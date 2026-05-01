@@ -184,6 +184,20 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                         ? () => _showToast('Tài khoản đã liên kết Google.')
                         : _linkGoogleAccount),
               ),
+              SLSpacing.h8,
+              _buildGradientBtn(
+                label: _isLinkingApple
+                    ? 'ĐANG LIÊN KẾT APPLE...'
+                    : (_appleLinked ? 'ĐÃ LIÊN KẾT APPLE' : 'LIÊN KẾT APPLE'),
+                gradient: _appleLinked
+                    ? const [Color(0xFF424242), Color(0xFF212121)]
+                    : const [Color(0xFF212121), Color(0xFF000000)],
+                onTap: _isLinkingApple
+                    ? () {}
+                    : (_appleLinked
+                        ? () => _showToast('Tài khoản đã liên kết Apple.')
+                        : _linkAppleAccount),
+              ),
             ],
           ),
           SLSpacing.h12,

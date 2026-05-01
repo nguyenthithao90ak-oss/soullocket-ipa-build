@@ -687,13 +687,14 @@ abstract final class _L10nStaticData {
     'widget_err_not_supported': 'Thiết bị không hỗ trợ ghim widget tự động',
     'widget_pin_failed': 'Lỗi: Không thể ghim widget',
     'widget_pin_req_sent': 'Đã gửi yêu cầu ghim widget!',
+    'ios_widget_pin_guide': 'Đã lưu cấu hình! Giữ màn hình chính > Widget > SoulLocket để thêm.',
     'home_screen_widget': 'Widget màn hình chính',
     'widget_home_desc':
         'Widget sẽ được đưa ra màn hình chính điện thoại để xem nhanh mỗi ngày.',
     'android_real_widget': 'Android (Widget thật):',
     'ios_widget': 'iOS:',
     'ios_widget_pending':
-        'Chưa bật Widget Extension trên iOS (sẽ làm sau khi có Mac).',
+        'Giữ nút Home > chọn Widget > tìm SoulLocket > chọn kiểu > Thêm.',
     'support_legal': 'Hỗ trợ & Pháp lý',
     'about_soullocket': 'Giới thiệu SoulLocket',
     'user_guide': 'Hướng dẫn sử dụng',
@@ -1770,13 +1771,14 @@ abstract final class _L10nStaticData {
     'widget_err_not_supported': 'Device does not support auto widget pinning',
     'widget_pin_failed': 'Error: Unable to pin widget',
     'widget_pin_req_sent': 'Widget pin request sent!',
+    'ios_widget_pin_guide': 'Config saved! Long-press Home > Widgets > SoulLocket to add.',
     'home_screen_widget': 'Home Screen Widget',
     'widget_home_desc':
         'Widget will be added to your home screen for quick viewing.',
     'android_real_widget': 'Android (Real Widget):',
     'ios_widget': 'iOS:',
     'ios_widget_pending':
-        'Widget Extension not yet enabled on iOS (pending Mac).',
+        'Long-press Home > Widgets > find SoulLocket > choose style > Add.',
     'support_legal': 'Support & Legal',
     'about_soullocket': 'About SoulLocket',
     'user_guide': 'User Guide',

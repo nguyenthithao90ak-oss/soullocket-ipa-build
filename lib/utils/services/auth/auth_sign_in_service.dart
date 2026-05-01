@@ -182,6 +182,10 @@ class AuthSignInService {
     return _isProviderLinkedCurrentUser('google.com');
   }
 
+  Future<bool> isAppleLinkedCurrentUser() {
+    return _isProviderLinkedCurrentUser('apple.com');
+  }
+
   Future<bool> isPasswordLinkedCurrentUser() {
     return _isProviderLinkedCurrentUser('password');
   }
@@ -257,6 +261,91 @@ class AuthSignInService {
         error,
         fallbackMessage:
             'Không liên kết Google được: hãy kiểm tra tài khoản Google, trạng thái đăng nhập và kết nối mạng.',
+      ).message;
+    }
+  }
+
+  Future<void> linkAppleToCurrentUser() async {
+    var user = _auth.currentUser;
+    if (user == null) {
+      throw 'Bạn cần đăng nhập trước khi liên kết Apple.';
+    }
+
+    if (await isAppleLinkedCurrentUser()) {
+      return;
+    }
+
+    try {
+      if (kIsWeb) {
+        final provider = firebase_auth.AppleAuthProvider()
+          ..addScope('email')
+          ..addScope('name');
+        await user.linkWithPopup(provider);
+      } else {
+        final isAvailable = await SignInWithApple.isAvailable();
+        if (!isAvailable) {
+          throw 'Thiết bị hoặc bản build này chưa hỗ trợ Sign in with Apple.';
+        }
+
+        final rawNonce = generateNonce();
+        final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+        final appleCredential = await SignInWithApple.getAppleIDCredential(
+          scopes: const [
+            AppleIDAuthorizationScopes.email,
+            AppleIDAuthorizationScopes.fullName,
+          ],
+          nonce: hashedNonce,
+          state: generateNonce(length: 12),
+          webAuthenticationOptions: _usesNativeAppleFlow
+              ? null
+              : _buildAppleWebAuthenticationOptions(),
+        );
+
+        final oauthCredential =
+            _buildAppleFirebaseCredential(appleCredential, rawNonce);
+        await user.linkWithCredential(oauthCredential);
+      }
+
+      await user.reload();
+      user = _auth.currentUser ?? user;
+      await _houseContextService.syncSecurityEmailForCurrentUser(user: user);
+    } on firebase_auth.FirebaseAuthException catch (error) {
+      switch (error.code) {
+        case 'provider-already-linked':
+          return;
+        case 'credential-already-in-use':
+        case 'email-already-in-use':
+        case 'account-exists-with-different-credential':
+          throw 'Email Apple này đã liên kết với tài khoản khác.';
+        case 'requires-recent-login':
+          throw 'Phiên đăng nhập đã cũ. Hãy đăng xuất rồi đăng nhập lại trước khi liên kết Apple.';
+        case 'popup-closed-by-user':
+          return;
+        case 'popup-blocked':
+          throw 'Popup liên kết Apple đang bị chặn. Hãy cho phép popup rồi thử lại.';
+        case 'operation-not-allowed':
+          throw kDebugMode
+              ? 'Firebase Authentication chưa bật nhà cung cấp Apple.'
+              : 'Liên kết Apple chưa sẵn sàng trên bản app này.';
+        case 'network-request-failed':
+          throw 'Mạng đang lỗi hoặc bị chặn, chưa thể liên kết Apple lúc này.';
+        default:
+          throw handleFirebaseAuthError(error);
+      }
+    } on SignInWithAppleAuthorizationException catch (error) {
+      if (error.code == AuthorizationErrorCode.canceled) {
+        return;
+      }
+      throw kDebugMode
+          ? 'Apple trả về lỗi xác thực (${error.code}). Hãy kiểm tra cấu hình Apple Sign In.'
+          : 'Liên kết Apple chưa hoàn tất được. Hãy thử lại sau.';
+    } catch (error) {
+      if (error is String) rethrow;
+      throw AppErrorMapper.resolve(
+        error,
+        fallbackMessage:
+            'Không liên kết Apple được: hãy kiểm tra Apple ID, quyền đăng nhập và kết nối mạng.',
       ).message;
     }
   }

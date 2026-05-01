@@ -85,9 +85,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                   role: 'user1',
                   isUser1: true,
                   hideMeta: isSingle,
-                  customOnTap: _currentRole == 'user1'
-                      ? () => _changeAvatar(isUser1: true)
-                      : null,
+                  customOnTap: () => _changeAvatar(isUser1: true),
                   customOnLongPress: () => _changeAvatar(isUser1: true),
                 ),
               ),
@@ -124,9 +122,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                         role: 'user2',
                         isUser1: false,
                         hideMeta: false,
-                        customOnTap: _currentRole == 'user2'
-                            ? () => _changeAvatar(isUser1: false)
-                            : null,
+                        customOnTap: () => _changeAvatar(isUser1: false),
                         customOnLongPress: () => _changeAvatar(isUser1: false),
                       ),
               ),

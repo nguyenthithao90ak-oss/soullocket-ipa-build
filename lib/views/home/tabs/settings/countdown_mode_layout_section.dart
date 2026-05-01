@@ -11,9 +11,9 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => _CountdownModeEditorScreen(
-          currentHouseId: widget.currentHouseId,
+          currentHouseId: widget.currentHouseId ?? '',
           isVipActive: widget.isVipActive,
-          spaceTitle: _spaceTitle(currentSpaceId),
+          spaceTitle: _spaceTitle(currentSpaceId).trim(),
           isAccepted: _acceptedSpaceHouseIds.contains(currentSpaceId),
           showDeleteSection:
               currentSpaceId != _selfSpaceHouseId && sharedSpace != null,
@@ -22,24 +22,24 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
               deleteRequest == null,
           canAcceptDelete: deleteRequest != null &&
               !deleteRequest.isRequestedBy(_selfSpaceHouseId),
-          deleteStatusTitle: _deleteStatusTitle(currentSpaceId),
-          deleteStatusDescription: _deleteStatusDescription(currentSpaceId),
+          deleteStatusTitle: _deleteStatusTitle(currentSpaceId).trim(),
+          deleteStatusDescription: _deleteStatusDescription(currentSpaceId).trim(),
           singleMode: _singleMode,
-          anchorDate: _anchorDate,
-          themeKey: _themeKey,
-          styleKey: _countdownStyleKey,
-          frameKey: _avatarFrameKey,
-          fontKey: _fontKey,
+          anchorDate: _anchorDate ?? DateTime.now(),
+          themeKey: _themeKey.trim(),
+          styleKey: _countdownStyleKey.trim(),
+          frameKey: _avatarFrameKey.trim(),
+          fontKey: _fontKey.trim(),
           transparentMode: _transparentMode,
           sizePx: _countdownSizePx,
-          topLabel: _topLabelText,
-          bottomLabel: _bottomLabelText,
-          nameU1: _nameU1,
-          nameU2: _nameU2,
-          avatarUrl1: _avatarUrl1,
-          avatarUrl2: _avatarUrl2,
-          customBackgroundUrl: _customBackgroundUrl,
-          centerIconType: _centerIconType,
+          topLabel: _topLabelText.trim(),
+          bottomLabel: _bottomLabelText.trim(),
+          nameU1: _nameU1.trim(),
+          nameU2: _nameU2.trim(),
+          avatarUrl1: _avatarUrl1.trim(),
+          avatarUrl2: _avatarUrl2.trim(),
+          customBackgroundUrl: _customBackgroundUrl.trim(),
+          centerIconType: _centerIconType.trim(),
         ),
       ),
     );
@@ -64,7 +64,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
       await _refreshCountdownStyleUnlockState();
       _safeSetState(() {
         _singleMode = result.singleMode;
-        _anchorDate = result.anchorDate;
+        _anchorDate = result.anchorDate ?? DateTime.now();
         _themeKey = result.themeKey;
         _countdownStyleKey = result.styleKey;
         _avatarFrameKey = result.frameKey;

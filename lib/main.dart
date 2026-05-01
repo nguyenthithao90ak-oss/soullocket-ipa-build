@@ -192,8 +192,7 @@ void main() {
     };
 
     try {
-      // Bỏ qua xác minh chữ ký cho bản build IPA tự do
-      // await _verifyOfficialBuildSignature();
+      await _verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
 
       if (!kIsWeb) {

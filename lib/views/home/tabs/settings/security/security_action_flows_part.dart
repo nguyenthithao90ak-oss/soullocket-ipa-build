@@ -658,6 +658,40 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     }
   }
 
+  Future<void> _linkAppleAccount() async {
+    if (_isLinkingApple) return;
+    final canContinue = await _securityFlowGuard.guard(
+      context,
+      action: SensitiveActionType.linkAppleAccount,
+      houseId: _houseId,
+      onWarnStepUp: () => _authenticateLockSettingsChange(
+        requireExistingLock: _isAppLockEnabled && _storedLockSecret.isNotEmpty,
+      ),
+      continueLabel: 'Xác minh rồi liên kết',
+    );
+    if (!canContinue) {
+      return;
+    }
+    setState(() => _isLinkingApple = true);
+
+    try {
+      await _authService.linkAppleToCurrentUser();
+      await _loadSecurityDetails();
+      if (!mounted) return;
+      _showToast(
+        _appleLinked
+            ? 'Tài khoản đã liên kết Apple.'
+            : 'Đã liên kết Apple thành công!',
+        success: true,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showToast('$e', success: false);
+    } finally {
+      if (mounted) setState(() => _isLinkingApple = false);
+    }
+  }
+
   Future<void> _changeHousePassword() async {
     final newPass = _newPassCtrl.text.trim();
     final oldPass = _oldPassCtrl.text.trim();

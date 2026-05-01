@@ -349,6 +349,12 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         return;
       }
       try {
+        if (Theme.of(context).platform == TargetPlatform.iOS) {
+          await _persistAndSyncWidgetAppearance();
+          if (!mounted) return;
+          _showToast(context.tr('ios_widget_pin_guide'), success: true);
+          return;
+        }
         final supported = await HomeWidget.isRequestPinWidgetSupported();
         if (!mounted) return;
         if (supported != true) {
@@ -543,8 +549,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               if (_widgetPanelTabKey != _widgetPanelTabIconKey)
                 _buildWidgetSectionCard(
                   icon: Icons.add_to_home_screen_rounded,
-                  title: context.tr('android_real_widget'),
-                  subtitle: context.tr('add_widget_desc'),
+                  title: context.tr('home_screen_widget'),
+                  subtitle: Theme.of(context).platform == TargetPlatform.iOS
+                      ? null
+                      : context.tr('add_widget_desc'),
                   iconGradient: const [
                     Color(0xFF14B8A6),
                     Color(0xFF06B6D4),
@@ -552,108 +560,122 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final useColumn = constraints.maxWidth < 330;
-                          if (useColumn) {
-                            return Column(
+                      if (Theme.of(context).platform != TargetPlatform.iOS) ...[
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final useColumn = constraints.maxWidth < 330;
+                            if (useColumn) {
+                              return Column(
+                                children: [
+                                  _buildGradientBtn(
+                                    label: context.tr('add_widget'),
+                                    gradient: const [
+                                      Color(0xFF10C8E6),
+                                      Color(0xFF0E9EB0),
+                                    ],
+                                    onTap: handlePinWidget,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _buildGradientBtn(
+                                    label: context.tr('update_widget'),
+                                    gradient: const [
+                                      Color(0xFFFF7898),
+                                      Color(0xFFD81B60),
+                                    ],
+                                    onTap: handleRefreshWidget,
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Row(
                               children: [
-                                _buildGradientBtn(
-                                  label: context.tr('add_widget'),
-                                  gradient: const [
-                                    Color(0xFF10C8E6),
-                                    Color(0xFF0E9EB0),
-                                  ],
-                                  onTap: handlePinWidget,
+                                Expanded(
+                                  child: _buildGradientBtn(
+                                    label: context.tr('add_widget'),
+                                    gradient: const [
+                                      Color(0xFF10C8E6),
+                                      Color(0xFF0E9EB0),
+                                    ],
+                                    onTap: handlePinWidget,
+                                  ),
                                 ),
-                                const SizedBox(height: 10),
-                                _buildGradientBtn(
-                                  label: context.tr('update_widget'),
-                                  gradient: const [
-                                    Color(0xFFFF7898),
-                                    Color(0xFFD81B60),
-                                  ],
-                                  onTap: handleRefreshWidget,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildGradientBtn(
+                                    label: context.tr('update_widget'),
+                                    gradient: const [
+                                      Color(0xFFFF7898),
+                                      Color(0xFFD81B60),
+                                    ],
+                                    onTap: handleRefreshWidget,
+                                  ),
                                 ),
                               ],
                             );
-                          }
-
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: _buildGradientBtn(
-                                  label: context.tr('add_widget'),
-                                  gradient: const [
-                                    Color(0xFF10C8E6),
-                                    Color(0xFF0E9EB0),
-                                  ],
-                                  onTap: handlePinWidget,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildGradientBtn(
-                                  label: context.tr('update_widget'),
-                                  gradient: const [
-                                    Color(0xFFFF7898),
-                                    Color(0xFFD81B60),
-                                  ],
-                                  onTap: handleRefreshWidget,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                      ],
                       if (Theme.of(context).platform == TargetPlatform.iOS) ...[
-                        const SizedBox(height: 12),
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF5FBFF),
+                            color: const Color(0xFFF0F9FF),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFCAEAF3)),
+                            border: Border.all(color: const Color(0xFFB9E6FE)),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                width: 34,
-                                height: 34,
+                                width: 32,
+                                height: 32,
                                 decoration: BoxDecoration(
-                                  color:
-                                      const Color(0xFF0EA5C6).withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: const Color(0xFF0EA5E9).withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Icon(
                                   Icons.info_outline_rounded,
-                                  color: Color(0xFF0B7285),
+                                  color: Color(0xFF0369A1),
+                                  size: 18,
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      context.tr('ios_widget'),
+                                      'Hướng dẫn thêm Widget',
                                       style: SLTheme.quicksand(
-                                        fontSize: 12.6,
+                                        fontSize: 13,
                                         fontWeight: FontWeight.w900,
-                                        color: const Color(0xFF0B7285),
+                                        color: const Color(0xFF0369A1),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       context.tr('ios_widget_pending'),
                                       style: SLTheme.quicksand(
-                                        fontSize: 11.8,
+                                        fontSize: 11.5,
                                         fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF667085),
-                                        height: 1.4,
+                                        color: const Color(0xFF475467),
+                                        height: 1.5,
                                       ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildGradientBtn(
+                                      label: 'Lưu & Đồng bộ cấu hình',
+                                      gradient: const [
+                                        Color(0xFF10C8E6),
+                                        Color(0xFF0E9EB0),
+                                      ],
+                                      onTap: () async {
+                                        await _persistAndSyncWidgetAppearance();
+                                        if (mounted) _showToast('Đã đồng bộ!', success: true);
+                                      },
                                     ),
                                   ],
                                 ),

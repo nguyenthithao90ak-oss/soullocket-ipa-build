@@ -202,12 +202,19 @@ class AppErrorMapper {
         code == 'unavailable' ||
         code == 'internal' ||
         code == 'internal-error') {
+      final cleanMsg = _normalizeServerMessage(
+        message,
+        fallbackMessage: fallbackMessage,
+      );
+      if (code == 'permission-denied' && (cleanMsg.isEmpty || cleanMsg == defaultServerMessage)) {
+        return const AppErrorInfo(
+          kind: AppErrorKind.server,
+          message: 'Bạn không có quyền thực hiện thao tác này hoặc dữ liệu bị từ chối truy cập.',
+        );
+      }
       return AppErrorInfo(
         kind: AppErrorKind.server,
-        message: _normalizeServerMessage(
-          message,
-          fallbackMessage: fallbackMessage,
-        ),
+        message: cleanMsg,
       );
     }
 

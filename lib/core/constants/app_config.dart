@@ -82,11 +82,11 @@ class AppConfig {
   );
   static const String appleSignInServiceId = String.fromEnvironment(
     'APPLE_SIGN_IN_SERVICE_ID',
-    defaultValue: '',
+    defaultValue: 'com.soullocket.app',
   );
   static const String appleSignInRedirectUrl = String.fromEnvironment(
     'APPLE_SIGN_IN_REDIRECT_URL',
-    defaultValue: '',
+    defaultValue: 'https://soullockket.firebaseapp.com/__/auth/handler',
   );
   static const String maintenanceModePath = 'sys_settings/is_maintenance';
   static const String legacyMaintenanceModePath =

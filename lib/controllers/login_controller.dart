@@ -11,6 +11,7 @@ import '../utils/rapid_action_feedback_policy.dart';
 import '../utils/sl_notice.dart';
 import '../views/app_entry.dart';
 import '../views/auth/qr_login_display_dialog.dart';
+import '../views/auth/login/social_auth_action_helper.dart';
 import '../core/sl_theme.dart';
 
 class LoginController extends ChangeNotifier {
@@ -340,15 +341,7 @@ class LoginController extends ChangeNotifier {
   }
 
   Future<void> handleSocialLogin(BuildContext context, String provider) async {
-    if (provider == 'Apple') {
-      SLNotice.showInfo(
-        context,
-        'Tính năng Apple đang phát triển.',
-      );
-      return;
-    }
-
-    if (provider != 'Google' && provider != 'Facebook') {
+    if (!SocialAuthActionHelper.isSupportedProvider(provider)) {
       return;
     }
 
@@ -356,15 +349,19 @@ class LoginController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await (provider == 'Facebook'
-              ? _authService.signInWithFacebook()
-              : _authService.signInWithGoogle())
+      final result = await (switch (provider) {
+        'Facebook' => _authService.signInWithFacebook(),
+        'Apple' => _authService.signInWithApple(),
+        _ => _authService.signInWithGoogle(),
+      })
           .timeout(
         _authActionTimeout,
         onTimeout: () => throw Exception(
-          provider == 'Facebook'
-              ? 'Đăng nhập Facebook quá lâu. Vui lòng thử lại.'
-              : 'Đăng nhập Google quá lâu. Vui lòng thử lại.',
+          switch (provider) {
+            'Facebook' => 'Đăng nhập Facebook quá lâu. Vui lòng thử lại.',
+            'Apple' => 'Đăng nhập Apple quá lâu. Vui lòng thử lại.',
+            _ => 'Đăng nhập Google quá lâu. Vui lòng thử lại.',
+          },
         ),
       );
       if (!context.mounted) return;

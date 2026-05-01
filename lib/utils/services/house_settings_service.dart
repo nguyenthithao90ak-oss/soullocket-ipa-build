@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -470,22 +471,31 @@ class HouseSettingsService {
     final changeCount = oldChangeCount + 1;
     final nextCooldownUntil =
         startCooldown ? nowMs + startDateChangeCooldown.inMilliseconds : null;
-    await _dbRef.update({
-      'houses/$houseId/settings/startDate': safeDate,
-      'houses/$houseId/settings/startDateChangedAt': nowMs,
-      'houses/$houseId/settings/startDateChangeCount': changeCount,
-      'houses/$houseId/settings/startDateCooldownUntil': nextCooldownUntil,
-      'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
-      'houses/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/startDate': safeDate,
-      'house_profiles/$houseId/settings/startDate': safeDate,
-      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
-      'houses_public/$houseId/startDate': safeDate,
-      'houses_public/$houseId/settings/startDate': safeDate,
-      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
-      'houses_public/$houseId/updated_at': ServerValue.timestamp,
-    });
+
+    try {
+      await _dbRef.update({
+        'houses/$houseId/settings/startDate': safeDate,
+        'houses/$houseId/settings/startDateChangedAt': nowMs,
+        'houses/$houseId/settings/startDateChangeCount': changeCount,
+        'houses/$houseId/settings/startDateCooldownUntil': nextCooldownUntil,
+        'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
+        'houses/$houseId/updatedAt': ServerValue.timestamp,
+        'house_profiles/$houseId/startDate': safeDate,
+        'house_profiles/$houseId/settings/startDate': safeDate,
+        'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
+        'house_profiles/$houseId/updated_at': ServerValue.timestamp,
+        'houses_public/$houseId/startDate': safeDate,
+        'houses_public/$houseId/settings/startDate': safeDate,
+        'houses_public/$houseId/updatedAt': ServerValue.timestamp,
+        'houses_public/$houseId/updated_at': ServerValue.timestamp,
+      });
+    } on FirebaseException catch (fe) {
+      if (fe.code == 'permission-denied') {
+        throw 'Hệ thống từ chối cập nhật ngày yêu. Có thể do lỗi phân quyền hoặc cấu hình bảo mật.';
+      }
+      rethrow;
+    }
+
     await _recordSpaceActivity(
       houseId,
       'đã cập nhật mốc ngày của không gian',

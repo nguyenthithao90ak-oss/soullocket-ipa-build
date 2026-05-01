@@ -44,6 +44,7 @@ class UtilityService {
   };
   static const Set<String> _debugOnlyIds = {
     'sticker_library',
+    'friendly_chat',
   };
   static final Set<String> _allAppIds =
       allApps.map((UtilityApp app) => app.id).toSet();
@@ -373,3 +374,4 @@ class UtilityService {
         .toList(growable: false);
   }
 }
+

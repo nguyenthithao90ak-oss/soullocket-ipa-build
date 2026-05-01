@@ -495,12 +495,12 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surfaceStart = isDark
-        ? Colors.white.withOpacity(0.08)
-        : Colors.white.withOpacity(0.66);
+        ? Colors.white.withOpacity(0.12)
+        : Colors.white.withOpacity(0.78);
     final surfaceEnd = isDark
-        ? Colors.white.withOpacity(0.05)
-        : Colors.white.withOpacity(0.58);
-    final borderColor = Colors.white.withOpacity(isDark ? 0.14 : 0.70);
+        ? Colors.white.withOpacity(0.09)
+        : Colors.white.withOpacity(0.70);
+    final borderColor = Colors.white.withOpacity(isDark ? 0.18 : 0.76);
     final centerPreset = _countdownModeCenterIconPresetFor(centerIconType);
 
     return Container(
@@ -513,16 +513,14 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: borderColor, width: 1.1),
-        boxShadow: isDark
-            ? const []
-            : [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 20,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+        border: Border.all(color: borderColor, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.22 : 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [

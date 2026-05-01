@@ -437,24 +437,25 @@ class _CountdownModeIndependentScreenState
                           top: 8,
                           left: 18,
                           right: 18,
-                          child: Row(
-                            children: [
-                              const Spacer(),
-                              IgnorePointer(
-                                ignoring: !_spaceChromeVisible,
-                                child: AnimatedOpacity(
-                                  opacity: _spaceChromeVisible ? 1 : 0,
-                                  duration: const Duration(milliseconds: 180),
-                                  child: _buildActionButton(
+                          child: IgnorePointer(
+                            ignoring: !_spaceChromeVisible,
+                            child: AnimatedOpacity(
+                              opacity: _spaceChromeVisible ? 1 : 0,
+                              duration: const Duration(milliseconds: 180),
+                              child: Row(
+                                children: [
+                                  const Spacer(),
+                                  _buildActionButton(
                                     icon: Icons.settings_rounded,
                                     foreground: themeData.foreground,
                                     isDark: themeData.isDark,
                                     onTap: _openSettingsSheet,
-                                    tooltip: 'Cài đặt không gian riêng',
+                                    tooltip:
+                                        'Cài đặt không gian riêng cho bạn bè',
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ],

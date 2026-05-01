@@ -189,12 +189,20 @@ class AuthService {
     return _signInService.isGoogleLinkedCurrentUser();
   }
 
+  Future<bool> isAppleLinkedCurrentUser() {
+    return _signInService.isAppleLinkedCurrentUser();
+  }
+
   Future<bool> isPasswordLinkedCurrentUser() {
     return _signInService.isPasswordLinkedCurrentUser();
   }
 
   Future<void> linkGoogleToCurrentUser() {
     return _signInService.linkGoogleToCurrentUser();
+  }
+
+  Future<void> linkAppleToCurrentUser() {
+    return _signInService.linkAppleToCurrentUser();
   }
 
   Future<void> createPasswordForCurrentUser(String newPassword) {

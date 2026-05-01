@@ -30,6 +30,8 @@ import 'storage_web_picker_guard.dart';
 class StorageService {
   StorageService();
 
+  static StorageService get instance => StorageService();
+
   static const int pickerImageQuality = StoragePickerService.pickerImageQuality;
   static const double pickerMaxWidth = StoragePickerService.pickerMaxWidth;
   static const double pickerMaxHeight = StoragePickerService.pickerMaxHeight;

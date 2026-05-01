@@ -88,21 +88,6 @@ extension _CountdownModeIndependentScreenViewPart
     return Container(
       width: double.infinity,
       padding: padding,
-      decoration: BoxDecoration(
-        color: _surfaceFillColor(themeData),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: _surfaceBorderColor(themeData),
-          width: 1.4,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _surfaceShadowColor(themeData),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
       child: child,
     );
   }
@@ -314,7 +299,6 @@ extension _CountdownModeIndependentScreenViewPart
     final value =
         _anchorDate == null ? '--' : _daysSince(_anchorDate!).toString();
     final titleColor = _titleColor(themeData);
-    final subtitleColor = _subtitleColor(themeData);
     final isAccepted = _acceptedSpaceHouseIds
         .contains(_openedSpaceHouseId ?? _selfSpaceHouseId);
     final statusColor =
@@ -387,53 +371,6 @@ extension _CountdownModeIndependentScreenViewPart
             ],
           ),
         ),
-        if (false) const SizedBox(height: 16),
-        if (false)
-          Text(
-            _caption(context),
-            textAlign: TextAlign.center,
-            style: SLTheme.textStyleForKey(
-              _fontKey,
-              color: subtitleColor,
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              height: 1.45,
-            ),
-          ),
-        if (false) const SizedBox(height: 10),
-        if (false)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(themeData.isDark ? 0.08 : 0.56),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(themeData.isDark ? 0.10 : 0.86),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.edit_calendar_rounded,
-                  size: 16,
-                  color: Color(0xFFD94C86),
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    'Chạm vào vòng đếm để sửa ngày mốc riêng',
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w800,
-                      color: subtitleColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
       ],
     );
   }
@@ -565,7 +502,7 @@ extension _CountdownModeIndependentScreenViewPart
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => _CountdownModeEditorScreen(
-          currentHouseId: widget.currentHouseId,
+          currentHouseId: widget.currentHouseId ?? '',
           isVipActive: widget.isVipActive,
           spaceTitle: _spaceTitle(currentSpaceId),
           isAccepted: _acceptedSpaceHouseIds.contains(currentSpaceId),
@@ -579,7 +516,7 @@ extension _CountdownModeIndependentScreenViewPart
           deleteStatusTitle: _deleteStatusTitle(currentSpaceId),
           deleteStatusDescription: _deleteStatusDescription(currentSpaceId),
           singleMode: _singleMode,
-          anchorDate: _anchorDate,
+          anchorDate: _anchorDate ?? DateTime.now(),
           themeKey: _themeKey,
           styleKey: _countdownStyleKey,
           frameKey: _avatarFrameKey,
@@ -617,7 +554,7 @@ extension _CountdownModeIndependentScreenViewPart
     if (result.action == _CountdownModeSettingsAction.save) {
       _safeSetState(() {
         _singleMode = result.singleMode;
-        _anchorDate = result.anchorDate;
+        _anchorDate = result.anchorDate ?? DateTime.now();
         _themeKey = result.themeKey;
         _countdownStyleKey = result.styleKey;
         _avatarFrameKey = result.frameKey;
@@ -635,7 +572,7 @@ extension _CountdownModeIndependentScreenViewPart
         _spaceChromeVisible = true;
       });
       await _saveLocalSettings();
-      _showMessage('Đã lưu không gian riêng.');
+      _showMessage('Đã lưu không gian riêng cho bạn bè.');
       return;
     }
 
@@ -712,7 +649,7 @@ extension _CountdownModeIndependentScreenViewPart
                           children: [
                             Expanded(
                               child: Text(
-                                'Cài đặt không gian riêng',
+                                'Cài đặt không gian riêng cho bạn bè',
                                 style: SLTheme.quicksand(
                                   fontSize:
                                       MediaQuery.of(sheetContext).size.width <
@@ -970,7 +907,7 @@ extension _CountdownModeIndependentScreenViewPart
                             },
                             icon: const Icon(Icons.close_rounded),
                             label:
-                                const Text('Thoát không gian riêng'),
+                                const Text('Thoát không gian riêng cho bạn bè'),
                           ),
                         ),
                       ],
@@ -1013,7 +950,7 @@ extension _CountdownModeIndependentScreenViewPart
         _avatarUrl2 = result.avatarUrl2;
       });
       await _saveLocalSettings();
-      _showMessage('Đã lưu không gian riêng.');
+      _showMessage('Đã lưu không gian riêng cho bạn bè.');
       return;
     }
 
@@ -1621,18 +1558,18 @@ extension _CountdownModeIndependentScreenViewPart
                   children: [
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
                       icon: Icon(
                         Icons.arrow_back_ios_new_rounded,
                         color: titleColor,
-                        size: 24,
+                        size: 20,
                       ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Không gian riêng',
+                        'Không gian riêng cho bạn bè',
                         style: SLTheme.quicksand(
                           fontSize: 29,
                           fontWeight: FontWeight.w900,

@@ -36,6 +36,7 @@ import '../../../services/notification_service.dart';
 import '../../../services/storage_service.dart';
 import '../../../services/utilities/note_service.dart';
 import '../../../utils/services/pending_upload_service.dart';
+import '../../../utils/sl_notice.dart';
 import '../../../models/album_item.dart';
 import '../../../models/house_settings.dart';
 import '../../../models/utilities/shared_note.dart';
@@ -1310,7 +1311,12 @@ class _MainHomeTabState extends State<MainHomeTab> {
     if (!mounted || houseId == null) return;
     if (_uploadingAvatarRole != null) return;
 
-    XFile? file = presetFile ?? await _storageService.pickImage();
+    XFile? file;
+    try {
+      file = presetFile ?? await _storageService.pickImage();
+    } catch (e) {
+      if (mounted) SLNotice.showInfo(context, 'Lỗi chọn ảnh: $e');
+    }
     if (file == null) return;
     if (!mounted) return;
 
