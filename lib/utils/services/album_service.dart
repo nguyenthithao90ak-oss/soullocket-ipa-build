@@ -476,7 +476,7 @@ class UploadGuardResult {
         errorTitle: 'Hết lượt hôm nay',
         errorMessage: isPro
             ? 'Bạn đã dùng hết $limit lượt tải ảnh hôm nay. Đợi sau 00h nhé!'
-            : 'Bạn đã dùng hết $limit lượt hôm nay. Nâng cấp PRO để tải 30 ảnh/ngày!',
+            : 'Bạn đã dùng hết $limit lượt hôm nay. Nâng cấp PRO để tải 60 ảnh/ngày!',
       );
 
   factory UploadGuardResult.exceedsRemaining(int remaining) =>
