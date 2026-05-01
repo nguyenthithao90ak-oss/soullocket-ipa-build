@@ -1,6 +1,5 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -11,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../utils/services/game_data_manager.dart';
+
 import '../../core/sl_theme.dart';
 import '../../services/admob_service.dart';
 import '../../services/house_service.dart';
@@ -987,54 +986,127 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   List<List<_SoulTile?>> _createOpeningBoard() {
-      final List<List<_SoulTile?>> board = _createEmptyBoard();
-  
-      void placeCells(
-        List<Point<int>> cells,
-        int toneIndex,
-        int pieceId,
-      ) {
-        for (final Point<int> cell in cells) {
-          if (cell.x >= 0 && cell.x < _strategyBoardSize && cell.y >= 0 && cell.y < _strategyBoardSize) {
-            board[cell.y][cell.x] = _SoulTile(
-              toneIndex: toneIndex,
-              pieceId: pieceId,
-              placedTurn: 0,
-            );
-          }
-        }
-      }
-  
-      final random = Random();
-      // TaÌ£o câÌ u truÌ c phÆ°Ì c taÌ£p hÆ¡n nhÆ° Block Blast
-      // VeÌƒ caÌ m giaÌ c 'daÌ€y' vaÌ€ coÌ  hÃªÌ£ thÃ´Ì ng
-      final List<List<Point<int>>> clusters = [
-        // Cum 1: GoÌ c trÃªn traÌ i
-        [Point(1,1), Point(1,2), Point(2,1), Point(2,2)],
-        // Cum 2: GoÌ c trÃªn phaÌ‰i
-        [Point(5,1), Point(6,1), Point(5,2), Point(6,2)],
-        // Cum 3: GiÆ°Ìƒa
-        [Point(3,3), Point(4,3), Point(3,4), Point(4,4)],
-        // Cum 4: GoÌ c dÆ°Æ¡Ì i traÌ i
-        [Point(1,5), Point(1,6), Point(2,5), Point(2,6)],
-        // Cum 5: GoÌ c dÆ°Æ¡Ì i phaÌ‰i
-        [Point(5,5), Point(5,6), Point(6,5), Point(6,6)],
-        // CaÌ c thanh ngang/doÌ£c trang triÌ 
-        [Point(0,3), Point(1,3)],
-        [Point(6,3), Point(7,3)],
-        [Point(3,0), Point(3,1)],
-        [Point(3,6), Point(3,7)],
-      ];
+    final List<List<_SoulTile?>> board = _createEmptyBoard();
 
-      // NgÃ¢Ìƒu nhiÃªn choÌ£n 5-7 cuÌ£m Ã°ÃªÌ‰ board troÌ‰ng bÆ¡Ì t nhÆ°ng vÃ¢Ìƒn Ã°eÌ£p
-      clusters.shuffle(random);
-      final count = 5 + random.nextInt(3);
-      for (var i = 0; i < count; i++) {
-        placeCells(clusters[i], random.nextInt(_kSoulTones.length), -100 - i);
+    void placeCells(
+      List<Point<int>> cells,
+      int toneIndex,
+      int pieceId,
+    ) {
+      for (final Point<int> cell in cells) {
+        board[cell.y][cell.x] = _SoulTile(
+          toneIndex: toneIndex,
+          pieceId: pieceId,
+          placedTurn: 0,
+        );
       }
-
-      return board;
     }
+
+    final List<List<List<Point<int>>>> openingPatterns =
+        <List<List<Point<int>>>>[
+      <List<Point<int>>>[
+        <Point<int>>[
+          const Point<int>(2, 2),
+          const Point<int>(3, 2),
+          const Point<int>(2, 3),
+        ],
+        <Point<int>>[
+          const Point<int>(5, 2),
+          const Point<int>(5, 3),
+          const Point<int>(5, 4),
+        ],
+        <Point<int>>[
+          const Point<int>(2, 5),
+          const Point<int>(3, 5),
+          const Point<int>(4, 5),
+        ],
+      ],
+      <List<Point<int>>>[
+        <Point<int>>[
+          const Point<int>(1, 1),
+          const Point<int>(2, 1),
+          const Point<int>(1, 2),
+          const Point<int>(2, 2),
+        ],
+        <Point<int>>[
+          const Point<int>(5, 1),
+          const Point<int>(5, 2),
+          const Point<int>(6, 2),
+        ],
+        <Point<int>>[
+          const Point<int>(3, 5),
+          const Point<int>(4, 5),
+          const Point<int>(5, 5),
+          const Point<int>(4, 6),
+        ],
+      ],
+      <List<Point<int>>>[
+        <Point<int>>[
+          const Point<int>(3, 1),
+          const Point<int>(4, 1),
+          const Point<int>(3, 2),
+          const Point<int>(4, 2),
+        ],
+        <Point<int>>[
+          const Point<int>(1, 4),
+          const Point<int>(2, 4),
+          const Point<int>(3, 4),
+        ],
+        <Point<int>>[
+          const Point<int>(5, 4),
+          const Point<int>(5, 5),
+          const Point<int>(5, 6),
+        ],
+      ],
+      <List<Point<int>>>[
+        <Point<int>>[
+          const Point<int>(1, 2),
+          const Point<int>(2, 2),
+          const Point<int>(3, 2),
+        ],
+        <Point<int>>[
+          const Point<int>(4, 4),
+          const Point<int>(5, 4),
+          const Point<int>(4, 5),
+          const Point<int>(5, 5),
+        ],
+        <Point<int>>[
+          const Point<int>(2, 6),
+          const Point<int>(3, 6),
+          const Point<int>(4, 6),
+        ],
+      ],
+      <List<Point<int>>>[
+        <Point<int>>[
+          const Point<int>(2, 1),
+          const Point<int>(2, 2),
+          const Point<int>(2, 3),
+        ],
+        <Point<int>>[
+          const Point<int>(4, 2),
+          const Point<int>(5, 2),
+          const Point<int>(6, 2),
+          const Point<int>(5, 3),
+        ],
+        <Point<int>>[
+          const Point<int>(3, 5),
+          const Point<int>(4, 5),
+          const Point<int>(4, 6),
+        ],
+      ],
+    ];
+
+    final List<List<Point<int>>> selectedPattern =
+        openingPatterns[_random.nextInt(openingPatterns.length)];
+    for (int index = 0; index < selectedPattern.length; index++) {
+      placeCells(
+        selectedPattern[index],
+        index % _kSoulTones.length,
+        -(index + 1),
+      );
+    }
+
+    return board;
   }
 
   List<List<_SoulTile?>> _cloneBoard(List<List<_SoulTile?>> board) {
@@ -2012,4 +2084,3 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     );
   }
 }
-
