@@ -404,11 +404,16 @@ class SLShadow {
 
 /// ─── Main Theme Class ─────────────────────────────────────────
 class SLTheme {
-  static const String defaultFontKey = 'quicksand';
+  static const String defaultFontKey = 'beVietnam';
   static const List<SLFontOption> fontOptions = [
     SLFontOption(
-      key: defaultFontKey,
-      label: 'Quicksand (Gốc)',
+      key: 'beVietnam',
+      label: 'Be Vietnam Pro (Gốc)',
+      sampleText: 'Yêu nhau 1000 ngày',
+    ),
+    SLFontOption(
+      key: 'quicksand',
+      label: 'Quicksand',
       sampleText: 'Yêu nhau 1000 ngày',
     ),
     SLFontOption(
@@ -424,11 +429,6 @@ class SLTheme {
     SLFontOption(
       key: 'playfair',
       label: 'Playfair Display',
-      sampleText: 'Yêu nhau 1000 ngày',
-    ),
-    SLFontOption(
-      key: 'beVietnam',
-      label: 'Be Vietnam Pro',
       sampleText: 'Yêu nhau 1000 ngày',
     ),
     SLFontOption(
@@ -455,8 +455,13 @@ class SLTheme {
 
   static const List<SLFontOption> cleanFontOptions = [
     SLFontOption(
-      key: defaultFontKey,
-      label: 'Quicksand (Gốc)',
+      key: 'beVietnam',
+      label: 'Be Vietnam Pro (Gốc)',
+      sampleText: 'Yêu nhau 1000 ngày',
+    ),
+    SLFontOption(
+      key: 'quicksand',
+      label: 'Quicksand',
       sampleText: 'Yêu nhau 1000 ngày',
     ),
     SLFontOption(
@@ -472,11 +477,6 @@ class SLTheme {
     SLFontOption(
       key: 'playfair',
       label: 'Playfair Display',
-      sampleText: 'Yêu nhau 1000 ngày',
-    ),
-    SLFontOption(
-      key: 'beVietnam',
-      label: 'Be Vietnam Pro',
       sampleText: 'Yêu nhau 1000 ngày',
     ),
     SLFontOption(
