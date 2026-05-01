@@ -217,11 +217,11 @@ struct InfoChip: View {
 
     var body: some View {
         Text(label)
-            .font(.system(size: 9, weight: .semibold, design: .rounded))
+            .font(.system(size: 8.5, weight: .semibold, design: .rounded))
             .foregroundColor(theme.secondaryTextColor)
             .lineLimit(1)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
             .background(theme.chipBackground)
             .overlay(
                 Capsule().stroke(theme.chipBorder, lineWidth: 0.8)
@@ -522,7 +522,7 @@ struct PersonCard: View {
             }
 
             Text(name)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.system(size: 14, weight: .bold, design: .rounded))
                 .foregroundColor(theme.textColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -610,9 +610,9 @@ struct SmallWidgetView: View {
                 data: data,
                 theme: theme,
                 palette: palette,
-                heartSize: 44,
-                diaryWidth: 44,
-                diaryHeight: 54
+                heartSize: 40,
+                diaryWidth: 40,
+                diaryHeight: 50
             )
 
             Text(data.daysText)
@@ -623,20 +623,20 @@ struct SmallWidgetView: View {
 
             HStack(spacing: 5) {
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar1Path, name: data.name1, size: 30, accentColor: theme.accentColor)
+                    AvatarView(path: data.avatar1Path, name: data.name1, size: 36, accentColor: theme.accentColor)
                     OnlineDot(isOnline: data.isOnline1)
                         .offset(x: 2, y: 2)
                 }
 
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar2Path, name: data.name2, size: 30, accentColor: theme.accentColor)
+                    AvatarView(path: data.avatar2Path, name: data.name2, size: 36, accentColor: theme.accentColor)
                     OnlineDot(isOnline: data.isOnline2)
                         .offset(x: 2, y: 2)
                 }
             }
 
             Text("\(data.name1) & \(data.name2)")
-                .font(.system(size: 9, weight: .medium, design: .rounded))
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
                 .foregroundColor(theme.secondaryTextColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -663,7 +663,7 @@ struct MediumWidgetView: View {
                 stars: data.stars1,
                 avatarPath: data.avatar1Path,
                 theme: theme,
-                avatarSize: 44
+                avatarSize: 52
             )
             .frame(maxWidth: .infinity)
 
@@ -672,9 +672,9 @@ struct MediumWidgetView: View {
                     data: data,
                     theme: theme,
                     palette: palette,
-                    heartSize: 58,
-                    diaryWidth: 56,
-                    diaryHeight: 70
+                    heartSize: 52,
+                    diaryWidth: 52,
+                    diaryHeight: 65
                 )
 
                 Text(data.daysText)
@@ -693,7 +693,7 @@ struct MediumWidgetView: View {
                 stars: data.stars2,
                 avatarPath: data.avatar2Path,
                 theme: theme,
-                avatarSize: 44
+                avatarSize: 52
             )
             .frame(maxWidth: .infinity)
         }
@@ -721,7 +721,7 @@ struct LargeWidgetView: View {
                     stars: data.stars1,
                     avatarPath: data.avatar1Path,
                     theme: theme,
-                    avatarSize: 52
+                    avatarSize: 60
                 )
                 .frame(maxWidth: .infinity)
 
@@ -730,9 +730,9 @@ struct LargeWidgetView: View {
                         data: data,
                         theme: theme,
                         palette: palette,
-                        heartSize: 68,
-                        diaryWidth: 68,
-                        diaryHeight: 84
+                        heartSize: 62,
+                        diaryWidth: 62,
+                        diaryHeight: 78
                     )
 
                     Text(data.daysText)
@@ -751,7 +751,7 @@ struct LargeWidgetView: View {
                     stars: data.stars2,
                     avatarPath: data.avatar2Path,
                     theme: theme,
-                    avatarSize: 52
+                    avatarSize: 60
                 )
                 .frame(maxWidth: .infinity)
             }

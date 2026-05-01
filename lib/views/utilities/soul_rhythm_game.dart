@@ -982,14 +982,18 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
 
   Rect _playAreaRect() {
     final media = MediaQuery.of(context);
-    final isCompactWidth = media.size.width < 390;
+    final size = media.size;
+    if (size.width <= 0 || size.height <= 0) {
+      return const Rect.fromLTWH(0, 0, 360, 640);
+    }
+    final isCompactWidth = size.width < 390;
     final sideInset = isCompactWidth ? 6.0 : 8.0;
     final top = media.padding.top + (isCompactWidth ? 62.0 : 68.0);
-    final bottom = media.size.height - media.padding.bottom - 14;
+    final bottom = size.height - media.padding.bottom - 14;
     return Rect.fromLTWH(
       sideInset,
       top,
-      media.size.width - (sideInset * 2),
+      max(1.0, size.width - (sideInset * 2)),
       max(260.0, bottom - top),
     );
   }

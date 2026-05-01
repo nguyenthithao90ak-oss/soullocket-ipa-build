@@ -110,15 +110,6 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
               border: Border.all(
                 color: Colors.white.withOpacity(0.09),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF00E5FF).withOpacity(
-                    0.08 + (bgPulse * 0.12),
-                  ),
-                  blurRadius: 22,
-                  spreadRadius: 0.5,
-                ),
-              ],
             ),
             child: DecoratedBox(
               decoration: BoxDecoration(
