@@ -527,7 +527,6 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           return;
         }
       }
-    }
 
     final remainingDailySlots = dailyLimit - uploadedToday;
     final pickLimit = StorageService.clampImagePickLimit(
