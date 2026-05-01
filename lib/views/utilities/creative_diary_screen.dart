@@ -12,7 +12,7 @@ import 'package:vision_gallery_saver/vision_gallery_saver.dart';
 import '../../core/sl_theme.dart';
 import '../../services/creative_diary_service.dart';
 import '../../services/house_service.dart';
-import '../../utils/services/admob_service.dart';
+import 'package:soullocket_app/utils/services/admob_service.dart';
 import '../home/tabs/diary/controllers/diary_guard_controller.dart';
 
 part 'creative_diary/creative_diary_create_sheet.dart';
