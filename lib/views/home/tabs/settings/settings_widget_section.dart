@@ -1,4 +1,4 @@
-// ignore_for_file: unused_local_variable, prefer_const_declarations
+﻿// ignore_for_file: unused_local_variable, prefer_const_declarations
 part of '../settings_tab.dart';
 
 // Shell-ready extraction target for shared draft state:
@@ -34,23 +34,23 @@ class _WidgetPanelConfig {
 extension _SettingsTabWidgetSection on _SettingsTabState {
   _WidgetPanelConfig _buildWidgetPanelConfig() {
     final themeOptions = [
-      ('Hồng ngọt', 'pink'),
-      ('Tối hiện đại', 'dark'),
-      ('Trắng tinh', 'white'),
+      ('Há»“ng ngá»t', 'pink'),
+      ('Tá»‘i hiá»‡n Ä‘áº¡i', 'dark'),
+      ('Tráº¯ng tinh', 'white'),
       ('Xanh lam', 'blue'),
-      ('Cam nắng', 'orange'),
-      ('Tím mộng', 'purple'),
-      ('Xanh ngọc', 'green'),
-      ('Đỏ đậm', 'red'),
-      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
+      ('Cam náº¯ng', 'orange'),
+      ('TÃ­m má»™ng', 'purple'),
+      ('Xanh ngá»c', 'green'),
+      ('Äá» Ä‘áº­m', 'red'),
+      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO ðŸ”’', 'premium'),
     ];
     final heartColorOptions = [
-      ('Hồng rose', 'rose'),
-      ('Đỏ ruby', 'ruby'),
-      ('Tím violet', 'violet'),
+      ('Há»“ng rose', 'rose'),
+      ('Äá» ruby', 'ruby'),
+      ('TÃ­m violet', 'violet'),
       ('Xanh ocean', 'ocean'),
       ('Mint', 'mint'),
-      ('Hoàng hôn', 'sunset'),
+      ('HoÃ ng hÃ´n', 'sunset'),
       ('Gold', 'gold'),
     ];
     final previewSizeOptions = _widgetPreviewSizeKeys
@@ -78,7 +78,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         )
         .$1;
     final smartSeasonLabel = smartSeasonKey == 'none'
-        ? 'Tự động phối màu'
+        ? 'Tá»± Ä‘á»™ng phá»‘i mÃ u'
         : WidgetService.seasonLabel(smartSeasonKey);
 
     return _WidgetPanelConfig(
@@ -296,23 +296,23 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
   Widget _buildWidgetPanel({bool hideBackButton = false}) {
     final config = _buildWidgetPanelConfig();
     final themeOptions = [
-      ('Hồng ngọt', 'pink'),
-      ('Tối hiện đại', 'dark'),
-      ('Trắng tinh', 'white'),
+      ('Há»“ng ngá»t', 'pink'),
+      ('Tá»‘i hiá»‡n Ä‘áº¡i', 'dark'),
+      ('Tráº¯ng tinh', 'white'),
       ('Xanh lam', 'blue'),
-      ('Cam nắng', 'orange'),
-      ('Tím mộng', 'purple'),
-      ('Xanh ngọc', 'green'),
-      ('Đỏ đậm', 'red'),
-      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
+      ('Cam náº¯ng', 'orange'),
+      ('TÃ­m má»™ng', 'purple'),
+      ('Xanh ngá»c', 'green'),
+      ('Äá» Ä‘áº­m', 'red'),
+      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO ðŸ”’', 'premium'),
     ];
     final heartColorOptions = [
-      ('Hồng rose', 'rose'),
-      ('Đỏ ruby', 'ruby'),
-      ('Tím violet', 'violet'),
+      ('Há»“ng rose', 'rose'),
+      ('Äá» ruby', 'ruby'),
+      ('TÃ­m violet', 'violet'),
       ('Xanh ocean', 'ocean'),
       ('Mint', 'mint'),
-      ('Hoàng hôn', 'sunset'),
+      ('HoÃ ng hÃ´n', 'sunset'),
       ('Gold', 'gold'),
     ];
     final previewSizeOptions = _widgetPreviewSizeKeys
@@ -340,12 +340,12 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         )
         .$1;
     final smartSeasonLabel = smartSeasonKey == 'none'
-        ? 'Tự động phối màu'
+        ? 'Tá»± Ä‘á»™ng phá»‘i mÃ u'
         : WidgetService.seasonLabel(smartSeasonKey);
 
     Future<void> handlePinWidget() async {
       if (kIsWeb) {
-        _showToast('Widget Android không hỗ trợ trên Web');
+        _showToast('Widget Android khÃ´ng há»— trá»£ trÃªn Web');
         return;
       }
       try {
@@ -367,13 +367,13 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         _showToast(context.tr('widget_pin_req_sent'), success: true);
       } catch (_) {
         if (!mounted) return;
-        _showToast('Lỗi: Không thể ghim widget');
+        _showToast('Lá»—i: KhÃ´ng thá»ƒ ghim widget');
       }
     }
 
     Future<void> handleRefreshWidget() async {
       if (kIsWeb) {
-        _showToast('Widget Android không hỗ trợ trên Web');
+        _showToast('Widget Android khÃ´ng há»— trá»£ trÃªn Web');
         return;
       }
       try {
@@ -382,7 +382,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         _showToast(context.tr('widget_updated_success'), success: true);
       } catch (_) {
         if (!mounted) return;
-        _showToast('Lỗi: Không thể cập nhật widget');
+        _showToast('Lá»—i: KhÃ´ng thá»ƒ cáº­p nháº­t widget');
       }
     }
 
@@ -417,7 +417,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
-                  'Xem trước widget',
+                  'Xem trÆ°á»›c widget',
                   style: SLTheme.quicksand(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w900,
@@ -462,7 +462,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 const SizedBox(height: 12),
                 _buildWidgetSectionCard(
                   icon: Icons.favorite_rounded,
-                  title: 'Trái tim và nội dung',
+                  title: 'TrÃ¡i tim vÃ  ná»™i dung',
                   subtitle: null,
                   iconGradient: const [
                     Color(0xFFFF86A8),
@@ -472,7 +472,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Kiểu trái tim',
+                        'Kiá»ƒu trÃ¡i tim',
                         style: SLTheme.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
@@ -483,7 +483,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                       _buildWidgetHeartStylePicker(),
                       const SizedBox(height: 14),
                       Text(
-                        'Màu trái tim',
+                        'MÃ u trÃ¡i tim',
                         style: SLTheme.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
@@ -648,7 +648,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Hướng dẫn thêm Widget',
+                                      'HÆ°á»›ng dáº«n thÃªm Widget',
                                       style: SLTheme.quicksand(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w900,
@@ -667,14 +667,14 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                     ),
                                     const SizedBox(height: 12),
                                     _buildGradientBtn(
-                                      label: 'Lưu & Đồng bộ cấu hình',
+                                      label: 'LÆ°u & Äá»“ng bá»™ cáº¥u hÃ¬nh',
                                       gradient: const [
                                         Color(0xFF10C8E6),
                                         Color(0xFF0E9EB0),
                                       ],
                                       onTap: () async {
                                         await _persistAndSyncWidgetAppearance();
-                                        if (mounted) _showToast('Đã đồng bộ!', success: true);
+                                        if (mounted) _showToast('ÄÃ£ Ä‘á»“ng bá»™!', success: true);
                                       },
                                     ),
                                   ],

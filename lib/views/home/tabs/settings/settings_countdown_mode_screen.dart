@@ -1,4 +1,4 @@
-part of '../settings_tab.dart';
+﻿part of '../settings_tab.dart';
 // ignore_for_file: dead_code, unused_element
 
 class _CountdownModeIndependentScreen extends StatefulWidget {
@@ -49,19 +49,19 @@ class _CountdownModeIndependentScreenState
   static const int _maxSpaces = CountdownSpaceService.maxSpacesPerHouse;
 
   static const List<MapEntry<String, String>> _themeOptions = [
-    MapEntry('Tự động theo mùa', 'theme-auto'),
-    MapEntry('Sóng hồng', 'theme-pink-glow'),
-    MapEntry('Mặc định sáng', 'theme-default'),
-    MapEntry('Hoàng hôn', 'theme-sunset'),
-    MapEntry('Đại dương', 'theme-ocean'),
-    MapEntry('Đêm sâu', 'theme-night'),
+    MapEntry('Tá»± Ä‘á»™ng theo mÃ¹a', 'theme-auto'),
+    MapEntry('SÃ³ng há»“ng', 'theme-pink-glow'),
+    MapEntry('Máº·c Ä‘á»‹nh sÃ¡ng', 'theme-default'),
+    MapEntry('HoÃ ng hÃ´n', 'theme-sunset'),
+    MapEntry('Äáº¡i dÆ°Æ¡ng', 'theme-ocean'),
+    MapEntry('ÄÃªm sÃ¢u', 'theme-night'),
     MapEntry('Dark', 'theme-dark'),
     MapEntry('Mystic Dark', 'theme-mystic-dark'),
-    MapEntry('Tắt chủ đề', 'off'),
+    MapEntry('Táº¯t chá»§ Ä‘á»', 'off'),
   ];
 
   static const List<MapEntry<String, String>> _countdownStyleOptions = [
-    MapEntry('Mặc định', 'default'),
+    MapEntry('Máº·c Ä‘á»‹nh', 'default'),
     MapEntry('Rose Wave', 'rose_wave'),
     MapEntry('Glass', 'glass'),
     MapEntry('Glow', 'glow'),
@@ -134,7 +134,7 @@ class _CountdownModeIndependentScreenState
   }
 
   static const List<MapEntry<String, String>> _avatarFrameOptions = [
-    MapEntry('Không khung', 'off'),
+    MapEntry('KhÃ´ng khung', 'off'),
     MapEntry('Circle', 'circle'),
     MapEntry('Rounded', 'rounded'),
     MapEntry('Squircle', 'squircle'),
@@ -359,7 +359,7 @@ class _CountdownModeIndependentScreenState
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final rightName =
-                        _nameU2.trim().isEmpty ? 'Người ấy' : _nameU2.trim();
+                        _nameU2.trim().isEmpty ? 'NgÆ°á»i áº¥y' : _nameU2.trim();
                     return Stack(
                       children: [
                         SingleChildScrollView(
@@ -406,7 +406,7 @@ class _CountdownModeIndependentScreenState
                                     _CountdownModeAvatarCardStatic(
                                       isSingleMode: _singleMode,
                                       leftName: _nameU1.trim().isEmpty
-                                          ? 'Bạn'
+                                          ? 'Báº¡n'
                                           : _nameU1.trim(),
                                       rightName: rightName,
                                       leftAvatarUrl: _avatarUrl1,
@@ -451,7 +451,7 @@ class _CountdownModeIndependentScreenState
                                     isDark: themeData.isDark,
                                     onTap: _openSettingsSheet,
                                     tooltip:
-                                        'Cài đặt không gian riêng cho bạn bè',
+                                        'CÃ i Ä‘áº·t khÃ´ng gian riÃªng cho báº¡n bÃ¨',
                                   ),
                                 ],
                               ),

@@ -1,4 +1,4 @@
-part of '../settings_tab.dart';
+﻿part of '../settings_tab.dart';
 // ignore_for_file: dead_code, unused_element
 
 extension _CountdownModeIndependentScreenViewPart
@@ -85,9 +85,8 @@ extension _CountdownModeIndependentScreenViewPart
     required Widget child,
     EdgeInsetsGeometry padding = const EdgeInsets.all(20),
   }) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: padding,
       child: child,
     );
   }
@@ -105,17 +104,17 @@ extension _CountdownModeIndependentScreenViewPart
     final subtitleColor = _subtitleColor(themeData);
     final metrics = <({String label, int value, Color color})>[
       (
-        label: 'Ấm áp',
+        label: 'áº¤m Ã¡p',
         value: _pulseMetric(1, 72, 96),
         color: const Color(0xFFD94C86)
       ),
       (
-        label: 'Kết nối',
+        label: 'Káº¿t ná»‘i',
         value: _pulseMetric(2, 68, 94),
         color: const Color(0xFF4BA7FF)
       ),
       (
-        label: 'Nhớ nhung',
+        label: 'Nhá»› nhung',
         value: _pulseMetric(3, 60, 90),
         color: const Color(0xFF8C7BFF)
       ),
@@ -136,7 +135,7 @@ extension _CountdownModeIndependentScreenViewPart
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  _singleMode ? 'TỔNG QUAN CỦA BẠN' : 'TỔNG QUAN HÔM NAY',
+                  _singleMode ? 'Tá»”NG QUAN Cá»¦A Báº N' : 'Tá»”NG QUAN HÃ”M NAY',
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
@@ -149,8 +148,8 @@ extension _CountdownModeIndependentScreenViewPart
           const SizedBox(height: 16),
           Text(
             _singleMode
-                ? 'Giữ lại khối tổng quan cá nhân gọn như trang chủ.'
-                : 'Giữ lại khối tổng quan hôm nay gọn như trang chủ.',
+                ? 'Giá»¯ láº¡i khá»‘i tá»•ng quan cÃ¡ nhÃ¢n gá»n nhÆ° trang chá»§.'
+                : 'Giá»¯ láº¡i khá»‘i tá»•ng quan hÃ´m nay gá»n nhÆ° trang chá»§.',
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -328,7 +327,7 @@ extension _CountdownModeIndependentScreenViewPart
               border: Border.all(color: statusColor.withOpacity(0.22)),
             ),
             child: Text(
-              isAccepted ? 'Đã ghép nối' : 'Chờ ghép nối',
+              isAccepted ? 'ÄÃ£ ghÃ©p ná»‘i' : 'Chá» ghÃ©p ná»‘i',
               style: SLTheme.quicksand(
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
@@ -337,12 +336,8 @@ extension _CountdownModeIndependentScreenViewPart
             ),
           ),
         const SizedBox(height: 18),
-        Container(
+        SizedBox(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: viewportConstraints.maxHeight < 720 ? 16 : 20,
-          ),
           child: Column(
             children: [
               Center(
@@ -384,15 +379,15 @@ extension _CountdownModeIndependentScreenViewPart
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildLoveTimeCell(value: detail['h']!, label: 'GIỜ'),
+            _buildLoveTimeCell(value: detail['h']!, label: 'GIá»œ'),
             const SizedBox(width: 8),
             _buildLoveTimeCell(
               value: detail['m']!,
-              label: 'PHÚT',
+              label: 'PHÃšT',
               alternate: true,
             ),
             const SizedBox(width: 8),
-            _buildLoveTimeCell(value: detail['s']!, label: 'GIÂY'),
+            _buildLoveTimeCell(value: detail['s']!, label: 'GIÃ‚Y'),
           ],
         );
       },
@@ -572,7 +567,7 @@ extension _CountdownModeIndependentScreenViewPart
         _spaceChromeVisible = true;
       });
       await _saveLocalSettings();
-      _showMessage('Đã lưu không gian riêng cho bạn bè.');
+      _showMessage('ÄÃ£ lÆ°u khÃ´ng gian riÃªng cho báº¡n bÃ¨.');
       return;
     }
 
@@ -649,7 +644,7 @@ extension _CountdownModeIndependentScreenViewPart
                           children: [
                             Expanded(
                               child: Text(
-                                'Cài đặt không gian riêng cho bạn bè',
+                                'CÃ i Ä‘áº·t khÃ´ng gian riÃªng cho báº¡n bÃ¨',
                                 style: SLTheme.quicksand(
                                   fontSize:
                                       MediaQuery.of(sheetContext).size.width <
@@ -674,39 +669,39 @@ extension _CountdownModeIndependentScreenViewPart
                         TextField(
                           controller: topCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Tiêu đề trên',
-                            hint: 'Yêu nhau',
+                            label: 'TiÃªu Ä‘á» trÃªn',
+                            hint: 'YÃªu nhau',
                           ),
                         ),
                         const SizedBox(height: 10),
                         TextField(
                           controller: bottomCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Tiêu đề dưới',
-                            hint: 'ngày',
+                            label: 'TiÃªu Ä‘á» dÆ°á»›i',
+                            hint: 'ngÃ y',
                           ),
                         ),
                         const SizedBox(height: 10),
                         TextField(
                           controller: leftCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Tên bên trái',
-                            hint: 'Bạn',
+                            label: 'TÃªn bÃªn trÃ¡i',
+                            hint: 'Báº¡n',
                           ),
                         ),
                         const SizedBox(height: 10),
                         TextField(
                           controller: rightCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Tên bên phải',
-                            hint: 'Người ấy',
+                            label: 'TÃªn bÃªn pháº£i',
+                            hint: 'NgÆ°á»i áº¥y',
                           ),
                         ),
                         const SizedBox(height: 10),
                         TextField(
                           controller: leftAvatarCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Avatar trái',
+                            label: 'Avatar trÃ¡i',
                             hint: 'https://...',
                           ),
                         ),
@@ -714,7 +709,7 @@ extension _CountdownModeIndependentScreenViewPart
                         TextField(
                           controller: rightAvatarCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Avatar phải',
+                            label: 'Avatar pháº£i',
                             hint: 'https://...',
                           ),
                         ),
@@ -724,7 +719,7 @@ extension _CountdownModeIndependentScreenViewPart
                             Expanded(
                               child: ChoiceChip(
                                 selected: draftSingleMode,
-                                label: const Text('Cá nhân'),
+                                label: const Text('CÃ¡ nhÃ¢n'),
                                 onSelected: (_) =>
                                     setSheetState(() => draftSingleMode = true),
                               ),
@@ -733,7 +728,7 @@ extension _CountdownModeIndependentScreenViewPart
                             Expanded(
                               child: ChoiceChip(
                                 selected: !draftSingleMode,
-                                label: const Text('Cặp đôi'),
+                                label: const Text('Cáº·p Ä‘Ã´i'),
                                 onSelected: (_) => setSheetState(
                                     () => draftSingleMode = false),
                               ),
@@ -746,8 +741,8 @@ extension _CountdownModeIndependentScreenViewPart
                             Expanded(
                               child: Text(
                                 draftDate == null
-                                    ? 'Chưa chọn ngày mốc'
-                                    : 'Ngày mốc: ${DateInputUtils.formatDisplayDate(draftDate!)}',
+                                    ? 'ChÆ°a chá»n ngÃ y má»‘c'
+                                    : 'NgÃ y má»‘c: ${DateInputUtils.formatDisplayDate(draftDate!)}',
                                 style: SLTheme.quicksand(
                                   fontSize: 12.8,
                                   fontWeight: FontWeight.w800,
@@ -769,13 +764,13 @@ extension _CountdownModeIndependentScreenViewPart
                                 }
                               },
                               icon: const Icon(Icons.event_rounded),
-                              label: const Text('Chọn ngày'),
+                              label: const Text('Chá»n ngÃ y'),
                             ),
                           ],
                         ),
                         const SizedBox(height: 10),
                         _CountdownModeSheetDropdown(
-                          label: 'Chủ đề',
+                          label: 'Chá»§ Ä‘á»',
                           value: draftThemeKey,
                           options: _CountdownModeIndependentScreenState
                               ._themeOptions,
@@ -784,7 +779,7 @@ extension _CountdownModeIndependentScreenViewPart
                         ),
                         const SizedBox(height: 10),
                         _CountdownModeSheetDropdown(
-                          label: 'Kiểu vòng đếm',
+                          label: 'Kiá»ƒu vÃ²ng Ä‘áº¿m',
                           value: draftStyleKey,
                           options: _CountdownModeIndependentScreenState
                               ._countdownStyleOptions,
@@ -805,7 +800,7 @@ extension _CountdownModeIndependentScreenViewPart
                           value: draftTransparent,
                           onChanged: (value) =>
                               setSheetState(() => draftTransparent = value),
-                          title: const Text('Kính mờ'),
+                          title: const Text('KÃ­nh má»'),
                         ),
                         Slider(
                           min: 200,
@@ -843,7 +838,7 @@ extension _CountdownModeIndependentScreenViewPart
                               );
                             },
                             icon: const Icon(Icons.check_circle_rounded),
-                            label: const Text('Lưu thay đổi'),
+                            label: const Text('LÆ°u thay Ä‘á»•i'),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -875,7 +870,7 @@ extension _CountdownModeIndependentScreenViewPart
                               );
                             },
                             icon: const Icon(Icons.grid_view_rounded),
-                            label: const Text('Về danh sách không gian'),
+                            label: const Text('Vá» danh sÃ¡ch khÃ´ng gian'),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -907,7 +902,7 @@ extension _CountdownModeIndependentScreenViewPart
                             },
                             icon: const Icon(Icons.close_rounded),
                             label:
-                                const Text('Thoát không gian riêng cho bạn bè'),
+                                const Text('ThoÃ¡t khÃ´ng gian riÃªng cho báº¡n bÃ¨'),
                           ),
                         ),
                       ],
@@ -950,7 +945,7 @@ extension _CountdownModeIndependentScreenViewPart
         _avatarUrl2 = result.avatarUrl2;
       });
       await _saveLocalSettings();
-      _showMessage('Đã lưu không gian riêng cho bạn bè.');
+      _showMessage('ÄÃ£ lÆ°u khÃ´ng gian riÃªng cho báº¡n bÃ¨.');
       return;
     }
 
@@ -995,21 +990,21 @@ extension _CountdownModeIndependentScreenViewPart
     CountdownSpaceRequestInfo? incomingRequest,
   ) {
     if (_hasDeleteRequest(houseId)) {
-      return 'Yêu cầu xóa đang chờ xử lý';
+      return 'YÃªu cáº§u xÃ³a Ä‘ang chá» xá»­ lÃ½';
     }
     if (incomingRequest != null) {
-      return 'Chạm để xem yêu cầu ghép nối';
+      return 'Cháº¡m Ä‘á»ƒ xem yÃªu cáº§u ghÃ©p ná»‘i';
     }
     if (houseId == _selfSpaceHouseId) {
-      return 'Giữ để đổi tên nhanh';
+      return 'Giá»¯ Ä‘á»ƒ Ä‘á»•i tÃªn nhanh';
     }
     if (_isSharedSpace(houseId)) {
-      return 'Chạm để mở không gian';
+      return 'Cháº¡m Ä‘á»ƒ má»Ÿ khÃ´ng gian';
     }
     if (_hasPendingSpaceRequest(houseId)) {
-      return 'Yêu cầu đã gửi, đang chờ';
+      return 'YÃªu cáº§u Ä‘Ã£ gá»­i, Ä‘ang chá»';
     }
-    return 'Chạm để chỉnh riêng cho không gian này';
+    return 'Cháº¡m Ä‘á»ƒ chá»‰nh riÃªng cho khÃ´ng gian nÃ y';
   }
 
   Widget _buildAddSpaceTile(_CountdownModeThemeData themeData) {
@@ -1100,7 +1095,7 @@ extension _CountdownModeIndependentScreenViewPart
                         ),
                       ),
                       child: Text(
-                        'Tối đa ${_CountdownModeIndependentScreenState._maxSpaces}',
+                        'Tá»‘i Ä‘a ${_CountdownModeIndependentScreenState._maxSpaces}',
                         style: SLTheme.quicksand(
                           fontSize: 9.6,
                           fontWeight: FontWeight.w800,
@@ -1142,7 +1137,7 @@ extension _CountdownModeIndependentScreenViewPart
                               ),
                               const SizedBox(height: 14),
                               Text(
-                                'Thêm không gian',
+                                'ThÃªm khÃ´ng gian',
                                 style: SLTheme.quicksand(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
@@ -1152,8 +1147,8 @@ extension _CountdownModeIndependentScreenViewPart
                               const SizedBox(height: 6),
                               Text(
                                 _hasReachedSpaceLimit
-                                    ? 'Đã đủ số lượng, chạm để xem hướng xử lý'
-                                    : 'Tạo thêm một nhịp đếm mới thật riêng',
+                                    ? 'ÄÃ£ Ä‘á»§ sá»‘ lÆ°á»£ng, cháº¡m Ä‘á»ƒ xem hÆ°á»›ng xá»­ lÃ½'
+                                    : 'Táº¡o thÃªm má»™t nhá»‹p Ä‘áº¿m má»›i tháº­t riÃªng',
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   fontSize: 10.8,
@@ -1569,7 +1564,7 @@ extension _CountdownModeIndependentScreenViewPart
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Không gian riêng cho bạn bè',
+                        'KhÃ´ng gian riÃªng cho báº¡n bÃ¨',
                         style: SLTheme.quicksand(
                           fontSize: 29,
                           fontWeight: FontWeight.w900,
@@ -1582,7 +1577,7 @@ extension _CountdownModeIndependentScreenViewPart
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Nhập mã nhà, @username hoặc link để gửi yêu cầu ghép nối. Mỗi không gian ở đây có cấu hình đếm riêng cho bạn bè, không dùng chung dữ liệu với home.',
+                  'Nháº­p mÃ£ nhÃ , @username hoáº·c link Ä‘á»ƒ gá»­i yÃªu cáº§u ghÃ©p ná»‘i. Má»—i khÃ´ng gian á»Ÿ Ä‘Ã¢y cÃ³ cáº¥u hÃ¬nh Ä‘áº¿m riÃªng cho báº¡n bÃ¨, khÃ´ng dÃ¹ng chung dá»¯ liá»‡u vá»›i home.',
                   style: SLTheme.quicksand(
                     fontSize: 12.4,
                     fontWeight: FontWeight.w700,

@@ -768,13 +768,13 @@ class DiaryMemoryController extends ChangeNotifier {
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
-          L10nService().translate('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a nhá»¯ng áº£nh Ä‘Ã£ chá»n?'),
+          L10nService().translate('diary_delete_selected_confirm'),
           style: SLTheme.quicksand(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(L10nService().translate('Há»§y')),
+            child: Text(L10nService().translate('cancel')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -782,7 +782,7 @@ class DiaryMemoryController extends ChangeNotifier {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(L10nService().translate('XÃ³a')),
+            child: Text(L10nService().translate('delete')),
           ),
         ],
       ),
@@ -1055,18 +1055,18 @@ class DiaryMemoryController extends ChangeNotifier {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
         title: Text(
-          L10nService().translate('XÃ³a ká»· niá»‡m?'),
+          L10nService().translate('diary_delete_photo_title'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
           L10nService()
-              .translate('Báº¡n cÃ³ cháº¯c muá»‘n chuyá»ƒn áº£nh nÃ y vÃ o thÃ¹ng rÃ¡c?'),
+              .translate('diary_delete_photo_confirm'),
           style: SLTheme.quicksand(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Há»§y'),
+            child: Text(L10nService().translate('cancel')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -1074,7 +1074,7 @@ class DiaryMemoryController extends ChangeNotifier {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(L10nService().translate('XÃ³a')),
+            child: Text(L10nService().translate('delete')),
           ),
         ],
       ),
