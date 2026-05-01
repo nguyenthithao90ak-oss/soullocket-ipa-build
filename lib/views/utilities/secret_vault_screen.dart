@@ -555,7 +555,6 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     if (enforceLocalDailyLimit && uploadedToday + images.length > dailyLimit && !isPro) {
         // Just let it through if they just watched an ad or only over limit by a bit
         // or we can just remove this strict block to favor the ad-rewarded flow
-      }
     }
 
     const skipDialogKey = 'secret_vault_skip_dialog_until';

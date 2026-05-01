@@ -19,7 +19,7 @@ class AlbumService {
   static const int totalCapLifetimeVip = 1500;
   static const int dailyLimitFree = 30;
   static const int dailyLimitPro = 30;
-  static const int trashExpiryMs = 3 * 24 * 60 * 60 * 1000;
+  static const int trashExpiryMs = 60 * 24 * 60 * 60 * 1000;
   static const int albumStreamPageSize = 120;
 
   static const Map<String, Map<String, String>> _holidayMap = {

@@ -295,53 +295,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
   Widget _buildWidgetPanel({bool hideBackButton = false}) {
     final config = _buildWidgetPanelConfig();
-    final themeOptions = [
-      ('Hồng ngọt', 'pink'),
-      ('Tối hiện đại', 'dark'),
-      ('Trắng tinh', 'white'),
-      ('Xanh lam', 'blue'),
-      ('Cam nắng', 'orange'),
-      ('Tím mộng', 'purple'),
-      ('Xanh ngọc', 'green'),
-      ('Đỏ đậm', 'red'),
-      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
-    ];
-    final heartColorOptions = [
-      ('Hồng rose', 'rose'),
-      ('Đỏ ruby', 'ruby'),
-      ('Tím violet', 'violet'),
-      ('Xanh ocean', 'ocean'),
-      ('Mint', 'mint'),
-      ('Hoàng hôn', 'sunset'),
-      ('Gold', 'gold'),
-    ];
-    final previewSizeOptions = _widgetPreviewSizeKeys
-        .map((key) => (_widgetPreviewSizeLabel(key), key))
-        .toList(growable: false);
-    final diaryLayoutOptions = _widgetDiaryLayoutKeys
-        .map((key) => (_widgetDiaryLayoutLabel(key), key))
-        .toList(growable: false);
-    final seasonModeOptions = _widgetSeasonModeKeys
-        .map((key) => (_widgetSeasonModeLabel(key), key))
-        .toList(growable: false);
-    final smartSeasonKey = _resolvedWidgetSeasonKey();
-    final smartSeasonPalette = _widgetSeasonPalette(smartSeasonKey);
-    final smartHeartPalette = _widgetHeartPalette(_widgetHeartColorKey);
-    final smartAccentColor = smartSeasonKey == 'none'
-        ? smartHeartPalette.first
-        : smartSeasonPalette.first;
-    final smartSurfaceColor = smartSeasonKey == 'none'
-        ? smartHeartPalette.last
-        : smartSeasonPalette.last;
-    final smartThemeLabel = themeOptions
-        .firstWhere(
-          (item) => item.$2 == (_draftWidgetThemeKey ?? 'pink'),
-          orElse: () => ('Pink', 'pink'),
-        )
-        .$1;
-    final smartSeasonLabel = smartSeasonKey == 'none'
-        ? 'Tự động phối màu'
-        : WidgetService.seasonLabel(smartSeasonKey);
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
     Future<void> handlePinWidget() async {
       if (kIsWeb) {
@@ -349,7 +303,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         return;
       }
       try {
-        if (Theme.of(context).platform == TargetPlatform.iOS) {
+        if (isIOS) {
           await _persistAndSyncWidgetAppearance();
           if (!mounted) return;
           _showToast(context.tr('ios_widget_pin_guide'), success: true);
@@ -385,8 +339,6 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         _showToast('Lỗi: Không thể cập nhật widget');
       }
     }
-
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
     return _buildPanel(
       hideBackButton: hideBackButton,
