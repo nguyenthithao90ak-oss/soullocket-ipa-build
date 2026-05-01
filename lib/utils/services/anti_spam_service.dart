@@ -9,7 +9,7 @@ import 'dart:math';
 ///  1. Theo dõi tần suất gọi API từ màn hình Chat, thả tim.
 ///  2. Giới hạn số gửi không quá 5 tin nhắn/2 giây.
 ///  3. Block tạm thời thiết bị nếu phát hiện spam (Phạt lũy tiến).
-///  4. Shadow B?n nếu vi phạm quá nhiều.
+///  4. Shadow Ban nếu vi phạm quá nhiều.
 /// ============================================================
 class AntiSpamRateLimitService {
   static final AntiSpamRateLimitService _instance =
@@ -50,7 +50,7 @@ class AntiSpamRateLimitService {
     return DateTime.now().millisecondsSinceEpoch < cooldown;
   }
 
-  /// Kiểm tra xem người dùng có bị Shadow B?n không
+  /// Kiểm tra xem người dùng có bị Shadow Ban không
   Future<bool> get isShadowBanned async {
     final prefs = await SharedPreferences.getInstance();
     final violations = prefs.getInt('il_antispam_violations') ?? 0;

@@ -1,6 +1,7 @@
 import 'soul_rhythm/soul_rhythm_models.dart';
 import 'soul_rhythm/soul_rhythm_painters.dart';
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/services/game_data_manager.dart';
 import '../../services/admob_service.dart';
 import '../ui_prefs.dart';
 import '../../core/sl_theme.dart';
@@ -273,6 +275,18 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
       cacheSize > 0 ? cacheSize : 1,
       const AssetImage(_gameIconPath),
     );
+  }
+
+  Future<Uint8List?> _loadGameFileBytes(String gameId, String fileName) async {
+    try {
+      final path = await GameDataManager.getLocalFilePath(gameId, fileName);
+      if (path != null) {
+        return await File(path).readAsBytes();
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _primePrefs() async {
@@ -924,7 +938,15 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     try {
       await _bgPlayer.stop();
       if (desiredTrack == 'custom') {
-        await _bgPlayer.play(AssetSource(_customTrackAssetPath));
+        final customPath = await GameDataManager.getLocalFilePath(
+          'soul_rhythm',
+          'AxelF_CrazyFrog_Tutorial.mp3',
+        );
+        if (customPath != null) {
+          await _bgPlayer.play(DeviceFileSource(customPath));
+        } else {
+          await _bgPlayer.play(AssetSource(_customTrackAssetPath));
+        }
         return;
       }
       await _bgPlayer.play(

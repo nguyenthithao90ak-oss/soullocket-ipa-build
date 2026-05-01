@@ -286,7 +286,7 @@ class _DiaryTabState extends State<DiaryTab> {
     const options = <({int days, String label, String subtitle})>[
       (days: 7, label: '7 ngày', subtitle: 'Mặc định'),
       (days: 14, label: '14 ngày', subtitle: 'Thêm 1 tuần'),
-      (days: 30, label: '30 ngày', subtitle: 'Khoảng 1 tháng'),
+      (days: 60, label: '60 ngày', subtitle: 'Khoảng 2 tháng'),
       (days: 90, label: '3 tháng', subtitle: 'Giữ lâu hơn'),
       (days: 183, label: '6 tháng', subtitle: 'Tối đa'),
     ];

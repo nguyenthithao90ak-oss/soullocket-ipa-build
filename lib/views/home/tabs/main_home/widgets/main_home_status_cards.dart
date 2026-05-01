@@ -1,4 +1,4 @@
-part of '../../main_home_tab.dart';
+﻿part of '../../main_home_tab.dart';
 
 extension _MainHomeTabStatusCards on _MainHomeTabState {
   Widget _buildHomeCardFirstTapWrapper({
@@ -95,7 +95,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     Text(
                       'Khoảnh khắc nổi bật',
                       style: SLTheme.quicksand(
-                        fontSize: 14,
+                        fontSize: 16,
                         fontWeight: FontWeight.w900,
                         color: const Color(0xFF263242),
                       ),
@@ -117,7 +117,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           Text(
             title,
             style: SLTheme.quicksand(
-              fontSize: 13,
+              fontSize: 15,
               fontWeight: FontWeight.w900,
               color: SLColors.primary,
               height: 1.4,
@@ -733,3 +733,4 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
     );
   }
 }
+

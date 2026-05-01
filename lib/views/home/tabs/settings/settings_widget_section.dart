@@ -386,10 +386,12 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       }
     }
 
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'widget',
-      title: context.tr('widget_utility'),
+      title: context.tr('home_screen_widget'),
       borderColor: const Color(0xFF80DEEA),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
@@ -550,9 +552,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 _buildWidgetSectionCard(
                   icon: Icons.add_to_home_screen_rounded,
                   title: context.tr('home_screen_widget'),
-                  subtitle: Theme.of(context).platform == TargetPlatform.iOS
-                      ? null
-                      : context.tr('add_widget_desc'),
+                  subtitle: isIOS ? null : context.tr('add_widget_desc'),
                   iconGradient: const [
                     Color(0xFF14B8A6),
                     Color(0xFF06B6D4),
@@ -560,7 +560,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (Theme.of(context).platform != TargetPlatform.iOS) ...[
+                      if (!isIOS) ...[
                         LayoutBuilder(
                           builder: (context, constraints) {
                             final useColumn = constraints.maxWidth < 330;
@@ -615,9 +615,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                             );
                           },
                         ),
-                        const SizedBox(height: 14),
                       ],
-                      if (Theme.of(context).platform == TargetPlatform.iOS) ...[
+                      if (isIOS) ...[
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
@@ -633,7 +632,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0EA5E9).withOpacity(0.12),
+                                  color:
+                                      const Color(0xFF0EA5E9).withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Icon(
@@ -674,7 +674,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                       ],
                                       onTap: () async {
                                         await _persistAndSyncWidgetAppearance();
-                                        if (mounted) _showToast('Đã đồng bộ!', success: true);
+                                        if (mounted) {
+                                          _showToast('Đã đồng bộ!',
+                                              success: true);
+                                        }
                                       },
                                     ),
                                   ],

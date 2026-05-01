@@ -522,7 +522,7 @@ struct PersonCard: View {
             }
 
             Text(name)
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .font(.system(size: 15, weight: .black, design: .rounded))
                 .foregroundColor(theme.textColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -610,33 +610,33 @@ struct SmallWidgetView: View {
                 data: data,
                 theme: theme,
                 palette: palette,
-                heartSize: 40,
-                diaryWidth: 40,
-                diaryHeight: 50
+                heartSize: 45,
+                diaryWidth: 45,
+                diaryHeight: 56
             )
 
             Text(data.daysText)
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .font(.system(size: 16, weight: .black, design: .rounded))
                 .foregroundColor(theme.textColor)
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.78)
 
             HStack(spacing: 5) {
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar1Path, name: data.name1, size: 36, accentColor: theme.accentColor)
+                    AvatarView(path: data.avatar1Path, name: data.name1, size: 40, accentColor: theme.accentColor)
                     OnlineDot(isOnline: data.isOnline1)
                         .offset(x: 2, y: 2)
                 }
 
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar2Path, name: data.name2, size: 36, accentColor: theme.accentColor)
+                    AvatarView(path: data.avatar2Path, name: data.name2, size: 40, accentColor: theme.accentColor)
                     OnlineDot(isOnline: data.isOnline2)
                         .offset(x: 2, y: 2)
                 }
             }
 
             Text("\(data.name1) & \(data.name2)")
-                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .font(.system(size: 11, weight: .bold, design: .rounded))
                 .foregroundColor(theme.secondaryTextColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -663,7 +663,7 @@ struct MediumWidgetView: View {
                 stars: data.stars1,
                 avatarPath: data.avatar1Path,
                 theme: theme,
-                avatarSize: 52
+                avatarSize: 58
             )
             .frame(maxWidth: .infinity)
 
@@ -672,13 +672,13 @@ struct MediumWidgetView: View {
                     data: data,
                     theme: theme,
                     palette: palette,
-                    heartSize: 52,
-                    diaryWidth: 52,
-                    diaryHeight: 65
+                    heartSize: 58,
+                    diaryWidth: 58,
+                    diaryHeight: 72
                 )
 
                 Text(data.daysText)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(.system(size: 15, weight: .black, design: .rounded))
                     .foregroundColor(theme.textColor)
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.75)
@@ -693,7 +693,7 @@ struct MediumWidgetView: View {
                 stars: data.stars2,
                 avatarPath: data.avatar2Path,
                 theme: theme,
-                avatarSize: 52
+                avatarSize: 58
             )
             .frame(maxWidth: .infinity)
         }
@@ -721,7 +721,7 @@ struct LargeWidgetView: View {
                     stars: data.stars1,
                     avatarPath: data.avatar1Path,
                     theme: theme,
-                    avatarSize: 60
+                    avatarSize: 66
                 )
                 .frame(maxWidth: .infinity)
 
@@ -730,13 +730,13 @@ struct LargeWidgetView: View {
                         data: data,
                         theme: theme,
                         palette: palette,
-                        heartSize: 62,
-                        diaryWidth: 62,
-                        diaryHeight: 78
+                        heartSize: 68,
+                        diaryWidth: 68,
+                        diaryHeight: 85
                     )
 
                     Text(data.daysText)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(.system(size: 17, weight: .black, design: .rounded))
                         .foregroundColor(theme.textColor)
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(0.74)
@@ -751,7 +751,7 @@ struct LargeWidgetView: View {
                     stars: data.stars2,
                     avatarPath: data.avatar2Path,
                     theme: theme,
-                    avatarSize: 60
+                    avatarSize: 66
                 )
                 .frame(maxWidth: .infinity)
             }

@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -83,7 +83,7 @@ class AdMobService {
   factory AdMobService() => _instance;
   AdMobService._internal();
   static const int rewardedMainPoints = 50;
-  static const int dailyRewardedAdLimit = 10; // Giới hạn 10 quảng cáo/ngày
+  static const int dailyRewardedAdLimit = 50; // Giới hạn 10 quảng cáo/ngày
   static const String _autoInterstitialNextAtPrefsKey =
       'il_auto_interstitial_next_at_ms_v1';
   static const String _appOpenLastShownDatePrefsKey =
@@ -1191,3 +1191,4 @@ class AdMobService {
     return RewardClaimResult.fromResponse(response);
   }
 }
+

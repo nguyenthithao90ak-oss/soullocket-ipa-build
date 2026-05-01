@@ -8,6 +8,9 @@ import 'package:path_provider/path_provider.dart';
 class StorageDownloadCacheHelper {
   const StorageDownloadCacheHelper();
 
+  static final Map<String, Uint8List> _memoryCache = {};
+  static const int _maxMemoryCacheSize = 40;
+
   String stableCacheToken(String value) {
     var hash = 2166136261;
     for (final codeUnit in value.codeUnits) {
@@ -89,7 +92,7 @@ class StorageDownloadCacheHelper {
     try {
       final response = await http
           .get(Uri.parse(normalizedUrl))
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
         await cacheFile.writeAsBytes(response.bodyBytes, flush: true);
         return cacheFile;
@@ -114,8 +117,19 @@ class StorageDownloadCacheHelper {
     Duration ttl = const Duration(hours: 18),
     bool forceRefresh = false,
   }) async {
+    final normalizedUrl = url.trim();
+    if (normalizedUrl.isEmpty) return null;
+
+    final keySource =
+        (cacheKey ?? '').trim().isNotEmpty ? '${cacheKey!.trim()}|$normalizedUrl' : normalizedUrl;
+    final memKey = stableCacheToken(keySource);
+
+    if (!forceRefresh && _memoryCache.containsKey(memKey)) {
+      return _memoryCache[memKey];
+    }
+
     final file = await getCachedNetworkFile(
-      url,
+      normalizedUrl,
       namespace: namespace,
       cacheKey: cacheKey,
       ttl: ttl,
@@ -125,7 +139,14 @@ class StorageDownloadCacheHelper {
       return null;
     }
     try {
-      return await file.readAsBytes();
+      final bytes = await file.readAsBytes();
+      if (bytes.isNotEmpty) {
+        if (_memoryCache.length >= _maxMemoryCacheSize) {
+          _memoryCache.remove(_memoryCache.keys.first);
+        }
+        _memoryCache[memKey] = bytes;
+      }
+      return bytes;
     } catch (e) {
       debugPrint('Cached bytes read error ($namespace): $e');
       return null;

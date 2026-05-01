@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/sl_theme.dart';
 import '../../../../utils/services/utility_service.dart';
+import '../../../../utils/services/game_data_manager.dart';
 import '../../../utilities/utilities_config.dart';
 import '../../../utilities/utility_sticker_icon.dart';
 
@@ -14,12 +15,14 @@ class UtilitiesHubItem extends StatelessWidget {
     required this.onTap,
     required this.onReorder,
     required this.onEditModeChanged,
+    this.onDelete,
   });
 
   final UtilityApp app;
   final bool isEditMode;
   final VoidCallback onTap;
   final void Function(String fromId, String toId) onReorder;
+  final void Function(String id)? onDelete;
   final ValueChanged<bool> onEditModeChanged;
 
   @override
@@ -161,7 +164,15 @@ class _UtilitiesHubTileContent extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
+      child: GestureDetector(
+          onLongPress: () {
+            if (app.id == 'block_blast' || app.id == 'soul_rhythm') {
+              onDelete?.call(app.id);
+            }
+          },
+          child: Stack(
+            children: [
+              InkWell(
         borderRadius: BorderRadius.circular(26),
         onTap: onTap,
         child: SizedBox(
@@ -274,13 +285,40 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            buildUtilityStickerIcon(
-                              utilityId: app.id,
-                              fallbackIcon: iconData,
-                              fallbackColor: iconColor,
-                              fallbackSize: 27,
-                              padding: const EdgeInsets.all(2),
-                            ),
+                            FutureBuilder<bool>(
+                              future: GameDataManager.isGameDownloaded(app.id),
+                              builder: (context, snapshot) {
+                                final isDownloaded = snapshot.data ?? true; // Default to true for non-game apps
+                                final isGame = app.id == 'block_blast' || app.id == 'soul_rhythm';
+                                
+                                return Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    buildUtilityStickerIcon(
+                                      utilityId: app.id,
+                                      fallbackIcon: iconData,
+                                      fallbackColor: iconColor,
+                                      fallbackSize: 27,
+                                      padding: const EdgeInsets.all(2),
+                                    ),
+                                    if (isGame && !isDownloaded)
+                                      Container(
+                                        width: 52,
+                                        height: 52,
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.4),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: const Icon(
+                                          Icons.download_rounded,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              },
+                            )
                           ],
                         ),
                       ),
@@ -314,3 +352,13 @@ class _UtilitiesHubTileContent extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+

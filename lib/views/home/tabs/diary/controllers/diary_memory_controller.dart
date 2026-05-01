@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -104,7 +104,7 @@ class DiaryMemoryController extends ChangeNotifier {
   bool get hasPendingUploadRetry => _pendingUploadPaths.isNotEmpty;
   String get pendingUploadMessage =>
       _pendingUploadMessage ??
-      'Lần upload Kỷ niệm trước đã bị gián đoạn. Bạn có thể thử lại.';
+      'Láº§n upload Ká»· niá»‡m trÆ°á»›c Ä‘Ã£ bá»‹ giÃ¡n Ä‘oáº¡n. Báº¡n cÃ³ thá»ƒ thá»­ láº¡i.';
 
   int get _memoryCacheLimit =>
       kIsWeb ? _webMemoryCacheLimit : _appMemoryCacheLimit;
@@ -236,8 +236,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
       _setPendingUploadState(
         recoverablePaths,
-        message:
-            'Lần upload Kỷ niệm trước đã bị gián đoạn. Bạn có thể thử lại.',
+        message: null,
       );
     } catch (_) {
       await _clearPendingUploadState();
@@ -267,7 +266,7 @@ class DiaryMemoryController extends ChangeNotifier {
       houseId: houseId,
       paths: remaining,
       message:
-          'Còn ${remaining.length} ảnh Kỷ niệm chưa tải xong. Bạn có thể thử lại.',
+          'CÃ²n ${remaining.length} áº£nh Ká»· niá»‡m chÆ°a táº£i xong. Báº¡n cÃ³ thá»ƒ thá»­ láº¡i.',
     );
   }
 
@@ -728,16 +727,16 @@ class DiaryMemoryController extends ChangeNotifier {
           : <String, dynamic>{};
 
       await ActivityHistoryService.instance.add(
-        'đã xóa ảnh nhật ký kỷ niệm',
+        'Ä‘Ã£ xÃ³a áº£nh nháº­t kÃ½ ká»· niá»‡m',
         houseId: houseId,
         role: role,
-        title: 'Đã xóa ảnh kỷ niệm',
+        title: 'ÄÃ£ xÃ³a áº£nh ká»· niá»‡m',
         subtitle: title,
         action: 'delete',
         module: 'diary_memory',
         entityType: 'memory_image',
         entityId: memoryId,
-        sourceLabel: 'Nhật ký kỷ niệm',
+        sourceLabel: 'Nháº­t kÃ½ ká»· niá»‡m',
         previewUrl: previewUrl,
         previewType: 'image',
         restorePath: 'houses/$houseId/memories_trash/$memoryId',
@@ -768,13 +767,13 @@ class DiaryMemoryController extends ChangeNotifier {
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
-          L10nService().translate('Bạn có chắc muốn xóa những ảnh đã chọn?'),
+          L10nService().translate('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a nhá»¯ng áº£nh Ä‘Ã£ chá»n?'),
           style: SLTheme.quicksand(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(L10nService().translate('Hủy')),
+            child: Text(L10nService().translate('Há»§y')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -782,7 +781,7 @@ class DiaryMemoryController extends ChangeNotifier {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(L10nService().translate('Xóa')),
+            child: Text(L10nService().translate('XÃ³a')),
           ),
         ],
       ),
@@ -829,7 +828,7 @@ class DiaryMemoryController extends ChangeNotifier {
       final isNotFound = errorText.contains('firebase_functions/not-found') ||
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
-          errorText.contains('Không tìm thấy ảnh Kỷ niệm cần xóa');
+          errorText.contains('KhÃ´ng tÃ¬m tháº¥y áº£nh Ká»· niá»‡m cáº§n xÃ³a');
       if (isNotFound) {
         final now = DateTime.now().millisecondsSinceEpoch;
         final purgeAt = now + const Duration(days: 3).inMilliseconds;
@@ -915,7 +914,7 @@ class DiaryMemoryController extends ChangeNotifier {
         }
         Navigator.of(context).pop();
         showSnackBar(
-          'Chưa có quyền lưu ảnh vào album.',
+          'ChÆ°a cÃ³ quyá»n lÆ°u áº£nh vÃ o album.',
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -960,7 +959,7 @@ class DiaryMemoryController extends ChangeNotifier {
         notifyListeners();
       } else {
         showSnackBar(
-          'Không thể tải ảnh.',
+          'KhÃ´ng thá»ƒ táº£i áº£nh.',
           backgroundColor: const Color(0xFFE53935),
         );
       }
@@ -998,7 +997,7 @@ class DiaryMemoryController extends ChangeNotifier {
         }
         Navigator.of(context).pop();
         showSnackBar(
-          'Chưa có quyền lưu ảnh vào album.',
+          'ChÆ°a cÃ³ quyá»n lÆ°u áº£nh vÃ o album.',
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -1027,7 +1026,7 @@ class DiaryMemoryController extends ChangeNotifier {
         }
         Navigator.of(context).pop();
         showSnackBar(
-          'Không thể tải ảnh.',
+          'KhÃ´ng thá»ƒ táº£i áº£nh.',
           backgroundColor: const Color(0xFFE53935),
         );
       }
@@ -1055,18 +1054,18 @@ class DiaryMemoryController extends ChangeNotifier {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
         title: Text(
-          L10nService().translate('Xóa kỷ niệm?'),
+          L10nService().translate('XÃ³a ká»· niá»‡m?'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
           L10nService()
-              .translate('Bạn có chắc muốn chuyển ảnh này vào thùng rác?'),
+              .translate('Báº¡n cÃ³ cháº¯c muá»‘n chuyá»ƒn áº£nh nÃ y vÃ o thÃ¹ng rÃ¡c?'),
           style: SLTheme.quicksand(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
+            child: const Text('Há»§y'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -1074,7 +1073,7 @@ class DiaryMemoryController extends ChangeNotifier {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(L10nService().translate('Xóa')),
+            child: Text(L10nService().translate('XÃ³a')),
           ),
         ],
       ),
@@ -1088,7 +1087,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
     try {
       if (memoryId.isEmpty) {
-        throw Exception('Thiếu id ảnh Kỷ niệm.');
+        throw Exception('Thiáº¿u id áº£nh Ká»· niá»‡m.');
       }
 
       final result = await _storageService.moveMemoryImagesToTrash(
@@ -1106,7 +1105,7 @@ class DiaryMemoryController extends ChangeNotifier {
       final isNotFound = errorText.contains('firebase_functions/not-found') ||
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
-          errorText.contains('Không tìm thấy ảnh Kỷ niệm cần xóa');
+          errorText.contains('KhÃ´ng tÃ¬m tháº¥y áº£nh Ká»· niá»‡m cáº§n xÃ³a');
       if (isNotFound && memoryId.isNotEmpty) {
         final now = DateTime.now().millisecondsSinceEpoch;
         final purgeAt = now + const Duration(days: 3).inMilliseconds;
@@ -1157,7 +1156,7 @@ class DiaryMemoryController extends ChangeNotifier {
       final upload = await _storageService.uploadMemoryImage(houseId, image);
       final sessionId = upload?.sessionId?.trim() ?? '';
       if (upload == null || sessionId.isEmpty) {
-        return 'Không thể tạo phiên tải ảnh.';
+        return 'KhÃ´ng thá»ƒ táº¡o phiÃªn táº£i áº£nh.';
       }
 
       Map<String, dynamic>? finalized;
@@ -1192,12 +1191,12 @@ class DiaryMemoryController extends ChangeNotifier {
       }
 
       if (lastError != null) {
-        debugPrint('Lỗi finalize ảnh kỷ niệm: $lastError');
+        debugPrint('Lá»—i finalize áº£nh ká»· niá»‡m: $lastError');
         return lastError.toString();
       }
-      return 'Không nhận được phản hồi hợp lệ từ máy chủ.';
+      return 'KhÃ´ng nháº­n Ä‘Æ°á»£c pháº£n há»“i há»£p lá»‡ tá»« mÃ¡y chá»§.';
     } catch (e) {
-      debugPrint('Lỗi tải ảnh kỷ niệm: $e');
+      debugPrint('Lá»—i táº£i áº£nh ká»· niá»‡m: $e');
       return e.toString();
     }
   }
@@ -1235,7 +1234,7 @@ class DiaryMemoryController extends ChangeNotifier {
     if (images.isEmpty) {
       await _clearPendingUploadState();
       showSnackBar(
-        'Không còn ảnh Kỷ niệm tạm để thử lại.',
+        'KhÃ´ng cÃ²n áº£nh Ká»· niá»‡m táº¡m Ä‘á»ƒ thá»­ láº¡i.',
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -1273,7 +1272,7 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
 
-    // Chạy song song để giảm thời gian chờ trước khi hiện picker
+    // Cháº¡y song song Ä‘á»ƒ giáº£m thá»i gian chá» trÆ°á»›c khi hiá»‡n picker
     final preCheckResults = await Future.wait([
       PurchaseService().getVipAccessInfo(),
       _getTotalMemoriesCount(houseId),
@@ -1307,8 +1306,8 @@ class DiaryMemoryController extends ChangeNotifier {
       showSnackBar(
         L10nService().translate(
           vipAccess.isVip
-              ? 'Bạn đã đạt giới hạn đăng 30 ảnh kỷ niệm hôm nay. Hãy quay lại vào ngày mai nhé!'
-              : 'Tài khoản thường chỉ đăng được 10 ảnh/ngày. Hãy nâng cấp PRO hoặc thử lại vào ngày mai!',
+              ? 'Báº¡n Ä‘Ã£ Ä‘áº¡t giá»›i háº¡n Ä‘Äƒng 30 áº£nh ká»· niá»‡m hÃ´m nay. HÃ£y quay láº¡i vÃ o ngÃ y mai nhÃ©!'
+              : 'TÃ i khoáº£n thÆ°á»ng chá»‰ Ä‘Äƒng Ä‘Æ°á»£c 10 áº£nh/ngÃ y. HÃ£y nÃ¢ng cáº¥p PRO hoáº·c thá»­ láº¡i vÃ o ngÃ y mai!',
         ),
         backgroundColor: const Color(0xFFE53935),
       );
@@ -1345,15 +1344,13 @@ class DiaryMemoryController extends ChangeNotifier {
       await _savePendingUploadState(
         houseId: houseId,
         paths: recoverablePaths,
-        message: presetImages == null
-            ? 'Nếu app bị tắt giữa chừng, bạn có thể thử lại upload Kỷ niệm.'
-            : 'Đang thử lại ảnh Kỷ niệm chưa tải xong.',
+        message: null,
       );
     } else if (presetImages != null) {
       await _clearPendingUploadState();
     }
 
-    // Sau khi user chọn ảnh: resolve user + location song song
+    // Sau khi user chá»n áº£nh: resolve user + location song song
     Future<Position?> locationFuture = Future.value(null);
     if (!kIsWeb) {
       locationFuture =
@@ -1379,7 +1376,7 @@ class DiaryMemoryController extends ChangeNotifier {
     if (user == null) {
       showSnackBar(
         L10nService()
-            .translate('Phiên đăng nhập chưa sẵn sàng. Vui lòng thử lại.'),
+            .translate('PhiÃªn Ä‘Äƒng nháº­p chÆ°a sáºµn sÃ ng. Vui lÃ²ng thá»­ láº¡i.'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -1398,7 +1395,7 @@ class DiaryMemoryController extends ChangeNotifier {
         final alreadyPinned =
             pinSnapshot.containsLocation(position.latitude, position.longitude);
         if (pinSnapshot.isFull && !alreadyPinned) {
-          // Giữ nguyên upload ảnh nhưng bỏ ghim vị trí mới để không vượt mốc 30 điểm.
+          // Giá»¯ nguyÃªn upload áº£nh nhÆ°ng bá» ghim vá»‹ trÃ­ má»›i Ä‘á»ƒ khÃ´ng vÆ°á»£t má»‘c 30 Ä‘iá»ƒm.
           position = null;
           skippedMapPinBecauseLimit = true;
         }
@@ -1446,7 +1443,7 @@ class DiaryMemoryController extends ChangeNotifier {
       if (uploadedCount > 0) {
         await NotificationService().sendPartnerNotification(
           houseId: houseId,
-          title: L10nService().translate('📸 Kỷ niệm mới!'),
+          title: L10nService().translate('ðŸ“¸ Ká»· niá»‡m má»›i!'),
           body: L10nService().format('diary_partner_new_memory', {
             'author': authorName,
             'count': uploadedCount,
@@ -1457,7 +1454,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
       final failedCount = images.length - uploadedCount;
       final errorMessageStr =
-          errorMessages.isNotEmpty ? '\nLỗi: ${errorMessages.first}' : '';
+          errorMessages.isNotEmpty ? '\nLá»—i: ${errorMessages.first}' : '';
 
       if (failedCount <= 0) {
         await _clearPendingUploadState(notify: false);
@@ -1468,7 +1465,7 @@ class DiaryMemoryController extends ChangeNotifier {
             houseId: houseId,
             paths: _pendingUploadPaths,
             message:
-                'Còn $failedCount ảnh Kỷ niệm chưa tải xong. Bạn có thể thử lại.',
+                'CÃ²n $failedCount áº£nh Ká»· niá»‡m chÆ°a táº£i xong. Báº¡n cÃ³ thá»ƒ thá»­ láº¡i.',
           );
         }
       }
@@ -1479,13 +1476,13 @@ class DiaryMemoryController extends ChangeNotifier {
           content: Text(
             failedCount == 0
                 ? skippedMapPinBecauseLimit
-                    ? 'Đã thêm $uploadedCount kỷ niệm. Ảnh vẫn được lưu nhưng không ghim vị trí mới vì bản đồ đã đủ ${MapPinLimitService.maxPins} điểm.'
+                    ? 'ÄÃ£ thÃªm $uploadedCount ká»· niá»‡m. áº¢nh váº«n Ä‘Æ°á»£c lÆ°u nhÆ°ng khÃ´ng ghim vá»‹ trÃ­ má»›i vÃ¬ báº£n Ä‘á»“ Ä‘Ã£ Ä‘á»§ ${MapPinLimitService.maxPins} Ä‘iá»ƒm.'
                     : L10nService().format('diary_added_new_memories', {
                         'count': uploadedCount,
                       })
                 : skippedMapPinBecauseLimit
-                    ? 'Đã thêm $uploadedCount/${images.length} kỷ niệm. Một phần ảnh không ghim vị trí mới.$errorMessageStr'
-                    : 'Đã thêm $uploadedCount/${images.length} kỷ niệm. $failedCount ảnh lỗi.$errorMessageStr',
+                    ? 'ÄÃ£ thÃªm $uploadedCount/${images.length} ká»· niá»‡m. Má»™t pháº§n áº£nh khÃ´ng ghim vá»‹ trÃ­ má»›i.$errorMessageStr'
+                    : 'ÄÃ£ thÃªm $uploadedCount/${images.length} ká»· niá»‡m. $failedCount áº£nh lá»—i.$errorMessageStr',
           ),
         ),
       );
@@ -1545,3 +1542,7 @@ class DiaryMemoryController extends ChangeNotifier {
     super.dispose();
   }
 }
+
+
+
+

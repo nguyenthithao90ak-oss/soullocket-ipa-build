@@ -1,4 +1,4 @@
-import 'widgets/utilities_tab_body.dart';
+﻿import 'widgets/utilities_tab_body.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
@@ -13,6 +13,7 @@ import '../../../services/admob_service.dart';
 import '../../../services/house_service.dart';
 import '../../../services/military_lock_service.dart';
 import '../../../services/utility_service.dart';
+import '../../../utils/services/game_data_manager.dart';
 import '../../../services/offline_cache_service.dart';
 import '../../../core/sl_theme.dart';
 import '../../utilities/bucket_list_screen.dart';
@@ -93,6 +94,25 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
   }
 
   // Không khai báo lại dispose() ở dưới nữa
+
+  Future<void> _deleteGame(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('XÃ³a dá»¯ liá»‡u'),
+        content: Text('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a dá»¯ liá»‡u trÃ² chÆ¡i nÃ y Ä‘á»ƒ tiáº¿t kiá»‡m dung lÆ°á»£ng?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Há»§y')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('XÃ³a')),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await GameDataManager.deleteGameData(id);
+      SLNotice.showInfo(context, 'Ä Ã£ xÃ³a dá»¯ liá»‡u game.');
+      setState(() {});
+    }
+  }
 
   Future<void> _init() async {
     final nextOrder = await _utilityService.getCustomOrder();
@@ -351,6 +371,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         onAppTap: _navigateToApp,
         onReorder: _reorderApp,
         onEditModeChanged: _handleEditModeChanged,
+          onDelete: _deleteGame,
       ),
     );
   }
@@ -1025,6 +1046,32 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
   static DateTime? _lastUtilityAdTime;
 
   Future<void> _navigateToApp(String id) async {
+      final isGame = id == 'block_blast' || id == 'soul_rhythm';
+      if (isGame) {
+        final isDownloaded = await GameDataManager.isGameDownloaded(id);
+        if (!isDownloaded) {
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Táº£i xuá»‘ng Game'),
+              content: Text('Báº¡n cÃ³ muá»‘n táº£i dá»¯ liá»‡u cho trÃ² chÆ¡i nÃ y khÃ´ng?'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Há»§y')),
+                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Táº£i ngay')),
+              ],
+            ),
+          );
+          if (confirm == true) {
+            SLNotice.showInfo(context, 'Ä ang táº£i dá»¯ liá»‡u...');
+            await Future.delayed(const Duration(seconds: 2));
+            await GameDataManager.markAsDownloaded(id);
+            SLNotice.showInfo(context, 'Ä Ã£ táº£i xong!');
+            setState(() {});
+          }
+          return;
+        }
+      }
+      
     if (!UtilityService.isUtilityAllowed(id, _relationshipMode)) {
       final blockedMessage =
           UtilityService.blockedMessageForMode(id, _relationshipMode);
@@ -1188,3 +1235,6 @@ class _UtilitySuggestion {
     required this.message,
   });
 }
+
+
+

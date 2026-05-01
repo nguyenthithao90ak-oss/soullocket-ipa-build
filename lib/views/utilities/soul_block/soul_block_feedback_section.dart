@@ -11,10 +11,11 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         ],
         masterGain: 0.54,
       );
-      _liftSfxBytes = await _loadAudioAssetBytes(
-            'assets/audio/soul_block/drag_lift.mp3',
-          ) ??
-          _buildWaveBytes(
+      _liftSfxBytes = await _loadGameFileBytes(
+        'block_blast',
+        'drag_lift.mp3',
+      ) ??
+      _buildWaveBytes(
             <_SoulSfxTone>[
               _tone(60, 24, 0.84, noiseMix: 0.22),
               _tone(67, 38, 0.56, noiseMix: 0.08),
@@ -22,8 +23,9 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
             ],
             masterGain: 0.62,
           );
-      _placeSfxBytes = await _loadAudioAssetBytes(
-            'assets/audio/soul_block/big_win_place_first_half.mp3',
+      _placeSfxBytes = await _loadGameFileBytes(
+            'block_blast',
+            'big_win_place_first_half.mp3',
           ) ??
           _buildWaveBytes(
             <_SoulSfxTone>[
@@ -33,8 +35,9 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
             ],
             masterGain: 0.68,
           );
-      _clearSfxBytes = await _loadAudioAssetBytes(
-            'assets/audio/soul_block/clear_burst.mp3',
+      _clearSfxBytes = await _loadGameFileBytes(
+            'block_blast',
+            'clear_burst.mp3',
           ) ??
           _buildWaveBytes(
             <_SoulSfxTone>[
@@ -94,8 +97,9 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         ],
         masterGain: 0.70,
       );
-      _bestScoreSfxBytes = await _loadAudioAssetBytes(
-            'assets/audio/soul_block/big_win.mp3',
+      _bestScoreSfxBytes = await _loadGameFileBytes(
+            'block_blast',
+            'big_win.mp3',
           ) ??
           _buildWaveBytes(
             <_SoulSfxTone>[
@@ -107,8 +111,9 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
             ],
             masterGain: 0.76,
           );
-      _memoryBurstSfxBytes = await _loadAudioAssetBytes(
-            'assets/audio/soul_block/big_win_memory_second_half.mp3',
+      _memoryBurstSfxBytes = await _loadGameFileBytes(
+            'block_blast',
+            'big_win_memory_second_half.mp3',
           ) ??
           _bestScoreSfxBytes;
       _audioReady = true;
@@ -123,7 +128,14 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     try {
       await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
       await _bgmPlayer.setVolume(0.52);
-      await _bgmPlayer.setSourceAsset('audio/soul_block/soul_block_bgm.mp3');
+
+      final bgmPath = await GameDataManager.getLocalFilePath('block_blast', 'soul_block_bgm.mp3');
+      if (bgmPath != null) {
+        await _bgmPlayer.setSourceDeviceFile(bgmPath);
+      } else {
+        await _bgmPlayer.setSourceAsset('audio/soul_block/soul_block_bgm.mp3');
+      }
+
       await _syncBgmWithSound(restartIfStopped: true);
     } catch (error) {
       debugPrint('Soul Block bgm init failed: $error');
@@ -139,20 +151,36 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
       await _bgmPlayer.setVolume(0.52);
       if (restartIfStopped) {
-        await _bgmPlayer.play(
-          AssetSource('audio/soul_block/soul_block_bgm.mp3'),
-          volume: 0.52,
-        );
+        final bgmPath = await GameDataManager.getLocalFilePath('block_blast', 'soul_block_bgm.mp3');
+        if (bgmPath != null) {
+          await _bgmPlayer.play(
+            DeviceFileSource(bgmPath),
+            volume: 0.52,
+          );
+        } else {
+          await _bgmPlayer.play(
+            AssetSource('audio/soul_block/soul_block_bgm.mp3'),
+            volume: 0.52,
+          );
+        }
         return;
       }
       await _bgmPlayer.resume();
     } catch (_) {
       if (restartIfStopped) {
         try {
-          await _bgmPlayer.play(
-            AssetSource('audio/soul_block/soul_block_bgm.mp3'),
-            volume: 0.52,
-          );
+          final bgmPath = await GameDataManager.getLocalFilePath('block_blast', 'soul_block_bgm.mp3');
+          if (bgmPath != null) {
+            await _bgmPlayer.play(
+              DeviceFileSource(bgmPath),
+              volume: 0.52,
+            );
+          } else {
+            await _bgmPlayer.play(
+              AssetSource('audio/soul_block/soul_block_bgm.mp3'),
+              volume: 0.52,
+            );
+          }
         } catch (_) {}
       }
     }
@@ -264,10 +292,13 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     return byteData.buffer.asUint8List();
   }
 
-  Future<Uint8List?> _loadAudioAssetBytes(String assetPath) async {
+  Future<Uint8List?> _loadGameFileBytes(String gameId, String fileName) async {
     try {
-      final ByteData data = await rootBundle.load(assetPath);
-      return data.buffer.asUint8List();
+      final path = await GameDataManager.getLocalFilePath(gameId, fileName);
+      if (path != null) {
+        return await File(path).readAsBytes();
+      }
+      return null;
     } catch (_) {
       return null;
     }

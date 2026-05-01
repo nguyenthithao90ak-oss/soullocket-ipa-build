@@ -98,8 +98,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             const SizedBox(height: 10),
             _buildDataExportRangeTile(
               ctx,
-              days: 30,
-              title: '1 tháng gần nhất',
+              days: 60,
+              title: '2 tháng gần nhất',
               subtitle: 'Cân bằng giữa dung lượng và độ đầy đủ.',
               icon: Icons.calendar_month_rounded,
             ),
@@ -189,9 +189,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         return '1 tuần gần nhất';
       case 180:
         return '6 tháng gần nhất';
-      case 30:
+      case 60:
       default:
-        return '1 tháng gần nhất';
+        return '2 tháng gần nhất';
     }
   }
 

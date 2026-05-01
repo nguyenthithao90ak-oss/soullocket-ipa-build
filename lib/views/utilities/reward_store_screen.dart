@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -328,24 +328,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     int baseSeconds;
     int rangeSeconds;
 
-    if (_consecutiveAdsWatched == 3) {
-      baseSeconds = 15;
-      rangeSeconds = 15;
-    } else if (_consecutiveAdsWatched == 4) {
-      baseSeconds = 30;
-      rangeSeconds = 30;
-    } else if (_consecutiveAdsWatched == 5) {
-      baseSeconds = 60;
-      rangeSeconds = 60;
-    } else if (_consecutiveAdsWatched == 6) {
-      baseSeconds = 120;
-      rangeSeconds = 120;
-    } else {
-      baseSeconds = 300;
-      rangeSeconds = 300;
-    }
-
-    final random = math.Random();
+    baseSeconds = 5;
+    rangeSeconds = 5;
     _adCooldownSeconds = baseSeconds + random.nextInt(rangeSeconds + 1);
     _adCooldownEndTimeMs =
         DateTime.now().millisecondsSinceEpoch + (_adCooldownSeconds * 1000);
@@ -1680,3 +1664,4 @@ class _StoreGlow extends StatelessWidget {
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../../utils/services/utility_service.dart';
@@ -21,6 +21,7 @@ class UtilitiesTabBody extends StatelessWidget {
     required this.onAppTap,
     required this.onReorder,
     required this.onEditModeChanged,
+    this.onDelete,
   });
 
   final int currentSegment;
@@ -36,6 +37,7 @@ class UtilitiesTabBody extends StatelessWidget {
   final ValueChanged<String> onAppTap;
   final void Function(String fromId, String toId) onReorder;
   final ValueChanged<bool> onEditModeChanged;
+  final ValueChanged<String>? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +60,11 @@ class UtilitiesTabBody extends StatelessWidget {
             onAppTap: onAppTap,
             onReorder: onReorder,
             onEditModeChanged: onEditModeChanged,
+            onDelete: onDelete,
           ),
         ),
       ],
     );
   }
 }
+
