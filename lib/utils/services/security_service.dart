@@ -86,54 +86,30 @@ class SecurityService {
   }
 
   /// Detect if device is using VPN/Proxy based on network interfaces
+  /// Detect if device is using Proxy (High Risk)
+  /// Note: VPN interfaces are now ignored to allow normal VPN usage.
   Future<bool> isProxyOrVpnActive() async {
-    // Avoid checking too often, cache result for 30 seconds
     if (_lastProxyCheck != null &&
         DateTime.now().difference(_lastProxyCheck!).inSeconds < 30) {
       return _isProxyDetectedCache;
     }
-
-    if (kIsWeb) {
-      return false;
-    }
+    if (kIsWeb) return false;
 
     try {
-      bool isDetected = false;
-
-      // Method 1: Check Network Interfaces (Mobile)
-      final interfaces = await NetworkInterface.list(
-          includeLoopback: false, type: InternetAddressType.any);
-      for (var interface in interfaces) {
-        final name = interface.name.toLowerCase();
-        if (name.contains('tun') ||
-            name.contains('tap') ||
-            name.contains('ppp') ||
-            name.contains('pptp') ||
-            name.contains('ipsec') ||
-            name.contains('vpn') ||
-            name.contains('wireguard') ||
-            name.contains('wg0') ||
-            name.contains('utun') ||
-            name.contains('ovpn')) {
-          isDetected = true;
-          break;
-        }
+      bool isProxyDetected = false;
+      // We only check for system-level PROXY settings, not VPN interfaces.
+      // This allows users with 1.1.1.1 or standard VPNs to use the app.
+      final proxy = HttpClient.findProxyFromEnvironment(
+          Uri.parse('https://google.com'));
+      if (proxy.contains('PROXY')) {
+        isProxyDetected = true;
       }
 
-      // Method 2: Check System Proxy Settings (Mobile)
-      if (!isDetected) {
-        final proxy = HttpClient.findProxyFromEnvironment(
-            Uri.parse('https://google.com'));
-        if (proxy.contains('PROXY')) {
-          isDetected = true;
-        }
-      }
-
-      _isProxyDetectedCache = isDetected;
+      _isProxyDetectedCache = isProxyDetected;
       _lastProxyCheck = DateTime.now();
-      return isDetected;
+      return isProxyDetected;
     } catch (e) {
-      debugPrint('Error checking VPN/Proxy: $e');
+      debugPrint('Error checking Proxy: $e');
       return false;
     }
   }
