@@ -43,7 +43,10 @@ class UtilitiesHubItem extends StatelessWidget {
           onDragCompleted: HapticFeedback.lightImpact,
           onDraggableCanceled: (_, __) => onEditModeChanged(false),
           onDragEnd: (_) => onEditModeChanged(false),
-          feedback: _UtilitiesHubDragFeedback(app: app),
+          feedback: _UtilitiesHubDragFeedback(
+            app: app,
+            onDelete: onDelete,
+          ),
           childWhenDragging: AnimatedOpacity(
             duration: const Duration(milliseconds: 150),
             curve: Curves.easeOutCubic,
@@ -52,7 +55,11 @@ class UtilitiesHubItem extends StatelessWidget {
               duration: const Duration(milliseconds: 150),
               curve: Curves.easeOutCubic,
               scale: 0.92,
-              child: _UtilitiesHubTileContent(app: app, isTarget: false),
+              child: _UtilitiesHubTileContent(
+                app: app,
+                isTarget: false,
+                onDelete: onDelete,
+              ),
             ),
           ),
           child: KeyedSubtree(
@@ -65,6 +72,7 @@ class UtilitiesHubItem extends StatelessWidget {
                 app: app,
                 isTarget: isTarget,
                 onTap: onTap,
+                onDelete: onDelete,
               ),
             ),
           ),
@@ -75,9 +83,10 @@ class UtilitiesHubItem extends StatelessWidget {
 }
 
 class _UtilitiesHubDragFeedback extends StatelessWidget {
-  const _UtilitiesHubDragFeedback({required this.app});
+  const _UtilitiesHubDragFeedback({required this.app, this.onDelete});
 
   final UtilityApp app;
+  final void Function(String id)? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +113,11 @@ class _UtilitiesHubDragFeedback extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: _UtilitiesHubTileContent(app: app, isTarget: false),
+                  child: _UtilitiesHubTileContent(
+                    app: app,
+                    isTarget: false,
+                    onDelete: onDelete,
+                  ),
                 ),
               ),
             ),
@@ -120,11 +133,13 @@ class _UtilitiesHubTileContent extends StatelessWidget {
     required this.app,
     required this.isTarget,
     this.onTap,
+    this.onDelete,
   });
 
   final UtilityApp app;
   final bool isTarget;
   final VoidCallback? onTap;
+  final void Function(String id)? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -165,187 +180,186 @@ class _UtilitiesHubTileContent extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: GestureDetector(
-          onLongPress: () {
-            if (app.id == 'block_blast' || app.id == 'soul_rhythm') {
-              onDelete?.call(app.id);
-            }
-          },
-          child: Stack(
-            children: [
-              InkWell(
-        borderRadius: BorderRadius.circular(26),
-        onTap: onTap,
-        child: SizedBox(
-          width: double.infinity,
-          child: Column(
-            children: [
-              AnimatedSlide(
-                duration: const Duration(milliseconds: 160),
-                curve: Curves.easeOutCubic,
-                offset: isTarget ? const Offset(0, -0.04) : Offset.zero,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
+        onLongPress: () {
+          if (app.id == 'block_blast' || app.id == 'soul_rhythm') {
+            onDelete?.call(app.id);
+          }
+        },
+        child: InkWell(
+          borderRadius: BorderRadius.circular(26),
+          onTap: onTap,
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              children: [
+                AnimatedSlide(
+                  duration: const Duration(milliseconds: 160),
                   curve: Curves.easeOutCubic,
-                  width: 68,
-                  height: 68,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(26),
-                    gradient: LinearGradient(
-                      colors: [
-                        shellStart.withOpacity(isTarget ? 0.98 : 0.94),
-                        shellEnd.withOpacity(isTarget ? 0.98 : 0.88),
+                  offset: isTarget ? const Offset(0, -0.04) : Offset.zero,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
+                    width: 68,
+                    height: 68,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(26),
+                      gradient: LinearGradient(
+                        colors: [
+                          shellStart.withOpacity(isTarget ? 0.98 : 0.94),
+                          shellEnd.withOpacity(isTarget ? 0.98 : 0.88),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      border: Border.all(
+                        color: shellBorder.withOpacity(isTarget ? 0.96 : 0.88),
+                        width: isTarget ? 1.5 : 1.15,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: shellGlow.withOpacity(isTarget ? 0.34 : 0.22),
+                          blurRadius: isTarget ? 18 : 12,
+                          offset: const Offset(0, 6),
+                        ),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
-                    border: Border.all(
-                      color: shellBorder.withOpacity(isTarget ? 0.96 : 0.88),
-                      width: isTarget ? 1.5 : 1.15,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: shellGlow.withOpacity(isTarget ? 0.34 : 0.22),
-                        blurRadius: isTarget ? 18 : 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Positioned(
-                        top: 9,
-                        left: 10,
-                        right: 10,
-                        child: Container(
-                          height: 18,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Positioned(
+                          top: 9,
+                          left: 10,
+                          right: 10,
+                          child: Container(
+                            height: 18,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(18),
+                              gradient: LinearGradient(
+                                colors: [
+                                  shellOverlayStart.withOpacity(0.34),
+                                  shellOverlayEnd.withOpacity(0.08),
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 52,
+                          height: 52,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(20),
                             gradient: LinearGradient(
-                              colors: [
-                                shellOverlayStart.withOpacity(0.34),
-                                shellOverlayEnd.withOpacity(0.08),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
+                              colors: colors,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            border: Border.all(
+                              color: innerBorder.withOpacity(0.58),
                             ),
                           ),
-                        ),
-                      ),
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          gradient: LinearGradient(
-                            colors: colors,
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          border: Border.all(
-                            color: innerBorder.withOpacity(0.58),
-                          ),
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Positioned.fill(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      innerOverlayStart.withOpacity(0.22),
-                                      innerOverlayEnd.withOpacity(0.06),
-                                      Colors.transparent,
-                                    ],
-                                    stops: const [0.0, 0.28, 1.0],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              left: 9,
-                              right: 9,
-                              bottom: 9,
-                              child: Container(
-                                height: 9,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.black.withOpacity(0.14),
-                                      Colors.transparent,
-                                    ],
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            FutureBuilder<bool>(
-                              future: GameDataManager.isGameDownloaded(app.id),
-                              builder: (context, snapshot) {
-                                final isDownloaded = snapshot.data ?? true; // Default to true for non-game apps
-                                final isGame = app.id == 'block_blast' || app.id == 'soul_rhythm';
-                                
-                                return Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    buildUtilityStickerIcon(
-                                      utilityId: app.id,
-                                      fallbackIcon: iconData,
-                                      fallbackColor: iconColor,
-                                      fallbackSize: 27,
-                                      padding: const EdgeInsets.all(2),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Positioned.fill(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        innerOverlayStart.withOpacity(0.22),
+                                        innerOverlayEnd.withOpacity(0.06),
+                                        Colors.transparent,
+                                      ],
+                                      stops: const [0.0, 0.28, 1.0],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
                                     ),
-                                    if (isGame && !isDownloaded)
-                                      Container(
-                                        width: 52,
-                                        height: 52,
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.4),
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                        child: const Icon(
-                                          Icons.download_rounded,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                left: 9,
+                                right: 9,
+                                bottom: 9,
+                                child: Container(
+                                  height: 9,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.black.withOpacity(0.14),
+                                        Colors.transparent,
+                                      ],
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              FutureBuilder<bool>(
+                                future: GameDataManager.isGameDownloaded(app.id),
+                                builder: (context, snapshot) {
+                                  final isDownloaded = snapshot.data ?? true;
+                                  final isGame = app.id == 'block_blast' || app.id == 'soul_rhythm';
+
+                                  return Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      buildUtilityStickerIcon(
+                                        utilityId: app.id,
+                                        fallbackIcon: iconData,
+                                        fallbackColor: iconColor,
+                                        fallbackSize: 27,
+                                        padding: const EdgeInsets.all(2),
                                       ),
-                                  ],
-                                );
-                              },
-                            )
-                          ],
+                                      if (isGame && !isDownloaded)
+                                        Container(
+                                          width: 52,
+                                          height: 52,
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withOpacity(0.4),
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: const Icon(
+                                            Icons.download_rounded,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                        ),
+                                    ],
+                                  );
+                                },
+                              )
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 28,
-                child: Center(
-                  child: Text(
-                    app.localizedTitle.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w900,
-                      color: labelColor,
-                      letterSpacing: 0.35,
-                      height: 1.08,
+                      ],
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 28,
+                  child: Center(
+                    child: Text(
+                      app.localizedTitle.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w900,
+                        color: labelColor,
+                        letterSpacing: 0.35,
+                        height: 1.08,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
