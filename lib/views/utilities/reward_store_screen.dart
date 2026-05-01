@@ -188,8 +188,23 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     int baseSeconds;
     int rangeSeconds;
 
-    baseSeconds = 5;
-    rangeSeconds = 5;
+    if (_consecutiveAdsWatched == 3) {
+      baseSeconds = 15;
+      rangeSeconds = 15;
+    } else if (_consecutiveAdsWatched == 4) {
+      baseSeconds = 30;
+      rangeSeconds = 30;
+    } else if (_consecutiveAdsWatched == 5) {
+      baseSeconds = 60;
+      rangeSeconds = 60;
+    } else if (_consecutiveAdsWatched == 6) {
+      baseSeconds = 120;
+      rangeSeconds = 120;
+    } else {
+      baseSeconds = 300;
+      rangeSeconds = 300;
+    }
+
     _adCooldownSeconds = baseSeconds + random.nextInt(rangeSeconds + 1);
     _adCooldownEndTimeMs =
         DateTime.now().millisecondsSinceEpoch + (_adCooldownSeconds * 1000);
