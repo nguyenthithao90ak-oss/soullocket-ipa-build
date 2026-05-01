@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
-import 'admob_service.dart';
+import 'package:soullocket_app/utils/services/admob_service.dart';
 import 'notification_service.dart';
 
 class DailyQuestService {
