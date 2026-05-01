@@ -72,7 +72,7 @@ import '../../../services/l10n_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/device_manager_service.dart';
 import '../../../services/security_flow_guard.dart';
-import '../../../services/admob_service.dart';
+import 'package:soullocket_app/utils/services/admob_service.dart';
 import '../../../services/breakup_service.dart';
 import '../../../services/house_service.dart';
 import '../../../services/military_lock_service.dart';
