@@ -183,7 +183,7 @@ class AlbumService {
 
   Future<List<AlbumItem>> fetchAlbumPage(
     String houseId, {
-    int limit = 30,
+    int limit = 60,
     int? endBeforeTs,
   }) async {
     Query query = _dbRef.child('houses/$houseId/album').orderByChild('ts');
