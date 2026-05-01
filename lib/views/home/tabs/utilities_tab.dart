@@ -99,18 +99,20 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('XÃ³a dá»¯ liá»‡u'),
-        content: Text('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a dá»¯ liá»‡u trÃ² chÆ¡i nÃ y Ä‘á»ƒ tiáº¿t kiá»‡m dung lÆ°á»£ng?'),
+        title: const Text('Xóa dữ liệu'),
+        content: const Text('Bạn có chắc muốn xóa dữ liệu trò chơi này để tiết kiệm dung lượng?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Há»§y')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('XÃ³a')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Xóa')),
         ],
       ),
     );
     if (confirm == true) {
       await GameDataManager.deleteGameData(id);
-      SLNotice.showInfo(context, 'Ä Ã£ xÃ³a dá»¯ liá»‡u game.');
-      setState(() {});
+      if (mounted) {
+        SLNotice.showInfo(context, 'Đã xóa dữ liệu game.');
+        setState(() {});
+      }
     }
   }
 
