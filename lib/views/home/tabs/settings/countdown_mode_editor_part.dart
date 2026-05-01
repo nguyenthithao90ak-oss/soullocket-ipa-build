@@ -757,7 +757,7 @@ class _CountdownModeEditorScreenState
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Cài đặt không gian riêng cho bạn bè',
+                                      'Cài đặt không gian riêng',
                                       style: SLTheme.quicksand(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w900,
@@ -1678,7 +1678,7 @@ class _CountdownModeEditorScreenState
                                     ),
                                     icon: const Icon(Icons.close_rounded),
                                     label: const Text(
-                                      'Thoát không gian riêng cho bạn bè',
+                                      'Thoát không gian riêng',
                                     ),
                                   ),
                                 ),

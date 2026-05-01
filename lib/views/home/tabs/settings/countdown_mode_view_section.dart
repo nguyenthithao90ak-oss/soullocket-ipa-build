@@ -359,22 +359,6 @@ extension _CountdownModeIndependentScreenViewPart
             horizontal: 12,
             vertical: viewportConstraints.maxHeight < 720 ? 16 : 20,
           ),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(themeData.isDark ? 0.10 : 0.62),
-            borderRadius: BorderRadius.circular(34),
-            border: Border.all(
-              color: Colors.white.withOpacity(themeData.isDark ? 0.16 : 0.78),
-            ),
-            boxShadow: themeData.isDark
-                ? const []
-                : [
-                    BoxShadow(
-                      color: const Color(0xFFD94C86).withOpacity(0.08),
-                      blurRadius: 28,
-                      offset: const Offset(0, 16),
-                    ),
-                  ],
-          ),
           child: Column(
             children: [
               Center(
@@ -651,7 +635,7 @@ extension _CountdownModeIndependentScreenViewPart
         _spaceChromeVisible = true;
       });
       await _saveLocalSettings();
-      _showMessage('Đã lưu không gian riêng cho bạn bè.');
+      _showMessage('Đã lưu không gian riêng.');
       return;
     }
 
@@ -728,7 +712,7 @@ extension _CountdownModeIndependentScreenViewPart
                           children: [
                             Expanded(
                               child: Text(
-                                'Cài đặt không gian riêng cho bạn bè',
+                                'Cài đặt không gian riêng',
                                 style: SLTheme.quicksand(
                                   fontSize:
                                       MediaQuery.of(sheetContext).size.width <
@@ -986,7 +970,7 @@ extension _CountdownModeIndependentScreenViewPart
                             },
                             icon: const Icon(Icons.close_rounded),
                             label:
-                                const Text('Thoát không gian riêng cho bạn bè'),
+                                const Text('Thoát không gian riêng'),
                           ),
                         ),
                       ],
@@ -1029,7 +1013,7 @@ extension _CountdownModeIndependentScreenViewPart
         _avatarUrl2 = result.avatarUrl2;
       });
       await _saveLocalSettings();
-      _showMessage('Đã lưu không gian riêng cho bạn bè.');
+      _showMessage('Đã lưu không gian riêng.');
       return;
     }
 
@@ -1633,14 +1617,31 @@ extension _CountdownModeIndependentScreenViewPart
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Không gian riêng cho bạn bè',
-                  style: SLTheme.quicksand(
-                    fontSize: 29,
-                    fontWeight: FontWeight.w900,
-                    color: titleColor,
-                    height: 1.02,
-                  ),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: titleColor,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Không gian riêng',
+                        style: SLTheme.quicksand(
+                          fontSize: 29,
+                          fontWeight: FontWeight.w900,
+                          color: titleColor,
+                          height: 1.02,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 10),
                 Text(
