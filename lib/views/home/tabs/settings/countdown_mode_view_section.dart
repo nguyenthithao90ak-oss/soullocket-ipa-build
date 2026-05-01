@@ -337,8 +337,7 @@ extension _CountdownModeIndependentScreenViewPart
             ),
           ),
         const SizedBox(height: 18),
-        Container(
-          width: double.infinity,
+        Padding(
           padding: EdgeInsets.symmetric(
             horizontal: 12,
             vertical: viewportConstraints.maxHeight < 720 ? 16 : 20,

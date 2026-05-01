@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
@@ -307,7 +307,7 @@ class MilitaryLockService {
         allowBiometrics && resolvedSettings.useBiometrics;
     final resolvedTitle = title ?? getScopeTitle(scope);
     final resolvedReason =
-        reason ?? 'Xác thực để mở ${resolvedTitle.toLowerCase()}.';
+        reason ?? 'XÃ¡c thá»±c Ä‘á»ƒ má»Ÿ ${resolvedTitle.toLowerCase()}.';
 
     if (!context.mounted) {
       return false;
@@ -338,7 +338,7 @@ class MilitaryLockService {
     if (expectedSecret == null || expectedSecret.secret.trim().isEmpty) {
       _showSnack(
         context,
-        'Chưa có mật khẩu hoặc PIN cho Khóa app. Hãy vào Cài đặt để thiết lập.',
+        'ChÆ°a cÃ³ máº­t kháº©u hoáº·c PIN cho KhÃ³a app. HÃ£y vÃ o CÃ i Ä‘áº·t Ä‘á»ƒ thiáº¿t láº­p.',
         isError: true,
       );
       return false;
@@ -365,7 +365,7 @@ class MilitaryLockService {
   }) async {
     if (allowBiometrics) {
       final bioSuccess = await _authenticateWithDevice(
-        localizedReason: 'Xác thực để thay đổi cài đặt khóa ứng dụng.',
+        localizedReason: 'XÃ¡c thá»±c Ä‘á»ƒ thay Ä‘á»•i cÃ i Ä‘áº·t khÃ³a á»©ng dá»¥ng.',
       );
       if (bioSuccess) return true;
     }
@@ -378,9 +378,9 @@ class MilitaryLockService {
 
     return _showUnlockDialog(
       context: context,
-      title: 'Xác thực cài đặt khóa',
+      title: 'XÃ¡c thá»±c cÃ i Ä‘áº·t khÃ³a',
       expectedSecret: expectedSecret,
-      reason: 'Nhập mã khóa hiện tại để thay đổi cài đặt bảo mật.',
+      reason: 'Nháº­p mÃ£ khÃ³a hiá»‡n táº¡i Ä‘á»ƒ thay Ä‘á»•i cÃ i Ä‘áº·t báº£o máº­t.',
       houseId: houseId,
     );
   }
@@ -395,26 +395,26 @@ class MilitaryLockService {
     isAuthenticatingBiometrics = true;
     try {
       return await _localAuth.authenticate(
-        localizedReason: 'Xác thực để kiểm tra tính năng FaceID/Vân tay',
+        localizedReason: 'XÃ¡c thá»±c Ä‘á»ƒ kiá»ƒm tra tÃ­nh nÄƒng FaceID/VÃ¢n tay',
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
-            signInTitle: 'Kiểm tra sinh trắc học',
-            cancelButton: 'Hủy',
-            biometricHint: 'Chạm cảm biến hoặc nhìn vào camera',
-            biometricNotRecognized: 'Không nhận diện được. Vui lòng thử lại.',
-            biometricSuccess: 'Xác thực thành công!',
+            signInTitle: 'Kiá»ƒm tra sinh tráº¯c há»c',
+            cancelButton: 'Há»§y',
+            biometricHint: 'Cháº¡m cáº£m biáº¿n hoáº·c nhÃ¬n vÃ o camera',
+            biometricNotRecognized: 'KhÃ´ng nháº­n diá»‡n Ä‘Æ°á»£c. Vui lÃ²ng thá»­ láº¡i.',
+            biometricSuccess: 'XÃ¡c thá»±c thÃ nh cÃ´ng!',
           ),
           IOSAuthMessages(
-            lockOut: 'Face ID / Touch ID đang tạm khóa. Vui lòng thử lại sau.',
-            goToSettingsButton: 'Mở cài đặt',
+            lockOut: 'Face ID / Touch ID Ä‘ang táº¡m khÃ³a. Vui lÃ²ng thá»­ láº¡i sau.',
+            goToSettingsButton: 'Má»Ÿ cÃ i Ä‘áº·t',
             goToSettingsDescription:
-                'Hãy bật Face ID hoặc Touch ID cho SoulLocket trong phần cài đặt iPhone.',
-            cancelButton: 'Hủy',
+                'HÃ£y báº­t Face ID hoáº·c Touch ID cho SoulLocket trong pháº§n cÃ i Ä‘áº·t iPhone.',
+            cancelButton: 'Há»§y',
           ),
         ],
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false,
+          biometricOnly: true,
         ),
       );
     } catch (e) {
@@ -436,23 +436,23 @@ class MilitaryLockService {
         localizedReason: localizedReason,
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
-            signInTitle: 'Xác thực sinh trắc học',
-            cancelButton: 'Dùng mật khẩu',
-            biometricHint: 'Chạm cảm biến hoặc nhìn vào camera',
-            biometricNotRecognized: 'Không nhận diện được. Vui lòng thử lại.',
-            biometricSuccess: 'Xác thực thành công!',
+            signInTitle: 'XÃ¡c thá»±c sinh tráº¯c há»c',
+            cancelButton: 'DÃ¹ng máº­t kháº©u',
+            biometricHint: 'Cháº¡m cáº£m biáº¿n hoáº·c nhÃ¬n vÃ o camera',
+            biometricNotRecognized: 'KhÃ´ng nháº­n diá»‡n Ä‘Æ°á»£c. Vui lÃ²ng thá»­ láº¡i.',
+            biometricSuccess: 'XÃ¡c thá»±c thÃ nh cÃ´ng!',
           ),
           IOSAuthMessages(
-            lockOut: 'Face ID / Touch ID đang tạm khóa. Vui lòng thử lại sau.',
-            goToSettingsButton: 'Mở cài đặt',
+            lockOut: 'Face ID / Touch ID Ä‘ang táº¡m khÃ³a. Vui lÃ²ng thá»­ láº¡i sau.',
+            goToSettingsButton: 'Má»Ÿ cÃ i Ä‘áº·t',
             goToSettingsDescription:
-                'Hãy bật Face ID hoặc Touch ID cho SoulLocket trong phần cài đặt iPhone.',
-            cancelButton: 'Dùng mật khẩu',
+                'HÃ£y báº­t Face ID hoáº·c Touch ID cho SoulLocket trong pháº§n cÃ i Ä‘áº·t iPhone.',
+            cancelButton: 'DÃ¹ng máº­t kháº©u',
           ),
         ],
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false,
+          biometricOnly: true,
         ),
       );
     } catch (e) {
@@ -572,7 +572,7 @@ class MilitaryLockService {
               setDialogState(() {
                 isSubmitting = false;
                 controller.clear();
-                errorText = result.message ?? 'Mã khóa chưa đúng. Hãy thử lại.';
+                errorText = result.message ?? 'MÃ£ khÃ³a chÆ°a Ä‘Ãºng. HÃ£y thá»­ láº¡i.';
                 remainingLockSeconds = result.remainingLockSeconds;
               });
 
@@ -616,7 +616,7 @@ class MilitaryLockService {
                             submitUnlock();
                           },
                           decoration: InputDecoration(
-                            labelText: 'Mật khẩu khóa',
+                            labelText: 'Máº­t kháº©u khÃ³a',
                             errorText: errorText,
                             suffixIcon: IconButton(
                               icon: Icon(obscureText
@@ -639,7 +639,7 @@ class MilitaryLockService {
                                 child: TextButton(
                                     onPressed: () =>
                                         Navigator.pop(dialogContext, false),
-                                    child: const Text('Để sau'))),
+                                    child: const Text('Äá»ƒ sau'))),
                             SLSpacing.w12,
                             Expanded(
                               flex: 2,
@@ -653,7 +653,7 @@ class MilitaryLockService {
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                         borderRadius: SLRadius.lgAll)),
-                                child: const Text('Mở khóa'),
+                                child: const Text('Má»Ÿ khÃ³a'),
                               ),
                             ),
                           ],
@@ -683,18 +683,18 @@ class MilitaryLockService {
   String? _buildPinRecoveryHint(PinRecoveryOptions options) {
     final items = <String>[];
     if ((options.securityQuestion?.trim().isNotEmpty ?? false)) {
-      items.add('câu hỏi bảo mật');
+      items.add('cÃ¢u há»i báº£o máº­t');
     }
     for (final email in options.emails) {
       items.add(email.label.toLowerCase());
     }
     if (options.canQuickDelete) {
-      items.add('xóa PIN vừa đặt');
+      items.add('xÃ³a PIN vá»«a Ä‘áº·t');
     }
     if (items.isEmpty) {
       return null;
     }
-    return items.join(' · ');
+    return items.join(' Â· ');
   }
 
   Future<int?> getPinConfiguredAtEpochMs({String? houseId}) async {
@@ -736,7 +736,7 @@ class MilitaryLockService {
     if (!recoveryOptions.hasAnyRecoveryMethod) {
       _showSnack(
         context,
-        'Chưa có câu hỏi bảo mật, email phụ hoặc email chính để khôi phục mã PIN.',
+        'ChÆ°a cÃ³ cÃ¢u há»i báº£o máº­t, email phá»¥ hoáº·c email chÃ­nh Ä‘á»ƒ khÃ´i phá»¥c mÃ£ PIN.',
         isError: true,
       );
       return false;
@@ -757,7 +757,7 @@ class MilitaryLockService {
         }
         _showSnack(
           context,
-          'Đã xóa mã PIN vừa đặt để bạn vào lại app.',
+          'ÄÃ£ xÃ³a mÃ£ PIN vá»«a Ä‘áº·t Ä‘á»ƒ báº¡n vÃ o láº¡i app.',
         );
         return true;
       }
@@ -771,7 +771,7 @@ class MilitaryLockService {
         if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
           _showSnack(
             context,
-            'Không tìm thấy nhà để kiểm tra câu hỏi bảo mật.',
+            'KhÃ´ng tÃ¬m tháº¥y nhÃ  Ä‘á»ƒ kiá»ƒm tra cÃ¢u há»i báº£o máº­t.',
             isError: true,
           );
           return false;
@@ -797,8 +797,8 @@ class MilitaryLockService {
 
       final firstPin = await PinPadSetupModal.show(
         context,
-        title: 'Đặt mã PIN mới',
-        subtitle: 'Nhập mã PIN mới để thay thế mã cũ.',
+        title: 'Äáº·t mÃ£ PIN má»›i',
+        subtitle: 'Nháº­p mÃ£ PIN má»›i Ä‘á»ƒ thay tháº¿ mÃ£ cÅ©.',
       );
       if (firstPin == null || !context.mounted) {
         return false;
@@ -806,8 +806,8 @@ class MilitaryLockService {
 
       final confirmedPin = await PinPadSetupModal.show(
         context,
-        title: 'Xác nhận mã PIN mới',
-        subtitle: 'Nhập lại đúng mã PIN mới để hoàn tất khôi phục.',
+        title: 'XÃ¡c nháº­n mÃ£ PIN má»›i',
+        subtitle: 'Nháº­p láº¡i Ä‘Ãºng mÃ£ PIN má»›i Ä‘á»ƒ hoÃ n táº¥t khÃ´i phá»¥c.',
         isConfirming: true,
         firstPin: firstPin,
       );
@@ -825,7 +825,7 @@ class MilitaryLockService {
 
       _showSnack(
         context,
-        'Đã đặt lại mã PIN mới thành công.',
+        'ÄÃ£ Ä‘áº·t láº¡i mÃ£ PIN má»›i thÃ nh cÃ´ng.',
       );
       return true;
     }
@@ -834,7 +834,7 @@ class MilitaryLockService {
     if (!recoveryOptions.hasAnyRecoveryMethod) {
       _showSnack(
         context,
-        'Bạn chưa thêm email khôi phục cho mã PIN. Hãy vào Cài đặt > Bảo mật để bổ sung.',
+        'Báº¡n chÆ°a thÃªm email khÃ´i phá»¥c cho mÃ£ PIN. HÃ£y vÃ o CÃ i Ä‘áº·t > Báº£o máº­t Ä‘á»ƒ bá»• sung.',
         isError: true,
       );
       return false;
@@ -850,9 +850,9 @@ class MilitaryLockService {
 
     final firstPin = await PinPadSetupModal.show(
       context,
-      title: 'Đặt mã PIN mới',
+      title: 'Äáº·t mÃ£ PIN má»›i',
       subtitle:
-          'Nhập mã PIN mới để thay thế mã cũ. Mã chỉ vừa được xác thực qua email khôi phục.',
+          'Nháº­p mÃ£ PIN má»›i Ä‘á»ƒ thay tháº¿ mÃ£ cÅ©. MÃ£ chá»‰ vá»«a Ä‘Æ°á»£c xÃ¡c thá»±c qua email khÃ´i phá»¥c.',
     );
     if (firstPin == null || !context.mounted) {
       return false;
@@ -860,8 +860,8 @@ class MilitaryLockService {
 
     final confirmedPin = await PinPadSetupModal.show(
       context,
-      title: 'Xác nhận mã PIN mới',
-      subtitle: 'Nhập lại đúng mã PIN mới để hoàn tất khôi phục.',
+      title: 'XÃ¡c nháº­n mÃ£ PIN má»›i',
+      subtitle: 'Nháº­p láº¡i Ä‘Ãºng mÃ£ PIN má»›i Ä‘á»ƒ hoÃ n táº¥t khÃ´i phá»¥c.',
       isConfirming: true,
       firstPin: firstPin,
     );
@@ -879,7 +879,7 @@ class MilitaryLockService {
 
     _showSnack(
       context,
-      'Đã đặt lại mã PIN mới qua email khôi phục.',
+      'ÄÃ£ Ä‘áº·t láº¡i mÃ£ PIN má»›i qua email khÃ´i phá»¥c.',
     );
     return true;
     */
@@ -911,7 +911,7 @@ class MilitaryLockService {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Quên mã PIN',
+                  'QuÃªn mÃ£ PIN',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -919,13 +919,13 @@ class MilitaryLockService {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Chọn cách khôi phục ngay từ màn hình khóa.',
+                  'Chá»n cÃ¡ch khÃ´i phá»¥c ngay tá»« mÃ n hÃ¬nh khÃ³a.',
                 ),
                 const SizedBox(height: 16),
                 if ((options.securityQuestion?.trim().isNotEmpty ?? false))
                   _buildRecoveryMethodTile(
                     icon: Icons.quiz_rounded,
-                    title: 'Trả lời câu hỏi bảo mật',
+                    title: 'Tráº£ lá»i cÃ¢u há»i báº£o máº­t',
                     subtitle: options.securityQuestion!,
                     onTap: () => Navigator.of(sheetContext).pop(
                       const _PinRecoverySelection(
@@ -936,7 +936,7 @@ class MilitaryLockService {
                 for (final email in options.emails)
                   _buildRecoveryMethodTile(
                     icon: Icons.mark_email_read_rounded,
-                    title: 'Nhận mã qua ${email.label.toLowerCase()}',
+                    title: 'Nháº­n mÃ£ qua ${email.label.toLowerCase()}',
                     subtitle: email.maskedEmail,
                     onTap: () => Navigator.of(sheetContext).pop(
                       _PinRecoverySelection(
@@ -948,9 +948,9 @@ class MilitaryLockService {
                 if (options.canQuickDelete)
                   _buildRecoveryMethodTile(
                     icon: Icons.delete_outline_rounded,
-                    title: 'Xóa mã PIN vừa đặt',
+                    title: 'XÃ³a mÃ£ PIN vá»«a Ä‘áº·t',
                     subtitle:
-                        'Chỉ có trong 12 giờ đầu để tránh đặt nhầm rồi quên.',
+                        'Chá»‰ cÃ³ trong 12 giá» Ä‘áº§u Ä‘á»ƒ trÃ¡nh Ä‘áº·t nháº§m rá»“i quÃªn.',
                     onTap: () => Navigator.of(sheetContext).pop(
                       const _PinRecoverySelection(
                         type: _PinRecoveryMethodType.quickDelete,
@@ -1048,7 +1048,7 @@ class MilitaryLockService {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                title: const Text('Câu hỏi bảo mật'),
+                title: const Text('CÃ¢u há»i báº£o máº­t'),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1061,7 +1061,7 @@ class MilitaryLockService {
                       controller: answerController,
                       enabled: !isChecking,
                       decoration: InputDecoration(
-                        labelText: 'Câu trả lời',
+                        labelText: 'CÃ¢u tráº£ lá»i',
                         errorText: errorText,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -1075,7 +1075,7 @@ class MilitaryLockService {
                     onPressed: isChecking
                         ? null
                         : () => Navigator.of(dialogContext).pop(false),
-                    child: const Text('Hủy'),
+                    child: const Text('Há»§y'),
                   ),
                   ElevatedButton(
                     onPressed: isChecking
@@ -1084,7 +1084,7 @@ class MilitaryLockService {
                             final answer = answerController.text.trim();
                             if (answer.isEmpty) {
                               setDialogState(() {
-                                errorText = 'Vui lòng nhập câu trả lời.';
+                                errorText = 'Vui lÃ²ng nháº­p cÃ¢u tráº£ lá»i.';
                               });
                               return;
                             }
@@ -1106,11 +1106,11 @@ class MilitaryLockService {
                             }
                             setDialogState(() {
                               isChecking = false;
-                              errorText = 'Câu trả lời chưa đúng.';
+                              errorText = 'CÃ¢u tráº£ lá»i chÆ°a Ä‘Ãºng.';
                             });
                           },
                     child: Text(
-                      isChecking ? 'Đang kiểm tra...' : 'Xác nhận',
+                      isChecking ? 'Äang kiá»ƒm tra...' : 'XÃ¡c nháº­n',
                     ),
                   ),
                 ],
@@ -1185,14 +1185,14 @@ class MilitaryLockService {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                title: const Text('Khôi phục mã PIN'),
+                title: const Text('KhÃ´i phá»¥c mÃ£ PIN'),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       isSending
-                          ? 'Đang gửi mã xác nhận 6 số tới ${recoveryEmail.maskedEmail}...'
-                          : 'Mã xác nhận chỉ được gửi tới email khôi phục ${recoveryEmail.maskedEmail}. Nhập mã để đặt lại PIN.',
+                          ? 'Äang gá»­i mÃ£ xÃ¡c nháº­n 6 sá»‘ tá»›i ${recoveryEmail.maskedEmail}...'
+                          : 'MÃ£ xÃ¡c nháº­n chá»‰ Ä‘Æ°á»£c gá»­i tá»›i email khÃ´i phá»¥c ${recoveryEmail.maskedEmail}. Nháº­p mÃ£ Ä‘á»ƒ Ä‘áº·t láº¡i PIN.',
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
@@ -1203,7 +1203,7 @@ class MilitaryLockService {
                       maxLength: 6,
                       textAlign: TextAlign.center,
                       decoration: InputDecoration(
-                        labelText: 'Mã xác nhận',
+                        labelText: 'MÃ£ xÃ¡c nháº­n',
                         counterText: '',
                         errorText: errorText,
                         border: OutlineInputBorder(
@@ -1218,13 +1218,13 @@ class MilitaryLockService {
                     onPressed: isVerifying
                         ? null
                         : () => Navigator.of(dialogContext).pop(false),
-                    child: const Text('Hủy'),
+                    child: const Text('Há»§y'),
                   ),
                   TextButton(
                     onPressed: isVerifying
                         ? null
                         : () => sendCode(dialogContext, setDialogState),
-                    child: const Text('Gửi lại'),
+                    child: const Text('Gá»­i láº¡i'),
                   ),
                   ElevatedButton(
                     onPressed: canSubmit
@@ -1232,7 +1232,7 @@ class MilitaryLockService {
                             final otp = otpController.text.trim();
                             if (otp.length != 6) {
                               setDialogState(() {
-                                errorText = 'Vui lòng nhập đủ 6 số.';
+                                errorText = 'Vui lÃ²ng nháº­p Ä‘á»§ 6 sá»‘.';
                               });
                               return;
                             }
@@ -1264,7 +1264,7 @@ class MilitaryLockService {
                           }
                         : null,
                     child: Text(
-                      isVerifying ? 'Đang kiểm tra...' : 'Xác nhận',
+                      isVerifying ? 'Äang kiá»ƒm tra...' : 'XÃ¡c nháº­n',
                     ),
                   ),
                 ],
@@ -1323,3 +1323,4 @@ class MilitaryLockService {
     return _MilitaryLockRuleEngine.defaultScopeValue(scope);
   }
 }
+

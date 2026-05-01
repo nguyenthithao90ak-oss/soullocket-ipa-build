@@ -446,6 +446,14 @@ class _CountdownModeIndependentScreenState
                                 children: [
                                   const Spacer(),
                                   _buildActionButton(
+                                    icon: Icons.close_rounded,
+                                    foreground: themeData.foreground,
+                                    isDark: themeData.isDark,
+                                    onTap: _handleOpenedSpaceBack,
+                                    tooltip: 'Quay lại',
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildActionButton(
                                     icon: Icons.settings_rounded,
                                     foreground: themeData.foreground,
                                     isDark: themeData.isDark,

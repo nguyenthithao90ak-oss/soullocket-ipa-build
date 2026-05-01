@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element
+﻿// ignore_for_file: unused_element
 
 part of '../../main_home_tab.dart';
 
@@ -28,7 +28,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
         title: Text(
-          'Tính năng đang phát triển',
+          'TÃ­nh nÄƒng Ä‘ang phÃ¡t triá»ƒn',
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
@@ -43,7 +43,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                   size: 64, color: SLTheme.primary),
               SLSpacing.h16,
               Text(
-                'Hệ thống ghép đôi gọi video ngẫu nhiên',
+                'Há»‡ thá»‘ng ghÃ©p Ä‘Ã´i gá»i video ngáº«u nhiÃªn',
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
@@ -52,7 +52,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               ),
               SLSpacing.h12,
               Text(
-                'Tính năng này sẽ giúp bạn ghép nối ngẫu nhiên và an toàn với những người dùng độc thân khác phù hợp về độ tuổi và sở thích. Sẽ ra mắt trong phiên bản sắp tới, hãy cùng chờ đón nhé!',
+                'TÃ­nh nÄƒng nÃ y sáº½ giÃºp báº¡n ghÃ©p ná»‘i ngáº«u nhiÃªn vÃ  an toÃ n vá»›i nhá»¯ng ngÆ°á»i dÃ¹ng Ä‘á»™c thÃ¢n khÃ¡c phÃ¹ há»£p vá» Ä‘á»™ tuá»•i vÃ  sá»Ÿ thÃ­ch. Sáº½ ra máº¯t trong phiÃªn báº£n sáº¯p tá»›i, hÃ£y cÃ¹ng chá» Ä‘Ã³n nhÃ©!',
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w600,
@@ -78,7 +78,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: Text(
-                'Đã hiểu',
+                'ÄÃ£ hiá»ƒu',
                 style: SLTheme.quicksand(fontWeight: FontWeight.w900),
               ),
             ),
@@ -453,8 +453,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                       const SizedBox(height: 2),
                       Text(
                         partnerOnline
-                            ? '$partnerName sẽ thấy ngay'
-                            : 'Đã gửi cho $partnerName',
+                            ? '$partnerName sáº½ tháº¥y ngay'
+                            : 'ÄÃ£ gá»­i cho $partnerName',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
@@ -522,7 +522,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       initialDate = DateTime.tryParse(curStartDate) ?? DateTime.now();
     }
 
-    // Lưu context-dependent objects trước async gap
+    // LÆ°u context-dependent objects trÆ°á»›c async gap
     if (!mounted) return;
     final scaffoldMessenger = ScaffoldMessenger.maybeOf(context);
 
@@ -546,46 +546,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     if (picked != null) {
       final newDateStr = picked.toIso8601String().split('T')[0];
       try {
-        final policy =
-            await _houseSettingsService.getStartDateChangePolicy(_houseId!);
-        final cooldownUntil = policy['cooldownUntil'] as int?;
-        if (policy['isLocked'] == true) {
-          final unlockAt = cooldownUntil == null
-              ? null
-              : DateTime.fromMillisecondsSinceEpoch(cooldownUntil);
-          final message = unlockAt == null
-              ? 'Bạn cần chờ đủ 3 ngày mới có thể đổi ngày yêu tiếp.'
-              : 'Bạn cần chờ đến ${unlockAt.day}/${unlockAt.month}/${unlockAt.year} mới có thể đổi ngày yêu tiếp.';
-          scaffoldMessenger?.showSnackBar(SnackBar(content: Text(message)));
-          return;
-        }
-
         var startCooldown = false;
-        if (policy['shouldWarn'] == true) {
-          if (!mounted) return;
-          final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Lưu ý'),
-                  content: const Text(
-                    'Nếu bạn đổi tiếp, bạn sẽ phải đợi 3 ngày nữa mới có thể đổi ngày yêu lần sau.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(false),
-                      child: const Text('Hủy'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(true),
-                      child: const Text('Đổi tiếp'),
-                    ),
-                  ],
-                ),
-              ) ??
-              false;
-          if (!confirmed) return;
-          startCooldown = true;
-        }
         await _houseSettingsService.updateStartDate(
           _houseId!,
           newDateStr,
@@ -593,13 +554,13 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         );
         if (!mounted) return;
         scaffoldMessenger?.showSnackBar(
-          const SnackBar(content: Text('Đã cập nhật ngày bắt đầu yêu!')),
+          const SnackBar(content: Text('ÄÃ£ cáº­p nháº­t ngÃ y báº¯t Ä‘áº§u yÃªu!')),
         );
       } catch (e) {
         if (!mounted) return;
         final message = _shortErrorMessage(
           e,
-          'Không cập nhật được ngày yêu: chưa xác định được lỗi từ hệ thống.',
+          'KhÃ´ng cáº­p nháº­t Ä‘Æ°á»£c ngÃ y yÃªu: chÆ°a xÃ¡c Ä‘á»‹nh Ä‘Æ°á»£c lá»—i tá»« há»‡ thá»‘ng.',
         );
         scaffoldMessenger?.showSnackBar(SnackBar(content: Text(message)));
       }
@@ -614,8 +575,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
 
     final controller = TextEditingController(text: currentLabel);
     final dialogTitle =
-        editTopLabel ? 'Đổi chữ phía trên' : 'Đổi chữ phía dưới';
-    final hintText = editTopLabel ? 'VD: BÊN NHAU' : 'VD: ngày yêu';
+        editTopLabel ? 'Äá»•i chá»¯ phÃ­a trÃªn' : 'Äá»•i chá»¯ phÃ­a dÆ°á»›i';
+    final hintText = editTopLabel ? 'VD: BÃŠN NHAU' : 'VD: ngÃ y yÃªu';
 
     showDialog(
       context: context,
@@ -634,7 +595,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Để trống sẽ quay về chữ mặc định.',
+                'Äá»ƒ trá»‘ng sáº½ quay vá» chá»¯ máº·c Ä‘á»‹nh.',
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 12.5,
@@ -678,7 +639,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Hủy',
+              'Há»§y',
               style: SLTheme.quicksand(
                 color: Colors.grey,
                 fontWeight: FontWeight.w700,
@@ -700,7 +661,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                 if (!mounted) return;
                 final message = _shortErrorMessage(
                   e,
-                  'Không lưu được nhãn đếm ngày: chưa xác định được lỗi từ hệ thống.',
+                  'KhÃ´ng lÆ°u Ä‘Æ°á»£c nhÃ£n Ä‘áº¿m ngÃ y: chÆ°a xÃ¡c Ä‘á»‹nh Ä‘Æ°á»£c lá»—i tá»« há»‡ thá»‘ng.',
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(message)),
@@ -715,7 +676,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               ),
             ),
             child: Text(
-              'Lưu',
+              'LÆ°u',
               style: SLTheme.quicksand(fontWeight: FontWeight.w800),
             ),
           ),
@@ -733,7 +694,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
         title: Text(
-          'Đổi biệt danh',
+          'Äá»•i biá»‡t danh',
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
@@ -745,7 +706,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 18),
           decoration: InputDecoration(
-            hintText: 'Nhập tên mới...',
+            hintText: 'Nháº­p tÃªn má»›i...',
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -758,7 +719,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Hủy',
+            child: Text('Há»§y',
                 style: SLTheme.quicksand(
                     color: Colors.grey, fontWeight: FontWeight.w700)),
           ),
@@ -783,7 +744,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text('Lưu',
+            child: Text('LÆ°u',
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
           ),
         ],
@@ -791,3 +752,4 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     );
   }
 }
+
