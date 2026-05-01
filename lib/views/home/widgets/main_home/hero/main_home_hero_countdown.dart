@@ -1,0 +1,404 @@
+part of '../../../tabs/main_home_tab.dart';
+
+class _MainHomeHeroCountdownSection extends StatelessWidget {
+  final _MainHomeTabState state;
+  final bool isSingle;
+  final String houseName;
+  final String smartGreeting;
+  final String circleValue;
+  final String circleTopLabel;
+  final String circleBottomLabel;
+  final String? startDate;
+  final double circleSize;
+  final bool homeShowHouseName;
+  final bool showDayCounter;
+  final bool showLoveTimeDetail;
+  final String countdownStyleKey;
+  final bool enableMotion;
+  final VoidCallback? onEditStartDate;
+  final VoidCallback? onEditTopLabel;
+  final VoidCallback? onEditBottomLabel;
+
+  const _MainHomeHeroCountdownSection({
+    required this.state,
+    required this.isSingle,
+    required this.houseName,
+    required this.smartGreeting,
+    required this.circleValue,
+    required this.circleTopLabel,
+    required this.circleBottomLabel,
+    required this.startDate,
+    required this.circleSize,
+    required this.homeShowHouseName,
+    required this.showDayCounter,
+    required this.showLoveTimeDetail,
+    required this.countdownStyleKey,
+    required this.enableMotion,
+    this.onEditStartDate,
+    this.onEditTopLabel,
+    this.onEditBottomLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // The large circle is permanently reserved for the relationship day
+        // count. Only the compact time-detail row below may be toggled.
+        if (showDayCounter) ...[
+          _MainHomeHeroCountdownCircle(
+            state: state,
+            isSingle: isSingle,
+            smartGreeting: smartGreeting,
+            circleValue: circleValue,
+            circleTopLabel: circleTopLabel,
+            circleBottomLabel: circleBottomLabel,
+            circleSize: circleSize,
+            countdownStyleKey: countdownStyleKey,
+            enableMotion: enableMotion,
+            onEditStartDate: onEditStartDate,
+            onEditTopLabel: onEditTopLabel,
+            onEditBottomLabel: onEditBottomLabel,
+          ),
+          SLSpacing.h16,
+        ],
+        // `showLoveTimeDetail` means the 3-block hours/minutes/seconds strip.
+        if (showLoveTimeDetail)
+          _MainHomeHeroCounters(
+            state: state,
+            startDate: startDate,
+          ),
+        if (homeShowHouseName)
+          _MainHomeHeroBadges(
+            houseName: houseName,
+          ),
+      ],
+    );
+  }
+}
+
+class _MainHomeHeroCountdownCircle extends StatelessWidget {
+  final _MainHomeTabState state;
+  final bool isSingle;
+  final String smartGreeting;
+  final String circleValue;
+  final String circleTopLabel;
+  final String circleBottomLabel;
+  final double circleSize;
+  final String countdownStyleKey;
+  final bool enableMotion;
+  final VoidCallback? onEditStartDate;
+  final VoidCallback? onEditTopLabel;
+  final VoidCallback? onEditBottomLabel;
+
+  const _MainHomeHeroCountdownCircle({
+    required this.state,
+    required this.isSingle,
+    required this.smartGreeting,
+    required this.circleValue,
+    required this.circleTopLabel,
+    required this.circleBottomLabel,
+    required this.circleSize,
+    required this.countdownStyleKey,
+    required this.enableMotion,
+    this.onEditStartDate,
+    this.onEditTopLabel,
+    this.onEditBottomLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final transparentMode = UiPrefs.notifier.value.transparentMode;
+    final countdownVisual =
+        _CountdownVisualSpec.resolve(countdownStyleKey, transparentMode);
+    final labelHeight = (circleSize * 0.13).clamp(32.0, 56.0).toDouble();
+    final numberHeight = (circleSize * 0.34).clamp(74.0, 140.0).toDouble();
+    final topLabelWidth = circleSize * 0.68;
+    final bottomLabelWidth = circleSize * 0.64;
+    final numberWidth = circleSize * 0.72;
+    final topGap = (circleSize * 0.025).clamp(4.0, 8.0).toDouble();
+    final bottomGap = (circleSize * 0.016).clamp(3.0, 6.0).toDouble();
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: isSingle
+          ? null
+          : () => state._showCountdownCircleHint(
+                smartGreeting: smartGreeting,
+              ),
+      onLongPress: state._showCountdownQuickCustomizeSheet,
+      child: _MainHomeHeroCountdownMotionShell(
+        size: circleSize,
+        styleKey: countdownStyleKey,
+        highlightColors: countdownVisual.numberGradient,
+        enableMotion: enableMotion,
+        child: Container(
+          width: circleSize,
+          height: circleSize,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: countdownVisual.outerColor,
+            gradient: countdownVisual.outerGradient,
+            border: countdownVisual.outerBorder,
+            boxShadow: countdownVisual.shadows,
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned.fill(
+                child: Padding(
+                  padding: SLSpacing.all12,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: countdownVisual.innerColor,
+                      gradient: countdownVisual.innerGradient,
+                      border: countdownVisual.innerBorder,
+                    ),
+                    child: RepaintBoundary(
+                      child: _AnimatedWaveBackground(
+                        styleKey: countdownStyleKey,
+                        enableMotion: enableMotion,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: circleSize * 0.16),
+                    child: _MainHomeHeroCountdownTapTarget(
+                      circleSize: circleSize,
+                      onTap: isSingle ? null : onEditTopLabel,
+                      onLongPress: state._showCountdownQuickCustomizeSheet,
+                      constraints: BoxConstraints(
+                        minWidth: topLabelWidth,
+                        maxWidth: topLabelWidth,
+                        minHeight: labelHeight,
+                        maxHeight: labelHeight,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          circleTopLabel,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            fontSize: (circleSize * 0.075).clamp(16.0, 22.0),
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                            color: countdownVisual.topLabelColor,
+                          ).copyWith(
+                            shadows: countdownVisual.labelShadows,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: topGap),
+                  ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: countdownVisual.numberGradient,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds),
+                    child: _MainHomeHeroCountdownTapTarget(
+                      circleSize: circleSize,
+                      onTap: isSingle ? null : onEditStartDate,
+                      onLongPress: state._showCountdownQuickCustomizeSheet,
+                      constraints: BoxConstraints(
+                        minWidth: numberWidth,
+                        maxWidth: numberWidth,
+                        minHeight: numberHeight,
+                        maxHeight: numberHeight,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          circleValue,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            fontSize: (circleSize * 0.36).clamp(54.0, 142.0),
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 1.0,
+                          ).copyWith(
+                            shadows: countdownVisual.numberShadows,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: bottomGap),
+                  Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: circleSize * 0.18),
+                    child: _MainHomeHeroCountdownTapTarget(
+                      circleSize: circleSize,
+                      onTap: isSingle ? null : onEditBottomLabel,
+                      onLongPress: state._showCountdownQuickCustomizeSheet,
+                      constraints: BoxConstraints(
+                        minWidth: bottomLabelWidth,
+                        maxWidth: bottomLabelWidth,
+                        minHeight: labelHeight,
+                        maxHeight: labelHeight,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          circleBottomLabel,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            fontSize: (circleSize * 0.082).clamp(17.0, 24.0),
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.1,
+                            color: countdownVisual.bottomLabelColor,
+                          ).copyWith(
+                            shadows: countdownVisual.labelShadows,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MainHomeHeroCountdownMotionShell extends StatefulWidget {
+  final double size;
+  final String styleKey;
+  final List<Color> highlightColors;
+  final bool enableMotion;
+  final Widget child;
+
+  const _MainHomeHeroCountdownMotionShell({
+    required this.size,
+    required this.styleKey,
+    required this.highlightColors,
+    required this.enableMotion,
+    required this.child,
+  });
+
+  @override
+  State<_MainHomeHeroCountdownMotionShell> createState() =>
+      _MainHomeHeroCountdownMotionShellState();
+}
+
+class _MainHomeHeroCountdownMotionShellState
+    extends State<_MainHomeHeroCountdownMotionShell>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 5200),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    UiPrefs.notifier.addListener(_handleUiPrefsChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  @override
+  void dispose() {
+    UiPrefs.notifier.removeListener(_handleUiPrefsChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleUiPrefsChanged() {
+    if (!mounted) return;
+    _syncAnimation();
+  }
+
+  bool _shouldAnimate() {
+    if (!TickerMode.of(context)) return false;
+    return widget.enableMotion;
+  }
+
+  void _syncAnimation() {
+    final shouldAnimate = _shouldAnimate();
+    if (shouldAnimate) {
+      if (!_controller.isAnimating) {
+        _controller.repeat();
+      }
+    } else {
+      if (_controller.isAnimating) {
+        _controller.stop();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<UiPrefsState>(
+      valueListenable: UiPrefs.notifier,
+      builder: (context, _, __) {
+        final shouldAnimate = _shouldAnimate();
+        _syncAnimation();
+
+        if (!shouldAnimate) {
+          return widget.child;
+        }
+
+        return widget.child;
+      },
+    );
+  }
+}
+
+class _MainHomeHeroCountdownTapTarget extends StatelessWidget {
+  final double circleSize;
+  final Widget child;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final BoxConstraints? constraints;
+
+  const _MainHomeHeroCountdownTapTarget({
+    required this.circleSize,
+    required this.child,
+    this.onTap,
+    this.onLongPress,
+    this.constraints,
+  });
+
+  double _countdownTapWidth(double circleSize) =>
+      (circleSize * 0.56).clamp(132.0, 240.0);
+
+  double _countdownTapHeight(double circleSize) =>
+      (circleSize * 0.16).clamp(46.0, 72.0);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: ConstrainedBox(
+        constraints: constraints ??
+            BoxConstraints(
+              minWidth: _countdownTapWidth(circleSize),
+              minHeight: _countdownTapHeight(circleSize),
+            ),
+        child: Center(child: child),
+      ),
+    );
+  }
+}

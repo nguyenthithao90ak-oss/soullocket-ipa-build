@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Hướng dẫn sử dụng SoulLocket</title>
+  <style>
+    :root {
+      --bg: #fff7fb;
+      --bg-soft: #fff0f7;
+      --card: rgba(255, 255, 255, 0.95);
+      --line: #f4cade;
+      --text: #253347;
+      --muted: #667085;
+      --pink: #d81b60;
+      --pink-dark: #ad1457;
+      --blue: #1e88e5;
+      --purple: #7c4dff;
+      --green: #0f9d58;
+      --orange: #ef6c00;
+      --shadow: 0 18px 50px rgba(216, 27, 96, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(255, 182, 193, 0.35), transparent 22%),
+        radial-gradient(circle at left center, rgba(124, 77, 255, 0.10), transparent 24%),
+        linear-gradient(180deg, #fffafe 0%, var(--bg) 100%);
+      line-height: 1.72;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+
+    .hero,
+    .section,
+    .footer-card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px 24px;
+      margin-bottom: 18px;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, #ff8ab3, #d81b60, #7c4dff);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--bg-soft);
+      color: var(--pink-dark);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 6vw, 42px);
+      line-height: 1.12;
+      color: var(--pink);
+    }
+
+    .lead {
+      margin: 14px 0 0;
+      max-width: 780px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .meta span {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(216, 27, 96, 0.10);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .quick-nav {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .quick-nav a {
+      display: block;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,240,247,0.96));
+      border: 1px solid rgba(216, 27, 96, 0.10);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(216, 27, 96, 0.08);
+    }
+
+    .section,
+    .footer-card {
+      padding: 24px 22px;
+      margin-top: 18px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      color: var(--pink);
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 18px 0 8px;
+      color: var(--blue);
+      font-size: 18px;
+    }
+
+    p,
+    li {
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .soft {
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .card {
+      padding: 16px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,244,249,0.96));
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--pink-dark);
+      font-size: 15px;
+    }
+
+    .steps {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .steps li {
+      margin-bottom: 10px;
+    }
+
+    .note,
+    .warning,
+    .tip {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      font-size: 14px;
+    }
+
+    .note {
+      background: rgba(30, 136, 229, 0.08);
+      border: 1px solid rgba(30, 136, 229, 0.14);
+    }
+
+    .warning {
+      background: rgba(239, 108, 0, 0.10);
+      border: 1px solid rgba(239, 108, 0, 0.16);
+    }
+
+    .tip {
+      background: rgba(15, 157, 88, 0.10);
+      border: 1px solid rgba(15, 157, 88, 0.16);
+    }
+
+    table {
+      width: 100%;
+      margin-top: 14px;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      text-align: left;
+      border-bottom: 1px solid #f3d7e3;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      background: #fff1f6;
+      color: var(--pink-dark);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: rgba(216, 27, 96, 0.08);
+      color: var(--pink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 16px 12px 40px;
+      }
+
+      .hero,
+      .section,
+      .footer-card {
+        border-radius: 22px;
+      }
+
+      .hero,
+      .section,
+      .footer-card {
+        padding: 20px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="badge">📘 Hướng dẫn chính thức trong app</div>
+      <h1>Hướng dẫn sử dụng SoulLocket</h1>
+      <p class="lead">
+        Tài liệu này mô tả cách dùng SoulLocket theo đúng bề mặt chức năng đang có trong app tại thời điểm rà soát:
+        từ đăng nhập, House, ghép đôi, cộng đồng, messenger, nhật ký, utilities, game, VIP, reward cho tới support và xử lý lỗi.
+        Nội dung được viết để người dùng mới đọc là dùng được ngay, đồng thời vẫn đủ chi tiết để đối chiếu khi cần.
+      </p>
+      <div class="meta">
+        <span>Phiên bản áp dụng: SoulLocket v1.0.0</span>
+        <span>Cập nhật tài liệu: 19/04/2026</span>
+        <span>Phạm vi: app Android và web viewer trong app</span>
+      </div>
+      <div class="quick-nav">
+        <a href="#bat-dau">1. Bắt đầu nhanh</a>
+        <a href="#tai-khoan">2. Tài khoản, House và QR</a>
+        <a href="#tabs">3. Các khu chính</a>
+        <a href="#utilities">4. Kho tiện ích</a>
+        <a href="#bao-mat">5. Bảo mật và quyền</a>
+        <a href="#vip">6. VIP, reward, giftcode</a>
+        <a href="#su-co">7. Khắc phục sự cố</a>
+      </div>
+    </section>
+
+    <section class="section" id="bat-dau">
+      <h2>1. Bắt đầu nhanh</h2>
+      <ol class="steps">
+        <li>Đăng ký hoặc đăng nhập bằng <strong>email/mật khẩu</strong> hoặc <strong>Google Sign-In</strong>.</li>
+        <li>Chọn trạng thái sử dụng phù hợp: <strong>Độc thân</strong> hoặc <strong>Couple</strong>.</li>
+        <li>Tạo hoặc vào một <strong>House</strong> để app có không gian lưu dữ liệu riêng.</li>
+        <li>Vào <code>Cài đặt</code> để kiểm tra tên nhà, avatar, ngày bắt đầu, giao diện và bảo mật.</li>
+        <li>Bật <strong>PIN khóa app</strong> càng sớm càng tốt nếu bạn có nhật ký, ảnh riêng tư hoặc vault.</li>
+        <li>Thử lần lượt Home, Diary, Community, Utilities và Update để xác nhận dữ liệu đang hiển thị đúng.</li>
+      </ol>
+      <div class="tip">
+        Nếu bạn vừa tạo nhà xong, nên mở thêm tài liệu <a href="huong_dan_cai_dat_lan_dau.html">Hướng dẫn cài đặt lần đầu</a>
+        để kiểm tra nhanh các bước tối thiểu trước khi dùng sâu hơn.
+      </div>
+    </section>
+
+    <section class="section" id="tai-khoan">
+      <h2>2. Tài khoản, House và các luồng QR</h2>
+
+      <h3>2.1 Tài khoản đăng nhập</h3>
+      <div class="grid">
+        <div class="card">
+          <strong>Email / mật khẩu</strong>
+          Dùng cho luồng đăng ký, đăng nhập, đổi mật khẩu, bảo mật cơ bản và khôi phục quyền truy cập ở mức tài khoản.
+        </div>
+        <div class="card">
+          <strong>Google Sign-In</strong>
+          Dùng khi bạn muốn đăng nhập nhanh bằng tài khoản Google đang có trên thiết bị.
+        </div>
+        <div class="card">
+          <strong>QR đăng nhập</strong>
+          Repo hiện có luồng tạo QR đăng nhập trên thiết bị cũ và quét QR trên thiết bị mới để cấp quyền truy cập nhanh hơn.
+        </div>
+      </div>
+
+      <h3>2.2 House là gì</h3>
+      <p>
+        House là đơn vị chứa phần lớn dữ liệu dùng chung trong SoulLocket. Một House có thể gồm tên nhà, avatar, thành viên,
+        ngày bắt đầu, theme, privacy, dữ liệu community, messenger, diary, memories, utilities và một phần trạng thái VIP.
+      </p>
+
+      <h3>2.3 Ghép đôi, QR nhà và single match</h3>
+      <ul class="steps">
+        <li><strong>Couple connect:</strong> người dùng có thể ghép đôi để dùng House chung và các luồng tương tác hai người.</li>
+        <li><strong>QR nhà:</strong> app có màn House QR để xem, quét, upload ảnh QR hoặc nhập ID nhà/profile thủ công.</li>
+        <li><strong>Single Match:</strong> khi ở luồng phù hợp, người dùng có thể public hồ sơ, xem candidate card, lọc hồ sơ và thực hiện audio/video call.</li>
+      </ul>
+      <div class="note">
+        QR đăng nhập và QR nhà là <strong>hai loại mã khác nhau</strong>. App đã có logic tách loại mã để tránh quét nhầm.
+      </div>
+    </section>
+
+    <section class="section" id="tabs">
+      <h2>3. Các khu chính trong app</h2>
+
+      <h3>3.1 Tổng quan điều hướng</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Khu</th>
+            <th>Dùng để làm gì</th>
+            <th>Điểm đáng chú ý</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Home</td>
+            <td>Không gian trung tâm của House</td>
+            <td>Đếm ngày, avatar, timeline, quick actions, insight, map card, highlights, presence</td>
+          </tr>
+          <tr>
+            <td>Community</td>
+            <td>Đăng bài, xem feed, bình luận, reaction và khám phá hồ sơ</td>
+            <td>Có composer, filter, search, top hot, privacy và QR nhà</td>
+          </tr>
+          <tr>
+            <td>Messenger</td>
+            <td>Nhắn tin trực tiếp và nhóm</td>
+            <td>Repo hiện có messenger screen, chat detail, group chat, gọi audio/video và watch together</td>
+          </tr>
+          <tr>
+            <td>Diary</td>
+            <td>Viết tâm sự, lưu memories, export dữ liệu</td>
+            <td>Có tab diary text và memory, mood, export HTML, bảo vệ riêng tư, đồng bộ House</td>
+          </tr>
+          <tr>
+            <td>Utilities</td>
+            <td>Kho công cụ mở rộng</td>
+            <td>Nhiều module độc lập như note, finance, vault, photobook, capsule, playlist, tarot, travel planner</td>
+          </tr>
+          <tr>
+            <td>Game</td>
+            <td>Khu mini-game</td>
+            <td>Có Soul Block, Soul Rhythm, Block Blast, Caro Neon, Heart Catcher và daily challenge</td>
+          </tr>
+          <tr>
+            <td>Update / Support</td>
+            <td>Changelog, guide, chính sách, liên hệ hỗ trợ</td>
+            <td>Mở tài liệu nội bộ, email support, support chat và hướng dẫn xóa dữ liệu</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>3.2 Home</h3>
+      <div class="grid">
+        <div class="card">
+          <strong>Đếm ngày và trạng thái quan hệ</strong>
+          Dùng ngày bắt đầu để tính countdown, hiển thị cảm giác “đang chung nhà” và các mốc liên quan.
+        </div>
+        <div class="card">
+          <strong>Shortcut dock</strong>
+          Truy cập nhanh các tiện ích được ghim ngay từ màn chính.
+        </div>
+        <div class="card">
+          <strong>Highlights, map, activity</strong>
+          Home hiện có nhiều thẻ tổng hợp như highlights, timeline hoạt động, map card và support card.
+        </div>
+        <div class="card">
+          <strong>Widget và preview giao diện</strong>
+          Phần cài đặt hiện có nhóm cấu hình widget, countdown mode, theme preview và nhạc nền.
+        </div>
+      </div>
+
+      <h3>3.3 Community</h3>
+      <ul class="steps">
+        <li>Đăng bài với caption, ảnh, vị trí hoặc thông tin đi kèm tùy composer.</li>
+        <li>Like, reaction, bình luận, mở sheet comment và lọc feed.</li>
+        <li>Tìm kiếm hồ sơ/House công khai, mở House QR và xem thiết lập community.</li>
+        <li>Một số luồng có liên quan đến privacy, friend policy hoặc moderation.</li>
+      </ul>
+
+      <h3>3.4 Messenger, gọi và Watch Together</h3>
+      <ul class="steps">
+        <li>Messenger dùng cho nhắn tin trực tiếp hoặc theo nhóm.</li>
+        <li>Chat detail có liên kết tới <strong>video_call_screen</strong> và <strong>watch_together_screen</strong>.</li>
+        <li>Single Match cũng có thể gọi thoại hoặc video nếu hồ sơ hai bên cho phép.</li>
+        <li>Các luồng chat/call cần camera, micro và mạng ổn định để chạy tốt.</li>
+      </ul>
+
+      <h3>3.5 Diary và Memories</h3>
+      <ul class="steps">
+        <li>Viết diary text, thêm mood, gắn ảnh và lưu vào House.</li>
+        <li>Xem memory feed, chọn nhiều ảnh, tải về máy, xóa hoặc mở full preview.</li>
+        <li>Xuất nhật ký qua HTML từ menu ở đầu tab diary.</li>
+        <li>Một số phạm vi diary có thêm lớp khóa riêng tư và cache/offline.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="utilities">
+      <h2>4. Kho tiện ích và module mở rộng</h2>
+
+      <h3>4.1 Nhóm tiện ích đang thấy trong app</h3>
+      <div class="grid">
+        <div class="card">
+          <strong>Ghi chú và kế hoạch</strong>
+          Shared Notes, Bucket List, Wish List, Calendar, Habit, Travel Planner, Date Spot.
+        </div>
+        <div class="card">
+          <strong>Media và sáng tạo</strong>
+          Photobook, Photo Collage, Advanced Collage, Gift Maker, Creative Diary, Drawing Studio, Love Card.
+        </div>
+        <div class="card">
+          <strong>Riêng tư và lưu trữ</strong>
+          Secret Vault, Time Capsule, Diary Export, Media Cleanup, Activity History, Device Manager.
+        </div>
+        <div class="card">
+          <strong>Âm thanh và cảm xúc</strong>
+          Voice, Shared Playlist, Songs, Mood, Sleep Sync, Love Fortune, Love Analytics, Tarot.
+        </div>
+        <div class="card">
+          <strong>Tài chính và quà</strong>
+          Finance, Reward Store, Giftcode, Gift Maker, Wheel, Daily Challenge.
+        </div>
+        <div class="card">
+          <strong>Sức khỏe và đời sống</strong>
+          Health, Age Zodiac, Outfit Matcher, Love Tree, Love Surprise và các tiện ích theo ngữ cảnh khác.
+        </div>
+      </div>
+
+      <h3>4.2 Cách hiểu đúng về Utilities</h3>
+      <p>
+        Utilities là khu nhiều module nhất của SoulLocket. Không phải tất cả module đều dành cho mọi trạng thái người dùng,
+        và cũng không phải module nào cũng dùng chung một mức quyền truy cập. Ví dụ:
+      </p>
+      <ul class="steps">
+        <li>Map/date spot/travel planner cần vị trí hoặc API bản đồ.</li>
+        <li>Voice cần micro và lưu file.</li>
+        <li>Secret Vault và một số vùng riêng tư cần PIN hoặc mã phục hồi.</li>
+        <li>Photobook, collage, love card, creative diary cần quyền ảnh/bộ nhớ và có thể bị giới hạn theo VIP hoặc reward.</li>
+      </ul>
+
+      <div class="warning">
+        Hướng dẫn này không giả định mọi module đều “bật sẵn” như nhau ở mọi máy. Một số module còn phụ thuộc quyền hệ điều hành,
+        gói VIP, cấu hình mạng hoặc dữ liệu House hiện có.
+      </div>
+    </section>
+
+    <section class="section" id="bao-mat">
+      <h2>5. Bảo mật, quyền truy cập và dữ liệu cục bộ</h2>
+
+      <h3>5.1 Các lớp bảo mật người dùng nên bật</h3>
+      <ul class="steps">
+        <li><strong>PIN khóa app</strong> trong <code>Cài đặt &gt; Bảo mật</code>.</li>
+        <li><strong>Sinh trắc học</strong> nếu thiết bị hỗ trợ.</li>
+        <li><strong>Quản lý thiết bị</strong> để rà lại máy đã duyệt và dấu vết truy cập khi cần.</li>
+        <li><strong>Privacy / visibility</strong> cho Community, House và hồ sơ cá nhân.</li>
+      </ul>
+
+      <h3>5.2 Quyền hệ điều hành thường gặp</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Quyền</th>
+            <th>Dùng cho</th>
+            <th>Nếu không cấp</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Camera</td>
+            <td>Quét QR, chụp ảnh, gọi video, một số module media</td>
+            <td>Không quét QR hoặc gọi video trực tiếp được</td>
+          </tr>
+          <tr>
+            <td>Micro</td>
+            <td>Gọi thoại/video, ghi âm</td>
+            <td>Voice và call không thu tiếng được</td>
+          </tr>
+          <tr>
+            <td>Vị trí</td>
+            <td>Map, check-in, diary location, date spot, travel planner</td>
+            <td>Các màn dùng GPS bị thiếu tọa độ hoặc không hoạt động</td>
+          </tr>
+          <tr>
+            <td>Thông báo</td>
+            <td>Tin nhắn, lời mời, nhắc sự kiện, trạng thái support</td>
+            <td>Bạn vẫn dùng app được nhưng dễ bỏ lỡ sự kiện</td>
+          </tr>
+          <tr>
+            <td>Ảnh / bộ nhớ</td>
+            <td>Chọn media, lưu memory, photobook, collage, vault</td>
+            <td>Khó import/export hoặc lưu ảnh về máy</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        App có nhiều cache cục bộ để tăng tốc tải, giữ consent, theme, trạng thái khóa và một phần dữ liệu xem gần đây.
+        Muốn dọn sạch trạng thái cục bộ, bạn cần đăng xuất hoặc xóa dữ liệu ứng dụng trong hệ điều hành.
+      </div>
+    </section>
+
+    <section class="section" id="vip">
+      <h2>6. VIP, reward, giftcode và quảng cáo thưởng</h2>
+
+      <h3>6.1 VIP / Premium</h3>
+      <ul class="steps">
+        <li>App có màn mua VIP/Premium riêng và logic <strong>restore purchases</strong>.</li>
+        <li>Một số màn như photobook, theme, vault, reward hoặc utility nâng cao có thể đọc trạng thái VIP.</li>
+        <li>Giao dịch đang gắn với Google Play Billing trong phần mã nguồn hiện tại.</li>
+      </ul>
+
+      <h3>6.2 Reward Store và quảng cáo thưởng</h3>
+      <ul class="steps">
+        <li>Reward Store dùng điểm nội bộ để đổi quyền lợi hoặc quà theo cấu hình hiện hành.</li>
+        <li>App có tích hợp AdMob và nhiều luồng rewarded ad, gồm cả game và reward store.</li>
+        <li>Không phải lúc nào quảng cáo cũng tải ngay; khi lỗi tải hoặc server reward tạm unavailable, điểm có thể chưa cộng.</li>
+      </ul>
+
+      <h3>6.3 Giftcode</h3>
+      <p>
+        SoulLocket có màn hình nhập giftcode và service redeem riêng. Hãy nhập đúng mã, đúng tài khoản/House hiện tại
+        để tránh nhận ưu đãi sai đối tượng.
+      </p>
+    </section>
+
+    <section class="section" id="su-co">
+      <h2>7. Khắc phục sự cố thường gặp</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tình huống</th>
+            <th>Cách xử lý nên thử trước</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Không đăng nhập được</td>
+            <td>Kiểm tra mạng, kiểm tra đúng phương thức đăng nhập, thử đổi sang email/Google đúng luồng hoặc dùng QR login nếu có thiết bị cũ.</td>
+          </tr>
+          <tr>
+            <td>Quét QR không nhận</td>
+            <td>Kiểm tra quyền camera, ánh sáng màn hình, loại QR đang quét và thử luồng upload ảnh QR hoặc nhập ID thủ công.</td>
+          </tr>
+          <tr>
+            <td>Nhật ký / memory chưa đồng bộ</td>
+            <td>Đợi vài giây ở màn vừa lưu, kiểm tra trạng thái mạng, thử mở lại tab đúng chỗ vừa thao tác trước khi thoát app.</td>
+          </tr>
+          <tr>
+            <td>Call / Watch Together không chạy</td>
+            <td>Cấp lại camera/micro, kiểm tra mạng và thử mở lại room hoặc màn chat.</td>
+          </tr>
+          <tr>
+            <td>VIP chưa mở quyền</td>
+            <td>Vào lại khu Premium hoặc Cài đặt để restore purchase, sau đó chờ đồng bộ lại trạng thái VIP.</td>
+          </tr>
+          <tr>
+            <td>Reward / quảng cáo thưởng lỗi</td>
+            <td>Đợi cooldown, kiểm tra mạng và thử lại khi rewarded ad đã preload xong.</td>
+          </tr>
+          <tr>
+            <td>Vault hoặc khu riêng tư không mở được</td>
+            <td>Kiểm tra PIN, sinh trắc học, mã phục hồi và trạng thái thiết bị đang dùng có còn hợp lệ không.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warning">
+        Khi gửi báo lỗi, hãy kèm <strong>màn đang đứng</strong>, <strong>thao tác vừa bấm</strong>, <strong>thiết bị</strong>,
+        <strong>mạng đang dùng</strong> và nếu có thì gửi thêm ảnh chụp màn hình. Support sẽ xử lý nhanh hơn rất nhiều.
+      </div>
+    </section>
+
+    <section class="footer-card">
+      <h2>Kênh hỗ trợ chính thức</h2>
+      <p><strong>Support chat trong app:</strong> mở từ tab Update / Support hoặc các entry hỗ trợ liên quan.</p>
+      <p><strong>Email hỗ trợ:</strong> <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p>
+      <p><strong>Tài liệu liên quan:</strong> <a href="about.html">Giới thiệu</a>, <a href="privacy.html">Chính sách bảo mật</a>, <a href="terms.html">Điều khoản sử dụng</a>, <a href="cookie-policy.html">Chính sách Cookie</a>, <a href="delete-account.html">Hướng dẫn xóa dữ liệu</a>.</p>
+      <p class="soft">
+        Tài liệu này cố ý mô tả theo nhóm tính năng có thật trong app và repo hiện tại, không dùng các câu quảng cáo kiểu “sắp ra mắt”
+        cho những phần đã có hoặc “không giới hạn” cho những phần app không hề cam kết.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

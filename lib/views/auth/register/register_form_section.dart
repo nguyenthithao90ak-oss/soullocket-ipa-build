@@ -1,0 +1,386 @@
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+
+import '../../../core/sl_theme.dart';
+import '../../../services/l10n_service.dart';
+import '../../../utils/flexible_date_input.dart';
+import '../login/social_auth_buttons.dart';
+
+class RegisterForm extends StatelessWidget {
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final bool obscurePassword;
+  final bool isLoading;
+  final bool acceptTerms;
+  final bool showSecurityQuestion;
+  final String selectedSecurityQuestion;
+  final List<String> securityQuestions;
+  final TextEditingController securityAnswerController;
+  final VoidCallback onToggleObscure;
+  final ValueChanged<bool?> onAcceptTermsChanged;
+  final VoidCallback onToggleSecurityQuestion;
+  final ValueChanged<String?> onSecurityQuestionChanged;
+  final VoidCallback onRegister;
+  final Function(String) onSocialLogin;
+  final VoidCallback onTermsTap;
+  final VoidCallback onPrivacyTap;
+  final Color accentRose;
+  final Color accentBlush;
+  final Color accentLavender;
+
+  const RegisterForm({
+    super.key,
+    required this.emailController,
+    required this.passwordController,
+    required this.obscurePassword,
+    required this.isLoading,
+    required this.acceptTerms,
+    required this.showSecurityQuestion,
+    required this.selectedSecurityQuestion,
+    required this.securityQuestions,
+    required this.securityAnswerController,
+    required this.onToggleObscure,
+    required this.onAcceptTermsChanged,
+    required this.onToggleSecurityQuestion,
+    required this.onSecurityQuestionChanged,
+    required this.onRegister,
+    required this.onSocialLogin,
+    required this.onTermsTap,
+    required this.onPrivacyTap,
+    required this.accentRose,
+    required this.accentBlush,
+    required this.accentLavender,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = L10nService();
+    final isVietnamese = l10n.locale.languageCode == 'vi';
+    final isBirthQuestion =
+        DateInputUtils.looksLikeBirthQuestion(selectedSecurityQuestion);
+    final passwordLabel =
+        isVietnamese ? 'Mật khẩu mở cửa:' : l10n.translate('password');
+    final passwordHint =
+        isVietnamese ? 'Tối thiểu 6 ký tự và có số' : 'Min 6 chars & 1 number';
+    final securityQuestionLabel = isVietnamese
+        ? 'Câu hỏi bảo mật (Tuỳ chọn)'
+        : 'Security Question (Optional)';
+    final securityQuestionTapLabel = isVietnamese
+        ? 'Câu hỏi bảo mật (Tuỳ chọn)  (ấn vào)'
+        : 'Security Question (Optional) (Tap)';
+    final securityNote = isVietnamese
+        ? 'Lưu ý: Có thể thêm trong Cài đặt sau khi tạo nhà. Cần thiết khi khôi phục tài khoản.'
+        : 'Note: Can be added in Settings later. Needed for account recovery.';
+    final securityAnswerHint =
+        isVietnamese ? 'Nhập câu trả lời bảo mật' : 'Security answer';
+    final signupLabel =
+        isVietnamese ? 'TẠO NHÀ MỚI' : l10n.translate('signup').toUpperCase();
+
+    return AutofillGroup(
+      child: Column(
+        key: const ValueKey('register'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SLTheme.sectionHeader(
+            title: isVietnamese ? 'Email đăng nhập:' : 'Login Email:',
+            trailing: isVietnamese ? 'QUAN TRỌNG' : 'IMPORTANT',
+            trailingColor: accentRose,
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [
+              AutofillHints.newUsername,
+              AutofillHints.email,
+            ],
+            onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+            style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
+            decoration: SLTheme.authInputDecoration(
+              hintText: isVietnamese
+                  ? 'Ví dụ: example@gmail.com'
+                  : l10n.translate('Ví dụ: example@gmail.com'),
+              focusColor: accentRose,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SLTheme.sectionHeader(title: passwordLabel),
+          const SizedBox(height: 8),
+          TextField(
+            controller: passwordController,
+            obscureText: obscurePassword,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.newPassword],
+            enableSuggestions: false,
+            autocorrect: false,
+            onSubmitted: (_) {
+              if (!isLoading) onRegister();
+            },
+            style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
+            decoration: SLTheme.authInputDecoration(
+              hintText: passwordHint,
+              focusColor: accentRose,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  color: SLTheme.authMutedTextColor,
+                  size: 20,
+                ),
+                onPressed: onToggleObscure,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: onToggleSecurityQuestion,
+            child: SLTheme.authToggleCard(
+              selected: showSecurityQuestion,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        showSecurityQuestion
+                            ? securityQuestionLabel
+                            : securityQuestionTapLabel,
+                        style: SLTheme.quicksand(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: showSecurityQuestion
+                              ? SLColors.textSecond
+                              : SLTheme.authMutedTextColor,
+                          fontStyle: showSecurityQuestion
+                              ? FontStyle.normal
+                              : FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      duration: const Duration(milliseconds: 240),
+                      turns: showSecurityQuestion ? 0.5 : 0,
+                      child: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: SLColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 300),
+            crossFadeState: showSecurityQuestion
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox(height: 4),
+            secondChild: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: SLTheme.authHintCard(
+                    child: Text(
+                      securityNote,
+                      style: SLTheme.quicksand(
+                        fontSize: 11,
+                        color: SLColors.primary,
+                        fontWeight: FontWeight.w700,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: SLTheme.authFieldDecoration(
+                    fillColor: SLTheme.authFieldFill,
+                    borderColor: SLTheme.authFieldBorder,
+                    focusColor: accentRose,
+                    radius: 16,
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedSecurityQuestion,
+                      isExpanded: true,
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: SLColors.primary,
+                      ),
+                      style: SLTheme.quicksand(
+                        color: SLColors.textSecond,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                      onChanged: onSecurityQuestionChanged,
+                      items: securityQuestions
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: securityAnswerController,
+                  keyboardType: isBirthQuestion
+                      ? TextInputType.datetime
+                      : TextInputType.text,
+                  inputFormatters: isBirthQuestion
+                      ? const [FlexibleDateInputFormatter()]
+                      : null,
+                  textInputAction: TextInputAction.done,
+                  onEditingComplete: isBirthQuestion
+                      ? () {
+                          final normalized = DateInputUtils.normalizeForDisplay(
+                            securityAnswerController.text,
+                            firstYear: 1900,
+                            lastYear: DateTime.now().year,
+                            allowMissingYear: true,
+                          );
+                          securityAnswerController.text = normalized;
+                          securityAnswerController.selection =
+                              TextSelection.collapsed(
+                            offset: normalized.length,
+                          );
+                        }
+                      : null,
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                  decoration: SLTheme.authInputDecoration(
+                    hintText:
+                        isBirthQuestion ? 'ngày/tháng/năm' : securityAnswerHint,
+                    helperText:
+                        isBirthQuestion ? 'Đang nhập ngày/tháng/năm' : null,
+                    focusColor: accentRose,
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SLTheme.authToggleCard(
+            selected: acceptTerms,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: Checkbox(
+                      value: acceptTerms,
+                      activeColor: SLColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      onChanged: onAcceptTermsChanged,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          color: const Color(0xFF58455B),
+                          fontWeight: FontWeight.w700,
+                          height: 1.4,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: isVietnamese
+                                ? 'Tôi xác nhận đủ 13 tuổi trở lên và đồng ý với '
+                                : 'I confirm I am 13+ and agree to the ',
+                            recognizer: TapGestureRecognizer()
+                              ..onTap =
+                                  () => onAcceptTermsChanged(!acceptTerms),
+                          ),
+                          TextSpan(
+                            text: isVietnamese ? 'Điều khoản' : 'Terms',
+                            style: const TextStyle(
+                              color: SLColors.primary,
+                              fontWeight: FontWeight.w900,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = onTermsTap,
+                          ),
+                          TextSpan(
+                            text: ' & ',
+                            recognizer: TapGestureRecognizer()
+                              ..onTap =
+                                  () => onAcceptTermsChanged(!acceptTerms),
+                          ),
+                          TextSpan(
+                            text: isVietnamese
+                                ? 'Chính sách bảo mật'
+                                : 'Privacy Policy',
+                            style: const TextStyle(
+                              color: SLColors.primary,
+                              fontWeight: FontWeight.w900,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = onPrivacyTap,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          SLTheme.authPrimaryButton(
+            label: signupLabel,
+            onPressed: isLoading ? null : onRegister,
+            isLoading: isLoading,
+            colors: [accentRose, accentBlush, accentLavender],
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: Text(
+                isVietnamese ? 'HOẶC ĐĂNG KÝ NHANH' : 'OR QUICK SIGN UP',
+                style: SLTheme.quicksand(
+                  color: const Color(0xFF888888),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ),
+          SocialAuthButtons(
+            onProviderTap: onSocialLogin,
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              isVietnamese
+                  ? 'Việc đăng ký đồng nghĩa bạn xác nhận đủ 13 tuổi\n'
+                      'và đồng ý với Điều khoản của chúng tôi.'
+                  : 'By signing up, you confirm you are 13+\nand agree to our Terms.',
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                color: const Color(0xFF999999),
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

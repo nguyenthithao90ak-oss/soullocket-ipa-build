@@ -1,0 +1,151 @@
+part of '../../main_home_tab.dart';
+
+extension _MainHomeTabQuickActions on _MainHomeTabState {
+  void _onPinnedAppTap(UtilityApp app) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          L10nService().format(
+            'utilities_opening_app',
+            {'title': app.localizedTitle},
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ignore: unused_element
+  Widget _buildModernShortcutDock(List<UtilityApp> apps) {
+    return SLTheme.glassCard(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: apps.map((app) {
+            return GestureDetector(
+              onTap: () => _onPinnedAppTap(app),
+              child: Container(
+                width: 78,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.white.withOpacity(0.9),
+                            const Color(0xFFF1F5F9).withOpacity(0.9),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: SLRadius.lgAll,
+                        boxShadow: SLShadow.subtle,
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.5)),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          app.icon,
+                          size: 26,
+                          color: SLColors.primary,
+                        ),
+                      ),
+                    ),
+                    SLSpacing.h8,
+                    SizedBox(
+                      height: 28,
+                      child: Text(
+                        app.localizedTitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: SLTheme.quicksand(
+                          fontSize: 10.5,
+                          height: 1.15,
+                          fontWeight: FontWeight.w800,
+                          color: SLColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernRelationshipAction({required bool isSingle}) {
+    final canSendMissYou = !isSingle;
+    final VoidCallback handleTap =
+        canSendMissYou ? _sendSuggestedInteraction : () {};
+    final displayPreset = _displayInteractionPreset;
+    final showDefaultHeart = canSendMissYou &&
+        _showDefaultHeartSuggestion &&
+        _manualInteractionPresetType == null;
+
+    return GestureDetector(
+      onTap: handleTap,
+      onLongPressStart:
+          canSendMissYou ? _handleInteractionLongPressStart : null,
+      onLongPressMoveUpdate:
+          canSendMissYou ? _handleInteractionLongPressMoveUpdate : null,
+      onLongPressEnd: canSendMissYou ? _handleInteractionLongPressEnd : null,
+      onLongPressCancel:
+          canSendMissYou ? _handleInteractionLongPressCancel : null,
+      child: _HeartbeatWidget(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: canSendMissYou ? 88 : 74,
+              height: canSendMissYou ? 88 : 74,
+              child: Center(
+                child: canSendMissYou
+                    ? (showDefaultHeart
+                        ? const Icon(
+                            Icons.favorite_rounded,
+                            color: Color(0xFFFF4D79),
+                            size: 52,
+                          )
+                        : _buildInteractionVisual(
+                            visual: displayPreset.emoji,
+                            assetPath: displayPreset.assetPath,
+                            size: 52,
+                            emojiSize: 44,
+                            preferAsset: true,
+                          ))
+                    : const Icon(
+                        Icons.favorite_rounded,
+                        color: Color(0xFFFF4D79),
+                        size: 54,
+                      ),
+              ),
+            ),
+            if (canSendMissYou) ...[
+              // Keep icon-only presentation here.
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _sendSuggestedInteraction() {
+    final preset = _displayInteractionPreset;
+    _handleSendInteraction(
+      preset.type,
+      _showDefaultHeartSuggestion && _manualInteractionPresetType == null
+          ? '\u{1F496}'
+          : preset.emoji,
+    );
+    _refreshSmartInteraction(forceRotate: true);
+  }
+}

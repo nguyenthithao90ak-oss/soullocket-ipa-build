@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Hướng dẫn cài đặt lần đầu</title>
+  <style>
+    :root {
+      --bg: #fff7fb;
+      --card: rgba(255, 255, 255, 0.96);
+      --line: #f3d4e3;
+      --text: #243447;
+      --muted: #667085;
+      --pink: #d81b60;
+      --pink-soft: #fff0f7;
+      --purple: #7c4dff;
+      --blue: #1e88e5;
+      --green: #1b9e77;
+      --orange: #ef6c00;
+      --shadow: 0 18px 42px rgba(216, 27, 96, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      line-height: 1.7;
+      background:
+        radial-gradient(circle at top right, rgba(255, 192, 203, 0.34), transparent 22%),
+        radial-gradient(circle at left center, rgba(124, 77, 255, 0.10), transparent 24%),
+        linear-gradient(180deg, #fffafe 0%, var(--bg) 100%);
+    }
+
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 54px;
+    }
+
+    .hero,
+    .section,
+    .footer-card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.74);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px 24px;
+      margin-bottom: 18px;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, #ff8ab3, #d81b60, #7c4dff);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--pink-soft);
+      color: var(--pink);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 6vw, 42px);
+      line-height: 1.12;
+      color: var(--pink);
+    }
+
+    .lead {
+      margin: 14px 0 0;
+      max-width: 780px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .quick-nav {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .quick-nav a {
+      display: block;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,240,247,0.96));
+      border: 1px solid rgba(216, 27, 96, 0.10);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 10px 22px rgba(216, 27, 96, 0.08);
+    }
+
+    .section {
+      padding: 24px 22px;
+      margin-top: 18px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      color: var(--pink);
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 18px 0 8px;
+      color: var(--blue);
+      font-size: 18px;
+    }
+
+    p, li {
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .card {
+      padding: 16px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,244,249,0.96));
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--pink);
+      font-size: 15px;
+    }
+
+    .steps {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .steps li {
+      margin-bottom: 10px;
+    }
+
+    .tip,
+    .note,
+    .warning {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      font-size: 14px;
+    }
+
+    .tip {
+      background: rgba(30, 136, 229, 0.08);
+      border: 1px solid rgba(30, 136, 229, 0.15);
+    }
+
+    .note {
+      background: rgba(124, 77, 255, 0.08);
+      border: 1px solid rgba(124, 77, 255, 0.15);
+    }
+
+    .warning {
+      background: rgba(239, 108, 0, 0.08);
+      border: 1px solid rgba(239, 108, 0, 0.18);
+    }
+
+    .footer-card {
+      margin-top: 18px;
+      padding: 18px 20px;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: rgba(216, 27, 96, 0.08);
+      color: var(--pink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+      .page { padding: 18px 12px 44px; }
+      .hero, .section, .footer-card { border-radius: 22px; }
+      .hero { padding: 22px 18px; }
+      .section { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="badge">🚀 Cài đặt lần đầu</div>
+      <h1>Thiết lập SoulLocket đúng ngay từ lần mở đầu tiên</h1>
+      <p class="lead">
+        Tài liệu này dành cho người vừa tạo nhà xong. Bạn chỉ cần đi lần lượt vài bước
+        dưới đây là app sẽ vào đúng luồng, dữ liệu lưu ổn định và phần riêng tư được bảo vệ ngay từ đầu.
+      </p>
+
+      <div class="quick-nav">
+        <a href="#bat-dau">1. Bắt đầu ở đâu</a>
+        <a href="#bao-mat">2. Bảo mật bằng mã PIN</a>
+        <a href="#giao-dien">3. Giao diện và nhạc</a>
+        <a href="#tab-chinh">4. Các tab chính</a>
+        <a href="#single-couple">5. Độc thân và Couple</a>
+        <a href="#kiem-tra">6. Kiểm tra nhanh sau cài đặt</a>
+      </div>
+    </section>
+
+    <section id="bat-dau" class="section">
+      <h2>1. Bắt đầu ở đâu</h2>
+      <ol class="steps">
+        <li>Mở <code>Cài đặt</code> để kiểm tra tên ngôi nhà, tên hiển thị và các thông tin cơ bản.</li>
+        <li>Đảm bảo chế độ của bạn đang đúng: <code>Độc thân</code> hoặc <code>Couple</code>.</li>
+        <li>Nếu vừa tạo nhà xong, nên đọc bảng hướng dẫn nổi trong app một lần trước khi tùy chỉnh sâu.</li>
+      </ol>
+
+      <div class="grid">
+        <div class="card">
+          <strong>Vì sao phải làm bước này</strong>
+          Tên nhà, tên hiển thị và chế độ quan hệ sẽ ảnh hưởng tới Home, avatar, QR ghép đôi và nhiều tiện ích phía sau.
+        </div>
+        <div class="card">
+          <strong>Luồng an toàn nhất</strong>
+          Hoàn thiện nhà trước, bật mã PIN sau, rồi mới chỉnh giao diện và thử các tab khác.
+        </div>
+      </div>
+    </section>
+
+    <section id="bao-mat" class="section">
+      <h2>2. Bảo mật bằng mã PIN</h2>
+      <p>
+        Sau khi vào app lần đầu, nên bật mã PIN càng sớm càng tốt. Đây là lớp khóa cơ bản
+        để bảo vệ nhật ký, phần riêng tư và các dữ liệu nhạy cảm của bạn.
+      </p>
+      <ol class="steps">
+        <li>Vào <code>Cài đặt &gt; Bảo mật</code>.</li>
+        <li>Bật khóa app bằng <code>mã PIN</code>.</li>
+        <li>Nếu máy hỗ trợ, bạn có thể bật thêm sinh trắc học sau đó.</li>
+      </ol>
+      <div class="warning">
+        Nếu chưa bật mã PIN, người khác có thể cầm máy và mở trực tiếp app khi bạn quên thoát màn hình.
+      </div>
+    </section>
+
+    <section id="giao-dien" class="section">
+      <h2>3. Giao diện, hiệu ứng và nhạc nền</h2>
+      <p>
+        Phần này nằm trong <code>Cài đặt &gt; Giao diện</code>. Bạn có thể chỉnh theme, hiệu ứng rơi,
+        font chữ, nhạc nền và một số thông số hiển thị của ngôi nhà.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <strong>Theme và hiệu ứng</strong>
+          Chọn nền, hiệu ứng rơi và màu khối để Home nhìn đúng phong cách bạn muốn.
+        </div>
+        <div class="card">
+          <strong>Âm nhạc</strong>
+          Dán link YouTube, MP3 hoặc MP4 để dùng làm nhạc nền cho nhà.
+        </div>
+        <div class="card">
+          <strong>Hiệu năng</strong>
+          Nếu máy yếu, ưu tiên cấu hình nhẹ để tránh lag và giảm tự làm mới ngoài ý muốn.
+        </div>
+      </div>
+
+      <div class="tip">
+        Sau khi chỉnh xong giao diện, quay lại Home để kiểm tra ngay xem font, màu và hiệu ứng đã đúng ý chưa.
+      </div>
+    </section>
+
+    <section id="tab-chinh" class="section">
+      <h2>4. Các tab chính nên thử ngay</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>Home</strong>
+          Màn hình chính của ngôi nhà. Kiểm tra avatar, tên hiển thị, đếm ngày và các khối thông tin.
+        </div>
+        <div class="card">
+          <strong>Nhật ký</strong>
+          Thử viết một mục <em>Tâm tư</em> hoặc thêm một kỷ niệm đầu tiên để kiểm tra dữ liệu đã lưu.
+        </div>
+        <div class="card">
+          <strong>Tiện ích</strong>
+          Khám phá các công cụ nhanh như ghi chú, quà tặng, lịch sử, ảnh và các tiện ích đôi.
+        </div>
+        <div class="card">
+          <strong>Cộng đồng</strong>
+          Xem feed, luật đăng bài và cách hiển thị bình luận trước khi dùng thường xuyên.
+        </div>
+      </div>
+    </section>
+
+    <section id="single-couple" class="section">
+      <h2>5. Độc thân và Couple khác nhau thế nào</h2>
+      <h3>Nếu đang ở chế độ Độc thân</h3>
+      <p>
+        Bạn vẫn dùng app bình thường. Khi muốn ghép đôi, hãy mở QR kết nối để chuyển sang luồng đôi.
+        Một số tính năng sẽ chỉ mở đầy đủ sau khi ghép đôi thành công.
+      </p>
+
+      <h3>Nếu đang ở chế độ Couple</h3>
+      <p>
+        Nên kiểm tra lại tên hai người, avatar, đếm ngày và các quyền riêng tư liên quan đến nhà chung.
+      </p>
+
+      <div class="note">
+        Chế độ quan hệ là nền tảng để app phân luồng. Nếu tạo sai ngay từ đầu, một số khu vực sẽ hiển thị không đúng kỳ vọng.
+      </div>
+    </section>
+
+    <section id="kiem-tra" class="section">
+      <h2>6. Kiểm tra nhanh sau khi cài xong</h2>
+      <ol class="steps">
+        <li>Thoát ra Home và xác nhận tên nhà hiển thị đúng.</li>
+        <li>Vào Nhật ký, tạo một mục ngắn để kiểm tra lưu dữ liệu.</li>
+        <li>Vào Cài đặt, chắc chắn rằng mã PIN đã bật nếu bạn cần bảo vệ riêng tư.</li>
+        <li>Thử mở Tiện ích hoặc Âm nhạc để xem theme và hiệu ứng đã hoạt động đúng chưa.</li>
+      </ol>
+
+      <div class="tip">
+        Nếu thấy giao diện chưa ổn, dữ liệu không hiển thị đúng hoặc quyền chưa được cấp đủ,
+        hãy mở lại mục <code>Hỗ trợ &amp; Pháp lý</code> trong Cài đặt để xem tài liệu và liên hệ hỗ trợ.
+      </div>
+    </section>
+
+    <section class="footer-card">
+      <strong style="display:block; margin-bottom:8px; color:var(--pink); font-size:16px;">Tóm tắt ngắn</strong>
+      <p style="margin:0;">
+        Thứ tự khuyến nghị: <code>Cài đặt cơ bản</code> → <code>Bật mã PIN</code> → <code>Chỉnh giao diện/nhạc</code> →
+        <code>Viết nhật ký đầu tiên</code> → <code>Khám phá các tab còn lại</code>.
+      </p>
+      <p style="margin:12px 0 0; color:var(--muted); font-size:13px;">
+        Cập nhật lần cuối: 19/04/2026
+      </p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,113 @@
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'security_service.dart';
+
+enum GiftcodeError {
+  notFound,
+  limitReached,
+  alreadyUsed,
+  permissionDenied,
+  invalidCode,
+  verificationRequired,
+  unknown,
+}
+
+class GiftcodeResult {
+  final bool success;
+  final int? daysAdded;
+  final GiftcodeError? error;
+  final String message;
+
+  GiftcodeResult({
+    required this.success,
+    this.daysAdded,
+    this.error,
+    required this.message,
+  });
+}
+
+class GiftcodeService {
+  static final GiftcodeService _instance = GiftcodeService._internal();
+  factory GiftcodeService() => _instance;
+  GiftcodeService._internal();
+
+  final FirebaseDatabase _db = FirebaseDatabase.instance;
+  final FirebaseFunctions _functions = FirebaseFunctions.instance;
+  final SecurityService _securityService = SecurityService();
+
+  Future<GiftcodeResult> redeemGiftcode({
+    required String houseId,
+    required String code,
+  }) async {
+    final sanitized = code.trim().toUpperCase();
+    if (sanitized.isEmpty) {
+      return GiftcodeResult(
+        success: false,
+        message: 'Vui lòng nhập mã giftcode!',
+      );
+    }
+
+    try {
+      final deviceId = await _securityService.getDeviceId();
+      final callable = _functions.httpsCallable('redeemGiftcode');
+      final response = await callable.call({
+        'houseId': houseId,
+        'code': sanitized,
+        'deviceId': deviceId,
+      });
+      final payload = Map<String, dynamic>.from(response.data as Map);
+      final days = (payload['daysAdded'] as num?)?.toInt();
+
+      return GiftcodeResult(
+        success: true,
+        daysAdded: days,
+        message: (payload['message']?.toString().trim().isNotEmpty ?? false)
+            ? payload['message'].toString()
+            : 'Giftcode hợp lệ!',
+      );
+    } on FirebaseFunctionsException catch (error) {
+      final normalizedMessage = error.message?.trim() ?? '';
+      final mappedError = switch (error.code) {
+        'already-exists' => GiftcodeError.alreadyUsed,
+        'resource-exhausted' => GiftcodeError.limitReached,
+        'permission-denied' => GiftcodeError.permissionDenied,
+        'not-found' => GiftcodeError.notFound,
+        'invalid-argument' => GiftcodeError.invalidCode,
+        'failed-precondition'
+            when normalizedMessage.toLowerCase().contains('app check') =>
+          GiftcodeError.verificationRequired,
+        _ => GiftcodeError.unknown,
+      };
+      final friendlyMessage = mappedError == GiftcodeError.verificationRequired
+          ? 'Không thể xác minh thiết bị lúc này. Vui lòng cập nhật app hoặc thử lại sau.'
+          : normalizedMessage;
+      return GiftcodeResult(
+        success: false,
+        error: mappedError,
+        message: friendlyMessage.isNotEmpty
+            ? friendlyMessage
+            : 'Lỗi hệ thống, vui lòng thử lại!',
+      );
+    } catch (_) {
+      return GiftcodeResult(
+        success: false,
+        error: GiftcodeError.unknown,
+        message: 'Lỗi hệ thống, vui lòng thử lại!',
+      );
+    }
+  }
+
+  Future<bool> isVip(String houseId) async {
+    final snap = await _db.ref('houses/$houseId/proUntil').get();
+    final proUntil = (snap.value as num?)?.toInt() ?? 0;
+    return proUntil > DateTime.now().millisecondsSinceEpoch;
+  }
+
+  Stream<DateTime?> streamVipExpiry(String houseId) {
+    return _db.ref('houses/$houseId/proUntil').onValue.map((event) {
+      final val = (event.snapshot.value as num?)?.toInt() ?? 0;
+      if (val == 0) return null;
+      return DateTime.fromMillisecondsSinceEpoch(val);
+    });
+  }
+}

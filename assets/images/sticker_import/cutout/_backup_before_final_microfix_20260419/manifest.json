@@ -1,0 +1,30 @@
+[
+  {
+    "sheet": "sheet_01",
+    "source": "tải xuống (1).jfif",
+    "mode": "manual-boxes",
+    "count": 8,
+    "output_dir": "assets/images/sticker_import/cutout/sheet_01"
+  },
+  {
+    "sheet": "sheet_02",
+    "source": "tải xuống (2).jfif",
+    "mode": "manual-boxes",
+    "count": 8,
+    "output_dir": "assets/images/sticker_import/cutout/sheet_02"
+  },
+  {
+    "sheet": "sheet_03",
+    "source": "tải xuống.jfif",
+    "mode": "component-area>=100",
+    "count": 16,
+    "output_dir": "assets/images/sticker_import/cutout/sheet_03"
+  },
+  {
+    "sheet": "sheet_04",
+    "source": "tải xuống.png",
+    "mode": "manual-boxes",
+    "count": 14,
+    "output_dir": "assets/images/sticker_import/cutout/sheet_04"
+  }
+]

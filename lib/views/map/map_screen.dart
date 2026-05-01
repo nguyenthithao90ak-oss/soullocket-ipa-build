@@ -1,0 +1,1654 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math' as math;
+import 'dart:ui';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart' as fm;
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart' as ll;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../core/constants/app_config.dart';
+import '../../core/fast_backdrop_filter.dart';
+import '../../core/sl_theme.dart';
+import '../../services/daily_quest_service.dart';
+import '../../services/gps_tracker_service.dart';
+import '../../services/location_service.dart';
+import '../../services/map_pin_limit_service.dart';
+import '../../services/notification_service.dart';
+import '../../utils/services/app_lifecycle_presence_guard.dart';
+
+part 'dialogs/map_checkin_sheet.dart';
+part 'dialogs/map_detail_dialogs.dart';
+part 'map_location_logic.dart';
+part 'map_location_marker_pipeline.dart';
+part 'map_screen_helpers.dart';
+part 'sections/map_panel_sections.dart';
+part 'sections/map_surface_sections.dart';
+
+const Color _kMapBlue = Color(0xFF2E8BFF);
+const Color _kMapBlueSoft = Color(0xFFAED7FF);
+const Color _kMapPink = Color(0xFFFF5C93);
+const Color _kMapPinkSoft = Color(0xFFFFB4CC);
+const Color _kMapPinkDeep = Color(0xFFFF3F7C);
+const Color _kMapRouteBorder = Color(0xF2FFFFFF);
+const Color _kMapRouteGlow = Color(0x33FF5C93);
+const Color _kMapPanelBorder = Color(0xFF303643);
+const Color _kMapTextMuted = Color(0xFF94A3B8);
+const Color _kMapTextSoft = Color(0xFFE2E8F0);
+const Color _kMapTileSurface = Color(0xFF171C25);
+const Color _kMapSummaryStart = Color(0xFF182132);
+const Color _kMapSummaryEnd = Color(0xFF301C2B);
+const int _kMaxMapPins = MapPinLimitService.maxPins;
+const int _kMaxRenderedMemoryMarkers = 24;
+const int _kMaxRenderedCheckinMarkers = 28;
+const int _kMaxRenderedCheckinPathPoints = 140;
+const int _kMapMemoryQueryLimit = 48;
+const int _kMapCheckinQueryLimit = 64;
+const int _kGpsHistoryFetchLimit = 600;
+const int _kMapRouteCacheMaxEntries = 24;
+const int _kMapReverseGeocodeCacheMaxEntries = 48;
+const double _kMapMaxLiveAccuracyMeters = 100;
+const double _kMapGoodAccuracyMeters = 30;
+const double _kMapFairAccuracyMeters = 75;
+const Duration _kMapRouteCacheTtl = Duration(minutes: 10);
+const Duration _kMapReverseGeocodeCacheTtl = Duration(hours: 12);
+const double _kPartnerNearbyEnterMeters = 150;
+const double _kPartnerNearbyExitMeters = 220;
+const double _kPinnedPlaceNearbyEnterMeters = 140;
+const double _kPinnedPlaceNearbyExitMeters = 220;
+
+class MapScreen extends StatefulWidget {
+  final String houseId;
+  final String myRole;
+  final String partnerRole;
+  final String relationshipMode;
+  final String myName;
+  final String partnerName;
+  final String myAvatarUrl;
+  final String partnerAvatarUrl;
+
+  const MapScreen({
+    super.key,
+    required this.houseId,
+    required this.myRole,
+    required this.partnerRole,
+    required this.relationshipMode,
+    required this.myName,
+    required this.partnerName,
+    required this.myAvatarUrl,
+    required this.partnerAvatarUrl,
+  });
+
+  @override
+  State<MapScreen> createState() => _MapScreenState();
+}
+
+class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
+  final fm.MapController _mapController = fm.MapController();
+  final LocationService _locationService = LocationService();
+  final NotificationService _notificationService = NotificationService();
+  final MapPinLimitService _mapPinLimitService = MapPinLimitService();
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  final ll.Distance _distance = const ll.Distance();
+  final DateFormat _dayFormat = DateFormat('yyyy-MM-dd');
+  final DateFormat _prettyDayFormat = DateFormat('dd/MM/yyyy');
+  final DateFormat _timeFormat = DateFormat('HH:mm');
+
+  final ValueNotifier<List<fm.Marker>> _staticMarkersVN =
+      ValueNotifier<List<fm.Marker>>(const []);
+  final ValueNotifier<List<fm.Polyline>> _historyPolylinesVN =
+      ValueNotifier<List<fm.Polyline>>(const []);
+  final ValueNotifier<List<fm.Polyline>> _checkinPolylinesVN =
+      ValueNotifier<List<fm.Polyline>>(const []);
+  final ValueNotifier<List<fm.Marker>> _liveMarkersVN =
+      ValueNotifier<List<fm.Marker>>(const []);
+  final ValueNotifier<List<fm.Polyline>> _livePolylinesVN =
+      ValueNotifier<List<fm.Polyline>>(const []);
+  final ValueNotifier<_LiveUiSnapshot> _liveUiVN =
+      ValueNotifier<_LiveUiSnapshot>(_LiveUiSnapshot.empty());
+
+  bool _isLoading = true;
+  bool _isFetchingRoute = false;
+  bool _didAutoFit = false;
+  bool _isMapReady = false;
+  bool _isBootstrappingLocation = false;
+  bool _didQueueMapIntroNotice = false;
+  String? _mapInitError;
+  String? _locationStatusMessage;
+
+  _GpsPoint? _myCurrentGps;
+  _GpsPoint? _myLastKnownGps;
+  _GpsPoint? _partnerCurrentGps;
+  _GpsPoint? _partnerLastKnownGps;
+  bool _myIsLive = false;
+  bool _partnerIsLive = false;
+  bool _myHasLocationHistory = false;
+  bool _partnerHasLocationHistory = false;
+
+  DateTime _selectedHistoryDate = DateTime.now();
+  _HistoryBundle _historyBundle = _HistoryBundle.empty();
+  _RouteSnapshot? _routeSnapshot;
+
+  List<_MapMemoryItem> _memories = [];
+  List<_MapCheckinItem> _checkins = [];
+
+  String _distanceText = 'Đang định vị...';
+  String _routeDistanceText = '--';
+  String _etaText = '--';
+  String _mapInsightText = 'Đang quét dữ liệu...';
+  String? _mapAlert;
+  String _memorySummary = 'Chưa có ghim kỷ niệm';
+  String _checkinSummary = 'Chưa có check-in';
+  String _myAddressText = 'Chưa có vị trí';
+  String _partnerAddressText = 'Chưa có vị trí';
+
+  StreamSubscription<DatabaseEvent>? _myLocSub;
+  StreamSubscription<DatabaseEvent>? _partnerLocSub;
+  StreamSubscription<DatabaseEvent>? _memoriesRootSub;
+  StreamSubscription<DatabaseEvent>? _memoriesHouseSub;
+  StreamSubscription<DatabaseEvent>? _checkinsSub;
+
+  Timer? _routeDebounce;
+  Timer? _liveRefreshDebounce;
+  Timer? _memoryReloadDebounce;
+  Timer? _mapReadyTimeout;
+  Timer? _fitDebounce;
+  bool _realtimePipelinesActive = false;
+  bool _partnerListenerActive = false;
+  bool _isFitting = false;
+  String? _lastRouteKey;
+  int _routeRequestToken = 0;
+  String _memorySignature = '';
+  String _checkinSignature = '';
+  String _liveMarkerSignature = '';
+  String _livePolylineSignature = '';
+  String _liveUiSignature = '';
+  String _historyPolylineSignature = '';
+  String? _myAddressKey;
+  String? _partnerAddressKey;
+  dynamic _latestPublicMemoriesRaw;
+  dynamic _latestHouseMemoriesRaw;
+  final Map<String, _RouteSnapshot?> _routeCache = <String, _RouteSnapshot?>{};
+  final Map<String, int> _routeCacheTs = <String, int>{};
+  final Map<String, Future<_RouteSnapshot?>> _routeInFlight =
+      <String, Future<_RouteSnapshot?>>{};
+  final Map<String, String?> _reverseGeocodeCache = <String, String?>{};
+  final Map<String, int> _reverseGeocodeCacheTs = <String, int>{};
+  final Map<String, Future<String?>> _reverseGeocodeInFlight =
+      <String, Future<String?>>{};
+  bool _didNotifyPartnerNearby = false;
+  String? _myActiveNearbyPinKey;
+  String? _partnerActiveNearbyPinKey;
+  String? _lastProximityBannerKey;
+  DateTime? _lastProximityBannerAt;
+
+  ll.LatLng? get _myLocation => _effectiveGpsForRole(widget.myRole)?.latLng;
+  ll.LatLng? get _partnerLocation => _isSingleRelationship
+      ? null
+      : _effectiveGpsForRole(widget.partnerRole)?.latLng;
+  ll.LatLng? get _myLiveLocation =>
+      _effectiveLiveGpsForRole(widget.myRole)?.latLng;
+  bool get _isSingleRelationship =>
+      widget.relationshipMode.trim().toLowerCase() == 'single';
+  String get _mapScreenTitle =>
+      _isSingleRelationship ? 'Vị trí hiện tại' : 'Vị trí của chúng mình';
+  String get _mapScreenSubtitle => _isSingleRelationship
+      ? 'Bản đồ • Vị trí của bạn'
+      : 'Bản đồ • Khoảng cách • Lịch sử di chuyển';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _setPartnerListenerActive(true);
+    _initMap();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _cancelTransientMapWork(resetRouteFetch: true);
+    _setRealtimePipelinesActive(false);
+    _setPartnerListenerActive(false);
+    unawaited(
+      _locationService.stopTracking(
+        houseId: widget.houseId,
+        role: widget.myRole,
+      ),
+    );
+    _mapReadyTimeout?.cancel();
+    _mapController.dispose();
+    _staticMarkersVN.dispose();
+    _historyPolylinesVN.dispose();
+    _checkinPolylinesVN.dispose();
+    _liveMarkersVN.dispose();
+    _livePolylinesVN.dispose();
+    _liveUiVN.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _setPartnerListenerActive(true);
+      _setRealtimePipelinesActive(true);
+      if (!_isMapReady && _isLoading) {
+        _scheduleMapReadyWatchdog();
+      }
+      _scheduleLiveRefresh();
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      if (AppLifecyclePresenceGuard.shouldKeepPresenceOnline) {
+        return;
+      }
+      _cancelTransientMapWork(resetRouteFetch: true);
+      _setRealtimePipelinesActive(false);
+      _setPartnerListenerActive(false);
+      unawaited(
+        _locationService.stopTracking(
+          houseId: widget.houseId,
+          role: widget.myRole,
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _isBootstrappingLocation = false;
+        _locationStatusMessage =
+            'GPS tạm dừng khi app ra nền. Mở lại bản đồ và bấm "Bật GPS" để cập nhật.';
+      });
+    }
+  }
+
+  void _setPartnerListenerActive(bool active) {
+    if (active) {
+      if (_partnerListenerActive) return;
+      final myUid = FirebaseAuth.instance.currentUser?.uid;
+      if (myUid == null) return;
+      GpsTrackerService().startListeningPartner(widget.houseId, myUid);
+      _partnerListenerActive = true;
+      return;
+    }
+
+    if (!_partnerListenerActive) return;
+    GpsTrackerService().stopListeningPartner();
+    _partnerListenerActive = false;
+  }
+
+  void _setRealtimePipelinesActive(bool active) {
+    if (active) {
+      if (_realtimePipelinesActive) return;
+      _realtimePipelinesActive = true;
+      _listenLiveGps();
+      _listenMemoryNodes();
+      _listenCheckins();
+      return;
+    }
+
+    _realtimePipelinesActive = false;
+
+    final myLocSub = _myLocSub;
+    _myLocSub = null;
+    if (myLocSub != null) {
+      unawaited(myLocSub.cancel());
+    }
+
+    final partnerLocSub = _partnerLocSub;
+    _partnerLocSub = null;
+    if (partnerLocSub != null) {
+      unawaited(partnerLocSub.cancel());
+    }
+
+    final memoriesRootSub = _memoriesRootSub;
+    _memoriesRootSub = null;
+    if (memoriesRootSub != null) {
+      unawaited(memoriesRootSub.cancel());
+    }
+
+    final memoriesHouseSub = _memoriesHouseSub;
+    _memoriesHouseSub = null;
+    if (memoriesHouseSub != null) {
+      unawaited(memoriesHouseSub.cancel());
+    }
+
+    final checkinsSub = _checkinsSub;
+    _checkinsSub = null;
+    if (checkinsSub != null) {
+      unawaited(checkinsSub.cancel());
+    }
+
+    _disposeMemoryPipeline();
+  }
+
+  void _cancelTransientMapWork({required bool resetRouteFetch}) {
+    _routeDebounce?.cancel();
+    _routeDebounce = null;
+    _liveRefreshDebounce?.cancel();
+    _liveRefreshDebounce = null;
+    _memoryReloadDebounce?.cancel();
+    _memoryReloadDebounce = null;
+    _mapReadyTimeout?.cancel();
+    _fitDebounce?.cancel();
+    _fitDebounce = null;
+
+    if (!resetRouteFetch) return;
+
+    _routeRequestToken++;
+    if (_isFetchingRoute) {
+      _isFetchingRoute = false;
+      _notifyLiveUiIfNeeded();
+    }
+  }
+
+  bool _isGpsFresh(int? ts) {
+    if (ts == null) return false;
+    final ageMs = DateTime.now().millisecondsSinceEpoch - ts;
+    return ageMs >= 0 && ageMs <= 3 * 60 * 1000;
+  }
+
+  _GpsPoint? _effectiveGpsForRole(String role) {
+    if (role == widget.myRole) {
+      if (_myIsLive && _myCurrentGps != null) return _myCurrentGps;
+      if (_myHasLocationHistory) return _myLastKnownGps ?? _myCurrentGps;
+      return null;
+    }
+    if (_partnerIsLive && _partnerCurrentGps != null) return _partnerCurrentGps;
+    if (_partnerHasLocationHistory) {
+      return _partnerLastKnownGps ?? _partnerCurrentGps;
+    }
+    return null;
+  }
+
+  _GpsPoint? _effectiveLiveGpsForRole(String role) {
+    if (role == widget.myRole) {
+      return _myIsLive ? _myCurrentGps : null;
+    }
+    return _partnerIsLive ? _partnerCurrentGps : null;
+  }
+
+  bool _isRoleLive(String role) {
+    return role == widget.myRole ? _myIsLive : _partnerIsLive;
+  }
+
+  bool _hasRoleLocationHistory(String role) {
+    return role == widget.myRole
+        ? _myHasLocationHistory
+        : _partnerHasLocationHistory;
+  }
+
+  _LocationNodeState _parseLocationNodeState(dynamic raw) {
+    final map = _toStringDynamicMap(raw);
+    final parsedCurrent = _parseGpsPoint(map);
+    final current =
+        _isGpsPointAccurateEnough(parsedCurrent) ? parsedCurrent : null;
+    final lastKnown = _parseGpsPoint(map['lastKnown']);
+    final isLive = (map['isLive'] == true || map['sharingEnabled'] == true) &&
+        current != null &&
+        _isGpsFresh(_readInt(map['ts']) ?? current.ts);
+    final hasHistory = map['everShared'] == true ||
+        map['sharingEnabled'] == true ||
+        map['isLive'] == true ||
+        lastKnown != null;
+    return _LocationNodeState(
+      current: current,
+      lastKnown: lastKnown,
+      isLive: isLive,
+      hasHistory: hasHistory,
+    );
+  }
+
+  Future<void> _initMap() async {
+    _setRealtimePipelinesActive(true);
+
+    // Automatically bootstrap location when entering the map screen
+    _bootstrapLocationTracking(forcePrompt: false);
+
+    try {
+      await Future.wait([
+        _primeMemoryPipeline().timeout(
+          const Duration(seconds: 8),
+          onTimeout: () {},
+        ),
+        _loadHistoryForDate(_selectedHistoryDate, fitToHistory: false)
+            .timeout(const Duration(seconds: 8), onTimeout: () {}),
+      ]);
+    } catch (_) {}
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    _scheduleMapReadyWatchdog();
+    _queueMapIntroNotice();
+  }
+
+  void triggerMapStateUpdate() {
+    if (mounted) setState(() {});
+  }
+
+  void _applyPanelStateUpdate(VoidCallback updater) {
+    if (!mounted) return;
+    setState(updater);
+  }
+
+  bool _isValidCoordinate(double lat, double lng) {
+    if (lat.isNaN || lat.isInfinite || lng.isNaN || lng.isInfinite) {
+      return false;
+    }
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return false;
+    }
+    if (lat.abs() < 0.000001 && lng.abs() < 0.000001) {
+      return false;
+    }
+    return true;
+  }
+
+  bool _isGpsPointAccurateEnough(_GpsPoint? point) {
+    if (point == null) return false;
+    final accuracy = point.accuracy;
+    return accuracy == null ||
+        !accuracy.isFinite ||
+        accuracy <= _kMapMaxLiveAccuracyMeters;
+  }
+
+  ({String label, Color color, bool isLow}) _gpsAccuracyPresentation(
+      double? accuracy) {
+    if (accuracy == null || !accuracy.isFinite) {
+      return (
+        label: 'Đang đo GPS...',
+        color: _kMapTextMuted,
+        isLow: false,
+      );
+    }
+    if (accuracy <= _kMapGoodAccuracyMeters) {
+      return (
+        label: 'GPS tốt ±${accuracy.toStringAsFixed(0)} m',
+        color: const Color(0xFF22C55E),
+        isLow: false,
+      );
+    }
+    if (accuracy <= _kMapFairAccuracyMeters) {
+      return (
+        label: 'GPS tạm ổn ±${accuracy.toStringAsFixed(0)} m',
+        color: const Color(0xFFF59E0B),
+        isLow: false,
+      );
+    }
+    return (
+      label: 'GPS yếu ±${accuracy.toStringAsFixed(0)} m',
+      color: const Color(0xFFF97316),
+      isLow: true,
+    );
+  }
+
+  String? _gpsAccuracyHint(double? accuracy) {
+    if (accuracy == null ||
+        !accuracy.isFinite ||
+        accuracy <= _kMapFairAccuracyMeters) {
+      return null;
+    }
+    return 'Bật Vị trí chính xác hoặc ra nơi thoáng hơn để GPS sát hơn.';
+  }
+
+  Future<void> _bootstrapLocationTracking({bool forcePrompt = false}) async {
+    if (_isBootstrappingLocation) return;
+    if (mounted) {
+      setState(() {
+        _isBootstrappingLocation = true;
+        _locationStatusMessage = 'Đang xin quyền GPS...';
+      });
+    }
+
+    final hasPerm = await _locationService
+        .requestPermission(context: context, forcePrompt: forcePrompt)
+        .timeout(const Duration(seconds: 15), onTimeout: () => false);
+    if (!mounted) return;
+    if (!hasPerm) {
+      setState(() {
+        _isBootstrappingLocation = false;
+        _locationStatusMessage = kIsWeb
+            ? 'Chưa cấp quyền Location. Cho phép để xem vị trí hiện tại và check-in.'
+            : 'Chưa cấp quyền vị trí. Cho phép Location để cập nhật GPS.';
+      });
+      return;
+    }
+
+    setState(() {
+      _locationStatusMessage = 'Đang bật cập nhật GPS...';
+    });
+
+    final started = await _locationService
+        .startTracking(
+          widget.houseId,
+          widget.myRole,
+          context: context,
+          forcePrompt: forcePrompt,
+        )
+        .timeout(const Duration(seconds: 12), onTimeout: () => false);
+    if (!mounted) return;
+    setState(() {
+      _isBootstrappingLocation = false;
+      _locationStatusMessage = started
+          ? null
+          : 'GPS chưa sẵn sàng. Kiểm tra quyền vị trí rồi thử lại.';
+    });
+  }
+
+  void _scheduleMapReadyWatchdog() {
+    _mapReadyTimeout?.cancel();
+    _mapReadyTimeout = Timer(const Duration(seconds: 15), () {
+      if (!mounted || _isMapReady) return;
+      setState(() {
+        _mapInitError =
+            'Bản đồ OpenStreetMap chưa sẵn sàng. Vui lòng thử lại hoặc kiểm tra kết nối mạng.';
+      });
+    });
+  }
+
+  Future<void> _reloadMemories() async {
+    await _primeMemoryPipeline();
+    return;
+
+    final merged = <_MapMemoryItem>[];
+    final seen = <String>{};
+
+    Future<void> collectFrom(
+      String path, {
+      required bool allowDirectEntriesWithoutHouseId,
+    }) async {
+      final snap = await _dbRef.child(path).get();
+      _extractMemoriesFromNode(
+        snap.value,
+        merged,
+        seen,
+        allowDirectEntriesWithoutHouseId: allowDirectEntriesWithoutHouseId,
+      );
+    }
+
+    await collectFrom(
+      'map_memories',
+      allowDirectEntriesWithoutHouseId: false,
+    );
+    await collectFrom(
+      'houses/${widget.houseId}/memories',
+      allowDirectEntriesWithoutHouseId: true,
+    );
+
+    merged.sort((a, b) => (b.ts ?? 0).compareTo(a.ts ?? 0));
+    final signature = _buildMemorySignature(merged);
+    if (signature == _memorySignature) return;
+    _memorySignature = signature;
+    if (!mounted) return;
+    setState(() {
+      _memories = merged;
+      _memorySummary = merged.isEmpty
+          ? 'Chưa có ghim kỷ niệm'
+          : '${merged.length} ghim kỷ niệm trên bản đồ';
+    });
+    _memorySummary = _buildMemorySummaryLabel(merged.length);
+    _rebuildStaticMarkers();
+  }
+
+  _MapMemoryItem? _memoryItemFromMap(String id, dynamic raw) {
+    final map = _toStringDynamicMap(raw);
+    final lat = _readDouble(map['lat']) ?? _readDouble(map['lt']);
+    final lng = _readDouble(map['lng']) ?? _readDouble(map['lg']);
+    if (lat == null || lng == null || !_isValidCoordinate(lat, lng)) {
+      return null;
+    }
+
+    final houseId = (map['houseId'] ?? map['hid'] ?? '').toString().trim();
+    if (houseId.isNotEmpty && houseId != widget.houseId) return null;
+
+    return _MapMemoryItem(
+      id: id,
+      lat: lat,
+      lng: lng,
+      title: (map['text'] ?? map['title'] ?? 'Kỷ niệm').toString(),
+      note: (map['desc'] ?? map['note'] ?? '').toString(),
+      imageUrl: (map['imageUrl'] ?? map['url'] ?? '').toString(),
+      author: (map['author'] ?? '').toString(),
+      ts: _readInt(map['ts']),
+    );
+  }
+
+  void _extractMemoriesFromNode(
+    dynamic raw,
+    List<_MapMemoryItem> sink,
+    Set<String> seen, {
+    required bool allowDirectEntriesWithoutHouseId,
+  }) {
+    final map = _toStringDynamicMap(raw);
+    if (map.isEmpty) return;
+
+    final nestedHouseBucket = _toStringDynamicMap(map[widget.houseId]);
+    if (nestedHouseBucket.isNotEmpty) {
+      for (final entry in nestedHouseBucket.entries) {
+        final item = _memoryItemFromMap(entry.key, entry.value);
+        if (item == null) continue;
+        final key = '${item.id}_${item.lat}_${item.lng}_${item.ts ?? 0}';
+        if (seen.add(key)) {
+          sink.add(item);
+        }
+      }
+    }
+
+    for (final entry in map.entries) {
+      final entryMap = _toStringDynamicMap(entry.value);
+      final directHouseId =
+          (entryMap['houseId'] ?? entryMap['hid'] ?? '').toString().trim();
+      if (!allowDirectEntriesWithoutHouseId && directHouseId.isEmpty) {
+        continue;
+      }
+
+      final item = _memoryItemFromMap(entry.key, entry.value);
+      if (item == null) continue;
+      final key = '${item.id}_${item.lat}_${item.lng}_${item.ts ?? 0}';
+      if (seen.add(key)) {
+        sink.add(item);
+      }
+    }
+  }
+
+  _GpsPoint? _parseGpsPoint(dynamic raw) {
+    final map = _toStringDynamicMap(raw);
+    final lat = _readDouble(map['lt']) ?? _readDouble(map['lat']);
+    final lng = _readDouble(map['lg']) ?? _readDouble(map['lng']);
+    if (lat == null || lng == null || !_isValidCoordinate(lat, lng)) {
+      return null;
+    }
+    return _GpsPoint(
+      lat: lat,
+      lng: lng,
+      ts: _readInt(map['ts']),
+      accuracy: _readDouble(map['acc']),
+      address: map['address']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> _toStringDynamicMap(dynamic raw) {
+    if (raw is Map) {
+      return raw.map((key, value) => MapEntry(key.toString(), value));
+    }
+    return <String, dynamic>{};
+  }
+
+  double? _readDouble(dynamic value) {
+    double? result;
+    if (value is num) {
+      result = value.toDouble();
+    } else {
+      result = double.tryParse(value?.toString() ?? '');
+    }
+    if (result != null && (result.isNaN || result.isInfinite)) return null;
+    return result;
+  }
+
+  int? _readInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) {
+      if (value.isNaN || value.isInfinite) return null;
+      return value.toInt();
+    }
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  Future<void> _resolveAddressForPoint(_GpsPoint point, bool isMine) async {
+    final address = await _reverseGeocode(point.lat, point.lng);
+    if (!mounted || address == null || address.trim().isEmpty) return;
+
+    final updated = point.copyWith(address: address);
+    if (isMine) {
+      if (_myCurrentGps?.lat == point.lat && _myCurrentGps?.lng == point.lng) {
+        _myCurrentGps = updated;
+      }
+      if (_myLastKnownGps?.lat == point.lat &&
+          _myLastKnownGps?.lng == point.lng) {
+        _myLastKnownGps = updated;
+      }
+    } else {
+      if (_partnerCurrentGps?.lat == point.lat &&
+          _partnerCurrentGps?.lng == point.lng) {
+        _partnerCurrentGps = updated;
+      }
+      if (_partnerLastKnownGps?.lat == point.lat &&
+          _partnerLastKnownGps?.lng == point.lng) {
+        _partnerLastKnownGps = updated;
+      }
+    }
+    _refreshLiveData();
+  }
+
+  Future<_RouteSnapshot?> _fetchRouteSnapshot(
+    _GpsPoint myPoint,
+    _GpsPoint partnerPoint,
+  ) async {
+    try {
+      final uri = Uri.parse(
+        '${AppConfig.osrmRouteBaseUrl}/'
+        '${myPoint.lng},${myPoint.lat};${partnerPoint.lng},${partnerPoint.lat}'
+        '?overview=full&steps=false&alternatives=false&geometries=geojson',
+      );
+      final response = await http.get(
+        uri,
+        headers: const {'User-Agent': 'SoulLocket-App'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) return null;
+
+      final map = jsonDecode(response.body) as Map<String, dynamic>;
+      final routes = map['routes'];
+      if (routes is! List || routes.isEmpty) return null;
+
+      final route = routes.first as Map<String, dynamic>;
+      final geometry = route['geometry'];
+      final coords =
+          geometry is Map<String, dynamic> ? geometry['coordinates'] : null;
+      final points = <ll.LatLng>[];
+      if (coords is List) {
+        for (final item in coords) {
+          if (item is List && item.length >= 2) {
+            final lng = _readDouble(item[0]);
+            final lat = _readDouble(item[1]);
+            if (lat != null && lng != null) {
+              points.add(ll.LatLng(lat, lng));
+            }
+          }
+        }
+      }
+      if (points.length < 2) return null;
+
+      return _RouteSnapshot(
+        distanceMeters:
+            (_readDouble(route['distance']) ?? 0).clamp(0, double.infinity),
+        etaMinutes: (((_readDouble(route['duration']) ?? 0) / 60)
+            .clamp(0, 9999)
+            .ceil()),
+        points: points,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _reverseGeocode(double lat, double lng) async {
+    final cacheKey = _buildCoordinateCacheKey(lat, lng, precision: 4);
+    if (_isCacheEntryFresh(
+      _reverseGeocodeCacheTs,
+      cacheKey,
+      _kMapReverseGeocodeCacheTtl,
+    )) {
+      return _reverseGeocodeCache[cacheKey];
+    }
+
+    final pending = _reverseGeocodeInFlight[cacheKey];
+    if (pending != null) {
+      return pending;
+    }
+
+    final future = () async {
+      try {
+        final uri = Uri.parse(
+          '${AppConfig.nominatimReverseUrl}'
+          '?format=jsonv2&lat=$lat&lon=$lng&accept-language=vi',
+        );
+        final response = await http.get(
+          uri,
+          headers: const {'User-Agent': 'SoulLocket-App'},
+        ).timeout(const Duration(seconds: 10));
+        if (response.statusCode != 200) return null;
+        final map = jsonDecode(response.body) as Map<String, dynamic>;
+        final displayName = map['display_name']?.toString().trim();
+        return displayName == null || displayName.isEmpty ? null : displayName;
+      } catch (_) {
+        return null;
+      }
+    }();
+
+    _reverseGeocodeInFlight[cacheKey] = future;
+    final result = await future;
+    _reverseGeocodeInFlight.remove(cacheKey);
+    _reverseGeocodeCache[cacheKey] = result;
+    _reverseGeocodeCacheTs[cacheKey] = DateTime.now().millisecondsSinceEpoch;
+    _trimReverseGeocodeCache();
+    return result;
+  }
+
+  Future<void> _loadHistoryForDate(
+    DateTime date, {
+    bool fitToHistory = true,
+  }) async {
+    final dateKey = _dayFormat.format(date);
+    final myPoints = await _fetchRoleHistory(widget.myRole, dateKey);
+    final partnerPoints = _isSingleRelationship
+        ? const <_HistoryPoint>[]
+        : await _fetchRoleHistory(widget.partnerRole, dateKey);
+
+    final history = _HistoryBundle(
+      dateKey: dateKey,
+      myPoints: myPoints,
+      partnerPoints: partnerPoints,
+      myDistanceMeters: _calculatePathDistance(myPoints),
+      partnerDistanceMeters: _calculatePathDistance(partnerPoints),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _selectedHistoryDate = date;
+      _historyBundle = history;
+    });
+    _setHistoryPolylines(_buildHistoryPolylines(history));
+
+    if (history.isEmpty) {
+      _mapInsightText = _isSingleRelationship
+          ? 'Ngày ${_prettyDayFormat.format(date)} chưa có dữ liệu di chuyển của bạn.'
+          : 'Ngày ${_prettyDayFormat.format(date)} chưa có dữ liệu di chuyển của hai bạn.';
+    } else {
+      _mapInsightText = _isSingleRelationship
+          ? 'Ngày ${_prettyDayFormat.format(date)}: Đang hiển thị lịch sử di chuyển của bạn.'
+          : 'Ngày ${_prettyDayFormat.format(date)}: Đang hiển thị lịch sử di chuyển của hai bạn.';
+    }
+
+    _emitLiveUiSnapshot();
+    _maybeScheduleAutoFit(fitToData: fitToHistory);
+  }
+
+  void _emitLiveUiSnapshot() {
+    _liveUiVN.value = _LiveUiSnapshot(
+      myPoint: _effectiveGpsForRole(widget.myRole),
+      partnerPoint: _effectiveGpsForRole(widget.partnerRole),
+      myIsLive: _isRoleLive(widget.myRole),
+      partnerIsLive: _isRoleLive(widget.partnerRole),
+      myHasHistory: _hasRoleLocationHistory(widget.myRole),
+      partnerHasHistory: _hasRoleLocationHistory(widget.partnerRole),
+      isFetchingRoute: _isFetchingRoute,
+      myAddressText: _myAddressText,
+      partnerAddressText: _partnerAddressText,
+      distanceText: _distanceText,
+      routeDistanceText: _routeDistanceText,
+      etaText: _etaText,
+      mapInsightText: _mapInsightText,
+      mapAlert: _mapAlert,
+    );
+  }
+
+  void _setStaticMarkers(List<fm.Marker> markers) {
+    _staticMarkersVN.value = markers;
+  }
+
+  void _setCheckinPolylines(List<fm.Polyline> polylines) {
+    _checkinPolylinesVN.value = polylines;
+  }
+
+  void _setHistoryPolylines(List<fm.Polyline> polylines) {
+    final signature = _buildPolylineSignature(polylines);
+    if (signature == _historyPolylineSignature) return;
+    _historyPolylineSignature = signature;
+    _historyPolylinesVN.value = polylines;
+  }
+
+  void _maybeScheduleAutoFit({required bool fitToData}) {
+    if (!fitToData || _didAutoFit || _isFitting) return;
+    _fitDebounce?.cancel();
+    _fitDebounce = Timer(const Duration(milliseconds: 500), () {
+      _fitToVisibleData(includeHistory: true);
+    });
+  }
+
+  Future<List<_HistoryPoint>> _fetchRoleHistory(
+    String role,
+    String dateKey,
+  ) async {
+    final merged = <_HistoryPoint>[];
+    final seen = <String>{};
+
+    Future<void> collect(String path) async {
+      final snap = await _dbRef
+          .child(path)
+          .orderByChild('ts')
+          .limitToLast(_kGpsHistoryFetchLimit)
+          .get();
+      final raw = _toStringDynamicMap(snap.value);
+      for (final entry in raw.entries) {
+        final item = _toStringDynamicMap(entry.value);
+        final lat = _readDouble(item['lt']) ?? _readDouble(item['lat']);
+        final lng = _readDouble(item['lg']) ?? _readDouble(item['lng']);
+        final ts = _readInt(item['ts']);
+        if (lat == null || lng == null || ts == null) continue;
+        final key = '${lat.toStringAsFixed(6)}_${lng.toStringAsFixed(6)}_$ts';
+        if (!seen.add(key)) continue;
+        merged.add(
+          _HistoryPoint(
+            lat: lat,
+            lng: lng,
+            ts: ts,
+            acc: _readDouble(item['acc']) ?? 0,
+          ),
+        );
+      }
+    }
+
+    await collect('gps_history/${widget.houseId}/$role/$dateKey');
+
+    merged.sort((a, b) => a.ts.compareTo(b.ts));
+    final sanitized = _sanitizeHistoryPoints(merged);
+    if (sanitized.length > 600) {
+      return sanitized.sublist(sanitized.length - 600);
+    }
+    return sanitized;
+  }
+
+  List<_HistoryPoint> _sanitizeHistoryPoints(List<_HistoryPoint> points) {
+    if (points.length < 2) return points;
+
+    final cleaned = <_HistoryPoint>[];
+    for (final point in points) {
+      if (point.acc > 150) continue;
+      if (cleaned.isEmpty) {
+        cleaned.add(point);
+        continue;
+      }
+
+      final previous = cleaned.last;
+      final deltaMs = point.ts - previous.ts;
+      if (deltaMs <= 0) continue;
+
+      final distanceMeters = _distance
+          .as(
+            ll.LengthUnit.Meter,
+            previous.latLng,
+            point.latLng,
+          )
+          .toDouble();
+
+      if (distanceMeters < 8 && deltaMs < 2 * 60 * 1000) {
+        continue;
+      }
+
+      final speedMps = distanceMeters / (deltaMs / 1000);
+      if (speedMps > 70 && point.acc > 40) {
+        continue;
+      }
+
+      cleaned.add(point);
+    }
+
+    if (cleaned.isEmpty && points.isNotEmpty) {
+      return [points.last];
+    }
+    return cleaned;
+  }
+
+  double _calculatePathDistance(List<_HistoryPoint> points) {
+    if (points.length < 2) return 0;
+    double total = 0;
+    for (var i = 1; i < points.length; i++) {
+      total += _distance
+          .as(
+            ll.LengthUnit.Meter,
+            ll.LatLng(points[i - 1].lat, points[i - 1].lng),
+            ll.LatLng(points[i].lat, points[i].lng),
+          )
+          .toDouble();
+    }
+    return total;
+  }
+
+  List<_HistoryPoint> _compressHistoryPoints(
+    List<_HistoryPoint> points, {
+    int maxPoints = 180,
+  }) {
+    if (points.length <= maxPoints || maxPoints < 3) {
+      return points;
+    }
+
+    final sampled = <_HistoryPoint>[points.first];
+    final step = (points.length - 1) / (maxPoints - 1);
+    var cursor = step;
+    var lastIndex = 0;
+
+    while (sampled.length < maxPoints - 1) {
+      final nextIndex = cursor.round().clamp(1, points.length - 2);
+      if (nextIndex > lastIndex) {
+        sampled.add(points[nextIndex]);
+        lastIndex = nextIndex;
+      }
+      cursor += step;
+    }
+
+    if (!identical(sampled.last, points.last)) {
+      sampled.add(points.last);
+    }
+    return sampled;
+  }
+
+  List<ll.LatLng> _compressLatLngPoints(
+    List<ll.LatLng> points, {
+    int maxPoints = _kMaxRenderedCheckinPathPoints,
+  }) {
+    if (points.length <= maxPoints || maxPoints < 3) {
+      return points;
+    }
+
+    final sampled = <ll.LatLng>[points.first];
+    final step = (points.length - 1) / (maxPoints - 1);
+    var cursor = step;
+    var lastIndex = 0;
+
+    while (sampled.length < maxPoints - 1) {
+      final nextIndex = cursor.round().clamp(1, points.length - 2);
+      if (nextIndex > lastIndex) {
+        sampled.add(points[nextIndex]);
+        lastIndex = nextIndex;
+      }
+      cursor += step;
+    }
+
+    if (!identical(sampled.last, points.last)) {
+      sampled.add(points.last);
+    }
+    return sampled;
+  }
+
+  fm.Polyline _buildSharpPolyline({
+    required List<ll.LatLng> points,
+    required Color color,
+    List<Color>? gradientColors,
+    double strokeWidth = 5,
+    double borderStrokeWidth = 2,
+    Color borderColor = _kMapRouteBorder,
+  }) {
+    return fm.Polyline(
+      points: points,
+      color: color,
+      gradientColors: gradientColors,
+      strokeWidth: strokeWidth,
+      borderStrokeWidth: borderStrokeWidth,
+      borderColor: borderColor,
+      strokeCap: StrokeCap.round,
+      strokeJoin: StrokeJoin.round,
+    );
+  }
+
+  fm.Polyline _buildGlowPolyline({
+    required List<ll.LatLng> points,
+    required Color color,
+    double strokeWidth = 10,
+  }) {
+    return fm.Polyline(
+      points: points,
+      color: color,
+      strokeWidth: strokeWidth,
+      strokeCap: StrokeCap.round,
+      strokeJoin: StrokeJoin.round,
+    );
+  }
+
+  List<fm.Polyline> _buildHistoryPolylines(_HistoryBundle history) {
+    final polylines = <fm.Polyline>[];
+    if (history.myPoints.length >= 2) {
+      final myRenderPoints = _compressHistoryPoints(history.myPoints)
+          .map((e) => e.latLng)
+          .toList();
+      polylines.add(
+        _buildSharpPolyline(
+          points: myRenderPoints,
+          color: _kMapBlue,
+          gradientColors: const [_kMapBlueSoft, _kMapBlue],
+          strokeWidth: 4.8,
+          borderStrokeWidth: 1.8,
+        ),
+      );
+    }
+    if (history.partnerPoints.length >= 2) {
+      final partnerRenderPoints = _compressHistoryPoints(history.partnerPoints)
+          .map((e) => e.latLng)
+          .toList();
+      polylines.add(
+        _buildSharpPolyline(
+          points: partnerRenderPoints,
+          color: _kMapPinkDeep,
+          gradientColors: const [_kMapPinkSoft, _kMapPinkDeep],
+          strokeWidth: 4.8,
+          borderStrokeWidth: 1.8,
+        ),
+      );
+    }
+    return polylines;
+  }
+
+  ll.LatLng? _preferredFocusPoint() {
+    if (_myLocation != null) return _myLocation;
+    if (_partnerLocation != null) return _partnerLocation;
+    if (_historyBundle.myPoints.isNotEmpty) {
+      return _historyBundle.myPoints.last.latLng;
+    }
+    if (_historyBundle.partnerPoints.isNotEmpty) {
+      return _historyBundle.partnerPoints.last.latLng;
+    }
+    return null;
+  }
+
+  Future<void> _focusCameraNearMe() async {
+    if (_isFitting || !_isMapReady) return;
+
+    final focusPoint = _preferredFocusPoint();
+    if (focusPoint == null) return;
+
+    _isFitting = true;
+    try {
+      final zoom = _myLocation != null
+          ? (_isRoleLive(widget.myRole) ? 16.2 : 15.6)
+          : (_partnerLocation != null ? 15.2 : 14.8);
+      _mapController.move(focusPoint, zoom);
+      _didAutoFit = true;
+    } catch (_) {
+      await Future<void>.delayed(const Duration(milliseconds: 240));
+    } finally {
+      _isFitting = false;
+    }
+  }
+
+  Future<void> _fitToVisibleData({required bool includeHistory}) async {
+    if (_isFitting || !_isMapReady) return;
+
+    final points = <ll.LatLng>[];
+    if (_myLocation != null) points.add(_myLocation!);
+    if (_partnerLocation != null) points.add(_partnerLocation!);
+    if (_routeSnapshot != null && _routeSnapshot!.points.isNotEmpty) {
+      points.add(_routeSnapshot!.points.first);
+      points.add(_routeSnapshot!.points.last);
+    }
+    if (includeHistory) {
+      points.addAll(
+        _compressHistoryPoints(_historyBundle.myPoints, maxPoints: 120)
+            .map((e) => e.latLng),
+      );
+      points.addAll(
+        _compressHistoryPoints(_historyBundle.partnerPoints, maxPoints: 120)
+            .map((e) => e.latLng),
+      );
+    }
+
+    final uniquePoints = points
+        .where((point) => _isValidCoordinate(point.latitude, point.longitude))
+        .toSet()
+        .toList();
+    if (uniquePoints.isEmpty) {
+      await _focusCameraNearMe();
+      return;
+    }
+
+    _isFitting = true;
+    try {
+      if (uniquePoints.length == 1) {
+        _mapController.move(uniquePoints.first, 15.8);
+      } else {
+        _mapController.fitCamera(
+          fm.CameraFit.coordinates(
+            coordinates: uniquePoints,
+            padding: const EdgeInsets.fromLTRB(42, 118, 42, 250),
+            maxZoom: 16,
+          ),
+        );
+      }
+      _didAutoFit = true;
+    } catch (_) {
+      await Future<void>.delayed(const Duration(milliseconds: 280));
+    } finally {
+      _isFitting = false;
+    }
+  }
+
+  Future<void> _showCheckinSheet() async {
+    await _showCheckinSheetDialog();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF18191A),
+      appBar: AppBar(
+        toolbarHeight: 52,
+        elevation: 0,
+        backgroundColor: const Color(0xFF18191A),
+        foregroundColor: Colors.white,
+        titleSpacing: 0,
+        title: Text(
+          _mapScreenTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: SLTheme.quicksand(fontSize: 17, fontWeight: FontWeight.w900),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Về vị trí của bạn',
+            onPressed: _focusCameraNearMe,
+            icon: const Icon(Icons.my_location_rounded),
+          ),
+        ],
+      ),
+      body: _isLoading ? _buildMapLoadingState() : _buildMapBodySection(),
+    );
+  }
+
+  Widget _buildMapSurface() {
+    return _buildMapSurfaceSection();
+  }
+
+  fm.Marker _buildOsmMarker(_MapMarkerSpec marker) {
+    final badgeWidth = marker.compact ? 74.0 : 104.0;
+    final bubbleSize = marker.compact ? 34.0 : 42.0;
+    final hasAvatar = marker.avatarUrl != null && marker.avatarUrl!.isNotEmpty;
+
+    return fm.Marker(
+      key: ValueKey(marker.id),
+      point: marker.point,
+      width: marker.compact ? 88 : 120,
+      height: marker.compact ? 78 : 108,
+      alignment: Alignment.bottomCenter,
+      child: GestureDetector(
+        onTap: marker.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (!marker.compact)
+                Container(
+                  constraints: BoxConstraints(maxWidth: badgeWidth),
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF18191A).withOpacity(0.94),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: marker.color.withOpacity(0.22)),
+                  ),
+                  child: Text(
+                    marker.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              SizedBox(
+                width: bubbleSize + 16,
+                height: bubbleSize + 16,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (marker.pulse)
+                      Container(
+                        width: bubbleSize + 16,
+                        height: bubbleSize + 16,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: marker.color.withOpacity(0.20),
+                          border: Border.all(
+                            color: marker.color.withOpacity(0.24),
+                            width: 1.4,
+                          ),
+                        ),
+                      ),
+                    Container(
+                      width: bubbleSize,
+                      height: bubbleSize,
+                      decoration: BoxDecoration(
+                        color: marker.compact ? marker.color : null,
+                        gradient: marker.compact
+                            ? null
+                            : LinearGradient(
+                                colors: [
+                                  Color.lerp(
+                                    marker.color,
+                                    Colors.white,
+                                    0.16,
+                                  )!,
+                                  marker.color,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                        shape: BoxShape.circle,
+                        boxShadow: marker.compact
+                            ? const []
+                            : [
+                                BoxShadow(
+                                  color: marker.color.withOpacity(0.28),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                        border: Border.all(
+                          color: marker.pulse
+                              ? marker.color.withOpacity(0.92)
+                              : Colors.white.withOpacity(
+                                  marker.compact ? 0.78 : 0.88,
+                                ),
+                          width:
+                              marker.pulse ? 2.2 : (marker.compact ? 1.2 : 1.6),
+                        ),
+                        image: hasAvatar
+                            ? DecorationImage(
+                                image: CachedNetworkImageProvider(
+                                    marker.avatarUrl!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: hasAvatar
+                          ? null
+                          : Icon(
+                              marker.icon,
+                              color: Colors.white,
+                              size: marker.compact ? 16 : 20,
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              Transform.translate(
+                offset: const Offset(0, -4),
+                child: Transform.rotate(
+                  angle: math.pi / 4,
+                  child: Container(
+                    width: marker.compact ? 10 : 12,
+                    height: marker.compact ? 10 : 12,
+                    decoration: BoxDecoration(
+                      color: marker.color,
+                      borderRadius: BorderRadius.circular(3),
+                      border: Border.all(
+                          color: Colors.white.withOpacity(0.9), width: 1),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMapFallbackSurface() {
+    return _buildMapFallbackSection();
+  }
+
+  void _retryMapSurface() {
+    setState(() {
+      _mapInitError = null;
+      _isMapReady = false;
+    });
+    _scheduleMapReadyWatchdog();
+  }
+
+  void _queueMapIntroNotice() {
+    if (_didQueueMapIntroNotice) return;
+    _didQueueMapIntroNotice = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_maybeShowFirstMapNotice());
+    });
+  }
+}
+
+class _LiveUiSnapshot {
+  final _GpsPoint? myPoint;
+  final _GpsPoint? partnerPoint;
+  final bool myIsLive;
+  final bool partnerIsLive;
+  final bool myHasHistory;
+  final bool partnerHasHistory;
+  final bool isFetchingRoute;
+  final String myAddressText;
+  final String partnerAddressText;
+  final String distanceText;
+  final String routeDistanceText;
+  final String etaText;
+  final String mapInsightText;
+  final String? mapAlert;
+
+  const _LiveUiSnapshot({
+    required this.myPoint,
+    required this.partnerPoint,
+    required this.myIsLive,
+    required this.partnerIsLive,
+    required this.myHasHistory,
+    required this.partnerHasHistory,
+    required this.isFetchingRoute,
+    required this.myAddressText,
+    required this.partnerAddressText,
+    required this.distanceText,
+    required this.routeDistanceText,
+    required this.etaText,
+    required this.mapInsightText,
+    required this.mapAlert,
+  });
+
+  factory _LiveUiSnapshot.empty() => const _LiveUiSnapshot(
+        myPoint: null,
+        partnerPoint: null,
+        myIsLive: false,
+        partnerIsLive: false,
+        myHasHistory: false,
+        partnerHasHistory: false,
+        isFetchingRoute: false,
+        myAddressText: 'Chưa có vị trí',
+        partnerAddressText: 'Chưa có vị trí',
+        distanceText: 'Đang định vị...',
+        routeDistanceText: '--',
+        etaText: '--',
+        mapInsightText: 'Đang quét dữ liệu...',
+        mapAlert: null,
+      );
+}
+
+class _LocationNodeState {
+  final _GpsPoint? current;
+  final _GpsPoint? lastKnown;
+  final bool isLive;
+  final bool hasHistory;
+
+  const _LocationNodeState({
+    required this.current,
+    required this.lastKnown,
+    required this.isLive,
+    required this.hasHistory,
+  });
+}
+
+class _GpsPoint {
+  final double lat;
+  final double lng;
+  final int? ts;
+  final double? accuracy;
+  final String? address;
+
+  const _GpsPoint({
+    required this.lat,
+    required this.lng,
+    this.ts,
+    this.accuracy,
+    this.address,
+  });
+
+  ll.LatLng get latLng => ll.LatLng(lat, lng);
+
+  _GpsPoint copyWith({String? address}) {
+    return _GpsPoint(
+      lat: lat,
+      lng: lng,
+      ts: ts,
+      accuracy: accuracy,
+      address: address ?? this.address,
+    );
+  }
+}
+
+class _HistoryPoint {
+  final double lat;
+  final double lng;
+  final int ts;
+  final double acc;
+
+  const _HistoryPoint({
+    required this.lat,
+    required this.lng,
+    required this.ts,
+    required this.acc,
+  });
+
+  ll.LatLng get latLng => ll.LatLng(lat, lng);
+}
+
+class _HistoryBundle {
+  final String dateKey;
+  final List<_HistoryPoint> myPoints;
+  final List<_HistoryPoint> partnerPoints;
+  final double myDistanceMeters;
+  final double partnerDistanceMeters;
+
+  const _HistoryBundle({
+    required this.dateKey,
+    required this.myPoints,
+    required this.partnerPoints,
+    required this.myDistanceMeters,
+    required this.partnerDistanceMeters,
+  });
+
+  factory _HistoryBundle.empty() => const _HistoryBundle(
+        dateKey: '',
+        myPoints: <_HistoryPoint>[],
+        partnerPoints: <_HistoryPoint>[],
+        myDistanceMeters: 0,
+        partnerDistanceMeters: 0,
+      );
+
+  bool get isEmpty => myPoints.isEmpty && partnerPoints.isEmpty;
+  int get totalPoints => myPoints.length + partnerPoints.length;
+  double get totalDistanceMeters => myDistanceMeters + partnerDistanceMeters;
+}
+
+class _RouteSnapshot {
+  final double distanceMeters;
+  final int etaMinutes;
+  final List<ll.LatLng> points;
+
+  const _RouteSnapshot({
+    required this.distanceMeters,
+    required this.etaMinutes,
+    required this.points,
+  });
+}
+
+class _MapMarkerSpec {
+  final String id;
+  final ll.LatLng point;
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool compact;
+  final bool pulse;
+  final String? avatarUrl;
+
+  const _MapMarkerSpec({
+    required this.id,
+    required this.point,
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.compact = false,
+    this.pulse = false,
+    this.avatarUrl,
+  });
+}
+
+class _MapMemoryItem {
+  final String id;
+  final double lat;
+  final double lng;
+  final String title;
+  final String note;
+  final String imageUrl;
+  final String author;
+  final int? ts;
+
+  const _MapMemoryItem({
+    required this.id,
+    required this.lat,
+    required this.lng,
+    required this.title,
+    required this.note,
+    required this.imageUrl,
+    required this.author,
+    required this.ts,
+  });
+}
+
+class _MapCheckinItem {
+  final String id;
+  final double lat;
+  final double lng;
+  final String title;
+  final String note;
+  final String imageUrl;
+  final String role;
+  final String author;
+  final int? ts;
+
+  const _MapCheckinItem({
+    required this.id,
+    required this.lat,
+    required this.lng,
+    required this.title,
+    required this.note,
+    this.imageUrl = '',
+    required this.role,
+    required this.author,
+    required this.ts,
+  });
+}
+
+class _NearbyMapPinCandidate {
+  final String key;
+  final String title;
+  final String kindLabel;
+  final double lat;
+  final double lng;
+  final double distanceMeters;
+
+  const _NearbyMapPinCandidate({
+    required this.key,
+    required this.title,
+    required this.kindLabel,
+    required this.lat,
+    required this.lng,
+    required this.distanceMeters,
+  });
+
+  String get displayTitle {
+    final trimmed = title.trim();
+    return trimmed.isEmpty ? kindLabel : trimmed;
+  }
+}

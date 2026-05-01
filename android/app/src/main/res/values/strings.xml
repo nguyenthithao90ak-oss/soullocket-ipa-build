@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SoulLocket</string>
+    <string name="widget_name">Widget Couple</string>
+    <string name="facebook_app_id">2604105489983792</string>
+    <string name="fb_login_protocol_scheme">fb2604105489983792</string>
+    <string name="facebook_client_token">a140622e72ab28fe86915c2739432657</string>
+</resources>

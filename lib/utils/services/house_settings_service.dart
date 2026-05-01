@@ -1,0 +1,621 @@
+import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../services/single_match_service.dart';
+import 'activity_history_service.dart';
+import '../models/house_settings.dart';
+import '../utils/flexible_date_input.dart';
+import 'device_manager_service.dart';
+
+/// HouseSettingsService - realtime listener cho settings nhà
+/// Kết hợp với HouseService hiện tại (HouseService lo phần tạo nhà)
+class HouseSettingsService {
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  final DeviceManagerService _deviceManagerService = DeviceManagerService();
+  static const Duration startDateChangeCooldown = Duration(days: 3);
+
+  static int? _readEpochMs(dynamic raw) {
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '');
+  }
+
+  Future<Map<String, dynamic>> getStartDateChangePolicy(String houseId) async {
+    final snap = await _dbRef.child('houses/$houseId/settings').get();
+    final settings = _asStringDynamicMap(snap.value) ?? {};
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final cooldownUntil = _readEpochMs(settings['startDateCooldownUntil']);
+    final changedAt = _readEpochMs(settings['startDateChangedAt']);
+    final changeCount = _readEpochMs(settings['startDateChangeCount']) ?? 0;
+    final isLocked = cooldownUntil != null && cooldownUntil > now;
+    final shouldWarn = !isLocked &&
+        changeCount >= 2 &&
+        changedAt != null &&
+        now - changedAt >= 0 &&
+        now - changedAt < startDateChangeCooldown.inMilliseconds;
+
+    return {
+      'isLocked': isLocked,
+      'shouldWarn': shouldWarn,
+      'cooldownUntil': cooldownUntil,
+    };
+  }
+
+  String _withRefreshToken(String url) {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty) return trimmed;
+    final separator = trimmed.contains('?') ? '&' : '?';
+    return '$trimmed${separator}v=${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  Map<String, dynamic>? _asStringDynamicMap(Object? raw) {
+    if (raw is! Map) {
+      return null;
+    }
+    try {
+      return Map<String, dynamic>.from(Map<dynamic, dynamic>.from(raw));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String> _resolvedActivityRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = (prefs.getString('il_role') ?? 'user1').trim();
+    return role == 'user2' ? 'user2' : 'user1';
+  }
+
+  Future<void> _recordSpaceActivity(String houseId, String text) async {
+    try {
+      final role = await _resolvedActivityRole();
+      await ActivityHistoryService.instance.add(
+        text,
+        houseId: houseId,
+        role: role,
+      );
+    } catch (_) {}
+  }
+
+  Stream<HouseSettings?> streamSettings(String houseId) {
+    return _dbRef.child('houses/$houseId/settings').onValue.map((event) {
+      if (!event.snapshot.exists || event.snapshot.value == null) return null;
+      final raw = event.snapshot.value;
+      if (raw is! Map) return null;
+      try {
+        return HouseSettings.fromMap(raw);
+      } catch (_) {
+        return null;
+      }
+    });
+  }
+
+  Future<HouseSettings?> fetchSettings(String houseId) async {
+    final snap = await _dbRef.child('houses/$houseId/settings').get();
+    if (!snap.exists || snap.value == null) return null;
+    final raw = snap.value;
+    if (raw is! Map) return null;
+    return HouseSettings.fromMap(raw);
+  }
+
+  Future<void> _ensureCurrentDeviceCanModifySharedInfo(
+    String houseId, {
+    bool allowPendingApproval = true,
+  }) async {
+    final trustState = await _deviceManagerService.getCurrentDeviceTrustState(
+        autoApprove: true);
+    if (trustState.isTrusted) return;
+    if (allowPendingApproval && trustState.isPendingApproval) return;
+    if (trustState.isBlocked) {
+      throw 'Thiết bị này đã bị chặn nên không thể thay đổi thông tin chung.';
+    }
+
+    final unlockAtMs = trustState.autoApproveAtMs;
+    final unlockLabel =
+        unlockAtMs > 0 ? _formatDateTime(unlockAtMs) : 'sau đủ 12 giờ';
+    throw 'Thiết bị này đang chờ duyệt nên chưa thể thay đổi thông tin chung. '
+        'Hãy duyệt thiết bị ở máy tin cậy hoặc đợi đến $unlockLabel.';
+  }
+
+  String _formatDateTime(int epochMs) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(epochMs);
+    final dd = dt.day.toString().padLeft(2, '0');
+    final mm = dt.month.toString().padLeft(2, '0');
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final min = dt.minute.toString().padLeft(2, '0');
+    return '$dd/$mm/${dt.year} $hh:$min';
+  }
+
+  Future<void> updateField(String houseId, String field, dynamic value) async {
+    await _ensureCurrentDeviceCanModifySharedInfo(houseId);
+    await _dbRef.child('houses/$houseId/settings/$field').set(value);
+  }
+
+  Future<void> updateAvatar(
+    String houseId,
+    String role,
+    String url, {
+    bool syncHouseAvatar = false,
+  }) async {
+    await _ensureCurrentDeviceCanModifySharedInfo(
+      houseId,
+      allowPendingApproval: true,
+    );
+    final refreshedUrl = _withRefreshToken(url);
+    final field = role == 'user1' ? 'avtUser1' : 'avtUser2';
+    final updates = <String, dynamic>{
+      'houses/$houseId/settings/$field': refreshedUrl,
+      'house_profiles/$houseId/$field': refreshedUrl,
+      'house_profiles/$houseId/settings/$field': refreshedUrl,
+      'houses/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
+      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
+      'houses_public/$houseId/updated_at': ServerValue.timestamp,
+    };
+
+    if (syncHouseAvatar) {
+      updates.addAll({
+        'houses/$houseId/settings/houseAvatar': refreshedUrl,
+        'houses/$houseId/avatar': refreshedUrl,
+        'houses/$houseId/houseAvatar': refreshedUrl,
+        'house_profiles/$houseId/avatar': refreshedUrl,
+        'house_profiles/$houseId/houseAvatar': refreshedUrl,
+        'house_profiles/$houseId/settings/houseAvatar': refreshedUrl,
+        'houses_public/$houseId/avatar': refreshedUrl,
+        'houses_public/$houseId/houseAvatar': refreshedUrl,
+        'houses_public/$houseId/settings/houseAvatar': refreshedUrl,
+        ...SingleMatchService.profileIndexUpdates(
+          houseId: houseId,
+          avatarUrl: refreshedUrl,
+          updatedAt: DateTime.now().millisecondsSinceEpoch,
+        ),
+      });
+    }
+
+    await _dbRef.update(updates);
+  }
+
+  Future<void> updateHouseAvatarOnly({
+    required String houseId,
+    required String avatarUrl,
+  }) async {
+    await _ensureCurrentDeviceCanModifySharedInfo(
+      houseId,
+      allowPendingApproval: true,
+    );
+
+    final safeAvatarUrl = _withRefreshToken(avatarUrl);
+    if (safeAvatarUrl.isEmpty || safeAvatarUrl.length > 2048) {
+      throw 'Avatar hồ sơ không hợp lệ.';
+    }
+
+    await _dbRef.update({
+      'houses/$houseId/settings/houseAvatar': safeAvatarUrl,
+      'houses/$houseId/avatar': safeAvatarUrl,
+      'houses/$houseId/houseAvatar': safeAvatarUrl,
+      'house_profiles/$houseId/avatar': safeAvatarUrl,
+      'house_profiles/$houseId/houseAvatar': safeAvatarUrl,
+      'house_profiles/$houseId/settings/houseAvatar': safeAvatarUrl,
+      'houses_public/$houseId/avatar': safeAvatarUrl,
+      'houses_public/$houseId/houseAvatar': safeAvatarUrl,
+      'houses_public/$houseId/settings/houseAvatar': safeAvatarUrl,
+      'houses/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
+      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
+      'houses_public/$houseId/updated_at': ServerValue.timestamp,
+      ...SingleMatchService.profileIndexUpdates(
+        houseId: houseId,
+        avatarUrl: safeAvatarUrl,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      ),
+    });
+  }
+
+  Future<void> updateProfilePresentation({
+    required String houseId,
+    String? headerImageUrl,
+    String? headerThemeKey,
+    double? avatarSizePx,
+  }) async {
+    await _ensureCurrentDeviceCanModifySharedInfo(
+      houseId,
+      allowPendingApproval: true,
+    );
+
+    final updates = <String, dynamic>{
+      'houses/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
+      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
+      'houses_public/$houseId/updated_at': ServerValue.timestamp,
+    };
+
+    if (headerImageUrl != null) {
+      final safeHeaderImageUrl = headerImageUrl.trim();
+      if (safeHeaderImageUrl.length > 2048) {
+        throw 'Ảnh nền hồ sơ quá dài hoặc không hợp lệ.';
+      }
+      updates.addAll({
+        'houses/$houseId/settings/profileHeaderImageUrl': safeHeaderImageUrl,
+        'house_profiles/$houseId/profileHeaderImageUrl': safeHeaderImageUrl,
+        'house_profiles/$houseId/settings/profileHeaderImageUrl':
+            safeHeaderImageUrl,
+        'houses_public/$houseId/profileHeaderImageUrl': safeHeaderImageUrl,
+        'houses_public/$houseId/settings/profileHeaderImageUrl':
+            safeHeaderImageUrl,
+      });
+    }
+
+    if (headerThemeKey != null) {
+      final safeHeaderThemeKey = headerThemeKey.trim();
+      if (safeHeaderThemeKey.length > 40) {
+        throw 'Mã nền hồ sơ không hợp lệ.';
+      }
+      updates.addAll({
+        'houses/$houseId/settings/profileHeaderThemeKey': safeHeaderThemeKey,
+        'house_profiles/$houseId/profileHeaderThemeKey': safeHeaderThemeKey,
+        'house_profiles/$houseId/settings/profileHeaderThemeKey':
+            safeHeaderThemeKey,
+        'houses_public/$houseId/profileHeaderThemeKey': safeHeaderThemeKey,
+        'houses_public/$houseId/settings/profileHeaderThemeKey':
+            safeHeaderThemeKey,
+      });
+    }
+
+    if (avatarSizePx != null) {
+      final safeAvatarSize = avatarSizePx.clamp(60, 180).toDouble();
+      updates.addAll({
+        'houses/$houseId/settings/profileAvatarSizePx': safeAvatarSize,
+        'house_profiles/$houseId/profileAvatarSizePx': safeAvatarSize,
+        'house_profiles/$houseId/settings/profileAvatarSizePx': safeAvatarSize,
+        'houses_public/$houseId/profileAvatarSizePx': safeAvatarSize,
+        'houses_public/$houseId/settings/profileAvatarSizePx': safeAvatarSize,
+      });
+    }
+
+    if (updates.length <= 5) {
+      return;
+    }
+
+    await _dbRef.update(updates);
+  }
+
+  Future<void> updateHouseName(String houseId, String newName) async {
+    await _ensureCurrentDeviceCanModifySharedInfo(houseId);
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty || trimmed.length > 30) {
+      throw 'Tên nhà phải từ 1 đến 30 ký tự.';
+    }
+
+    await _dbRef.update({
+      'houses/$houseId/houseName': trimmed,
+      'houses/$houseId/settings/houseName': trimmed,
+      'house_profiles/$houseId/houseName': trimmed,
+      'house_profiles/$houseId/settings/houseName': trimmed,
+      'houses_public/$houseId/houseName': trimmed,
+      'houses_public/$houseId/settings/houseName': trimmed,
+      'houses/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
+      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
+      'houses_public/$houseId/updated_at': ServerValue.timestamp,
+      ...SingleMatchService.profileIndexUpdates(
+        houseId: houseId,
+        houseName: trimmed,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      ),
+    });
+    await _recordSpaceActivity(
+      houseId,
+      'đã đổi tên không gian thành "$trimmed"',
+    );
+  }
+
+  Future<void> updateIdentityBundle({
+    required String houseId,
+    required String houseName,
+    required String nameU1,
+    required String nameU2,
+    required String startDate,
+    required String dobU1,
+    required String dobU2,
+    required String dayUnit,
+    String? greetingQuote,
+  }) async {
+    await _ensureCurrentDeviceCanModifySharedInfo(houseId);
+    final safeHouseName = houseName.trim();
+    final safeNameU1 = nameU1.trim();
+    final safeNameU2 = nameU2.trim();
+    final safeStartDate = startDate.trim().isEmpty
+        ? ''
+        : DateInputUtils.normalizeToIsoDate(
+            startDate,
+            firstYear: 1900,
+            lastYear: DateTime.now().year,
+          );
+    final safeDobU1 = dobU1.trim().isEmpty
+        ? ''
+        : DateInputUtils.normalizeToIsoDate(
+            dobU1,
+            firstYear: 1900,
+            lastYear: DateTime.now().year,
+          );
+    final safeDobU2 = dobU2.trim().isEmpty
+        ? ''
+        : DateInputUtils.normalizeToIsoDate(
+            dobU2,
+            firstYear: 1900,
+            lastYear: DateTime.now().year,
+          );
+    final safeDayUnit = dayUnit.trim().isEmpty ? 'ngày yêu' : dayUnit.trim();
+    final safeGreetingQuote = (greetingQuote ?? '').trim();
+
+    if (safeHouseName.isEmpty || safeHouseName.length > 30) {
+      throw 'Tên nhà phải từ 1 đến 30 ký tự.';
+    }
+    if (safeNameU1.isEmpty) {
+      throw 'Tên người thứ 1 không được để trống.';
+    }
+    if (safeStartDate == null) {
+      throw 'Định dạng ngày yêu không hợp lệ.';
+    }
+    if (safeStartDate.isNotEmpty) {
+      final parsedStart = DateTime.tryParse(safeStartDate);
+      if (parsedStart == null) {
+        throw 'Định dạng ngày yêu không hợp lệ.';
+      }
+      if (parsedStart.isAfter(DateTime.now())) {
+        throw 'Ngày yêu không được ở tương lai.';
+      }
+    }
+    if (safeDobU1 == null || safeDobU2 == null) {
+      throw 'Định dạng ngày sinh không hợp lệ.';
+    }
+    for (final dob in [safeDobU1, safeDobU2]) {
+      if (dob.isEmpty) continue;
+      if (DateTime.tryParse(dob) == null) {
+        throw 'Định dạng ngày sinh không hợp lệ.';
+      }
+    }
+
+    await _dbRef.update({
+      'houses/$houseId/houseName': safeHouseName,
+      'houses/$houseId/settings/houseName': safeHouseName,
+      'houses/$houseId/settings/nameU1': safeNameU1,
+      'houses/$houseId/settings/nameU2': safeNameU2,
+      'houses/$houseId/settings/startDate': safeStartDate,
+      'houses/$houseId/settings/dobU1': safeDobU1,
+      'houses/$houseId/settings/dobU2': safeDobU2,
+      'houses/$houseId/settings/dayUnit': safeDayUnit,
+      'houses/$houseId/settings/greetingQuote': safeGreetingQuote,
+      'houses/$houseId/settings/countdownTopLabel': safeGreetingQuote,
+      'houses/$houseId/settings/countdownBottomLabel': safeDayUnit,
+      'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
+      'houses/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/houseName': safeHouseName,
+      'house_profiles/$houseId/nameU1': safeNameU1,
+      'house_profiles/$houseId/nameU2': safeNameU2,
+      'house_profiles/$houseId/startDate': safeStartDate,
+      'house_profiles/$houseId/dayUnit': safeDayUnit,
+      'house_profiles/$houseId/settings/houseName': safeHouseName,
+      'house_profiles/$houseId/settings/nameU1': safeNameU1,
+      'house_profiles/$houseId/settings/nameU2': safeNameU2,
+      'house_profiles/$houseId/settings/startDate': safeStartDate,
+      'house_profiles/$houseId/settings/dayUnit': safeDayUnit,
+      'house_profiles/$houseId/settings/greetingQuote': safeGreetingQuote,
+      'house_profiles/$houseId/settings/countdownTopLabel': safeGreetingQuote,
+      'house_profiles/$houseId/settings/countdownBottomLabel': safeDayUnit,
+      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
+      'houses_public/$houseId/houseName': safeHouseName,
+      'houses_public/$houseId/startDate': safeStartDate,
+      'houses_public/$houseId/dayUnit': safeDayUnit,
+      'houses_public/$houseId/settings/houseName': safeHouseName,
+      'houses_public/$houseId/settings/startDate': safeStartDate,
+      'houses_public/$houseId/settings/dayUnit': safeDayUnit,
+      'houses_public/$houseId/settings/greetingQuote': safeGreetingQuote,
+      'houses_public/$houseId/settings/countdownTopLabel': safeGreetingQuote,
+      'houses_public/$houseId/settings/countdownBottomLabel': safeDayUnit,
+      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
+      'houses_public/$houseId/updated_at': ServerValue.timestamp,
+      ...SingleMatchService.profileIndexUpdates(
+        houseId: houseId,
+        displayName: safeNameU1,
+        houseName: safeHouseName,
+        dobU1: safeDobU1,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      ),
+    });
+    await _recordSpaceActivity(
+      houseId,
+      'đã làm mới thông tin không gian chung',
+    );
+  }
+
+  Future<void> updateStartDate(
+    String houseId,
+    String dateStr, {
+    bool startCooldown = false,
+  }) async {
+    await _ensureCurrentDeviceCanModifySharedInfo(houseId);
+    final safeDate = DateInputUtils.normalizeToIsoDate(
+      dateStr,
+      firstYear: 1900,
+      lastYear: DateTime.now().year,
+    );
+    final parsed = safeDate == null ? null : DateTime.tryParse(safeDate);
+    if (parsed == null) {
+      throw 'Định dạng ngày không hợp lệ (YYYY-MM-DD).';
+    }
+    if (parsed.isAfter(DateTime.now())) {
+      throw 'Ngày yêu không được ở tương lai!';
+    }
+    final settingsSnap = await _dbRef.child('houses/$houseId/settings').get();
+    final settings = _asStringDynamicMap(settingsSnap.value) ?? {};
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final cooldownUntil = _readEpochMs(settings['startDateCooldownUntil']);
+    if (cooldownUntil != null && cooldownUntil > nowMs) {
+      throw 'Bạn cần chờ đủ 3 ngày mới có thể đổi ngày yêu tiếp.';
+    }
+    final changedAt = _readEpochMs(settings['startDateChangedAt']);
+    final oldChangeCount = _readEpochMs(settings['startDateChangeCount']) ?? 0;
+    final shouldWarn = oldChangeCount >= 2 &&
+        changedAt != null &&
+        nowMs - changedAt >= 0 &&
+        nowMs - changedAt < startDateChangeCooldown.inMilliseconds;
+    if (shouldWarn && !startCooldown) {
+      throw 'Nếu đổi tiếp, bạn cần xác nhận sẽ chờ 3 ngày mới có thể đổi lần sau.';
+    }
+    final changeCount = oldChangeCount + 1;
+    final nextCooldownUntil =
+        startCooldown ? nowMs + startDateChangeCooldown.inMilliseconds : null;
+    await _dbRef.update({
+      'houses/$houseId/settings/startDate': safeDate,
+      'houses/$houseId/settings/startDateChangedAt': nowMs,
+      'houses/$houseId/settings/startDateChangeCount': changeCount,
+      'houses/$houseId/settings/startDateCooldownUntil': nextCooldownUntil,
+      'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
+      'houses/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/startDate': safeDate,
+      'house_profiles/$houseId/settings/startDate': safeDate,
+      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
+      'houses_public/$houseId/startDate': safeDate,
+      'houses_public/$houseId/settings/startDate': safeDate,
+      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
+      'houses_public/$houseId/updated_at': ServerValue.timestamp,
+    });
+    await _recordSpaceActivity(
+      houseId,
+      'đã cập nhật mốc ngày của không gian',
+    );
+  }
+
+  Future<void> updateCountdownLabels({
+    required String houseId,
+    String? topLabel,
+    String? bottomLabel,
+  }) async {
+    await _ensureCurrentDeviceCanModifySharedInfo(houseId);
+    final hasTopLabel = topLabel != null;
+    final hasBottomLabel = bottomLabel != null;
+    if (!hasTopLabel && !hasBottomLabel) return;
+
+    final safeTopLabel = (topLabel ?? '').trim();
+    final safeBottomLabel = (bottomLabel ?? '').trim();
+
+    if (safeTopLabel.length > 22) {
+      throw 'Chữ phía trên chỉ được tối đa 22 ký tự.';
+    }
+    if (safeBottomLabel.length > 22) {
+      throw 'Chữ phía dưới chỉ được tối đa 22 ký tự.';
+    }
+
+    final updates = <String, dynamic>{
+      'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
+      'houses/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
+      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
+      'houses_public/$houseId/updated_at': ServerValue.timestamp,
+    };
+
+    if (hasTopLabel) {
+      updates.addAll({
+        'houses/$houseId/settings/greetingQuote': safeTopLabel,
+        'houses/$houseId/settings/countdownTopLabel': safeTopLabel,
+        'house_profiles/$houseId/settings/greetingQuote': safeTopLabel,
+        'house_profiles/$houseId/settings/countdownTopLabel': safeTopLabel,
+        'houses_public/$houseId/settings/greetingQuote': safeTopLabel,
+        'houses_public/$houseId/settings/countdownTopLabel': safeTopLabel,
+      });
+    }
+
+    if (hasBottomLabel) {
+      updates.addAll({
+        'houses/$houseId/settings/dayUnit': safeBottomLabel,
+        'houses/$houseId/settings/countdownBottomLabel': safeBottomLabel,
+        'house_profiles/$houseId/dayUnit': safeBottomLabel,
+        'house_profiles/$houseId/settings/dayUnit': safeBottomLabel,
+        'house_profiles/$houseId/settings/countdownBottomLabel':
+            safeBottomLabel,
+        'houses_public/$houseId/dayUnit': safeBottomLabel,
+        'houses_public/$houseId/settings/dayUnit': safeBottomLabel,
+        'houses_public/$houseId/settings/countdownBottomLabel': safeBottomLabel,
+      });
+    }
+
+    await _dbRef.update(updates);
+    final activityText = hasTopLabel && hasBottomLabel
+        ? 'đã chỉnh lại chữ ở vòng đếm ngày'
+        : hasTopLabel
+            ? 'đã chỉnh dòng chữ phía trên vòng đếm ngày'
+            : 'đã chỉnh dòng chữ phía dưới vòng đếm ngày';
+    await _recordSpaceActivity(houseId, activityText);
+  }
+
+  Future<void> updateHomeUiSettings({
+    required String houseId,
+    String? fallingEffectKey,
+    String? countdownStyleKey,
+  }) async {
+    await _ensureCurrentDeviceCanModifySharedInfo(houseId);
+    final updates = <String, dynamic>{
+      'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
+      'houses/$houseId/updatedAt': ServerValue.timestamp,
+    };
+
+    if (fallingEffectKey != null) {
+      updates['houses/$houseId/settings/fallingEffect'] =
+          fallingEffectKey.trim();
+    }
+    if (countdownStyleKey != null) {
+      updates['houses/$houseId/settings/countdownStyle'] =
+          countdownStyleKey.trim();
+    }
+
+    if (updates.length <= 2) {
+      return;
+    }
+
+    await _dbRef.update(updates);
+  }
+
+  Future<Map<String, dynamic>?> fetchHouseProfile(String houseId) async {
+    try {
+      final snap = await _dbRef
+          .child('house_profiles/$houseId')
+          .get()
+          .timeout(const Duration(seconds: 3));
+      if (!snap.exists || snap.value == null) return null;
+      return _asStringDynamicMap(snap.value);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> isCoupleConnected(String houseId) async {
+    try {
+      final snap = await _dbRef
+          .child('houses/$houseId/members')
+          .get()
+          .timeout(const Duration(seconds: 3));
+      if (!snap.exists || snap.value == null) return false;
+      final raw = snap.value;
+      if (raw is! Map) return false;
+      final map = Map<dynamic, dynamic>.from(raw);
+      return map.length >= 2;
+    } catch (_) {
+      return false; // Trả về false nếu offline hoặc lỗi
+    }
+  }
+
+  Future<void> changeRelationshipMode({
+    required String houseId,
+    required String newMode,
+    Duration cooldown = const Duration(hours: 24),
+  }) async {
+    throw 'Chế độ Độc thân / Có người ấy chỉ được chọn khi tạo nhà lần đầu và không thể đổi lại trong Cài đặt.';
+  }
+}

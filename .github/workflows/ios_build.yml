@@ -1,0 +1,280 @@
+name: Build Signed iOS IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      export_method:
+        description: Xcode export method
+        required: false
+        default: development
+        type: choice
+        options:
+          - development
+          - ad-hoc
+          - app-store
+
+jobs:
+  build:
+    name: Build signed IPA
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      IOS_EXPORT_METHOD: ${{ github.event.inputs.export_method }}
+      IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+      IOS_BUNDLE_ID: ${{ secrets.IOS_BUNDLE_ID }}
+      IOS_WIDGET_BUNDLE_ID: ${{ secrets.IOS_WIDGET_BUNDLE_ID }}
+      IOS_RUNNER_TESTS_BUNDLE_ID: ${{ secrets.IOS_RUNNER_TESTS_BUNDLE_ID }}
+      IOS_APP_GROUP_ID: ${{ secrets.IOS_APP_GROUP_ID }}
+      IOS_ASSOCIATED_DOMAIN_WEB: ${{ secrets.IOS_ASSOCIATED_DOMAIN_WEB }}
+      IOS_ASSOCIATED_DOMAIN_AUTH: ${{ secrets.IOS_ASSOCIATED_DOMAIN_AUTH }}
+      ENV_LOCAL_JSON_BASE64: ${{ secrets.ENV_LOCAL_JSON_BASE64 }}
+      P12_BASE64: ${{ secrets.P12_BASE64 }}
+      P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      RUNNER_PROVISIONING_PROFILE_BASE64: ${{ secrets.RUNNER_PROVISIONING_PROFILE_BASE64 }}
+      WIDGET_PROVISIONING_PROFILE_BASE64: ${{ secrets.WIDGET_PROVISIONING_PROFILE_BASE64 }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.3"
+          channel: stable
+          cache: true
+
+      - name: Prepare CI build settings
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          missing=()
+          [[ -n "${IOS_TEAM_ID:-}" ]] || missing+=("IOS_TEAM_ID")
+          [[ -n "${P12_BASE64:-}" ]] || missing+=("P12_BASE64")
+          [[ -n "${P12_PASSWORD:-}" ]] || missing+=("P12_PASSWORD")
+          [[ -n "${KEYCHAIN_PASSWORD:-}" ]] || missing+=("KEYCHAIN_PASSWORD")
+          [[ -n "${RUNNER_PROVISIONING_PROFILE_BASE64:-}" ]] || missing+=("RUNNER_PROVISIONING_PROFILE_BASE64")
+          [[ -n "${WIDGET_PROVISIONING_PROFILE_BASE64:-}" ]] || missing+=("WIDGET_PROVISIONING_PROFILE_BASE64")
+
+          if (( ${#missing[@]} > 0 )); then
+            echo "Missing required GitHub secrets: ${missing[*]}" >&2
+            exit 1
+          fi
+
+          APP_BUNDLE_ID="${IOS_BUNDLE_ID:-com.soullocket.app}"
+          WIDGET_BUNDLE_ID="${IOS_WIDGET_BUNDLE_ID:-${APP_BUNDLE_ID}.SoulLocketWidget}"
+          RUNNER_TESTS_BUNDLE_ID="${IOS_RUNNER_TESTS_BUNDLE_ID:-${APP_BUNDLE_ID}.RunnerTests}"
+          APP_GROUP_ID="${IOS_APP_GROUP_ID:-group.WidgetCoupleProvider}"
+          DOMAIN_WEB="${IOS_ASSOCIATED_DOMAIN_WEB:-applinks:soullockket.web.app}"
+          DOMAIN_AUTH="${IOS_ASSOCIATED_DOMAIN_AUTH:-applinks:soullockket.firebaseapp.com}"
+          EXPORT_METHOD="${IOS_EXPORT_METHOD:-development}"
+          export APP_GROUP_ID DOMAIN_WEB DOMAIN_AUTH
+
+          cat > ios/Flutter/AppConfig.local.xcconfig <<EOF
+          APPLE_TEAM_ID = ${IOS_TEAM_ID}
+          APP_BUNDLE_IDENTIFIER = ${APP_BUNDLE_ID}
+          WIDGET_BUNDLE_IDENTIFIER = ${WIDGET_BUNDLE_ID}
+          RUNNER_TESTS_BUNDLE_IDENTIFIER = ${RUNNER_TESTS_BUNDLE_ID}
+          IOS_DEPLOYMENT_TARGET = 15.5
+          EOF
+
+          python3 <<'PY'
+          import os
+          from pathlib import Path
+
+          replacements = {
+              "group.WidgetCoupleProvider": os.environ["APP_GROUP_ID"],
+              "applinks:soullockket.web.app": os.environ["DOMAIN_WEB"],
+              "applinks:soullockket.firebaseapp.com": os.environ["DOMAIN_AUTH"],
+          }
+
+          for rel_path in (
+              "ios/Runner/Runner.entitlements",
+              "ios/SoulLocketWidget/SoulLocketWidget.entitlements",
+              "ios/SoulLocketWidget/SoulLocketWidget.swift",
+          ):
+              path = Path(rel_path)
+              text = path.read_text(encoding="utf-8")
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
+              path.write_text(text, encoding="utf-8")
+          PY
+
+          if [[ -n "${ENV_LOCAL_JSON_BASE64:-}" ]]; then
+            ENV_JSON_PATH="$RUNNER_TEMP/env.local.json"
+            echo -n "$ENV_LOCAL_JSON_BASE64" | base64 --decode > "$ENV_JSON_PATH"
+            echo "ENV_JSON_PATH=$ENV_JSON_PATH" >> "$GITHUB_ENV"
+          fi
+
+          {
+            echo "APP_BUNDLE_ID=$APP_BUNDLE_ID"
+            echo "WIDGET_BUNDLE_ID=$WIDGET_BUNDLE_ID"
+            echo "APP_GROUP_ID=$APP_GROUP_ID"
+            echo "DOMAIN_WEB=$DOMAIN_WEB"
+            echo "DOMAIN_AUTH=$DOMAIN_AUTH"
+            echo "EXPORT_METHOD=$EXPORT_METHOD"
+          } >> "$GITHUB_ENV"
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build launcher icons
+        run: dart run flutter_launcher_icons
+
+      - name: Build native splash
+        run: dart run flutter_native_splash:create
+
+      - name: Install CocoaPods
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ios
+          pod install
+
+      - name: Import certificate and provisioning profiles
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          RUNNER_PROFILE_PATH="$RUNNER_TEMP/runner.mobileprovision"
+          WIDGET_PROFILE_PATH="$RUNNER_TEMP/widget.mobileprovision"
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+
+          echo -n "$P12_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          echo -n "$RUNNER_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$RUNNER_PROFILE_PATH"
+          echo -n "$WIDGET_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$WIDGET_PROFILE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          mkdir -p "$PROFILE_DIR"
+
+          for profile_path in "$RUNNER_PROFILE_PATH" "$WIDGET_PROFILE_PATH"; do
+            profile_uuid=$(/usr/bin/security cms -D -i "$profile_path" > "$profile_path.plist"; /usr/libexec/PlistBuddy -c "Print :UUID" "$profile_path.plist")
+            cp "$profile_path" "$PROFILE_DIR/$profile_uuid.mobileprovision"
+          done
+
+          RUNNER_PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" "$RUNNER_PROFILE_PATH.plist")
+          WIDGET_PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" "$WIDGET_PROFILE_PATH.plist")
+
+          {
+            echo "RUNNER_PROFILE_NAME=$RUNNER_PROFILE_NAME"
+            echo "WIDGET_PROFILE_NAME=$WIDGET_PROFILE_NAME"
+          } >> "$GITHUB_ENV"
+
+      - name: Generate export options
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          EXPORT_PLIST_PATH="$RUNNER_TEMP/ExportOptions.plist"
+          cat > "$EXPORT_PLIST_PATH" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>compileBitcode</key>
+            <false/>
+            <key>destination</key>
+            <string>export</string>
+            <key>method</key>
+            <string>${EXPORT_METHOD}</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${APP_BUNDLE_ID}</key>
+              <string>${RUNNER_PROFILE_NAME}</string>
+              <key>${WIDGET_BUNDLE_ID}</key>
+              <string>${WIDGET_PROFILE_NAME}</string>
+            </dict>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>teamID</key>
+            <string>${IOS_TEAM_ID}</string>
+          </dict>
+          </plist>
+          EOF
+          echo "EXPORT_PLIST_PATH=$EXPORT_PLIST_PATH" >> "$GITHUB_ENV"
+
+      - name: Build signed IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat > "$RUNNER_TEMP/patch_profiles.py" <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          path = Path("ios/Runner.xcodeproj/project.pbxproj")
+          text = path.read_text(encoding="utf-8")
+
+          profile_by_bundle = {
+              os.environ["APP_BUNDLE_ID"]: os.environ["RUNNER_PROFILE_NAME"],
+              "$(APP_BUNDLE_IDENTIFIER)": os.environ["RUNNER_PROFILE_NAME"],
+              os.environ["WIDGET_BUNDLE_ID"]: os.environ["WIDGET_PROFILE_NAME"],
+              "$(WIDGET_BUNDLE_IDENTIFIER)": os.environ["WIDGET_PROFILE_NAME"],
+          }
+
+          def patch_build_settings(match):
+              block = match.group(0)
+              bundle_match = re.search(r'PRODUCT_BUNDLE_IDENTIFIER = "?([^";]+)"?;', block)
+              if not bundle_match:
+                  return block
+              bundle_id = bundle_match.group(1)
+              profile_name = profile_by_bundle.get(bundle_id)
+              if not profile_name:
+                  return block
+              if 'CODE_SIGN_STYLE' in block:
+                  block = re.sub(r'CODE_SIGN_STYLE = [^;]+;', 'CODE_SIGN_STYLE = Manual;', block)
+              else:
+                  block = block.replace('buildSettings = {', 'buildSettings = {\n\t\t\t\tCODE_SIGN_STYLE = Manual;')
+              block = re.sub(r'DEVELOPMENT_TEAM = [^;]+;', f'DEVELOPMENT_TEAM = {os.environ["IOS_TEAM_ID"]};', block)
+              block = re.sub(r'"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "[^"]+";', '"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";', block)
+              if 'CODE_SIGN_IDENTITY[sdk=iphoneos*]' not in block:
+                  block = block.replace('buildSettings = {', 'buildSettings = {\n\t\t\t\t"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";')
+              if 'PROVISIONING_PROFILE_SPECIFIER' in block:
+                  block = re.sub(r'PROVISIONING_PROFILE_SPECIFIER = [^;]+;', f'PROVISIONING_PROFILE_SPECIFIER = "{profile_name}";', block)
+              else:
+                  block = block.replace('buildSettings = {', f'buildSettings = {{\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "{profile_name}";')
+              return block
+
+          text = re.sub(r'buildSettings = \{.*?\n\t\t\t\};', patch_build_settings, text, flags=re.S)
+          path.write_text(text, encoding="utf-8")
+          PY
+          python3 "$RUNNER_TEMP/patch_profiles.py"
+
+          build_args=()
+          if [[ -n "${ENV_JSON_PATH:-}" && -f "${ENV_JSON_PATH:-}" ]]; then
+            build_args+=(--dart-define-from-file="$ENV_JSON_PATH")
+          fi
+          build_args+=(--dart-define=IOS_BUNDLE_ID="$APP_BUNDLE_ID")
+          build_args+=(--dart-define=IOS_APP_GROUP_ID="$APP_GROUP_ID")
+          build_args+=(--dart-define=IOS_ASSOCIATED_DOMAIN_WEB="$DOMAIN_WEB")
+          build_args+=(--dart-define=IOS_ASSOCIATED_DOMAIN_AUTH="$DOMAIN_AUTH")
+
+          flutter build ipa --release "${build_args[@]}" --export-options-plist="$EXPORT_PLIST_PATH"
+
+      - name: Verify IPA output
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -R build/ios/ipa
+          test -n "$(find build/ios/ipa -name '*.ipa' -print -quit)"
+
+      - name: Upload IPA artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-ios-ipa
+          path: |
+            build/ios/ipa/*.ipa
+            build/ios/archive/*.xcarchive
+          if-no-files-found: error

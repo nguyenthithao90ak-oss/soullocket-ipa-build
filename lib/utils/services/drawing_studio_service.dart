@@ -1,0 +1,334 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vision_gallery_saver/vision_gallery_saver.dart';
+
+class DrawingStudioGalleryItem {
+  final String id;
+  final String path;
+  final String? inlineBase64;
+  final String? remoteUrl;
+  final int createdAtMs;
+  final String mode;
+  final String syncStatus;
+  final String? storagePath;
+
+  const DrawingStudioGalleryItem({
+    required this.id,
+    required this.path,
+    required this.createdAtMs,
+    required this.mode,
+    this.inlineBase64,
+    this.remoteUrl,
+    this.syncStatus = 'local',
+    this.storagePath,
+  });
+
+  bool get isPendingUpload => false;
+
+  bool get isLegacyCloudItem =>
+      (remoteUrl?.isNotEmpty ?? false) &&
+      path.isEmpty &&
+      (inlineBase64?.isEmpty ?? true);
+
+  bool get isValidForCurrentPlatform {
+    if (kIsWeb) {
+      return (inlineBase64?.isNotEmpty ?? false) ||
+          (remoteUrl?.isNotEmpty ?? false);
+    }
+    return path.isNotEmpty || (remoteUrl?.isNotEmpty ?? false);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'path': path,
+      'inlineBase64': inlineBase64,
+      'remoteUrl': remoteUrl,
+      'createdAtMs': createdAtMs,
+      'mode': mode,
+      'syncStatus': syncStatus,
+      'storagePath': storagePath,
+    };
+  }
+
+  factory DrawingStudioGalleryItem.fromJson(Map<String, dynamic> json) {
+    return DrawingStudioGalleryItem(
+      id: (json['id'] ?? '').toString(),
+      path: (json['path'] ?? '').toString(),
+      inlineBase64: json['inlineBase64'] as String?,
+      remoteUrl: json['remoteUrl']?.toString(),
+      createdAtMs: int.tryParse((json['createdAtMs'] ?? '').toString()) ?? 0,
+      mode: (json['mode'] ?? 'pic').toString(),
+      syncStatus: (json['syncStatus'] ?? 'local').toString(),
+      storagePath: json['storagePath']?.toString(),
+    );
+  }
+
+  DrawingStudioGalleryItem copyWith({
+    String? id,
+    String? path,
+    String? inlineBase64,
+    String? remoteUrl,
+    int? createdAtMs,
+    String? mode,
+    String? syncStatus,
+    String? storagePath,
+  }) {
+    return DrawingStudioGalleryItem(
+      id: id ?? this.id,
+      path: path ?? this.path,
+      inlineBase64: inlineBase64 ?? this.inlineBase64,
+      remoteUrl: remoteUrl ?? this.remoteUrl,
+      createdAtMs: createdAtMs ?? this.createdAtMs,
+      mode: mode ?? this.mode,
+      syncStatus: syncStatus ?? this.syncStatus,
+      storagePath: storagePath ?? this.storagePath,
+    );
+  }
+}
+
+class DrawingStudioService {
+  DrawingStudioService({
+    Object? database,
+    Object? storageService,
+  });
+
+  static const int maxGalleryItems = 20;
+  static const String _galleryPrefsKey = 'drawing_studio_gallery_v2';
+  static const String _cachePrefix = 'drawing_studio_gallery_cloud_v1_';
+  static const String _migratedPrefix = 'drawing_studio_gallery_migrated_v1_';
+
+  Future<List<DrawingStudioGalleryItem>> loadGallery(String houseId) async {
+    await _clearCloudMarkers(houseId);
+    return _loadLocalGallery();
+  }
+
+  Future<DrawingStudioGalleryItem> saveDrawing(
+    String houseId,
+    Uint8List data, {
+    required String mode,
+  }) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final id = 'drawing_$now';
+    final item = await _buildLocalItem(
+      id: id,
+      bytes: data,
+      createdAtMs: now,
+      mode: mode,
+    );
+
+    final next = _normalizeGallery([item, ...await _loadLocalGallery()]);
+    await _persistLocalGallery(next);
+    await _clearCloudMarkers(houseId);
+    return item;
+  }
+
+  Future<String?> saveBytesToDevice(
+    Uint8List bytes, {
+    String? fileName,
+  }) async {
+    if (kIsWeb) {
+      throw UnsupportedError('Trình duyệt hiện chưa hỗ trợ lưu trực tiếp.');
+    }
+
+    final name = fileName ??
+        'soullocket_drawing_${DateTime.now().millisecondsSinceEpoch}';
+    final result = await VisionGallerySaver.saveImage(
+      bytes,
+      quality: 100,
+      name: name,
+      androidRelativePath: 'Pictures/SoulLocket/DrawingStudio',
+    );
+
+    final filePath = result['filePath']?.toString();
+    final isSuccess =
+        result['isSuccess'] == true || (filePath?.isNotEmpty ?? false);
+    if (!isSuccess) {
+      final errorMessage = result['errorMessage']?.toString();
+      throw Exception(
+        errorMessage?.isNotEmpty == true ? errorMessage : 'Lỗi khi lưu ảnh',
+      );
+    }
+    return filePath;
+  }
+
+  Future<String?> exportGalleryItemToDevice(
+    DrawingStudioGalleryItem item, {
+    String? fileName,
+  }) async {
+    final bytes = await _readItemBytes(item);
+    if (bytes == null || bytes.isEmpty) {
+      throw StateError('Không đọc được dữ liệu tranh để lưu ra máy.');
+    }
+    return saveBytesToDevice(
+      bytes,
+      fileName: fileName ?? 'soullocket_drawing_${item.createdAtMs}',
+    );
+  }
+
+  Future<void> deleteGalleryItem(
+    String houseId,
+    DrawingStudioGalleryItem item,
+  ) async {
+    if (!kIsWeb && item.path.isNotEmpty) {
+      final file = File(item.path);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
+
+    final next = (await _loadLocalGallery())
+        .where((entry) => entry.id != item.id)
+        .toList();
+    await _persistLocalGallery(next);
+    await _clearCloudMarkers(houseId);
+  }
+
+  Future<void> syncPendingLocalGallery(String houseId) async {
+    await _clearCloudMarkers(houseId);
+  }
+
+  Future<void> migrateLegacyLocalGallery(String houseId) async {
+    await _clearCloudMarkers(houseId);
+  }
+
+  Future<List<DrawingStudioGalleryItem>> _loadLocalGallery() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_galleryPrefsKey);
+      if (raw == null || raw.isEmpty) {
+        return const <DrawingStudioGalleryItem>[];
+      }
+      final list = jsonDecode(raw) as List<dynamic>;
+      return _normalizeGallery(
+        list
+            .whereType<Map>()
+            .map(
+              (item) => DrawingStudioGalleryItem.fromJson(
+                Map<String, dynamic>.from(item),
+              ),
+            )
+            .toList(),
+      );
+    } catch (_) {
+      return const <DrawingStudioGalleryItem>[];
+    }
+  }
+
+  Future<void> _persistLocalGallery(
+      List<DrawingStudioGalleryItem> items) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _galleryPrefsKey,
+      jsonEncode(
+          _normalizeGallery(items).map((item) => item.toJson()).toList()),
+    );
+  }
+
+  Future<DrawingStudioGalleryItem> _buildLocalItem({
+    required String id,
+    required Uint8List bytes,
+    required int createdAtMs,
+    required String mode,
+  }) async {
+    if (kIsWeb) {
+      return DrawingStudioGalleryItem(
+        id: id,
+        path: '',
+        inlineBase64: base64Encode(bytes),
+        createdAtMs: createdAtMs,
+        mode: mode,
+        syncStatus: 'local',
+      );
+    }
+
+    final dir = await _ensureGalleryDirectory();
+    final file = File('${dir.path}/$id.png');
+    await file.writeAsBytes(bytes, flush: true);
+    return DrawingStudioGalleryItem(
+      id: id,
+      path: file.path,
+      createdAtMs: createdAtMs,
+      mode: mode,
+      syncStatus: 'local',
+    );
+  }
+
+  Future<Uint8List?> _readItemBytes(DrawingStudioGalleryItem item) async {
+    if (item.inlineBase64 != null && item.inlineBase64!.isNotEmpty) {
+      return base64Decode(item.inlineBase64!);
+    }
+    if (!kIsWeb && item.path.isNotEmpty) {
+      final file = File(item.path);
+      if (await file.exists()) {
+        return file.readAsBytes();
+      }
+    }
+    if (!kIsWeb && (item.remoteUrl?.isNotEmpty ?? false)) {
+      return _downloadRemoteBytes(item.remoteUrl!);
+    }
+    return null;
+  }
+
+  Future<Uint8List?> _downloadRemoteBytes(String url) async {
+    try {
+      final client = HttpClient();
+      final request = await client.getUrl(Uri.parse(url));
+      final response = await request.close();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return null;
+      }
+      final bytes = await consolidateHttpClientResponseBytes(response);
+      client.close();
+      return bytes;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _clearCloudMarkers(String houseId) async {
+    final trimmedHouseId = houseId.trim();
+    final prefs = await SharedPreferences.getInstance();
+    if (trimmedHouseId.isNotEmpty) {
+      await prefs.remove('$_cachePrefix$trimmedHouseId');
+      await prefs.remove('$_migratedPrefix$trimmedHouseId');
+    }
+  }
+
+  Future<Directory> _ensureGalleryDirectory() async {
+    final baseDir = await getApplicationDocumentsDirectory();
+    final dir = Directory('${baseDir.path}/drawing_studio_gallery');
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir;
+  }
+
+  List<DrawingStudioGalleryItem> _normalizeGallery(
+    List<DrawingStudioGalleryItem> items,
+  ) {
+    final byId = <String, DrawingStudioGalleryItem>{};
+    for (final item in items) {
+      final id = item.id.isNotEmpty
+          ? item.id
+          : 'drawing_${item.createdAtMs}_${item.mode}';
+      byId[id] = item.copyWith(
+        id: id,
+        syncStatus: item.syncStatus.isEmpty ? 'local' : item.syncStatus,
+      );
+    }
+
+    final values = byId.values
+        .where((item) => item.isValidForCurrentPlatform)
+        .toList()
+      ..sort((a, b) => b.createdAtMs.compareTo(a.createdAtMs));
+    if (values.length > maxGalleryItems) {
+      return values.take(maxGalleryItems).toList();
+    }
+    return values;
+  }
+}

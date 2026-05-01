@@ -1,0 +1,883 @@
+import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../../services/house_service.dart';
+import '../../services/storage_service.dart';
+import '../../services/collage_limit_service.dart';
+import '../../core/sl_theme.dart';
+import '../../utils/services/pending_upload_service.dart';
+
+class PhotoCollageScreen extends StatefulWidget {
+  const PhotoCollageScreen({super.key});
+
+  @override
+  State<PhotoCollageScreen> createState() => _PhotoCollageScreenState();
+}
+
+class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
+  static const String _pendingUploadKeyPrefix = 'photo_collage_';
+  final List<_CollagePhoto> _images = [];
+  final StorageService _storageService = StorageService();
+  final HouseService _houseService = HouseService();
+  final GlobalKey _captureKey = GlobalKey();
+  int _selectedLayout = 1;
+  final int _maxImages = 9;
+  double _aspectRatio = 1.0;
+  bool _isPicking = false;
+  bool _isSaving = false;
+  bool _isSharing = false;
+  bool _didPromptPendingUploadRetry = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_promptPendingUploadRetryIfNeeded());
+  }
+
+  Future<String?> _pendingUploadKey() async {
+    final houseId = await _houseService.getCurrentHouseId();
+    if (houseId == null || houseId.isEmpty) {
+      return null;
+    }
+    return '$_pendingUploadKeyPrefix$houseId';
+  }
+
+  Future<void> _promptPendingUploadRetryIfNeeded() async {
+    if (_didPromptPendingUploadRetry || !mounted) {
+      return;
+    }
+    final pendingKey = await _pendingUploadKey();
+    if (pendingKey == null) {
+      return;
+    }
+    final pending = await PendingUploadService.instance.load(pendingKey);
+    if (pending == null || !mounted) {
+      return;
+    }
+    _didPromptPendingUploadRetry = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Lần lưu ảnh ghép trước đã bị gián đoạn.'),
+          action: SnackBarAction(
+            label: 'Thử lại',
+            onPressed: () {
+              unawaited(_retryPendingSaveToHouseAlbum());
+            },
+          ),
+        ),
+      );
+    });
+  }
+
+  Future<void> _retryPendingSaveToHouseAlbum() async {
+    final pendingKey = await _pendingUploadKey();
+    if (pendingKey == null || !mounted) {
+      return;
+    }
+    final pending = await PendingUploadService.instance.load(pendingKey);
+    if (pending == null) {
+      return;
+    }
+    final rawPaths = pending['imagePaths'];
+    if (rawPaths is! List) {
+      await PendingUploadService.instance.clear(pendingKey);
+      return;
+    }
+    final retryImages = <_CollagePhoto>[];
+    for (final rawPath in rawPaths) {
+      final path = rawPath.toString().trim();
+      if (path.isEmpty) {
+        continue;
+      }
+      final file = XFile(path);
+      try {
+        final bytes = await file.readAsBytes();
+        if (bytes.isNotEmpty) {
+          retryImages.add(_CollagePhoto(file: file, bytes: bytes));
+        }
+      } catch (_) {}
+    }
+    if (retryImages.isEmpty) {
+      await PendingUploadService.instance.clear(pendingKey);
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _images
+        ..clear()
+        ..addAll(retryImages);
+      _selectedLayout = (pending['selectedLayout'] as num?)?.toInt() ?? 1;
+      _aspectRatio = (pending['aspectRatio'] as num?)?.toDouble() ?? 1.0;
+    });
+    await _saveToHouseAlbum();
+  }
+
+  Future<void> _pickImages() async {
+    final remaining = _maxImages - _images.length;
+    if (remaining <= 0) {
+      _showToast('Bạn đã chọn đủ $_maxImages ảnh cho khung ghép này.');
+      return;
+    }
+
+    setState(() => _isPicking = true);
+    try {
+      final picked = await _storageService.pickImages(limit: remaining);
+      if (picked.isEmpty) return;
+      final next = <_CollagePhoto>[..._images];
+      for (final file in picked) {
+        next.add(_CollagePhoto(file: file, bytes: await file.readAsBytes()));
+      }
+      if (!mounted) return;
+      if (!mounted) return;
+      setState(() {
+        _images.addAll(next.take(_maxImages));
+        if (_selectedLayout == 1 && _images.length > 1) {
+          _selectedLayout = _images.length > 9 ? 9 : _images.length;
+        }
+      });
+    } catch (e) {
+      _showToast('Không thể chọn ảnh: $e');
+    } finally {
+      if (mounted) setState(() => _isPicking = false);
+    }
+  }
+
+  Future<Uint8List?> _captureCollageBytes() async {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    final boundary = _captureKey.currentContext?.findRenderObject()
+        as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    final image = await boundary.toImage(pixelRatio: 2.6);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    return byteData?.buffer.asUint8List();
+  }
+
+  Future<void> _saveToHouseAlbum() async {
+    final canProceed = await CollageLimitService().checkLimitAndAskAd(context);
+    if (!canProceed) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final houseId = await _houseService.getCurrentHouseId();
+      if (houseId == null || houseId.isEmpty) {
+        _showToast('Bạn cần vào nhà trước khi lưu ảnh ghép.');
+        return;
+      }
+      final pendingKey = await _pendingUploadKey();
+      if (pendingKey != null) {
+        await PendingUploadService.instance.save(
+          pendingKey,
+          <String, dynamic>{
+            'imagePaths':
+                _images.map((item) => item.file.path).toList(growable: false),
+            'selectedLayout': _selectedLayout,
+            'aspectRatio': _aspectRatio,
+          },
+          category: 'photo_collage',
+        );
+      }
+      final bytes = await _captureCollageBytes();
+      if (bytes == null || bytes.isEmpty) {
+        _showToast('Không tạo được ảnh ghép để lưu.');
+        return;
+      }
+
+      final fileName = 'collage_${DateTime.now().millisecondsSinceEpoch}.png';
+      final url = await _storageService.uploadBytesToPath(
+        'houses/$houseId/collages/$fileName',
+        bytes,
+        contentType: 'image/png',
+        originalFileName: fileName,
+      );
+      await FirebaseDatabase.instance
+          .ref('houses/$houseId/collages')
+          .push()
+          .set({
+        'url': url,
+        'template': 'layout_$_selectedLayout',
+        'ts': ServerValue.timestamp,
+        'source': 'photo_collage_screen',
+      });
+      await CollageLimitService().consumeLimit();
+      if (pendingKey != null) {
+        await PendingUploadService.instance.clear(pendingKey);
+      }
+      _showToast('Đã lưu ảnh ghép vào album của nhà.');
+    } catch (e) {
+      final pendingKey = await _pendingUploadKey();
+      if (pendingKey != null) {
+        await PendingUploadService.instance.markFailed(pendingKey, e);
+      }
+      _showToast('Không thể lưu ảnh ghép: $e');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _shareCollage() async {
+    final canProceed = await CollageLimitService().checkLimitAndAskAd(context);
+    if (!canProceed) return;
+
+    setState(() => _isSharing = true);
+    try {
+      final bytes = await _captureCollageBytes();
+      if (bytes == null || bytes.isEmpty) {
+        _showToast('Không tạo được ảnh ghép để chia sẻ.');
+        return;
+      }
+      final fileName =
+          'soullocket-collage-${DateTime.now().millisecondsSinceEpoch}.png';
+      await SharePlus.instance.share(
+        ShareParams(
+          text: 'Ghép ảnh kỷ niệm từ SoulLocket',
+          files: [
+            XFile.fromData(bytes, mimeType: 'image/png'),
+          ],
+          fileNameOverrides: [fileName],
+          downloadFallbackEnabled: true,
+        ),
+      );
+      await CollageLimitService().consumeLimit();
+    } catch (e) {
+      _showToast('Không thể chia sẻ ảnh ghép: $e');
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
+  }
+
+  void _clearImages() {
+    setState(() {
+      _images.clear();
+      _selectedLayout = 1;
+    });
+  }
+
+  void _showToast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF7FB),
+      appBar: AppBar(
+        title: Text(
+          'Ghép Ảnh Kỷ Niệm',
+          style: SLTheme.quicksand(
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF1E293B),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
+        actions: [
+          if (_images.isNotEmpty)
+            IconButton(
+              onPressed: _clearImages,
+              icon: const Icon(Icons.delete_sweep_rounded, color: Colors.red),
+            ),
+        ],
+      ),
+      body: Column(
+        children: [
+          SLSpacing.h16,
+          _buildLayoutBar(),
+          SLSpacing.h8,
+          _buildRatioBar(),
+          SLSpacing.h16,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: RepaintBoundary(
+                key: _captureKey,
+                child: _buildCanvasCard(),
+              ),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.fromLTRB(18, 12, 18, 22),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _isPicking ? null : _pickImages,
+                        icon: _isPicking
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.add_photo_alternate_rounded),
+                        label: Text(
+                          _images.isEmpty ? 'Chọn ảnh' : 'Thêm ảnh',
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFD81B60),
+                          side: const BorderSide(color: Color(0xFFD81B60)),
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: SLRadius.lgAll,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SLSpacing.w8,
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _images.isEmpty || _isSaving
+                            ? null
+                            : _saveToHouseAlbum,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.cloud_upload_rounded),
+                        label: Text(
+                          'Lưu vào nhà',
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFD81B60),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: SLRadius.lgAll,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SLSpacing.h8,
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed:
+                        _images.isEmpty || _isSharing ? null : _shareCollage,
+                    icon: _isSharing
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.ios_share_rounded),
+                    label: Text(
+                      'Lưu / Chia sẻ ảnh ghép',
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E293B),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: SLRadius.lgAll,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLayoutBar() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Row(
+        children: [1, 2, 3, 4, 5, 6, 7, 8, 9].map((layout) {
+          final selected = _selectedLayout == layout;
+          return GestureDetector(
+            onTap: () {
+              if (_images.length >= layout) {
+                setState(() => _selectedLayout = layout);
+              } else {
+                _showToast('Bạn cần ít nhất $layout ảnh cho bố cục này.');
+              }
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              decoration: BoxDecoration(
+                color: selected ? const Color(0xFFD81B60) : Colors.white,
+                borderRadius: SLRadius.pillAll,
+                border: Border.all(
+                  color: selected
+                      ? const Color(0xFFD81B60)
+                      : const Color(0xFFE5E7EB),
+                ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFFD81B60).withOpacity(0.22),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Text(
+                '$layout ảnh',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w900,
+                  color: selected ? Colors.white : const Color(0xFF64748B),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildRatioBar() {
+    final ratios = [
+      {'label': '1:1', 'value': 1.0},
+      {'label': '3:4', 'value': 3 / 4},
+      {'label': '4:3', 'value': 4 / 3},
+      {'label': '16:9', 'value': 16 / 9},
+      {'label': '9:16', 'value': 9 / 16},
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Row(
+        children: ratios.map((ratio) {
+          final isSelected = _aspectRatio == ratio['value'];
+          return GestureDetector(
+            onTap: () =>
+                setState(() => _aspectRatio = ratio['value'] as double),
+            child: Container(
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFFD81B60) : Colors.white,
+                borderRadius: SLRadius.mdAll,
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFFD81B60)
+                      : const Color(0xFFE5E7EB),
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFFD81B60).withOpacity(0.22),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Text(
+                ratio['label'] as String,
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w900,
+                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildCanvasCard() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: SLSpacing.all12,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFFFFF), Color(0xFFFFF2F7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFF8D7E2)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withOpacity(0.08),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Bảng ghép ảnh',
+            style: SLTheme.quicksand(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFFD81B60),
+            ),
+          ),
+          SLSpacing.h8,
+          Text(
+            'Ảnh ghép sẽ được lưu đúng như phần xem trước ở đây.',
+            style: SLTheme.quicksand(
+              fontSize: 12.5,
+              height: 1.6,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          SLSpacing.h12,
+          AspectRatio(
+            aspectRatio: _aspectRatio,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: SLRadius.xlAll,
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: Stack(
+                children: [
+                  Positioned.fill(child: _buildCanvas()),
+                  Positioned(
+                    bottom: 8,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'SoulLocket',
+                        style: SLTheme.quicksand(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFFD81B60),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCanvas() {
+    if (_images.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.photo_library_outlined,
+              size: 64,
+              color: Colors.grey[300],
+            ),
+            SLSpacing.h12,
+            Text(
+              'Chưa có ảnh nào\nNhấn "Chọn ảnh" để bắt đầu',
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                color: Colors.grey[500],
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    switch (_selectedLayout) {
+      case 1:
+        return _buildImageTile(0);
+      case 2:
+        return Row(
+          children: [
+            Expanded(child: _buildImageTile(0)),
+            Container(width: 4, color: Colors.white),
+            Expanded(child: _buildImageTile(1)),
+          ],
+        );
+      case 3:
+        return Row(
+          children: [
+            Expanded(child: _buildImageTile(0)),
+            Container(width: 4, color: Colors.white),
+            Expanded(
+              child: Column(
+                children: [
+                  Expanded(child: _buildImageTile(1)),
+                  Container(height: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(2)),
+                ],
+              ),
+            ),
+          ],
+        );
+      case 4:
+        return Column(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(0)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(1)),
+                ],
+              ),
+            ),
+            Container(height: 4, color: Colors.white),
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(2)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(3)),
+                ],
+              ),
+            ),
+          ],
+        );
+      case 5:
+        return Column(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(0)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(1)),
+                ],
+              ),
+            ),
+            Container(height: 4, color: Colors.white),
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(2)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(3)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(4)),
+                ],
+              ),
+            ),
+          ],
+        );
+      case 6:
+        return Column(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(0)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(1)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(2)),
+                ],
+              ),
+            ),
+            Container(height: 4, color: Colors.white),
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(3)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(4)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(5)),
+                ],
+              ),
+            ),
+          ],
+        );
+      case 7:
+        return Column(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(0)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(1)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(2)),
+                ],
+              ),
+            ),
+            Container(height: 4, color: Colors.white),
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(3)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(4)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(5)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(6)),
+                ],
+              ),
+            ),
+          ],
+        );
+      case 8:
+        return Column(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(0)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(1)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(2)),
+                ],
+              ),
+            ),
+            Container(height: 4, color: Colors.white),
+            Expanded(
+              flex: 2,
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(3)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(4)),
+                ],
+              ),
+            ),
+            Container(height: 4, color: Colors.white),
+            Expanded(
+              flex: 2,
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(5)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(6)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(7)),
+                ],
+              ),
+            ),
+          ],
+        );
+      case 9:
+      default:
+        return Column(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(0)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(1)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(2)),
+                ],
+              ),
+            ),
+            Container(height: 4, color: Colors.white),
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(3)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(4)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(5)),
+                ],
+              ),
+            ),
+            Container(height: 4, color: Colors.white),
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildImageTile(6)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(7)),
+                  Container(width: 4, color: Colors.white),
+                  Expanded(child: _buildImageTile(8)),
+                ],
+              ),
+            ),
+          ],
+        );
+    }
+  }
+
+  Widget _buildImageTile(int index) {
+    if (index >= _images.length) {
+      return Container(
+        color: const Color(0xFFF8FAFC),
+        alignment: Alignment.center,
+        child: Icon(Icons.add_photo_alternate_rounded,
+            size: 36, color: Colors.grey[350]),
+      );
+    }
+
+    return Image.memory(
+      _images[index].bytes,
+      fit: BoxFit.cover,
+      gaplessPlayback: true,
+    );
+  }
+}
+
+class _CollagePhoto {
+  const _CollagePhoto({
+    required this.file,
+    required this.bytes,
+  });
+
+  final XFile file;
+  final Uint8List bytes;
+}

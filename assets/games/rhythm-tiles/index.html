@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Soul Rhythm ✨</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Nunito:wght@400;600;700;800&display=swap');
+
+        :root {
+            --primary: #ff0055;
+            --secondary: #00e5ff;
+            --accent: #ffeb3b;
+            --bg-dark: #05050a;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --neon-shadow: 0 0 20px var(--primary);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: var(--bg-dark);
+            font-family: 'Nunito', sans-serif;
+            user-select: none;
+            touch-action: none;
+            color: white;
+            height: 100dvh;
+            width: 100dvw;
+        }
+
+        #game-canvas {
+            display: block;
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        /* ═══════════════ HUD LAYER ═══════════════ */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            background: rgba(255,255,255,0.06);
+            position: absolute;
+            top: 0;
+            z-index: 10;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            width: 0%;
+            transition: width 0.25s linear;
+            box-shadow: 0 0 10px var(--secondary);
+        }
+
+        /* HUD top */
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px 14px;
+            padding-top: calc(10px + env(safe-area-inset-top, 0px));
+            margin-top: 5px;
+        }
+
+        .hud-right {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .mini-btn {
+            pointer-events: auto;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.12s, background 0.15s, box-shadow 0.15s;
+            font-size: 16px;
+        }
+        .mini-btn:active {
+            transform: scale(0.90);
+            background: rgba(255,255,255,0.16);
+            box-shadow: 0 0 12px var(--primary);
+        }
+
+        .score-box { text-align: left; }
+        .score-label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+        .score-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255,255,255,0.4);
+            line-height: 1.1;
+        }
+
+        .lives-box { text-align: right; }
+        .lives-row {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-end;
+            margin-top: 4px;
+        }
+        .life {
+            width: 11px;
+            height: 11px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: all 0.3s;
+        }
+        .life.on {
+            background: radial-gradient(circle at 30% 30%, #fff, #ff7aa8 40%, var(--primary));
+            box-shadow: 0 0 12px rgba(255,0,85,0.7), 0 0 24px rgba(255,0,85,0.3);
+            animation: heartbeat 1.2s ease-in-out infinite;
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        /* Combo display */
+        .combo-box {
+            text-align: center;
+            position: absolute;
+            top: 28%;
+            width: 100%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s, transform 0.15s;
+            transform: scale(1);
+        }
+        .combo-box.show { opacity: 1; }
+        .combo-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 64px;
+            font-weight: 900;
+            color: var(--secondary);
+            text-shadow: 0 0 30px var(--secondary), 0 0 60px var(--secondary);
+            line-height: 1;
+        }
+        .combo-label {
+            font-size: 13px;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.7);
+            font-weight: 700;
+        }
+
+        /* ═══════════════ MENU SCREENS ═══════════════ */
+        .menu-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: auto;
+            transition: opacity 0.35s ease;
+            padding: 20px;
+            padding-bottom: calc(20px + var(--safe-bottom));
+        }
+        .menu-screen::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 5, 15, 0.82);
+            backdrop-filter: blur(20px) saturate(1.5);
+            -webkit-backdrop-filter: blur(20px) saturate(1.5);
+        }
+        .menu-screen > * { position: relative; z-index: 1; }
+
+        .hidden { opacity: 0 !important; pointer-events: none !important; }
+
+        /* Game title with animated gradient */
+        .game-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(32px, 8vw, 52px);
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff00cc, #ff0055, #ff9900, #ffeb3b, #00e5ff, #7c4dff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGradient 4s ease infinite;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        @keyframes titleGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .game-subtitle {
+            color: rgba(255,255,255,0.55);
+            font-size: 14px;
+            margin-bottom: 32px;
+            letter-spacing: 1px;
+        }
+
+        /* Main play button */
+        .btn-play {
+            background: linear-gradient(135deg, var(--primary), #ff4081, #ff9900);
+            background-size: 200% 200%;
+            border: none;
+            padding: clamp(14px, 4vw, 18px) clamp(40px, 12vw, 64px);
+            border-radius: 60px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(16px, 4vw, 22px);
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 8px 32px rgba(255, 0, 85, 0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+            transition: transform 0.15s, box-shadow 0.15s;
+            margin: 6px 0;
+            position: relative;
+            overflow: hidden;
+            animation: pulsePlay 2s ease-in-out infinite;
+            min-width: 200px;
+        }
+        @keyframes pulsePlay {
+            0%, 100% { box-shadow: 0 8px 32px rgba(255,0,85,0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+            50% { box-shadow: 0 8px 48px rgba(255,0,85,0.8), 0 0 40px rgba(255,0,85,0.3), inset 0 1px 0 rgba(255,255,255,0.3); }
+        }
+        .btn-play:active { transform: scale(0.94); animation: none; }
+        .btn-play::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(rgba(255,255,255,0.25), transparent);
+            border-radius: 60px 60px 0 0;
+        }
+
+        /* Difficulty row */
+        .difficulty-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .diff-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 10px 18px;
+            color: rgba(255,255,255,0.7);
+            font-family: 'Nunito', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 72px;
+        }
+        .diff-btn .diff-icon { font-size: 20px; }
+        .diff-btn:active { transform: scale(0.93); }
+        .diff-btn.selected {
+            background: rgba(255,255,255,0.15);
+            border-color: var(--secondary);
+            color: white;
+            box-shadow: 0 0 16px rgba(0,229,255,0.3);
+        }
+
+        /* Icon buttons row */
+        .menu-row {
+            display: flex;
+            gap: 14px;
+            margin-top: 20px;
+        }
+        .btn-icon {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            width: 56px; height: 56px;
+            border-radius: 18px;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-icon:active {
+            transform: scale(0.90);
+            background: rgba(255,255,255,0.18);
+            box-shadow: 0 0 18px var(--primary);
+        }
+
+        /* Version text */
+        .version-text {
+            margin-top: 24px;
+            font-size: 11px;
+            opacity: 0.4;
+            letter-spacing: 1px;
+        }
+
+        /* Bottom bar (menu) */
+        .menu-bottom {
+            position: absolute;
+            bottom: calc(16px + var(--safe-bottom));
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+        }
+        .bottom-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            font-size: 22px;
+            padding: 10px;
+            transition: color 0.2s;
+        }
+        .bottom-btn:active { color: white; }
+
+        /* ═══════════════ GAME OVER ═══════════════ */
+        #over-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(22px, 6vw, 32px);
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .final-score-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(52px, 14vw, 70px);
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 30px rgba(255,215,0,0.6);
+            margin-bottom: 20px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 14px;
+            text-align: center;
+            margin-bottom: 16px;
+            width: 100%;
+            max-width: 340px;
+        }
+        .stat-card {
+            flex: 1;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 12px 8px;
+        }
+        .stat-card-label {
+            color: rgba(255,255,255,0.5);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+        .stat-card-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            margin-top: 4px;
+        }
+
+        .btn-replay {
+            background: linear-gradient(135deg, var(--primary), #ff4081);
+            border: none;
+            padding: 14px 48px;
+            border-radius: 50px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 24px rgba(255,0,85,0.45);
+            transition: transform 0.15s, box-shadow 0.15s;
+            margin-top: 6px;
+        }
+        .btn-replay:active { transform: scale(0.93); }
+
+        .btn-home {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 10px 28px;
+            border-radius: 30px;
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        .btn-home:active { background: rgba(255,255,255,0.1); }
+
+        /* ═══════════════ SLIDING PANELS ═══════════════ */
+        .panel {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            background: rgba(14, 14, 26, 0.95);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 28px 28px 0 0;
+            border-top: 1px solid var(--glass-border);
+            padding: 8px 20px 20px;
+            padding-bottom: calc(20px + var(--safe-bottom));
+            box-sizing: border-box;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 150;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+        .panel.open { transform: translateY(0); }
+
+        /* Pull handle */
+        .panel::before {
+            content: '';
+            display: block;
+            width: 44px; height: 5px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 999px;
+            margin: 8px auto 16px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .panel-close {
+            cursor: pointer;
+            font-size: 20px;
+            color: rgba(255,255,255,0.5);
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .panel-close:active { background: rgba(255,255,255,0.1); }
+
+        /* Shop grid */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .shop-item {
+            background: var(--glass);
+            border-radius: 18px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .shop-item.active {
+            border-color: var(--secondary);
+            background: rgba(0, 229, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0,229,255,0.2);
+        }
+        .shop-item:active { transform: scale(0.96); }
+
+        /* Leaderboard */
+        .lb-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 14px;
+            background: var(--glass);
+            border-radius: 14px;
+            margin-bottom: 8px;
+        }
+        .lb-rank { width: 36px; font-size: 18px; }
+        .lb-score {
+            font-family: 'Orbitron', sans-serif;
+            color: #ffd700;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        /* Settings toggles */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: var(--glass);
+            border-radius: 16px;
+            margin-bottom: 10px;
+        }
+        .toggle-label { font-weight: 700; font-size: 14px; }
+        .toggle-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+        .switch {
+            position: relative; display: inline-block;
+            width: 52px; height: 28px; flex-shrink: 0;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.15);
+            transition: .35s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 22px; width: 22px;
+            left: 3px; bottom: 3px;
+            background: white;
+            transition: .35s;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        input:checked + .slider { background: var(--primary); box-shadow: 0 0 12px var(--primary); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="game-canvas"></canvas>
+
+    <!-- HUD -->
+    <div id="ui-layer">
+        <div class="progress-bar"><div class="progress-fill" id="xp-bar"></div></div>
+        <div class="hud-top">
+            <div class="score-box">
+                <div class="score-label">Score</div>
+                <div class="score-val" id="score-display">0</div>
+            </div>
+            <div class="hud-right">
+                <button class="mini-btn" id="btn-pause" aria-label="Pause" onclick="Game.togglePause()">
+                    <i class="fa-solid fa-pause"></i>
+                </button>
+                <button class="mini-btn" id="btn-exit" aria-label="Exit" onclick="Game.exitToApp()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="score-box lives-box">
+                    <div class="score-label">Level</div>
+                    <div class="score-val" id="level-display">1</div>
+                    <div class="lives-row" id="lives-row" aria-label="Lives"></div>
+                </div>
+            </div>
+        </div>
+        <div class="combo-box" id="combo-display">
+            <div class="combo-val" id="combo-num">0</div>
+            <div class="combo-label">✨ Combo ✨</div>
+        </div>
+    </div>
+
+    <!-- MAIN MENU -->
+    <div id="menu-main" class="menu-screen">
+        <div class="game-title">SOUL RHYTHM</div>
+        <div class="game-subtitle">🎵 Feel the beat. Touch the tiles. 🎵</div>
+
+        <button class="btn-play" onclick="Game.start()">
+            ▶ PLAY NOW
+        </button>
+
+        <div class="difficulty-row">
+            <button class="diff-btn" id="diff-easy" onclick="Game.setDifficulty('easy'); updateDiffBtn('easy')">
+                <span class="diff-icon">🍀</span>
+                <span>Easy</span>
+            </button>
+            <button class="diff-btn selected" id="diff-normal" onclick="Game.setDifficulty('normal'); updateDiffBtn('normal')">
+                <span class="diff-icon">⚡</span>
+                <span>Normal</span>
+            </button>
+            <button class="diff-btn" id="diff-hard" onclick="Game.setDifficulty('hard'); updateDiffBtn('hard')">
+                <span class="diff-icon">💀</span>
+                <span>Hard</span>
+            </button>
+        </div>
+
+        <div class="menu-row">
+            <button class="btn-icon" onclick="UI.togglePanel('panel-shop')" aria-label="Skins">🎨</button>
+            <button class="btn-icon" onclick="UI.togglePanel('panel-lb')" aria-label="Leaderboard">🏆</button>
+            <button class="btn-icon" onclick="UI.togglePanel('panel-settings')" aria-label="Settings">⚙️</button>
+        </div>
+
+        <div class="version-text">v4.0.0 · Ultra Premium Edition</div>
+
+        <div class="menu-bottom">
+            <button class="bottom-btn" onclick="Game.toggleFullscreen()" aria-label="Fullscreen">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+            <button class="bottom-btn" onclick="window.parent && window.parent.postMessage && window.parent.postMessage('soul_game_close', '*')" aria-label="Close">
+                <i class="fa-solid fa-power-off"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="menu-over" class="menu-screen hidden">
+        <div id="over-title">✨ COMPLETED</div>
+        <div class="final-score-val" id="final-score">0</div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-card-label">Perfect</div>
+                <div class="stat-card-val" style="color: var(--secondary);" id="stat-perfect">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Max Combo</div>
+                <div class="stat-card-val" style="color: var(--primary);" id="stat-combo">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Accuracy</div>
+                <div class="stat-card-val" style="color: #76ff03;" id="stat-acc">0%</div>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-card-label">Grade</div>
+                <div class="stat-card-val" style="color: #ffd700;" id="stat-grade">S</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Misses</div>
+                <div class="stat-card-val" style="color: #ff6b6b;" id="stat-miss">0</div>
+            </div>
+        </div>
+
+        <button class="btn-replay" id="btn-revive" onclick="Game.requestRevive()" style="background: linear-gradient(135deg, #00e5ff, #0066ff); display: none;">🎬 HỒI SINH</button>
+        <button class="btn-replay" onclick="Game.reset()">🔁 REPLAY</button>
+        <button class="btn-home" onclick="UI.showHome()">🏠 Home</button>
+    </div>
+
+    <!-- PANELS -->
+    <div id="panel-shop" class="panel">
+        <div class="panel-header">
+            <div class="panel-title">🎨 Skin</div>
+            <div class="panel-close" onclick="UI.closePanels()"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+        <div class="shop-grid" id="shop-grid"></div>
+    </div>
+
+    <div id="panel-lb" class="panel">
+        <div class="panel-header">
+            <div class="panel-title">🏆 Bảng Xếp Hạng</div>
+            <div class="panel-close" onclick="UI.closePanels()"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+        <div id="lb-list">
+            <div style="text-align:center; padding: 30px; color:#555;">Loading...</div>
+        </div>
+    </div>
+
+    <div id="panel-settings" class="panel">
+        <div class="panel-header">
+            <div class="panel-title">⚙️ Cài Đặt</div>
+            <div class="panel-close" onclick="UI.closePanels()"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+
+        <div class="toggle-row">
+            <div>
+                <div class="toggle-label">🤖 Auto Play</div>
+                <div class="toggle-sub">AI tự chơi thay bạn</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="chk-autoplay" onchange="Game.toggleAutoPlay(this.checked)">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="toggle-row">
+            <div>
+                <div class="toggle-label">🔊 Âm Thanh</div>
+                <div class="toggle-sub">Hiệu ứng nhạc khi chạm tile</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="chk-sound" checked onchange="Game.toggleSound(this.checked)">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="toggle-row">
+            <div>
+                <div class="toggle-label">🎵 Nhạc Nền</div>
+                <div class="toggle-sub">Giai điệu nền khi chơi</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="chk-music" checked onchange="Game.toggleMusic(this.checked)">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="toggle-row">
+            <div>
+                <div class="toggle-label">📳 Rung</div>
+                <div class="toggle-sub">Phản hồi haptic</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="chk-vibe" checked onchange="Game.toggleVibration(this.checked)">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <script>
+        // Difficulty button highlight
+        function updateDiffBtn(d) {
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+            const el = document.getElementById('diff-' + d);
+            if (el) el.classList.add('selected');
+        }
+        // Init selection from saved
+        (function() {
+            const saved = localStorage.getItem('sr_data_v4');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.difficulty) updateDiffBtn(data.difficulty);
+                } catch(e) {}
+            }
+        })();
+    </script>
+    <script src="game-logic.js"></script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "com.google.gms.google-services" apply false
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def flutterDartDefines = [:]
+def dartDefinesRaw = project.findProperty("dart-defines") ?: ""
+if (dartDefinesRaw) {
+    dartDefinesRaw.split(',').each { entry ->
+        if (!entry) {
+            return
+        }
+        def decoded = new String(java.util.Base64.decoder.decode(entry), 'UTF-8')
+        def separatorIndex = decoded.indexOf('=')
+        if (separatorIndex <= 0) {
+            return
+        }
+        def key = decoded.substring(0, separatorIndex)
+        def value = decoded.substring(separatorIndex + 1)
+        flutterDartDefines[key] = value
+    }
+}
+
+def buildConfigValues = [:]
+buildConfigValues.putAll(flutterDartDefines)
+
+def mergeDefinesFromJsonFile = { File file ->
+    if (file == null || !file.exists()) {
+        return
+    }
+    try {
+        def parsed = new groovy.json.JsonSlurper().parse(file)
+        if (parsed instanceof Map) {
+            parsed.each { k, v ->
+                def key = k?.toString()
+                def value = v?.toString()
+                if (key && value != null && (!buildConfigValues[key]?.trim())) {
+                    buildConfigValues[key] = value
+                }
+            }
+        }
+    } catch (Exception ignored) {
+    }
+}
+
+mergeDefinesFromJsonFile(rootProject.file("../.env.local.json"))
+mergeDefinesFromJsonFile(rootProject.file("../assets/env.local.json"))
+
+def isReleaseBuild = gradle.startParameter.taskNames.any { it.toLowerCase().contains("release") }
+def hasGoogleServicesFile = file("google-services.json").exists()
+if (hasGoogleServicesFile) {
+    apply plugin: "com.google.gms.google-services"
+}
+
+def facebookAppId = (buildConfigValues["FACEBOOK_APP_ID"] ?: "0").trim()
+def facebookClientToken = (buildConfigValues["FACEBOOK_CLIENT_TOKEN"] ?: "disabled_client_token").trim()
+def facebookDisplayName = (buildConfigValues["FACEBOOK_DISPLAY_NAME"] ?: "SoulLocket").trim()
+def facebookLoginProtocolScheme = "fb${facebookAppId ?: '0'}"
+
+def releaseFirebaseKeys = [
+        "FIREBASE_API_KEY",
+        "FIREBASE_AUTH_DOMAIN",
+        "FIREBASE_DATABASE_URL",
+        "FIREBASE_PROJECT_ID",
+        "FIREBASE_STORAGE_BUCKET",
+        "FIREBASE_MESSAGING_SENDER_ID",
+        "FIREBASE_APP_ID"
+]
+def missingRuntimeFirebaseKeys = releaseFirebaseKeys.findAll { !buildConfigValues[it]?.trim() }
+
+if (isReleaseBuild && !missingRuntimeFirebaseKeys.isEmpty()) {
+    throw new RuntimeException("Missing runtime dart-defines for Android release: ${missingRuntimeFirebaseKeys.join(', ')}. Build with --dart-define-from-file=.env.local.json.")
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+def requiredKeystoreKeys = ["storeFile", "storePassword", "keyAlias", "keyPassword"]
+def missingKeystoreKeys = requiredKeystoreKeys.findAll { !keystoreProperties[it]?.toString()?.trim() }
+def expectedSigningSha256 = (keystoreProperties['expectedSigningSha256'] ?: "").toString().trim().replace(":", "").toUpperCase()
+def releaseStoreFile = null
+if (keystoreProperties['storeFile']) {
+    def configuredStoreFile = keystoreProperties['storeFile'].toString()
+    def appRelativeStoreFile = file(configuredStoreFile)
+    def androidRelativeStoreFile = rootProject.file(configuredStoreFile)
+    releaseStoreFile = appRelativeStoreFile.exists()
+            ? appRelativeStoreFile
+            : androidRelativeStoreFile
+}
+
+if (isReleaseBuild && !keystorePropertiesFile.exists()) {
+    throw new RuntimeException("Missing android/key.properties for Android release. Create it from android/key.properties.example.")
+}
+
+if (isReleaseBuild && !missingKeystoreKeys.isEmpty()) {
+    throw new RuntimeException("android/key.properties is missing required keys: ${missingKeystoreKeys.join(', ')}.")
+}
+
+if (isReleaseBuild && (releaseStoreFile == null || !releaseStoreFile.exists())) {
+    throw new RuntimeException("Release keystore file from android/key.properties was not found.")
+}
+
+if (isReleaseBuild && expectedSigningSha256.isEmpty()) {
+    throw new RuntimeException("android/key.properties is missing expectedSigningSha256 for APK tamper protection.")
+}
+
+android {
+    namespace = "com.soullocket.app"
+    compileSdk = 36
+    ndkVersion = "26.1.10909125"
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    defaultConfig {
+        multiDexEnabled true
+        applicationId = "com.soullocket.app"
+        manifestPlaceholders += [applicationName: "android.app.Application"]
+        manifestPlaceholders += [ADMOB_APP_ID: "ca-app-pub-6165771694697009~7810334800"]
+        manifestPlaceholders += [FACEBOOK_LOGIN_PROTOCOL_SCHEME: facebookLoginProtocolScheme]
+        resValue "string", "facebook_app_id", facebookAppId
+        resValue "string", "facebook_client_token", facebookClientToken
+        resValue "string", "facebook_login_protocol_scheme", facebookLoginProtocolScheme
+        resValue "string", "facebook_display_name", facebookDisplayName
+        minSdk = 24
+        targetSdk = 36
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+        buildConfigField "String", "EXPECTED_SIGNING_SHA256", "\"${expectedSigningSha256}\""
+    }
+
+    signingConfigs {
+        release {
+            keyAlias = keystoreProperties['keyAlias']
+            keyPassword = keystoreProperties['keyPassword']
+            storeFile = releaseStoreFile
+            storePassword = keystoreProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.release
+            shrinkResources true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+
+dependencies {
+    implementation 'androidx.activity:activity-ktx:1.10.1'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+}

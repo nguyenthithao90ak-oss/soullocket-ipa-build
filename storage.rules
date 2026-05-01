@@ -1,0 +1,100 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function allowedMedia() {
+      return request.resource != null
+        && request.resource.size <= 50 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*|audio/.*|video/mp4');
+    }
+
+    function allowedImage() {
+      return request.resource != null
+        && request.resource.size <= 50 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /uploads/{uid}/secret_vault/{houseId}/{filePath=**} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow delete: if signedIn()
+        && request.auth.uid == uid
+        && resource != null;
+      allow create, update: if false;
+    }
+
+    match /uploads/{uid}/chat_images/{filePath=**} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+
+    match /uploads/{uid}/houses/{houseId}/chat_images/{filePath=**} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+
+    match /uploads/{uid}/houses/{houseId}/memories/{filePath=**} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+
+    match /uploads/{uid}/houses/{houseId}/album/{filePath=**} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+
+    match /uploads/{uid}/houses/{houseId}/gifts/{filePath=**} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+
+    match /uploads/{uid}/houses/{houseId}/love_cards/{filePath=**} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+
+    match /uploads/{uid}/houses/{houseId}/{folder}/{filePath=**} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if signedIn()
+        && request.auth.uid == uid
+        && folder != 'chat_images'
+        && folder != 'memories'
+        && folder != 'album'
+        && folder != 'gifts'
+        && folder != 'love_cards'
+        && allowedMedia();
+    }
+
+    match /uploads/{uid}/{topLevel}/{filePath=**} {
+      allow read: if signedIn()
+        && request.auth.uid == uid
+        && topLevel != 'secret_vault'
+        && topLevel != 'chat_images'
+        && topLevel != 'houses';
+      allow write: if signedIn()
+        && request.auth.uid == uid
+        && topLevel != 'secret_vault'
+        && topLevel != 'chat_images'
+        && topLevel != 'houses'
+        && allowedMedia();
+    }
+
+    match /uploads/{uid}/{fileName} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if signedIn()
+        && request.auth.uid == uid
+        && allowedMedia();
+    }
+
+    match /houses/{houseId}/{filePath=**} {
+      allow read, write: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

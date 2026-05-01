@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Chính sách bảo mật - SoulLocket</title>
+  <style>
+    :root {
+      --bg: #fff7fb;
+      --bg-soft: #fff0f6;
+      --card: rgba(255, 255, 255, 0.94);
+      --line: #f1cede;
+      --text: #243447;
+      --muted: #6b7280;
+      --primary: #d81b60;
+      --primary-dark: #ad1457;
+      --blue: #1565c0;
+      --green: #2e7d32;
+      --orange: #ef6c00;
+      --shadow: 0 18px 50px rgba(216, 27, 96, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(255, 182, 193, 0.34), transparent 24%),
+        radial-gradient(circle at left center, rgba(123, 31, 162, 0.08), transparent 24%),
+        linear-gradient(180deg, #fffafe 0%, var(--bg) 100%);
+      line-height: 1.72;
+    }
+
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+
+    .hero,
+    .section,
+    .contact {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.74);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px 24px;
+      margin-bottom: 18px;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, #ffafcc, #d81b60, #7b1fa2);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--bg-soft);
+      color: var(--primary-dark);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 6vw, 42px);
+      line-height: 1.12;
+      color: var(--primary);
+    }
+
+    .lead {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 780px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .meta span {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(216, 27, 96, 0.10);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .toc a {
+      display: block;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,242,248,0.96));
+      border: 1px solid rgba(216, 27, 96, 0.10);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(216, 27, 96, 0.08);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .summary .card {
+      padding: 16px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,244,249,0.96));
+    }
+
+    .summary strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--primary-dark);
+      font-size: 15px;
+    }
+
+    .section {
+      padding: 24px 22px;
+      margin-top: 18px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      color: var(--primary);
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 18px 0 8px;
+      color: var(--blue);
+      font-size: 18px;
+    }
+
+    p,
+    li {
+      font-size: 15px;
+    }
+
+    ul,
+    ol {
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .note,
+    .warning {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      font-size: 14px;
+    }
+
+    .note {
+      background: rgba(21, 101, 192, 0.08);
+      border: 1px solid rgba(21, 101, 192, 0.15);
+    }
+
+    .warning {
+      background: rgba(239, 108, 0, 0.10);
+      border: 1px solid rgba(239, 108, 0, 0.16);
+    }
+
+    table {
+      width: 100%;
+      margin-top: 14px;
+      border-collapse: collapse;
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.88);
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      text-align: left;
+      border-bottom: 1px solid #f2d6e2;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      background: #fff1f6;
+      color: var(--primary-dark);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .contact {
+      margin-top: 18px;
+      padding: 20px 22px;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 16px 12px 40px;
+      }
+
+      .hero,
+      .section,
+      .contact {
+        border-radius: 22px;
+      }
+
+      .hero,
+      .section {
+        padding: 20px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="badge">🛡️ Chính sách dữ liệu và quyền riêng tư</div>
+      <h1>Chính sách bảo mật SoulLocket</h1>
+      <p class="lead">
+        Chính sách này giải thích cách SoulLocket thu thập, sử dụng, lưu trữ, đồng bộ,
+        chia sẻ và bảo vệ dữ liệu khi bạn dùng ứng dụng, web viewer trong app và các dịch vụ hỗ trợ liên quan.
+        Nội dung dưới đây được viết bám sát vào nhóm tính năng hiện có của sản phẩm tại thời điểm rà soát.
+      </p>
+      <div class="meta">
+        <span>Ngày hiệu lực: 29/04/2026</span>
+        <span>Phiên bản áp dụng: SoulLocket v1.0.0</span>
+        <span>Áp dụng cho app, tài khoản, hạ tầng đồng bộ và hỗ trợ</span>
+      </div>
+      <div class="summary">
+        <div class="card">
+          <strong>Dữ liệu cốt lõi</strong>
+          Tài khoản, hồ sơ nhà, nội dung người dùng, media, cài đặt, token thiết bị và nhật ký hoạt động cần thiết cho dịch vụ.
+        </div>
+        <div class="card">
+          <strong>Dữ liệu nhạy cảm theo tính năng</strong>
+          Vị trí, camera, micro, sinh trắc học, nhật ký riêng tư, private area và nội dung AI chỉ được dùng khi bạn chủ động bật/nhập.
+        </div>
+        <div class="card">
+          <strong>Nhà cung cấp hạ tầng</strong>
+          SoulLocket hiện dùng Firebase làm hạ tầng chính, cùng Google Sign-In, Google Maps, Google Play Billing, Google AdMob và dịch vụ AI được cấu hình trên máy chủ.
+        </div>
+        <div class="card">
+          <strong>Quyền kiểm soát của bạn</strong>
+          Bạn có thể sửa, xóa, xuất, ẩn, giới hạn hiển thị hoặc ngừng cấp quyền cho nhiều loại dữ liệu trực tiếp từ app hoặc hệ điều hành.
+        </div>
+      </div>
+      <div class="toc">
+        <a href="#pham-vi">1. Phạm vi áp dụng</a>
+        <a href="#thu-thap">2. Dữ liệu được thu thập</a>
+        <a href="#muc-dich">3. Mục đích sử dụng</a>
+        <a href="#chia-se">4. Chia sẻ dữ liệu</a>
+        <a href="#luu-giu">5. Lưu giữ và xóa dữ liệu</a>
+        <a href="#bao-mat">6. Bảo mật</a>
+        <a href="#quyen">7. Quyền và lựa chọn của bạn</a>
+        <a href="#cookie">8. Cookie và lưu trữ cục bộ</a>
+        <a href="#lien-he">9. Liên hệ</a>
+      </div>
+    </section>
+
+    <section class="section" id="pham-vi">
+      <h2>1. Phạm vi áp dụng</h2>
+      <p>
+        Chính sách này áp dụng cho người dùng SoulLocket trên ứng dụng và các màn hình tài liệu nội bộ,
+        bao gồm nhưng không giới hạn ở các khu Home, Cộng đồng, Nhật ký, Chat, Gọi, Map, Tiện ích,
+        VIP/Premium, thông báo, hỗ trợ, bảo mật thiết bị và các công cụ quản trị liên quan.
+      </p>
+      <div class="note">
+        <strong>Minh bạch phạm vi quyền:</strong> app có thể khai báo nhiều quyền Android để sẵn sàng cho các module như camera,
+        micro, vị trí, QR, sinh trắc học hoặc thông báo; tuy nhiên dữ liệu chỉ phát sinh khi bạn chủ động dùng đúng tính năng tương ứng
+        hoặc bật quyền đó trong hệ điều hành.
+      </div>
+      <p>
+        SoulLocket là dịch vụ do nhóm vận hành SoulLocket quản lý. Khi chính sách này nhắc đến "SoulLocket",
+        "chúng tôi" hoặc "dịch vụ", đó là cách gọi chung cho ứng dụng, nền tảng đồng bộ và bộ phận hỗ trợ của sản phẩm.
+      </p>
+    </section>
+
+    <section class="section" id="thu-thap">
+      <h2>2. Chúng tôi thu thập những loại dữ liệu nào</h2>
+
+      <h3>2.1 Dữ liệu tài khoản và định danh</h3>
+      <ul>
+        <li>Email đăng nhập, UID tài khoản, phương thức đăng nhập (email hoặc Google Sign-In).</li>
+        <li>Thông tin xác thực kỹ thuật do nhà cung cấp đăng nhập tạo ra để duy trì phiên làm việc.</li>
+        <li>Dấu hiệu chống gian lận và kiểm tra an toàn như ID thiết bị, IP công khai, vị trí gần đúng suy ra từ IP hoặc trạng thái thiết bị đã duyệt khi luồng bảo mật yêu cầu.</li>
+      </ul>
+
+      <h3>2.2 Dữ liệu hồ sơ và "House"</h3>
+      <ul>
+        <li>Tên nhà, tên hiển thị, biệt danh, ảnh đại diện, ảnh nhà, vai trò thành viên, ngày bắt đầu, sinh nhật.</li>
+        <li>Thiết lập quan hệ: chế độ Độc thân / Couple, quyền riêng tư, policy kết bạn, giao diện, font, theme, hiệu ứng, nhạc nền.</li>
+        <li>Trạng thái VIP, ngày hết hạn, plan, dữ liệu khôi phục giao dịch và mốc kích hoạt gói.</li>
+      </ul>
+
+      <h3>2.3 Nội dung do bạn tạo trong app</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Nhóm dữ liệu</th>
+            <th>Ví dụ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Nhật ký và ký ức</td>
+            <td>Bài nhật ký, mood, caption, ảnh, bản ghi liên quan đến memory, dữ liệu export, dữ liệu likes trong phạm vi nhật ký</td>
+          </tr>
+          <tr>
+            <td>Chat và tương tác trực tiếp</td>
+            <td>Tin nhắn, phản ứng, reply, hình ảnh chat, room gọi, watch together, link chia sẻ</td>
+          </tr>
+          <tr>
+            <td>Cộng đồng</td>
+            <td>Bài đăng, caption, ảnh, bình luận, like/reaction, mức hiển thị, báo cáo nội dung, top hot</td>
+          </tr>
+          <tr>
+            <td>Tiện ích</td>
+            <td>Note, bucket list, finance, habit, calendar, photobook, collage, voice, check-in, date spot, secret vault, love letter, capsule</td>
+          </tr>
+          <tr>
+            <td>Hỗ trợ và phản hồi</td>
+            <td>Tin nhắn hỗ trợ, ticket, phản hồi lỗi, nội dung trao đổi với admin hoặc bot hỗ trợ trong app</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>2.4 Dữ liệu media</h3>
+      <ul>
+        <li>Ảnh bạn tải lên từ thư viện hoặc chụp từ camera khi dùng nhật ký, cộng đồng, avatar, photobook, kho ảnh hoặc các tiện ích liên quan.</li>
+        <li>Âm thanh hoặc tín hiệu micro khi dùng voice note, gọi audio/video hoặc các tính năng truyền thông trực tiếp.</li>
+        <li>Ở luồng hiện tại, media và tệp đính kèm được xử lý chủ yếu qua Firebase Storage hoặc bộ nhớ cục bộ cần thiết cho upload/sync.</li>
+      </ul>
+
+      <h3>2.5 Dữ liệu vị trí</h3>
+      <ul>
+        <li>Vị trí hiện tại, lịch sử đường đi, tọa độ check-in hoặc tọa độ gắn vào nhật ký/kỷ niệm nếu bạn cấp quyền vị trí.</li>
+        <li>Thông tin này chỉ phát sinh khi bạn bật các tính năng bản đồ, định vị, check-in hoặc gắn vị trí liên quan.</li>
+      </ul>
+
+      <h3>2.6 Dữ liệu thiết bị, thông báo và kỹ thuật</h3>
+      <ul>
+        <li>FCM token, trạng thái nhận thông báo, badge trạng thái, model/OS thiết bị, nhật ký thiết bị đã duyệt, IP công khai, vị trí gần đúng suy ra từ IP và các dữ liệu kỹ thuật cần thiết để bảo mật tài khoản, phát hiện bất thường, gửi thông báo và vận hành dịch vụ.</li>
+        <li>Shared preferences / local storage như trạng thái đồng ý cookie, privacy, điều khoản, theme, login tracker, scope khóa app, mode quan hệ.</li>
+        <li>Secure storage, shared preferences, cache ảnh/tài liệu và một phần dữ liệu cục bộ khác có thể được dùng để giữ phiên, tăng tốc tải, đồng bộ lại và hỗ trợ vận hành kỹ thuật.</li>
+      </ul>
+
+      <h3>2.7 Thanh toán, quảng cáo và phần thưởng</h3>
+      <ul>
+        <li>Mã sản phẩm VIP, trạng thái giao dịch, purchase token, ngày mua, dữ liệu restore mua hàng do Google Play Billing cung cấp.</li>
+        <li>Số điểm thưởng, lịch sử cộng/trừ điểm và trạng thái quảng cáo thưởng nếu bạn sử dụng Reward Store hoặc tính năng xem quảng cáo nhận quà.</li>
+        <li>Khi khu vực quảng cáo hoặc quảng cáo thưởng được bật, Google AdMob / Google Mobile Ads và SDK liên quan có thể xử lý thông tin thiết bị, trạng thái yêu cầu quảng cáo, dữ liệu tương tác quảng cáo/app và các tín hiệu kỹ thuật cần thiết theo chính sách riêng của Google.</li>
+        <li>SoulLocket không tự thu thập số thẻ ngân hàng của bạn; phần thanh toán nhạy cảm được xử lý bởi nền tảng thanh toán tương ứng.</li>
+      </ul>
+
+      <h3>2.8 Dữ liệu AI</h3>
+      <ul>
+        <li>Nội dung bạn nhập cho AI counselor, AI love letter hoặc các trường có nhãn AI có thể được dùng để tạo phản hồi tự động.</li>
+        <li>Với Chat thân thiện, tin nhắn có thể được gửi qua máy chủ SoulLocket tới dịch vụ AI đang được cấu hình để tạo phản hồi.</li>
+        <li>Lịch sử Chat thân thiện gần nhất được lưu trong khoảng 3 ngày để bot nhớ ngữ cảnh ngắn hạn, sau đó hệ thống sẽ dọn các tin nhắn cũ theo thiết kế.</li>
+        <li>Khi bạn bấm báo cáo câu trả lời AI, nội dung câu hỏi, câu trả lời và lý do báo cáo được lưu để admin xem xét và cải thiện an toàn nội dung.</li>
+      </ul>
+
+      <div class="warning">
+        <strong>Dữ liệu nhạy cảm:</strong> Nhật ký, vị trí, media riêng tư, private area, nội dung AI và thông tin bảo mật
+        có thể chứa nội dung nhạy cảm hơn bình thường. Bạn chỉ nên nhập hoặc lưu các dữ liệu này khi hiểu rõ mục đích sử dụng.
+      </div>
+    </section>
+
+    <section class="section" id="muc-dich">
+      <h2>3. Chúng tôi sử dụng dữ liệu để làm gì</h2>
+      <ul>
+        <li>Cung cấp, duy trì và đồng bộ các tính năng cốt lõi của SoulLocket.</li>
+        <li>Cho phép đăng nhập, ghép đôi, xác thực thiết bị, bảo vệ tài khoản và phát hiện hành vi bất thường.</li>
+        <li>Lưu và hiển thị nội dung người dùng như nhật ký, chat, ảnh, cộng đồng, lịch, tài chính, bucket list, kho ảnh và tiện ích.</li>
+        <li>Hiển thị thông báo đẩy, local notification, badge và nhắc nhở sự kiện.</li>
+        <li>Hỗ trợ tính năng bản đồ, check-in, vị trí đối phương hoặc lịch sử đường đi khi bạn chủ động bật quyền tương ứng.</li>
+        <li>Cấp quyền VIP, xử lý restore, quản lý quà tặng và điểm thưởng từ quảng cáo hoặc hệ thống.</li>
+        <li>Trả lời yêu cầu hỗ trợ, xử lý báo cáo, kháng nghị, phản hồi lỗi và duy trì an toàn cộng đồng.</li>
+        <li>Tạo phản hồi AI hoặc nội dung gợi ý cho các khu có tính năng AI.</li>
+        <li>Tuân thủ yêu cầu pháp lý, phòng chống gian lận, bảo vệ sản phẩm và người dùng.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="chia-se">
+      <h2>4. Chúng tôi chia sẻ dữ liệu với ai</h2>
+
+      <h3>4.1 Chia sẻ theo chính bạn thiết lập</h3>
+      <ul>
+        <li>Người còn lại trong "House" có thể xem những nội dung mà mô hình dữ liệu cho phép chia sẻ trong không gian chung.</li>
+        <li>Người dùng cộng đồng có thể thấy bài viết, ảnh và tương tác mà bạn đăng ở khu công khai theo mức visibility/quyền riêng tư đã chọn.</li>
+        <li>Người không phải bạn bè hoặc khách truy cập có thể bị chặn xem nếu hồ sơ/nhà để ở trạng thái riêng tư hoặc chỉ bạn bè.</li>
+      </ul>
+
+      <h3>4.2 Nhà cung cấp dịch vụ hạ tầng</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Nhà cung cấp / nhóm dịch vụ</th>
+            <th>Mục đích sử dụng trong SoulLocket</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Firebase</td>
+            <td>Xác thực tài khoản, realtime database, push notification, một phần lưu trữ media và đồng bộ dữ liệu</td>
+          </tr>
+          <tr>
+            <td>Google Sign-In</td>
+            <td>Đăng nhập bằng tài khoản Google</td>
+          </tr>
+          <tr>
+            <td>Google Maps / dịch vụ bản đồ</td>
+            <td>Hiển thị bản đồ, marker, điều hướng vị trí và dữ liệu map</td>
+          </tr>
+          <tr>
+            <td>Google Play Billing</td>
+            <td>Xử lý mua VIP/Premium và khôi phục mua hàng</td>
+          </tr>
+          <tr>
+            <td>Google AdMob</td>
+            <td>Hiển thị quảng cáo và quảng cáo thưởng; có thể xử lý yêu cầu quảng cáo, thông tin thiết bị và dữ liệu kỹ thuật cần thiết theo chính sách của Google</td>
+          </tr>
+          <tr>
+            <td>Dịch vụ AI được cấu hình trên máy chủ</td>
+            <td>Sinh nội dung AI, phản hồi Chat thân thiện hoặc hỗ trợ tự động ở các module có tích hợp AI</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>4.3 Chia sẻ khi bắt buộc hoặc để bảo vệ hệ thống</h3>
+      <ul>
+        <li>Khi pháp luật yêu cầu hoặc cơ quan có thẩm quyền yêu cầu hợp lệ.</li>
+        <li>Khi cần điều tra hành vi lạm dụng, gian lận, spam, xâm nhập trái phép hoặc vi phạm điều khoản sử dụng.</li>
+        <li>Khi cần cho admin hoặc bộ phận hỗ trợ tiếp cận phạm vi dữ liệu tối thiểu để xử lý yêu cầu của bạn.</li>
+      </ul>
+
+      <div class="note">
+        <strong>Cam kết cốt lõi:</strong> SoulLocket không chủ động bán dữ liệu cá nhân của bạn như một sản phẩm thương mại độc lập.
+        Tuy nhiên, các nhà cung cấp hạ tầng, thanh toán hoặc quảng cáo có thể xử lý dữ liệu kỹ thuật như định danh thiết bị/quảng cáo, tín hiệu attribution, IP hoặc vị trí gần đúng suy ra từ IP theo chính sách riêng của họ.
+      </div>
+    </section>
+
+    <section class="section" id="luu-giu">
+      <h2>5. Lưu giữ dữ liệu và xóa dữ liệu</h2>
+      <ul>
+        <li>Dữ liệu tài khoản và hồ sơ được lưu cho đến khi bạn đóng tài khoản, yêu cầu xóa hoặc dịch vụ chấm dứt theo điều khoản.</li>
+        <li>Nội dung người dùng như chat, nhật ký, cộng đồng, ảnh, note, tài chính, thói quen và lịch được giữ để phục vụ đồng bộ, hiển thị và lịch sử sử dụng.</li>
+        <li>Lịch sử Chat thân thiện AI được lưu ngắn hạn trong khoảng 3 ngày; báo cáo câu trả lời AI được giữ cùng hệ thống báo cáo/hỗ trợ để admin xử lý.</li>
+        <li>Một số dữ liệu media có thể đi qua vùng "thùng rác tạm thời" hoặc bước chờ xóa, tùy tính năng và luồng dọn dẹp.</li>
+        <li>FCM token, purchase token, device approval hoặc dữ liệu kỹ thuật có thể được cập nhật hoặc thay thế khi đổi máy, cài lại app hoặc đăng xuất.</li>
+        <li>Dữ liệu local storage trên thiết bị được giữ đến khi bạn xóa app data, xóa trình duyệt, đăng xuất hoặc đổi lựa chọn trong app.</li>
+      </ul>
+      <p>
+        Nếu bạn dùng luồng "Chia tay / Xóa dữ liệu", hệ thống hiện có cơ chế chờ tối đa 30 ngày để xác nhận hoặc hết hạn,
+        sau đó lên lịch thêm 1 ngày cuối trước khi dọn dữ liệu vĩnh viễn ở các nhánh Firebase và bộ nhớ liên quan theo thiết kế của luồng đó.
+      </p>
+      <div class="note">
+        Nếu bạn vẫn đăng nhập được, hãy xóa tài khoản trực tiếp trong app tại <strong>Cài đặt → Hỗ trợ & Pháp lý → Xóa tài khoản và dữ liệu</strong>.
+        Nếu không thể đăng nhập, bạn có thể gửi yêu cầu tại <a href="https://soullockket.web.app/delete-account.html">trang xóa tài khoản ngoài ứng dụng</a>.
+      </div>
+    </section>
+
+    <section class="section" id="bao-mat">
+      <h2>6. Bảo mật dữ liệu</h2>
+      <ul>
+        <li>Ứng dụng hỗ trợ PIN khóa app, khóa theo scope, sinh trắc học, quản lý thiết bị và một số cơ chế private area.</li>
+        <li>Một số nội dung riêng tư như vault/media nhạy cảm có thể đi qua lớp xử lý bảo mật bổ sung tùy tính năng.</li>
+        <li>Token thông báo, phê duyệt thiết bị, quyền khóa scope và thông tin bảo mật được lưu để giảm rủi ro truy cập trái phép.</li>
+        <li>Chúng tôi nỗ lực dùng các nền tảng hạ tầng phù hợp và kiểm soát quyền truy cập, nhưng không có hệ thống Internet nào an toàn tuyệt đối 100%.</li>
+      </ul>
+      <div class="warning">
+        <strong>Tự bảo vệ tài khoản:</strong> đừng chia sẻ mã PIN, đừng đưa người khác dùng máy đang đăng nhập SoulLocket,
+        và hãy tắt hoặc gỡ các thiết bị không còn tin cậy trong phần quản lý bảo mật khi cần.
+      </div>
+    </section>
+
+    <section class="section" id="quyen">
+      <h2>7. Quyền và lựa chọn của bạn</h2>
+      <ul>
+        <li>Chỉnh sửa hồ sơ, ảnh đại diện, quyền riêng tư, trạng thái hiển thị và nhiều cấu hình khác ngay trong app.</li>
+        <li>Xóa bài đăng, nhật ký, media hoặc dữ liệu tiện ích ở những nơi mà giao diện cho phép thao tác.</li>
+        <li>Tắt quyền camera, micro, vị trí, thông báo hoặc sinh trắc học từ hệ điều hành nếu không muốn tiếp tục cấp quyền.</li>
+        <li>Rút lại lựa chọn cookie/lưu trữ không bắt buộc bằng cách xóa dữ liệu app/trình duyệt hoặc cập nhật consent khi có hỗ trợ trong giao diện.</li>
+        <li>Yêu cầu giải thích, hỗ trợ, báo lỗi hoặc khiếu nại qua chat hỗ trợ trong app hoặc email hỗ trợ.</li>
+      </ul>
+      <p>
+        Nếu bạn cần hỗ trợ xóa dữ liệu ở cấp tài khoản hoặc cần rà soát nội dung mà bạn không còn truy cập được,
+        hãy liên hệ bộ phận hỗ trợ và mô tả rõ tài khoản, thiết bị, màn hình liên quan và yêu cầu cụ thể.
+      </p>
+    </section>
+
+    <section class="section" id="cookie">
+      <h2>8. Cookie, local storage và lưu trữ cục bộ</h2>
+      <p>
+        SoulLocket có thể dùng cookie trên web viewer hoặc cơ chế tương đương như local storage, shared preferences và session data
+        để duy trì đăng nhập, nhớ lựa chọn giao diện, lưu trạng thái đồng ý điều khoản/chính sách, quản lý khóa app và hỗ trợ đồng bộ.
+      </p>
+      <ul>
+        <li>Mức lưu trữ hiện có trong consent flow gồm <strong>Thiết yếu</strong> và <strong>Tất cả</strong>.</li>
+        <li>Dữ liệu thiết yếu là bắt buộc để dịch vụ hoạt động ổn định.</li>
+        <li>Dữ liệu "tất cả" có thể bao gồm phần chức năng nâng cao, ghi nhớ nhiều cấu hình hơn và hỗ trợ trải nghiệm trơn tru hơn.</li>
+      </ul>
+      <p>
+        Để biết chi tiết hơn, vui lòng xem riêng tài liệu <strong>Chính sách Cookie</strong> trong cùng khu tài liệu này.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>9. Dữ liệu trẻ em và phạm vi sử dụng</h2>
+      <p>
+        SoulLocket không được thiết kế như một dịch vụ dành riêng cho trẻ em nhỏ tuổi. Bạn chỉ nên sử dụng dịch vụ
+        khi đủ độ tuổi và có đủ năng lực pháp lý theo quy định áp dụng tại nơi bạn cư trú.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>10. Thay đổi chính sách</h2>
+      <p>
+        Chúng tôi có thể cập nhật Chính sách bảo mật khi sản phẩm thay đổi, khi tích hợp nhà cung cấp mới,
+        khi thêm tính năng mới hoặc khi cần đáp ứng yêu cầu pháp lý, vận hành và bảo mật. Khi có thay đổi đáng kể,
+        ngày hiệu lực sẽ được cập nhật rõ trong tài liệu này.
+      </p>
+    </section>
+
+    <section class="contact" id="lien-he">
+      <h2>11. Liên hệ</h2>
+      <p><strong>Email hỗ trợ:</strong> hotroviethoangdev.lo.ve@gmail.com</p>
+      <p><strong>Kênh trong app:</strong> tab Update/Hỗ trợ hoặc màn chat hỗ trợ người dùng.</p>
+      <p class="muted">
+        Nếu bạn liên hệ về quyền dữ liệu hoặc quyền riêng tư, vui lòng ghi rõ email tài khoản, tên nhà hoặc UID liên quan,
+        nội dung cần rà soát và cách chúng tôi có thể phản hồi cho bạn.
+      </p>
+    </section>
+  </div>
+</body>
+</html>

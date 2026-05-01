@@ -1,0 +1,31 @@
+--- home_screen.dart
++++ home_screen.dart
+@@ -31,8 +31,6 @@
+ import '../utilities/shared_utilities_part.dart';
+ import '../activities/activity_home_view.dart';
+ import '../activities/activity_tracker_manager.dart';
+-import '../relationship/video_call_screen.dart';
+-import 'widgets/home_shell/incoming_call_overlay.dart';
+ import 'tabs/main_home_tab.dart';
+ import 'tabs/memories_tab.dart';
+ import 'tabs/utilities_tab.dart';
+@@ -1034,19 +1032,6 @@
+               child: _buildMusicButton(),
+             ),
+-            if (_incomingCall != null)
+-              Positioned.fill(
+-                child: IncomingCallOverlay(
+-                  callerName:
+-                      (_incomingCall!['callerName'] ?? 'Someone').toString(),
+-                  callerAvatar:
+-                      (_incomingCall!['callerAvatar'] ?? '').toString(),
+-                  roomId: (_incomingCall!['roomId'] ?? '').toString(),
+-                  isVideo: _incomingCall!['isVideo'] == true,
+-                  onAccept: () {},
+-                  onDecline: () {},
+-                ),
+-              ),
+           ],
+         );
+ 
+ 

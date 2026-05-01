@@ -1,0 +1,1169 @@
+part of '../../settings_tab.dart';
+
+extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
+  ({List<Color> colors, Color textColor, Color borderColor, bool premium})
+      _widgetPreviewThemeSpec(String themeKey) {
+    switch (themeKey) {
+      case 'dark':
+        return (
+          colors: const [Color(0xFF121321), Color(0xFF24293F)],
+          textColor: Colors.white,
+          borderColor: const Color(0xFF475569),
+          premium: false,
+        );
+      case 'white':
+        return (
+          colors: const [Color(0xFFFFFFFF), Color(0xFFF5F7FB)],
+          textColor: const Color(0xFF1F2937),
+          borderColor: const Color(0xFFE5E7EB),
+          premium: false,
+        );
+      case 'blue':
+        return (
+          colors: const [
+            Color(0xFFEAF4FF),
+            Color(0xFFCFE6FF),
+          ],
+          textColor: const Color(0xFF214A84),
+          borderColor: const Color(0xFF8FC2FF),
+          premium: false,
+        );
+      case 'orange':
+        return (
+          colors: const [Color(0xFFFFEDD5), Color(0xFFFEC89A)],
+          textColor: const Color(0xFF9A3412),
+          borderColor: const Color(0xFFFDBA74),
+          premium: false,
+        );
+      case 'purple':
+        return (
+          colors: const [Color(0xFFF3E8FF), Color(0xFFD8B4FE)],
+          textColor: const Color(0xFF5B217A),
+          borderColor: const Color(0xFFC084FC),
+          premium: false,
+        );
+      case 'green':
+        return (
+          colors: const [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
+          textColor: const Color(0xFF166534),
+          borderColor: const Color(0xFF86EFAC),
+          premium: false,
+        );
+      case 'red':
+        return (
+          colors: const [Color(0xFFFFE4E6), Color(0xFFFDA4AF)],
+          textColor: const Color(0xFF9F1239),
+          borderColor: const Color(0xFFFB7185),
+          premium: false,
+        );
+      case 'premium':
+        return (
+          colors: const [
+            Color(0xFFFF5FA2),
+            Color(0xFFFFB86B),
+            Color(0xFF67E8F9),
+            Color(0xFF7C3AED),
+          ],
+          textColor: Colors.white,
+          borderColor: const Color(0xFFFFD166),
+          premium: true,
+        );
+      case 'pink':
+      default:
+        return (
+          colors: const [Color(0xFFFFEEF5), Color(0xFFFBCFE8)],
+          textColor: const Color(0xFF831843),
+          borderColor: const Color(0xFFF9A8D4),
+          premium: false,
+        );
+    }
+  }
+
+  List<Color> _widgetHeartPalette(String colorKey) {
+    switch (colorKey) {
+      case 'ruby':
+        return const [
+          Color(0xFFE11D48),
+          Color(0xFFFB7185),
+          Color(0xFFFFE4E6),
+        ];
+      case 'violet':
+        return const [
+          Color(0xFF8B5CF6),
+          Color(0xFFC084FC),
+          Color(0xFFF3E8FF),
+        ];
+      case 'ocean':
+        return const [
+          Color(0xFF0EA5E9),
+          Color(0xFF67E8F9),
+          Color(0xFFE0F2FE),
+        ];
+      case 'mint':
+        return const [
+          Color(0xFF10B981),
+          Color(0xFF6EE7B7),
+          Color(0xFFDCFCE7),
+        ];
+      case 'sunset':
+        return const [
+          Color(0xFFF97316),
+          Color(0xFFFBBF24),
+          Color(0xFFFFEDD5),
+        ];
+      case 'gold':
+        return const [
+          Color(0xFFEAB308),
+          Color(0xFFFDE68A),
+          Color(0xFFFFFBEB),
+        ];
+      case 'rose':
+      default:
+        return const [
+          Color(0xFFFF4D73),
+          Color(0xFFFF8FB1),
+          Color(0xFFFFE4EC),
+        ];
+    }
+  }
+
+  Widget _buildWidgetDiaryPreview(
+    Color textColor, {
+    double width = 56,
+    double height = 84,
+  }) {
+    if (!_showDiaryOnWidget) {
+      return const SizedBox.shrink();
+    }
+
+    const outerRadius = 18.0;
+    final houseId = _houseId?.trim();
+
+    if (houseId == null || houseId.isEmpty) {
+      return Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: textColor.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(outerRadius),
+          border:
+              Border.all(color: Colors.white.withOpacity(0.62), width: 0.95),
+        ),
+        child: Center(
+          child: Icon(
+            Icons.photo_library_rounded,
+            size: width * 0.4,
+            color: textColor.withOpacity(0.45),
+          ),
+        ),
+      );
+    }
+
+    return _WidgetDiaryPreviewStream(
+      state: this,
+      houseId: houseId,
+      layoutKey: _widgetDiaryLayoutKey,
+      textColor: textColor,
+      width: width,
+      height: height,
+    );
+  }
+
+  Widget _buildWidgetHeartStylePicker() {
+    final selectedKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _widgetHeartStyleKeys.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1,
+      ),
+      itemBuilder: (context, index) {
+        final heart = _widgetHeartStyleKeys[index];
+        final isSelected = selectedKey == heart;
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () async => _handleWidgetHeartStyleChanged(heart),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color(0xFFFFEEF5)
+                    : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFFFF6B97)
+                      : const Color(0xFFE4EAF3),
+                  width: isSelected ? 1.6 : 1.1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFFFF6B97).withOpacity(0.16),
+                          blurRadius: 12,
+                          offset: const Offset(0, 5),
+                        ),
+                      ]
+                    : const [],
+              ),
+              child: Center(
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 220),
+                  scale: isSelected ? 1.08 : 1,
+                  child: Text(
+                    heart,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 23,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _resolvedWidgetSeasonKey() {
+    return WidgetService.resolveSeasonEffect(
+      seasonModeKey: _widgetSeasonModeKey,
+      loveDate: _loveDate,
+      birthday1: _dobU1,
+      birthday2: _dobU2,
+    );
+  }
+
+  List<Color> _widgetSeasonPalette(String seasonKey) {
+    switch (seasonKey) {
+      case 'valentine':
+        return const [Color(0xFFFF5B8A), Color(0xFFFFC4D6)];
+      case 'anniversary':
+        return const [Color(0xFFFFB84D), Color(0xFFFFE5A8)];
+      case 'birthday':
+        return const [Color(0xFF5B8CFF), Color(0xFF8FE8FF)];
+      case 'none':
+      default:
+        return const [Color(0xFFE2E8F0), Color(0xFFF8FAFC)];
+    }
+  }
+
+  double _widgetPreviewCardWidth(double maxWidth) {
+    if (maxWidth <= 0) {
+      return 0;
+    }
+    return maxWidth > 360 ? maxWidth - 4 : maxWidth;
+  }
+
+  Widget _buildWidgetHeartPreview(Color textColor, {double size = 72}) {
+    final tick = _widgetPreviewTickNotifier.value;
+    final palette = _widgetHeartPalette(_widgetHeartColorKey);
+    final primary = palette[0];
+    final secondary = palette[1];
+    final glow = palette[2];
+    final styleKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
+    final styleSeed = styleKey.runes.fold<int>(0, (sum, rune) => sum + rune);
+    final colorSeed =
+        _widgetHeartColorKey.runes.fold<int>(0, (sum, rune) => sum + rune);
+    final animatedStyleIndex =
+        (tick * 7 + styleSeed + colorSeed) % _widgetHeartStyleKeys.length;
+    final activeStyleKey = _widgetHeartAnimated
+        ? _widgetHeartStyleKeys[animatedStyleIndex]
+        : styleKey;
+    final phase = (tick + styleSeed) % 6;
+    final pulse = _widgetHeartAnimated
+        ? <double>[1.0, 1.08, 0.95, 1.06, 0.98, 1.03][phase]
+        : 1.0;
+    final floatY = _widgetHeartAnimated
+        ? <double>[0.0, -2.4, 1.0, -1.6, 0.7, -1.0][phase]
+        : 0.0;
+    final swayX = _widgetHeartAnimated
+        ? <double>[0.0, 2.2, -2.0, 1.2, -1.3, 0.8][phase]
+        : 0.0;
+    final emojiSize = size * 0.62;
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Center(
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: size * 0.9,
+              height: size * 0.9,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    glow.withOpacity(0.92),
+                    primary.withOpacity(0.20),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.54, 1.0],
+                ),
+              ),
+            ),
+            if (_widgetHeartAnimated)
+              Positioned(
+                top: size * 0.18 + (floatY * 0.35),
+                right: size * 0.14 - (swayX * 0.45),
+                child: Container(
+                  width: size * 0.14,
+                  height: size * 0.14,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: secondary.withOpacity(0.34),
+                  ),
+                ),
+              ),
+            if (_widgetHeartAnimated)
+              Positioned(
+                left: size * 0.14 + (swayX * 0.24),
+                bottom: size * 0.16,
+                child: Container(
+                  width: size * 0.1,
+                  height: size * 0.1,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: glow.withOpacity(0.86),
+                  ),
+                ),
+              ),
+            Transform.translate(
+              offset: Offset(swayX * 0.42, floatY),
+              child: Transform.scale(
+                scale: pulse,
+                child: Text(
+                  activeStyleKey,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: emojiSize,
+                    height: 1,
+                    shadows: [
+                      Shadow(
+                        color: primary
+                            .withOpacity(_widgetHeartAnimated ? 0.28 : 0.16),
+                        blurRadius: size * 0.18,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  LinearGradient _widgetPreviewCardGradient(
+    String themeKey,
+    List<Color> colors,
+  ) {
+    if (themeKey != 'premium') {
+      return LinearGradient(
+        colors: colors,
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    }
+
+    const begins = <Alignment>[
+      Alignment(-1.0, -1.0),
+      Alignment(-0.4, -1.0),
+      Alignment(-0.9, -0.2),
+      Alignment(-0.3, -0.9),
+    ];
+    const ends = <Alignment>[
+      Alignment(1.0, 1.0),
+      Alignment(0.9, 1.0),
+      Alignment(1.0, 0.5),
+      Alignment(1.0, 1.0),
+    ];
+    const stopOffsets = <double>[0.0, 0.04, -0.03, 0.02];
+    final phase = _widgetPreviewTickNotifier.value % 4;
+
+    return LinearGradient(
+      colors: [
+        colors[0].withOpacity(0.98),
+        colors[1].withOpacity(0.96),
+        colors[2].withOpacity(0.94),
+        colors[3].withOpacity(0.98),
+      ],
+      stops: [
+        0.0,
+        (0.34 + stopOffsets[phase]).clamp(0.18, 0.46),
+        0.72,
+        1.0,
+      ],
+      begin: begins[phase],
+      end: ends[phase],
+    );
+  }
+
+  Widget _buildPremiumWidgetPreviewAurora(double cardWidth, double cardHeight) {
+    final phase = _widgetPreviewTickNotifier.value % 4;
+    const firstAlignments = <Alignment>[
+      Alignment(-0.9, -0.9),
+      Alignment(-0.55, -0.8),
+      Alignment(-0.75, -0.35),
+      Alignment(-0.5, -0.85),
+    ];
+    const secondAlignments = <Alignment>[
+      Alignment(0.95, -0.15),
+      Alignment(0.7, -0.45),
+      Alignment(0.95, -0.3),
+      Alignment(0.7, -0.1),
+    ];
+    const thirdAlignments = <Alignment>[
+      Alignment(0.15, 1.0),
+      Alignment(-0.15, 0.9),
+      Alignment(0.3, 0.75),
+      Alignment(-0.05, 1.0),
+    ];
+
+    Widget blob({
+      required Alignment alignment,
+      required double size,
+      required List<Color> colors,
+      required double opacity,
+    }) {
+      return AnimatedAlign(
+        duration: const Duration(milliseconds: 850),
+        curve: Curves.easeInOut,
+        alignment: alignment,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                colors.first.withOpacity(opacity),
+                colors.last.withOpacity(opacity * 0.52),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.48, 1.0],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return IgnorePointer(
+      child: Stack(
+        children: <Widget>[
+          blob(
+            alignment: firstAlignments[phase],
+            size: cardWidth * 0.72,
+            colors: const [Color(0xFFFF8AB8), Color(0xFFFFB86B)],
+            opacity: 0.54,
+          ),
+          blob(
+            alignment: secondAlignments[phase],
+            size: cardWidth * 0.62,
+            colors: const [Color(0xFF8AE7FF), Color(0xFF6D7CFF)],
+            opacity: 0.48,
+          ),
+          blob(
+            alignment: thirdAlignments[phase],
+            size: cardHeight * 0.98,
+            colors: const [Color(0xFFFFD38A), Color(0xFFCE8BFF)],
+            opacity: 0.34,
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.12),
+                    Colors.transparent,
+                    Colors.white.withOpacity(0.06),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: cardHeight * 0.16,
+            right: cardWidth * 0.16,
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              size: cardWidth * 0.06,
+              color: Colors.white.withOpacity(0.72),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ignore: unused_element
+  Widget _buildWidgetDayLabel(
+    Color textColor,
+    int days, {
+    required bool compact,
+  }) {
+    return Text(
+      '$days ngày',
+      style: SLTheme.quicksand(
+        color: textColor,
+        fontWeight: FontWeight.w900,
+        fontSize: compact ? 14.2 : 15.4,
+        letterSpacing: -0.2,
+        height: 1,
+      ),
+    );
+  }
+
+  Widget _buildWidgetDayStackedLabel(
+    Color textColor,
+    int days, {
+    required bool compact,
+  }) {
+    final countSize = compact ? 18.2 : 19.2;
+    final unitSize = compact ? 12.4 : 13.2;
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: '$days\n',
+            style: SLTheme.quicksand(
+              color: textColor,
+              fontWeight: FontWeight.w900,
+              fontSize: countSize,
+              letterSpacing: -0.3,
+              height: 0.96,
+            ),
+          ),
+          TextSpan(
+            text: 'ng\u00E0y',
+            style: SLTheme.quicksand(
+              color: textColor,
+              fontWeight: FontWeight.w800,
+              fontSize: unitSize,
+              letterSpacing: -0.1,
+              height: 0.98,
+            ),
+          ),
+        ],
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildWidgetPreview() {
+    return ValueListenableBuilder<int>(
+      valueListenable: _widgetPreviewTickNotifier,
+      builder: (context, _, __) {
+        final themeKey = _draftWidgetThemeKey ?? 'pink';
+        final theme = _widgetPreviewThemeSpec(themeKey);
+        final textColor = theme.textColor;
+        final heartPalette = _widgetHeartPalette(_widgetHeartColorKey);
+        final seasonKey = _resolvedWidgetSeasonKey();
+        final seasonPalette = _widgetSeasonPalette(seasonKey);
+        final accentColor =
+            seasonKey == 'none' ? heartPalette.first : seasonPalette.first;
+        final daysColor = theme.premium || themeKey == 'dark'
+            ? Colors.white
+            : Color.alphaBlend(accentColor.withOpacity(0.18), textColor);
+        final days = _loveDayCounter();
+        final label1 =
+            _nameU1.trim().isEmpty ? context.tr('role_male') : _nameU1.trim();
+        final label2 =
+            _nameU2.trim().isEmpty ? context.tr('role_female') : _nameU2.trim();
+        final showDiaryPreview = _showDiaryOnWidget;
+        final isCountdownStyle = _widgetStyleKey == 'countdown';
+        final loveDateLabel = _loveDate.trim().isEmpty
+            ? 'Bat dau hom nay'
+            : 'Tu ${DateInputUtils.normalizeForDisplay(_loveDate)}';
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final maxWidth =
+                constraints.maxWidth.isFinite && constraints.maxWidth > 0
+                    ? constraints.maxWidth
+                    : 340.0;
+            final cardWidth = _widgetPreviewCardWidth(maxWidth);
+            final isCompact = cardWidth < 320;
+            final isLarge = cardWidth >= 370;
+            final cardHeight = showDiaryPreview
+                ? (cardWidth * (isCompact ? 0.68 : 0.60))
+                    .clamp(196.0, 286.0)
+                    .toDouble()
+                : (cardWidth * (isCompact ? 0.54 : 0.50))
+                    .clamp(168.0, 236.0)
+                    .toDouble();
+            final avatarRadius = isCompact ? 25.0 : (isLarge ? 31.0 : 28.0);
+            final avatarWidth = isCompact ? 82.0 : (isLarge ? 112.0 : 96.0);
+            final heartSize = showDiaryPreview
+                ? (isCompact ? 58.0 : (isLarge ? 70.0 : 64.0))
+                : (isCompact ? 66.0 : (isLarge ? 76.0 : 70.0));
+            final diaryPreviewWidth =
+                isCompact ? 58.0 : (isLarge ? 74.0 : 66.0);
+            final diaryPreviewHeight =
+                isCompact ? 84.0 : (isLarge ? 108.0 : 96.0);
+            final diaryBlockOffsetY = showDiaryPreview
+                ? (isCompact ? 4.0 : (isLarge ? 8.0 : 6.0))
+                : 0.0;
+            final diaryBlockGap =
+                showDiaryPreview ? (isCompact ? 4.0 : 6.0) : 6.0;
+
+            if (isCountdownStyle) {
+              final countdownHeight = (cardWidth * (isCompact ? 0.56 : 0.52))
+                  .clamp(176.0, 228.0)
+                  .toDouble();
+              final topAvatarRadius = isCompact ? 20.0 : 24.0;
+
+              return Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 850),
+                  curve: Curves.easeInOut,
+                  width: cardWidth,
+                  height: countdownHeight,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    gradient:
+                        _widgetPreviewCardGradient(themeKey, theme.colors),
+                    borderRadius: BorderRadius.circular(26),
+                    border: Border.all(
+                      color: theme.borderColor.withOpacity(0.95),
+                      width: 1.4,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colors.first.withOpacity(0.22),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      if (theme.premium)
+                        Positioned.fill(
+                          child: _buildPremiumWidgetPreviewAurora(
+                            cardWidth,
+                            countdownHeight,
+                          ),
+                        ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          isCompact ? 16 : 20,
+                          16,
+                          isCompact ? 16 : 20,
+                          16,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildWidgetPreviewPerson(
+                                  avatarUrl: _avatarUrl1,
+                                  label: label1,
+                                  textColor: textColor,
+                                  radius: topAvatarRadius,
+                                  width: isCompact ? 70 : 78,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10),
+                                  child: Icon(
+                                    Icons.favorite_rounded,
+                                    color: accentColor,
+                                    size: isCompact ? 18 : 20,
+                                  ),
+                                ),
+                                _buildWidgetPreviewPerson(
+                                  avatarUrl: _avatarUrl2,
+                                  label: label2,
+                                  textColor: textColor,
+                                  radius: topAvatarRadius,
+                                  width: isCompact ? 70 : 78,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '$days',
+                              style: SLTheme.quicksand(
+                                color: daysColor,
+                                fontSize: isCompact ? 34 : 40,
+                                fontWeight: FontWeight.w900,
+                                height: 1,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'ngay',
+                              style: SLTheme.quicksand(
+                                color: daysColor.withOpacity(0.78),
+                                fontSize: isCompact ? 13 : 14,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              loveDateLabel,
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                color: textColor.withOpacity(0.82),
+                                fontSize: isCompact ? 11.8 : 12.6,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return Center(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 850),
+                curve: Curves.easeInOut,
+                width: cardWidth,
+                height: cardHeight,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  gradient: _widgetPreviewCardGradient(themeKey, theme.colors),
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(
+                    color: theme.borderColor.withOpacity(0.95),
+                    width: 1.4,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colors.first.withOpacity(0.22),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    if (theme.premium)
+                      Positioned.fill(
+                        child: _buildPremiumWidgetPreviewAurora(
+                          cardWidth,
+                          cardHeight,
+                        ),
+                      ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        isCompact ? 16 : 20,
+                        16,
+                        isCompact ? 16 : 20,
+                        16,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: _buildWidgetPreviewPerson(
+                                      avatarUrl: _avatarUrl1,
+                                      label: label1,
+                                      textColor: textColor,
+                                      radius: avatarRadius,
+                                      width: avatarWidth,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: isCompact ? 10 : 14),
+                                SizedBox(
+                                  width: isCompact ? 96 : (isLarge ? 118 : 106),
+                                  child: Transform.translate(
+                                    offset: Offset(0, diaryBlockOffsetY),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        _buildWidgetDayStackedLabel(
+                                          daysColor,
+                                          days,
+                                          compact: isCompact,
+                                        ),
+                                        SizedBox(height: diaryBlockGap),
+                                        if (!showDiaryPreview)
+                                          _buildWidgetHeartPreview(
+                                            textColor,
+                                            size: heartSize,
+                                          ),
+                                        if (showDiaryPreview) ...[
+                                          SizedBox(height: diaryBlockGap),
+                                          _buildWidgetDiaryPreview(
+                                            textColor,
+                                            width: diaryPreviewWidth,
+                                            height: diaryPreviewHeight,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: isCompact ? 10 : 14),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: _buildWidgetPreviewPerson(
+                                      avatarUrl: _avatarUrl2,
+                                      label: label2,
+                                      textColor: textColor,
+                                      radius: avatarRadius,
+                                      width: avatarWidth,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildWidgetPreviewPerson({
+    required String avatarUrl,
+    required String label,
+    required Color textColor,
+    double radius = 34,
+    double width = 76,
+  }) {
+    final iconSize = radius * 0.78;
+    final fontSize = radius >= 30 ? 12.5 : 11.4;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.18),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white.withOpacity(0.24)),
+          ),
+          child: CircleAvatar(
+            radius: radius,
+            backgroundColor: Colors.white.withOpacity(0.78),
+            backgroundImage:
+                avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+            child: avatarUrl.isEmpty
+                ? Icon(
+                    Icons.person,
+                    color: textColor.withOpacity(0.75),
+                    size: iconSize,
+                  )
+                : null,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: width,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: SLTheme.quicksand(
+              color: textColor,
+              fontWeight: FontWeight.w900,
+              fontSize: fontSize,
+              height: 1.15,
+              letterSpacing: -0.1,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WidgetDiaryPreviewStream extends StatefulWidget {
+  const _WidgetDiaryPreviewStream({
+    required this.state,
+    required this.houseId,
+    required this.layoutKey,
+    required this.textColor,
+    required this.width,
+    required this.height,
+  });
+
+  final _SettingsTabState state;
+  final String houseId;
+  final String layoutKey;
+  final Color textColor;
+  final double width;
+  final double height;
+
+  @override
+  State<_WidgetDiaryPreviewStream> createState() =>
+      _WidgetDiaryPreviewStreamState();
+}
+
+class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
+  static const double _outerRadius = 18;
+
+  late Stream<DatabaseEvent> _memoriesStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateStream();
+  }
+
+  @override
+  void didUpdateWidget(covariant _WidgetDiaryPreviewStream oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.houseId != widget.houseId) {
+      _updateStream();
+    }
+  }
+
+  void _updateStream() {
+    _memoriesStream = widget.state._dbRef
+        .child('houses/${widget.houseId}/memories')
+        .limitToLast(8)
+        .onValue;
+  }
+
+  Widget _buildEmptyPreview() {
+    return Container(
+      width: widget.width,
+      height: widget.height,
+      decoration: BoxDecoration(
+        color: widget.textColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(_outerRadius),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.62),
+          width: 0.95,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.photo_library_rounded,
+          size: widget.width * 0.4,
+          color: widget.textColor.withOpacity(0.45),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTile({
+    String? imageUrl,
+    required double tileWidth,
+    required double tileHeight,
+    required BorderRadius borderRadius,
+  }) {
+    final iconSize = (tileWidth < tileHeight ? tileWidth : tileHeight) * 0.34;
+    return Container(
+      width: tileWidth,
+      height: tileHeight,
+      decoration: BoxDecoration(
+        color: widget.textColor.withOpacity(0.07),
+        borderRadius: borderRadius,
+      ),
+      child: imageUrl == null
+          ? Icon(
+              Icons.photo_library_rounded,
+              size: iconSize,
+              color: widget.textColor.withOpacity(0.45),
+            )
+          : ClipRRect(
+              borderRadius: borderRadius,
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                memCacheWidth: tileWidth.ceil(),
+                memCacheHeight: tileHeight.ceil(),
+                errorWidget: (_, __, ___) {
+                  return Icon(
+                    Icons.broken_image_rounded,
+                    size: iconSize,
+                    color: widget.textColor.withOpacity(0.45),
+                  );
+                },
+              ),
+            ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<DatabaseEvent>(
+      stream: _memoriesStream,
+      builder: (context, snapshot) {
+        final imageLimit = switch (widget.layoutKey) {
+          'grid' => 4,
+          'duo' => 2,
+          _ => 1,
+        };
+        final imageUrls = widget.state._extractWidgetDiaryUrls(
+          snapshot.data?.snapshot.value,
+          limit: imageLimit,
+        );
+        if (imageUrls.isEmpty) {
+          return _buildEmptyPreview();
+        }
+
+        final previewKey = '${widget.layoutKey}_${imageUrls.join('|')}';
+        final filledUrls = switch (widget.layoutKey) {
+          'grid' => List<String?>.generate(
+              4,
+              (index) => index < imageUrls.length ? imageUrls[index] : null,
+            ),
+          'duo' => List<String?>.generate(
+              2,
+              (index) => index < imageUrls.length ? imageUrls[index] : null,
+            ),
+          _ => <String?>[imageUrls.first],
+        };
+
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 320),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          child: Container(
+            key: ValueKey(previewKey),
+            width: widget.width,
+            height: widget.height,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(_outerRadius),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.68),
+                width: 0.95,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(_outerRadius - 1),
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: switch (widget.layoutKey) {
+                  'grid' => Column(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _buildTile(
+                                  imageUrl: filledUrls[0],
+                                  tileWidth: widget.width / 2,
+                                  tileHeight: widget.height / 2,
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              Expanded(
+                                child: _buildTile(
+                                  imageUrl: filledUrls[1],
+                                  tileWidth: widget.width / 2,
+                                  tileHeight: widget.height / 2,
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _buildTile(
+                                  imageUrl: filledUrls[2],
+                                  tileWidth: widget.width / 2,
+                                  tileHeight: widget.height / 2,
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              Expanded(
+                                child: _buildTile(
+                                  imageUrl: filledUrls[3],
+                                  tileWidth: widget.width / 2,
+                                  tileHeight: widget.height / 2,
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  'duo' => Column(
+                      children: [
+                        Expanded(
+                          child: _buildTile(
+                            imageUrl: filledUrls[0],
+                            tileWidth: widget.width,
+                            tileHeight: widget.height / 2,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Expanded(
+                          child: _buildTile(
+                            imageUrl: filledUrls[1],
+                            tileWidth: widget.width,
+                            tileHeight: widget.height / 2,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  _ => _buildTile(
+                      imageUrl: filledUrls.first,
+                      tileWidth: widget.width,
+                      tileHeight: widget.height,
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

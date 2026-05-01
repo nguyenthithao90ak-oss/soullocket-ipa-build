@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/diary_item_root"
+    android:layout_width="match_parent"
+    android:layout_height="35dp"
+    android:background="@drawable/widget_diary_tile_bg"
+    android:padding="2dp">
+
+    <ImageView
+        android:id="@+id/diary_img"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop" />
+</FrameLayout>

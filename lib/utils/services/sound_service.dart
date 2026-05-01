@@ -1,0 +1,31 @@
+import 'package:flutter/services.dart';
+import '../views/ui_prefs.dart';
+
+class SoundService {
+  static final SoundService _instance = SoundService._internal();
+  factory SoundService() => _instance;
+  SoundService._internal();
+
+  Future<void> init() async {
+    // No initialization needed for SystemSound
+  }
+
+  Future<void> playClick() async {
+    final enabled = UiPrefs.notifier.value.touchSound;
+    if (!enabled) return;
+
+    try {
+      await SystemSound.play(SystemSoundType.click);
+    } catch (_) {}
+  }
+
+  Future<void> playSuccess() async {
+    // We can use a different system sound or just click for now
+    final enabled = UiPrefs.notifier.value.touchSound;
+    if (!enabled) return;
+
+    try {
+      await SystemSound.play(SystemSoundType.click);
+    } catch (_) {}
+  }
+}

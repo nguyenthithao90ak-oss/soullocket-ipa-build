@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "soullockket"
+  },
+  "targets": {
+    "soullockket": {
+      "hosting": {
+        "app": [
+          "soullockket"
+        ],
+        "admin": [
+          "admin-soullockket"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

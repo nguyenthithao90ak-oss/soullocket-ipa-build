@@ -1,0 +1,143 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+**/.kotlin/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+/node_modules/
+**/node_modules/
+/.firebase/
+/.genkit/
+**/.next/
+/aab/
+/app-obfuscation-symbols/
+/.tmp/
+*.apk
+*.aab
+*.ipa
+*.rar
+*.zip
+*.7z
+firebase-debug.log
+database-debug.log
+flutter_*.log
+/.env.json
+/.env.*.json
+!/env.example.json
+
+# Env files — KHÔNG commit secrets/runtime config thật
+.env
+.env.local
+.env.*.local
+.env.local.json
+.env.json
+.env.*.json
+**/.env
+**/.env.local
+**/.env.*.local
+**/.env.local.json
+**/.env.json
+**/.env.*.json
+**/env.local.json
+**/env.json
+**/env.*.json
+assets/env.local.json
+assets/env.json
+assets/env.*.json
+
+# Keystore / Android signing — KHÔNG commit
+android/key.properties
+**/key.properties
+**/*.jks
+**/*.keystore
+**/*.p12
+**/*.p8
+**/*.mobileprovision
+service-account-key.json
+**/*service-account*.json
+**/*serviceAccount*.json
+**/*firebase-adminsdk*.json
+**/*credentials*.json
+
+# Firebase/Google services — KHÔNG commit (nên cấp qua CI/CD hoặc local)
+google-services.json
+**/google-services.json
+GoogleService-Info.plist
+**/GoogleService-Info.plist
+
+# Cho phép commit file mẫu
+!.env.example
+!**/.env.example
+!**/.env.local.example
+!env.example.json
+!functions/.env.example
+!android/app/google-services.json.example
+!**/*credentials*.example.json
+
+# Local agent/cache directories
+/.claude/worktrees/
+/.claude/settings.json
+/.codex_appdata/
+/.gradle-local*/
+/.gradle_local/
+*.url
+build_log.txt
+# Local secrets and signing assets
+.env.*
+!*.env.example
+**/service-account-key.json
+apple_cert/
+*.p8
+*.p12
+*.mobileprovision
+*base64*.txt
+*.certSigningRequest
+*.cer
+*.pem
+*.key
+
+# Do not commit local installers or release artifacts
+*.exe
+*.msi
+*.ipa
+*.aab
+*.apks
+*.rar

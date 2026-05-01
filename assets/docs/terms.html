@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Điều khoản sử dụng - SoulLocket</title>
+  <style>
+    :root {
+      --bg: #fff7fb;
+      --bg-soft: #fff0f6;
+      --card: rgba(255, 255, 255, 0.94);
+      --line: #f1cede;
+      --text: #243447;
+      --muted: #6b7280;
+      --primary: #6d4c41;
+      --primary-dark: #4e342e;
+      --pink: #d81b60;
+      --blue: #1565c0;
+      --orange: #ef6c00;
+      --shadow: 0 18px 50px rgba(109, 76, 65, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(205, 133, 63, 0.18), transparent 22%),
+        radial-gradient(circle at left center, rgba(216, 27, 96, 0.08), transparent 24%),
+        linear-gradient(180deg, #fffaf8 0%, var(--bg) 100%);
+      line-height: 1.72;
+    }
+
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+
+    .hero,
+    .section,
+    .contact {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.74);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px 24px;
+      margin-bottom: 18px;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, #a1887f, #6d4c41, #d81b60);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #f8f1ef;
+      color: var(--primary-dark);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 6vw, 42px);
+      line-height: 1.12;
+      color: var(--primary);
+    }
+
+    .lead {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 780px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .meta span {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(109, 76, 65, 0.12);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .toc a {
+      display: block;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(250,244,241,0.96));
+      border: 1px solid rgba(109, 76, 65, 0.10);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(109, 76, 65, 0.08);
+    }
+
+    .section {
+      padding: 24px 22px;
+      margin-top: 18px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      color: var(--primary);
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 18px 0 8px;
+      color: var(--blue);
+      font-size: 18px;
+    }
+
+    p,
+    li {
+      font-size: 15px;
+    }
+
+    ul,
+    ol {
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .highlight,
+    .warning {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      font-size: 14px;
+    }
+
+    .highlight {
+      background: rgba(21, 101, 192, 0.08);
+      border: 1px solid rgba(21, 101, 192, 0.15);
+    }
+
+    .warning {
+      background: rgba(239, 108, 0, 0.10);
+      border: 1px solid rgba(239, 108, 0, 0.16);
+    }
+
+    table {
+      width: 100%;
+      margin-top: 14px;
+      border-collapse: collapse;
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.88);
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      text-align: left;
+      border-bottom: 1px solid #ead8d0;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f7efec;
+      color: var(--primary-dark);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .contact {
+      margin-top: 18px;
+      padding: 20px 22px;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 16px 12px 40px;
+      }
+
+      .hero,
+      .section,
+      .contact {
+        border-radius: 22px;
+      }
+
+      .hero,
+      .section {
+        padding: 20px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="badge">📘 Bộ điều khoản áp dụng cho SoulLocket</div>
+      <h1>Điều khoản sử dụng SoulLocket</h1>
+      <p class="lead">
+        Khi bạn tạo tài khoản, đăng nhập hoặc tiếp tục sử dụng SoulLocket, bạn xác nhận đã đọc,
+        hiểu và đồng ý với các điều khoản dưới đây. Điều khoản này đi cùng với Chính sách bảo mật
+        và Chính sách Cookie, tạo thành bộ quy tắc nền cho việc sử dụng dịch vụ.
+      </p>
+      <div class="meta">
+        <span>Ngày hiệu lực: 19/04/2026</span>
+        <span>Phiên bản áp dụng: SoulLocket v1.0.0</span>
+        <span>Áp dụng cho app, tài khoản, cộng đồng, VIP và dịch vụ hỗ trợ</span>
+      </div>
+      <div class="toc">
+        <a href="#chap-nhan">1. Chấp nhận điều khoản</a>
+        <a href="#pham-vi-dich-vu">Phạm vi dịch vụ hiện tại</a>
+        <a href="#tai-khoan">2. Tài khoản và trách nhiệm người dùng</a>
+        <a href="#noi-dung">3. Nội dung người dùng</a>
+        <a href="#cong-dong">4. Quy tắc cộng đồng</a>
+        <a href="#vip">5. VIP, quảng cáo và phần thưởng</a>
+        <a href="#bao-mat">6. Bảo mật và thiết bị</a>
+        <a href="#gioi-han">7. Giới hạn trách nhiệm</a>
+        <a href="#lien-he">8. Liên hệ</a>
+      </div>
+    </section>
+
+    <section class="section" id="chap-nhan">
+      <h2>1. Chấp nhận điều khoản</h2>
+      <ul>
+        <li>Bạn đồng ý tuân thủ Điều khoản sử dụng này khi dùng SoulLocket bằng bất kỳ phương thức truy cập hợp lệ nào.</li>
+        <li>Nếu bạn không đồng ý, vui lòng ngừng sử dụng dịch vụ và không tạo tài khoản hoặc không tiếp tục đăng nhập.</li>
+        <li>Một số tính năng như cộng đồng, VIP, gọi video, bản đồ hoặc AI có thể có quy tắc bổ sung trong phạm vi tính năng đó.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="pham-vi-dich-vu">
+      <h2>Phạm vi dịch vụ hiện tại</h2>
+      <p>
+        Ở phiên bản hiện tại, SoulLocket là ứng dụng dành cho kết nối cá nhân/cặp đôi với hạ tầng đồng bộ chính trên Firebase.
+        Phạm vi dịch vụ đang được triển khai trong app có thể bao gồm:
+      </p>
+      <ul>
+        <li>Không gian "House" để lưu hồ sơ, ghép đôi, chia sẻ dữ liệu chung và quản lý thiết bị.</li>
+        <li>Chat, nhật ký, feed cộng đồng, bình luận, tương tác bài viết, ảnh, media và thông báo.</li>
+        <li>Bản đồ, check-in, vị trí khi bạn chủ động cấp quyền; gọi audio/video khi bạn dùng camera và micro.</li>
+        <li>Tiện ích như note, bucket list, photobook, tài chính, thói quen, voice, time capsule, support chat và một số module khác đang xuất hiện trong app.</li>
+        <li>Tính năng VIP/Premium, quảng cáo thưởng, đăng nhập Google, đăng nhập QR và các công cụ AI hỗ trợ khi được bật.</li>
+      </ul>
+      <div class="highlight">
+        <strong>Lưu ý phạm vi:</strong> SoulLocket có thể thêm, đổi vị trí, tạm ẩn hoặc dừng một số tính năng theo từng bản phát hành,
+        nhưng điều khoản này chỉ phản ánh nhóm chức năng hiện có tại thời điểm tài liệu được cập nhật.
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>2. Điều kiện sử dụng</h2>
+      <ul>
+        <li>Bạn phải đủ độ tuổi và có đủ năng lực pháp lý theo quy định áp dụng tại nơi bạn cư trú để sử dụng dịch vụ.</li>
+        <li>Bạn cam kết cung cấp thông tin tài khoản trung thực, không giả mạo người khác và không tạo tài khoản cho mục đích lạm dụng.</li>
+        <li>Bạn chịu trách nhiệm cho mọi hoạt động phát sinh từ tài khoản, thiết bị và phiên đăng nhập của mình.</li>
+      </ul>
+      <div class="warning">
+        <strong>Không dùng SoulLocket cho mục đích khẩn cấp:</strong> đây không phải dịch vụ cứu hộ, y tế khẩn cấp,
+        trị liệu bắt buộc, hệ thống theo dõi an toàn chuyên dụng hay công cụ thực thi pháp luật.
+      </div>
+    </section>
+
+    <section class="section" id="tai-khoan">
+      <h2>3. Tài khoản, đăng nhập và House</h2>
+
+      <h3>3.1 Tài khoản</h3>
+      <ul>
+        <li>Bạn có thể đăng nhập bằng email/mật khẩu hoặc Google Sign-In theo cấu hình mà SoulLocket hỗ trợ.</li>
+        <li>Bạn phải bảo mật mật khẩu, mã PIN, mã QR đăng nhập và các thiết bị đã đăng nhập.</li>
+        <li>Chúng tôi có thể từ chối, khóa tạm hoặc yêu cầu xác minh bổ sung nếu hệ thống phát hiện rủi ro bảo mật, spam hoặc hành vi bất thường.</li>
+      </ul>
+
+      <h3>3.2 House và ghép đôi</h3>
+      <ul>
+        <li>Dữ liệu trong SoulLocket có thể được nhóm trong một "House" để đại diện cho không gian cá nhân hoặc không gian của cặp đôi.</li>
+        <li>Khi bạn ghép đôi, một số dữ liệu có thể được chia sẻ cho người còn lại trong House theo thiết kế tính năng và cấu hình quyền riêng tư.</li>
+        <li>Bạn không được dùng QR, mã đăng nhập hoặc quyền kết nối để truy cập trái phép vào House của người khác.</li>
+      </ul>
+
+      <h3>3.3 Thiết bị và phê duyệt truy cập</h3>
+      <ul>
+        <li>Ứng dụng có thể lưu trạng thái thiết bị, token thông báo, device ID và các cờ đã duyệt để bảo vệ tài khoản.</li>
+        <li>Nếu nhà của bạn dùng quản lý thiết bị, máy mới có thể bị chặn hoặc cần được duyệt trước khi dùng tiếp.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="noi-dung">
+      <h2>4. Nội dung người dùng và quyền sử dụng nội dung</h2>
+
+      <h3>4.1 Bạn sở hữu gì</h3>
+      <p>
+        Bạn giữ quyền đối với nội dung do mình tạo và tải lên, như nhật ký, ảnh, bài cộng đồng, tin nhắn,
+        audio, note, bucket list, photobook, voice note, nội dung AI nhập vào và các dữ liệu khác do bạn tự cung cấp.
+      </p>
+
+      <h3>4.2 Bạn cấp quyền gì cho SoulLocket</h3>
+      <p>
+        Để dịch vụ hoạt động, bạn cho phép SoulLocket xử lý nội dung đó trong phạm vi cần thiết cho việc lưu trữ,
+        hiển thị, sao lưu kỹ thuật, đồng bộ realtime, kiểm duyệt an toàn, hiển thị cho đúng người nhận
+        và thực hiện các chức năng mà chính bạn đã chọn dùng.
+      </p>
+
+      <h3>4.3 Bạn phải chịu trách nhiệm gì</h3>
+      <ul>
+        <li>Không đăng tải nội dung trái pháp luật, bạo lực cực đoan, khiêu dâm, bóc lột trẻ em, lừa đảo, xâm phạm đời tư hoặc xâm phạm quyền sở hữu trí tuệ.</li>
+        <li>Không dùng SoulLocket để spam, quấy rối, doxxing, hạ nhục, ép buộc hoặc theo dõi người khác trái phép.</li>
+        <li>Không tải lên virus, mã độc, script nguy hiểm hoặc khai thác kỹ thuật nhằm phá hoại dịch vụ.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="cong-dong">
+      <h2>5. Quy tắc cộng đồng và hành vi bị cấm</h2>
+
+      <h3>5.1 Nguyên tắc chung</h3>
+      <ul>
+        <li>Giữ lời lẽ văn minh, không công kích, không kích động thù ghét và không phát tán thông tin gây hại.</li>
+        <li>Chỉ đăng nội dung mà bạn có quyền sử dụng hoặc có quyền chia sẻ.</li>
+        <li>Tôn trọng quyền riêng tư của chính bạn và của người khác.</li>
+      </ul>
+
+      <h3>5.2 Hành vi bị cấm</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Nhóm hành vi</th>
+            <th>Ví dụ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Nội dung gây hại</td>
+            <td>Nội dung 18+, bóc lột, đe dọa, kích động tự hại, lừa đảo, spam liên kết</td>
+          </tr>
+          <tr>
+            <td>Xâm phạm tài khoản</td>
+            <td>Dùng QR của người khác, truy cập House trái phép, giả danh, chiếm quyền thiết bị</td>
+          </tr>
+          <tr>
+            <td>Lạm dụng hệ thống</td>
+            <td>Tạo tài khoản hàng loạt, vượt kiểm soát rate limit, gửi thông báo rác, lợi dụng lỗi</td>
+          </tr>
+          <tr>
+            <td>Xâm phạm quyền bên thứ ba</td>
+            <td>Đăng ảnh không xin phép, sao chép nội dung bản quyền, công khai dữ liệu riêng tư của người khác</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>5.3 Biện pháp xử lý</h3>
+      <ul>
+        <li>Ẩn nội dung, khóa một phần tính năng, khóa tạm tài khoản, thu hồi quyền truy cập hoặc xóa dữ liệu vi phạm.</li>
+        <li>Từ chối kháng nghị nếu hành vi vi phạm nghiêm trọng, tái phạm nhiều lần hoặc gây nguy hiểm cho cộng đồng.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>6. Tính năng AI và nội dung gợi ý</h2>
+      <ul>
+        <li>SoulLocket có thể cung cấp gợi ý AI, thư tình AI, nội dung tham khảo hoặc phản hồi hỗ trợ tự động.</li>
+        <li>Nội dung AI chỉ mang tính hỗ trợ tham khảo, không thay thế cho tư vấn tâm lý, pháp lý, y tế hoặc tài chính chuyên môn.</li>
+        <li>Bạn không nên xem phản hồi AI là cam kết tuyệt đối đúng, đặc biệt trong các vấn đề nhạy cảm hoặc khẩn cấp.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="vip">
+      <h2>7. VIP, thanh toán, quảng cáo và điểm thưởng</h2>
+
+      <h3>7.1 VIP / Premium</h3>
+      <ul>
+        <li>Một số tính năng hoặc giới hạn có thể khác nhau giữa tài khoản thường và tài khoản VIP.</li>
+        <li>Các gói VIP được bán qua nền tảng thanh toán được app hỗ trợ, hiện tại bao gồm luồng Google Play Billing khi khả dụng.</li>
+        <li>Giá, thời lượng gói, trạng thái mở bán và khả năng khôi phục có thể thay đổi theo Store, quốc gia, giai đoạn thử nghiệm hoặc cấu hình sản phẩm.</li>
+        <li>Hoàn tiền, hủy hoặc tranh chấp giao dịch sẽ chịu ảnh hưởng bởi chính sách của nền tảng thanh toán tương ứng.</li>
+      </ul>
+
+      <h3>7.2 Khôi phục mua hàng</h3>
+      <p>
+        Nếu trước đây bạn đã mua gói VIP bằng tài khoản Store hợp lệ, SoulLocket có thể hỗ trợ khôi phục trong phạm vi kỹ thuật
+        mà nền tảng thanh toán cho phép. Việc khôi phục không đảm bảo thành công nếu giao dịch không còn hiệu lực hoặc không gắn với tài khoản đúng.
+      </p>
+
+      <h3>7.3 Quảng cáo và thưởng điểm</h3>
+      <ul>
+        <li>Một số màn hình có thể hiển thị quảng cáo hoặc quảng cáo thưởng. Việc xem quảng cáo không bảo đảm bạn luôn nhận được điểm nếu quảng cáo tải lỗi hoặc bị hủy giữa chừng.</li>
+        <li>Điểm thưởng trong hệ thống là đơn vị tiện ích nội bộ, không phải tiền thật, không có giá trị hoàn tiền hay quy đổi thành tiền mặt trừ khi SoulLocket công bố khác bằng văn bản.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="bao-mat">
+      <h2>8. Bảo mật, khóa app và trách nhiệm của bạn</h2>
+      <ul>
+        <li>Bạn chịu trách nhiệm tự bảo vệ thiết bị, mã PIN, quyền sinh trắc học, email đăng nhập và các phiên đang hoạt động.</li>
+        <li>Nếu thiết bị bị mất, bị truy cập trái phép hoặc bạn nghi ngờ tài khoản gặp rủi ro, hãy đổi mật khẩu, đăng xuất, gỡ thiết bị lạ và liên hệ hỗ trợ sớm nhất có thể.</li>
+        <li>SoulLocket có thể chặn một số thao tác nếu hệ thống nhận thấy dấu hiệu lạm dụng, thiết bị lạ, token bất thường hoặc nội dung có nguy cơ gây hại.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>9. Sở hữu trí tuệ của SoulLocket</h2>
+      <ul>
+        <li>Giao diện, bố cục, biểu tượng, tài liệu, logic sản phẩm, nhãn hiệu, mã nguồn và tài sản trí tuệ liên quan đến SoulLocket thuộc quyền của đơn vị vận hành hoặc bên cấp phép.</li>
+        <li>Bạn không được sao chép, dịch ngược, khai thác thương mại trái phép, tái phân phối hoặc tạo bản sao cạnh tranh từ dịch vụ mà không có sự cho phép hợp lệ.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>10. Tạm ngừng, khóa hoặc chấm dứt dịch vụ</h2>
+      <ul>
+        <li>SoulLocket có thể giới hạn, tạm khóa hoặc chấm dứt quyền truy cập nếu bạn vi phạm điều khoản, gây hại cho người khác hoặc làm suy yếu an toàn hệ thống.</li>
+        <li>Chúng tôi cũng có thể điều chỉnh, thay đổi, ngừng một số tính năng hoặc tiến hành bảo trì mà không phải duy trì vĩnh viễn mọi chức năng ở cùng trạng thái.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="gioi-han">
+      <h2>11. Giới hạn trách nhiệm</h2>
+      <ul>
+        <li>Trong phạm vi pháp luật cho phép, SoulLocket không chịu trách nhiệm cho các thiệt hại gián tiếp, gián đoạn, mất dữ liệu do nguyên nhân ngoài khả năng kiểm soát hợp lý của dịch vụ.</li>
+        <li>Chúng tôi không bảo đảm mọi tính năng sẽ luôn hoạt động không gián đoạn, không lỗi hoặc phù hợp cho mọi mục đích cá nhân đặc biệt của bạn.</li>
+        <li>Nội dung do người dùng khác đăng tải, kể cả trong House hoặc Cộng đồng, vẫn là trách nhiệm của người đăng tương ứng.</li>
+      </ul>
+      <div class="warning">
+        <strong>Nhắc lại:</strong> SoulLocket là ứng dụng hỗ trợ kết nối, lưu giữ kỷ niệm và tương tác,
+        không phải công cụ giám sát pháp lý, nền tảng cấp cứu hay dịch vụ đảm bảo tuyệt đối về mối quan hệ.
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>12. Chính sách liên quan</h2>
+      <p>
+        Điều khoản này được đọc cùng với:
+      </p>
+      <ul>
+        <li><strong>Chính sách bảo mật</strong> của SoulLocket</li>
+        <li><strong>Chính sách Cookie</strong> của SoulLocket</li>
+        <li>Các thông báo, hướng dẫn hoặc cảnh báo đặc thù xuất hiện trong từng màn hình tính năng</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>13. Cập nhật điều khoản</h2>
+      <p>
+        SoulLocket có thể chỉnh sửa Điều khoản sử dụng này để phản ánh thay đổi sản phẩm, quy trình thanh toán,
+        cơ chế an toàn, cấu trúc dữ liệu hoặc yêu cầu pháp lý. Khi có thay đổi quan trọng, ngày hiệu lực sẽ được cập nhật trong tài liệu.
+      </p>
+    </section>
+
+    <section class="contact" id="lien-he">
+      <h2>14. Liên hệ</h2>
+      <p><strong>Email hỗ trợ:</strong> hotroviethoangdev.lo.ve@gmail.com</p>
+      <p><strong>Hỗ trợ trong app:</strong> tab Update/Hỗ trợ hoặc màn chat hỗ trợ người dùng.</p>
+      <p class="muted">
+        Nếu bạn cần làm rõ điều khoản, gửi phản hồi pháp lý, báo vi phạm cộng đồng hoặc yêu cầu hỗ trợ liên quan tới tài khoản,
+        vui lòng kèm email tài khoản, mô tả vấn đề và màn hình/tính năng đang liên quan.
+      </p>
+    </section>
+  </div>
+</body>
+</html>

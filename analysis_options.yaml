@@ -1,0 +1,26 @@
+﻿# Check for errors, warnings, and lints.
+#
+# Analyzer issues are surfaced by Dart-aware IDEs and by `flutter analyze`.
+
+# Enable the recommended lint set for Flutter apps, packages, and plugins.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - temp_lib/**
+    # Exclude firebase-tools template dependencies.
+    - node_modules/**
+    # Exclude generated build output.
+    - .dart_tool/**
+    - build/**
+
+linter:
+  rules:
+    - use_build_context_synchronously
+    - prefer_const_constructors
+    - prefer_const_literals_to_create_immutables
+    - prefer_const_constructors_in_immutables
+    - prefer_const_declarations
+
+# Additional information about this file can be found at
+# https://dart.dev/guides/language/analysis-options

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Chính sách Cookie - SoulLocket</title>
+  <style>
+    :root {
+      --bg: #fff8fc;
+      --bg-soft: #fff2f8;
+      --card: rgba(255, 255, 255, 0.95);
+      --line: #f6d3b8;
+      --text: #243447;
+      --muted: #6b7280;
+      --primary: #ef6c00;
+      --primary-dark: #c25b00;
+      --pink: #d81b60;
+      --blue: #1565c0;
+      --shadow: 0 18px 50px rgba(239, 108, 0, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(255, 224, 178, 0.48), transparent 24%),
+        radial-gradient(circle at left center, rgba(216, 27, 96, 0.08), transparent 24%),
+        linear-gradient(180deg, #fffaf5 0%, var(--bg) 100%);
+      line-height: 1.72;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    .hero,
+    .section {
+      background: var(--card);
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.76);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px 24px;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, #ffb74d, #ef6c00, #d81b60);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      right: -90px;
+      top: -120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 204, 128, 0.38), rgba(255, 204, 128, 0));
+      pointer-events: none;
+    }
+
+    h1 {
+      margin: 12px 0 10px;
+      color: var(--primary);
+      font-size: clamp(28px, 6vw, 42px);
+      line-height: 1.12;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      color: var(--pink);
+      font-size: 22px;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      color: var(--primary-dark);
+      font-size: 17px;
+    }
+
+    p,
+    li {
+      margin: 0 0 10px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #fff3e0;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .summary-grid,
+    .card-grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .summary-grid {
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    }
+
+    .card-grid {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .summary-card,
+    .mini-card,
+    .provider,
+    .callout,
+    .table-wrap,
+    .section {
+      border-radius: 22px;
+    }
+
+    .summary-card,
+    .mini-card,
+    .provider,
+    .callout {
+      padding: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, var(--bg-soft) 100%);
+    }
+
+    .summary-card strong,
+    .mini-card strong,
+    .provider strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--primary-dark);
+      font-size: 15px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .section {
+      padding: 24px 22px;
+    }
+
+    .toc {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .toc a {
+      display: block;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(239, 108, 0, 0.06);
+      border: 1px solid rgba(239, 108, 0, 0.14);
+    }
+
+    .notice {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(216, 27, 96, 0.06);
+      border: 1px solid rgba(216, 27, 96, 0.12);
+      color: #5f2a49;
+    }
+
+    .provider-grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+    }
+
+    th,
+    td {
+      padding: 13px 12px;
+      text-align: left;
+      border-bottom: 1px solid #f3d6bf;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--primary-dark);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      background: rgba(239, 108, 0, 0.05);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid #f5dcc8;
+      background: #fffdfa;
+    }
+
+    .contact-box {
+      padding: 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(239, 108, 0, 0.10), rgba(216, 27, 96, 0.08));
+      border: 1px solid rgba(239, 108, 0, 0.14);
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        padding: 16px 12px 36px;
+      }
+
+      .hero,
+      .section {
+        border-radius: 24px;
+      }
+
+      .hero {
+        padding: 24px 18px;
+      }
+
+      .section {
+        padding: 20px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <span class="badge">Cookie, Local Storage & SDK Cache</span>
+      <h1>Chính sách Cookie của SoulLocket</h1>
+      <p>
+        Chính sách này giải thích cách SoulLocket sử dụng cookie, localStorage, sessionStorage, bộ nhớ cục bộ trong ứng dụng
+        và các công nghệ tương tự để duy trì đăng nhập, ghi nhớ tùy chọn, hỗ trợ bảo mật và vận hành ổn định trên Android,
+        web và các màn hình nhúng WebView.
+      </p>
+      <div class="meta">
+        <span>Ngày hiệu lực: 19/04/2026</span>
+        <span>Phiên bản tài liệu: v1.0.0</span>
+        <span>Áp dụng cho: SoulLocket mobile app, webview và website liên quan</span>
+      </div>
+
+      <div class="summary-grid">
+        <article class="summary-card">
+          <strong>Mức đồng ý hiện có</strong>
+          <p>Ứng dụng hiện dùng 2 mức lựa chọn là <b>Thiết yếu</b> và <b>Tất cả</b>. Hiện chưa có công tắc tách riêng cho từng nhóm marketing hoặc analytics.</p>
+        </article>
+        <article class="summary-card">
+          <strong>Dữ liệu cục bộ được lưu</strong>
+          <p>App có thể lưu trạng thái đăng nhập, cờ đồng ý pháp lý, thiết lập giao diện, khóa ứng dụng, phiên làm việc và dữ liệu tạm giúp tải nhanh hơn.</p>
+        </article>
+        <article class="summary-card">
+          <strong>Dịch vụ bên thứ ba liên quan</strong>
+          <p>Một số SDK như Firebase, Google Sign-In, Google Maps, AdMob và Play Billing có thể dùng cơ chế lưu trữ riêng để hoạt động đúng.</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="stack">
+      <section class="section">
+        <h2>Mục lục nhanh</h2>
+        <div class="toc">
+          <a href="#pham-vi">1. Phạm vi áp dụng</a>
+          <a href="#khai-niem">2. Cookie và công nghệ tương tự là gì</a>
+          <a href="#phan-loai">3. Các nhóm lưu trữ SoulLocket sử dụng</a>
+          <a href="#vi-du">4. Ví dụ dữ liệu được ghi nhớ</a>
+          <a href="#ben-thu-ba">5. Công nghệ từ bên thứ ba</a>
+          <a href="#quan-ly">6. Cách quản lý và rút lại đồng ý</a>
+          <a href="#luu-tru">7. Thời gian lưu và xóa dữ liệu cục bộ</a>
+          <a href="#cap-nhat">8. Cập nhật chính sách</a>
+          <a href="#lien-he">9. Liên hệ</a>
+        </div>
+      </section>
+
+      <section class="section" id="pham-vi">
+        <h2>1. Phạm vi áp dụng</h2>
+        <p>
+          Chính sách này áp dụng cho các thành phần có sử dụng công nghệ lưu trữ cục bộ của SoulLocket, bao gồm ứng dụng di động,
+          các màn hình WebView mở tài liệu hoặc nội dung hỗ trợ, cùng các dịch vụ tích hợp cần duy trì phiên làm việc.
+        </p>
+        <p>
+          Trong tài liệu này, thuật ngữ "cookie" được dùng theo nghĩa rộng để chỉ cookie trình duyệt, localStorage, sessionStorage,
+          SharedPreferences, cache SDK, token đăng nhập, bộ nhớ cục bộ của ứng dụng và công nghệ tương đương giúp dịch vụ hoạt động.
+        </p>
+      </section>
+
+      <section class="section" id="khai-niem">
+        <h2>2. Cookie và công nghệ tương tự là gì</h2>
+        <div class="card-grid">
+          <article class="mini-card">
+            <strong>Cookie trình duyệt</strong>
+            <p>Các tệp nhỏ do website hoặc dịch vụ web tạo ra để duy trì phiên, ghi nhớ lựa chọn và xử lý xác thực trong môi trường web.</p>
+          </article>
+          <article class="mini-card">
+            <strong>LocalStorage / SessionStorage</strong>
+            <p>Bộ nhớ do engine web cung cấp cho trang HTML hoặc WebView để lưu lại cài đặt, trạng thái hoặc dữ liệu phiên trong thiết bị.</p>
+          </article>
+          <article class="mini-card">
+            <strong>Bộ nhớ ứng dụng</strong>
+            <p>Trên app mobile, SoulLocket có thể lưu các cờ trạng thái hoặc tùy chọn người dùng bằng SharedPreferences, secure storage, SQLite cục bộ, cache tạm hoặc cơ chế tương đương.</p>
+          </article>
+          <article class="mini-card">
+            <strong>SDK cache</strong>
+            <p>Một số SDK tích hợp như xác thực, bản đồ, thông báo đẩy hoặc quảng cáo có thể tạo token, session hoặc cache cục bộ riêng theo chuẩn của nhà cung cấp.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="phan-loai">
+        <h2>3. Các nhóm lưu trữ SoulLocket sử dụng</h2>
+        <div class="notice">
+          SoulLocket hiện triển khai màn hình đồng ý cookie/lưu trữ với 2 lựa chọn: <b>Thiết yếu</b> và <b>Tất cả</b>. Vì vậy các nhóm dưới đây được
+          diễn giải để minh bạch hơn, nhưng trong thực tế trải nghiệm consent hiện tại sẽ gom chúng theo hai mức này.
+        </div>
+
+        <div class="card-grid">
+          <article class="mini-card">
+            <strong>Nhóm thiết yếu</strong>
+            <p>Dùng để duy trì đăng nhập, xác thực, ghi nhận trạng thái đồng ý pháp lý, bảo vệ phiên làm việc, chống lỗi và giữ các màn hình cốt lõi hoạt động ổn định.</p>
+            <p>Đây là nhóm cần thiết để bạn dùng được ứng dụng. Nếu tắt hoặc xóa, bạn có thể phải đăng nhập lại hoặc một số tính năng không còn hoạt động bình thường.</p>
+          </article>
+          <article class="mini-card">
+            <strong>Nhóm chức năng và cá nhân hóa</strong>
+            <p>Dùng để ghi nhớ theme, kiểu hiển thị, tab gần nhất, thiết lập khóa ứng dụng, lựa chọn chế độ quan hệ, một số bộ lọc, bố cục và trạng thái giao diện.</p>
+            <p>Nhóm này thường được cho phép khi bạn chọn mức <b>Tất cả</b>, hoặc được khởi tạo trong phạm vi cần thiết để phục hồi trải nghiệm người dùng.</p>
+          </article>
+          <article class="mini-card">
+            <strong>Nhóm hiệu năng và chẩn đoán</strong>
+            <p>Dùng để lưu cache tạm, tăng tốc tải ảnh hoặc dữ liệu, giảm request lặp, xác định phiên bị gián đoạn và hỗ trợ điều tra lỗi kỹ thuật.</p>
+            <p>Không phải mọi dữ liệu cache đều gắn với danh tính; nhiều phần chỉ là dữ liệu kỹ thuật phục vụ vận hành.</p>
+          </article>
+          <article class="mini-card">
+            <strong>Nhóm quảng cáo, thưởng và thanh toán</strong>
+            <p>Khi bạn dùng tính năng quảng cáo thưởng, VIP hoặc khôi phục giao dịch, một số SDK có thể lưu session, token hoặc trạng thái xác minh giao dịch để chống lạm dụng.</p>
+            <p>Nhóm này chịu thêm chính sách của Google Play Billing, Google AdMob hoặc nền tảng tương ứng.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="vi-du">
+        <h2>4. Ví dụ dữ liệu được ghi nhớ trên thiết bị</h2>
+        <p>Dưới đây là các loại trạng thái mà SoulLocket hoặc SDK liên quan có thể lưu trên thiết bị để phục vụ trải nghiệm sử dụng:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Loại dữ liệu cục bộ</th>
+                <th>Mục đích</th>
+                <th>Ví dụ minh họa</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cờ đồng ý pháp lý</td>
+                <td>Ghi nhận rằng bạn đã xem hoặc đã chấp nhận các tài liệu bắt buộc.</td>
+                <td>Các khóa như <code>il_tos_accepted</code>, <code>il_privacy_accepted</code>, <code>il_cookie_storage_consent</code>.</td>
+              </tr>
+              <tr>
+                <td>Phiên đăng nhập và xác thực</td>
+                <td>Giữ trạng thái đăng nhập, thiết bị đã duyệt hoặc phiên xác thực giữa các lần mở app.</td>
+                <td>Firebase Auth token, Google Sign-In session, trạng thái thiết bị được phê duyệt.</td>
+              </tr>
+              <tr>
+                <td>Tùy chọn giao diện</td>
+                <td>Khôi phục bố cục, theme, lựa chọn tab, sắp xếp hiển thị và trải nghiệm cá nhân hóa.</td>
+                <td>Theme, chế độ hiển thị, tùy chọn thanh điều hướng, cấu hình màn hình tiện ích và trạng thái đồng ý pháp lý.</td>
+              </tr>
+              <tr>
+                <td>Bảo mật cục bộ</td>
+                <td>Ghi nhớ việc bật khóa ứng dụng, sinh trắc học, thời gian hết hạn mở khóa hoặc lớp xác nhận cục bộ.</td>
+                <td>Trạng thái bật khóa, yêu cầu xác thực lại khi mở nhật ký riêng hoặc chat nhạy cảm.</td>
+              </tr>
+              <tr>
+                <td>Cache hiệu năng</td>
+                <td>Tăng tốc tải ảnh, video, danh sách, tài liệu và giảm tải khi mở lại màn hình.</td>
+                <td>Bộ nhớ tạm ảnh, cache danh sách bài viết, trạng thái tải dở hoặc nội dung WebView.</td>
+              </tr>
+              <tr>
+                <td>Quảng cáo thưởng và giao dịch</td>
+                <td>Ngăn cộng thưởng lặp, xác minh giao dịch hoặc phục hồi quyền lợi VIP đúng cách.</td>
+                <td>Session xem quảng cáo thưởng, trạng thái purchase restore, mã giao dịch đã xử lý.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">
+          Ví dụ trên mang tính minh họa cho nhóm dữ liệu. Tên khóa hoặc cấu trúc kỹ thuật nội bộ có thể thay đổi theo từng phiên bản ứng dụng.
+        </p>
+      </section>
+
+      <section class="section" id="ben-thu-ba">
+        <h2>5. Công nghệ từ bên thứ ba</h2>
+        <p>Một số nhà cung cấp dịch vụ tích hợp vào SoulLocket có thể dùng cơ chế lưu trữ riêng để hoàn thành chức năng mà bạn chủ động sử dụng:</p>
+        <div class="provider-grid">
+          <article class="provider">
+            <strong>Firebase</strong>
+            <p>Được dùng cho xác thực, cơ sở dữ liệu thời gian thực, lưu trữ tệp và thông báo đẩy. Các dịch vụ này có thể giữ token, session và metadata kỹ thuật.</p>
+          </article>
+          <article class="provider">
+            <strong>Google Sign-In</strong>
+            <p>Được dùng khi bạn đăng nhập bằng tài khoản Google. Dịch vụ có thể lưu session xác thực để bạn không phải cấp quyền lại liên tục.</p>
+          </article>
+          <article class="provider">
+            <strong>Google Maps và dịch vụ vị trí</strong>
+            <p>Khi bạn mở tính năng bản đồ, check-in hoặc gợi ý địa điểm, SDK bản đồ có thể dùng cache bản đồ, tile hoặc session kỹ thuật cần thiết cho hiển thị.</p>
+          </article>
+          <article class="provider">
+            <strong>Google AdMob</strong>
+            <p>Khi bạn dùng quảng cáo thưởng hoặc hiển thị quảng cáo trong vùng cho phép, SDK quảng cáo có thể lưu session kỹ thuật, trạng thái lượt hiển thị và chống gian lận.</p>
+          </article>
+          <article class="provider">
+            <strong>Google Play Billing</strong>
+            <p>Khi bạn mua VIP hoặc khôi phục giao dịch, nền tảng thanh toán có thể lưu thông tin phiên, token xác minh và dấu vết kỹ thuật liên quan đến giao dịch.</p>
+          </article>
+        </div>
+
+        <div class="callout">
+          <strong>Quan trọng</strong>
+          <p>
+            SoulLocket không mô tả mọi cơ chế lưu trữ nội bộ của từng nhà cung cấp bên thứ ba ở cấp độ hạ tầng. Các nhà cung cấp này có thể áp dụng thêm chính sách riêng
+            và bạn nên tham khảo chính sách của họ khi cần hiểu sâu hơn về cách SDK tương ứng hoạt động.
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="quan-ly">
+        <h2>6. Cách quản lý và rút lại đồng ý</h2>
+        <ul>
+          <li>Bạn có thể chọn mức đồng ý tại màn hình consent của SoulLocket khi ứng dụng yêu cầu hoặc khi tài liệu pháp lý được hiển thị lại.</li>
+          <li>Nếu muốn xóa dữ liệu cục bộ, bạn có thể đăng xuất, xóa dữ liệu ứng dụng, gỡ cài đặt rồi cài lại hoặc dùng công cụ xóa dữ liệu của trình duyệt đối với phiên bản web.</li>
+          <li>Việc xóa cookie hoặc cache thiết yếu có thể khiến bạn bị đăng xuất, mất một số tùy chọn đã lưu, phải xác thực lại thiết bị hoặc tải lại dữ liệu từ đầu.</li>
+          <li>Nếu bạn chỉ đồng ý mức <b>Thiết yếu</b>, các thành phần không bắt buộc cho trải nghiệm mở rộng có thể bị hạn chế hoặc hoạt động khác đi so với mức <b>Tất cả</b>.</li>
+        </ul>
+        <div class="notice">
+          Hiện tại SoulLocket chưa cung cấp bảng điều khiển chi tiết để bật/tắt từng nhóm cookie riêng lẻ trong app. Trải nghiệm consent đang theo hai lựa chọn tổng quát:
+          <b>Thiết yếu</b> hoặc <b>Tất cả</b>.
+        </div>
+      </section>
+
+      <section class="section" id="luu-tru">
+        <h2>7. Thời gian lưu và xóa dữ liệu cục bộ</h2>
+        <p>
+          Thời gian lưu phụ thuộc vào loại dữ liệu, phiên làm việc và nhà cung cấp dịch vụ. Một số dữ liệu chỉ tồn tại trong một phiên, trong khi dữ liệu khác có thể
+          được giữ lại cho đến khi bạn đăng xuất, xóa bộ nhớ ứng dụng, thay đổi cài đặt hoặc gỡ ứng dụng.
+        </p>
+        <p>
+          Dữ liệu cục bộ không đồng nghĩa với dữ liệu chỉ tồn tại trên thiết bị. Một số trạng thái được lưu đồng thời trên máy chủ để đồng bộ nhiều thiết bị hoặc phục vụ
+          bảo mật. Để hiểu phạm vi dữ liệu máy chủ, vui lòng xem thêm tài liệu <a href="privacy.html">Chính sách bảo mật</a>.
+        </p>
+      </section>
+
+      <section class="section" id="cap-nhat">
+        <h2>8. Cập nhật chính sách</h2>
+        <p>
+          SoulLocket có thể cập nhật Chính sách Cookie khi có thay đổi về luồng đăng nhập, cơ chế consent, nhà cung cấp dịch vụ, mô hình quảng cáo, thanh toán
+          hoặc hạ tầng lưu trữ cục bộ. Bản cập nhật mới sẽ được đăng trong ứng dụng hoặc tại các tài liệu liên quan.
+        </p>
+      </section>
+
+      <section class="section" id="lien-he">
+        <h2>9. Liên hệ</h2>
+        <div class="contact-box">
+          <p>Nếu bạn cần giải thích thêm về cookie, local storage, bộ nhớ cục bộ hoặc quyền kiểm soát dữ liệu liên quan, vui lòng liên hệ:</p>
+          <p><a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p>
+          <p class="small">Khi gửi yêu cầu, bạn nên mô tả rõ nền tảng đang dùng (Android/web), phiên bản ứng dụng và thao tác đang gặp để đội hỗ trợ phản hồi chính xác hơn.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

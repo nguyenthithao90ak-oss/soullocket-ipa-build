@@ -1,0 +1,110 @@
+import 'package:firebase_database/firebase_database.dart';
+import '../../models/utilities/bucket_item.dart';
+
+class BucketService {
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+
+  // Thêm một điều ước mới (ví dụ: "Đi Đà Lạt ngắm hoàng hôn")
+  // [JS-02] Nâng cấp: Giới hạn tối đa 100 mục "Bucket List (100 Điều)"
+  Future<void> addItem(String houseId, String title) async {
+    final ref = _dbRef.child('houses/$houseId/utilities/bucket');
+    final snapshot = await ref.get();
+
+    if (snapshot.exists) {
+      final data = Map<dynamic, dynamic>.from(snapshot.value as Map);
+      if (data.length >= 100) {
+        throw Exception(
+            'Bucket List đã đạt giới hạn 100 điều. Hãy hoàn thành hoặc xóa bớt để thêm mới nhé!');
+      }
+    }
+
+    final newItem = {
+      'title': title,
+      'isDone': false,
+      'createdAt': DateTime.now().millisecondsSinceEpoch,
+    };
+    await ref.push().set(newItem);
+  }
+
+  // Đánh dấu hoàn thành, (Cung cấp ảnh làm bằng chứng kỉ niệm)
+  Future<void> completeItem(String houseId, String itemId, String authorRole,
+      {String? photoUrl}) async {
+    final updates = {
+      'isDone': true,
+      'doneAt': DateTime.now().millisecondsSinceEpoch,
+      'doneBy': authorRole,
+    };
+    if (photoUrl != null) {
+      updates['photoUrl'] = photoUrl;
+    }
+    await _dbRef
+        .child('houses/$houseId/utilities/bucket/$itemId')
+        .update(updates);
+  }
+
+  // [JS-02] Bổ sung hàm bỏ đánh dấu hoàn thành (Toggle like JS cũ)
+  Future<void> uncompleteItem(String houseId, String itemId) async {
+    final updates = {
+      'isDone': false,
+      'doneAt': null,
+      'doneBy': null,
+    };
+    await _dbRef
+        .child('houses/$houseId/utilities/bucket/$itemId')
+        .update(updates);
+  }
+
+  // [JS-02] Cập nhật ảnh đính kèm cho Bucket Item (uploadBucketImage trong JS cũ)
+  Future<void> updateBucketImage(
+      String houseId, String itemId, String imageUrl) async {
+    await _dbRef.child('houses/$houseId/utilities/bucket/$itemId').update({
+      'photoUrl': imageUrl,
+    });
+  }
+
+  // Xóa điêu ước
+  Future<void> deleteItem(String houseId, String itemId) async {
+    await _dbRef.child('houses/$houseId/utilities/bucket/$itemId').remove();
+  }
+
+  // Stream toàn bộ 100 điều cần làm chung
+  Stream<List<BucketItem>> streamBucketList(String houseId) {
+    return _dbRef
+        .child('houses/$houseId/utilities/bucket')
+        .onValue
+        .map((event) {
+      if (!event.snapshot.exists) return [];
+      final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
+      final List<BucketItem> items = [];
+      data.forEach((key, value) {
+        final map = Map<dynamic, dynamic>.from(value as Map);
+        items.add(BucketItem.fromMap(key, map));
+      });
+      // Sắp xếp: Chưa hoàn thành đẩy lên trên, rồi mới tới ngày tạo
+      items.sort((a, b) {
+        if (a.isCompleted && !b.isCompleted) return 1;
+        if (!a.isCompleted && b.isCompleted) return -1;
+        return a.createdAt.compareTo(b.createdAt);
+      });
+      return items;
+    });
+  }
+
+  // Lấy tỷ lệ hoàn thành (Ví dụ: 10/100 -> 10%) để Trae (AI 1) vẽ Progress Bar
+  Future<double> getCompletionProgress(String houseId) async {
+    final ds = await _dbRef.child('houses/$houseId/utilities/bucket').get();
+    if (!ds.exists) return 0.0;
+
+    final data = Map<dynamic, dynamic>.from(ds.value as Map);
+    int total = data.length;
+    int completed = 0;
+
+    data.forEach((_, value) {
+      if (value['isDone'] == true) {
+        completed++;
+      }
+    });
+
+    return total == 0 ? 0.0 : (completed / total);
+  }
+}

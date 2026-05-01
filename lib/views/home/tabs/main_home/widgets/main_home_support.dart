@@ -1,0 +1,1171 @@
+// ignore_for_file: unused_element
+
+part of '../../main_home_tab.dart';
+
+class _BlinkingAvatarHint extends StatefulWidget {
+  const _BlinkingAvatarHint();
+
+  @override
+  State<_BlinkingAvatarHint> createState() => _BlinkingAvatarHintState();
+}
+
+class _BlinkingAvatarHintState extends State<_BlinkingAvatarHint>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _opacity = Tween<double>(
+      begin: 0.28,
+      end: 0.78,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.18),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: Colors.white.withOpacity(0.42)),
+          ),
+          child: Text(
+            'Chọn ảnh',
+            style: SLTheme.quicksand(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ShootingHeartEffect extends StatefulWidget {
+  final VoidCallback onComplete;
+  final bool shootToRight;
+  final String emoji;
+  final String? assetPath;
+
+  const ShootingHeartEffect({
+    super.key,
+    required this.onComplete,
+    required this.shootToRight,
+    this.emoji = '❤️',
+    this.assetPath,
+  });
+
+  @override
+  State<ShootingHeartEffect> createState() => _ShootingHeartEffectState();
+}
+
+class _ParticleData {
+  final double delay;
+  final double flightDuration; // relative to 1.0
+  final double peakHeight;
+  final double size;
+  final double baseRotation;
+
+  _ParticleData({
+    required this.delay,
+    required this.flightDuration,
+    required this.peakHeight,
+    required this.size,
+    required this.baseRotation,
+  });
+}
+
+class _ShootingHeartEffectState extends State<ShootingHeartEffect>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  final List<_ParticleData> _particles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
+    );
+
+    final random = Random();
+    const particleCount = 3;
+    for (int i = 0; i < particleCount; i++) {
+      _particles.add(_ParticleData(
+        delay: random.nextDouble() * 0.22,
+        flightDuration: 0.62,
+        peakHeight: random.nextDouble() * 0.9 + 0.72,
+        size: random.nextDouble() * 10 + 27,
+        baseRotation: (random.nextDouble() - 0.5) * 0.72,
+      ));
+    }
+
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        widget.onComplete();
+      }
+    });
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: _particles.map((p) {
+            // Local progress for this particle
+            double t = (_controller.value - p.delay) / p.flightDuration;
+            if (t < 0) t = 0;
+            if (t > 1) t = 1;
+
+            // X moves from sender to receiver
+            final startX = widget.shootToRight ? -0.7 : 0.7;
+            final endX = widget.shootToRight ? 0.7 : -0.7;
+            // Easing X
+            final curveX = Curves.easeOutSine.transform(t);
+            final currentX = startX + (endX - startX) * curveX;
+
+            // Y is a parabola: 0 at t=0, -peakHeight at t=0.5, 0 at t=1
+            final currentY = -p.peakHeight * (1 - 4 * (t - 0.5) * (t - 0.5));
+
+            // Scale drops at the end
+            double currentScale = 1.0;
+            double currentOpacity = 1.0;
+            if (t < 0.1) {
+              currentScale = t * 10; // pop in
+            } else if (t > 0.8) {
+              currentScale = 1.0 - (t - 0.8) * 5; // shrink out
+              currentOpacity = (1.0 - (t - 0.8) * 5).clamp(0.0, 1.0);
+            }
+
+            return Align(
+              alignment: Alignment(currentX, currentY - 0.25),
+              child: Opacity(
+                opacity: currentOpacity,
+                child: Transform.rotate(
+                  angle: p.baseRotation +
+                      (t * 3.14 * 2 * (widget.shootToRight ? 1 : -1)),
+                  child: Transform.scale(
+                    scale: currentScale,
+                    child: widget.assetPath != null &&
+                            widget.assetPath!.trim().isNotEmpty
+                        ? Image.asset(
+                            widget.assetPath!,
+                            width: p.size,
+                            height: p.size,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.high,
+                            errorBuilder: (_, __, ___) => Text(
+                              widget.emoji,
+                              style: TextStyle(
+                                fontSize: p.size,
+                                height: 1,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.pinkAccent.withOpacity(0.5),
+                                    blurRadius: 10,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : Text(
+                            widget.emoji,
+                            style: TextStyle(
+                              fontSize: p.size,
+                              height: 1,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.pinkAccent.withOpacity(0.5),
+                                  blurRadius: 10,
+                                ),
+                              ],
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+}
+
+// Painter cho viền nét đứt linh hoạt
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double radius;
+  static const double strokeWidth = 1.6;
+
+  _DashedBorderPainter({
+    this.color = Colors.grey,
+    this.radius = 24.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    // Tối ưu: Dùng path cơ bản thay vì computeMetrics liên tục gây lag khi cuộn
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+
+    // Fallback: Vẽ viền solid nhạt thay vì dashed để tránh lag trên Web
+    // Vì computeMetrics rất tốn tài nguyên trên Web CanvasKit.
+    paint.color = color.withOpacity(0.5);
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter old) =>
+      color != old.color || radius != old.radius;
+}
+
+class _HeartbeatWidget extends StatefulWidget {
+  final Widget child;
+  const _HeartbeatWidget({required this.child});
+
+  @override
+  State<_HeartbeatWidget> createState() => _HeartbeatWidgetState();
+}
+
+class _HeartbeatWidgetState extends State<_HeartbeatWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 2500))
+      ..repeat(reverse: true);
+    _animation = Tween<double>(begin: 1.0, end: 1.02)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(scale: _animation, child: widget.child);
+  }
+}
+
+class FallingEffect extends StatefulWidget {
+  final String type;
+  final bool isDark;
+  final String density;
+  const FallingEffect({
+    super.key,
+    required this.type,
+    required this.isDark,
+    this.density = 'balanced',
+  });
+
+  @override
+  State<FallingEffect> createState() => _FallingEffectState();
+}
+
+class _FallingEffectState extends State<FallingEffect>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  final List<_FallingItem> _items = [];
+  final Random _random = Random();
+  late String _type;
+
+  @override
+  void initState() {
+    super.initState();
+    _type = widget.type;
+    _controller =
+        AnimationController(vsync: this, duration: const Duration(seconds: 10))
+          ..repeat();
+    _initItems();
+  }
+
+  @override
+  void didUpdateWidget(covariant FallingEffect oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.type != widget.type || oldWidget.density != widget.density) {
+      _type = widget.type;
+      _initItems(reset: true);
+    }
+  }
+
+  void _initItems({bool reset = false}) {
+    if (reset) _items.clear();
+    final type = _type;
+    if (type == 'off') return;
+
+    final baseCount = switch (type) {
+      'meteors' => 8,
+      'bubbles' => 12,
+      'snow' => 15,
+      'leaves' => 10,
+      'sparkles' => 12,
+      'stars' => 10,
+      _ => 10,
+    };
+    final count = switch (widget.density) {
+      'low' => max(1, (baseCount * 0.18).round()),
+      'high' => min(baseCount, max(3, (baseCount * 0.78).round())),
+      _ => min(baseCount, max(2, (baseCount * 0.52).round())),
+    };
+    for (int i = 0; i < count; i++) {
+      final baseSize = switch (type) {
+        'sparkles' => 10.0,
+        'meteors' => 18.0,
+        'bubbles' => 22.0,
+        'snow' => 8.0,
+        'leaves' => 15.0,
+        'stars' => 12.0,
+        _ => 20.0,
+      };
+      final size = _random.nextDouble() * baseSize + (baseSize * 0.5);
+      final speed = switch (type) {
+        'meteors' => _random.nextDouble() * 0.004 + 0.002,
+        'bubbles' => _random.nextDouble() * 0.0016 + 0.0008,
+        'sparkles' => _random.nextDouble() * 0.0018 + 0.001,
+        'snow' => _random.nextDouble() * 0.001 + 0.0005,
+        'leaves' => _random.nextDouble() * 0.0015 + 0.0008,
+        _ => _random.nextDouble() * 0.002 + 0.001,
+      };
+      _items.add(
+        _FallingItem(
+          x: _random.nextDouble(),
+          y: _random.nextDouble(),
+          size: size,
+          speed: speed,
+          rotationSpeed: _random.nextDouble() * 0.02,
+          opacity: _random.nextDouble() * 0.5 + 0.2,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_type == 'off') return const SizedBox.shrink();
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          for (var item in _items) {
+            item.y += item.speed;
+            if (item.y > 1.1) {
+              item.y = -0.1;
+              item.x = _random.nextDouble();
+            }
+            item.rotation += item.rotationSpeed;
+          }
+          return CustomPaint(
+            painter:
+                _FallingPainter(_items, type: _type, isDark: widget.isDark),
+            size: Size.infinite,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FallingItem {
+  double x, y, size, speed, rotation, rotationSpeed, opacity;
+  _FallingItem(
+      {required this.x,
+      required this.y,
+      required this.size,
+      required this.speed,
+      required this.rotationSpeed,
+      required this.opacity})
+      : rotation = 0.0;
+}
+
+enum _HomeHighlightKind { photo }
+
+class _HomeHighlightItem {
+  final _HomeHighlightKind kind;
+  final String title;
+  final String subtitle;
+  final String? imageUrl;
+  final DateTime timestamp;
+
+  const _HomeHighlightItem({
+    required this.kind,
+    required this.title,
+    required this.subtitle,
+    this.imageUrl,
+    required this.timestamp,
+  });
+}
+
+class _FallingPainter extends CustomPainter {
+  final List<_FallingItem> items;
+  final String type;
+  final bool isDark;
+  _FallingPainter(this.items, {required this.type, required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint();
+    for (var item in items) {
+      canvas.save();
+      canvas.translate(item.x * size.width, item.y * size.height);
+      canvas.rotate(item.rotation);
+
+      final s = item.size;
+      switch (type) {
+        case 'sparkles':
+          paint
+            ..color = (isDark ? const Color(0xFFFFF1B8) : Colors.white)
+                .withOpacity(item.opacity)
+            ..style = PaintingStyle.fill;
+          _drawSparkle(canvas, paint, s);
+          break;
+        case 'meteors':
+          paint
+            ..color = (isDark ? const Color(0xFF9EE7FF) : Colors.white)
+                .withOpacity(item.opacity)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = (s * 0.12).clamp(1.0, 3.0);
+          canvas.drawLine(
+              Offset(-s * 0.7, -s * 0.2), Offset(s * 0.7, s * 0.2), paint);
+          paint
+            ..style = PaintingStyle.fill
+            ..strokeWidth = 0;
+          canvas.drawCircle(
+              Offset(s * 0.75, s * 0.22), (s * 0.12).clamp(1.5, 4.0), paint);
+          break;
+        case 'bubbles':
+          paint
+            ..color =
+                (isDark ? const Color(0xFFB3E5FC) : const Color(0xFFFFFFFF))
+                    .withOpacity(item.opacity * 0.55)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = (s * 0.08).clamp(1.0, 2.5);
+          canvas.drawCircle(Offset.zero, s * 0.35, paint);
+          paint
+            ..color =
+                (isDark ? const Color(0xFFE1F5FE) : const Color(0xFFFFFFFF))
+                    .withOpacity(item.opacity * 0.35)
+            ..style = PaintingStyle.fill;
+          canvas.drawCircle(Offset(-s * 0.12, -s * 0.12), s * 0.12, paint);
+          break;
+        case 'leaves':
+          paint
+            ..color = const Color(0xFFE65100).withOpacity(item.opacity)
+            ..style = PaintingStyle.fill;
+          final path = Path()
+            ..moveTo(0, -s * 0.5)
+            ..quadraticBezierTo(s * 0.4, -s * 0.2, s * 0.3, s * 0.2)
+            ..quadraticBezierTo(s * 0.1, s * 0.4, 0, s * 0.5)
+            ..quadraticBezierTo(-s * 0.1, s * 0.4, -s * 0.3, s * 0.2)
+            ..quadraticBezierTo(-s * 0.4, -s * 0.2, 0, -s * 0.5);
+          canvas.drawPath(path, paint);
+          break;
+        case 'stars':
+          paint
+            ..color = const Color(0xFFFFD54F).withOpacity(item.opacity)
+            ..style = PaintingStyle.fill;
+          _drawStar(canvas, paint, s);
+          break;
+        case 'snow':
+          paint
+            ..color = Colors.white.withOpacity(item.opacity)
+            ..style = PaintingStyle.fill;
+          canvas.drawCircle(Offset.zero, s * 0.2, paint);
+          break;
+        case 'hearts':
+        default:
+          paint
+            ..color =
+                (isDark ? const Color(0xFFFF7AA2) : const Color(0xFFFF4D73))
+                    .withOpacity(item.opacity)
+            ..style = PaintingStyle.fill;
+          final path = Path()
+            ..moveTo(0, s * 0.35)
+            ..cubicTo(0, s * 0.1, -s * 0.45, 0, -s * 0.45, s * 0.35)
+            ..cubicTo(-s * 0.45, s * 0.6, 0, s * 0.9, 0, s)
+            ..cubicTo(0, s * 0.9, s * 0.45, s * 0.6, s * 0.45, s * 0.35)
+            ..cubicTo(s * 0.45, 0, 0, s * 0.1, 0, s * 0.35);
+          canvas.drawPath(path, paint);
+          break;
+      }
+
+      canvas.restore();
+    }
+  }
+
+  void _drawSparkle(Canvas canvas, Paint paint, double s) {
+    final outer = s * 0.35;
+    final inner = s * 0.14;
+    final path = Path();
+    for (int i = 0; i < 8; i++) {
+      final angle = (i * 3.1415926535) / 4;
+      final r = i.isEven ? outer : inner;
+      final x = r * cos(angle);
+      final y = r * sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawStar(Canvas canvas, Paint paint, double s) {
+    final outer = s * 0.4;
+    final inner = s * 0.15;
+    final path = Path();
+    for (int i = 0; i < 10; i++) {
+      final angle = (i * 3.1415926535) / 5 - (3.1415926535 / 2);
+      final r = i.isEven ? outer : inner;
+      final x = r * cos(angle);
+      final y = r * sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class _InteractionSuccessDialog extends StatelessWidget {
+  final String interactionType;
+  final String title;
+  final String body;
+  final String partnerName;
+  final bool partnerOnline;
+
+  const _InteractionSuccessDialog({
+    required this.interactionType,
+    required this.title,
+    required this.body,
+    required this.partnerName,
+    required this.partnerOnline,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final uiState = UiPrefs.notifier.value;
+    final graphicsQuality = uiState.graphicsQualityKey == 'auto'
+        ? UiPrefs.getAutoGraphicsQuality()
+        : uiState.graphicsQualityKey;
+    final lightweightEffects = uiState.liteMode ||
+        graphicsQuality == 'low' ||
+        (kIsWeb && graphicsQuality != 'high');
+
+    final (dynamic iconOrEmoji, List<Color> gradient, Color accent) =
+        switch (interactionType) {
+      'hot' => (
+          Icons.local_fire_department_rounded,
+          const [Color(0xFFFFF2CC), Color(0xFFFFC36B)],
+          const Color(0xFFE87722),
+        ),
+      'warmth' => (
+          Icons.cloud_rounded,
+          const [Color(0xFFEAF8FF), Color(0xFFC6EEFF)],
+          const Color(0xFF1497C9),
+        ),
+      _ => (
+          _presetForInteractionType(interactionType).emoji,
+          _presetForInteractionType(interactionType).gradient,
+          _presetForInteractionType(interactionType).accent,
+        ),
+    };
+
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          // Blurry backdrop
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).maybePop(),
+              child: lightweightEffects
+                  ? Container(color: Colors.black.withOpacity(0.34))
+                  : BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
+                      child: Container(
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                    ),
+            ),
+          ),
+          Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 360),
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: gradient,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                    color: Colors.white.withOpacity(0.85), width: 1.4),
+                boxShadow: [
+                  BoxShadow(
+                    color: accent.withOpacity(0.22),
+                    blurRadius: 28,
+                    spreadRadius: 4,
+                    offset: const Offset(0, 16),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 84,
+                    height: 84,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [accent.withOpacity(0.88), accent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withOpacity(0.24),
+                          blurRadius: 22,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: iconOrEmoji is IconData
+                        ? Icon(
+                            iconOrEmoji,
+                            color: Colors.white,
+                            size: 44,
+                          )
+                        : Center(
+                            child: Text(
+                              iconOrEmoji.toString(),
+                              style: TextStyle(
+                                fontSize: 40,
+                                height: 1,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                  ),
+                  SLSpacing.h16,
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: accent,
+                    ),
+                  ),
+                  SLSpacing.h8,
+                  Text(
+                    body,
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      height: 1.45,
+                      color: const Color(0xFF5C6270),
+                    ),
+                  ),
+                  SLSpacing.h16,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 13),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.82),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: accent.withOpacity(0.15)),
+                    ),
+                    child: Text(
+                      partnerOnline
+                          ? '$partnerName đang online, nên người ấy sẽ thấy ngay trên màn hình chính luôn đó.'
+                          : '$partnerName chưa mở nhà, nhưng lời nhắn này đã được giữ lại thật cẩn thận.',
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        height: 1.45,
+                        color: const Color(0xFF444444),
+                      ),
+                    ),
+                  ),
+                  SLSpacing.h12,
+                  Text(
+                    'Chạm nhẹ ra ngoài để khép lại',
+                    style: SLTheme.quicksand(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF8B8B8B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MissYouAlertPayload {
+  final String type;
+  final String fromUid;
+  final String fromRole;
+  final String toRole;
+  final String title;
+  final String message;
+  final String body;
+  final String fromName;
+  final String fromAvatar;
+  final String toName;
+  final int sentAtMs;
+  final String emoji;
+  final String assetPath;
+
+  const _MissYouAlertPayload({
+    required this.type,
+    required this.fromUid,
+    required this.fromRole,
+    required this.toRole,
+    required this.title,
+    required this.message,
+    required this.body,
+    required this.fromName,
+    required this.fromAvatar,
+    required this.toName,
+    required this.sentAtMs,
+    this.emoji = '💖',
+    this.assetPath = '',
+  });
+
+  factory _MissYouAlertPayload.fromMap(Map<String, dynamic> map) {
+    int readMs(dynamic value) {
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+
+    return _MissYouAlertPayload(
+      type: (map['type']?.toString().trim().isNotEmpty ?? false)
+          ? map['type'].toString().trim()
+          : 'miss',
+      fromUid: map['fromUid']?.toString() ?? '',
+      fromRole: map['fromRole']?.toString() ?? '',
+      toRole: map['toRole']?.toString() ?? '',
+      title: map['title']?.toString() ?? '',
+      message: map['message']?.toString() ?? '',
+      body: map['body']?.toString() ?? '',
+      fromName: (map['from'] ?? map['fromName'] ?? 'Người ấy').toString(),
+      fromAvatar: map['fromAvatar']?.toString() ?? '',
+      toName: map['toName']?.toString() ?? '',
+      sentAtMs: (() {
+        final value = readMs(map['sentAt'] ?? map['timestamp'] ?? map['ts']);
+        return value > 0 ? value : DateTime.now().millisecondsSinceEpoch;
+      })(),
+      emoji: map['emoji']?.toString() ?? '💖',
+      assetPath: map['assetPath']?.toString() ?? '',
+    );
+  }
+}
+
+class _MissYouScreen extends StatefulWidget {
+  final _MissYouAlertPayload payload;
+
+  const _MissYouScreen({required this.payload});
+
+  @override
+  __MissYouScreenState createState() => __MissYouScreenState();
+}
+
+class __MissYouScreenState extends State<_MissYouScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    // Auto close after 5 seconds
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final (
+      dynamic iconOrEmoji,
+      gradient,
+      accent,
+      defaultTitle,
+      defaultMessage,
+      lottieUrl,
+    ) = switch (widget.payload.type) {
+      'hot' => (
+          widget.payload.emoji,
+          <Color>[
+            const Color(0xFFFFA63D).withOpacity(0.92),
+            const Color(0xFFE86C00).withOpacity(0.96),
+          ],
+          const Color(0xFFFFD18A),
+          '${widget.payload.fromName} nhắc bạn uống nước!',
+          'Bên kia đang nóng đó nha, uống thêm nước giúp người ấy yên tâm nhé.',
+          null,
+        ),
+      'warmth' => (
+          widget.payload.emoji,
+          <Color>[
+            const Color(0xFF49C5F6).withOpacity(0.9),
+            const Color(0xFF0E8FC3).withOpacity(0.95),
+          ],
+          const Color(0xFFC8F1FF),
+          '${widget.payload.fromName} nhắc bạn giữ ấm!',
+          'Bên kia đang mưa hoặc lạnh đó, nhớ giữ ấm và đừng để mình lo nhé.',
+          null,
+        ),
+      'kiss' => (
+          widget.payload.emoji,
+          _presetForInteractionType('kiss')
+              .gradient
+              .map((color) => color.withOpacity(0.92))
+              .toList(),
+          Colors.white,
+          '${widget.payload.fromName} gửi bạn một nụ hôn!',
+          'Chụt một cái thật ngoan nè 💕',
+          'https://assets9.lottiefiles.com/packages/lf20_mjfquvsi.json',
+        ),
+      'hug' => (
+          widget.payload.emoji,
+          _presetForInteractionType('hug')
+              .gradient
+              .map((color) => color.withOpacity(0.92))
+              .toList(),
+          Colors.white,
+          '${widget.payload.fromName} ôm bạn một cái!',
+          'Một cái ôm mềm đang tới, đón lấy thật ngoan nhé 🤗',
+          'https://assets10.lottiefiles.com/packages/lf20_96py9mpe.json',
+        ),
+      'angry' => (
+          widget.payload.emoji,
+          _presetForInteractionType('angry')
+              .gradient
+              .map((color) => color.withOpacity(0.92))
+              .toList(),
+          Colors.white,
+          '${widget.payload.fromName} đang dỗi kìa!',
+          'Dỗi xíu thôi đó, qua dỗ người ta chút nha!',
+          null,
+        ),
+      'furious' => (
+          widget.payload.emoji,
+          _presetForInteractionType('furious')
+              .gradient
+              .map((color) => color.withOpacity(0.94))
+              .toList(),
+          Colors.white,
+          '${widget.payload.fromName} đang tức lắm đó!',
+          'Cơn tức đỏ rực vừa bay tới, qua dỗ người ta liền nha!',
+          null,
+        ),
+      'tease' => (
+          widget.payload.emoji,
+          _presetForInteractionType('tease')
+              .gradient
+              .map((color) => color.withOpacity(0.92))
+              .toList(),
+          Colors.white,
+          '${widget.payload.fromName} vừa trêu bạn đó!',
+          'Một cú chọc yêu siêu nhẹ vừa bay tới nè!',
+          null,
+        ),
+      'cry' => (
+          widget.payload.emoji,
+          _presetForInteractionType('cry')
+              .gradient
+              .map((color) => color.withOpacity(0.94))
+              .toList(),
+          Colors.white,
+          '${widget.payload.fromName} đang cần bạn dỗ dành!',
+          'Hôm nay người ấy hơi tủi một chút, ôm và dỗ một câu nha!',
+          null,
+        ),
+      'poop' => (
+          widget.payload.emoji,
+          _presetForInteractionType('poop')
+              .gradient
+              .map((color) => color.withOpacity(0.92))
+              .toList(),
+          Colors.white,
+          '${widget.payload.fromName} ném 💩 vào bạn!',
+          'Một cú trêu siêu nghịch vừa đáp xuống nè!',
+          null,
+        ),
+      _ => (
+          widget.payload.emoji,
+          _presetForInteractionType(widget.payload.type)
+              .gradient
+              .map((color) => color.withOpacity(0.92))
+              .toList(),
+          Colors.white,
+          '${widget.payload.fromName} đang nhớ bạn!',
+          'Nhớ phản hồi lại cho người ấy cười một cái nhé 💕',
+          'https://assets3.lottiefiles.com/packages/lf20_o7pajr.json',
+        ),
+    };
+    final presetAssetPath =
+        _maybePresetForInteractionType(widget.payload.type)?.assetPath;
+    final backgroundVisual = switch (widget.payload.type) {
+      'hot' => '☀️',
+      'warmth' => '❄️',
+      _ => null,
+    };
+
+    return Material(
+      color: Colors.transparent,
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final shortestSide = constraints.biggest.shortestSide;
+                final artSize =
+                    (shortestSide * 0.56).clamp(140.0, 250.0).toDouble();
+                final emojiSize =
+                    (artSize * 0.42).clamp(64.0, 106.0).toDouble();
+                final titleSize =
+                    (shortestSide * 0.062).clamp(22.0, 26.0).toDouble();
+                final messageSize = constraints.maxWidth < 360 ? 15.0 : 16.0;
+                final contentWidth =
+                    (constraints.maxWidth - 40).clamp(280.0, 460.0).toDouble();
+                final verticalGap = shortestSide < 380 ? 20.0 : 30.0;
+                final minHeight = constraints.maxHeight > 48
+                    ? constraints.maxHeight - 48
+                    : 0.0;
+
+                return SingleChildScrollView(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: minHeight),
+                    child: Center(
+                      child: SizedBox(
+                        width: contentWidth,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            if (backgroundVisual != null)
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: Align(
+                                    alignment: Alignment.topCenter,
+                                    child: Transform.translate(
+                                      offset: const Offset(0, -18),
+                                      child: Opacity(
+                                        opacity: 0.15,
+                                        child: Text(
+                                          backgroundVisual,
+                                          style: TextStyle(
+                                            fontSize: artSize * 1.22,
+                                            height: 1,
+                                            fontFamilyFallback: const [
+                                              'Noto Color Emoji',
+                                              'Apple Color Emoji',
+                                              'Segoe UI Emoji',
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (lottieUrl != null)
+                                  LottieAsyncLoader(
+                                    url: lottieUrl,
+                                    width: artSize,
+                                    height: artSize,
+                                    fit: BoxFit.contain,
+                                    loadDelay:
+                                        const Duration(milliseconds: 150),
+                                    errorWidget: ScaleTransition(
+                                      scale: _scaleAnimation,
+                                      child: _buildInteractionVisual(
+                                        visual: iconOrEmoji,
+                                        assetPath: presetAssetPath,
+                                        size: emojiSize,
+                                        emojiSize: emojiSize,
+                                        iconColor: accent,
+                                        emojiShadows: [
+                                          Shadow(
+                                            color:
+                                                Colors.black.withOpacity(0.14),
+                                            blurRadius: 16,
+                                            offset: const Offset(0, 6),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  ScaleTransition(
+                                    scale: _scaleAnimation,
+                                    child: _buildInteractionVisual(
+                                      visual: iconOrEmoji,
+                                      assetPath: presetAssetPath,
+                                      size: emojiSize,
+                                      emojiSize: emojiSize,
+                                      iconColor: accent,
+                                      emojiShadows: [
+                                        Shadow(
+                                          color: Colors.black.withOpacity(0.14),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                SizedBox(height: verticalGap),
+                                Text(
+                                  widget.payload.title.isNotEmpty
+                                      ? widget.payload.title
+                                      : defaultTitle,
+                                  style: SLTheme.quicksand(
+                                    fontSize: titleSize,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    shadows: const [
+                                      Shadow(
+                                        color: Colors.black26,
+                                        offset: Offset(0, 4),
+                                        blurRadius: 10,
+                                      ),
+                                    ],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SLSpacing.h16,
+                                Text(
+                                  widget.payload.message.isNotEmpty
+                                      ? widget.payload.message
+                                      : defaultMessage,
+                                  style: SLTheme.quicksand(
+                                    fontSize: messageSize,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white70,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

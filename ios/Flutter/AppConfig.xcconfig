@@ -1,0 +1,15 @@
+// Default iOS build settings used by local builds and CI.
+// Override any of these values in Flutter/AppConfig.local.xcconfig.
+
+APPLE_TEAM_ID = 7AHY4TWYCV
+
+APP_BUNDLE_IDENTIFIER = com.soullocket.app
+WIDGET_BUNDLE_IDENTIFIER = com.soullocket.app.SoulLocketWidget
+RUNNER_TESTS_BUNDLE_IDENTIFIER = com.soullocket.app.RunnerTests
+
+IOS_DEPLOYMENT_TARGET = 15.5
+
+FACEBOOK_APP_ID = 2604105489983792
+FACEBOOK_CLIENT_TOKEN = a140622e72ab28fe86915c2739432657
+FACEBOOK_DISPLAY_NAME = SoulLocket
+FACEBOOK_URL_SCHEME = fb$(FACEBOOK_APP_ID)
