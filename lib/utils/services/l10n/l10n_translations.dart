@@ -694,7 +694,7 @@ abstract final class _L10nStaticData {
     'android_real_widget': 'Android (Widget thật):',
     'ios_widget': 'iOS:',
     'ios_widget_pending':
-        'Giữ nút Home > chọn Widget > tìm SoulLocket > chọn kiểu > Thêm.',
+        'Giữ màn hình chính > chọn dấu (+) > tìm SoulLocket > chọn kiểu > Thêm.',
     'support_legal': 'Hỗ trợ & Pháp lý',
     'about_soullocket': 'Giới thiệu SoulLocket',
     'user_guide': 'Hướng dẫn sử dụng',
