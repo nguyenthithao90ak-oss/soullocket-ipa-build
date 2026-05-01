@@ -178,7 +178,7 @@ class VipAccessInfo {
   }
 
   int get dailyMemoryUploadLimit {
-    return isVip ? 30 : 10;
+    return 60;
   }
 
   @override
