@@ -192,6 +192,15 @@ jobs:
           echo -n "$P12_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
           echo -n "$RUNNER_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$RUNNER_PROFILE_PATH"
           echo -n "$WIDGET_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$WIDGET_PROFILE_PATH"
+      - name: Decode GoogleService-Info
+        run: |
+          if [[ -n "${GOOGLE_SERVICE_INFO_BASE64:-}" ]]; then
+            echo -n "$GOOGLE_SERVICE_INFO_BASE64" | base64 --decode > ios/Runner/GoogleService-Info.plist
+            echo "GoogleService-Info.plist created"
+          else
+            echo "GOOGLE_SERVICE_INFO_BASE64 is empty"
+          fi
+
 
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
