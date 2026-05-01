@@ -685,6 +685,27 @@ class SLTheme {
     );
   }
 
+  static Widget meshBackground(BuildContext context, {Color? color}) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            (color ?? SLColors.primary).withOpacity(0.8),
+            (color ?? SLColors.primary).withOpacity(0.4),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Opacity(
+        opacity: 0.1,
+        child: meshPattern(),
+      ),
+    );
+  }
+
   // ─── AppBar ───────────────────────────────────────────────────
   static AppBar appBar(
     BuildContext context,
