@@ -1548,7 +1548,7 @@ abstract final class _L10nStaticData {
     'Bạn có chắc muốn chuyển ảnh này vào thùng rác?':
         'Are you sure you want to move this photo to trash?',
     'Xóa': 'Delete',
-    'Chỉ được tải lên tối đa 30 ảnh một lần.': 'Maximum 30 photos per upload.',
+    'Chỉ được tải lên tối đa 60 ảnh một lần.': 'Maximum 60 photos per upload.',
     'Đã thêm ': 'Added ',
     ' kỷ niệm mới.': ' new memories.',
     'Lỗi tải ảnh: ': 'Error uploading photo: ',
