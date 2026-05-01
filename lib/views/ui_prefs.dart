@@ -125,7 +125,7 @@ class UiPrefsState {
     countdownStyleKey: 'rose_wave',
     countdownTopLabel: '',
     countdownBottomLabel: '',
-    fontKey: 'beVietnam',
+    fontKey: 'quicksand',
     homeBlockToneKey: 'theme',
     liteMode: false,
     graphicsQualityKey: 'balanced',

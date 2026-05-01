@@ -104,7 +104,7 @@ class DiaryMemoryController extends ChangeNotifier {
   bool get hasPendingUploadRetry => _pendingUploadPaths.isNotEmpty;
   String get pendingUploadMessage =>
       _pendingUploadMessage ??
-      'Láº§n upload Ká»· niá»‡m trÆ°á»›c Ä‘Ã£ bá»‹ giÃ¡n Ä‘oáº¡n. Báº¡n cÃ³ thá»ƒ thá»­ láº¡i.';
+      L10nService().translate('diary_upload_interrupted_msg');
 
   int get _memoryCacheLimit =>
       kIsWeb ? _webMemoryCacheLimit : _appMemoryCacheLimit;
@@ -265,8 +265,9 @@ class DiaryMemoryController extends ChangeNotifier {
     await _savePendingUploadState(
       houseId: houseId,
       paths: remaining,
-      message:
-          'CÃ²n ${remaining.length} áº£nh Ká»· niá»‡m chÆ°a táº£i xong. Báº¡n cÃ³ thá»ƒ thá»­ láº¡i.',
+      message: L10nService().format('diary_upload_pending_msg', {
+        'count': remaining.length,
+      }),
     );
   }
 
@@ -1156,15 +1157,16 @@ class DiaryMemoryController extends ChangeNotifier {
       final upload = await _storageService.uploadMemoryImage(houseId, image);
       final sessionId = upload?.sessionId?.trim() ?? '';
       if (upload == null || sessionId.isEmpty) {
-        return 'KhÃ´ng thá»ƒ táº¡o phiÃªn táº£i áº£nh.';
+        return L10nService().translate('diary_upload_session_error');
       }
 
       Map<String, dynamic>? finalized;
       Object? lastError;
-      for (var attempt = 0; attempt < 2; attempt++) {
+      for (var attempt = 0; attempt < 3; attempt++) {
         try {
           // Small delay to ensure Storage file is ready (fixes iOS INTERNAL propagation issues)
-          await Future<void>.delayed(const Duration(milliseconds: 300));
+          await Future<void>.delayed(
+              Duration(milliseconds: 300 + (attempt * 150)));
           finalized = await _storageService.finalizeMemoryImageUpload(
             houseId: houseId,
             sessionId: sessionId,
@@ -1174,11 +1176,10 @@ class DiaryMemoryController extends ChangeNotifier {
             lat: position?.latitude,
             lng: position?.longitude,
           );
-          break;
+          if (finalized?['ok'] == true) break;
         } catch (error) {
           lastError = error;
-          if (attempt == 0) {
-            await Future<void>.delayed(const Duration(milliseconds: 450));
+          if (attempt < 2) {
             continue;
           }
         }
@@ -1191,13 +1192,13 @@ class DiaryMemoryController extends ChangeNotifier {
       }
 
       if (lastError != null) {
-        debugPrint('Lá»—i finalize áº£nh ká»· niá»‡m: $lastError');
+        debugPrint('Lỗi finalize ảnh kỷ niệm: $lastError');
         return lastError.toString();
       }
-      return 'KhÃ´ng nháº­n Ä‘Æ°á»£c pháº£n há»“i há»£p lá»‡ tá»« mÃ¡y chá»§.';
+      return L10nService().translate('diary_upload_server_no_response');
     } catch (e) {
-      debugPrint('Lá»—i táº£i áº£nh ká»· niá»‡m: $e');
-      return e.toString();
+      debugPrint('Lỗi tải ảnh kỷ niệm: $e');
+      return L10nService().format('diary_upload_generic_error', {'error': e});
     }
   }
 
@@ -1234,7 +1235,7 @@ class DiaryMemoryController extends ChangeNotifier {
     if (images.isEmpty) {
       await _clearPendingUploadState();
       showSnackBar(
-        'KhÃ´ng cÃ²n áº£nh Ká»· niá»‡m táº¡m Ä‘á»ƒ thá»­ láº¡i.',
+        L10nService().translate('diary_upload_no_recoverable_files'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -1305,9 +1306,7 @@ class DiaryMemoryController extends ChangeNotifier {
     if (uploadedToday >= dailyLimit) {
       showSnackBar(
         L10nService().translate(
-          vipAccess.isVip
-              ? 'Báº¡n Ä‘Ã£ Ä‘áº¡t giá»›i háº¡n Ä‘Äƒng 30 áº£nh ká»· niá»‡m hÃ´m nay. HÃ£y quay láº¡i vÃ o ngÃ y mai nhÃ©!'
-              : 'TÃ i khoáº£n thÆ°á»ng chá»‰ Ä‘Äƒng Ä‘Æ°á»£c 10 áº£nh/ngÃ y. HÃ£y nÃ¢ng cáº¥p PRO hoáº·c thá»­ láº¡i vÃ o ngÃ y mai!',
+          vipAccess.isVip ? 'diary_upload_limit_reached_vip' : 'diary_upload_limit_reached_free',
         ),
         backgroundColor: const Color(0xFFE53935),
       );
@@ -1475,58 +1474,35 @@ class DiaryMemoryController extends ChangeNotifier {
           content: Text(
             failedCount == 0
                 ? skippedMapPinBecauseLimit
-                    ? 'ÄÃ£ thÃªm $uploadedCount ká»· niá»‡m. áº¢nh váº«n Ä‘Æ°á»£c lÆ°u nhÆ°ng khÃ´ng ghim vá»‹ trÃ­ má»›i vÃ¬ báº£n Ä‘á»“ Ä‘Ã£ Ä‘á»§ ${MapPinLimitService.maxPins} Ä‘iá»ƒm.'
+                    ? L10nService().format('diary_upload_map_pin_limit_msg', {
+                        'count': uploadedCount,
+                        'max': MapPinBimitService.maxPins,
+                    })
                     : L10nService().format('diary_added_new_memories', {
                         'count': uploadedCount,
-                      })
+                    })
                 : skippedMapPinBecauseLimit
-                    ? 'ÄÃ£ thÃªm $uploadedCount/${images.length} ká»· niá»‡m. Má»™t pháº§n áº£nh khÃ´ng ghim vá»‹ trÃ­ má»›i.$errorMessageStr'
-                    : 'ÄÃ£ thÃªm $uploadedCount/${images.length} ká»· niá»‡m. $failedCount áº£nh lá»—i.$errorMessageStr',
+                    ? L10nService().format('diary_upload_partial_map_limit_msg', {
+                        'uploaded': uploadedCount,
+                        'total': images.length,
+                    })
+                    : L10nService().format('diary_upload_failed_summary', {
+                        'success': uploadedCount,
+                        'failed': failedCount,
+                    }),
           ),
-        ),
-      );
-    } catch (e) {
-      if (!context.mounted) {
-        return;
-      }
-      await _restorePendingUploadState();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            L10nService().format('diary_memory_upload_error', {'error': e}),
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> _saveMemoryBytesToGallery(
-    Uint8List bytes, {
-    required int index,
-    required String url,
-  }) async {
-    final baseName = p.basenameWithoutExtension(url.split('?').first);
-    final safeBaseName = baseName.trim().isEmpty
-        ? 'memory_${DateTime.now().millisecondsSinceEpoch}_$index'
-        : baseName.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
-    UiPrefs.setCaptureMode(true);
-    try {
-      await Future<void>.delayed(const Duration(milliseconds: 80));
-      final result = await VisionGallerySaver.saveImage(
-        bytes,
-        quality: 100,
-        name: 'soullocket_$safeBaseName',
-        androidRelativePath: 'Pictures/SoulLocket/KyNiem',
-      );
-
-      final isSuccess = result['isSuccess'] == true ||
-          (result['filePath']?.toString().isNotEmpty ?? false);
-      if (!isSuccess) {
-        final message = result['errorMessage']?.toString();
-        throw Exception(
-          message?.isNotEmpty == true
-              ? message
-              : L10nService().translate('diary_cannot_save_image'),
+          action: failedCount > 0
+              ? SnackBarAction(
+                label: L10nService().translate('diary_upload_retry_cta'),
+                onPressed: () => retryPendingUpload(
+                  context: context,
+                  guardController: guardController,
+                  feedController: feedController,
+                  showSnackBar: showSnackBar,
+                ),
+              )
+            : null,
+        )
         );
       }
     } finally {

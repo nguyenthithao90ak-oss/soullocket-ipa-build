@@ -1,4 +1,4 @@
-import 'package:firebase_core/firebase_core.dart';
+﻿import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -8,8 +8,8 @@ import '../models/house_settings.dart';
 import '../utils/flexible_date_input.dart';
 import 'device_manager_service.dart';
 
-/// HouseSettingsService - realtime listener cho settings nhà
-/// Kết hợp với HouseService hiện tại (HouseService lo phần tạo nhà)
+/// HouseSettingsService - realtime listener cho settings nhÃ 
+/// Káº¿t há»£p vá»›i HouseService hiá»‡n táº¡i (HouseService lo pháº§n táº¡o nhÃ )
 class HouseSettingsService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final DeviceManagerService _deviceManagerService = DeviceManagerService();
@@ -101,14 +101,14 @@ class HouseSettingsService {
     if (trustState.isTrusted) return;
     if (allowPendingApproval && trustState.isPendingApproval) return;
     if (trustState.isBlocked) {
-      throw 'Thiết bị này đã bị chặn nên không thể thay đổi thông tin chung.';
+      throw 'Thiáº¿t bá»‹ nÃ y Ä‘Ã£ bá»‹ cháº·n nÃªn khÃ´ng thá»ƒ thay Ä‘á»•i thÃ´ng tin chung.';
     }
 
     final unlockAtMs = trustState.autoApproveAtMs;
     final unlockLabel =
-        unlockAtMs > 0 ? _formatDateTime(unlockAtMs) : 'sau đủ 12 giờ';
-    throw 'Thiết bị này đang chờ duyệt nên chưa thể thay đổi thông tin chung. '
-        'Hãy duyệt thiết bị ở máy tin cậy hoặc đợi đến $unlockLabel.';
+        unlockAtMs > 0 ? _formatDateTime(unlockAtMs) : 'sau Ä‘á»§ 12 giá»';
+    throw 'Thiáº¿t bá»‹ nÃ y Ä‘ang chá» duyá»‡t nÃªn chÆ°a thá»ƒ thay Ä‘á»•i thÃ´ng tin chung. '
+        'HÃ£y duyá»‡t thiáº¿t bá»‹ á»Ÿ mÃ¡y tin cáº­y hoáº·c Ä‘á»£i Ä‘áº¿n $unlockLabel.';
   }
 
   String _formatDateTime(int epochMs) {
@@ -181,7 +181,7 @@ class HouseSettingsService {
 
     final safeAvatarUrl = _withRefreshToken(avatarUrl);
     if (safeAvatarUrl.isEmpty || safeAvatarUrl.length > 2048) {
-      throw 'Avatar hồ sơ không hợp lệ.';
+      throw 'Avatar há»“ sÆ¡ khÃ´ng há»£p lá»‡.';
     }
 
     await _dbRef.update({
@@ -229,7 +229,7 @@ class HouseSettingsService {
     if (headerImageUrl != null) {
       final safeHeaderImageUrl = headerImageUrl.trim();
       if (safeHeaderImageUrl.length > 2048) {
-        throw 'Ảnh nền hồ sơ quá dài hoặc không hợp lệ.';
+        throw 'áº¢nh ná»n há»“ sÆ¡ quÃ¡ dÃ i hoáº·c khÃ´ng há»£p lá»‡.';
       }
       updates.addAll({
         'houses/$houseId/settings/profileHeaderImageUrl': safeHeaderImageUrl,
@@ -245,7 +245,7 @@ class HouseSettingsService {
     if (headerThemeKey != null) {
       final safeHeaderThemeKey = headerThemeKey.trim();
       if (safeHeaderThemeKey.length > 40) {
-        throw 'Mã nền hồ sơ không hợp lệ.';
+        throw 'MÃ£ ná»n há»“ sÆ¡ khÃ´ng há»£p lá»‡.';
       }
       updates.addAll({
         'houses/$houseId/settings/profileHeaderThemeKey': safeHeaderThemeKey,
@@ -280,7 +280,7 @@ class HouseSettingsService {
     await _ensureCurrentDeviceCanModifySharedInfo(houseId);
     final trimmed = newName.trim();
     if (trimmed.isEmpty || trimmed.length > 30) {
-      throw 'Tên nhà phải từ 1 đến 30 ký tự.';
+      throw 'TÃªn nhÃ  pháº£i tá»« 1 Ä‘áº¿n 30 kÃ½ tá»±.';
     }
 
     await _dbRef.update({
@@ -303,7 +303,7 @@ class HouseSettingsService {
     });
     await _recordSpaceActivity(
       houseId,
-      'đã đổi tên không gian thành "$trimmed"',
+      'Ä‘Ã£ Ä‘á»•i tÃªn khÃ´ng gian thÃ nh "$trimmed"',
     );
   }
 
@@ -343,34 +343,34 @@ class HouseSettingsService {
             firstYear: 1900,
             lastYear: DateTime.now().year,
           );
-    final safeDayUnit = dayUnit.trim().isEmpty ? 'ngày yêu' : dayUnit.trim();
+    final safeDayUnit = dayUnit.trim().isEmpty ? 'ngÃ y yÃªu' : dayUnit.trim();
     final safeGreetingQuote = (greetingQuote ?? '').trim();
 
     if (safeHouseName.isEmpty || safeHouseName.length > 30) {
-      throw 'Tên nhà phải từ 1 đến 30 ký tự.';
+      throw 'TÃªn nhÃ  pháº£i tá»« 1 Ä‘áº¿n 30 kÃ½ tá»±.';
     }
     if (safeNameU1.isEmpty) {
-      throw 'Tên người thứ 1 không được để trống.';
+      throw 'TÃªn ngÆ°á»i thá»© 1 khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.';
     }
     if (safeStartDate == null) {
-      throw 'Định dạng ngày yêu không hợp lệ.';
+      throw 'Äá»‹nh dáº¡ng ngÃ y yÃªu khÃ´ng há»£p lá»‡.';
     }
     if (safeStartDate.isNotEmpty) {
       final parsedStart = DateTime.tryParse(safeStartDate);
       if (parsedStart == null) {
-        throw 'Định dạng ngày yêu không hợp lệ.';
+        throw 'Äá»‹nh dáº¡ng ngÃ y yÃªu khÃ´ng há»£p lá»‡.';
       }
       if (parsedStart.isAfter(DateTime.now())) {
-        throw 'Ngày yêu không được ở tương lai.';
+        throw 'NgÃ y yÃªu khÃ´ng Ä‘Æ°á»£c á»Ÿ tÆ°Æ¡ng lai.';
       }
     }
     if (safeDobU1 == null || safeDobU2 == null) {
-      throw 'Định dạng ngày sinh không hợp lệ.';
+      throw 'Äá»‹nh dáº¡ng ngÃ y sinh khÃ´ng há»£p lá»‡.';
     }
     for (final dob in [safeDobU1, safeDobU2]) {
       if (dob.isEmpty) continue;
       if (DateTime.tryParse(dob) == null) {
-        throw 'Định dạng ngày sinh không hợp lệ.';
+        throw 'Äá»‹nh dáº¡ng ngÃ y sinh khÃ´ng há»£p lá»‡.';
       }
     }
 
@@ -424,7 +424,7 @@ class HouseSettingsService {
     });
     await _recordSpaceActivity(
       houseId,
-      'đã làm mới thông tin không gian chung',
+      'Ä‘Ã£ lÃ m má»›i thÃ´ng tin khÃ´ng gian chung',
     );
   }
 
@@ -441,10 +441,10 @@ class HouseSettingsService {
     );
     final parsed = safeDate == null ? null : DateTime.tryParse(safeDate);
     if (parsed == null) {
-      throw 'Định dạng ngày không hợp lệ (YYYY-MM-DD).';
+      throw 'Äá»‹nh dáº¡ng ngÃ y khÃ´ng há»£p lá»‡ (YYYY-MM-DD).';
     }
     if (parsed.isAfter(DateTime.now())) {
-      throw 'Ngày yêu không được ở tương lai!';
+      throw 'NgÃ y yÃªu khÃ´ng Ä‘Æ°á»£c á»Ÿ tÆ°Æ¡ng lai!';
     }
     final settingsSnap = await _dbRef.child('houses/$houseId/settings').get();
     final settings = _asStringDynamicMap(settingsSnap.value) ?? {};
@@ -471,14 +471,14 @@ class HouseSettingsService {
       });
     } on FirebaseException catch (fe) {
       if (fe.code == 'permission-denied') {
-        throw 'Hệ thống từ chối cập nhật ngày yêu. Có thể do lỗi phân quyền hoặc cấu hình bảo mật.';
+        throw 'Há»‡ thá»‘ng tá»« chá»‘i cáº­p nháº­t ngÃ y yÃªu. CÃ³ thá»ƒ do lá»—i phÃ¢n quyá»n hoáº·c cáº¥u hÃ¬nh báº£o máº­t.';
       }
       rethrow;
     }
 
     await _recordSpaceActivity(
       houseId,
-      'đã cập nhật mốc ngày của không gian',
+      'Ä‘Ã£ cáº­p nháº­t má»‘c ngÃ y cá»§a khÃ´ng gian',
     );
   }
 
@@ -496,10 +496,10 @@ class HouseSettingsService {
     final safeBottomLabel = (bottomLabel ?? '').trim();
 
     if (safeTopLabel.length > 22) {
-      throw 'Chữ phía trên chỉ được tối đa 22 ký tự.';
+      throw 'Chá»¯ phÃ­a trÃªn chá»‰ Ä‘Æ°á»£c tá»‘i Ä‘a 22 kÃ½ tá»±.';
     }
     if (safeBottomLabel.length > 22) {
-      throw 'Chữ phía dưới chỉ được tối đa 22 ký tự.';
+      throw 'Chá»¯ phÃ­a dÆ°á»›i chá»‰ Ä‘Æ°á»£c tá»‘i Ä‘a 22 kÃ½ tá»±.';
     }
 
     final updates = <String, dynamic>{
@@ -538,10 +538,10 @@ class HouseSettingsService {
 
     await _dbRef.update(updates);
     final activityText = hasTopLabel && hasBottomLabel
-        ? 'đã chỉnh lại chữ ở vòng đếm ngày'
+        ? 'Ä‘Ã£ chá»‰nh láº¡i chá»¯ á»Ÿ vÃ²ng Ä‘áº¿m ngÃ y'
         : hasTopLabel
-            ? 'đã chỉnh dòng chữ phía trên vòng đếm ngày'
-            : 'đã chỉnh dòng chữ phía dưới vòng đếm ngày';
+            ? 'Ä‘Ã£ chá»‰nh dÃ²ng chá»¯ phÃ­a trÃªn vÃ²ng Ä‘áº¿m ngÃ y'
+            : 'Ä‘Ã£ chá»‰nh dÃ²ng chá»¯ phÃ­a dÆ°á»›i vÃ²ng Ä‘áº¿m ngÃ y';
     await _recordSpaceActivity(houseId, activityText);
   }
 
@@ -597,7 +597,7 @@ class HouseSettingsService {
       final map = Map<dynamic, dynamic>.from(raw);
       return map.length >= 2;
     } catch (_) {
-      return false; // Trả về false nếu offline hoặc lỗi
+      return false; // Tráº£ vá» false náº¿u offline hoáº·c lá»—i
     }
   }
 
@@ -606,6 +606,6 @@ class HouseSettingsService {
     required String newMode,
     Duration cooldown = const Duration(hours: 24),
   }) async {
-    throw 'Chế độ Độc thân / Có người ấy chỉ được chọn khi tạo nhà lần đầu và không thể đổi lại trong Cài đặt.';
+    throw 'Cháº¿ Ä‘á»™ Äá»™c thÃ¢n / CÃ³ ngÆ°á»i áº¥y chá»‰ Ä‘Æ°á»£c chá»n khi táº¡o nhÃ  láº§n Ä‘áº§u vÃ  khÃ´ng thá»ƒ Ä‘á»•i láº¡i trong CÃ i Ä‘áº·t.';
   }
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../../core/sl_theme.dart';
@@ -19,7 +19,6 @@ class UtilitiesHubGrid extends StatelessWidget {
     required this.onAppTap,
     required this.onReorder,
     required this.onEditModeChanged,
-    this.onDelete,
   });
 
   final List<UtilityApp> apps;
@@ -32,7 +31,6 @@ class UtilitiesHubGrid extends StatelessWidget {
   final ValueChanged<String> onAppTap;
   final void Function(String fromId, String toId) onReorder;
   final ValueChanged<bool> onEditModeChanged;
-  final ValueChanged<String>? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +74,6 @@ class UtilitiesHubGrid extends StatelessWidget {
                         onTap: () => onAppTap(app.id),
                         onReorder: onReorder,
                         onEditModeChanged: onEditModeChanged,
-                        onDelete: onDelete,
                       ),
                     );
                   }).toList(growable: false),
@@ -118,4 +115,3 @@ class UtilitiesHubGrid extends StatelessWidget {
     );
   }
 }
-

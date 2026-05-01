@@ -1,4 +1,4 @@
-﻿import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../services/house_settings_service.dart';
@@ -43,7 +43,7 @@ class SettingsIdentityDraft {
   String get normalizedNameU2 => nameU2.trim();
   String get normalizedGreetingQuote => greetingQuote.trim();
   String get normalizedDayUnit =>
-      dayUnit.trim().isEmpty ? 'ngÃ y yÃªu' : dayUnit.trim();
+      dayUnit.trim().isEmpty ? 'ngày yêu' : dayUnit.trim();
 }
 
 class SettingsIdentityController {
@@ -62,7 +62,7 @@ class SettingsIdentityController {
   Future<bool> canRenameHouse({
     required DatabaseReference dbRef,
     required SettingsIdentityDraft draft,
-    Duration cooldown = const Duration(seconds: 10),
+    Duration cooldown = const Duration(days: 7),
   }) async {
     if (!draft.isHouseNameChanged) {
       return true;
@@ -124,11 +124,10 @@ class SettingsIdentityController {
       lastYear: DateTime.now().year,
     );
     if (normalizedDate == null) {
-      throw 'NgÃ y khÃ´ng há»£p lá»‡.';
+      throw 'Ngày không hợp lệ.';
     }
 
     await houseSettingsService.updateStartDate(houseId, normalizedDate);
     return normalizedDate;
   }
 }
-

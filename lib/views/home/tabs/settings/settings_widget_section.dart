@@ -98,9 +98,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
   Widget _buildWidgetPanelTabBar() {
     final items = <(String, String, IconData)>[
-      (WidgetService.defaultWidgetStyleKey, 'Mặc định', Icons.widgets_rounded),
-      ('countdown', 'Đếm ngày', Icons.timer_outlined),
-      (_widgetPanelTabIconKey, 'Nhận diện', Icons.favorite_rounded),
+      (WidgetService.defaultWidgetStyleKey, 'Mac dinh', Icons.widgets_rounded),
+      ('countdown', 'Dem ngay', Icons.timer_outlined),
+      (_widgetPanelTabIconKey, 'Nhan dien', Icons.favorite_rounded),
     ];
 
     return Container(
@@ -177,7 +177,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           icon: Icons.favorite_rounded,
           title: 'Icon trong app',
           subtitle:
-              'Đổi viền tim và tông màu cho nhận diện hiển thị bên trong app.',
+              'Doi vien tim va tong mau cho nhan dien hien thi ben trong app.',
           iconGradient: const [
             Color(0xFFFF7EA8),
             Color(0xFFA971FF),
@@ -279,7 +279,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ),
               const SizedBox(height: 4),
               Text(
-                'Nhận diện hiển thị trong app',
+                'Nhan dien hien thi trong app',
                 style: SLTheme.quicksand(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
@@ -295,7 +295,53 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
   Widget _buildWidgetPanel({bool hideBackButton = false}) {
     final config = _buildWidgetPanelConfig();
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final themeOptions = [
+      ('Hồng ngọt', 'pink'),
+      ('Tối hiện đại', 'dark'),
+      ('Trắng tinh', 'white'),
+      ('Xanh lam', 'blue'),
+      ('Cam nắng', 'orange'),
+      ('Tím mộng', 'purple'),
+      ('Xanh ngọc', 'green'),
+      ('Đỏ đậm', 'red'),
+      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
+    ];
+    final heartColorOptions = [
+      ('Hồng rose', 'rose'),
+      ('Đỏ ruby', 'ruby'),
+      ('Tím violet', 'violet'),
+      ('Xanh ocean', 'ocean'),
+      ('Mint', 'mint'),
+      ('Hoàng hôn', 'sunset'),
+      ('Gold', 'gold'),
+    ];
+    final previewSizeOptions = _widgetPreviewSizeKeys
+        .map((key) => (_widgetPreviewSizeLabel(key), key))
+        .toList(growable: false);
+    final diaryLayoutOptions = _widgetDiaryLayoutKeys
+        .map((key) => (_widgetDiaryLayoutLabel(key), key))
+        .toList(growable: false);
+    final seasonModeOptions = _widgetSeasonModeKeys
+        .map((key) => (_widgetSeasonModeLabel(key), key))
+        .toList(growable: false);
+    final smartSeasonKey = _resolvedWidgetSeasonKey();
+    final smartSeasonPalette = _widgetSeasonPalette(smartSeasonKey);
+    final smartHeartPalette = _widgetHeartPalette(_widgetHeartColorKey);
+    final smartAccentColor = smartSeasonKey == 'none'
+        ? smartHeartPalette.first
+        : smartSeasonPalette.first;
+    final smartSurfaceColor = smartSeasonKey == 'none'
+        ? smartHeartPalette.last
+        : smartSeasonPalette.last;
+    final smartThemeLabel = themeOptions
+        .firstWhere(
+          (item) => item.$2 == (_draftWidgetThemeKey ?? 'pink'),
+          orElse: () => ('Pink', 'pink'),
+        )
+        .$1;
+    final smartSeasonLabel = smartSeasonKey == 'none'
+        ? 'Tự động phối màu'
+        : WidgetService.seasonLabel(smartSeasonKey);
 
     Future<void> handlePinWidget() async {
       if (kIsWeb) {
@@ -303,7 +349,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         return;
       }
       try {
-        if (isIOS) {
+        if (Theme.of(context).platform == TargetPlatform.iOS) {
           await _persistAndSyncWidgetAppearance();
           if (!mounted) return;
           _showToast(context.tr('ios_widget_pin_guide'), success: true);
@@ -340,12 +386,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       }
     }
 
-    final isIOSReal = isIOS && !kIsWeb;
-
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'widget',
-      title: context.tr('home_screen_widget'),
+      title: context.tr('widget_utility'),
       borderColor: const Color(0xFF80DEEA),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
@@ -482,15 +526,15 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 const SizedBox(height: 12),
                 _buildWidgetSectionCard(
                   icon: Icons.timer_rounded,
-                  title: 'Widget đếm ngày',
+                  title: 'Widget dem ngay',
                   subtitle:
-                      'Chế độ này ưu tiên số ngày ở giữa và ngày bắt đầu bên dưới.',
+                      'Mode nay uu tien so ngay o giua va ngay bat dau ben duoi.',
                   iconGradient: const [
                     Color(0xFFFFB84D),
                     Color(0xFFFF7A59),
                   ],
                   child: Text(
-                    'Đang dùng kiểu: ${_widgetStyleLabel(_widgetStyleKey)}',
+                    'Dang dung kieu: ${_widgetStyleLabel(_widgetStyleKey)}',
                     style: SLTheme.quicksand(
                       fontSize: 12.8,
                       fontWeight: FontWeight.w800,
@@ -506,7 +550,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 _buildWidgetSectionCard(
                   icon: Icons.add_to_home_screen_rounded,
                   title: context.tr('home_screen_widget'),
-                  subtitle: isIOSReal ? null : context.tr('add_widget_desc'),
+                  subtitle: Theme.of(context).platform == TargetPlatform.iOS
+                      ? null
+                      : context.tr('add_widget_desc'),
                   iconGradient: const [
                     Color(0xFF14B8A6),
                     Color(0xFF06B6D4),
@@ -514,7 +560,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (!isIOSReal) ...[
+                      if (Theme.of(context).platform != TargetPlatform.iOS) ...[
                         LayoutBuilder(
                           builder: (context, constraints) {
                             final useColumn = constraints.maxWidth < 330;
@@ -569,8 +615,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                             );
                           },
                         ),
+                        const SizedBox(height: 14),
                       ],
-                      if (isIOSReal) ...[
+                      if (Theme.of(context).platform == TargetPlatform.iOS) ...[
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
@@ -586,8 +633,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color:
-                                      const Color(0xFF0EA5E9).withOpacity(0.12),
+                                  color: const Color(0xFF0EA5E9).withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Icon(
@@ -628,10 +674,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                       ],
                                       onTap: () async {
                                         await _persistAndSyncWidgetAppearance();
-                                        if (mounted) {
-                                          _showToast('Đã đồng bộ!',
-                                              success: true);
-                                        }
+                                        if (mounted) _showToast('Đã đồng bộ!', success: true);
                                       },
                                     ),
                                   ],

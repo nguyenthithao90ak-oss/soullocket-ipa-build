@@ -298,39 +298,80 @@ extension _CountdownModeIndependentScreenViewPart
         .roundToDouble();
     final value =
         _anchorDate == null ? '--' : _daysSince(_anchorDate!).toString();
+    final titleColor = _titleColor(themeData);
+    final isAccepted = _acceptedSpaceHouseIds
+        .contains(_openedSpaceHouseId ?? _selfSpaceHouseId);
+    final statusColor =
+        isAccepted ? const Color(0xFF4BA7FF) : const Color(0xFFFFB74D);
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: viewportConstraints.maxHeight < 720 ? 16 : 20,
-      ),
-      child: Column(
-        children: [
-          Center(
-            child: SizedBox(
-              width: circleSize,
-              height: circleSize,
-              child: _CountdownModeCircle(
-                size: circleSize,
-                value: value,
-                topLabel: _topLabel(),
-                bottomLabel: _bottomLabel(),
-                styleData: styleData,
-                fontKey: _fontKey,
-                onTopTap: () => _editCountdownLabel(
-                  editTopLabel: true,
-                ),
-                onValueTap: _pickAnchorDate,
-                onBottomTap: () => _editCountdownLabel(
-                  editTopLabel: false,
-                ),
+    return Column(
+      children: [
+        if (false)
+          Text(
+            _spaceTitle(_openedSpaceHouseId ?? _selfSpaceHouseId),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: SLTheme.quicksand(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: titleColor,
+            ),
+          ),
+        if (false) const SizedBox(height: 8),
+        if (false)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: statusColor.withOpacity(0.22)),
+            ),
+            child: Text(
+              isAccepted ? 'Đã ghép nối' : 'Chờ ghép nối',
+              style: SLTheme.quicksand(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: statusColor,
               ),
             ),
           ),
-          if (_anchorDate != null) const SizedBox(height: 16),
-          if (_anchorDate != null) _buildLoveTimeCounters(),
-        ],
-      ),
+        const SizedBox(height: 18),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: viewportConstraints.maxHeight < 720 ? 16 : 20,
+          ),
+          child: Column(
+            children: [
+              Center(
+                child: SizedBox(
+                  width: circleSize,
+                  height: circleSize,
+                  child: _CountdownModeCircle(
+                    size: circleSize,
+                    value: value,
+                    topLabel: _topLabel(),
+                    bottomLabel: _bottomLabel(),
+                    styleData: styleData,
+                    fontKey: _fontKey,
+                    onTopTap: () => _editCountdownLabel(
+                      editTopLabel: true,
+                    ),
+                    onValueTap: _pickAnchorDate,
+                    onBottomTap: () => _editCountdownLabel(
+                      editTopLabel: false,
+                    ),
+                  ),
+                ),
+              ),
+              if (_anchorDate != null) const SizedBox(height: 16),
+              if (_anchorDate != null) _buildLoveTimeCounters(),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
