@@ -1055,20 +1055,22 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
           final confirm = await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
-              title: const Text('Táº£i xuá»‘ng Game'),
-              content: Text('Báº¡n cÃ³ muá»‘n táº£i dá»¯ liá»‡u cho trÃ² chÆ¡i nÃ y khÃ´ng?'),
+              title: const Text('Tải xuống Game'),
+              content: const Text('Bạn có muốn tải dữ liệu cho trò chơi này không?'),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Há»§y')),
-                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Táº£i ngay')),
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Tải ngay')),
               ],
             ),
           );
           if (confirm == true) {
-            SLNotice.showInfo(context, 'Ä ang táº£i dá»¯ liá»‡u...');
+            if (mounted) SLNotice.showInfo(context, 'Đang tải dữ liệu...');
             await Future.delayed(const Duration(seconds: 2));
             await GameDataManager.markAsDownloaded(id);
-            SLNotice.showInfo(context, 'Ä Ã£ táº£i xong!');
-            setState(() {});
+            if (mounted) {
+              SLNotice.showInfo(context, 'Đã tải xong!');
+              setState(() {});
+            }
           }
           return;
         }
