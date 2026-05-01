@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/sl_theme.dart';
-import 'admob_service.dart';
+import 'package:soullocket_app/utils/services/admob_service.dart';
 
 class CollageLimitService {
   static final CollageLimitService _instance = CollageLimitService._internal();
