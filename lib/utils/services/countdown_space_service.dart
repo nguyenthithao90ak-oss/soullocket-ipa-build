@@ -17,6 +17,9 @@ class CountdownSpaceRequestResult {
   final String? requestId;
 }
 
+typedef CountdownSpaceRequestInfo = CountdownSpaceRequest;
+typedef CountdownSpaceInfo = CountdownSpace;
+
 class CountdownSpaceRequest {
   final String requestId;
   final String spaceId;
@@ -37,6 +40,11 @@ class CountdownSpaceRequest {
     required this.createdAt,
     required this.snapshot,
   });
+
+  String otherHouseIdFor(String myHouseId) =>
+      fromHouseId == myHouseId ? toHouseId : fromHouseId;
+
+  bool isOutgoingFor(String myHouseId) => fromHouseId == myHouseId;
 
   factory CountdownSpaceRequest.fromMap(Map<String, dynamic> map) {
     return CountdownSpaceRequest(
@@ -65,12 +73,54 @@ class CountdownSpace {
     required this.updatedAt,
   });
 
+  String otherHouseIdFor(String myHouseId) {
+    final parts = spaceId.split('_');
+    if (parts.length < 2) return '';
+    return parts[0] == myHouseId ? parts[1] : parts[0];
+  }
+
   factory CountdownSpace.fromMap(String spaceId, Map<String, dynamic> map) {
     return CountdownSpace(
       spaceId: spaceId,
       status: map['status']?.toString() ?? 'active',
       snapshot: _toMap(map['snapshot']),
       updatedAt: _toInt(map['updatedAt']),
+    );
+  }
+}
+
+class CountdownSpaceDeleteRequestInfo {
+  final String spaceId;
+  final String requestedBy;
+  final int requestedAt;
+  final int deleteAt;
+  final String status;
+
+  const CountdownSpaceDeleteRequestInfo({
+    required this.spaceId,
+    required this.requestedBy,
+    required this.requestedAt,
+    required this.deleteAt,
+    required this.status,
+  });
+
+  bool get isPending => status == 'pending';
+  bool isRequestedBy(String houseId) => requestedBy == houseId;
+
+  String otherHouseIdFor(String myHouseId) {
+    final parts = spaceId.split('_');
+    if (parts.length < 2) return '';
+    return parts[0] == myHouseId ? parts[1] : parts[0];
+  }
+
+  factory CountdownSpaceDeleteRequestInfo.fromMap(
+      String spaceId, Map<String, dynamic> map) {
+    return CountdownSpaceDeleteRequestInfo(
+      spaceId: spaceId,
+      requestedBy: map['requestedBy']?.toString() ?? '',
+      requestedAt: _toInt(map['requestedAt']),
+      deleteAt: _toInt(map['deleteAt']),
+      status: map['status']?.toString() ?? 'pending',
     );
   }
 }
@@ -355,6 +405,143 @@ class CountdownSpaceService {
         }
       });
       list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      return list;
+    });
+  }
+
+  Future<CountdownSpaceRequestResult> sendRequest({
+    required String fromHouseId,
+    required String fromHouseName,
+    required String toHouseId,
+    required Map<String, dynamic> initialSnapshot,
+  }) =>
+      requestConnection(
+        fromHouseId: fromHouseId,
+        fromHouseName: fromHouseName,
+        toHouseId: toHouseId,
+        initialSnapshot: initialSnapshot,
+      );
+
+  Future<CountdownSpaceRequestResult> declineRequest({
+    required String requestId,
+    required String currentHouseId,
+  }) =>
+      rejectRequest(requestId);
+
+  Future<void> updatePendingRequestSnapshot({
+    required String requestId,
+    required String fromHouseId,
+    required Map<String, dynamic> snapshot,
+  }) async {
+    await _db.ref('countdown_space_requests/$requestId').update({
+      'snapshot': _sanitizeSnapshot(snapshot),
+    });
+  }
+
+  Future<void> updateSpaceSnapshot({
+    required String selfHouseId,
+    required String otherHouseId,
+    required Map<String, dynamic> snapshot,
+  }) async {
+    final spaceId = pairKeyFor(selfHouseId, otherHouseId);
+    await updateSnapshot(spaceId: spaceId, snapshot: snapshot);
+  }
+
+  Future<CountdownSpaceRequestResult> requestDelete({
+    required String spaceId,
+    required String currentHouseId,
+    required String currentHouseName,
+  }) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final deleteAt = now + (15 * 24 * 60 * 60 * 1000); // 15 days
+      await _db.ref('countdown_space_delete_requests/$spaceId').set({
+        'spaceId': spaceId,
+        'requestedBy': currentHouseId,
+        'requestedAt': now,
+        'deleteAt': deleteAt,
+        'status': 'pending',
+      });
+      return const CountdownSpaceRequestResult(
+        success: true,
+        message: 'Đã gửi yêu cầu xóa không gian.',
+      );
+    } catch (e) {
+      return CountdownSpaceRequestResult(
+        success: false,
+        message: 'Lỗi: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<CountdownSpaceRequestResult> acceptDelete({
+    required String spaceId,
+    required String currentHouseId,
+  }) async {
+    try {
+      final updates = <String, dynamic>{};
+      updates['countdown_spaces/$spaceId/status'] = 'deleted';
+      updates['countdown_space_delete_requests/$spaceId/status'] = 'accepted';
+      await _db.ref().update(updates);
+      return const CountdownSpaceRequestResult(
+        success: true,
+        message: 'Đã xóa không gian đếm.',
+      );
+    } catch (e) {
+      return CountdownSpaceRequestResult(
+        success: false,
+        message: 'Lỗi: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<void> evaluateDeleteRequest({
+    required String spaceId,
+    required String currentHouseId,
+  }) async {
+    final snap =
+        await _db.ref('countdown_space_delete_requests/$spaceId').get();
+    if (!snap.exists) return;
+    final data = _toMap(snap.value);
+    if (data['status'] != 'pending') return;
+    final deleteAt = _toInt(data['deleteAt']);
+    if (DateTime.now().millisecondsSinceEpoch >= deleteAt) {
+      await acceptDelete(spaceId: spaceId, currentHouseId: currentHouseId);
+    }
+  }
+
+  Stream<List<CountdownSpaceRequest>> watchRequestsForHouse(String houseId) {
+    final hId = houseId.trim();
+    return _db.ref('countdown_space_requests').onValue.map((event) {
+      if (event.snapshot.value == null) return [];
+      final raw = _toMap(event.snapshot.value);
+      final list = <CountdownSpaceRequest>[];
+      raw.forEach((key, value) {
+        final data = _toMap(value);
+        if (data['fromHouseId'] == hId || data['toHouseId'] == hId) {
+          list.add(CountdownSpaceRequest.fromMap(data));
+        }
+      });
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list;
+    });
+  }
+
+  Stream<List<CountdownSpace>> watchSpacesForHouse(String houseId) =>
+      streamActiveSpaces(houseId);
+
+  Stream<List<CountdownSpaceDeleteRequestInfo>> watchDeleteRequestsForHouse(
+      String houseId) {
+    final hId = houseId.trim();
+    return _db.ref('countdown_space_delete_requests').onValue.map((event) {
+      if (event.snapshot.value == null) return [];
+      final raw = _toMap(event.snapshot.value);
+      final list = <CountdownSpaceDeleteRequestInfo>[];
+      raw.forEach((key, value) {
+        if (key.contains(hId)) {
+          list.add(CountdownSpaceDeleteRequestInfo.fromMap(key, _toMap(value)));
+        }
+      });
       return list;
     });
   }
