@@ -95,20 +95,19 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
           .child('users/$uid/points')
           .onValue
           .map((event) => (event.snapshot.value as num?)?.toInt() ?? 0);
-      _questsStream = _dbRef
-          .child('users/$uid/quests')
-          .onValue
-          .map((event) => Map<String, dynamic>.from(event.snapshot.value as Map? ?? {}));
+      _questsStream = _dailyQuestService.streamQuests();
 
       _userSubscription = _dbRef.child('users/$uid').onValue.listen((event) {
         if (!mounted) return;
         final data = event.snapshot.value as Map? ?? {};
         setState(() {
-          _checkinDays = Map<String, bool>.from(data['checkinDays'] as Map? ?? {});
+          _checkinDays = Map<String, bool>.from(
+              (data['checkinDays'] as Map?)?.cast<String, bool>() ?? {});
           _streak = (data['checkinStreak'] as num?)?.toInt() ?? 0;
           _dailyAdCount = (data['dailyAdCount'] as num?)?.toInt() ?? 0;
           _lastAdWatchTimeMs = (data['lastAdWatchTimeMs'] as num?)?.toInt() ?? 0;
-          _consecutiveAdsWatched = (data['consecutiveAdsWatched'] as num?)?.toInt() ?? 0;
+          _consecutiveAdsWatched =
+              (data['consecutiveAdsWatched'] as num?)?.toInt() ?? 0;
 
           final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
           _checkedInToday = _checkinDays[today] == true;
