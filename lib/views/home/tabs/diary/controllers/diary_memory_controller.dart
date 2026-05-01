@@ -1375,8 +1375,7 @@ class DiaryMemoryController extends ChangeNotifier {
     final user = postPickResults[0] as User?;
     if (user == null) {
       showSnackBar(
-        L10nService()
-            .translate('PhiÃªn Ä‘Äƒng nháº­p chÆ°a sáºµn sÃ ng. Vui lÃ²ng thá»­ láº¡i.'),
+        L10nService().translate('auth_session_not_ready'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;

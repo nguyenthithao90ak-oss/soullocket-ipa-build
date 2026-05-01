@@ -17,8 +17,8 @@ class AlbumService {
   static const int totalCapFree = 1000;
   static const int totalCapPro = 1000;
   static const int totalCapLifetimeVip = 1500;
-  static const int dailyLimitFree = 60;
-  static const int dailyLimitPro = 60;
+  static const int dailyLimitFree = 10;
+  static const int dailyLimitPro = 30;
   static const int trashExpiryMs = 60 * 24 * 60 * 60 * 1000;
   static const int albumStreamPageSize = 120;
 
@@ -183,7 +183,7 @@ class AlbumService {
 
   Future<List<AlbumItem>> fetchAlbumPage(
     String houseId, {
-    int limit = 60,
+    int limit = 30,
     int? endBeforeTs,
   }) async {
     Query query = _dbRef.child('houses/$houseId/album').orderByChild('ts');
@@ -476,7 +476,7 @@ class UploadGuardResult {
         errorTitle: 'Hết lượt hôm nay',
         errorMessage: isPro
             ? 'Bạn đã dùng hết $limit lượt tải ảnh hôm nay. Đợi sau 00h nhé!'
-            : 'Bạn đã dùng hết $limit lượt hôm nay. Nâng cấp PRO để tải 60 ảnh/ngày!',
+            : 'Bạn đã dùng hết $limit lượt hôm nay. Nâng cấp PRO để tải 30 ảnh/ngày!',
       );
 
   factory UploadGuardResult.exceedsRemaining(int remaining) =>

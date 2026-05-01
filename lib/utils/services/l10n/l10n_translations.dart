@@ -686,7 +686,8 @@ abstract final class _L10nStaticData {
     'widget_android_only': 'Tính năng này chỉ hỗ trợ trên Android',
     'widget_err_not_supported': 'Thiết bị không hỗ trợ ghim widget tự động',
     'widget_pin_failed': 'Lỗi: Không thể ghim widget',
-    'widget_pin_req_sent': 'Đã gửi yêu cầu ghim widget!',
+    'diary_upload_limit_vip': 'Bạn đã đạt giới hạn đăng 30 ảnh kỷ niệm hôm nay. Hãy quay lại vào ngày mai nhé!',
+    'diary_upload_limit_free': 'Tài khoản thường chỉ đăng được 10 ảnh/ngày. Hãy nâng cấp PRO hoặc thử lại vào ngày mai!',
     'ios_widget_pin_guide': 'Đã lưu cấu hình! Giữ màn hình chính > Widget > SoulLocket để thêm.',
     'home_screen_widget': 'Widget màn hình chính',
     'widget_home_desc':
@@ -1548,7 +1549,7 @@ abstract final class _L10nStaticData {
     'Bạn có chắc muốn chuyển ảnh này vào thùng rác?':
         'Are you sure you want to move this photo to trash?',
     'Xóa': 'Delete',
-    'Chỉ được tải lên tối đa 60 ảnh một lần.': 'Maximum 60 photos per upload.',
+    'Chỉ được tải lên tối đa 30 ảnh một lần.': 'Maximum 30 photos per upload.',
     'Đã thêm ': 'Added ',
     ' kỷ niệm mới.': ' new memories.',
     'Lỗi tải ảnh: ': 'Error uploading photo: ',
@@ -1770,6 +1771,8 @@ abstract final class _L10nStaticData {
     'widget_android_only': 'This feature is only available on Android',
     'widget_err_not_supported': 'Device does not support auto widget pinning',
     'widget_pin_failed': 'Error: Unable to pin widget',
+    'diary_upload_limit_vip': 'You have reached the limit of 30 memory photos today. Please come back tomorrow!',
+    'diary_upload_limit_free': 'Free accounts can only post 10 photos/day. Please upgrade to PRO or try again tomorrow!',
     'widget_pin_req_sent': 'Widget pin request sent!',
     'ios_widget_pin_guide': 'Config saved! Long-press Home > Widgets > SoulLocket to add.',
     'home_screen_widget': 'Home Screen Widget',
