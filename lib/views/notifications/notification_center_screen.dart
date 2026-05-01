@@ -265,8 +265,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
 
   bool _isRead(_NotifModel n) => _readLocal.contains(n.id) || n.readAt != null;
 
-  bool _isLocked(_NotifModel n) =>
-      n.locked || _category(n) == _NotifCategory.warning;
+  bool _isLocked(_NotifModel n) => n.locked;
 
   _NotifModel? _findNotif(String id) {
     for (final item in _all) {

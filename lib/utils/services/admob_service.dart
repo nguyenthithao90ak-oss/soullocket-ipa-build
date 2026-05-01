@@ -1101,17 +1101,6 @@ class AdMobService {
   }
 
   Future<RewardClaimResult> claimRewardedAdPoints() async {
-    // Kiểm tra xem đã đạt giới hạn hàng ngày chưa
-    await canWatchRewardedAdToday();
-    if (false) {
-      debugPrint(
-          'AdMobService: Đã đạt giới hạn $dailyRewardedAdLimit quảng cáo/ngày.');
-      return const RewardClaimResult(
-        ok: false,
-        error: 'local_daily_limit_estimate',
-      );
-    }
-
     final response = await _claimRewardFromServer(source: 'rewarded_ad');
     final result = RewardClaimResult.fromResponse(response);
     if (result.ok) {
