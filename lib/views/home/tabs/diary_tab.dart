@@ -14,7 +14,7 @@ import '../../../core/sl_theme.dart';
 import '../../../models/diary_post.dart';
 import '../../../services/interaction_metrics_service.dart';
 import '../../../utils/app_error_mapper.dart';
-import '../../../utils/services/admob_service.dart';
+import 'package:soullocket_app/utils/services/admob_service.dart';
 import '../../../utils/services/memory_share_allowance_service.dart';
 import '../../../utils/services/memory_share_service.dart';
 import '../../../utils/sl_notice.dart';
