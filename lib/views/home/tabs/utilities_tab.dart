@@ -9,7 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../models/house_settings.dart';
-import '../../../services/admob_service.dart';
+import 'package:soullocket_app/utils/services/admob_service.dart';
 import '../../../services/house_service.dart';
 import '../../../services/military_lock_service.dart';
 import '../../../services/utility_service.dart';
