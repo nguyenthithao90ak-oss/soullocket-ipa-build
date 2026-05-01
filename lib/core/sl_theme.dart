@@ -532,7 +532,7 @@ class SLTheme {
         return GoogleFonts.beVietnamProTextTheme(base);
       case defaultFontKey:
       default:
-        return GoogleFonts.quicksandTextTheme(base);
+        return GoogleFonts.beVietnamProTextTheme(base);
     }
   }
 
@@ -598,7 +598,7 @@ class SLTheme {
         return GoogleFonts.beVietnamPro(textStyle: baseStyle);
       case defaultFontKey:
       default:
-        return GoogleFonts.quicksand(textStyle: baseStyle);
+        return GoogleFonts.beVietnamPro(textStyle: baseStyle);
     }
   }
 
