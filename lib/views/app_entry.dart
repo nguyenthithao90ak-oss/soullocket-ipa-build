@@ -474,7 +474,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           return BlockedScaffold(
             title: 'Lỗi xác thực',
             message: kDebugMode
-                ? 'Không thể kết nối Firebase Auth. Vui lòng thử lại.\n${snapshot.error}'
+                ? 'Không thể kết nối hệ thống xác thực. Vui lòng thử lại.\n${snapshot.error}'
                 : 'Không thể kiểm tra đăng nhập. Hãy kiểm tra mạng rồi mở lại ứng dụng.',
             onSignOut: () async {},
           );
