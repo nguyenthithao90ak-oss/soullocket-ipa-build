@@ -583,20 +583,23 @@ class _DiaryMemoryPhotoRow extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(18),
-                      child: Image(
-                        image: imageProvider,
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.medium,
-                        gaplessPlayback: true,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.white.withOpacity(0.5),
-                            child: const Icon(
-                              Icons.broken_image,
-                              color: SLColors.textTertiary,
-                            ),
-                          );
-                        },
+                      child: Hero(
+                        tag: 'memory_image_${photo['id']}',
+                        child: Image(
+                          image: imageProvider,
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.medium,
+                          gaplessPlayback: true,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.white.withOpacity(0.5),
+                              child: const Icon(
+                                Icons.broken_image,
+                                color: SLColors.textTertiary,
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
