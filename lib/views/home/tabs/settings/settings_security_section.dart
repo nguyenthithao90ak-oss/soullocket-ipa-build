@@ -37,52 +37,97 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           if (!isSingleMode) ...[
             Container(
               width: double.infinity,
-              padding: SLSpacing.all16,
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFF4F7), Color(0xFFFFEEF4)],
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFFFD1E1).withOpacity(0.3),
+                    const Color(0xFFFFF0F5).withOpacity(0.5),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: SLRadius.xlAll,
-                border: Border.all(color: const Color(0xFFF48FB1)),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFFFC1D1).withOpacity(0.5), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF78A8).withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
-                  Text(
-                    'Đang đăng nhập',
-                    style: SLTextStyles.quicksand(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFFE57373),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.person_pin_rounded, color: Color(0xFFE57373), size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        'ĐANG ĐĂNG NHẬP',
+                        style: SLTextStyles.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFE57373),
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
-                  SLSpacing.h8,
+                  const SizedBox(height: 10),
                   Text(
                     activeName,
                     textAlign: TextAlign.center,
                     style: SLTextStyles.quicksand(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.w900,
                       color: const Color(0xFFD81B60),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFFC1D1).withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      _houseId == null ? 'Mã nhà: Chưa có' : 'ID: $_houseId',
+                      style: SLTextStyles.quicksand(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFFE8A0B6),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            SLSpacing.h12,
+            SLSpacing.h16,
           ],
-          Center(
-            child: Text(
-              _houseId == null ? 'Mã nhà: Chưa có' : 'Mã nhà: $_houseId',
-              style: SLTextStyles.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFFE8A0B6),
+          if (isSingleMode) ...[
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDEEF4),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  _houseId == null ? 'Mã nhà: Chưa có' : 'Mã nhà: $_houseId',
+                  style: SLTextStyles.quicksand(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFFE8A0B6),
+                  ),
+                ),
               ),
             ),
-          ),
-          SLSpacing.h12,
+            SLSpacing.h12,
+          ],
           _buildSecurityCard(
             title: 'Thông tin đăng nhập riêng tư',
             subtitle:
