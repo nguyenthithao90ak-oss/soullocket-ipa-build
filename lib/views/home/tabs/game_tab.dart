@@ -156,48 +156,64 @@ class _GameTabState extends State<GameTab> {
                     final crossAxisCount = constraints.maxWidth < 280 ? 2 : 3;
                     final spacing = constraints.maxWidth < 360 ? 10.0 : 14.0;
 
-                    return GridView.count(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: spacing,
-                      mainAxisSpacing: spacing + 2,
-                      childAspectRatio: crossAxisCount == 3 ? 0.68 : 0.75,
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      children: [
-                        _SoulBlockCard(
-                          isDownloaded: _downloadedGames['soul_block'] ?? false,
-                          downloadProgress: _downloadProgress['soul_block'],
-                          onTap: () => _onGameTap('soul_block', () => _openSoulBlockGame(context)),
-                        ),
-                        _SoulRhythmCard(
-                          imagePath: GameTab.soulRhythmIconPath,
-                          isDownloaded: _downloadedGames['soul_rhythm'] ?? false,
-                          downloadProgress: _downloadProgress['soul_rhythm'],
-                          onTap: () => _onGameTap('soul_rhythm', () => _openSoulGame(context)),
-                        ),
-                        _GenericGameCard(
-                          label: 'Caro Neon',
-                          icon: Icons.grid_4x4_rounded,
-                          color: const Color(0xFF00E5FF),
-                          isDownloaded: _downloadedGames['caro_neon'] ?? false,
-                          downloadProgress: _downloadProgress['caro_neon'],
-                          onTap: () => _onGameTap('caro_neon', () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const CaroNeonScreen()),
-                          )),
-                        ),
-                        _GenericGameCard(
-                          label: 'Heart Catcher',
-                          icon: Icons.favorite_rounded,
-                          color: const Color(0xFFFF4081),
-                          isDownloaded: _downloadedGames['heart_catcher'] ?? false,
-                          downloadProgress: _downloadProgress['heart_catcher'],
-                          onTap: () => _onGameTap('heart_catcher', () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const HeartCatcherGame()),
-                          )),
-                        ),
-                      ],
+                    final downloadService = GameDownloadService();
+                    return ListenableBuilder(
+                      listenable: downloadService,
+                      builder: (context, _) {
+                        return GridView.count(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: spacing,
+                          mainAxisSpacing: spacing + 2,
+                          childAspectRatio: crossAxisCount == 3 ? 0.68 : 0.75,
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          children: [
+                            FutureBuilder<bool>(
+                              future: downloadService.isGameDownloaded('soul_block'),
+                              builder: (context, snapshot) {
+                                final isDownloaded = snapshot.data ?? false;
+                                return _SoulBlockCard(
+                                  isDownloaded: isDownloaded,
+                                  downloadProgress: downloadService.getProgress('soul_block'),
+                                  onTap: () => _onGameTap('soul_block', () => _openSoulBlockGame(context)),
+                                );
+                              }
+                            ),
+                            FutureBuilder<bool>(
+                              future: downloadService.isGameDownloaded('soul_rhythm'),
+                              builder: (context, snapshot) {
+                                final isDownloaded = snapshot.data ?? false;
+                                return _SoulRhythmCard(
+                                  imagePath: GameTab.soulRhythmIconPath,
+                                  isDownloaded: isDownloaded,
+                                  downloadProgress: downloadService.getProgress('soul_rhythm'),
+                                  onTap: () => _onGameTap('soul_rhythm', () => _openSoulGame(context)),
+                                );
+                              }
+                            ),
+                            _GenericGameCard(
+                              label: 'Caro Neon',
+                              icon: Icons.grid_4x4_rounded,
+                              color: const Color(0xFF00E5FF),
+                              isDownloaded: true, // Game nhẹ, mặc định có sẵn
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const CaroNeonScreen()),
+                              ),
+                            ),
+                            _GenericGameCard(
+                              label: 'Heart Catcher',
+                              icon: Icons.favorite_rounded,
+                              color: const Color(0xFFFF4081),
+                              isDownloaded: true, // Game nhẹ, mặc định có sẵn
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const HeartCatcherGame()),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
                     );
                   },
                 ),
