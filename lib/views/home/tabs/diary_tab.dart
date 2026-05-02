@@ -21,7 +21,9 @@ import '../../../utils/sl_notice.dart';
 import '../../../widgets/cute_loading_indicator.dart';
 import '../../../widgets/share_bottom_sheet.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../../widgets/skeleton_container.dart';
 import 'diary_composer.dart';
+
 import 'diary/controllers/diary_composer_controller.dart';
 import 'diary/controllers/diary_feed_controller.dart';
 import 'diary/controllers/diary_guard_controller.dart';
@@ -239,8 +241,39 @@ class _DiaryTabState extends State<DiaryTab> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CuteLoadingIndicator(color: SLColors.primary),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: List.generate(
+            5,
+            (index) => Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SkeletonContainer.circle(size: 44),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonContainer.rounded(
+                          width: MediaQuery.of(context).size.width * 0.4,
+                          height: 16,
+                        ),
+                        const SizedBox(height: 8),
+                        const SkeletonContainer.rounded(
+                          width: double.infinity,
+                          height: 80,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
 
