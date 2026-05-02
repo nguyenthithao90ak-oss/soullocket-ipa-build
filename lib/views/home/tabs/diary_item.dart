@@ -167,11 +167,14 @@ class DiaryItem extends StatelessWidget {
                     fit: BoxFit.cover,
                     memCacheWidth: postImageCacheWidth,
                     fadeInDuration: const Duration(milliseconds: 200),
-                    placeholder: (context, url) => Container(
-                      height: 120,
-                      color: Colors.white.withOpacity(0.3),
-                      child: SkeletonContainer.rounded(width: double.infinity, height: 120),
-                    ),
+                    placeholder: (context, url) => post.blurHash != null
+                        ? BlurHash(hash: post.blurHash!)
+                        : Container(
+                            height: 120,
+                            color: Colors.white.withOpacity(0.3),
+                            child: SkeletonContainer.rounded(
+                                width: double.infinity, height: 120),
+                          ),
                     errorWidget: (_, __, ___) => Container(
                       height: 120,
                       color: Colors.white.withOpacity(0.3),
