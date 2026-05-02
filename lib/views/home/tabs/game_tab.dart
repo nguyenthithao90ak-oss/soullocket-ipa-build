@@ -55,39 +55,41 @@ class _GameTabState extends State<GameTab> {
     });
   }
 
-  Future<void> _simulateDownload(String gameId) async {
-    if (_downloadProgress.containsKey(gameId)) return;
+  Future<void> _handleRealDownload(String gameId) async {
+    final service = GameDownloadService();
+    if (service.isDownloading(gameId)) return;
 
-    for (double i = 0; i <= 1.01; i += 0.05) {
-      if (!mounted) return;
-      setState(() {
-        _downloadProgress[gameId] = i;
-      });
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _downloadProgress.remove(gameId);
-    });
-    await _saveDownloadStatus(gameId, true);
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Đã tải xong game! Chúc bạn chơi vui vẻ. 🎮'),
-          backgroundColor: const Color(0xFF2E7D32),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    try {
+      await service.downloadGame(gameId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã tải xong game! Chúc bạn chơi vui vẻ. 🎮'),
+            backgroundColor: Color(0xFF2E7D32),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi tải game: $e'),
+            backgroundColor: const Color(0xFFD32F2F),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
-  void _onGameTap(String gameId, VoidCallback onPlay) {
-    if (_downloadedGames[gameId] == true) {
+  void _onGameTap(String gameId, VoidCallback onPlay) async {
+    final service = GameDownloadService();
+    final isDownloaded = await service.isGameDownloaded(gameId);
+    if (isDownloaded) {
       onPlay();
     } else {
-      _simulateDownload(gameId);
+      await _handleRealDownload(gameId);
     }
   }
 
