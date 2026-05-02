@@ -1411,6 +1411,18 @@ class DiaryMemoryController extends ChangeNotifier {
         }
       }
 
+      final messenger = ScaffoldMessenger.of(context);
+
+      // Ensure Auth is ready and has a fresh token before starting batch upload
+      try {
+        final user = guardController.currentUser;
+        if (user != null) {
+          await user.getIdToken(true);
+        }
+      } catch (e) {
+        debugPrint('Auth warm-up failed: $e');
+      }
+
       var uploadedCount = 0;
       final errorMessages = <String>[];
 
@@ -1440,9 +1452,7 @@ class DiaryMemoryController extends ChangeNotifier {
             uploadedCount++;
             completedImages.add(batch[index]);
           } else {
-            // Map technical error to friendly message
-            final resolved = AppErrorMapper.resolve(err);
-            errorMessages.add(resolved.message);
+            errorMessages.add(err);
           }
         }
         if (completedImages.isNotEmpty) {
@@ -1466,7 +1476,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
       final failedCount = images.length - uploadedCount;
       final errorMessageStr =
-          errorMessages.isNotEmpty ? '\nThông báo: ${errorMessages.first}' : '';
+          errorMessages.isNotEmpty ? '\nLỗi: ${errorMessages.first}' : '';
 
       if (failedCount <= 0) {
         await _clearPendingUploadState(notify: false);
