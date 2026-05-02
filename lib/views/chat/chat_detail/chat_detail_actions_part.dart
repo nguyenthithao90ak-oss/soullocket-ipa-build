@@ -1,5 +1,9 @@
 // ignore_for_file: invalid_use_of_protected_member
 
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/connectivity_service.dart';
+import 'chat_friendly_helper.dart';
+
 part of '../chat_detail_screen.dart';
 
 extension _ChatDetailActionsPart on _ChatDetailScreenState {
@@ -42,9 +46,15 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     }
 
     try {
+      if (!ConnectivityService().isOnline) {
+        final offlineResponse = ChatFriendlyHelper.getFriendlyResponse(isOffline: true);
+        _showNotice(offlineResponse);
+        return;
+      }
       await _sendChatMessage(text);
       _msgController.clear();
     } catch (e) {
+
       if (!mounted) return;
       _showChatError(e);
     }
@@ -312,9 +322,15 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     }
 
     try {
+      if (!ConnectivityService().isOnline) {
+        final offlineResponse = ChatFriendlyHelper.getFriendlyResponse(isOffline: true);
+        _showNotice(offlineResponse);
+        return false;
+      }
       await _sendChatMessage(sticker, type: 'sticker');
       return true;
     } catch (e) {
+
       _showChatError(e);
       return false;
     }
