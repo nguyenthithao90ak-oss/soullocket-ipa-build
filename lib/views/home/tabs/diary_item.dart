@@ -169,7 +169,7 @@ class DiaryItem extends StatelessWidget {
                     placeholder: (context, url) => Container(
                       height: 120,
                       color: Colors.white.withOpacity(0.3),
-                      child: const SkeletonContainer.rounded(width: double.infinity, height: 120),
+                      child: SkeletonContainer.rounded(width: double.infinity, height: 120),
                     ),
                     errorWidget: (_, __, ___) => Container(
                       height: 120,
