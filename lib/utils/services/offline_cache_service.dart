@@ -8,8 +8,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 class OfflineCacheService {
   static final OfflineCacheService instance = OfflineCacheService._internal();
   static Database? _database;
+  static SharedPreferences? _cachedPrefs;
 
   OfflineCacheService._internal();
+
+  static SharedPreferences? getPrefsSync() => _cachedPrefs;
+
+  static Future<void> initialize() async {
+    _cachedPrefs = await SharedPreferences.getInstance();
+  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;
