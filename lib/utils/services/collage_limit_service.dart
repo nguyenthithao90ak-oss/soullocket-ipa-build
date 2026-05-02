@@ -1,14 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/sl_theme.dart';
-import 'package:soullocket_app/utils/services/admob_service.dart';
+import 'admob_service.dart';
 
 class CollageLimitService {
   static final CollageLimitService _instance = CollageLimitService._internal();
   factory CollageLimitService() => _instance;
   CollageLimitService._internal();
 
-  static const int dailyLimit = 20;
+  static const int dailyLimit = 5;
 
   String _getTodayKey() {
     final now = DateTime.now();
@@ -128,4 +128,3 @@ class CollageLimitService {
     await prefs.setInt(countKey, currentCount + 1);
   }
 }
-

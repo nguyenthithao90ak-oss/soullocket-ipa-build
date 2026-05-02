@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
-import 'package:soullocket_app/utils/services/admob_service.dart';
+import 'admob_service.dart';
 import 'notification_service.dart';
 
 class DailyQuestService {
@@ -82,40 +82,6 @@ class DailyQuestService {
     }
   }
 
-  static Map<String, QuestConfig> getQuestConfigs() {
-    return questsConfig.map((key, value) => MapEntry(
-          key,
-          QuestConfig(
-            title: value['title'] as String,
-            description: value['desc'] as String,
-            points: value['points'] as int,
-            target: value['target'] as int,
-            icon: value['icon'] as String,
-          ),
-        ));
-  }
-
-  Future<Map<String, dynamic>> checkIn() async {
-    final result = await _adMob.claimDailyCheckinReward();
-    return {
-      'success': result.ok,
-      'points': result.points,
-      'message': result.error,
-    };
-  }
-
-  Future<Map<String, dynamic>> claimQuestReward(String questId) async {
-    // In this architecture, rewards are often automatic when progress reaches target
-    // or handled via a specific claim endpoint.
-    // For now, we'll implement a stub or call the reward server if applicable.
-    final result = await _adMob.recordDailyQuestProgress(questId);
-    return {
-      'success': result?['ok'] == true,
-      'points': (result?['points'] as num?)?.toInt() ?? 0,
-      'message': result?['error'],
-    };
-  }
-
   void _onQuestCompleted(int points, String title) {
     _notification.showLocalNotification(
       title: 'Nhiệm vụ hoàn thành! 🎉',
@@ -124,20 +90,4 @@ class DailyQuestService {
       dedupeKey: 'quest_${DateTime.now().millisecondsSinceEpoch}',
     );
   }
-}
-
-class QuestConfig {
-  final String title;
-  final String description;
-  final int points;
-  final int target;
-  final String icon;
-
-  const QuestConfig({
-    required this.title,
-    required this.description,
-    required this.points,
-    required this.target,
-    required this.icon,
-  });
 }

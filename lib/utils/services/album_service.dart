@@ -1,4 +1,4 @@
-﻿import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,12 +14,12 @@ class AlbumService {
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
-  static const int totalCapFree = 1000;
+  static const int totalCapFree = 365;
   static const int totalCapPro = 1000;
   static const int totalCapLifetimeVip = 1500;
   static const int dailyLimitFree = 10;
   static const int dailyLimitPro = 30;
-  static const int trashExpiryMs = 60 * 24 * 60 * 60 * 1000;
+  static const int trashExpiryMs = 3 * 24 * 60 * 60 * 1000;
   static const int albumStreamPageSize = 120;
 
   static const Map<String, Map<String, String>> _holidayMap = {
@@ -358,26 +358,6 @@ class AlbumService {
     await _dbRef.child('houses/$houseId/album_trash/$itemId').remove();
   }
 
-  Future<void> autoCleanupOldItems(String houseId) async {
-    try {
-      final cutoff = DateTime.now().subtract(const Duration(days: 60)).millisecondsSinceEpoch;
-      final snap = await _dbRef.child('houses/$houseId/album').orderByChild('ts').endAt(cutoff).get();
-      if (!snap.exists || snap.value == null) return;
-      final raw = snap.value;
-      if (raw is! Map) return;
-
-      final updates = <String, dynamic>{};
-      raw.forEach((key, value) {
-        updates[key.toString()] = null;
-      });
-
-      if (updates.isNotEmpty) {
-        await _dbRef.child('houses/$houseId/album').update(updates);
-        await _changeAlbumCount(houseId, -updates.length);
-      }
-    } catch (_) {}
-  }
-
   Future<void> toggleLike({
     required String houseId,
     required String itemId,
@@ -486,4 +466,3 @@ class UploadGuardResult {
         errorMessage: 'Bạn chỉ còn $remaining lượt tải ảnh hôm nay.',
       );
 }
-

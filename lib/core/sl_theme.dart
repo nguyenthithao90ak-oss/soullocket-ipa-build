@@ -404,16 +404,11 @@ class SLShadow {
 
 /// ─── Main Theme Class ─────────────────────────────────────────
 class SLTheme {
-  static const String defaultFontKey = 'beVietnam';
+  static const String defaultFontKey = 'quicksand';
   static const List<SLFontOption> fontOptions = [
     SLFontOption(
-      key: 'beVietnam',
-      label: 'Be Vietnam Pro (Gốc)',
-      sampleText: 'Yêu nhau 1000 ngày',
-    ),
-    SLFontOption(
-      key: 'quicksand',
-      label: 'Quicksand',
+      key: defaultFontKey,
+      label: 'Quicksand (Gốc)',
       sampleText: 'Yêu nhau 1000 ngày',
     ),
     SLFontOption(
@@ -429,6 +424,11 @@ class SLTheme {
     SLFontOption(
       key: 'playfair',
       label: 'Playfair Display',
+      sampleText: 'Yêu nhau 1000 ngày',
+    ),
+    SLFontOption(
+      key: 'beVietnam',
+      label: 'Be Vietnam Pro',
       sampleText: 'Yêu nhau 1000 ngày',
     ),
     SLFontOption(
@@ -455,13 +455,8 @@ class SLTheme {
 
   static const List<SLFontOption> cleanFontOptions = [
     SLFontOption(
-      key: 'beVietnam',
-      label: 'Be Vietnam Pro (Gốc)',
-      sampleText: 'Yêu nhau 1000 ngày',
-    ),
-    SLFontOption(
-      key: 'quicksand',
-      label: 'Quicksand',
+      key: defaultFontKey,
+      label: 'Quicksand (Gốc)',
       sampleText: 'Yêu nhau 1000 ngày',
     ),
     SLFontOption(
@@ -477,6 +472,11 @@ class SLTheme {
     SLFontOption(
       key: 'playfair',
       label: 'Playfair Display',
+      sampleText: 'Yêu nhau 1000 ngày',
+    ),
+    SLFontOption(
+      key: 'beVietnam',
+      label: 'Be Vietnam Pro',
       sampleText: 'Yêu nhau 1000 ngày',
     ),
     SLFontOption(
@@ -532,7 +532,7 @@ class SLTheme {
         return GoogleFonts.beVietnamProTextTheme(base);
       case defaultFontKey:
       default:
-        return GoogleFonts.beVietnamProTextTheme(base);
+        return GoogleFonts.quicksandTextTheme(base);
     }
   }
 
@@ -598,7 +598,7 @@ class SLTheme {
         return GoogleFonts.beVietnamPro(textStyle: baseStyle);
       case defaultFontKey:
       default:
-        return GoogleFonts.beVietnamPro(textStyle: baseStyle);
+        return GoogleFonts.quicksand(textStyle: baseStyle);
     }
   }
 
@@ -681,27 +681,6 @@ class SLTheme {
     return Container(
       decoration: BoxDecoration(
         color: SLColors.bgElevated.withOpacity(0.02),
-      ),
-    );
-  }
-
-  static Widget meshBackground(BuildContext context, {Color? color}) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            (color ?? SLColors.primary).withOpacity(0.8),
-            (color ?? SLColors.primary).withOpacity(0.4),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Opacity(
-        opacity: 0.1,
-        child: meshPattern(),
       ),
     );
   }

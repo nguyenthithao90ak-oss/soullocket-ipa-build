@@ -277,8 +277,8 @@ class BreakupService {
     }
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final expireAt = isSingleRelationship ? 0 : now + (60 * 86400000);
-    final deleteAt = isSingleRelationship ? now + (60 * 86400000) : 0;
+    final expireAt = isSingleRelationship ? 0 : now + (30 * 86400000);
+    final deleteAt = isSingleRelationship ? now + (3 * 86400000) : 0;
     final deviceMeta = await getTrustedDevicesMeta(
       houseId: houseId,
       currentUid: userUid,
@@ -295,7 +295,7 @@ class BreakupService {
       'requestedByName': userName,
       'requestedByUid': userUid,
       'pinRequired': pinRequired,
-      'reason': isSingleRelationship ? 'single_scheduled_60_days' : '',
+      'reason': isSingleRelationship ? 'single_scheduled_3_days' : '',
       'scheduledAt': isSingleRelationship ? now : 0,
       'processingAt': 0,
       'canceledAt': 0,
@@ -471,7 +471,7 @@ class BreakupService {
       final deleteAt = now + 86400000;
       await ref.update({
         'status': 'scheduled',
-        'reason': approvedByPartner ? 'partner_approved' : 'expired_60_days',
+        'reason': approvedByPartner ? 'partner_approved' : 'expired_30_days',
         'scheduledAt': now,
         'deleteAt': deleteAt,
       });
