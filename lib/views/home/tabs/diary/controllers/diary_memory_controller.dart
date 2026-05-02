@@ -1391,6 +1391,7 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
 
+
     try {
       final authorName = await feedController.resolveCurrentAuthorName(user);
       final authorEmail = user.email?.trim().toLowerCase() ?? '';
