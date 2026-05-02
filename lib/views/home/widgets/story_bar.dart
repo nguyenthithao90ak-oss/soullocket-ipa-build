@@ -151,6 +151,12 @@ class _StoryBarState extends State<StoryBar> {
                     colors: [Colors.purple, Colors.orange, Colors.yellow]),
               ),
               child: Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
                 child: ClipOval(
                   child: CachedNetworkImage(
                     imageUrl: story['url'],
