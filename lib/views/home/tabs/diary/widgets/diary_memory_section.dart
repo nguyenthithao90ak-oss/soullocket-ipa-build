@@ -1222,25 +1222,28 @@ class _DiaryMemoryInlineLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(22, 4, 22, 18),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.88),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.82)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CuteLoadingIndicator(color: Color(0xFFD81B60), size: 26),
-          SLSpacing.w12,
-          Text(
-            'Đang mở kho kỷ niệm...',
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF7C6D83),
+          // Giả lập header ngày
+          const SkeletonContainer.rounded(width: 120, height: 24),
+          const SizedBox(height: 16),
+          // Giả lập lưới ảnh 3 cột
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 9,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemBuilder: (context, index) => const SkeletonContainer.rounded(
+              width: double.infinity,
+              height: double.infinity,
+              borderRadius: BorderRadius.all(Radius.circular(18)),
             ),
           ),
         ],
