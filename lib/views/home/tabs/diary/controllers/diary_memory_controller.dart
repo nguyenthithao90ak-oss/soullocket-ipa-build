@@ -29,6 +29,7 @@ import 'package:soullocket_app/views/home/tabs/diary/controllers/diary_guard_con
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/widgets/cute_loading_indicator.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 typedef DiaryMemoryFlattenedItem = ({
   bool isHeader,
@@ -1501,11 +1502,11 @@ class DiaryMemoryController extends ChangeNotifier {
 
       if (context.mounted) {
         await _restorePendingUploadState();
+        final resolved = AppErrorMapper.resolve(e);
         messenger.showSnackBar(
           SnackBar(
-            content: Text(
-              L10nService().format('diary_memory_upload_error', {'error': e}),
-            ),
+            content: Text(resolved.message),
+            backgroundColor: const Color(0xFFE53935),
           ),
         );
       }
