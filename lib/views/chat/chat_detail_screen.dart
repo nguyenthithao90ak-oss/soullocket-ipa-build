@@ -28,6 +28,8 @@ import '../../utils/rapid_action_feedback_policy.dart';
 import '../../widgets/animated_rabbit_sticker.dart';
 import '../../services/connectivity_service.dart';
 import 'chat_friendly_helper.dart';
+import '../../widgets/skeleton_container.dart';
+
 
 
 part 'chat_detail/chat_detail_helpers_part.dart';
