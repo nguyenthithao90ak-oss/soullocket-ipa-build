@@ -1356,6 +1356,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
         sessionId: sessionId,
         target: 'home_avatar',
         role: role,
+        blurHash: upload?.blurHash,
       );
       await PendingUploadService.instance.clear(pendingKey);
 
