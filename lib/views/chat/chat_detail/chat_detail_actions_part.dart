@@ -117,6 +117,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         _currentRole,
         emoji,
       );
+      HapticFeedback.selectionClick();
       return;
     }
     await _chatService.addReaction(
