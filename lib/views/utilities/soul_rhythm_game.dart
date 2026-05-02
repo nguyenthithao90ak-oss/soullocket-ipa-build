@@ -600,7 +600,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
   Future<void> _initAudio() async {
     await UiPrefs.ensureLoaded();
     await _bgPlayer.setReleaseMode(ReleaseMode.loop);
-    await _bgPlayer.setVolume(0.34);
+    await _bgPlayer.setVolume(0.38);
     _menuLoopBytes = _buildWaveBytes(
       _trackConfig.menuSteps.map(_toneFromSpec).toList(),
       masterGain: _trackConfig.menuGain,
@@ -916,10 +916,10 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     _activeTrack = desiredTrack;
     await _bgPlayer.setVolume(
       desiredTrack == 'custom'
-          ? 0.44
+          ? 0.46
           : desiredTrack == 'game'
-              ? 0.48
-              : 0.36,
+              ? 0.52
+              : 0.38,
     );
     try {
       await _bgPlayer.stop();
@@ -952,11 +952,11 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     if (isPerfect) {
       if (_allowSfx(_lastPerfectSfxUs, 45000)) {
         _lastPerfectSfxUs = _nowUs();
-        unawaited(_playSfx(_perfectTapBytes, volume: 0.48));
+        unawaited(_playSfx(_perfectTapBytes, volume: 0.22));
       }
     } else if (_allowSfx(_lastTapSfxUs, 30000)) {
       _lastTapSfxUs = _nowUs();
-      unawaited(_playSfx(_tapBytes, volume: 0.39));
+      unawaited(_playSfx(_tapBytes, volume: 0.18));
     }
     if (!_touchSoundEnabled) {
       SystemSound.play(SystemSoundType.click);
