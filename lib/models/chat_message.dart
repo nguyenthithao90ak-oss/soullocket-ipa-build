@@ -16,6 +16,7 @@ class ChatMessage {
   final String imageStatus;
   final DateTime? deletedAt;
   final String? deletedReason;
+  final String? blurHash;
 
   ChatMessage({
     required this.id,
@@ -34,6 +35,7 @@ class ChatMessage {
     this.imageStatus = '',
     this.deletedAt,
     this.deletedReason,
+    this.blurHash,
   });
 
   factory ChatMessage.fromMap(String id, Map<dynamic, dynamic> map) {
@@ -67,6 +69,7 @@ class ChatMessage {
           ? DateTime.fromMillisecondsSinceEpoch(map['deletedAt'])
           : null,
       deletedReason: map['deletedReason']?.toString(),
+      blurHash: map['blurHash']?.toString(),
     );
   }
 
@@ -87,6 +90,7 @@ class ChatMessage {
       if (imageStatus.trim().isNotEmpty) 'imageStatus': imageStatus.trim(),
       if (deletedAt != null) 'deletedAt': deletedAt!.millisecondsSinceEpoch,
       if (deletedReason != null) 'deletedReason': deletedReason,
+      if (blurHash != null) 'blurHash': blurHash,
     };
   }
 
