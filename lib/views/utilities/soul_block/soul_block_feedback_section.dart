@@ -136,34 +136,32 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         await _bgmPlayer.pause();
         return;
       }
-      
-      final bool isStopped = _bgmPlayer.state == PlayerState.stopped || _bgmPlayer.state == PlayerState.completed;
-      if (restartIfStopped || isStopped) {
-        await _bgmPlayer.stop();
-        await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
-        await _bgmPlayer.setVolume(0.52);
+      await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+      await _bgmPlayer.setVolume(0.52);
+      if (restartIfStopped) {
         await _bgmPlayer.play(
           AssetSource('audio/soul_block/soul_block_bgm.mp3'),
           volume: 0.52,
         );
-      } else if (_bgmPlayer.state != PlayerState.playing) {
-        await _bgmPlayer.resume();
+        return;
       }
+      await _bgmPlayer.resume();
     } catch (_) {
-      // Fallback: try direct play if resume fails
-      try {
-        await _bgmPlayer.play(
-          AssetSource('audio/soul_block/soul_block_bgm.mp3'),
-          volume: 0.52,
-        );
-      } catch (_) {}
+      if (restartIfStopped) {
+        try {
+          await _bgmPlayer.play(
+            AssetSource('audio/soul_block/soul_block_bgm.mp3'),
+            volume: 0.52,
+          );
+        } catch (_) {}
+      }
     }
   }
 
   Future<void> _syncBgmWithSound({bool restartIfStopped = false}) async {
     try {
       if (_soundEnabled) {
-        await _resumeBgm(restartIfStopped: restartIfStopped);
+        await _resumeBgm(restartIfStopped: true);
       } else {
         await _bgmPlayer.pause();
       }
@@ -268,9 +266,20 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
 
   Future<Uint8List?> _loadAudioAssetBytes(String assetPath) async {
     try {
+      final fileName = p.basename(assetPath);
+      final localPath = await GameDownloadService().getLocalPath('soul_block', fileName);
+      final localFile = File(localPath);
+      
+      if (await localFile.exists()) {
+        debugPrint('Soul Block: Loading SFX from LOCAL: $localPath');
+        return await localFile.readAsBytes();
+      }
+
+      debugPrint('Soul Block: Loading SFX from ASSET: $assetPath');
       final ByteData data = await rootBundle.load(assetPath);
       return data.buffer.asUint8List();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Soul Block: Error loading SFX ($assetPath): $e');
       return null;
     }
   }
