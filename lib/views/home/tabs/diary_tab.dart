@@ -403,6 +403,16 @@ class _DiaryTabState extends State<DiaryTab> {
       showSnackBar: _showDiarySnackBar,
     );
   }
+  Future<void> _downloadSingleImage(String? url) async {
+    final trimmed = url?.trim() ?? '';
+    if (trimmed.isEmpty) return;
+    await _memoryController.downloadSingleImage(
+      context: context,
+      url: trimmed,
+      guardController: _guardController,
+      showSnackBar: _showDiarySnackBar,
+    );
+  }
 
   Future<void> _retryPendingMemoryUpload() async {
     await _memoryController.retryPendingUpload(
