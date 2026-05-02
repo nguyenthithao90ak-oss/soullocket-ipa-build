@@ -802,25 +802,14 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
         '$waitMessage';
   }
 
-  Future<DeviceTrustState> _loadTrustStateWithRetry() async {
-    final first = await DeviceManagerService().getCurrentDeviceTrustState(
-      autoApprove: true,
-    );
-    if (first.isTrusted || first.isPendingApproval || first.isBlocked) {
-      return first;
-    }
-    if (first.exists && first.status != 'unknown') {
-      return first;
-    }
-    return DeviceManagerService().getCurrentDeviceTrustState(autoApprove: true);
-  }
-
   Future<bool> _ensureManagedSharedInfoWriteAccess({
     bool showToast = true,
   }) async {
     if (kIsWeb) return true;
     try {
-      final trustState = await _loadTrustStateWithRetry();
+      final trustState = await DeviceManagerService()
+          .getCurrentDeviceTrustState(autoApprove: true)
+          .timeout(const Duration(seconds: 8));
       if (trustState.isTrusted) {
         if (mounted && _isDevicePending) {
           setState(() {
@@ -880,10 +869,23 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
     }
 
     DeviceTrustState? trustState;
-    var isTrusted = kIsWeb;
+    var isTrusted = true;
     if (!kIsWeb) {
       try {
-        trustState = await _loadTrustStateWithRetry();
+        trustState = await DeviceManagerService()
+            .getCurrentDeviceTrustState(autoApprove: true)
+            .timeout(
+              const Duration(seconds: 8),
+              onTimeout: () => const DeviceTrustState(
+                houseId: '',
+                deviceId: 'unknown',
+                status: 'unknown',
+                firstSeenAtMs: 0,
+                autoApproveAtMs: 0,
+                exists: false,
+                isAdmin: false,
+              ),
+            );
         isTrusted = trustState.isTrusted;
       } catch (error) {
         debugPrint('isCurrentDeviceTrusted failed: $error');
@@ -891,27 +893,13 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
       }
     }
 
-    if (!isTrusted && (trustState?.isPendingApproval ?? false)) {
+    if (!isTrusted) {
       final pendingMessage = _buildManagedPendingDeviceMessage(trustState);
       if (mounted) {
         setState(() {
-          _isDevicePending = true;
+          _isDevicePending = trustState?.isPendingApproval ?? false;
           _devicePendingMessage = pendingMessage;
           _devicePendingUnlockAtMs = trustState?.autoApproveAtMs ?? 0;
-          _isSecurityLocked = false;
-          _isCheckingSecurityLock = false;
-        });
-      }
-      return;
-    }
-
-    if (!isTrusted && (trustState?.isBlocked ?? false)) {
-      final blockedMessage = _buildManagedPendingDeviceMessage(trustState);
-      if (mounted) {
-        setState(() {
-          _isDevicePending = false;
-          _devicePendingMessage = blockedMessage;
-          _devicePendingUnlockAtMs = 0;
           _isSecurityLocked = false;
           _isCheckingSecurityLock = false;
         });

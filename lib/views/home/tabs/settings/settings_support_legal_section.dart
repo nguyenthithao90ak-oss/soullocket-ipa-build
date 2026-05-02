@@ -1,4 +1,4 @@
-﻿part of '../settings_tab.dart';
+part of '../settings_tab.dart';
 
 extension _SettingsTabSupportLegalSection on _SettingsTabState {
   void _openPolicyOverview() {
@@ -50,26 +50,11 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _shareApp() {
-    const String appLink = "https://play.google.com/store/apps/details?id=com.soullocket.app&pcampaignid=web_share";
-    Share.share(
-      "Trải nghiệm SoulLocket - Nhật ký tình yêu cùng mình nhé! 💖\nTải ngay tại: " + appLink,
-      subject: "Chia sẻ ứng dụng SoulLocket",
-    );
+    _showToast('Tính năng chia sẻ đang được cập nhật.', success: true);
   }
 
-  void _rateApp() async {
-    final InAppReview inAppReview = InAppReview.instance;
-    if (await inAppReview.isAvailable()) {
-      inAppReview.requestReview();
-    } else {
-      const String appLink = "https://play.google.com/store/apps/details?id=com.soullocket.app";
-      final Uri url = Uri.parse(appLink);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        _showToast("Không thể mở liên kết đánh giá.", success: false);
-      }
-    }
+  void _rateApp() {
+    _showToast('Tính năng đánh giá đang được cập nhật.', success: true);
   }
 
   Future<void> _openSupportContact() async {
@@ -193,24 +178,120 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _deleteAccount() async {
-    final confirmed = await SLNotice.showConfirmDialog(
+    final houseId = _houseId?.trim();
+    if (houseId != null &&
+        houseId.isNotEmpty &&
+        !await _ensureCanModifySharedInfo()) {
+      return;
+    }
+
+    if (!mounted) return;
+    final canContinue = await _securityFlowGuard.guard(
       context,
-      title: 'Xóa tài khoản',
-      message: 'Bạn có chắc chắn muốn xóa tài khoản? Hành động này sẽ đặt lịch xóa sau 3 ngày và không thể hoàn tác.',
-      confirmText: 'Tiếp tục',
-      cancelText: 'Hủy',
-      isDanger: true,
+      action: SensitiveActionType.deleteAccount,
+      houseId: _houseId,
+    );
+    if (!canContinue) {
+      return;
+    }
+
+    if (!mounted) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: Colors.red, size: 32),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Xóa tài khoản vĩnh viễn',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w900,
+                  color: Colors.red.shade700,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản và toàn bộ dữ liệu cá nhân của mình không?',
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.shade200),
+              ),
+              child: Text(
+                '⚠️ Hành động này KHÔNG THỂ hoàn tác. Toàn bộ dữ liệu cá nhân của bạn sẽ bị xóa sạch khỏi hệ thống. Dữ liệu nhà chung nếu có người kia vẫn còn sẽ không bị ảnh hưởng trực tiếp, nhưng tài khoản của bạn sẽ biến mất hoàn toàn.',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: Colors.red.shade900,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              context.tr('cancel'),
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Đồng ý xóa',
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
 
-    if (confirmed == true) {
+    if (confirm == true) {
+      // Xác nhận thêm lần nữa cho an toàn
       if (!mounted) return;
       final finalConfirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          backgroundColor: Colors.red.shade50,
           title: Row(
             children: [
-              const Icon(Icons.warning_rounded, color: Colors.red, size: 32),
+              const Icon(Icons.dangerous_rounded, color: Colors.red, size: 32),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -272,11 +353,11 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           int days = result['delayDays'] ?? 3;
           SLNotice.showSuccess(
             context,
-            'Yêu cầu thành công. Tài khoản sẽ xóa sau ' + days.toString() + ' ngày.',
+            'Yêu cầu thành công. Tài khoản sẽ xóa sau $days ngày.',
           );
         } catch (e) {
           if (!mounted) return;
-          SLNotice.showError(context, 'Lỗi: ' + e.toString());
+          SLNotice.showError(context, 'Lỗi: $e');
         }
       }
     }
@@ -340,20 +421,6 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             label: context.tr('about_soullocket'),
             color: const Color(0xFF00796B),
             onTap: _openAboutDocument,
-          ),
-          const SizedBox(height: 10),
-          _buildLegalBtn(
-            icon: Icons.share_rounded,
-            label: "Chia sẻ ứng dụng",
-            color: const Color(0xFF673AB7),
-            onTap: _shareApp,
-          ),
-          const SizedBox(height: 10),
-          _buildLegalBtn(
-            icon: Icons.star_rate_rounded,
-            label: "Đánh giá ứng dụng",
-            color: const Color(0xFFFFB300),
-            onTap: _rateApp,
           ),
           TextButton.icon(
             onPressed: _openDeleteAccountRequestPage,

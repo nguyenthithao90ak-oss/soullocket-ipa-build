@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:soullocket_app/utils/services/admob_service.dart';
+import '../../services/admob_service.dart';
 import '../../services/critical_data_sync_service.dart';
 import '../../services/device_manager_service.dart';
 import '../../services/encryption_service.dart';

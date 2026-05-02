@@ -1,4 +1,4 @@
-﻿import 'widgets/utilities_tab_body.dart';
+import 'widgets/utilities_tab_body.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
@@ -9,11 +9,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../models/house_settings.dart';
-import 'package:soullocket_app/utils/services/admob_service.dart';
+import '../../../services/admob_service.dart';
 import '../../../services/house_service.dart';
 import '../../../services/military_lock_service.dart';
 import '../../../services/utility_service.dart';
-import '../../../utils/services/game_data_manager.dart';
 import '../../../services/offline_cache_service.dart';
 import '../../../core/sl_theme.dart';
 import '../../utilities/bucket_list_screen.dart';
@@ -94,27 +93,6 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
   }
 
   // Không khai báo lại dispose() ở dưới nữa
-
-  Future<void> _deleteGame(String id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Xóa dữ liệu'),
-        content: const Text('Bạn có chắc muốn xóa dữ liệu trò chơi này để tiết kiệm dung lượng?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Xóa')),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      await GameDataManager.deleteGameData(id);
-      if (mounted) {
-        SLNotice.showInfo(context, 'Đã xóa dữ liệu game.');
-        setState(() {});
-      }
-    }
-  }
 
   Future<void> _init() async {
     final nextOrder = await _utilityService.getCustomOrder();
@@ -373,7 +351,6 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         onAppTap: _navigateToApp,
         onReorder: _reorderApp,
         onEditModeChanged: _handleEditModeChanged,
-          onDelete: _deleteGame,
       ),
     );
   }
@@ -1048,34 +1025,6 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
   static DateTime? _lastUtilityAdTime;
 
   Future<void> _navigateToApp(String id) async {
-      final isGame = id == 'block_blast' || id == 'soul_rhythm';
-      if (isGame) {
-        final isDownloaded = await GameDataManager.isGameDownloaded(id);
-        if (!isDownloaded) {
-          final confirm = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Tải xuống Game'),
-              content: const Text('Bạn có muốn tải dữ liệu cho trò chơi này không?'),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
-                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Tải ngay')),
-              ],
-            ),
-          );
-          if (confirm == true) {
-            if (mounted) SLNotice.showInfo(context, 'Đang tải dữ liệu...');
-            await Future.delayed(const Duration(seconds: 2));
-            await GameDataManager.markAsDownloaded(id);
-            if (mounted) {
-              SLNotice.showInfo(context, 'Đã tải xong!');
-              setState(() {});
-            }
-          }
-          return;
-        }
-      }
-      
     if (!UtilityService.isUtilityAllowed(id, _relationshipMode)) {
       final blockedMessage =
           UtilityService.blockedMessageForMode(id, _relationshipMode);
@@ -1239,6 +1188,3 @@ class _UtilitySuggestion {
     required this.message,
   });
 }
-
-
-

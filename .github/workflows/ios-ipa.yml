@@ -152,24 +152,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build launcher icons
-        run: dart run flutter_launcher_icons
-
-      - name: Remove iOS app icon alpha channel
-        shell: bash
-        run: |
-          set -euo pipefail
-          find ios/Runner/Assets.xcassets/AppIcon.appiconset -name '*.png' -print0 | while IFS= read -r -d '' icon; do
-            tmp_jpeg="${icon}.opaque.jpg"
-            tmp_png="${icon}.opaque.png"
-            sips -s format jpeg "$icon" --out "$tmp_jpeg"
-            sips -s format png "$tmp_jpeg" --out "$tmp_png"
-            mv "$tmp_png" "$icon"
-            rm -f "$tmp_jpeg"
-          done
-
-      - name: Build native splash
-        run: dart run flutter_native_splash:create
 
       - name: Install CocoaPods
         shell: bash

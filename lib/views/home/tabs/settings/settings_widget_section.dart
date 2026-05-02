@@ -1,4 +1,4 @@
-﻿// ignore_for_file: unused_local_variable, prefer_const_declarations
+// ignore_for_file: unused_local_variable, prefer_const_declarations
 part of '../settings_tab.dart';
 
 // Shell-ready extraction target for shared draft state:
@@ -34,23 +34,23 @@ class _WidgetPanelConfig {
 extension _SettingsTabWidgetSection on _SettingsTabState {
   _WidgetPanelConfig _buildWidgetPanelConfig() {
     final themeOptions = [
-      ('Há»“ng ngá»t', 'pink'),
-      ('Tá»‘i hiá»‡n Ä‘áº¡i', 'dark'),
-      ('Tráº¯ng tinh', 'white'),
+      ('Hồng ngọt', 'pink'),
+      ('Tối hiện đại', 'dark'),
+      ('Trắng tinh', 'white'),
       ('Xanh lam', 'blue'),
-      ('Cam náº¯ng', 'orange'),
-      ('TÃ­m má»™ng', 'purple'),
-      ('Xanh ngá»c', 'green'),
-      ('Äá» Ä‘áº­m', 'red'),
-      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO ðŸ”’', 'premium'),
+      ('Cam nắng', 'orange'),
+      ('Tím mộng', 'purple'),
+      ('Xanh ngọc', 'green'),
+      ('Đỏ đậm', 'red'),
+      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
     ];
     final heartColorOptions = [
-      ('Há»“ng rose', 'rose'),
-      ('Äá» ruby', 'ruby'),
-      ('TÃ­m violet', 'violet'),
+      ('Hồng rose', 'rose'),
+      ('Đỏ ruby', 'ruby'),
+      ('Tím violet', 'violet'),
       ('Xanh ocean', 'ocean'),
       ('Mint', 'mint'),
-      ('HoÃ ng hÃ´n', 'sunset'),
+      ('Hoàng hôn', 'sunset'),
       ('Gold', 'gold'),
     ];
     final previewSizeOptions = _widgetPreviewSizeKeys
@@ -78,7 +78,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         )
         .$1;
     final smartSeasonLabel = smartSeasonKey == 'none'
-        ? 'Tá»± Ä‘á»™ng phá»‘i mÃ u'
+        ? 'Tự động phối màu'
         : WidgetService.seasonLabel(smartSeasonKey);
 
     return _WidgetPanelConfig(
@@ -296,23 +296,23 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
   Widget _buildWidgetPanel({bool hideBackButton = false}) {
     final config = _buildWidgetPanelConfig();
     final themeOptions = [
-      ('Há»“ng ngá»t', 'pink'),
-      ('Tá»‘i hiá»‡n Ä‘áº¡i', 'dark'),
-      ('Tráº¯ng tinh', 'white'),
+      ('Hồng ngọt', 'pink'),
+      ('Tối hiện đại', 'dark'),
+      ('Trắng tinh', 'white'),
       ('Xanh lam', 'blue'),
-      ('Cam náº¯ng', 'orange'),
-      ('TÃ­m má»™ng', 'purple'),
-      ('Xanh ngá»c', 'green'),
-      ('Äá» Ä‘áº­m', 'red'),
-      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO ðŸ”’', 'premium'),
+      ('Cam nắng', 'orange'),
+      ('Tím mộng', 'purple'),
+      ('Xanh ngọc', 'green'),
+      ('Đỏ đậm', 'red'),
+      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
     ];
     final heartColorOptions = [
-      ('Há»“ng rose', 'rose'),
-      ('Äá» ruby', 'ruby'),
-      ('TÃ­m violet', 'violet'),
+      ('Hồng rose', 'rose'),
+      ('Đỏ ruby', 'ruby'),
+      ('Tím violet', 'violet'),
       ('Xanh ocean', 'ocean'),
       ('Mint', 'mint'),
-      ('HoÃ ng hÃ´n', 'sunset'),
+      ('Hoàng hôn', 'sunset'),
       ('Gold', 'gold'),
     ];
     final previewSizeOptions = _widgetPreviewSizeKeys
@@ -340,21 +340,15 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         )
         .$1;
     final smartSeasonLabel = smartSeasonKey == 'none'
-        ? 'Tá»± Ä‘á»™ng phá»‘i mÃ u'
+        ? 'Tự động phối màu'
         : WidgetService.seasonLabel(smartSeasonKey);
 
     Future<void> handlePinWidget() async {
       if (kIsWeb) {
-        _showToast('Widget Android khÃ´ng há»— trá»£ trÃªn Web');
+        _showToast('Widget Android không hỗ trợ trên Web');
         return;
       }
       try {
-        if (Theme.of(context).platform == TargetPlatform.iOS) {
-          await _persistAndSyncWidgetAppearance();
-          if (!mounted) return;
-          _showToast(context.tr('ios_widget_pin_guide'), success: true);
-          return;
-        }
         final supported = await HomeWidget.isRequestPinWidgetSupported();
         if (!mounted) return;
         if (supported != true) {
@@ -367,13 +361,13 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         _showToast(context.tr('widget_pin_req_sent'), success: true);
       } catch (_) {
         if (!mounted) return;
-        _showToast('Lá»—i: KhÃ´ng thá»ƒ ghim widget');
+        _showToast('Lỗi: Không thể ghim widget');
       }
     }
 
     Future<void> handleRefreshWidget() async {
       if (kIsWeb) {
-        _showToast('Widget Android khÃ´ng há»— trá»£ trÃªn Web');
+        _showToast('Widget Android không hỗ trợ trên Web');
         return;
       }
       try {
@@ -382,7 +376,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         _showToast(context.tr('widget_updated_success'), success: true);
       } catch (_) {
         if (!mounted) return;
-        _showToast('Lá»—i: KhÃ´ng thá»ƒ cáº­p nháº­t widget');
+        _showToast('Lỗi: Không thể cập nhật widget');
       }
     }
 
@@ -417,7 +411,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
-                  'Xem trÆ°á»›c widget',
+                  'Xem trước widget',
                   style: SLTheme.quicksand(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w900,
@@ -462,7 +456,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 const SizedBox(height: 12),
                 _buildWidgetSectionCard(
                   icon: Icons.favorite_rounded,
-                  title: 'TrÃ¡i tim vÃ  ná»™i dung',
+                  title: 'Trái tim và nội dung',
                   subtitle: null,
                   iconGradient: const [
                     Color(0xFFFF86A8),
@@ -472,7 +466,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Kiá»ƒu trÃ¡i tim',
+                        'Kiểu trái tim',
                         style: SLTheme.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
@@ -483,7 +477,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                       _buildWidgetHeartStylePicker(),
                       const SizedBox(height: 14),
                       Text(
-                        'MÃ u trÃ¡i tim',
+                        'Màu trái tim',
                         style: SLTheme.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
@@ -549,10 +543,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               if (_widgetPanelTabKey != _widgetPanelTabIconKey)
                 _buildWidgetSectionCard(
                   icon: Icons.add_to_home_screen_rounded,
-                  title: context.tr('home_screen_widget'),
-                  subtitle: Theme.of(context).platform == TargetPlatform.iOS
-                      ? null
-                      : context.tr('add_widget_desc'),
+                  title: context.tr('android_real_widget'),
+                  subtitle: context.tr('add_widget_desc'),
                   iconGradient: const [
                     Color(0xFF14B8A6),
                     Color(0xFF06B6D4),
@@ -560,122 +552,108 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (Theme.of(context).platform != TargetPlatform.iOS) ...[
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final useColumn = constraints.maxWidth < 330;
-                            if (useColumn) {
-                              return Column(
-                                children: [
-                                  _buildGradientBtn(
-                                    label: context.tr('add_widget'),
-                                    gradient: const [
-                                      Color(0xFF10C8E6),
-                                      Color(0xFF0E9EB0),
-                                    ],
-                                    onTap: handlePinWidget,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _buildGradientBtn(
-                                    label: context.tr('update_widget'),
-                                    gradient: const [
-                                      Color(0xFFFF7898),
-                                      Color(0xFFD81B60),
-                                    ],
-                                    onTap: handleRefreshWidget,
-                                  ),
-                                ],
-                              );
-                            }
-
-                            return Row(
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final useColumn = constraints.maxWidth < 330;
+                          if (useColumn) {
+                            return Column(
                               children: [
-                                Expanded(
-                                  child: _buildGradientBtn(
-                                    label: context.tr('add_widget'),
-                                    gradient: const [
-                                      Color(0xFF10C8E6),
-                                      Color(0xFF0E9EB0),
-                                    ],
-                                    onTap: handlePinWidget,
-                                  ),
+                                _buildGradientBtn(
+                                  label: context.tr('add_widget'),
+                                  gradient: const [
+                                    Color(0xFF10C8E6),
+                                    Color(0xFF0E9EB0),
+                                  ],
+                                  onTap: handlePinWidget,
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _buildGradientBtn(
-                                    label: context.tr('update_widget'),
-                                    gradient: const [
-                                      Color(0xFFFF7898),
-                                      Color(0xFFD81B60),
-                                    ],
-                                    onTap: handleRefreshWidget,
-                                  ),
+                                const SizedBox(height: 10),
+                                _buildGradientBtn(
+                                  label: context.tr('update_widget'),
+                                  gradient: const [
+                                    Color(0xFFFF7898),
+                                    Color(0xFFD81B60),
+                                  ],
+                                  onTap: handleRefreshWidget,
                                 ),
                               ],
                             );
-                          },
-                        ),
-                        const SizedBox(height: 14),
-                      ],
+                          }
+
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: _buildGradientBtn(
+                                  label: context.tr('add_widget'),
+                                  gradient: const [
+                                    Color(0xFF10C8E6),
+                                    Color(0xFF0E9EB0),
+                                  ],
+                                  onTap: handlePinWidget,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildGradientBtn(
+                                  label: context.tr('update_widget'),
+                                  gradient: const [
+                                    Color(0xFFFF7898),
+                                    Color(0xFFD81B60),
+                                  ],
+                                  onTap: handleRefreshWidget,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                       if (Theme.of(context).platform == TargetPlatform.iOS) ...[
+                        const SizedBox(height: 12),
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF0F9FF),
+                            color: const Color(0xFFF5FBFF),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFB9E6FE)),
+                            border: Border.all(color: const Color(0xFFCAEAF3)),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                width: 32,
-                                height: 32,
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0EA5E9).withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(10),
+                                  color:
+                                      const Color(0xFF0EA5C6).withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(
                                   Icons.info_outline_rounded,
-                                  color: Color(0xFF0369A1),
-                                  size: 18,
+                                  color: Color(0xFF0B7285),
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'HÆ°á»›ng dáº«n thÃªm Widget',
+                                      context.tr('ios_widget'),
                                       style: SLTheme.quicksand(
-                                        fontSize: 13,
+                                        fontSize: 12.6,
                                         fontWeight: FontWeight.w900,
-                                        color: const Color(0xFF0369A1),
+                                        color: const Color(0xFF0B7285),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       context.tr('ios_widget_pending'),
                                       style: SLTheme.quicksand(
-                                        fontSize: 11.5,
+                                        fontSize: 11.8,
                                         fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF475467),
-                                        height: 1.5,
+                                        color: const Color(0xFF667085),
+                                        height: 1.4,
                                       ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _buildGradientBtn(
-                                      label: 'LÆ°u & Äá»“ng bá»™ cáº¥u hÃ¬nh',
-                                      gradient: const [
-                                        Color(0xFF10C8E6),
-                                        Color(0xFF0E9EB0),
-                                      ],
-                                      onTap: () async {
-                                        await _persistAndSyncWidgetAppearance();
-                                        if (mounted) _showToast('ÄÃ£ Ä‘á»“ng bá»™!', success: true);
-                                      },
                                     ),
                                   ],
                                 ),

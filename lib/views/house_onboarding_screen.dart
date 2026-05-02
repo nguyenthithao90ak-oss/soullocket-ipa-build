@@ -59,6 +59,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   final _houseNameCtrl = TextEditingController();
   final _recoveryACtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  StreamSubscription<User?>? _authSub;
 
   bool _isLoading = false;
   String _mode = 'couple';
@@ -115,6 +116,17 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     }
 
     _hydratePendingSignupDraft();
+    if (widget.autoCreateOnly) {
+      _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+        if (user != null) {
+          _authSub?.cancel();
+          _authSub = null;
+          if (mounted) {
+            _createHouse();
+          }
+        }
+      });
+    }
     _scrollController.addListener(_handleScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scheduleScrollHint();
@@ -240,6 +252,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _scrollHintTimer?.cancel();
     _scrollController.removeListener(_handleScroll);
     _scrollController.dispose();

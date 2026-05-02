@@ -40,17 +40,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
     } catch (_) {}
   }
 
-  void _resolveAllowedAvatarFrameKeyImpl(String frameKey) {
-    // Implement or move existing logic here if found elsewhere
-  }
-
-  String _resolveAllowedAvatarFrameKey(String frameKey) {
-    if (frameKey == 'vip' && !_isVipActive) {
-      return 'classic';
-    }
-    return frameKey;
-  }
-
   void _updateThemeDraft(VoidCallback updateFn) {
     setState(updateFn);
     _applyThemeDraftToUiPrefsPreview();
@@ -1012,7 +1001,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
               .toString()
               .trim();
       final linkedGoogle = await _authService.isGoogleLinkedCurrentUser();
-      final linkedApple = await _authService.isAppleLinkedCurrentUser();
       final linkedPassword = await _authService.isPasswordLinkedCurrentUser();
       final settingsMap =
           Map<dynamic, dynamic>.from(houseMap['settings'] ?? {});
@@ -1060,7 +1048,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
         _housePin = hasHousePinConfigured ? '••••' : '';
         _hasRecoveryAnswer = recoveryAnswerHash.isNotEmpty;
         _googleLinked = linkedGoogle;
-        _appleLinked = linkedApple;
         _passwordLinked = linkedPassword;
         _isMainEmailVerified = currentUser?.emailVerified ?? false;
         _activeRoleKey = currentRole;
