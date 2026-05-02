@@ -661,13 +661,13 @@ class StorageService {
         label: 'Memory finalize response',
       );
       
-      final isOk = result['ok'] == true;
-      final memoryId = result['memoryId']?.toString().trim() ?? '';
+      final isOk = response['ok'] == true;
+      final memoryId = response['memoryId']?.toString().trim() ?? '';
       if (isOk && memoryId.isNotEmpty) {
         debugPrint('✅ UPLOAD THÀNH CÔNG: Memory ID = $memoryId');
       }
       
-      return result;
+      return response;
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
