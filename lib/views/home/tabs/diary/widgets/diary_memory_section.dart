@@ -164,8 +164,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                   connSnapshot.data == ConnectivityResult.none;
 
               if (isOffline && widget.initialMemoriesCache == null) {
-                return _DiaryMemoryErrorState(
-                  icon: Icons.wifi_off_rounded,
+                return DiaryHouseSetupCard(
                   title: 'KHÔNG CÓ KẾT NỐI',
                   message: 'Vui lòng kiểm tra internet để tải kỷ niệm mới nhất.',
                   onRetry: widget.onRetry,
