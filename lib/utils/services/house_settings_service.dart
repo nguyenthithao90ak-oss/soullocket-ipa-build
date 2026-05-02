@@ -25,14 +25,20 @@ class HouseSettingsService {
     final snap = await _dbRef.child('houses/$houseId/settings').get();
     final settings = _asStringDynamicMap(snap.value) ?? {};
     final now = DateTime.now().millisecondsSinceEpoch;
-
-    final isLocked = false;
-    final shouldWarn = false;
+    final cooldownUntil = _readEpochMs(settings['startDateCooldownUntil']);
+    final changedAt = _readEpochMs(settings['startDateChangedAt']);
+    final changeCount = _readEpochMs(settings['startDateChangeCount']) ?? 0;
+    final isLocked = cooldownUntil != null && cooldownUntil > now;
+    final shouldWarn = !isLocked &&
+        changeCount >= 2 &&
+        changedAt != null &&
+        now - changedAt >= 0 &&
+        now - changedAt < startDateChangeCooldown.inMilliseconds;
 
     return {
       'isLocked': isLocked,
       'shouldWarn': shouldWarn,
-      'cooldownUntil': null,
+      'cooldownUntil': cooldownUntil,
     };
   }
 
@@ -449,8 +455,22 @@ class HouseSettingsService {
     final settingsSnap = await _dbRef.child('houses/$houseId/settings').get();
     final settings = _asStringDynamicMap(settingsSnap.value) ?? {};
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    final changeCount = (_readEpochMs(settings['startDateChangeCount']) ?? 0) + 1;
-    final nextCooldownUntil = null;
+    final cooldownUntil = _readEpochMs(settings['startDateCooldownUntil']);
+    if (cooldownUntil != null && cooldownUntil > nowMs) {
+      throw 'Bạn cần chờ đủ 3 ngày mới có thể đổi ngày yêu tiếp.';
+    }
+    final changedAt = _readEpochMs(settings['startDateChangedAt']);
+    final oldChangeCount = _readEpochMs(settings['startDateChangeCount']) ?? 0;
+    final shouldWarn = oldChangeCount >= 2 &&
+        changedAt != null &&
+        nowMs - changedAt >= 0 &&
+        nowMs - changedAt < startDateChangeCooldown.inMilliseconds;
+    if (shouldWarn && !startCooldown) {
+      throw 'Nếu đổi tiếp, bạn cần xác nhận sẽ chờ 3 ngày mới có thể đổi lần sau.';
+    }
+    final changeCount = oldChangeCount + 1;
+    final nextCooldownUntil =
+        startCooldown ? nowMs + startDateChangeCooldown.inMilliseconds : null;
 
     try {
       await _dbRef.update({

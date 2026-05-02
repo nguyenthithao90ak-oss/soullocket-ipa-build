@@ -699,7 +699,7 @@ class DeviceManagerService {
       final ip = data['ip'] as String?;
       if (ip != null && ip.isNotEmpty && ip != 'unknown') {
         final cleanIp = ip.replaceAll('.', '_');
-        // Ban IP trên toàn hệ thống
+        // B?n IP trên toàn hệ thống
         await _db.ref('banned_ips/$cleanIp').set(true);
       }
     }
