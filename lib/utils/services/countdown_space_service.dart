@@ -260,11 +260,29 @@ class CountdownSpaceService {
   }
 
   Future<CountdownSpaceRequestResult> acceptRequest({
-    required CountdownSpaceRequest request,
+    CountdownSpaceRequest? request,
+    String? requestId,
+    required String currentHouseId,
     required String myHouseName,
   }) async {
     try {
-      final spaceId = request.spaceId;
+      CountdownSpaceRequest? finalRequest = request;
+      if (finalRequest == null && requestId != null) {
+        final snap = await _db.ref('countdown_space_requests/$requestId').get();
+        if (snap.exists) {
+          finalRequest = CountdownSpaceRequest.fromMap(_toMap(snap.value));
+        }
+      }
+
+      if (finalRequest == null) {
+        return const CountdownSpaceRequestResult(
+          success: false,
+          message: 'Không tìm thấy yêu cầu ghép nối.',
+        );
+      }
+
+      final spaceId = finalRequest.spaceId;
+
       final updates = <String, dynamic>{};
       updates['countdown_spaces/$spaceId'] = {
         'status': 'active',
@@ -277,10 +295,10 @@ class CountdownSpaceService {
       await _db.ref().update(updates);
 
       await PushNotificationHelper.push(
-        toHouseId: request.fromHouseId,
+        toHouseId: finalRequest.fromHouseId,
         type: 'countdown_space_accepted',
-        from: request.toHouseId,
-        fromId: request.toHouseId,
+        from: finalRequest.toHouseId,
+        fromId: finalRequest.toHouseId,
         fromLabel: myHouseName,
         title: 'Yêu cầu ghép nối được chấp nhận',
         msg: '$myHouseName đã chấp nhận ghép nối không gian đếm với bạn.',
@@ -288,6 +306,7 @@ class CountdownSpaceService {
           'spaceId': spaceId,
         },
       );
+
 
       return const CountdownSpaceRequestResult(
         success: true,
