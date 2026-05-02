@@ -3,53 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
-import '../../../utils/services/game_data_manager.dart';
-import '../../../utils/sl_notice.dart';
 import '../../utilities/block_blast_game.dart';
 import '../../utilities/soul_rhythm_game.dart';
-
-Widget _buildDownloadOverlay(double progress) {
-  return Positioned.fill(
-    child: IgnorePointer(
-      child: Container(
-        color: Colors.black.withOpacity(0.6),
-        child: Center(
-          child: progress <= 0
-              ? const Icon(
-                  Icons.download_rounded,
-                  color: Colors.white,
-                  size: 32,
-                )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 3,
-                        valueColor:
-                            const AlwaysStoppedAnimation<Color>(Colors.white),
-                        backgroundColor: Colors.white24,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${(progress * 100).toInt()}%',
-                      style: SLTheme.quicksand(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-        ),
-      ),
-    ),
-  );
-}
 
 class GameTab extends StatefulWidget {
   const GameTab({super.key});
@@ -64,34 +19,6 @@ class _GameTabState extends State<GameTab> {
   static const AssetImage _soulRhythmIcon =
       AssetImage(GameTab.soulRhythmIconPath);
   bool _didPrecacheSoulRhythmIcon = false;
-  final Map<String, double> _downloadProgress = {};
-
-  Future<void> _deleteGame(String id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Xóa dữ liệu'),
-        content: const Text(
-            'Bạn có chắc muốn xóa dữ liệu trò chơi này để tiết kiệm dung lượng?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Hủy')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Xóa')),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      await GameDataManager.deleteGameData(id);
-      if (mounted) {
-        SLNotice.showInfo(context, 'Đã xóa dữ liệu game.');
-        setState(() {});
-      }
-    }
-  }
 
   @override
   void didChangeDependencies() {
@@ -101,41 +28,7 @@ class _GameTabState extends State<GameTab> {
     precacheImage(_soulRhythmIcon, context);
   }
 
-  void _openSoulGame(BuildContext context) async {
-    const id = 'soul_rhythm';
-    final isDownloaded = await GameDataManager.isGameDownloaded(id);
-    if (!isDownloaded) {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Tải xuống Game'),
-          content: const Text('Bạn có muốn tải dữ liệu cho trò chơi này không?'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Tải ngay')),
-          ],
-        ),
-      );
-      if (confirm == true) {
-        SLNotice.showInfo(context, 'Đang tải dữ liệu...');
-        try {
-          await GameDataManager.downloadGame(
-            id,
-            onProgress: (p) => setState(() => _downloadProgress[id] = p),
-          );
-          SLNotice.showInfo(context, 'Đã tải xong!');
-          if (mounted) {
-            setState(() {
-              _downloadProgress.remove(id);
-            });
-          }
-        } catch (e) {
-          SLNotice.showInfo(context, 'Lỗi tải xuống: $e');
-        }
-      }
-      return;
-    }
-    
+  void _openSoulGame(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -145,40 +38,6 @@ class _GameTabState extends State<GameTab> {
   }
 
   Future<void> _openSoulBlockGame(BuildContext context) async {
-    const id = 'block_blast';
-    final isDownloaded = await GameDataManager.isGameDownloaded(id);
-    if (!isDownloaded) {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Tải xuống Game'),
-          content: const Text('Bạn có muốn tải dữ liệu cho trò chơi này không?'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Tải ngay')),
-          ],
-        ),
-      );
-      if (confirm == true) {
-        SLNotice.showInfo(context, 'Đang tải dữ liệu...');
-        try {
-          await GameDataManager.downloadGame(
-            id,
-            onProgress: (p) => setState(() => _downloadProgress[id] = p),
-          );
-          SLNotice.showInfo(context, 'Đã tải xong!');
-          if (mounted) {
-            setState(() {
-              _downloadProgress.remove(id);
-            });
-          }
-        } catch (e) {
-          SLNotice.showInfo(context, 'Lỗi tải xuống: $e');
-        }
-      }
-      return;
-    }
-    
     final navigator = Navigator.of(context, rootNavigator: true);
     final messenger = ScaffoldMessenger.maybeOf(context);
     try {
@@ -231,36 +90,12 @@ class _GameTabState extends State<GameTab> {
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
                       children: [
-                        FutureBuilder<bool>(
-                          future: GameDataManager.isGameDownloaded('block_blast'),
-                          builder: (context, snapshot) {
-                            final isDownloaded = snapshot.data ?? false;
-                            return GestureDetector(
-                              onLongPress: () => _deleteGame('block_blast'),
-                              child: _SoulBlockCard(
-                                onTap: () => _openSoulBlockGame(context),
-                                isDownloaded: isDownloaded,
-                                downloadProgress:
-                                    _downloadProgress['block_blast'] ?? 0,
-                              ),
-                            );
-                          },
+                        _SoulBlockCard(
+                          onTap: () => _openSoulBlockGame(context),
                         ),
-                        FutureBuilder<bool>(
-                          future: GameDataManager.isGameDownloaded('soul_rhythm'),
-                          builder: (context, snapshot) {
-                            final isDownloaded = snapshot.data ?? false;
-                            return GestureDetector(
-                              onLongPress: () => _deleteGame('soul_rhythm'),
-                              child: _SoulRhythmCard(
-                                imagePath: GameTab.soulRhythmIconPath,
-                                onTap: () => _openSoulGame(context),
-                                isDownloaded: isDownloaded,
-                                downloadProgress:
-                                    _downloadProgress['soul_rhythm'] ?? 0,
-                              ),
-                            );
-                          },
+                        _SoulRhythmCard(
+                          imagePath: GameTab.soulRhythmIconPath,
+                          onTap: () => _openSoulGame(context),
                         ),
                       ],
                     );
@@ -452,14 +287,10 @@ class _SoulRhythmCard extends StatelessWidget {
   const _SoulRhythmCard({
     required this.imagePath,
     required this.onTap,
-    required this.isDownloaded,
-    required this.downloadProgress,
   });
 
   final String imagePath;
   final VoidCallback onTap;
-  final bool isDownloaded;
-  final double downloadProgress;
 
   Widget _buildInstantPlaceholder() {
     return const DecoratedBox(
@@ -515,7 +346,6 @@ class _SoulRhythmCard extends StatelessWidget {
               ),
             ),
           ),
-          if (!isDownloaded) _buildDownloadOverlay(downloadProgress),
         ],
       ),
     );
@@ -525,13 +355,9 @@ class _SoulRhythmCard extends StatelessWidget {
 class _SoulBlockCard extends StatelessWidget {
   const _SoulBlockCard({
     required this.onTap,
-    required this.isDownloaded,
-    required this.downloadProgress,
   });
 
   final VoidCallback onTap;
-  final bool isDownloaded;
-  final double downloadProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -541,14 +367,10 @@ class _SoulBlockCard extends StatelessWidget {
       onTap: onTap,
       borderColor: const Color(0xFFFFC857),
       shadowColor: const Color(0xFF8CFF98),
-      preview: Stack(
-        fit: StackFit.expand,
-        children: [
-          const CustomPaint(
-            painter: _SoulBlockCardPainter(),
-          ),
-          if (!isDownloaded) _buildDownloadOverlay(downloadProgress),
-        ],
+      preview: const SizedBox.expand(
+        child: CustomPaint(
+          painter: _SoulBlockCardPainter(),
+        ),
       ),
     );
   }
@@ -662,8 +484,3 @@ class _SoulBlockCardPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
-
-
-
-

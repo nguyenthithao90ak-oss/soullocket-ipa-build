@@ -13,7 +13,7 @@ import 'admin_support_chat_screen.dart';
 ///
 ///  Chức năng:
 ///  1. Quản lý trạng thái VIP của người dùng (add_vip).
-///  2. Khóa (Ban) người dùng vi phạm (ban_perm, ban_24h, unban).
+///  2. Khóa (B?n) người dùng vi phạm (ban_perm, ban_24h, unban).
 ///  3. Bật/Tắt chế độ bảo trì hệ thống.
 ///  4. Gửi báo cáo / xóa báo cáo (send_report, clear_report).
 ///  5. Theo dõi thông số (houses, reports, social_feed).

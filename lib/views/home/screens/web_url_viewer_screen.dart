@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/utils/services/admob_service.dart';
+import 'package:soullocket_app/services/admob_service.dart';
 import 'package:soullocket_app/utils/web_helpers.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';

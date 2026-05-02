@@ -265,7 +265,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
 
   bool _isRead(_NotifModel n) => _readLocal.contains(n.id) || n.readAt != null;
 
-  bool _isLocked(_NotifModel n) => n.locked;
+  bool _isLocked(_NotifModel n) =>
+      n.locked || _category(n) == _NotifCategory.warning;
 
   _NotifModel? _findNotif(String id) {
     for (final item in _all) {
@@ -483,8 +484,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     }
 
     final result = await _countdownSpaceService.acceptRequest(
-      request: CountdownSpaceRequest.fromMap(notif.raw),
-      myHouseName: _houseName,
+      requestId: requestId,
+      currentHouseId: houseId,
     );
     if (!result.success) {
       _snack(result.message);

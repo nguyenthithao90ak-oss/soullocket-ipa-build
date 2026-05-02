@@ -1,7 +1,6 @@
 import 'soul_rhythm/soul_rhythm_models.dart';
 import 'soul_rhythm/soul_rhythm_painters.dart';
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
@@ -9,8 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../utils/services/game_data_manager.dart';
-import 'package:soullocket_app/utils/services/admob_service.dart';
+import '../../services/admob_service.dart';
 import '../ui_prefs.dart';
 import '../../core/sl_theme.dart';
 import 'soul_rhythm_music_config.dart';
@@ -275,18 +273,6 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
       cacheSize > 0 ? cacheSize : 1,
       const AssetImage(_gameIconPath),
     );
-  }
-
-  Future<Uint8List?> _loadGameFileBytes(String gameId, String fileName) async {
-    try {
-      final path = await GameDataManager.getLocalFilePath(gameId, fileName);
-      if (path != null) {
-        return await File(path).readAsBytes();
-      }
-      return null;
-    } catch (_) {
-      return null;
-    }
   }
 
   Future<void> _primePrefs() async {
@@ -938,15 +924,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     try {
       await _bgPlayer.stop();
       if (desiredTrack == 'custom') {
-        final customPath = await GameDataManager.getLocalFilePath(
-          'soul_rhythm',
-          'AxelF_CrazyFrog_Tutorial.mp3',
-        );
-        if (customPath != null) {
-          await _bgPlayer.play(DeviceFileSource(customPath));
-        } else {
-          await _bgPlayer.play(AssetSource(_customTrackAssetPath));
-        }
+        await _bgPlayer.play(AssetSource(_customTrackAssetPath));
         return;
       }
       await _bgPlayer.play(
@@ -1004,18 +982,14 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
 
   Rect _playAreaRect() {
     final media = MediaQuery.of(context);
-    final size = media.size;
-    if (size.width <= 0 || size.height <= 0) {
-      return const Rect.fromLTWH(0, 0, 360, 640);
-    }
-    final isCompactWidth = size.width < 390;
+    final isCompactWidth = media.size.width < 390;
     final sideInset = isCompactWidth ? 6.0 : 8.0;
     final top = media.padding.top + (isCompactWidth ? 62.0 : 68.0);
-    final bottom = size.height - media.padding.bottom - 14;
+    final bottom = media.size.height - media.padding.bottom - 14;
     return Rect.fromLTWH(
       sideInset,
       top,
-      max(1.0, size.width - (sideInset * 2)),
+      media.size.width - (sideInset * 2),
       max(260.0, bottom - top),
     );
   }

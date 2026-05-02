@@ -514,34 +514,13 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: themeData.foreground,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 40,
-                      ),
-                      iconSize: 22,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Không gian đếm',
-                        style: SLTheme.quicksand(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: themeData.foreground,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  'Không gian đếm',
+                  style: SLTheme.quicksand(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: themeData.foreground,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(

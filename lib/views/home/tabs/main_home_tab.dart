@@ -18,7 +18,6 @@ import '../../chat/messenger_screen.dart';
 import '../../map/map_screen.dart';
 import '../../relationship/couple_connect_screen.dart';
 import '../../relationship/video_call_screen.dart';
-import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -1312,39 +1311,23 @@ class _MainHomeTabState extends State<MainHomeTab> {
     if (!mounted || houseId == null) return;
     if (_uploadingAvatarRole != null) return;
 
-    final role = isUser1 ? 'user1' : 'user2';
     XFile? file;
     try {
-      debugPrint('MainHome: Picking image for $role');
       file = presetFile ?? await _storageService.pickImage();
-      if (file != null && file.path.isNotEmpty) {
-        // Ensure path is valid and accessible on iOS
-        final fileExists = await File(file.path).exists();
-        if (!fileExists) {
-          debugPrint('MainHome: Picked file does not exist at path: ${file.path}');
-          file = null;
-        }
-      }
-      debugPrint('MainHome: Picked file: ${file?.path}');
     } catch (e) {
-      debugPrint('MainHome: Pick image error: $e');
       if (mounted) SLNotice.showInfo(context, 'Lỗi chọn ảnh: $e');
     }
-    if (file == null) {
-      debugPrint('MainHome: No file selected');
-      return;
-    }
+    if (file == null) return;
     if (!mounted) return;
 
+    final role = isUser1 ? 'user1' : 'user2';
     final field = isUser1 ? 'avtUser1' : 'avtUser2';
     final pendingKey = _pendingAvatarUploadKeyForHouse(houseId);
     setState(() => _uploadingAvatarRole = role);
 
     try {
       if (presetFile == null) {
-        debugPrint('MainHome: Cropping image...');
         file = await _cropAvatarImage(file, isUser1: isUser1);
-        debugPrint('MainHome: Cropped file: ${file?.path}');
       }
       if (file == null) {
         return;

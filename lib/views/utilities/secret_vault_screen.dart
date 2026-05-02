@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +8,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soullocket_app/utils/services/admob_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/pending_upload_service.dart';
 import 'package:soullocket_app/utils/services/storage_service.dart';
@@ -498,36 +497,17 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         : StorageService.secretVaultDailyLimitFree;
     const enforceLocalDailyLimit = true;
 
-    if (enforceLocalDailyLimit && uploadedToday >= dailyLimit && !isPro) {
-        final watched = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: const Color(0xFF1F1C2C),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text('Hết lượt đăng ảnh', style: SLTheme.quicksand(fontWeight: FontWeight.w800, color: Colors.white)),
-            content: Text('Bạn đã hết 8 lượt đăng ảnh mật miễn phí hôm nay. Xem 1 quảng cáo để đăng thêm nhé!', style: SLTheme.quicksand(color: Colors.white70)),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Hủy', style: SLTheme.quicksand(color: Colors.white38))),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text('Xem quảng cáo', style: SLTheme.quicksand(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-        ) ?? false;
-        
-        if (watched) {
-          final ok = await AdMobService().showRewardedAd();
-          if (ok) {
-            await prefs.setInt(todayKey, uploadedToday - 5);
-            if (mounted) setState(() {});
-          } else {
-            return;
-          }
-        } else {
-          return;
-        }
+    if (enforceLocalDailyLimit && uploadedToday >= dailyLimit) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isPro
+              ? 'Đã đạt giới hạn $dailyLimit ảnh/ngày của gói PRO.'
+              : 'Đã đạt giới hạn $dailyLimit ảnh/ngày. Nâng cấp PRO để đăng nhiều hơn!'),
+          backgroundColor: Colors.redAccent,
+        ));
       }
+      return;
+    }
 
     final remainingDailySlots = dailyLimit - uploadedToday;
     final pickLimit = StorageService.clampImagePickLimit(
@@ -552,9 +532,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       ));
     }
 
-    if (enforceLocalDailyLimit && uploadedToday + images.length > dailyLimit && !isPro) {
-        // Just let it through if they just watched an ad or only over limit by a bit
-        // or we can just remove this strict block to favor the ad-rewarded flow
+    if (enforceLocalDailyLimit && uploadedToday + images.length > dailyLimit) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Chỉ còn lại ${dailyLimit - uploadedToday} lượt đăng hôm nay. Bạn đã chọn ${images.length} ảnh.'),
+          backgroundColor: Colors.orange,
+        ));
+      }
+      return;
     }
 
     const skipDialogKey = 'secret_vault_skip_dialog_until';
@@ -1505,5 +1491,3 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     );
   }
 }
-
-

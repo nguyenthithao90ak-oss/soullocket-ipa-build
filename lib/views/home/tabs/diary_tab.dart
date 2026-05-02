@@ -14,7 +14,7 @@ import '../../../core/sl_theme.dart';
 import '../../../models/diary_post.dart';
 import '../../../services/interaction_metrics_service.dart';
 import '../../../utils/app_error_mapper.dart';
-import 'package:soullocket_app/utils/services/admob_service.dart';
+import '../../../utils/services/admob_service.dart';
 import '../../../utils/services/memory_share_allowance_service.dart';
 import '../../../utils/services/memory_share_service.dart';
 import '../../../utils/sl_notice.dart';
@@ -286,7 +286,7 @@ class _DiaryTabState extends State<DiaryTab> {
     const options = <({int days, String label, String subtitle})>[
       (days: 7, label: '7 ngày', subtitle: 'Mặc định'),
       (days: 14, label: '14 ngày', subtitle: 'Thêm 1 tuần'),
-      (days: 60, label: '60 ngày', subtitle: 'Khoảng 2 tháng'),
+      (days: 30, label: '30 ngày', subtitle: 'Khoảng 1 tháng'),
       (days: 90, label: '3 tháng', subtitle: 'Giữ lâu hơn'),
       (days: 183, label: '6 tháng', subtitle: 'Tối đa'),
     ];
@@ -299,13 +299,12 @@ class _DiaryTabState extends State<DiaryTab> {
       ),
       builder: (sheetContext) => SafeArea(
         top: false,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
                 'Chọn thời hạn liên kết',
                 style: SLTheme.quicksand(
@@ -354,8 +353,7 @@ class _DiaryTabState extends State<DiaryTab> {
                 if (option != options.last)
                   const Divider(height: 1, color: Color(0xFFE5EAF1)),
               ],
-              ],
-            ),
+            ],
           ),
         ),
       ),

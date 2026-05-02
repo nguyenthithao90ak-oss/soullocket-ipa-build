@@ -16,7 +16,7 @@ import 'dart:async';
 import '../../../widgets/share_bottom_sheet.dart';
 
 import '../../../core/sl_theme.dart';
-import 'package:soullocket_app/utils/services/admob_service.dart';
+import '../../../services/admob_service.dart';
 
 import '../../../services/friends_service.dart';
 import '../../../services/house_service.dart';

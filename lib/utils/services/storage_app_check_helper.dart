@@ -104,8 +104,10 @@ class StorageAppCheckHelper {
     try {
       return await action();
     } on FirebaseFunctionsException catch (error) {
-      final bool isIosInternal = error.code == 'internal' && !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS);
-      if (!isAppCheckFailure(error, allowUnauthenticatedWithoutMarkers: allowUnauthenticatedWithoutMarkers) && !isIosInternal) {
+      if (!isAppCheckFailure(
+        error,
+        allowUnauthenticatedWithoutMarkers: allowUnauthenticatedWithoutMarkers,
+      )) {
         rethrow;
       }
 

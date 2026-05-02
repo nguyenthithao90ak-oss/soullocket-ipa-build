@@ -349,7 +349,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
                         icon: Icons.lock_clock_rounded,
                         title: 'Rạp chưa mở hôm nay',
                         message:
-                            'Rạp chỉ mở khi chạm đúng mốc kỷ niệm như 10 ngày, 60 ngày, 100 ngày, 200 ngày, 300 ngày, 365 ngày và các mốc tiếp theo trong phần Kỷ niệm.',
+                            'Rạp chỉ mở khi chạm đúng mốc kỷ niệm như 10 ngày, 30 ngày, 100 ngày, 200 ngày, 300 ngày, 365 ngày và các mốc tiếp theo trong phần Kỷ niệm.',
                         child: Padding(
                           padding: const EdgeInsets.only(top: 16),
                           child: _buildLockedShowtimeCard(),
