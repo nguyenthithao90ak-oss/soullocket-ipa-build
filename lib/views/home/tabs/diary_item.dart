@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/sl_theme.dart';
 import '../../../../models/diary_post.dart';
 import '../../../../utils/services/l10n_service.dart';
+import '../../../../widgets/skeleton_container.dart';
 
 class DiaryItem extends StatelessWidget {
   final DiaryPost post;
