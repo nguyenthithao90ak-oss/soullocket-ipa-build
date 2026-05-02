@@ -21,8 +21,10 @@ class HouseSettingsService {
     return int.tryParse(raw?.toString() ?? '');
   }
 
+  Future<Map<String, dynamic>> getStartDateChangePolicy(String houseId) async {
     const isLocked = false;
     const shouldWarn = false;
+
 
 
     return {
