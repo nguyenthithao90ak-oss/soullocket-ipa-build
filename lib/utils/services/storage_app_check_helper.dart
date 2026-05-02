@@ -104,11 +104,6 @@ class StorageAppCheckHelper {
     try {
       return await action();
     } on FirebaseFunctionsException catch (error) {
-      // On iOS, App Check often throws INTERNAL or UNKNOWN when it fails silently
-      final bool isInternalIos = error.code == 'internal' && !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS);
-      if (!isAppCheckFailure(error, allowUnauthenticatedWithoutMarkers: allowUnauthenticatedWithoutMarkers) && !isInternalIos) {
-        rethrow;
-      }
       if (!isAppCheckFailure(
         error,
         allowUnauthenticatedWithoutMarkers: allowUnauthenticatedWithoutMarkers,
