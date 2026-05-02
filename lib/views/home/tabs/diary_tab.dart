@@ -354,7 +354,6 @@ class _DiaryTabState extends State<DiaryTab> {
                 if (option != options.last)
                   const Divider(height: 1, color: Color(0xFFE5EAF1)),
               ],
-              ],
             ),
           ),
         ),
