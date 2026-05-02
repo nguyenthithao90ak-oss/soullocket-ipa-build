@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -9,49 +9,47 @@ import '../../utilities/block_blast_game.dart';
 import '../../utilities/soul_rhythm_game.dart';
 
 Widget _buildDownloadOverlay(double progress) {
-    return Positioned.fill(
+  return Positioned.fill(
+    child: IgnorePointer(
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(16),
-        ),
+        color: Colors.black.withOpacity(0.6),
         child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (progress <= 0)
-                const Icon(
+          child: progress <= 0
+              ? const Icon(
                   Icons.download_rounded,
                   color: Colors.white,
                   size: 32,
                 )
-              else ...[
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: CircularProgressIndicator(
-                    value: progress,
-                    strokeWidth: 3,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                    backgroundColor: Colors.white24,
-                  ),
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 3,
+                        valueColor:
+                            const AlwaysStoppedAnimation<Color>(Colors.white),
+                        backgroundColor: Colors.white24,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${(progress * 100).toInt()}%',
+                      style: SLTheme.quicksand(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '${(progress * 100).toInt()}%',
-                  style: SLTheme.quicksand(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ],
-          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
 class GameTab extends StatefulWidget {
   const GameTab({super.key});
@@ -239,13 +237,11 @@ class _GameTabState extends State<GameTab> {
                             final isDownloaded = snapshot.data ?? false;
                             return GestureDetector(
                               onLongPress: () => _deleteGame('block_blast'),
-                              child: Stack(
-                                children: [
-                                  _SoulBlockCard(
-                                    onTap: () => _openSoulBlockGame(context),
-                                  ),
-                                  if (!isDownloaded) _buildDownloadOverlay(_downloadProgress['block_blast'] ?? 0),
-                                ],
+                              child: _SoulBlockCard(
+                                onTap: () => _openSoulBlockGame(context),
+                                isDownloaded: isDownloaded,
+                                downloadProgress:
+                                    _downloadProgress['block_blast'] ?? 0,
                               ),
                             );
                           },
@@ -256,14 +252,12 @@ class _GameTabState extends State<GameTab> {
                             final isDownloaded = snapshot.data ?? false;
                             return GestureDetector(
                               onLongPress: () => _deleteGame('soul_rhythm'),
-                              child: Stack(
-                                children: [
-                                  _SoulRhythmCard(
-                                    imagePath: GameTab.soulRhythmIconPath,
-                                    onTap: () => _openSoulGame(context),
-                                  ),
-                                  if (!isDownloaded) _buildDownloadOverlay(_downloadProgress['soul_rhythm'] ?? 0),
-                                ],
+                              child: _SoulRhythmCard(
+                                imagePath: GameTab.soulRhythmIconPath,
+                                onTap: () => _openSoulGame(context),
+                                isDownloaded: isDownloaded,
+                                downloadProgress:
+                                    _downloadProgress['soul_rhythm'] ?? 0,
                               ),
                             );
                           },
@@ -458,10 +452,14 @@ class _SoulRhythmCard extends StatelessWidget {
   const _SoulRhythmCard({
     required this.imagePath,
     required this.onTap,
+    required this.isDownloaded,
+    required this.downloadProgress,
   });
 
   final String imagePath;
   final VoidCallback onTap;
+  final bool isDownloaded;
+  final double downloadProgress;
 
   Widget _buildInstantPlaceholder() {
     return const DecoratedBox(
@@ -517,6 +515,7 @@ class _SoulRhythmCard extends StatelessWidget {
               ),
             ),
           ),
+          if (!isDownloaded) _buildDownloadOverlay(downloadProgress),
         ],
       ),
     );
@@ -526,9 +525,13 @@ class _SoulRhythmCard extends StatelessWidget {
 class _SoulBlockCard extends StatelessWidget {
   const _SoulBlockCard({
     required this.onTap,
+    required this.isDownloaded,
+    required this.downloadProgress,
   });
 
   final VoidCallback onTap;
+  final bool isDownloaded;
+  final double downloadProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -538,10 +541,14 @@ class _SoulBlockCard extends StatelessWidget {
       onTap: onTap,
       borderColor: const Color(0xFFFFC857),
       shadowColor: const Color(0xFF8CFF98),
-      preview: const SizedBox.expand(
-        child: CustomPaint(
-          painter: _SoulBlockCardPainter(),
-        ),
+      preview: Stack(
+        fit: StackFit.expand,
+        children: [
+          const CustomPaint(
+            painter: _SoulBlockCardPainter(),
+          ),
+          if (!isDownloaded) _buildDownloadOverlay(downloadProgress),
+        ],
       ),
     );
   }
