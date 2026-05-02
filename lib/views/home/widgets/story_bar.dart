@@ -196,10 +196,14 @@ class _StoryBarState extends State<StoryBar> {
               child: Container(color: Colors.black.withOpacity(0.95))),
           Container(
             constraints: const BoxConstraints(maxWidth: 450, maxHeight: 800),
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                  image: CachedNetworkImageProvider(story['url']),
-                  fit: BoxFit.contain),
+            child: CachedNetworkImage(
+              imageUrl: story['url'],
+              fit: BoxFit.contain,
+              placeholder: (context, url) => story['blurHash'] != null
+                  ? BlurHash(hash: story['blurHash'])
+                  : const Center(child: CircularProgressIndicator()),
+              errorWidget: (context, url, error) =>
+                  const Icon(Icons.broken_image, color: Colors.white, size: 50),
             ),
           ),
           Positioned(
