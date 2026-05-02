@@ -1,4 +1,7 @@
-// ignore_for_file: invalid_use_of_protected_member
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/connectivity_service.dart';
+import 'chat_friendly_helper.dart';
 
 part of '../chat_detail_screen.dart';
 
@@ -50,7 +53,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       }
       await _sendChatMessage(text);
       _msgController.clear();
+      HapticFeedback.lightImpact();
     } catch (e) {
+
 
       if (!mounted) return;
       _showChatError(e);
@@ -92,7 +97,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       return;
     }
     await _sendSticker(_quickReactionEmoji);
+    HapticFeedback.mediumImpact();
   }
+
 
   Future<void> _addReaction(String messageId, String emoji) async {
     if (!await SecurityService().guardAction(
@@ -118,7 +125,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       messageId,
       emoji,
     );
+    HapticFeedback.selectionClick();
   }
+
 
   Future<void> _promptPendingChatUploadRetryIfNeeded() async {
     if (_didPromptPendingChatRetry || !mounted) {
@@ -325,8 +334,10 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         return false;
       }
       await _sendChatMessage(sticker, type: 'sticker');
+      HapticFeedback.lightImpact();
       return true;
     } catch (e) {
+
 
       _showChatError(e);
       return false;
