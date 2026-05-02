@@ -1345,7 +1345,8 @@ class DiaryMemoryController extends ChangeNotifier {
     _isUploadingMemories = true;
     notifyListeners();
 
-    final recoverablePaths = await _extractRecoverableImagePaths(images);
+    try {
+      final recoverablePaths = await _extractRecoverableImagePaths(images);
     if (recoverablePaths.isNotEmpty) {
       await _savePendingUploadState(
         houseId: houseId,
