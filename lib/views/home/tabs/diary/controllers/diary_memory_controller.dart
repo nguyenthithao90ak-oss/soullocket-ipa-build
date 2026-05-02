@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart'
     show ChangeNotifier, ValueNotifier, debugPrint, kIsWeb;
@@ -1429,7 +1429,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
       // Ensure Auth is ready and has a fresh token before starting batch upload
       try {
-        final user = guardController.currentUser;
+        final user = await guardController.resolveCurrentUser();
         if (user != null) {
           await user.getIdToken(true);
         }
