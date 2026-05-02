@@ -761,17 +761,20 @@ class _DiaryTabState extends State<DiaryTab> {
                           maxWidth: 900,
                         );
                         return InteractiveViewer(
-                          child: Image(
-                            image: imageProvider,
-                            fit: BoxFit.contain,
-                            width: double.infinity,
-                            height: double.infinity,
-                            filterQuality: FilterQuality.medium,
-                            gaplessPlayback: true,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(
-                              Icons.broken_image,
-                              color: Colors.grey,
+                          child: Hero(
+                            tag: 'memory_image_${initialItem['id']}',
+                            child: Image(
+                              image: imageProvider,
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
+                              filterQuality: FilterQuality.medium,
+                              gaplessPlayback: true,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                Icons.broken_image,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
                         );
