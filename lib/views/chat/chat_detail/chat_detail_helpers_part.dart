@@ -27,6 +27,16 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
         ),
       ),
       _ChatInfoShortcut(
+        id: 'friendly_wishes',
+        icon: Icons.auto_awesome_rounded,
+        title: 'Lời chúc thân thiện',
+        subtitle: 'Gửi nhanh lời chào, lời chúc hoặc động viên',
+        color: const Color(0xFFF472B6),
+        enabled: true,
+        closeDrawerBeforeAction: true,
+        onTap: _sendFriendlyResponse,
+      ),
+      _ChatInfoShortcut(
         id: 'nickname',
         icon: Icons.badge_outlined,
         title: 'Biệt danh',
