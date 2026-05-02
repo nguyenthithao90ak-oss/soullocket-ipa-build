@@ -97,11 +97,15 @@ class DiaryMemoryController extends ChangeNotifier {
   Object? _lastCachedLiveMemoriesSource;
   List<String> _pendingUploadPaths = const <String>[];
   String? _pendingUploadMessage;
+  bool _isUploadingMemories = false;
 
   bool get isSelectionMode => _isSelectionMode;
+  bool get selectedMemoriesCount => _selectedMemories.length;
   Map<String, Map<String, dynamic>> get selectedMemories => _selectedMemories;
   bool get isLoadingMoreMemories => _isLoadingMoreMemories;
-  bool get hasPendingUploadRetry => _pendingUploadPaths.isNotEmpty;
+  bool get isUploadingMemories => _isUploadingMemories;
+  bool get hasPendingUploadRetry =>
+      !_isUploadingMemories && _pendingUploadPaths.isNotEmpty;
   String get pendingUploadMessage =>
       _pendingUploadMessage ??
       'Lần upload Kỷ niệm trước đã bị gián đoạn. Bạn có thể thử lại.';
@@ -1337,6 +1341,9 @@ class DiaryMemoryController extends ChangeNotifier {
       );
       return;
     }
+
+    _isUploadingMemories = true;
+    notifyListeners();
 
     final recoverablePaths = await _extractRecoverableImagePaths(images);
     if (recoverablePaths.isNotEmpty) {
