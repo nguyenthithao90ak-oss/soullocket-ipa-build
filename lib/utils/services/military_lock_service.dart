@@ -515,6 +515,15 @@ class MilitaryLockService {
           attempt: attempt,
           houseId: houseId,
         ),
+        enableBiometrics: wantBiometrics,
+        onBiometricPressed: () async {
+          final bioSuccess = await _authenticateWithDevice(
+            localizedReason: reason,
+          );
+          if (bioSuccess && context.mounted) {
+            Navigator.of(context).pop('');
+          }
+        },
       );
       return pin != null;
     }
