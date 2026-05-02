@@ -110,6 +110,8 @@ dependencies:
   firebase_crashlytics: ^5.2.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  flutter_blurhash: ^0.9.1
+  blurhash: ^1.1.1
 dependency_overrides:
   app_links: 6.3.2
   image_cropper_platform_interface: 7.1.0
