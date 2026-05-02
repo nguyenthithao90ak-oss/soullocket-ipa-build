@@ -240,13 +240,20 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                                 width: effectiveImageSize,
                                 height: effectiveImageSize,
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) => SizedBox(
-                                  width: effectiveImageSize,
-                                  height: effectiveImageSize,
-                                  child: const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                ),
+                                placeholder: (context, url) => msg.blurHash != null
+                                    ? BlurHash(hash: msg.blurHash!)
+                                    : SizedBox(
+                                        width: effectiveImageSize,
+                                        height: effectiveImageSize,
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Color(0xFF0A7CFF)),
+                                          ),
+                                        ),
+                                      ),
                                 errorWidget: (context, url, error) => SizedBox(
                                   width: effectiveImageSize,
                                   height: effectiveImageSize,
