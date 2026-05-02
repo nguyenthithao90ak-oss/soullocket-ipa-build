@@ -151,14 +151,18 @@ class _StoryBarState extends State<StoryBar> {
                     colors: [Colors.purple, Colors.orange, Colors.yellow]),
               ),
               child: Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                  image: DecorationImage(
-                      image: CachedNetworkImageProvider(story['url']),
-                      fit: BoxFit.cover),
+                child: ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: story['url'],
+                    width: 58,
+                    height: 58,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => story['blurHash'] != null
+                        ? BlurHash(hash: story['blurHash'])
+                        : Container(color: Colors.white24),
+                    errorWidget: (context, url, error) =>
+                        const Icon(Icons.broken_image, color: Colors.white30),
+                  ),
                 ),
               ),
             ),
