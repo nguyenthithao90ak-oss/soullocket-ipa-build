@@ -209,8 +209,51 @@ class _DiaryTabLoadingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CuteLoadingIndicator(color: SLColors.primary),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          // Skeleton cho Header
+          const SkeletonContainer.rounded(width: 200, height: 28),
+          const SizedBox(height: 24),
+          // Skeleton cho Tab Switcher
+          const SkeletonContainer.rounded(width: double.infinity, height: 50, borderRadius: BorderRadius.all(Radius.circular(20))),
+          const SizedBox(height: 30),
+          // Danh sách Skeleton Items
+          Expanded(
+            child: ListView.builder(
+              itemCount: 6,
+              itemBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SkeletonContainer.circle(size: 48),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SkeletonContainer.rounded(
+                            width: MediaQuery.of(context).size.width * 0.45,
+                            height: 18,
+                          ),
+                          const SizedBox(height: 10),
+                          const SkeletonContainer.rounded(
+                            width: double.infinity,
+                            height: 100,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
