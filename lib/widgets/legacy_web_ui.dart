@@ -303,7 +303,7 @@ class LegacyWebUi {
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.transparent,
           elevation: 0,
-          margin: const EdgeInsets.fromLTRB(14, 0, 14, 20),
+          margin: const EdgeInsets.fromLTRB(14, 0, 14, 96),
           padding: EdgeInsets.zero,
           duration: Duration(seconds: success ? 3 : 4),
           content: Container(
@@ -388,7 +388,7 @@ class LegacyWebUi {
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.transparent,
           elevation: 0,
-          margin: const EdgeInsets.fromLTRB(14, 0, 14, 20),
+          margin: const EdgeInsets.fromLTRB(14, 0, 14, 96),
           padding: EdgeInsets.zero,
           duration: Duration(seconds: success ? 3 : 8),
           content: Container(
