@@ -404,7 +404,6 @@ class _DiaryTabState extends State<DiaryTab> {
     );
   }
 
-
   Future<void> _retryPendingMemoryUpload() async {
     await _memoryController.retryPendingUpload(
       context: context,
