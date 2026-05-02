@@ -825,9 +825,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             ),
             _buildModernSettingsRow(
               icon: Icons.military_tech_rounded,
-              label: 'Chống nhìn trộm',
+              label: context.tr('military_mode'),
               onTap: () async {
-                final enabledMessage = 'Đã bật chế độ chống nhìn trộm';
+                final enabledMessage = context.tr('military_mode_enabled');
                 final authSuccess = await _authenticateLockSettingsChange();
                 if (!authSuccess) {
                   return;
@@ -854,7 +854,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             Padding(
               padding: const EdgeInsets.only(left: 44, right: 16, bottom: 12),
               child: Text(
-                'Khi thoát ứng dụng (vào đa nhiệm), màn hình sẽ ngay lập tức được che phủ bởi một lớp bảo vệ để ngăn người khác nhìn thấy nội dung riêng tư.',
+                context.tr('military_mode_desc'),
                 style: SLTheme.quicksand(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
