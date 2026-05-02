@@ -307,7 +307,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
   void syncHouseId(String? houseId) {
     final normalized = _normalizeHouseId(houseId);
-    if (_currentHouseId == normalized) {
+    if (_currentHouseId == normalized && _memoriesStream != null) {
       return;
     }
     _currentHouseId = normalized;
