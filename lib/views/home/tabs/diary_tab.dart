@@ -393,10 +393,12 @@ class _DiaryTabState extends State<DiaryTab> {
     );
   }
 
-  Future<void> _downloadSingleImage(String url) async {
+  Future<void> _downloadSingleImage(String? url) async {
+    final trimmed = url?.trim() ?? '';
+    if (trimmed.isEmpty) return;
     await _memoryController.downloadSingleImage(
       context: context,
-      url: url,
+      url: trimmed,
       guardController: _guardController,
       showSnackBar: _showDiarySnackBar,
     );
@@ -934,16 +936,6 @@ class _DiaryTabState extends State<DiaryTab> {
     );
   }
 
-  Future<void> _downloadSingleImage(String? url) async {
-    final trimmed = url?.trim() ?? '';
-    if (trimmed.isEmpty) return;
-    await _memoryController.downloadSingleImage(
-      context: context,
-      url: trimmed,
-      guardController: _guardController,
-      showSnackBar: _showDiarySnackBar,
-    );
-  }
 
   Future<void> _showMemoryInfoSheet(
     BuildContext dialogContext,
