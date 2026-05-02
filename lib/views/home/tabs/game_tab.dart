@@ -88,7 +88,7 @@ class _GameTabState extends State<GameTab> {
                       crossAxisCount: crossAxisCount,
                       crossAxisSpacing: spacing,
                       mainAxisSpacing: spacing + 2,
-                      childAspectRatio: crossAxisCount == 3 ? 0.8 : 0.92,
+                      childAspectRatio: crossAxisCount == 3 ? 0.68 : 0.75,
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
                       children: [
@@ -249,74 +249,56 @@ class _GameLauncherTile extends StatelessWidget {
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: previewSize,
-                  height: previewSize,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(radius),
-                    border: Border.all(
-                      color: borderColor.withOpacity(0.9),
-                      width: 1.4,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: shadowColor.withOpacity(0.22),
-                        blurRadius: 16,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 7),
-                      ),
-                      const BoxShadow(
-                        color: Color.fromRGBO(255, 255, 255, 0.12),
-                        blurRadius: 8,
-                        offset: Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(radius - 1),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
                         preview,
                         const _TileGlossOverlay(),
-                        Positioned(
-                          top: 4,
-                          right: 4,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.black26,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.file_download_outlined,
-                              color: Colors.white,
-                              size: 14,
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 28,
-                  child: Center(
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF6B4A5D),
-                        height: 1.08,
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF4A3440),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                GestureDetector(
+                  onTap: onTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [borderColor, borderColor.withOpacity(0.7)],
                       ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: borderColor.withOpacity(0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.file_download_outlined, color: Colors.white, size: 10),
+                        const SizedBox(width: 4),
+                        Text(
+                          'TẢI XUỐNG',
+                          style: SLTheme.quicksand(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
