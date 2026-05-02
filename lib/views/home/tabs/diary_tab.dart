@@ -899,9 +899,16 @@ class _DiaryTabState extends State<DiaryTab> {
                       ],
                       onSelected: (value) async {
                         switch (value) {
-                          case 'save':
-                            await _downloadSingleImage(currentItem['url']);
-                            break;
+  Future<void> _downloadSingleImage(String? url) async {
+    final trimmed = url?.trim() ?? '';
+    if (trimmed.isEmpty) return;
+    await _memoryController.downloadSingleImage(
+      context: context,
+      url: trimmed,
+      guardController: _guardController,
+      showSnackBar: _showDiarySnackBar,
+    );
+  }
                           case 'share':
                             Navigator.pop(dialogContext);
                             await _shareSingleMemory(currentItem);
