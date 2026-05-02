@@ -15,6 +15,7 @@ import '../../core/sl_theme.dart';
 import '../../services/admob_service.dart';
 import '../../services/house_service.dart';
 import '../premium/premium_store_screen.dart';
+import '../../utils/services/game_download_service.dart';
 
 part 'soul_block/soul_block_panels.dart';
 part 'soul_block/soul_block_refined_panels.dart';
