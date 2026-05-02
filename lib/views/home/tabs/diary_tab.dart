@@ -934,6 +934,17 @@ class _DiaryTabState extends State<DiaryTab> {
     );
   }
 
+  Future<void> _downloadSingleImage(String? url) async {
+    final trimmed = url?.trim() ?? '';
+    if (trimmed.isEmpty) return;
+    await _memoryController.saveSelectedMemories(
+      context: context,
+      guardController: _guardController,
+      showSnackBar: _showDiarySnackBar,
+      presetUrl: trimmed,
+    );
+  }
+
   Future<void> _showMemoryInfoSheet(
     BuildContext dialogContext,
     Map<String, dynamic> item,
