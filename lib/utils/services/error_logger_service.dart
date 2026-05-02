@@ -38,7 +38,7 @@ class ErrorLoggerService {
   }
 
   Future<void> setUserId(String userId) async {
-    await FirebaseCrashlytics.instance.setUserId(userId);
+    await FirebaseCrashlytics.instance.setUserIdentifier(userId);
   }
 
   Future<void> log(String message) async {
