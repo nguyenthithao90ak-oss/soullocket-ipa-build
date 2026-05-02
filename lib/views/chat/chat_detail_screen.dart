@@ -238,9 +238,90 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isCheckingAuth) {
-      return const Scaffold(
-          body: Center(
-              child: CircularProgressIndicator(color: Color(0xFF0A7CFF))));
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Column(
+          children: [
+            // Skeleton Header
+            Container(
+              height: MediaQuery.of(context).padding.top + 74,
+              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 2)),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const SkeletonContainer.circle(size: 32),
+                    const SizedBox(width: 12),
+                    const SkeletonContainer.circle(size: 40),
+                    const SizedBox(width: 12),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        SkeletonContainer.rounded(width: 120, height: 16),
+                        SizedBox(height: 6),
+                        SkeletonContainer.rounded(width: 80, height: 12),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Skeleton Messages
+            Expanded(
+              child: ListView.builder(
+                itemCount: 8,
+                padding: const EdgeInsets.all(16),
+                itemBuilder: (context, index) {
+                  final isMe = index % 2 == 0;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Row(
+                      mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                      children: [
+                        if (!isMe) ...[
+                          const SkeletonContainer.circle(size: 32),
+                          const SizedBox(width: 8),
+                        ],
+                        SkeletonContainer.rounded(
+                          width: MediaQuery.of(context).size.width * 0.6,
+                          height: 44,
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(16),
+                            topRight: const Radius.circular(16),
+                            bottomLeft: Radius.circular(isMe ? 16 : 4),
+                            bottomRight: Radius.circular(isMe ? 4 : 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            // Skeleton Input
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(color: Colors.white),
+              child: Row(
+                children: [
+                  const SkeletonContainer.circle(size: 36),
+                  const SizedBox(width: 12),
+                  const Expanded(child: SkeletonContainer.rounded(height: 40)),
+                  const SizedBox(width: 12),
+                  const SkeletonContainer.circle(size: 36),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     if (!_isAuthenticated) {
