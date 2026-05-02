@@ -1439,7 +1439,9 @@ class DiaryMemoryController extends ChangeNotifier {
             uploadedCount++;
             completedImages.add(batch[index]);
           } else {
-            errorMessages.add(err);
+            // Map technical error to friendly message
+            final resolved = AppErrorMapper.resolve(err);
+            errorMessages.add(resolved.message);
           }
         }
         if (completedImages.isNotEmpty) {
@@ -1463,7 +1465,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
       final failedCount = images.length - uploadedCount;
       final errorMessageStr =
-          errorMessages.isNotEmpty ? '\nLỗi: ${errorMessages.first}' : '';
+          errorMessages.isNotEmpty ? '\nThông báo: ${errorMessages.first}' : '';
 
       if (failedCount <= 0) {
         await _clearPendingUploadState(notify: false);
