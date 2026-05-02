@@ -492,7 +492,7 @@ Future<void> _purgeDeprecatedSecretsDeferred() async {
 
 Future<void> _warmUpOfflineCache() async {
   try {
-    await OfflineCacheService.ensureWarmCache();
+    await OfflineCacheService.initialize();
   } catch (e) {
     debugPrint('Prefs init error: $e');
   }
