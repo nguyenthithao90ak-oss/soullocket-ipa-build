@@ -55,5 +55,6 @@ StorageUploadResult mapSecretVaultStorageUploadResult(
     remainingToday: session['remainingToday'] is num
         ? (session['remainingToday'] as num).toInt()
         : int.tryParse(session['remainingToday']?.toString() ?? ''),
+    blurHash: session['blurHash']?.toString(),
   );
 }
