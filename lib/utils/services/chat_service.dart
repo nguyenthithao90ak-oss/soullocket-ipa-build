@@ -616,6 +616,7 @@ class ChatService {
         if (!isInternal && (targetHouseId ?? '').trim().isNotEmpty)
           'targetHouseId': targetHouseId!.trim(),
         if (isInternal) 'senderRole': senderRole == 'user2' ? 'user2' : 'user1',
+        if (upload.blurHash != null) 'blurHash': upload.blurHash,
       });
     }
 
