@@ -444,6 +444,13 @@ class _CountdownModeIndependentScreenState
                               duration: const Duration(milliseconds: 180),
                               child: Row(
                                 children: [
+                                  _buildActionButton(
+                                    icon: Icons.arrow_back_ios_new_rounded,
+                                    foreground: themeData.foreground,
+                                    isDark: themeData.isDark,
+                                    onTap: () => unawaited(_handleOpenedSpaceBack()),
+                                    tooltip: 'Quay lại',
+                                  ),
                                   const Spacer(),
                                   _buildActionButton(
                                     icon: Icons.settings_rounded,
