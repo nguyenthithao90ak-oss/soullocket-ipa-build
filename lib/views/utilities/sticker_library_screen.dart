@@ -318,19 +318,6 @@ class _StickerLibraryTile extends StatelessWidget {
                     assetPath: assetPath,
                     fit: BoxFit.contain,
                   ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),
-              child: Text(
-                _fileName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w800,
                   color: const Color(0xFF5A6780),
                 ),
               ),
