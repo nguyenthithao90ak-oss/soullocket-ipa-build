@@ -16,19 +16,19 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.13),
-                  Colors.white.withOpacity(0.04),
+                  Colors.white.withOpacity(0.16),
+                  Colors.white.withOpacity(0.02),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withOpacity(0.10)),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.14)),
               boxShadow: [
                 BoxShadow(
-                  color: _SoulRhythmGameState._unityCyan.withOpacity(0.10),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
+                  color: Colors.black.withOpacity(0.24),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
@@ -155,14 +155,14 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.12),
-                Colors.white.withOpacity(0.04),
+                Colors.white.withOpacity(0.15),
+                Colors.white.withOpacity(0.02),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.11)),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withOpacity(0.15)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
