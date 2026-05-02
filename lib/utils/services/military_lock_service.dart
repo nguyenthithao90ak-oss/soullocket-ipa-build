@@ -350,6 +350,7 @@ class MilitaryLockService {
       expectedSecret: expectedSecret,
       reason: resolvedReason,
       houseId: houseId,
+      wantBiometrics: wantBiometrics,
     );
 
     if (pinSuccess && markUnlockedOnSuccess) {
@@ -382,6 +383,7 @@ class MilitaryLockService {
       expectedSecret: expectedSecret,
       reason: 'Nhập mã khóa hiện tại để thay đổi cài đặt bảo mật.',
       houseId: houseId,
+      wantBiometrics: allowBiometrics,
     );
   }
 
@@ -473,6 +475,7 @@ class MilitaryLockService {
     required LockSecretRecord expectedSecret,
     required String reason,
     String? houseId,
+    bool wantBiometrics = false,
   }) async {
     final normalizedExpectedSecret = expectedSecret.secret.trim();
     final bool hashedSecret = _isStoredSha256(normalizedExpectedSecret);
