@@ -163,8 +163,20 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
               final isOffline = connSnapshot.hasData &&
                   connSnapshot.data == ConnectivityResult.none;
 
+              if (isOffline) {
+                return _buildBody(
+                  isOffline: true,
+                  snapshot: null,
+                  cacheSnapshot: null,
+                );
+              }
+
+              if (widget.memoriesStream == null || widget.houseId == null) {
+                return const _DiaryMemoryInlineLoading();
+              }
+
               return StreamBuilder<DatabaseEvent>(
-                stream: isOffline ? null : widget.memoriesStream,
+                stream: widget.memoriesStream,
                 builder: (context, snapshot) {
                   return FutureBuilder<dynamic>(
                     future: widget.memoriesCacheFuture,
