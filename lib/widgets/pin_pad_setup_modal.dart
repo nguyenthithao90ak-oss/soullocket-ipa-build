@@ -1196,11 +1196,13 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
     required BuildContext context,
     required double size,
     IconData? icon,
+    VoidCallback? onTapOverride,
   }) {
     bool isDelete = value == 'delete';
     final onTap = _isInputLocked
         ? null
-        : (isDelete ? _onDeletePressed : () => _onNumberPressed(value));
+        : (onTapOverride ??
+            (isDelete ? _onDeletePressed : () => _onNumberPressed(value)));
 
     return Material(
       color: Colors.transparent,
