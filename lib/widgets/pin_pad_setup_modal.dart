@@ -23,7 +23,10 @@ class PinPadSetupModal extends StatefulWidget {
   final bool enableForgotPin;
   final String? forgotPinHint;
   final Future<bool> Function()? onForgotPin;
+  final bool enableBiometrics;
+  final VoidCallback? onBiometricPressed;
   final Function(String pin) onCompleted;
+
 
   const PinPadSetupModal({
     super.key,
@@ -39,8 +42,11 @@ class PinPadSetupModal extends StatefulWidget {
     this.enableForgotPin = false,
     this.forgotPinHint,
     this.onForgotPin,
+    this.enableBiometrics = false,
+    this.onBiometricPressed,
     required this.onCompleted,
   });
+
 
   static Future<String?> show(
     BuildContext context, {
@@ -56,7 +62,10 @@ class PinPadSetupModal extends StatefulWidget {
     bool enableForgotPin = false,
     String? forgotPinHint,
     Future<bool> Function()? onForgotPin,
+    bool enableBiometrics = false,
+    VoidCallback? onBiometricPressed,
   }) async {
+
     return Navigator.of(context, rootNavigator: true).push<String>(
       PageRouteBuilder<String>(
         opaque: true,
@@ -77,7 +86,10 @@ class PinPadSetupModal extends StatefulWidget {
             enableForgotPin: enableForgotPin,
             forgotPinHint: forgotPinHint,
             onForgotPin: onForgotPin,
+            enableBiometrics: enableBiometrics,
+            onBiometricPressed: onBiometricPressed,
             onCompleted: (pin) => Navigator.of(context).pop(pin),
+
           );
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
