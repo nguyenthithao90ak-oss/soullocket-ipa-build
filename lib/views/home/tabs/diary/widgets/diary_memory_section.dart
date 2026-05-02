@@ -592,10 +592,11 @@ class _DiaryMemoryPhotoRow extends StatelessWidget {
                           gaplessPlayback: true,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              color: Colors.white.withOpacity(0.5),
+                              color: const Color(0xFFF2F2F7),
                               child: const Icon(
-                                Icons.broken_image,
-                                color: SLColors.textTertiary,
+                                Icons.broken_image_outlined,
+                                color: Color(0xFFD1D1D6),
+                                size: 20,
                               ),
                             );
                           },
