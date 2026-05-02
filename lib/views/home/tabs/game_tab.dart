@@ -8,6 +8,7 @@ import '../../utilities/block_blast_game.dart';
 import '../../utilities/soul_rhythm_game.dart';
 import '../../utilities/caro_neon_screen.dart';
 import '../../utilities/heart_catcher_game.dart';
+import '../../../utils/services/game_download_service.dart';
 
 class GameTab extends StatefulWidget {
   const GameTab({super.key});
