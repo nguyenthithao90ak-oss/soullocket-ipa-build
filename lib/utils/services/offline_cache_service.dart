@@ -116,4 +116,14 @@ class OfflineCacheService {
     // we return null for now to avoid blocking, or the caller should use the Future version.
     return null;
   }
+
+  static Future<void> clearAllCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys().where((k) => k.startsWith('offline_cache_'));
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
+    await _database?.close();
+    _database = null;
+  }
 }
