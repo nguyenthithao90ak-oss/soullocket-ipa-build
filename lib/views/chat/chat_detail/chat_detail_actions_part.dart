@@ -630,4 +630,23 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       throw Exception('Không thể xóa file nền chat cũ trên Firebase Storage.');
     }
   }
+
+  Future<void> _sendFriendlyResponse() async {
+    final response = ChatFriendlyHelper.getFriendlyResponse(
+      isOffline: !ConnectivityService().isOnline,
+    );
+    
+    if (!ConnectivityService().isOnline) {
+      _showNotice(response);
+      return;
+    }
+
+    try {
+      await _sendChatMessage(response);
+      _showNotice('Đã gửi lời chúc thân thiện! ✨');
+    } catch (e) {
+      _showChatError(e);
+    }
+  }
 }
+
