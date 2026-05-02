@@ -86,103 +86,53 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           _buildSecurityCard(
             title: 'Thông tin đăng nhập riêng tư',
             subtitle:
-                'Sử dụng tài khoản Google hoặc email để đăng nhập an toàn.',
+                'Thông tin tài khoản dùng để đăng nhập và khôi phục khi cần thiết.',
             borderColor: const Color(0xFFF0D6DF),
             backgroundColor: Colors.white,
             children: [
-              _buildSecurityLine(
-                label: 'Email',
+              // --- EMAIL CHÍNH ---
+              _buildModernIdentityTile(
+                icon: Icons.email_rounded,
+                label: 'Email chính',
                 value: _securityEmail.isEmpty
                     ? 'Chưa có dữ liệu'
                     : _authService.maskEmail(_securityEmail),
-                trailing: _buildSecurityBadge(
-                  _isMainEmailVerified ? 'Đã xác thực' : 'Chưa xác thực',
-                  background: _isMainEmailVerified
-                      ? const Color(0xFFE8F5E9)
-                      : const Color(0xFFFFCC80),
-                  foreground: _isMainEmailVerified
-                      ? const Color(0xFF2E7D32)
-                      : const Color(0xFFF57C00),
-                ),
+                isVerified: _isMainEmailVerified,
+                onAction: !_isMainEmailVerified && _emailVerifyWaitSeconds <= 0
+                    ? _sendVerificationEmail
+                    : null,
+                actionLabel: _emailVerifyWaitSeconds > 0
+                    ? 'Thử lại sau ${_emailVerifyWaitSeconds}s'
+                    : 'Xác thực',
+                onSecondaryAction: !_isMainEmailVerified ? _changePrimaryEmailV2 : null,
+                secondaryActionLabel: 'Đổi email',
               ),
-              SLSpacing.h8,
-              Row(
-                children: [
-                  if (!_isMainEmailVerified) ...[
-                    Expanded(
-                      child: _buildSecurityInlineButton(
-                        label: 'Đổi email khác',
-                        gradient: const [Color(0xFFFF5B5B), Color(0xFFFF7043)],
-                        onTap: _changePrimaryEmailV2,
-                      ),
-                    ),
-                    SLSpacing.w8,
-                  ],
-                  Expanded(
-                    child: _buildSecurityInlineButton(
-                      label: _isMainEmailVerified
-                          ? 'Đã xác thực'
-                          : (_emailVerifyWaitSeconds > 0
-                              ? 'Thử lại sau ${_emailVerifyWaitSeconds}s'
-                              : 'Xác thực ngay'),
-                      gradient: _isMainEmailVerified
-                          ? const [Color(0xFFA5D6A7), Color(0xFF66BB6A)]
-                          : const [Color(0xFFFFC107), Color(0xFFFF9800)],
-                      textColor:
-                          _isMainEmailVerified ? Colors.white : Colors.black87,
-                      onTap: _isMainEmailVerified
-                          ? () => _showToast('Email này đã được xác thực rồi')
-                          : (_emailVerifyWaitSeconds > 0
-                              ? null
-                              : _sendVerificationEmail),
-                    ),
-                  ),
-                ],
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Divider(height: 1),
-              ),
-              _buildSecurityLine(
-                label: 'Email phụ',
+              SLSpacing.h12,
+              // --- EMAIL PHỤ ---
+              _buildModernIdentityTile(
+                icon: Icons.mark_email_read_rounded,
+                label: 'Email dự phòng',
                 value: _secondaryEmail.isEmpty
                     ? 'Chưa thiết lập'
                     : _authService.maskEmail(_secondaryEmail),
-                trailing: _buildSecurityBadge(
-                  _secondaryEmail.isEmpty ? 'Trống' : 'Đã có',
-                  background: _secondaryEmail.isEmpty
-                      ? const Color(0xFFF3E5F5)
-                      : const Color(0xFFB39DDB),
-                  foreground: const Color(0xFF6A1B9A),
-                ),
+                isVerified: _secondaryEmail.isNotEmpty,
+                onAction: () => _showSecondaryEmailModal(), // Sử dụng modal thay vì input inline dài dòng
+                actionLabel: _secondaryEmail.isEmpty ? 'Thêm ngay' : 'Thay đổi',
+                statusLabel: _secondaryEmail.isEmpty ? 'Trống' : 'An toàn',
+                accentColor: const Color(0xFF9C27B0),
               ),
-              SLSpacing.h8,
-              _buildInput(
-                  _secondaryEmailCtrl, 'Nhập email phụ / email dự phòng'),
-              _buildSecurityInlineButton(
-                label:
-                    _secondaryEmail.isEmpty ? 'Thêm email phụ' : 'Thêm / đổi',
-                gradient: const [Color(0xFF8E24AA), Color(0xFF6A1B9A)],
-                onTap: _saveSecondaryEmail,
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Divider(height: 1),
-              ),
-              _buildGradientBtn(
-                label: _isLinkingGoogle
-                    ? 'ĐANG LIÊN KẾT GOOGLE...'
-                    : (_googleLinked
-                        ? 'ĐÃ LIÊN KẾT GOOGLE'
-                        : 'LIÊN KẾT GOOGLE'),
-                gradient: _googleLinked
-                    ? const [Color(0xFF43A047), Color(0xFF2E7D32)]
-                    : const [Color(0xFFEF5350), Color(0xFFD84315)],
-                onTap: _isLinkingGoogle
-                    ? () {}
-                    : (_googleLinked
-                        ? () => _showToast('Tài khoản đã liên kết Google.')
-                        : _linkGoogleAccount),
+              SLSpacing.h12,
+              // --- LIÊN KẾT GOOGLE ---
+              _buildModernIdentityTile(
+                icon: Icons.account_circle_rounded,
+                label: 'Tài khoản Google',
+                value: _googleLinked ? 'Đã liên kết' : 'Chưa liên kết',
+                isVerified: _googleLinked,
+                onAction: _googleLinked ? null : _linkGoogleAccount,
+                actionLabel: 'Liên kết',
+                isLoading: _isLinkingGoogle,
+                accentColor: const Color(0xFFEA4335),
+                showCheckmark: _googleLinked,
               ),
             ],
           ),
