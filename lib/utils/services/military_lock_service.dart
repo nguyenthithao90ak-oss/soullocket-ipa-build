@@ -409,7 +409,7 @@ class MilitaryLockService {
             goToSettingsButton: 'Mở cài đặt',
             goToSettingsDescription:
                 'Hãy bật Face ID hoặc Touch ID cho SoulLocket trong phần cài đặt iPhone.',
-            cancelButton: 'Hủy',
+            cancelButton: 'Dùng mã PIN',
           ),
         ],
         options: const AuthenticationOptions(
@@ -439,7 +439,7 @@ class MilitaryLockService {
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
             signInTitle: 'Xác thực sinh trắc học',
-            cancelButton: 'Dùng mật khẩu',
+            cancelButton: 'Dùng mã PIN',
             biometricHint: 'Chạm cảm biến hoặc nhìn vào camera',
             biometricNotRecognized: 'Không nhận diện được. Vui lòng thử lại.',
             biometricSuccess: 'Xác thực thành công!',
@@ -449,7 +449,7 @@ class MilitaryLockService {
             goToSettingsButton: 'Mở cài đặt',
             goToSettingsDescription:
                 'Hãy bật Face ID hoặc Touch ID cho SoulLocket trong phần cài đặt iPhone.',
-            cancelButton: 'Dùng mật khẩu',
+            cancelButton: 'Dùng mã PIN',
           ),
         ],
         options: const AuthenticationOptions(
