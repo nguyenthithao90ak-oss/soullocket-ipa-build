@@ -642,7 +642,7 @@ class StorageService {
     String? blurHash,
   }) async {
     try {
-      return _finalizeHelper.finalizeUpload(
+      final response = await _finalizeHelper.finalizeUpload(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
           () => _functions.httpsCallable(name).call(payload),
           allowUnauthenticatedWithoutMarkers: true,
