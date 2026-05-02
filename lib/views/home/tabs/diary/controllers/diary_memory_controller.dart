@@ -1347,53 +1347,52 @@ class DiaryMemoryController extends ChangeNotifier {
 
     try {
       final recoverablePaths = await _extractRecoverableImagePaths(images);
-    if (recoverablePaths.isNotEmpty) {
-      await _savePendingUploadState(
-        houseId: houseId,
-        paths: recoverablePaths,
-        message: presetImages == null
-            ? 'Nếu app bị tắt giữa chừng, bạn có thể thử lại upload Kỷ niệm.'
-            : 'Đang thử lại ảnh Kỷ niệm chưa tải xong.',
-      );
-    } else if (presetImages != null) {
-      await _clearPendingUploadState();
-    }
+      if (recoverablePaths.isNotEmpty) {
+        await _savePendingUploadState(
+          houseId: houseId,
+          paths: recoverablePaths,
+          message: presetImages == null
+              ? 'Nếu app bị tắt giữa chừng, bạn có thể thử lại upload Kỷ niệm.'
+              : 'Đang thử lại ảnh Kỷ niệm chưa tải xong.',
+        );
+      } else if (presetImages != null) {
+        await _clearPendingUploadState();
+      }
 
-    // Sau khi user chọn ảnh: resolve user + location song song
-    Future<Position?> locationFuture = Future.value(null);
-    if (!kIsWeb) {
-      locationFuture =
-          Geolocator.isLocationServiceEnabled().then((enabled) async {
-        if (!enabled) return null;
-        final permission = await Geolocator.checkPermission();
-        if (permission != LocationPermission.always &&
-            permission != LocationPermission.whileInUse) {
-          return null;
-        }
-        return Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.low,
-        ).timeout(const Duration(seconds: 1));
-      }).catchError((_) => null as Position?);
-    }
+      // Sau khi user chọn ảnh: resolve user + location song song
+      Future<Position?> locationFuture = Future.value(null);
+      if (!kIsWeb) {
+        locationFuture =
+            Geolocator.isLocationServiceEnabled().then((enabled) async {
+          if (!enabled) return null;
+          final permission = await Geolocator.checkPermission();
+          if (permission != LocationPermission.always &&
+              permission != LocationPermission.whileInUse) {
+            return null;
+          }
+          return Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.low,
+          ).timeout(const Duration(seconds: 1));
+        }).catchError((_) => null as Position?);
+      }
 
-    final postPickResults = await Future.wait([
-      guardController.resolveCurrentUser(),
-      locationFuture,
-    ]);
+      final postPickResults = await Future.wait([
+        guardController.resolveCurrentUser(),
+        locationFuture,
+      ]);
 
-    final user = postPickResults[0] as User?;
-    if (user == null) {
-      showSnackBar(
-        L10nService()
-            .translate('Phiên đăng nhập chưa sẵn sàng. Vui lòng thử lại.'),
-        backgroundColor: const Color(0xFFE53935),
-      );
-      return;
-    }
+      final user = postPickResults[0] as User?;
+      if (user == null) {
+        showSnackBar(
+          L10nService()
+              .translate('Phiên đăng nhập chưa sẵn sàng. Vui lòng thử lại.'),
+          backgroundColor: const Color(0xFFE53935),
+        );
+        return;
+      }
 
-
-    try {
       final authorName = await feedController.resolveCurrentAuthorName(user);
+
       final authorEmail = user.email?.trim().toLowerCase() ?? '';
       final authorRole = feedController.currentAuthorRole;
 
@@ -1496,24 +1495,24 @@ class DiaryMemoryController extends ChangeNotifier {
           ),
         ),
       );
-    } catch (e) {
-      if (!context.mounted) {
-        return;
       }
-      await _restorePendingUploadState();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            L10nService().format('diary_memory_upload_error', {'error': e}),
+    } catch (e) {
+      if (context.mounted) {
+        await _restorePendingUploadState();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              L10nService().format('diary_memory_upload_error', {'error': e}),
+            ),
           ),
-        ),
-      );
+        );
       }
     } finally {
       _isUploadingMemories = false;
       notifyListeners();
     }
   }
+
 
 
   Future<void> _saveMemoryBytesToGallery(
