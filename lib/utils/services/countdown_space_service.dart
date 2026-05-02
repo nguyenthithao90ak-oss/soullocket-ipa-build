@@ -287,9 +287,9 @@ class CountdownSpaceService {
       updates['countdown_spaces/$spaceId'] = {
         'status': 'active',
         'updatedAt': ServerValue.timestamp,
-        'snapshot': request.snapshot,
+        'snapshot': finalRequest.snapshot,
       };
-      updates['countdown_space_requests/${request.requestId}/status'] =
+      updates['countdown_space_requests/${finalRequest.requestId}/status'] =
           'accepted';
 
       await _db.ref().update(updates);
