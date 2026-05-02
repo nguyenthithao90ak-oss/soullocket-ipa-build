@@ -247,7 +247,7 @@ class StorageService {
     required String fileName,
   }) async {
     try {
-      return _uploadSessionHelper.createUploadSession(
+      return await _uploadSessionHelper.createUploadSession(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
           () => _functions.httpsCallable(name).call(payload),
           allowUnauthenticatedWithoutMarkers: true,
@@ -308,7 +308,7 @@ class StorageService {
     String? targetHouseId,
   }) async {
     try {
-      return _uploadSessionHelper.createUploadSession(
+      return await _uploadSessionHelper.createUploadSession(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
           () => _functions.httpsCallable(name).call(payload),
           allowUnauthenticatedWithoutMarkers: true,
@@ -381,7 +381,7 @@ class StorageService {
     required String fileName,
   }) async {
     try {
-      return _uploadSessionHelper.createUploadSession(
+      return await _uploadSessionHelper.createUploadSession(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
           () => _functions.httpsCallable(name).call(payload),
           allowUnauthenticatedWithoutMarkers: true,
@@ -434,7 +434,7 @@ class StorageService {
     required String fileName,
   }) async {
     try {
-      return _uploadSessionHelper.createUploadSession(
+      return await _uploadSessionHelper.createUploadSession(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
           () => _functions.httpsCallable(name).call(payload),
           allowUnauthenticatedWithoutMarkers: true,
@@ -523,7 +523,7 @@ class StorageService {
     required String fileName,
   }) async {
     try {
-      return _uploadSessionHelper.createUploadSession(
+      return await _uploadSessionHelper.createUploadSession(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
           () => _functions.httpsCallable(name).call(payload),
           allowUnauthenticatedWithoutMarkers: true,
@@ -581,7 +581,7 @@ class StorageService {
     String type = 'image',
   }) async {
     try {
-      return _finalizeHelper.finalizeUpload(
+      return await _finalizeHelper.finalizeUpload(
         invokeCallable: (name, payload) =>
             _functions.httpsCallable(name).call(payload),
         functionName: 'finalizeAlbumImageUpload',
@@ -639,7 +639,7 @@ class StorageService {
     double? lng,
   }) async {
     try {
-      return _finalizeHelper.finalizeUpload(
+      return await _finalizeHelper.finalizeUpload(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
           () => _functions.httpsCallable(name).call(payload),
           allowUnauthenticatedWithoutMarkers: true,
@@ -891,7 +891,7 @@ class StorageService {
     bool flagged = false,
   }) async {
     try {
-      return _finalizeHelper.finalizeUpload(
+      return await _finalizeHelper.finalizeUpload(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
           () => _functions.httpsCallable(name).call(payload),
           allowUnauthenticatedWithoutMarkers: true,
