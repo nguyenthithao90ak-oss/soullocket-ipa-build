@@ -175,6 +175,16 @@ class _GameHeader extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đang tối ưu và giải phóng dữ liệu game...')),
+                  );
+                },
+                icon: const Icon(Icons.cloud_download_outlined, color: Color(0xFFE91E63), size: 20),
+                tooltip: 'Tải dữ liệu game',
+              ),
               const SizedBox(width: 96),
             ],
           ),
