@@ -61,6 +61,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   String? _lastUserId;
   Future<AppEntryAccessState>? _accessStateFuture;
   AppEntryAccessState? _initialAccessState;
+  OverlayEntry? _privacyGuardEntry;
 
   @override
   void initState() {
@@ -346,7 +347,42 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _maintenanceSub?.cancel();
     _appEntryController.dispose();
+    _removePrivacyGuard();
     super.dispose();
+  }
+
+  void _showPrivacyGuard() {
+    if (_privacyGuardEntry != null || !mounted) return;
+    final overlay = Overlay.of(context);
+    _privacyGuardEntry = OverlayEntry(
+      builder: (context) => Container(
+        color: Colors.black,
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.security_rounded, color: Colors.white, size: 64),
+              SizedBox(height: 16),
+              Text(
+                'Chống nhìn trộm đang bật',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    overlay.insert(_privacyGuardEntry!);
+  }
+
+  void _removePrivacyGuard() {
+    _privacyGuardEntry?.remove();
+    _privacyGuardEntry = null;
   }
 
   @override
@@ -362,6 +398,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
 
     if (state == AppLifecycleState.resumed) {
+      _removePrivacyGuard();
       if (_appEntryController.hasPendingResume) {
         unawaited(_handleAppResumed());
       } else {
@@ -371,14 +408,24 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
 
     if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.inactive) {
       if (MilitaryLockService.isAuthenticatingBiometrics) return;
-      unawaited(
-        _appEntryController.handleAppBackgrounded(
-          keepPresenceOnline:
-              AppLifecyclePresenceGuard.shouldKeepPresenceOnline,
-        ),
-      );
+
+      unawaited(() async {
+        if (await MilitaryLockService().isMilitaryModeEnabled()) {
+          _showPrivacyGuard();
+        }
+      }());
+
+      if (state != AppLifecycleState.inactive) {
+        unawaited(
+          _appEntryController.handleAppBackgrounded(
+            keepPresenceOnline:
+                AppLifecyclePresenceGuard.shouldKeepPresenceOnline,
+          ),
+        );
+      }
     }
   }
 
