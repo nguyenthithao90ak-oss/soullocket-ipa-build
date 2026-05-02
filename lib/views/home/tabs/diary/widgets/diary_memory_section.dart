@@ -574,6 +574,16 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 10),
       child: Row(
+        children: List.generate(3, (colIndex) {
+          if (colIndex >= widget.rowPhotos.length) {
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: colIndex < 2 ? 8.0 : 10.0),
+                child: const AspectRatio(aspectRatio: 1.0),
+              ),
+            );
+          }
+
           final photo = widget.rowPhotos[colIndex];
           final imageProvider = _DiaryMemoryImageProviders.thumbnail(
             (photo['url']?.toString() ?? '').trim(),
