@@ -1507,8 +1507,13 @@ class DiaryMemoryController extends ChangeNotifier {
           ),
         ),
       );
+      }
+    } finally {
+      _isUploadingMemories = false;
+      notifyListeners();
     }
   }
+
 
   Future<void> _saveMemoryBytesToGallery(
     Uint8List bytes, {
