@@ -1,8 +1,3 @@
-import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../services/connectivity_service.dart';
-import '../chat_friendly_helper.dart';
-
 part of '../chat_detail_screen.dart';
 
 
