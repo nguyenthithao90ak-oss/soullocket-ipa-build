@@ -1,7 +1,9 @@
-import 'dart:async';
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class OfflineCacheService {
   static final OfflineCacheService instance = OfflineCacheService._internal();
@@ -82,5 +84,29 @@ class OfflineCacheService {
     } else {
       await db.delete(table);
     }
+  }
+
+  // Legacy compatibility methods for current controllers
+  static Future<void> saveCache(String key, dynamic data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('offline_cache_$key', jsonEncode(data));
+  }
+
+  static Future<dynamic> loadCache(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('offline_cache_$key');
+    if (raw == null) return null;
+    try {
+      return jsonDecode(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static dynamic loadCacheSync(String key) {
+    // Note: This is a fake sync implementation using a memory cache or similar if needed.
+    // Since SharedPreferences doesn't support sync reading easily without a previous load,
+    // we return null for now to avoid blocking, or the caller should use the Future version.
+    return null;
   }
 }
