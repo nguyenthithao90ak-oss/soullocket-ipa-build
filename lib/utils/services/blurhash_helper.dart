@@ -23,7 +23,7 @@ class BlurHashHelper {
       if (image == null) return null;
 
       // 3. Generate BlurHash
-      final String hash = await BlurHash.encode(image, 4, 3);
+      final String hash = await BlurHash.encode(image.getBytes(), 4, 3);
       return hash;
     } catch (e) {
       print('Error generating BlurHash: $e');
@@ -40,7 +40,7 @@ class BlurHashHelper {
       // Resize for performance if needed
       final img.Image smallImage = img.copyResize(image, width: 32, height: 32);
       
-      final String hash = await BlurHash.encode(smallImage, 4, 3);
+      final String hash = await BlurHash.encode(smallImage.getBytes(), 4, 3);
       return hash;
     } catch (e) {
       print('Error generating BlurHash from bytes: $e');
