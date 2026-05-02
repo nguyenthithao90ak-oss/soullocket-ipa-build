@@ -1167,7 +1167,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
       Map<String, dynamic>? finalized;
       Object? lastError;
-      for (var attempt = 0; attempt < 2; attempt++) {
+      for (var attempt = 0; attempt < 3; attempt++) {
         try {
           finalized = await _storageService.finalizeMemoryImageUpload(
             houseId: houseId,
@@ -1181,8 +1181,22 @@ class DiaryMemoryController extends ChangeNotifier {
           break;
         } catch (error) {
           lastError = error;
-          if (attempt == 0) {
-            await Future<void>.delayed(const Duration(milliseconds: 450));
+          
+          final errStr = error.toString().toLowerCase();
+          final isUnauthenticated = errStr.contains('unauthenticated') || errStr.contains('401');
+          
+          if (isUnauthenticated) {
+             try {
+               final user = FirebaseAuth.instance.currentUser;
+               if (user != null) {
+                 await user.getIdToken(true);
+                 debugPrint('Refreshed token after unauthenticated error in finalize.');
+               }
+             } catch (_) {}
+          }
+
+          if (attempt < 2) {
+            await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
             continue;
           }
         }
