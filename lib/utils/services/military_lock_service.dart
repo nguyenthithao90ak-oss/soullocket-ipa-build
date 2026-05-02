@@ -414,7 +414,9 @@ class MilitaryLockService {
         ],
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false,
+          biometricOnly: true,
+          useErrorDialogs: true,
+
         ),
       );
     } catch (e) {
