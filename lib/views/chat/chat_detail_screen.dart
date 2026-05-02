@@ -391,7 +391,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 children: [
                   const SkeletonContainer.circle(size: 36),
                   const SizedBox(width: 12),
-                  const Expanded(child: SkeletonContainer.rounded(height: 40)),
+                  const Expanded(child: SkeletonContainer.rounded(width: double.infinity, height: 40)),
                   const SizedBox(width: 12),
                   const SkeletonContainer.circle(size: 36),
                 ],
