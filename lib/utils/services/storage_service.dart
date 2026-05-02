@@ -579,6 +579,7 @@ class StorageService {
     String caption = '',
     String thumbUrl = '',
     String type = 'image',
+    String? blurHash,
   }) async {
     try {
       return _finalizeHelper.finalizeUpload(
@@ -593,6 +594,7 @@ class StorageService {
           'caption': caption.trim(),
           'thumbUrl': thumbUrl.trim(),
           'type': type.trim(),
+          if (blurHash != null) 'blurHash': blurHash,
         },
         label: 'Album finalize response',
       );
@@ -637,6 +639,7 @@ class StorageService {
     required String authorRole,
     double? lat,
     double? lng,
+    String? blurHash,
   }) async {
     try {
       return _finalizeHelper.finalizeUpload(
@@ -653,6 +656,7 @@ class StorageService {
           'authorRole': authorRole.trim(),
           if (lat != null) 'lat': lat,
           if (lng != null) 'lng': lng,
+          if (blurHash != null) 'blurHash': blurHash,
         },
         label: 'Memory finalize response',
       );
@@ -889,6 +893,7 @@ class StorageService {
     bool isLocket = false,
     bool commentsEnabled = true,
     bool flagged = false,
+    String? blurHash,
   }) async {
     try {
       return _finalizeHelper.finalizeUpload(
@@ -917,6 +922,7 @@ class StorageService {
           'isLocket': isLocket,
           'commentsEnabled': commentsEnabled,
           'flagged': flagged,
+          if (blurHash != null) 'blurHash': blurHash,
         },
         label: 'Public image finalize response',
       );
