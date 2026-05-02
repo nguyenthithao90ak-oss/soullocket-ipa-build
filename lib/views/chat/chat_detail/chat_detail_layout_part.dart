@@ -42,121 +42,17 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
     bool isChatClosed, {
     bool hasChatBackground = false,
   }) {
-    if (_isInitialMessagesLoading) {
-      return ListView.builder(
-        itemCount: 8,
-        padding: const EdgeInsets.all(16),
-        itemBuilder: (context, index) {
-          final isMe = index % 2 == 0;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Row(
-              mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-              children: [
-                if (!isMe) ...[
-                  const SkeletonContainer.circle(size: 32),
-                  const SizedBox(width: 8),
-                ],
-                SkeletonContainer.rounded(
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  height: 44,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(16),
-                    topRight: const Radius.circular(16),
-                    bottomLeft: Radius.circular(isMe ? 16 : 4),
-                    bottomRight: Radius.circular(isMe ? 4 : 16),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    }
-
-    if (_messages.isEmpty) {
-      return Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-          decoration: BoxDecoration(
-            color: hasChatBackground
-                ? Colors.white.withOpacity(0.72)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(24),
-            border: hasChatBackground
-                ? Border.all(color: Colors.white.withOpacity(0.38))
-                : null,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF0F2F5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.chat_bubble_outline,
-                  size: 36,
-                  color: Color(0xFF0A7CFF),
-                ),
-              ),
-              SLSpacing.h16,
-              Text(
-                isChatClosed
-                    ? 'Đoạn chat này đã đóng'
-                    : 'Bắt đầu cuộc trò chuyện',
-                style: SLTheme.quicksand(
-                  color: const Color(0xFF6B7280),
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                ),
-              ),
-              SLSpacing.h8,
-              Text(
-                isChatClosed
-                    ? 'Bạn vẫn có thể xem lại tin nhắn cũ, nhưng chưa thể gửi tin nhắn mới.'
-                    : 'Gửi tin nhắn, sticker hoặc ảnh để bắt đầu.',
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  color: const Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w700,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    final itemCount = _messages.length + (_isLoadingOlderMessages ? 1 : 0);
-    return ListView.builder(
-      controller: _messagesScrollController,
-      padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
-      reverse: true,
-      itemCount: itemCount,
-      itemBuilder: (context, index) {
-        if (_isLoadingOlderMessages && index == _messages.length) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: SkeletonContainer.rounded(
-                width: 100,
-                height: 20,
-              ),
-            ),
-          );
-        }
-        final msg = _messages[index];
-        final isMe = _isInternal
-            ? msg.senderId == _currentRole
-            : msg.senderId == widget.myHouseId;
-        return _buildMsgBubble(msg, isMe);
-      },
+    return ChatMessageList(
+      messages: _messages,
+      isInitialLoading: _isInitialMessagesLoading,
+      isLoadingOlder: _isLoadingOlderMessages,
+      isChatClosed: isChatClosed,
+      hasChatBackground: hasChatBackground,
+      isInternal: _isInternal,
+      myHouseId: widget.myHouseId,
+      currentRole: _currentRole,
+      scrollController: _messagesScrollController,
+      bubbleBuilder: (msg, isMe) => _buildMsgBubble(msg, isMe),
     );
   }
 
