@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:blurhash/blurhash.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image/image.dart' as img;
 
@@ -18,15 +19,10 @@ class BlurHashHelper {
 
       if (smallImageBytes == null) return null;
 
-      // 2. Decode bytes to get pixel data
-      final img.Image? image = img.decodeImage(smallImageBytes);
-      if (image == null) return null;
-
-      // 3. Generate BlurHash
-      final String hash = await BlurHash.encode(image.getBytes(), 4, 3);
-      return hash;
+      // 2. Decode and Encode in background thread to avoid ANR
+      return await compute(_processBlurHashBytes, smallImageBytes);
     } catch (e) {
-      print('Error generating BlurHash: $e');
+      debugPrint('Error generating BlurHash: $e');
       return null;
     }
   }
@@ -34,16 +30,26 @@ class BlurHashHelper {
   /// Generates BlurHash from raw bytes
   static Future<String?> generateBlurHashFromBytes(Uint8List bytes) async {
     try {
+      return await compute(_processBlurHashBytes, bytes);
+    } catch (e) {
+      debugPrint('Error generating BlurHash from bytes: $e');
+      return null;
+    }
+  }
+
+  /// Helper function to be run in compute()
+  static Future<String?> _processBlurHashBytes(Uint8List bytes) async {
+    try {
       final img.Image? image = img.decodeImage(bytes);
       if (image == null) return null;
 
-      // Resize for performance if needed
-      final img.Image smallImage = img.copyResize(image, width: 32, height: 32);
+      // Resize for performance
+      final img.Image smallImage = (image.width > 32 || image.height > 32)
+          ? img.copyResize(image, width: 32, height: 32)
+          : image;
       
-      final String hash = await BlurHash.encode(smallImage.getBytes(), 4, 3);
-      return hash;
+      return await BlurHash.encode(smallImage.getBytes(), 4, 3);
     } catch (e) {
-      print('Error generating BlurHash from bytes: $e');
       return null;
     }
   }
