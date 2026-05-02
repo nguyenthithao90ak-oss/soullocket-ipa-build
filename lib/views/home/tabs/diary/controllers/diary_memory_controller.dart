@@ -1494,6 +1494,7 @@ class DiaryMemoryController extends ChangeNotifier {
                     : 'Đã thêm $uploadedCount/${images.length} kỷ niệm. $failedCount ảnh lỗi.$errorMessageStr',
           ),
         ),
+      );
     } catch (e) {
 
       if (context.mounted) {
