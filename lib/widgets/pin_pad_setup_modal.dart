@@ -1166,7 +1166,18 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            SizedBox(width: buttonSize, height: buttonSize),
+            if (widget.enableBiometrics && widget.onBiometricPressed != null)
+              _buildKeypadButton(
+                'bio',
+                context: context,
+                size: buttonSize,
+                icon: defaultTargetPlatform == TargetPlatform.iOS
+                    ? Icons.face_retouching_natural_rounded
+                    : Icons.fingerprint_rounded,
+                onTapOverride: widget.onBiometricPressed,
+              )
+            else
+              SizedBox(width: buttonSize, height: buttonSize),
             _buildKeypadButton('0', context: context, size: buttonSize),
             _buildKeypadButton(
               'delete',
