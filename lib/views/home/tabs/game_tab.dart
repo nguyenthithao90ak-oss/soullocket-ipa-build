@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../../../core/sl_theme.dart';
 import '../../utilities/block_blast_game.dart';
 import '../../utilities/soul_rhythm_game.dart';
+import '../../utilities/caro_neon_screen.dart';
+import '../../utilities/heart_catcher_game.dart';
 
 class GameTab extends StatefulWidget {
   const GameTab({super.key});
@@ -96,6 +98,24 @@ class _GameTabState extends State<GameTab> {
                         _SoulRhythmCard(
                           imagePath: GameTab.soulRhythmIconPath,
                           onTap: () => _openSoulGame(context),
+                        ),
+                        _GenericGameCard(
+                          label: 'Caro Neon',
+                          icon: Icons.grid_4x4_rounded,
+                          color: const Color(0xFF00E5FF),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const CaroNeonScreen()),
+                          ),
+                        ),
+                        _GenericGameCard(
+                          label: 'Heart Catcher',
+                          icon: Icons.favorite_rounded,
+                          color: const Color(0xFFFF4081),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const HeartCatcherGame()),
+                          ),
                         ),
                       ],
                     );
@@ -252,6 +272,22 @@ class _GameLauncherTile extends StatelessWidget {
                       children: [
                         preview,
                         const _TileGlossOverlay(),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.black26,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.file_download_outlined,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -483,4 +519,45 @@ class _SoulBlockCardPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _GenericGameCard extends StatelessWidget {
+  const _GenericGameCard({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return _GameLauncherTile(
+      label: label,
+      semanticsLabel: label,
+      onTap: onTap,
+      borderColor: color,
+      shadowColor: color,
+      preview: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.3), color.withOpacity(0.1)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            color: color,
+            size: 32,
+          ),
+        ),
+      ),
+    );
+  }
 }
