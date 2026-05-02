@@ -914,25 +914,33 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     }
 
     _activeTrack = desiredTrack;
-    await _bgPlayer.setVolume(
-      desiredTrack == 'custom'
-          ? 0.46
-          : desiredTrack == 'game'
-              ? 0.52
-              : 0.38,
-    );
+    final targetVol = desiredTrack == 'custom'
+        ? 0.52
+        : desiredTrack == 'game'
+            ? 0.62
+            : 0.38;
+    await _bgPlayer.setVolume(targetVol);
     try {
-      await _bgPlayer.stop();
-      if (desiredTrack == 'custom') {
-        await _bgPlayer.play(AssetSource(_customTrackAssetPath));
-        return;
+      // Only stop and restart if we are switching to a completely different sound source
+      // to keep the music playing smoothly without gaps.
+      if (force || desiredTrack != _activeTrack) {
+        await _bgPlayer.stop();
+        if (desiredTrack == 'custom') {
+          await _bgPlayer.play(AssetSource(_customTrackAssetPath));
+          return;
+        }
+        await _bgPlayer.play(
+          BytesSource(
+            bytes!,
+            mimeType: 'audio/wav',
+          ),
+        );
+      } else {
+        // If same track, just ensure it's playing and volume is set
+        if (_bgPlayer.state != PlayerState.playing) {
+          await _bgPlayer.resume();
+        }
       }
-      await _bgPlayer.play(
-        BytesSource(
-          bytes!,
-          mimeType: 'audio/wav',
-        ),
-      );
     } catch (_) {
       _activeTrack = '';
     }
