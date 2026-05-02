@@ -136,32 +136,34 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         await _bgmPlayer.pause();
         return;
       }
-      await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
-      await _bgmPlayer.setVolume(0.52);
-      if (restartIfStopped) {
+      
+      final bool isStopped = _bgmPlayer.state == PlayerState.stopped || _bgmPlayer.state == PlayerState.completed;
+      if (restartIfStopped || isStopped) {
+        await _bgmPlayer.stop();
+        await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+        await _bgmPlayer.setVolume(0.52);
         await _bgmPlayer.play(
           AssetSource('audio/soul_block/soul_block_bgm.mp3'),
           volume: 0.52,
         );
-        return;
+      } else if (_bgmPlayer.state != PlayerState.playing) {
+        await _bgmPlayer.resume();
       }
-      await _bgmPlayer.resume();
     } catch (_) {
-      if (restartIfStopped) {
-        try {
-          await _bgmPlayer.play(
-            AssetSource('audio/soul_block/soul_block_bgm.mp3'),
-            volume: 0.52,
-          );
-        } catch (_) {}
-      }
+      // Fallback: try direct play if resume fails
+      try {
+        await _bgmPlayer.play(
+          AssetSource('audio/soul_block/soul_block_bgm.mp3'),
+          volume: 0.52,
+        );
+      } catch (_) {}
     }
   }
 
   Future<void> _syncBgmWithSound({bool restartIfStopped = false}) async {
     try {
       if (_soundEnabled) {
-        await _resumeBgm(restartIfStopped: true);
+        await _resumeBgm(restartIfStopped: restartIfStopped);
       } else {
         await _bgmPlayer.pause();
       }
