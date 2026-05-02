@@ -141,3 +141,23 @@ apple_cert/
 *.aab
 *.apks
 *.rar
+
+# iOS Security - MANDATORY for public build repo
+ios/Runner/GoogleService-Info.plist
+**/GoogleService-Info.plist
+ios/ExportOptions.plist
+**/*.p8
+**/*.p12
+**/*.mobileprovision
+**/*.cer
+**/*.certSigningRequest
+
+# Android Security
+android/app/google-services.json
+**/google-services.json
+
+# Service Accounts & Secrets
+*service-account*.json
+**/*service-account*.json
+**/*firebase-adminsdk*.json
+**/service-account-key.json
