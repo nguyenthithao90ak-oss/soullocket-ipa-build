@@ -43,8 +43,34 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
     bool hasChatBackground = false,
   }) {
     if (_isInitialMessagesLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF0A7CFF)),
+      return ListView.builder(
+        itemCount: 8,
+        padding: const EdgeInsets.all(16),
+        itemBuilder: (context, index) {
+          final isMe = index % 2 == 0;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+              children: [
+                if (!isMe) ...[
+                  const SkeletonContainer.circle(size: 32),
+                  const SizedBox(width: 8),
+                ],
+                SkeletonContainer.rounded(
+                  width: MediaQuery.of(context).size.width * 0.6,
+                  height: 44,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(16),
+                    topRight: const Radius.circular(16),
+                    bottomLeft: Radius.circular(isMe ? 16 : 4),
+                    bottomRight: Radius.circular(isMe ? 4 : 16),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       );
     }
 
@@ -118,13 +144,9 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Center(
-              child: SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.2,
-                  color: Color(0xFF0A7CFF),
-                ),
+              child: SkeletonContainer.rounded(
+                width: 100,
+                height: 20,
               ),
             ),
           );
@@ -237,8 +259,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                           child: _isUploading
                               ? const Padding(
                                   padding: EdgeInsets.all(4),
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
+                                  child: SkeletonContainer.circle(size: 20),
                                 )
                               : const Icon(
                                   Icons.image_outlined,
