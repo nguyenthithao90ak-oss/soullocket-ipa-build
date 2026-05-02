@@ -486,6 +486,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     final result = await _countdownSpaceService.acceptRequest(
       requestId: requestId,
       currentHouseId: houseId,
+      myHouseName: _houseName,
     );
     if (!result.success) {
       _snack(result.message);
