@@ -1164,6 +1164,8 @@ class DiaryMemoryController extends ChangeNotifier {
       Object? lastError;
       for (var attempt = 0; attempt < 2; attempt++) {
         try {
+          // Safe delay for iOS storage propagation
+          await Future<void>.delayed(const Duration(milliseconds: 500));
           finalized = await _storageService.finalizeMemoryImageUpload(
             houseId: houseId,
             sessionId: sessionId,
