@@ -667,11 +667,7 @@ class StorageService {
         case 'invalid-argument':
           throw Exception('Thiếu dữ liệu để hoàn tất ảnh Kỷ niệm.');
         case 'resource-exhausted':
-          throw Exception(
-            (error.message ?? '').trim().isNotEmpty
-                ? error.message!.trim()
-                : 'Bạn đã đạt giới hạn đăng ảnh Kỷ niệm hôm nay.',
-          );
+          throw Exception('Bạn đã đạt giới hạn đăng ảnh Kỷ niệm hôm nay.');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
