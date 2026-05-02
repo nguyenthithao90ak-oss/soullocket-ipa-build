@@ -22,6 +22,74 @@ class _GameTabState extends State<GameTab> {
       AssetImage(GameTab.soulRhythmIconPath);
   bool _didPrecacheSoulRhythmIcon = false;
 
+  final Map<String, bool> _downloadedGames = {
+    'soul_block': false,
+    'soul_rhythm': false,
+    'caro_neon': false,
+    'heart_catcher': false,
+  };
+
+  final Map<String, double> _downloadProgress = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDownloadStatus();
+  }
+
+  Future<void> _loadDownloadStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      for (final key in _downloadedGames.keys) {
+        _downloadedGames[key] = prefs.getBool('game_downloaded_$key') ?? false;
+      }
+    });
+  }
+
+  Future<void> _saveDownloadStatus(String gameId, bool status) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('game_downloaded_$gameId', status);
+    setState(() {
+      _downloadedGames[gameId] = status;
+    });
+  }
+
+  Future<void> _simulateDownload(String gameId) async {
+    if (_downloadProgress.containsKey(gameId)) return;
+
+    for (double i = 0; i <= 1.01; i += 0.05) {
+      if (!mounted) return;
+      setState(() {
+        _downloadProgress[gameId] = i;
+      });
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _downloadProgress.remove(gameId);
+    });
+    await _saveDownloadStatus(gameId, true);
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã tải xong game! Chúc bạn chơi vui vẻ. 🎮'),
+          backgroundColor: const Color(0xFF2E7D32),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _onGameTap(String gameId, VoidCallback onPlay) {
+    if (_downloadedGames[gameId] == true) {
+      onPlay();
+    } else {
+      _simulateDownload(gameId);
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -93,29 +161,37 @@ class _GameTabState extends State<GameTab> {
                       shrinkWrap: true,
                       children: [
                         _SoulBlockCard(
-                          onTap: () => _openSoulBlockGame(context),
+                          isDownloaded: _downloadedGames['soul_block'] ?? false,
+                          downloadProgress: _downloadProgress['soul_block'],
+                          onTap: () => _onGameTap('soul_block', () => _openSoulBlockGame(context)),
                         ),
                         _SoulRhythmCard(
                           imagePath: GameTab.soulRhythmIconPath,
-                          onTap: () => _openSoulGame(context),
+                          isDownloaded: _downloadedGames['soul_rhythm'] ?? false,
+                          downloadProgress: _downloadProgress['soul_rhythm'],
+                          onTap: () => _onGameTap('soul_rhythm', () => _openSoulGame(context)),
                         ),
                         _GenericGameCard(
                           label: 'Caro Neon',
                           icon: Icons.grid_4x4_rounded,
                           color: const Color(0xFF00E5FF),
-                          onTap: () => Navigator.push(
+                          isDownloaded: _downloadedGames['caro_neon'] ?? false,
+                          downloadProgress: _downloadProgress['caro_neon'],
+                          onTap: () => _onGameTap('caro_neon', () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const CaroNeonScreen()),
-                          ),
+                          )),
                         ),
                         _GenericGameCard(
                           label: 'Heart Catcher',
                           icon: Icons.favorite_rounded,
                           color: const Color(0xFFFF4081),
-                          onTap: () => Navigator.push(
+                          isDownloaded: _downloadedGames['heart_catcher'] ?? false,
+                          downloadProgress: _downloadProgress['heart_catcher'],
+                          onTap: () => _onGameTap('heart_catcher', () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const HeartCatcherGame()),
-                          ),
+                          )),
                         ),
                       ],
                     );
@@ -225,6 +301,8 @@ class _GameLauncherTile extends StatelessWidget {
     required this.preview,
     required this.borderColor,
     required this.shadowColor,
+    this.isDownloaded = false,
+    this.downloadProgress,
   });
 
   final String label;
@@ -233,6 +311,8 @@ class _GameLauncherTile extends StatelessWidget {
   final Widget preview;
   final Color borderColor;
   final Color shadowColor;
+  final bool isDownloaded;
+  final double? downloadProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -295,32 +375,51 @@ class _GameLauncherTile extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [borderColor, borderColor.withOpacity(0.7)],
+                        colors: isDownloaded
+                            ? [const Color(0xFFE91E63), const Color(0xFFF48FB1)]
+                            : [borderColor, borderColor.withOpacity(0.7)],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: borderColor.withOpacity(0.3),
+                          color: (isDownloaded ? const Color(0xFFE91E63) : borderColor).withOpacity(0.3),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.file_download_outlined, color: Colors.white, size: 10),
-                        const SizedBox(width: 4),
-                        Text(
-                          'TẢI XUỐNG',
-                          style: SLTheme.quicksand(
-                            fontSize: 8,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                    child: downloadProgress != null
+                        ? SizedBox(
+                            width: 60,
+                            height: 10,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(5),
+                              child: LinearProgressIndicator(
+                                value: downloadProgress,
+                                backgroundColor: Colors.white.withOpacity(0.2),
+                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isDownloaded ? Icons.play_arrow_rounded : Icons.file_download_outlined,
+                                color: Colors.white,
+                                size: 10,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                isDownloaded ? 'CHƠI NGAY' : 'TẢI XUỐNG',
+                                style: SLTheme.quicksand(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],
@@ -336,10 +435,14 @@ class _SoulRhythmCard extends StatelessWidget {
   const _SoulRhythmCard({
     required this.imagePath,
     required this.onTap,
+    this.isDownloaded = false,
+    this.downloadProgress,
   });
 
   final String imagePath;
   final VoidCallback onTap;
+  final bool isDownloaded;
+  final double? downloadProgress;
 
   Widget _buildInstantPlaceholder() {
     return const DecoratedBox(
@@ -366,6 +469,8 @@ class _SoulRhythmCard extends StatelessWidget {
       label: 'Soul Rhythm',
       semanticsLabel: 'Soul Rhythm',
       onTap: onTap,
+      isDownloaded: isDownloaded,
+      downloadProgress: downloadProgress,
       borderColor: const Color(0xFFFF77B7),
       shadowColor: const Color(0xFFFF77B7),
       preview: Stack(
@@ -404,9 +509,13 @@ class _SoulRhythmCard extends StatelessWidget {
 class _SoulBlockCard extends StatelessWidget {
   const _SoulBlockCard({
     required this.onTap,
+    this.isDownloaded = false,
+    this.downloadProgress,
   });
 
   final VoidCallback onTap;
+  final bool isDownloaded;
+  final double? downloadProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -414,6 +523,8 @@ class _SoulBlockCard extends StatelessWidget {
       label: 'Soul Block',
       semanticsLabel: 'Soul Block',
       onTap: onTap,
+      isDownloaded: isDownloaded,
+      downloadProgress: downloadProgress,
       borderColor: const Color(0xFFFFC857),
       shadowColor: const Color(0xFF8CFF98),
       preview: const SizedBox.expand(
@@ -540,12 +651,16 @@ class _GenericGameCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.onTap,
+    this.isDownloaded = false,
+    this.downloadProgress,
   });
 
   final String label;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final bool isDownloaded;
+  final double? downloadProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -553,6 +668,8 @@ class _GenericGameCard extends StatelessWidget {
       label: label,
       semanticsLabel: label,
       onTap: onTap,
+      isDownloaded: isDownloaded,
+      downloadProgress: downloadProgress,
       borderColor: color,
       shadowColor: color,
       preview: Container(
