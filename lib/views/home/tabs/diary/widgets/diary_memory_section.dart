@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../widgets/cute_loading_indicator.dart';
+import '../../../../../widgets/skeleton_container.dart';
+
 import '../controllers/diary_memory_controller.dart';
 import 'diary_tab_shell_sections.dart';
 
