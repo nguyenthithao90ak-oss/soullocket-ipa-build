@@ -503,7 +503,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
   }
 }
 
-class _DiaryMemoryPhotoRow extends StatelessWidget {
+class _DiaryMemoryPhotoRow extends StatefulWidget {
   final List<Map<String, dynamic>> rowPhotos;
   final int thumbnailCacheWidth;
   final ValueListenable<int> selectionListenable;
@@ -518,6 +518,7 @@ class _DiaryMemoryPhotoRow extends StatelessWidget {
   final Future<void> Function(Map<String, dynamic> photo) onEnsurePhotoUrl;
 
   const _DiaryMemoryPhotoRow({
+    super.key,
     required this.rowPhotos,
     required this.thumbnailCacheWidth,
     required this.selectionListenable,
@@ -528,6 +529,36 @@ class _DiaryMemoryPhotoRow extends StatelessWidget {
     required this.allPhotos,
     required this.onEnsurePhotoUrl,
   });
+
+  @override
+  State<_DiaryMemoryPhotoRow> createState() => _DiaryMemoryPhotoRowState();
+}
+
+class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
+  @override
+  void initState() {
+    super.initState();
+    _refreshUrlsIfNeeded();
+  }
+
+  @override
+  void didUpdateWidget(covariant _DiaryMemoryPhotoRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.rowPhotos != oldWidget.rowPhotos) {
+      _refreshUrlsIfNeeded();
+    }
+  }
+
+  Future<void> _refreshUrlsIfNeeded() async {
+    for (final photo in widget.rowPhotos) {
+      if (_needsSignedRefresh(photo)) {
+        await widget.onEnsurePhotoUrl(photo);
+        if (mounted) {
+          setState(() {});
+        }
+      }
+    }
+  }
 
   bool _needsSignedRefresh(Map<String, dynamic> photo) {
     if (photo['privateMedia'] != true && photo['storageAccess'] != 'signed') {
@@ -543,20 +574,10 @@ class _DiaryMemoryPhotoRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 10),
       child: Row(
-        children: List.generate(3, (colIndex) {
-          if (colIndex >= rowPhotos.length) {
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: colIndex < 2 ? 8.0 : 10.0),
-                child: const AspectRatio(aspectRatio: 1.0),
-              ),
-            );
-          }
-
-          final photo = rowPhotos[colIndex];
+          final photo = widget.rowPhotos[colIndex];
           final imageProvider = _DiaryMemoryImageProviders.thumbnail(
             (photo['url']?.toString() ?? '').trim(),
-            thumbnailCacheWidth,
+            widget.thumbnailCacheWidth,
           );
           return Expanded(
             child: Padding(
@@ -564,7 +585,7 @@ class _DiaryMemoryPhotoRow extends StatelessWidget {
               child: AspectRatio(
                 aspectRatio: 1.0,
                 child: ValueListenableBuilder<int>(
-                  valueListenable: selectionListenable,
+                  valueListenable: widget.selectionListenable,
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(18),
@@ -606,25 +627,26 @@ class _DiaryMemoryPhotoRow extends StatelessWidget {
                   ),
                   builder: (context, _, imageChild) {
                     final photoId = photo['id'];
-                    final isSelected = selectedMemories.containsKey(photoId);
+                    final isSelected = widget.selectedMemories.containsKey(photoId);
 
                     return GestureDetector(
                       onLongPress: () => onToggleSelection(photo),
                       onTap: () async {
-                        if (isSelectionMode) {
-                          onToggleSelection(photo);
+                        if (widget.isSelectionMode) {
+                          widget.onToggleSelection(photo);
                         } else {
                           if (_needsSignedRefresh(photo)) {
-                            await onEnsurePhotoUrl(photo);
+                            await widget.onEnsurePhotoUrl(photo);
+                            if (mounted) setState(() {});
                           }
-                          onOpenMemory(photo, allPhotos);
+                          widget.onOpenMemory(photo, widget.allPhotos);
                         }
                       },
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
                           imageChild!,
-                          if (isSelectionMode)
+                          if (widget.isSelectionMode)
                             Positioned.fill(
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 140),
