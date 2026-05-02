@@ -138,6 +138,22 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     share: '\u0110\u00e3 chia s\u1ebb m\u1ed9t b\u00e0i vi\u1ebft',
   );
   late final Stream<ChatRoomMeta> _roomMetaStream;
+  void _replaceMessageState(List<ChatMessage> messages, {bool isFromCache = false}) {
+    _messages
+      ..clear()
+      ..addAll(messages);
+    _messageIds
+      ..clear()
+      ..addAll(messages.map((message) => message.id));
+    _oldestMessageKey = _messages.isEmpty ? null : _messages.last.id;
+    _newestMessageKey = _messages.isEmpty ? null : _messages.first.id;
+    
+    if (!isFromCache) {
+      unawaited(_saveMessagesToCache());
+    }
+    
+    setState(() {});
+  }
   StreamSubscription<ChatMessage>? _liveMessageSub;
   final List<ChatMessage> _messages = [];
   final Set<String> _messageIds = <String>{};
@@ -161,6 +177,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       '$_pendingChatImageUploadKeyPrefix$_chatPrefsScope';
   String get _pendingChatBackgroundUploadKey =>
       '$_pendingChatBackgroundUploadKeyPrefix$_chatPrefsScope';
+  String get _chatCachePrefsKey => 'chat_detail_cache_$_chatPrefsScope';
 
   @override
   void initState() {
@@ -177,8 +194,43 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     _messagesScrollController.addListener(_handleMessageScroll);
     _msgController.addListener(_handleComposerTextChanged);
     unawaited(_loadTargetBio());
-    unawaited(_loadInitialMessages());
+    unawaited(_loadCachedMessages().then((_) => _loadInitialMessages()));
     unawaited(_promptPendingChatUploadRetryIfNeeded());
+  }
+
+  Future<void> _loadCachedMessages() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_chatCachePrefsKey);
+      if (raw == null || raw.isEmpty) return;
+
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return;
+
+      final cached = decoded
+          .map((item) => ChatMessage.fromMap(
+                item['id']?.toString() ?? '',
+                Map<dynamic, dynamic>.from(item),
+              ))
+          .toList();
+
+      if (cached.isEmpty || !mounted) return;
+
+      _replaceMessageState(cached, isFromCache: true);
+    } catch (_) {
+      debugPrint('Failed to load chat cache: $_');
+    }
+  }
+
+  Future<void> _saveMessagesToCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Cache only the most recent 40 messages
+      final toCache = _messages.take(40).map((m) => m.toMap()..['id'] = m.id).toList();
+      await prefs.setString(_chatCachePrefsKey, jsonEncode(toCache));
+    } catch (_) {
+      debugPrint('Failed to save chat cache: $_');
+    }
   }
 
   Future<void> _loadChatPrefs() async {
@@ -215,6 +267,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         }
       } catch (_) {}
     }
+  }
+
+  void _upsertLiveMessage(ChatMessage message) {
+    if (_messageIds.contains(message.id)) {
+      final index = _messages.indexWhere((m) => m.id == message.id);
+      if (index != -1) {
+        _messages[index] = message;
+        setState(() {});
+      }
+      return;
+    }
+    _messageIds.add(message.id);
+    _messages.insert(_findMessageInsertIndex(message), message);
+    if (_messages.isNotEmpty) {
+      _newestMessageKey = _messages.first.id;
+      _oldestMessageKey = _messages.last.id;
+    }
+    unawaited(_saveMessagesToCache());
+    setState(() {});
   }
 
   Future<void> _saveNickname(String nickname) async {
