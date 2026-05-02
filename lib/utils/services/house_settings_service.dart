@@ -21,13 +21,9 @@ class HouseSettingsService {
     return int.tryParse(raw?.toString() ?? '');
   }
 
-  Future<Map<String, dynamic>> getStartDateChangePolicy(String houseId) async {
-    final snap = await _dbRef.child('houses/$houseId/settings').get();
-    final settings = _asStringDynamicMap(snap.value) ?? {};
-    final now = DateTime.now().millisecondsSinceEpoch;
+    const isLocked = false;
+    const shouldWarn = false;
 
-    final isLocked = false;
-    final shouldWarn = false;
 
     return {
       'isLocked': isLocked,
@@ -450,7 +446,8 @@ class HouseSettingsService {
     final settings = _asStringDynamicMap(settingsSnap.value) ?? {};
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     final changeCount = (_readEpochMs(settings['startDateChangeCount']) ?? 0) + 1;
-    final nextCooldownUntil = null;
+    const nextCooldownUntil = null;
+
 
     try {
       await _dbRef.update({
