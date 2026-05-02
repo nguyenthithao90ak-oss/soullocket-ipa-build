@@ -163,11 +163,12 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
               final isOffline = connSnapshot.hasData &&
                   connSnapshot.data == ConnectivityResult.none;
 
-              if (isOffline) {
-                return _buildBody(
-                  isOffline: true,
-                  snapshot: null,
-                  cacheSnapshot: null,
+              if (isOffline && widget.initialMemoriesCache == null) {
+                return _DiaryMemoryErrorState(
+                  icon: Icons.wifi_off_rounded,
+                  title: 'KHÔNG CÓ KẾT NỐI',
+                  message: 'Vui lòng kiểm tra internet để tải kỷ niệm mới nhất.',
+                  onRetry: widget.onRetry,
                 );
               }
 
