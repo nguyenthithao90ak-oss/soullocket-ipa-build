@@ -100,7 +100,7 @@ class DiaryMemoryController extends ChangeNotifier {
   bool _isUploadingMemories = false;
 
   bool get isSelectionMode => _isSelectionMode;
-  bool get selectedMemoriesCount => _selectedMemories.length;
+  int get selectedMemoriesCount => _selectedMemories.length;
   Map<String, Map<String, dynamic>> get selectedMemories => _selectedMemories;
   bool get isLoadingMoreMemories => _isLoadingMoreMemories;
   bool get isUploadingMemories => _isUploadingMemories;
