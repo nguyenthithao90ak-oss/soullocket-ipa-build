@@ -156,7 +156,7 @@ class GiftMakerService {
   // 2. ĐỌC QUÀ
   // ─────────────────────────────────────────────────────────────
 
-  /// Lấy thống tin 1 món quà theo ID
+  /// Lấy thông tin 1 món quà theo ID
   Future<GiftData?> getGift({
     required String houseId,
     required String giftId,
