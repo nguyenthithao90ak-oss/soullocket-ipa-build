@@ -340,7 +340,7 @@ class AppErrorMapper {
         normalized.contains('play integrity') ||
         normalized.contains('attestation')) {
       if (kDebugMode) {
-        return 'Firebase App Check đang chặn thao tác này. Hãy thêm debug token đúng cho thiết bị hoặc kiểm tra cấu hình App Check rồi thử lại.';
+        return 'Hệ thống xác thực bảo mật đang chặn thao tác này. Hãy kiểm tra cấu hình bảo mật thiết bị hoặc debug token rồi thử lại.';
       }
       return 'Thiết bị chưa được xác nhận để thực hiện thao tác này. Hãy chờ vài giây rồi thử lại hoặc đăng nhập lại.';
     }
