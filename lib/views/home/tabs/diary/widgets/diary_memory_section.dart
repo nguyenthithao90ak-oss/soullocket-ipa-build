@@ -640,7 +640,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                     final isSelected = widget.selectedMemories.containsKey(photoId);
 
                     return GestureDetector(
-                      onLongPress: () => onToggleSelection(photo),
+                      onLongPress: () => widget.onToggleSelection(photo),
                       onTap: () async {
                         if (widget.isSelectionMode) {
                           widget.onToggleSelection(photo);
