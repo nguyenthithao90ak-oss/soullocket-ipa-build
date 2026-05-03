@@ -217,6 +217,10 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             controller: passwordCtrl,
             obscureText: true,
             autofocus: true,
+            style: SLTheme.quicksand(
+              color: const Color(0xFF1565C0),
+              fontWeight: FontWeight.w700,
+            ),
             decoration: const InputDecoration(
               labelText: 'Mật khẩu đăng nhập',
               prefixIcon: Icon(Icons.lock_rounded),
