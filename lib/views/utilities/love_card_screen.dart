@@ -607,13 +607,15 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       await Future.delayed(const Duration(milliseconds: 260));
       await PendingUploadService.instance.clear(_pendingUploadKey);
       isSuccess = true;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Lỗi gửi thiệp: $e');
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Không gửi được thiệp. Hãy thử lại sau.'),
+        SnackBar(
+          content: Text('Không gửi được thiệp: $e'),
+          backgroundColor: Colors.red.shade800,
         ),
       );
     } finally {
