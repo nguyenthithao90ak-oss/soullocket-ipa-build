@@ -28,6 +28,7 @@ import 'consent/consent_gate.dart';
 import 'home/home_screen.dart';
 import 'house_onboarding_screen.dart';
 import 'login_screen.dart';
+import 'home/tabs/diary/controllers/diary_memory_controller.dart';
 
 class AppEntry extends StatefulWidget {
   const AppEntry({super.key});
@@ -192,6 +193,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   }
 
   void _applyAuthState(AppEntryAuthState state) {
+    if (state.isAuthenticated && !_isAuthenticated) {
+      unawaited(DiaryMemoryController().clearPendingUploadState(notify: false));
+    }
     setState(() {
       _isAuthenticated = state.isAuthenticated;
       _isCheckingAuth = state.isCheckingAuth;
