@@ -238,9 +238,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   ),
                   SLSpacing.h8,
                 ],
-                if (_passwordLinked)
                   TextField(
                     controller: _oldPassCtrl,
+                    obscureText: true,
                     style: SLTheme.quicksand(
                       color: Colors.black87,
                       fontWeight: FontWeight.w700,
