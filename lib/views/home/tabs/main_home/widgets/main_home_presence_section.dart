@@ -308,10 +308,11 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                     ),
                   ),
                 ),
-            ],
-          ),
+        ),
       ],
     );
+  }
+
   Widget _buildModernZodiacBadge(String emoji, String name) {
     // Xác định màu sắc dựa trên nguyên tố của cung
     final detail = ZodiacUtils.zodiacDetails[name];
