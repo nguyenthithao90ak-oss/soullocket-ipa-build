@@ -23,6 +23,7 @@ import '../../../services/notification_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_dynamic_icon/flutter_dynamic_icon.dart';
 import '../../../core/sl_theme.dart';
 import '../../../services/house_settings_service.dart';
 import '../../../services/location_service.dart';
