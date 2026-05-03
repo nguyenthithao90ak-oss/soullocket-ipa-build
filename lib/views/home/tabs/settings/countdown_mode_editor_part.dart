@@ -1,4 +1,4 @@
-part of '../settings_tab.dart';
+﻿part of '../settings_tab.dart';
 // ignore_for_file: dead_code, unused_element
 
 Future<XFile?> _cropCountdownModeAvatarFile(XFile file) async {
@@ -728,7 +728,7 @@ class _CountdownModeEditorScreenState
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () => Navigator.of(context).pop(),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(12),
                                   child: Ink(
                                     width: 48,
                                     height: 48,
@@ -736,7 +736,7 @@ class _CountdownModeEditorScreenState
                                       color: Colors.white.withOpacity(
                                         themeData.isDark ? 0.14 : 0.82,
                                       ),
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
                                         color: Colors.white.withOpacity(
                                           themeData.isDark ? 0.22 : 0.94,
@@ -810,7 +810,7 @@ class _CountdownModeEditorScreenState
                                       decoration: BoxDecoration(
                                         color: statusColor.withOpacity(0.14),
                                         borderRadius:
-                                            BorderRadius.circular(999),
+                                            BorderRadius.circular(12),
                                         border: Border.all(
                                           color: statusColor.withOpacity(0.22),
                                         ),
@@ -837,7 +837,7 @@ class _CountdownModeEditorScreenState
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.72),
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                       color: Colors.white.withOpacity(0.92),
                                     ),
@@ -961,7 +961,7 @@ class _CountdownModeEditorScreenState
                                           ),
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(16),
+                                                BorderRadius.circular(12),
                                           ),
                                         ),
                                         icon: _uploadingAvatarRole == 'left'
@@ -1003,7 +1003,7 @@ class _CountdownModeEditorScreenState
                                           ),
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(16),
+                                                BorderRadius.circular(12),
                                           ),
                                         ),
                                         icon: _uploadingAvatarRole == 'right'
@@ -1167,7 +1167,7 @@ class _CountdownModeEditorScreenState
                                           ),
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(16),
+                                                BorderRadius.circular(12),
                                           ),
                                         ),
                                         icon: _isUploadingBackground
@@ -1209,7 +1209,7 @@ class _CountdownModeEditorScreenState
                                           ),
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(16),
+                                                BorderRadius.circular(12),
                                           ),
                                         ),
                                         icon: const Icon(
@@ -1320,7 +1320,7 @@ class _CountdownModeEditorScreenState
                                           ),
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(16),
+                                                BorderRadius.circular(12),
                                           ),
                                         ),
                                         icon: const Icon(

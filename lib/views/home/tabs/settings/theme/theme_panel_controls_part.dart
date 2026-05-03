@@ -1,4 +1,4 @@
-part of '../../settings_tab.dart';
+﻿part of '../../settings_tab.dart';
 
 extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   Widget _buildThemeSectionHeader(String title, IconData icon) {
@@ -70,7 +70,7 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //     final countdownPreviewSize = (countdownSize * 0.4).toDouble();
 //
 //     return ClipRRect(
-//       borderRadius: BorderRadius.circular(28),
+//       borderRadius: BorderRadius.circular(12),
 //       child: AspectRatio(
 //         aspectRatio: 1.0,
 //         child: Container(

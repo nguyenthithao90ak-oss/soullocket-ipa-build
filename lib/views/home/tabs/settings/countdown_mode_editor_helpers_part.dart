@@ -1,4 +1,4 @@
-part of '../settings_tab.dart';
+﻿part of '../settings_tab.dart';
 
 extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
   void _showMessageImpl(String message) {
@@ -104,7 +104,7 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFF6D4E2)),
         boxShadow: [
           BoxShadow(

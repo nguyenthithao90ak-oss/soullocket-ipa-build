@@ -1,4 +1,4 @@
-part of '../settings_tab.dart';
+﻿part of '../settings_tab.dart';
 // ignore_for_file: unused_element
 
 extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
@@ -142,7 +142,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                   ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F1A2D),
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.white.withOpacity(0.10)),
                   ),
                   child: SingleChildScrollView(
@@ -548,11 +548,11 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                       if (index == _spaceHouseIds.length) {
                         return InkWell(
                           onTap: _isAddingSpace ? null : _showAddSpaceDialog,
-                          borderRadius: BorderRadius.circular(22),
+                          borderRadius: BorderRadius.circular(12),
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.10),
-                              borderRadius: BorderRadius.circular(22),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: Colors.white.withOpacity(0.26),
                               ),
@@ -610,13 +610,13 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                 : openIncomingRequest),
                         onLongPress: () =>
                             unawaited(_showRenameSpaceDialog(houseId)),
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(12),
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
                           decoration: BoxDecoration(
                             color: Colors.white
                                 .withOpacity(themeData.isDark ? 0.10 : 0.72),
-                            borderRadius: BorderRadius.circular(22),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                                 color: Colors.white.withOpacity(0.24)),
                           ),
@@ -684,7 +684,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                 width: double.infinity,
                                 height: 92,
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(12),
                                   gradient: LinearGradient(
                                     colors: [
                                       accent.withOpacity(0.24),
