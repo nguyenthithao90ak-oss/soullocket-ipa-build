@@ -183,9 +183,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                       horizontalPadding,
                                       compact ? 12 : 16,
                                       horizontalPadding,
-                                      mediaPadding.bottom > 0
-                                          ? mediaPadding.bottom + 12
-                                          : 14,
+                                      14,
                                     ),
                                     child: Column(
                                       crossAxisAlignment:
@@ -250,6 +248,18 @@ class _ConsentGateState extends State<ConsentGate> {
                                             cookieLevel = value;
                                           }),
                                         ),
+                                        const SizedBox(height: 24),
+                                        _buildStartupAgreeBar(
+                                          compact: compact,
+                                          bottomInset: mediaPadding.bottom,
+                                          cookieLevel: cookieLevel,
+                                          onConfirm: () => Navigator.pop(
+                                            ctx,
+                                            _StartupConsentResult(
+                                              cookieLevel: cookieLevel,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -268,17 +278,6 @@ class _ConsentGateState extends State<ConsentGate> {
                                   ),
                                 ),
                               ],
-                            ),
-                          ),
-                          _buildStartupAgreeBar(
-                            compact: compact,
-                            bottomInset: mediaPadding.bottom,
-                            cookieLevel: cookieLevel,
-                            onConfirm: () => Navigator.pop(
-                              ctx,
-                              _StartupConsentResult(
-                                cookieLevel: cookieLevel,
-                              ),
                             ),
                           ),
                         ],
