@@ -723,9 +723,9 @@ extension _SettingsTabShell on _SettingsTabState {
         border: const Color(0xFF73D5CC),
         textColor: const Color(0xFF0D7D81),
         onTap: () => _togglePanel('widget'),
-        badgeText: null // kIsWeb
-            ? context.tr('settings_badge_mobile')
-            : context.tr('settings_badge_open'),
+        badgeText: null
+//            ? context.tr('settings_badge_mobile')
+//            : context.tr('settings_badge_open'),
       ),
       _buildControlCard(
         icon: Icons.timelapse_rounded,
