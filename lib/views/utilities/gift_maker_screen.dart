@@ -790,8 +790,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     decoration: const BoxDecoration(
                       color: Color(0xFFFFFBFD),
                       borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
                       ),
                     ),
                     child: TabBarView(
@@ -1296,21 +1296,23 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
       hintStyle: SLTheme.quicksand(
         color: const Color(0xFF9CA3AF),
         fontWeight: FontWeight.w700,
+        fontSize: 14,
       ),
-      prefixIcon: Icon(icon, color: const Color(0xFFD81B60), size: 22),
+      prefixIcon: Icon(icon, color: const Color(0xFFD81B60).withOpacity(0.7), size: 20),
       filled: true,
-      fillColor: const Color(0xFFF9FAFB),
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: const Color(0xFFE5E7EB).withOpacity(0.6)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: const Color(0xFFE5E7EB).withOpacity(0.6)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.2),
       ),
     );
   }
