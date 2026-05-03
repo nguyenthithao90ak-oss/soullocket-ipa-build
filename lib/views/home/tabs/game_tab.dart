@@ -144,6 +144,12 @@ class _GameTabState extends State<GameTab> {
   }
 
   void _onGameTap(String gameId, VoidCallback onPlay) async {
+    // Các game này đã tích hợp sẵn assets, chơi được luôn
+    if (gameId == 'soul_block' || gameId == 'soul_rhythm') {
+      onPlay();
+      return;
+    }
+    
     final service = GameDownloadService();
     final isDownloaded = await service.isGameDownloaded(gameId);
     if (isDownloaded) {
