@@ -774,42 +774,6 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     end: Alignment.bottomRight,
                   ),
                 ),
-              ),
-            ),
-            const Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: _GiftBackdropPainter(),
-                ),
-              ),
-            ),
-            Column(
-              children: [
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFFBFD),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(32),
-                        topRight: Radius.circular(32),
-                      ),
-                    ),
-                    child: TabBarView(
-                      children: [
-                        _buildCreateTab(),
-                        _buildHistoryTab(
-                          stream: _sentGiftsStream,
-                          emptyTitle: 'Bạn chưa tạo quà nào',
-                          emptySubtitle: 'Quà bạn đã tạo sẽ hiện ở đây.',
-                          markOpened: false,
-                        ),
-                        _buildHistoryTab(
-                          stream: _receivedGiftsStream,
-                          emptyTitle: 'Bạn chưa nhận quà nào',
-                          emptySubtitle:
-                              'Khi có người gửi quà, bạn sẽ thấy ở đây.',
-                          markOpened: true,
                         ),
                       ],
                     ),
