@@ -619,8 +619,13 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không gửi được thiệp: $e'),
+          content: Text(
+            'Không gửi được thiệp: $e',
+            style: SLTheme.quicksand(fontWeight: FontWeight.w700, color: Colors.white),
+          ),
           backgroundColor: Colors.red.shade800,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       );
     } finally {
