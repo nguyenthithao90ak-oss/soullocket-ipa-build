@@ -457,21 +457,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            child: Stack(
               children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        colors.first,
-                        colors.last,
-                        const Color(0xFF17192E),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
                   ),
                   child: Stack(
