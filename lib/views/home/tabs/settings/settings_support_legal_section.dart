@@ -73,7 +73,6 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       _showToast('Không thể mở bảng đánh giá lúc này. Vui lòng thử lại sau.');
     }
   }
- Broadway
 
   Future<void> _openSupportContact() async {
     await Navigator.push(
