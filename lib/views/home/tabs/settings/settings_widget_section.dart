@@ -113,6 +113,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       child: Row(
         children: items.map((item) {
           final isSelected = _widgetPanelTabKey == item.$1;
+          final isBrandMarkTab = item.$1 == _widgetPanelTabIconKey;
+
           return Expanded(
             child: GestureDetector(
               onTap: () => unawaited(_handleWidgetPanelTabChanged(item.$1)),
@@ -139,13 +141,21 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      item.$3,
-                      size: 18,
-                      color: isSelected
-                          ? const Color(0xFF1F2A37)
-                          : const Color(0xFF64748B),
-                    ),
+                    isBrandMarkTab
+                        ? ValueListenableBuilder<UiPrefsState>(
+                            valueListenable: UiPrefs.notifier,
+                            builder: (context, ui, _) => SoulLocketBrandMark(
+                              styleKey: ui.brandMarkKey,
+                              size: 18,
+                            ),
+                          )
+                        : Icon(
+                            item.$3,
+                            size: 18,
+                            color: isSelected
+                                ? const Color(0xFF1F2A37)
+                                : const Color(0xFF64748B),
+                          ),
                     const SizedBox(height: 5),
                     Text(
                       item.$2,
