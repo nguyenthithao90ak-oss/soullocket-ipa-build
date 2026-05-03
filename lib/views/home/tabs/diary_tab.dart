@@ -18,10 +18,9 @@ import '../../../utils/services/admob_service.dart';
 import '../../../utils/services/memory_share_allowance_service.dart';
 import '../../../utils/services/memory_share_service.dart';
 import '../../../utils/sl_notice.dart';
-import '../../../widgets/cute_loading_indicator.dart';
 import '../../../widgets/share_bottom_sheet.dart';
-import 'package:soullocket_app/utils/services/l10n_service.dart';
 import '../../../widgets/skeleton_container.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'diary_composer.dart';
 
 import 'diary/controllers/diary_composer_controller.dart';
@@ -241,37 +240,40 @@ class _DiaryTabState extends State<DiaryTab> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: List.generate(
-            5,
-            (index) => Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SkeletonContainer.circle(size: 44),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SkeletonContainer.rounded(
-                          width: MediaQuery.of(context).size.width * 0.4,
-                          height: 16,
-                        ),
-                        const SizedBox(height: 8),
-                        const SkeletonContainer.rounded(
-                          width: double.infinity,
-                          height: 80,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+      builder: (_) => Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 36),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.96),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.14),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
               ),
-            ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2.4),
+              ),
+              const SizedBox(width: 14),
+              Flexible(
+                child: Text(
+                  'Đang tạo liên kết...',
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w800,
+                    color: SLColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

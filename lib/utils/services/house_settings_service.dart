@@ -433,7 +433,6 @@ class HouseSettingsService {
     String dateStr, {
     bool startCooldown = false,
   }) async {
-    await _ensureCurrentDeviceCanModifySharedInfo(houseId);
     final safeDate = DateInputUtils.normalizeToIsoDate(
       dateStr,
       firstYear: 1900,

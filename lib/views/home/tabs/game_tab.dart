@@ -135,7 +135,7 @@ class _GameTabState extends State<GameTab> {
     if (confirmed == true) {
       await GameDownloadService().deleteGameData(gameId);
       if (mounted) {
-        setState(() {});
+        await _loadDownloadStatus();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Đã xóa dữ liệu game $name.')),
         );
@@ -144,19 +144,17 @@ class _GameTabState extends State<GameTab> {
   }
 
   void _onGameTap(String gameId, VoidCallback onPlay) async {
-    // Các game này đã tích hợp sẵn assets, chơi được luôn
-    if (gameId == 'soul_block' || gameId == 'soul_rhythm') {
+    final service = GameDownloadService();
+    final isDownloaded = await service.isGameDownloaded(gameId);
+    if (!mounted) return;
+    if (isDownloaded) {
       onPlay();
       return;
     }
-    
-    final service = GameDownloadService();
-    final isDownloaded = await service.isGameDownloaded(gameId);
-    if (isDownloaded) {
-      onPlay();
-    } else {
-      await _handleRealDownload(gameId);
-    }
+
+    await _handleRealDownload(gameId);
+    if (!mounted) return;
+    await _loadDownloadStatus();
   }
 
   @override
@@ -242,6 +240,7 @@ class _GameTabState extends State<GameTab> {
                                   downloadProgress: downloadService.getProgress('soul_block'),
                                   onTap: () => _onGameTap('soul_block', () => _openSoulBlockGame(context)),
                                   onLongPress: isDownloaded ? () => _confirmDeleteGame(context, 'soul_block', 'Soul Block') : null,
+                                  onDelete: isDownloaded ? () => _confirmDeleteGame(context, 'soul_block', 'Soul Block') : null,
                                 );
                               }
                             ),
@@ -255,6 +254,7 @@ class _GameTabState extends State<GameTab> {
                                   downloadProgress: downloadService.getProgress('soul_rhythm'),
                                   onTap: () => _onGameTap('soul_rhythm', () => _openSoulGame(context)),
                                   onLongPress: isDownloaded ? () => _confirmDeleteGame(context, 'soul_rhythm', 'Soul Rhythm') : null,
+                                  onDelete: isDownloaded ? () => _confirmDeleteGame(context, 'soul_rhythm', 'Soul Rhythm') : null,
                                 );
                               }
                             ),
@@ -263,6 +263,8 @@ class _GameTabState extends State<GameTab> {
                               icon: Icons.grid_4x4_rounded,
                               color: const Color(0xFF00E5FF),
                               isDownloaded: true, // Game nhẹ, mặc định có sẵn
+                              onLongPress: () => _confirmDeleteGame(context, 'caro_neon', 'Caro Neon'),
+                              onDelete: () => _confirmDeleteGame(context, 'caro_neon', 'Caro Neon'),
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (_) => const CaroNeonScreen()),
@@ -273,6 +275,8 @@ class _GameTabState extends State<GameTab> {
                               icon: Icons.favorite_rounded,
                               color: const Color(0xFFFF4081),
                               isDownloaded: true, // Game nhẹ, mặc định có sẵn
+                              onLongPress: () => _confirmDeleteGame(context, 'heart_catcher', 'Heart Catcher'),
+                              onDelete: () => _confirmDeleteGame(context, 'heart_catcher', 'Heart Catcher'),
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (_) => const HeartCatcherGame()),
@@ -434,12 +438,14 @@ class _GameLauncherTile extends StatelessWidget {
     this.isDownloaded = false,
     this.downloadProgress,
     this.onLongPress,
+    this.onDelete,
   });
 
   final String label;
   final String semanticsLabel;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
   final Widget preview;
   final Color borderColor;
   final Color shadowColor;
@@ -485,6 +491,30 @@ class _GameLauncherTile extends StatelessWidget {
                         children: [
                           preview,
                           const _TileGlossOverlay(),
+                          if (isDownloaded && onDelete != null)
+                            Positioned(
+                              top: 6,
+                              right: 6,
+                              child: GestureDetector(
+                                onTap: onDelete,
+                                child: Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.58),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: Colors.white,
+                                    size: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -571,11 +601,13 @@ class _SoulRhythmCard extends StatelessWidget {
     this.isDownloaded = false,
     this.downloadProgress,
     this.onLongPress,
+    this.onDelete,
   });
 
   final String imagePath;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
   final bool isDownloaded;
   final double? downloadProgress;
 
@@ -605,6 +637,7 @@ class _SoulRhythmCard extends StatelessWidget {
       semanticsLabel: 'Soul Rhythm',
       onTap: onTap,
       onLongPress: onLongPress,
+      onDelete: onDelete,
       isDownloaded: isDownloaded,
       downloadProgress: downloadProgress,
       borderColor: const Color(0xFFFF77B7),
@@ -648,10 +681,12 @@ class _SoulBlockCard extends StatelessWidget {
     this.isDownloaded = false,
     this.downloadProgress,
     this.onLongPress,
+    this.onDelete,
   });
 
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
   final bool isDownloaded;
   final double? downloadProgress;
 
@@ -662,6 +697,7 @@ class _SoulBlockCard extends StatelessWidget {
       semanticsLabel: 'Soul Block',
       onTap: onTap,
       onLongPress: onLongPress,
+      onDelete: onDelete,
       isDownloaded: isDownloaded,
       downloadProgress: downloadProgress,
       borderColor: const Color(0xFFFFC857),
@@ -792,6 +828,8 @@ class _GenericGameCard extends StatelessWidget {
     required this.onTap,
     this.isDownloaded = false,
     this.downloadProgress,
+    this.onLongPress,
+    this.onDelete,
   });
 
   final String label;
@@ -800,6 +838,8 @@ class _GenericGameCard extends StatelessWidget {
   final VoidCallback onTap;
   final bool isDownloaded;
   final double? downloadProgress;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -809,6 +849,8 @@ class _GenericGameCard extends StatelessWidget {
       onTap: onTap,
       isDownloaded: isDownloaded,
       downloadProgress: downloadProgress,
+      onLongPress: onLongPress,
+      onDelete: onDelete,
       borderColor: color,
       shadowColor: color,
       preview: Container(

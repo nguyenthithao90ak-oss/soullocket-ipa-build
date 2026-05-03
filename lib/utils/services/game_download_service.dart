@@ -58,16 +58,34 @@ class GameDownloadService extends ChangeNotifier {
   }
 
   Future<bool> isGameDownloaded(String gameId) async {
-    // Các game đã được tích hợp sẵn vào assets
-    if (gameId == 'soul_block' || gameId == 'soul_rhythm') return true;
-    
+    final config = _gameConfigs[gameId];
+    if (config == null) {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('game_downloaded_$gameId') ?? false;
+    }
+
+    final directory = await getApplicationDocumentsDirectory();
+    for (final fileName in config.relativePaths) {
+      final file = File('${directory.path}/games/$gameId/$fileName');
+      if (!await file.exists()) {
+        return false;
+      }
+    }
+
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('game_downloaded_$gameId') ?? false;
+    await prefs.setBool('game_downloaded_$gameId', true);
+    return true;
   }
 
   Future<void> downloadGame(String gameId) async {
     final config = _gameConfigs[gameId];
-    if (config == null || (_isDownloading[gameId] ?? false)) return;
+    if (_isDownloading[gameId] ?? false) return;
+    if (config == null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('game_downloaded_$gameId', true);
+      notifyListeners();
+      return;
+    }
 
     _isDownloading[gameId] = true;
     _downloadProgress[gameId] = 0.0;
@@ -99,6 +117,11 @@ class GameDownloadService extends ChangeNotifier {
           remoteUrl = await FirebaseStorage.instance.ref(fullStoragePath).getDownloadURL();
         } catch (storageError) {
           final errStr = storageError.toString().toLowerCase();
+          if (errStr.contains('object-not-found')) {
+            debugPrint('Game asset missing on Storage, fallback to bundled asset: $fullStoragePath');
+            downloadedFiles++;
+            continue;
+          }
           if (errStr.contains('unauthorized') || errStr.contains('permission-denied')) {
             throw 'Lỗi phân quyền: Bạn cần cập nhật Storage Rules trên Firebase Console để cho phép đọc thư mục game_assets.';
           }

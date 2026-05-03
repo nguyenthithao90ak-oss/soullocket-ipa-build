@@ -116,9 +116,9 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                 ),
                 const SizedBox(height: 20),
                 GestureDetector(
-                  onTap: (_isLoading || !_encryptionReady || _hasPendingReset)
+                  onTap: (_isLoading || _hasPendingReset)
                       ? null
-                      : _uploadPhoto,
+                      : (_encryptionReady ? _uploadPhoto : _prepareVault),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 30, vertical: 14),

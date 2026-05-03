@@ -597,8 +597,15 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
           }
 
           final photo = widget.rowPhotos[colIndex];
+          final photoUrl = (photo['url']?.toString().trim().isNotEmpty ?? false)
+              ? photo['url'].toString().trim()
+              : (photo['downloadUrl']?.toString().trim().isNotEmpty ?? false)
+                  ? photo['downloadUrl'].toString().trim()
+                  : (photo['previewUrl']?.toString().trim().isNotEmpty ?? false)
+                      ? photo['previewUrl'].toString().trim()
+                      : (photo['thumbUrl']?.toString().trim() ?? '');
           final imageProvider = _DiaryMemoryImageProviders.thumbnail(
-            (photo['url']?.toString() ?? '').trim(),
+            photoUrl,
             widget.thumbnailCacheWidth,
           );
           return Expanded(

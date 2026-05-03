@@ -546,6 +546,21 @@ class DiaryMemoryController extends ChangeNotifier {
     item['urlExpiresAt'] = result.expiresAt;
   }
 
+  void _normalizeMemoryPhotoUrl(Map<String, dynamic> item) {
+    final existingUrl = item['url']?.toString().trim() ?? '';
+    if (existingUrl.isNotEmpty) {
+      return;
+    }
+    final fallbackUrl = item['downloadUrl']?.toString().trim().isNotEmpty == true
+        ? item['downloadUrl'].toString().trim()
+        : item['previewUrl']?.toString().trim().isNotEmpty == true
+            ? item['previewUrl'].toString().trim()
+            : item['thumbUrl']?.toString().trim() ?? '';
+    if (fallbackUrl.isNotEmpty) {
+      item['url'] = fallbackUrl;
+    }
+  }
+
   List<Map<String, dynamic>> _memoryPhotosFromSource(
     Object? source, {
     required bool useLiveSource,
@@ -565,6 +580,7 @@ class DiaryMemoryController extends ChangeNotifier {
         final item =
             Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
         item['id'] = key.toString();
+        _normalizeMemoryPhotoUrl(item);
         photos.add(item);
       });
     } else if (!useLiveSource && source is List) {
@@ -572,7 +588,9 @@ class DiaryMemoryController extends ChangeNotifier {
         if (item is! Map) {
           continue;
         }
-        photos.add(Map<String, dynamic>.from(item));
+        final normalizedItem = Map<String, dynamic>.from(item);
+        _normalizeMemoryPhotoUrl(normalizedItem);
+        photos.add(normalizedItem);
       }
     }
 

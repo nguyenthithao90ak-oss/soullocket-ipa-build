@@ -46,7 +46,7 @@ extension _SettingsTabShell on _SettingsTabState {
     }
     if (_shouldShowPendingDeviceGate(sectionId)) {
       if (!await _ensureCanModifySecurityInfo(showToast: false)) {
-        // Chỉ chặn nếu là mục bảo mật
+        return;
       }
       if (!mounted) return;
     }

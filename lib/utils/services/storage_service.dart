@@ -973,23 +973,57 @@ class StorageService {
     }
   }
 
+  bool _shouldRetrySignedUploadStatus(int statusCode) {
+    return statusCode == 408 ||
+        statusCode == 429 ||
+        statusCode == 500 ||
+        statusCode == 502 ||
+        statusCode == 503 ||
+        statusCode == 504;
+  }
+
+  bool _shouldRetrySignedUploadError(Object error) {
+    final text = error.toString().toLowerCase();
+    return text.contains('timeout') ||
+        text.contains('timed out') ||
+        text.contains('network') ||
+        text.contains('unavailable') ||
+        text.contains('connection') ||
+        text.contains('kết nối') ||
+        text.contains('mạng');
+  }
+
   Future<void> _uploadBytesToSignedUrl({
     required String uploadUrl,
     required Uint8List bytes,
     required Map<String, String> headers,
   }) async {
-    final response = await http
-        .put(
-          Uri.parse(uploadUrl),
-          headers: headers,
-          body: bytes,
-        )
-        .timeout(const Duration(minutes: 2));
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        final response = await http
+            .put(
+              Uri.parse(uploadUrl),
+              headers: headers,
+              body: bytes,
+            )
+            .timeout(const Duration(minutes: 2));
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception(
-        'Máy chủ lưu trữ từ chối ảnh kho bí mật (${response.statusCode}).',
-      );
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          return;
+        }
+        if (attempt < 2 && _shouldRetrySignedUploadStatus(response.statusCode)) {
+          await Future.delayed(Duration(milliseconds: 520 * (attempt + 1)));
+          continue;
+        }
+        throw Exception(
+          'Máy chủ lưu trữ từ chối ảnh kho bí mật (${response.statusCode}).',
+        );
+      } catch (error) {
+        if (attempt >= 2 || !_shouldRetrySignedUploadError(error)) {
+          rethrow;
+        }
+        await Future.delayed(Duration(milliseconds: 520 * (attempt + 1)));
+      }
     }
   }
 

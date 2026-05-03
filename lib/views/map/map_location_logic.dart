@@ -1429,12 +1429,12 @@ extension _MapLocationLogicExt on _MapScreenState {
               ? Icons.person_pin_circle_rounded
               : Icons.history_toggle_off_rounded,
           color: accent,
-          title: myLive ? widget.myName : '${widget.myName} ở vị trí cuối',
+          title: widget.myName,
           subtitle: _myAddressText,
           pulse: myLive,
           avatarUrl: widget.myAvatarUrl,
           onTap: () => _showMapPointDialog(
-            title: myLive ? widget.myName : '${widget.myName} ở vị trí cuối',
+            title: widget.myName,
             subtitle: _myAddressText,
             accent: accent,
             icon: myLive
@@ -1458,16 +1458,12 @@ extension _MapLocationLogicExt on _MapScreenState {
               ? Icons.favorite_rounded
               : Icons.favorite_border_rounded,
           color: accent,
-          title: partnerLive
-              ? widget.partnerName
-              : '${widget.partnerName} ở vị trí cuối',
+          title: widget.partnerName,
           subtitle: _partnerAddressText,
           pulse: partnerLive,
           avatarUrl: widget.partnerAvatarUrl,
           onTap: () => _showMapPointDialog(
-            title: partnerLive
-                ? widget.partnerName
-                : '${widget.partnerName} ở vị trí cuối',
+            title: widget.partnerName,
             subtitle: _partnerAddressText,
             accent: accent,
             icon: partnerLive

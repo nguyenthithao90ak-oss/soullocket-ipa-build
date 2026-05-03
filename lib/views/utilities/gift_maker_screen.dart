@@ -267,7 +267,6 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   final _senderCtrl = TextEditingController();
   final _messageCtrl = TextEditingController();
   late Stream<List<GiftData>> _sentGiftsStream;
-  late Stream<List<GiftData>> _receivedGiftsStream;
 
   GiftType _selectedType = GiftType.giftBox;
   bool _isChoosingType = true;
@@ -315,8 +314,6 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   void _refreshGiftStreams() {
     _sentGiftsStream =
         _giftService.streamSentGifts(widget.houseId).asBroadcastStream();
-    _receivedGiftsStream =
-        _giftService.streamReceivedGifts(widget.houseId).asBroadcastStream();
   }
 
   @override
@@ -728,9 +725,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xFF12051E),
+        backgroundColor: const Color(0xFFFFF1F7),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
@@ -742,9 +739,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFFD4145A),
-                  Color(0xFFF54EA2),
-                  Color(0xFFFF7A7A),
+                  Color(0xFFFF8AB3),
+                  Color(0xFFFFC2D8),
+                  Color(0xFFFFE3AF),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -782,7 +779,6 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                   tabs: const [
                     Tab(text: 'Tạo quà'),
                     Tab(text: 'Đã gửi'),
-                    Tab(text: 'Đã nhận'),
                   ],
                 ),
               ),
@@ -796,9 +792,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0xFF12051E),
-                      Color(0xFF30104A),
-                      Color(0xFF17192E),
+                      Color(0xFFFFF1F7),
+                      Color(0xFFFFDCEB),
+                      Color(0xFFFFF0C7),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -819,10 +815,18 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                   child: Container(
                     width: double.infinity,
                     decoration: const BoxDecoration(
-                      color: Color(0xFFFFFBFD),
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFFFFFCFE),
+                          Color(0xFFFFF5FA),
+                          Color(0xFFFFF9E8),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                       borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
+                        topLeft: Radius.circular(28),
+                        topRight: Radius.circular(28),
                       ),
                     ),
                     child: TabBarView(
@@ -833,13 +837,6 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                           emptyTitle: 'Bạn chưa tạo quà nào',
                           emptySubtitle: 'Quà bạn đã tạo sẽ hiện ở đây.',
                           markOpened: false,
-                        ),
-                        _buildHistoryTab(
-                          stream: _receivedGiftsStream,
-                          emptyTitle: 'Bạn chưa nhận quà nào',
-                          emptySubtitle:
-                              'Khi có người gửi quà, bạn sẽ thấy ở đây.',
-                          markOpened: true,
                         ),
                       ],
                     ),
