@@ -853,7 +853,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        _autoCreateFailureMessage!,
+                        _autoCreateFailureMessage ?? 'Đã có lỗi xảy ra khi chuẩn bị ngôi nhà. Vui lòng thử lại.',
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
                           height: 1.45,
