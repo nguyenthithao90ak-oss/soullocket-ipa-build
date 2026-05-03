@@ -1,7 +1,8 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 library settings_tab;
 
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../screens/document_viewer_screen.dart';
@@ -9,21 +10,20 @@ import '../screens/global_search_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:in_app_review/in_app_review.dart';
 import '../../login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart' show ShareParams, SharePlus;
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
-
-import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import '../../../services/notification_service.dart';
-import 'package:home_widget/home_widget.dart';
-import 'package:permission_handler/permission_handler.dart' as app_permission;
+import 'package:share_plus/share_plus.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_dynamic_icon/flutter_dynamic_icon.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:home_widget/home_widget.dart';
+import '../../../services/notification_service.dart';
+import 'package:permission_handler/permission_handler.dart' as app_permission;
 import '../../../core/sl_theme.dart';
 import '../../../services/house_settings_service.dart';
 import '../../../services/location_service.dart';
@@ -68,7 +68,6 @@ import 'package:local_auth/local_auth.dart';
 import '../../utilities/device_manager_screen.dart';
 // import '../../auth/qr_authorize_scanner_screen.dart';
 import '../../utilities/user_support_chat_screen.dart';
-import 'settings/settings_gift_links_manager_screen.dart';
 import '../../../services/l10n_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/device_manager_service.dart';
@@ -98,6 +97,10 @@ import '../../visitors/visitor_profile_screen.dart';
 import 'settings/account/identity_panel.dart';
 import 'settings/controllers/settings_identity_controller.dart';
 import 'settings/relationship/relationship_actions.dart';
+import 'settings/theme/theme_panel.dart';
+import 'settings/theme/theme_preview_builder.dart';
+import 'settings/theme/anniversary_panel.dart';
+import 'settings/theme/theme_background_actions.dart';
 
 part 'settings/settings_shared_widgets.dart';
 part 'settings/settings_state_helpers.dart';
@@ -414,6 +417,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isVipActive = false;
   bool _isRestoringVip = false;
   bool _googleLinked = false;
+  bool _appleLinked = false;
   bool _passwordLinked = false;
   bool _isMainEmailVerified = false;
   bool _hasRecoveryAnswer = false;
@@ -421,6 +425,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   final bool _showCustomLock = false;
   bool _showPasswordEditor = false;
   bool _isLinkingGoogle = false;
+  bool _isLinkingApple = false;
   bool _musicAutoplay = true;
   bool _notifAnniversary = true;
   bool _notifPost = true;
@@ -690,6 +695,14 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     }
 
     return _buildSettingsScaffold();
+  }
+
+  int _daysSince(DateTime startDate) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final normalized = DateTime(startDate.year, startDate.month, startDate.day);
+    final days = today.difference(normalized).inDays;
+    return days < 0 ? 0 : days;
   }
 
   Future<void> _addCustomAnniversary() async {

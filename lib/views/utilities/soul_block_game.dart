@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -10,14 +9,12 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/sl_theme.dart';
 import '../../services/admob_service.dart';
 import '../../services/house_service.dart';
 import '../premium/premium_store_screen.dart';
-import '../../utils/services/game_download_service.dart';
 
 part 'soul_block/soul_block_panels.dart';
 part 'soul_block/soul_block_refined_panels.dart';

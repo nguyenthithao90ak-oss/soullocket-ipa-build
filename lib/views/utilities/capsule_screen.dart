@@ -569,8 +569,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         maxLines: maxLines,
         cursorColor: _textPrimary,
         style: SLTheme.quicksand(
-          color: const Color(0xFF2B1F66), // Dark purple for visibility on white background
-          fontWeight: FontWeight.w700,
+          color: _textPrimary,
+          fontWeight: FontWeight.w600,
         ),
         decoration: InputDecoration(
           hintText: hint,

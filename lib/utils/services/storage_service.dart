@@ -579,7 +579,6 @@ class StorageService {
     String caption = '',
     String thumbUrl = '',
     String type = 'image',
-    String? blurHash,
   }) async {
     try {
       return _finalizeHelper.finalizeUpload(
@@ -594,7 +593,6 @@ class StorageService {
           'caption': caption.trim(),
           'thumbUrl': thumbUrl.trim(),
           'type': type.trim(),
-          if (blurHash != null) 'blurHash': blurHash,
         },
         label: 'Album finalize response',
       );
@@ -639,10 +637,9 @@ class StorageService {
     required String authorRole,
     double? lat,
     double? lng,
-    String? blurHash,
   }) async {
     try {
-      final response = await _finalizeHelper.finalizeUpload(
+      return _finalizeHelper.finalizeUpload(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
           () => _functions.httpsCallable(name).call(payload),
           allowUnauthenticatedWithoutMarkers: true,
@@ -656,18 +653,9 @@ class StorageService {
           'authorRole': authorRole.trim(),
           if (lat != null) 'lat': lat,
           if (lng != null) 'lng': lng,
-          if (blurHash != null) 'blurHash': blurHash,
         },
         label: 'Memory finalize response',
       );
-      
-      final isOk = response['ok'] == true;
-      final memoryId = response['memoryId']?.toString().trim() ?? '';
-      if (isOk && memoryId.isNotEmpty) {
-        debugPrint('✅ UPLOAD THÀNH CÔNG: Memory ID = $memoryId');
-      }
-      
-      return response;
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
@@ -675,7 +663,11 @@ class StorageService {
         case 'invalid-argument':
           throw Exception('Thiếu dữ liệu để hoàn tất ảnh Kỷ niệm.');
         case 'resource-exhausted':
-          throw Exception('Bạn đã đạt giới hạn đăng ảnh Kỷ niệm hôm nay.');
+          throw Exception(
+            (error.message ?? '').trim().isNotEmpty
+                ? error.message!.trim()
+                : 'Bạn đã đạt giới hạn đăng ảnh Kỷ niệm hôm nay.',
+          );
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -897,7 +889,6 @@ class StorageService {
     bool isLocket = false,
     bool commentsEnabled = true,
     bool flagged = false,
-    String? blurHash,
   }) async {
     try {
       return _finalizeHelper.finalizeUpload(
@@ -926,7 +917,6 @@ class StorageService {
           'isLocket': isLocket,
           'commentsEnabled': commentsEnabled,
           'flagged': flagged,
-          if (blurHash != null) 'blurHash': blurHash,
         },
         label: 'Public image finalize response',
       );
@@ -973,57 +963,23 @@ class StorageService {
     }
   }
 
-  bool _shouldRetrySignedUploadStatus(int statusCode) {
-    return statusCode == 408 ||
-        statusCode == 429 ||
-        statusCode == 500 ||
-        statusCode == 502 ||
-        statusCode == 503 ||
-        statusCode == 504;
-  }
-
-  bool _shouldRetrySignedUploadError(Object error) {
-    final text = error.toString().toLowerCase();
-    return text.contains('timeout') ||
-        text.contains('timed out') ||
-        text.contains('network') ||
-        text.contains('unavailable') ||
-        text.contains('connection') ||
-        text.contains('kết nối') ||
-        text.contains('mạng');
-  }
-
   Future<void> _uploadBytesToSignedUrl({
     required String uploadUrl,
     required Uint8List bytes,
     required Map<String, String> headers,
   }) async {
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        final response = await http
-            .put(
-              Uri.parse(uploadUrl),
-              headers: headers,
-              body: bytes,
-            )
-            .timeout(const Duration(minutes: 2));
+    final response = await http
+        .put(
+          Uri.parse(uploadUrl),
+          headers: headers,
+          body: bytes,
+        )
+        .timeout(const Duration(minutes: 2));
 
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          return;
-        }
-        if (attempt < 2 && _shouldRetrySignedUploadStatus(response.statusCode)) {
-          await Future.delayed(Duration(milliseconds: 520 * (attempt + 1)));
-          continue;
-        }
-        throw Exception(
-          'Máy chủ lưu trữ từ chối ảnh kho bí mật (${response.statusCode}).',
-        );
-      } catch (error) {
-        if (attempt >= 2 || !_shouldRetrySignedUploadError(error)) {
-          rethrow;
-        }
-        await Future.delayed(Duration(milliseconds: 520 * (attempt + 1)));
-      }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Máy chủ lưu trữ từ chối ảnh kho bí mật (${response.statusCode}).',
+      );
     }
   }
 

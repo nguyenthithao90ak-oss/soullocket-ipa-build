@@ -27,13 +27,7 @@ class WebRTCService {
 
   final Map<String, dynamic> _fallbackConfiguration = {
     'iceServers': [
-      {'urls': [
-        'stun:stun.l.google.com:19302',
-        'stun:stun1.l.google.com:19302',
-        'stun:stun2.l.google.com:19302',
-        'stun:stun3.l.google.com:19302',
-        'stun:stun4.l.google.com:19302'
-      ]},
+      {'urls': 'stun:stun.l.google.com:19302'},
     ],
   };
 
@@ -86,8 +80,8 @@ class WebRTCService {
       'video': includeVideo
           ? {
               'mandatory': {
-                'minWidth': '640',
-                'minHeight': '480',
+                'minWidth': '1280',
+                'minHeight': '720',
                 'minFrameRate': '30',
               },
               'facingMode': 'user',

@@ -439,7 +439,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     }
 
     _showToast(
-      'Đổi email chính bằng mã 6 số chưa được bật. Không dùng link xác minh để tránh nhầm lẫn.',
+      'Đổi email chính bằng mã 6 số chưa được bật. Tính năng sẽ mở trong bản cập nhật tiếp theo.',
       success: false,
     );
   }

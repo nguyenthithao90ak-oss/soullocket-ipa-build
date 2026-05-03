@@ -242,16 +242,13 @@ extension _MapPanelSectionsExt on _MapScreenState {
         return Container(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B).withOpacity(0.8),
+            gradient: const LinearGradient(
+              colors: [_kMapSummaryStart, _kMapSummaryEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: SLRadius.xlAll,
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            border: Border.all(color: _kMapPanelBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -418,11 +415,12 @@ extension _MapPanelSectionsExt on _MapScreenState {
                 SLSpacing.h12,
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.1),
+                    color: const Color(0xFFFFFBEB),
                     borderRadius: SLRadius.lgAll,
-                    border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFFFCD34D)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,40 +430,40 @@ extension _MapPanelSectionsExt on _MapScreenState {
                         children: [
                           if (_isBootstrappingLocation)
                             const SizedBox(
-                              width: 18,
-                              height: 18,
+                              width: 16,
+                              height: 16,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Color(0xFF10B981),
+                                strokeWidth: 2,
+                                color: _kMapPinkDeep,
                               ),
                             )
                           else
                             const Icon(
-                              Icons.location_on_rounded,
-                              size: 18,
-                              color: Color(0xFF10B981),
+                              Icons.location_searching_rounded,
+                              size: 16,
+                              color: Color(0xFFD97706),
                             ),
-                          SLSpacing.w10,
+                          SLSpacing.w8,
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Cấu hình GPS',
+                                  'Trạng thái GPS',
                                   style: SLTheme.quicksand(
-                                    fontSize: 13,
+                                    fontSize: 11.5,
                                     fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF10B981),
+                                    color: const Color(0xFF92400E),
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 3),
                                 Text(
                                   _locationStatusMessage!,
                                   style: SLTheme.quicksand(
-                                    fontSize: 12,
+                                    fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.white.withOpacity(0.8),
-                                    height: 1.4,
+                                    color: const Color(0xFF92400E),
+                                    height: 1.35,
                                   ),
                                 ),
                               ],
@@ -474,24 +472,12 @@ extension _MapPanelSectionsExt on _MapScreenState {
                         ],
                       ),
                       if (!_isBootstrappingLocation) ...[
-                        SLSpacing.h12,
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF10B981),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
-                            ),
-                            onPressed: () => _bootstrapLocationTracking(forcePrompt: true),
-                            icon: const Icon(Icons.gps_fixed_rounded, size: 18),
-                            label: Text(
-                              'BẬT CẬP NHẬT GPS NGAY',
-                              style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
-                            ),
-                          ),
+                        SLSpacing.h8,
+                        OutlinedButton.icon(
+                          onPressed: () =>
+                              _bootstrapLocationTracking(forcePrompt: true),
+                          icon: const Icon(Icons.my_location_rounded, size: 16),
+                          label: const Text('Bật/Cấp quyền GPS'),
                         ),
                       ],
                     ],

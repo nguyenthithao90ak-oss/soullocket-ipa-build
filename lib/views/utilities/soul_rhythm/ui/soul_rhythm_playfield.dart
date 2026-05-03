@@ -110,6 +110,15 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
               border: Border.all(
                 color: Colors.white.withOpacity(0.09),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00E5FF).withOpacity(
+                    0.08 + (bgPulse * 0.12),
+                  ),
+                  blurRadius: 22,
+                  spreadRadius: 0.5,
+                ),
+              ],
             ),
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -422,35 +431,34 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                       return Container(
                         width: tile.width,
                         height: tile.height,
-                          decoration: BoxDecoration(
-                            borderRadius: borderRadius,
-                            gradient: LinearGradient(
-                              colors: [
-                                Color.lerp(tile.color, Colors.white, 0.52)!,
-                                coreColor,
-                                shadowColor,
-                                Colors.black.withOpacity(0.45),
-                              ],
-                              stops: const [0.0, 0.18, 0.85, 1.0],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.92),
-                              width: 1.5,
-                            ),
+                        decoration: BoxDecoration(
+                          borderRadius: borderRadius,
+                          gradient: LinearGradient(
+                            colors: [
+                              Color.lerp(tile.color, Colors.white, 0.42)!,
+                              coreColor,
+                              shadowColor,
+                            ],
+                            stops: const [0.0, 0.22, 1.0],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.86),
+                            width: 1.25,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: tile.color.withOpacity(
-                                _isLowGraphics ? 0.62 : 0.88,
+                                _isLowGraphics ? 0.54 : 0.78,
                               ),
-                              blurRadius: glowBlur * 1.2,
-                              spreadRadius: glowSpread * 1.1,
+                              blurRadius: glowBlur,
+                              spreadRadius: glowSpread,
                             ),
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.35),
-                              blurRadius: _isLowGraphics ? 8 : 14,
-                              offset: const Offset(0, 12),
+                              color: Colors.black.withOpacity(0.30),
+                              blurRadius: _isLowGraphics ? 7 : 12,
+                              offset: const Offset(0, 10),
                             ),
                             if (!_isLowGraphics)
                               BoxShadow(

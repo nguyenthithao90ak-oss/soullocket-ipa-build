@@ -11,7 +11,6 @@ class DiaryPost {
   final bool pinned;
   final int? pinnedAt;
   final Map<String, dynamic>? likes; // {uid: true}
-  final String? blurHash;
 
   const DiaryPost({
     required this.id,
@@ -26,7 +25,6 @@ class DiaryPost {
     this.pinned = false,
     this.pinnedAt,
     this.likes,
-    this.blurHash,
   });
 
   bool get isEdited => editedAt != null;
@@ -68,7 +66,6 @@ class DiaryPost {
               ? (json['pinnedAt'] as num).toInt()
               : int.tryParse('${json['pinnedAt'] ?? ''}'),
       likes: likesMap,
-      blurHash: json['blurHash']?.toString(),
     );
   }
 
@@ -85,6 +82,5 @@ class DiaryPost {
         'pinned': pinned,
         if (pinnedAt != null) 'pinnedAt': pinnedAt,
         if (editedAt != null) 'editedAt': editedAt,
-        if (blurHash != null) 'blurHash': blurHash,
       };
 }

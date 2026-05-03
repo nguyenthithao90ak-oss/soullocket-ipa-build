@@ -1,6 +1,14 @@
-﻿part of '../../settings_tab.dart';
+part of '../../settings_tab.dart';
 
 extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
+  Future<void> _handleThemeSelection(String key) async {
+    _updateThemeDraft(() => _draftThemeKey = key);
+  }
+
+  void _safeSetState(VoidCallback fn) {
+    if (mounted) setState(fn);
+  }
+
   Widget _buildThemeSectionHeader(String title, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -70,7 +78,7 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //     final countdownPreviewSize = (countdownSize * 0.4).toDouble();
 //
 //     return ClipRRect(
-//       borderRadius: BorderRadius.circular(12),
+//       borderRadius: BorderRadius.circular(28),
 //       child: AspectRatio(
 //         aspectRatio: 1.0,
 //         child: Container(

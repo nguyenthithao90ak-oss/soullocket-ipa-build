@@ -1,4 +1,4 @@
-﻿part of '../soul_block_game.dart';
+part of '../soul_block_game.dart';
 
 mixin _SoulBlockStrategyLogic {
   Random get _random;
@@ -176,34 +176,45 @@ mixin _SoulBlockStrategyLogic {
         fittingCandidates.any((candidate) => candidate.template.tier == 0);
 
     final allCombos = _pickTemplateCombos(pool, 3);
-      if (allCombos.isEmpty) {
-        return fittingCandidates
-            .take(3)
-            .map((candidate) => _spawnPieceFromTemplate(candidate.template))
-            .toList(growable: false);
-      }
+    if (allCombos.isEmpty) {
+      return fittingCandidates
+          .take(3)
+          .map((candidate) => _spawnPieceFromTemplate(candidate.template))
+          .toList(growable: false);
+    }
 
-      final memo = <String, double>{};
-      final rankedBatches = <_BatchChoice>[];
-      for (final combo in allCombos) {
-        final uniqueTiers = combo.map((e) => e.tier).toSet().length;
-        final uniqueIds = combo.map((e) => e.id).toSet().length;
-        final double varietyBonus = (uniqueTiers * 5.0) + (uniqueIds * 3.0);
-        
-        final score = _evaluateBatchPlan(boardMask, combo, memo);
-        if (score.isFinite) {
-          rankedBatches.add(_BatchChoice(templates: combo, score: score + varietyBonus));
-        }
+    final rankedBatches = <_BatchChoice>[];
+    for (final combo in allCombos) {
+      if (forceEasyAnchor &&
+          !combo.any((template) => template.tier == 0) &&
+          fittingCandidates.any((candidate) => candidate.template.tier == 0)) {
+        continue;
       }
-
-      if (rankedBatches.isEmpty) {
-        return fittingCandidates
-            .take(3)
-            .map((candidate) => _spawnPieceFromTemplate(candidate.template))
-            .toList(growable: false);
+      final score = _evaluateBatchPlan(
+        boardMask,
+        combo,
+        <String, double>{},
+      );
+      final double diversityBoost =
+          combo.map((template) => template.tier).toSet().length.toDouble() *
+              (progress < 0.45 ? 5.5 : 8.0);
+      final double earlyEaseBoost = progress < 0.25
+          ? combo.where((template) => template.tier == 0).length * 9.0
+          : 0.0;
+      final double lateChallengeBoost = progress > 0.62
+          ? combo.where((template) => template.tier == 2).length * 10.0
+          : 0.0;
+      if (score.isFinite) {
+        rankedBatches.add(
+          _BatchChoice(
+            templates: combo,
+            score: score + diversityBoost + earlyEaseBoost + lateChallengeBoost,
+          ),
+        );
       }
+    }
 
-      rankedBatches.sort((a, b) => b.score.compareTo(a.score));
+    rankedBatches.sort((a, b) => b.score.compareTo(a.score));
     late final List<_SoulPieceTemplate> chosenTemplates;
     if (rankedBatches.isEmpty) {
       chosenTemplates = fittingCandidates
@@ -654,5 +665,3 @@ mixin _SoulBlockStrategyLogic {
     return template.cellCount * 5 + template.tier * 8;
   }
 }
-
-

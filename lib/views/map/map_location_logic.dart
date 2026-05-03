@@ -1027,7 +1027,6 @@ extension _MapLocationLogicExt on _MapScreenState {
 
     _memorySignature = signature;
     if (!mounted) return;
-
     _applyPanelStateUpdate(() {
       _memories = merged;
       _memorySummary = _buildMemorySummaryLabel(merged.length);
@@ -1429,12 +1428,12 @@ extension _MapLocationLogicExt on _MapScreenState {
               ? Icons.person_pin_circle_rounded
               : Icons.history_toggle_off_rounded,
           color: accent,
-          title: widget.myName,
+          title: myLive ? widget.myName : '${widget.myName} ở vị trí cuối',
           subtitle: _myAddressText,
           pulse: myLive,
           avatarUrl: widget.myAvatarUrl,
           onTap: () => _showMapPointDialog(
-            title: widget.myName,
+            title: myLive ? widget.myName : '${widget.myName} ở vị trí cuối',
             subtitle: _myAddressText,
             accent: accent,
             icon: myLive
@@ -1458,12 +1457,16 @@ extension _MapLocationLogicExt on _MapScreenState {
               ? Icons.favorite_rounded
               : Icons.favorite_border_rounded,
           color: accent,
-          title: widget.partnerName,
+          title: partnerLive
+              ? widget.partnerName
+              : '${widget.partnerName} ở vị trí cuối',
           subtitle: _partnerAddressText,
           pulse: partnerLive,
           avatarUrl: widget.partnerAvatarUrl,
           onTap: () => _showMapPointDialog(
-            title: widget.partnerName,
+            title: partnerLive
+                ? widget.partnerName
+                : '${widget.partnerName} ở vị trí cuối',
             subtitle: _partnerAddressText,
             accent: accent,
             icon: partnerLive

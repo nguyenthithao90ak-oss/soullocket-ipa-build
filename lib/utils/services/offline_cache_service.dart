@@ -1,129 +1,261 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+import 'dart:async';
 import 'dart:convert';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+
+import 'offline_cache_policy.dart';
+
+dynamic _decodeJson(String source) => jsonDecode(source);
+
+String _encodeCachePayload(Map<String, dynamic> payload) => jsonEncode(payload);
+
+Map<String, dynamic>? _decodeCachePayload(String source) {
+  try {
+    final decoded = jsonDecode(source);
+    if (decoded is Map) {
+      return Map<String, dynamic>.from(decoded);
+    }
+  } catch (_) {}
+  return null;
+}
+
+const OfflineCachePolicy _offlineCachePolicy = OfflineCachePolicy();
+
+Map<String, dynamic>? _resolveCachePayload(String? raw) {
+  if (raw == null) {
+    return null;
+  }
+  final payload = _decodeCachePayload(raw);
+  if (payload == null) {
+    return null;
+  }
+  final int ts = payload['ts'] ?? 0;
+  if (_offlineCachePolicy.isExpired(ts)) {
+    return null;
+  }
+  return payload;
+}
 
 class OfflineCacheService {
-  static final OfflineCacheService instance = OfflineCacheService._internal();
-  static Database? _database;
-  static SharedPreferences? _cachedPrefs;
+  static const String _prefix = 'il_offline_cache_';
+  static const int _maxCacheAgeMs = OfflineCachePolicy.maxCacheAgeMs; // 7 ngày
+  static const String _dbName = 'soullocket_offline_cache.db';
+  static const String _cacheTable = 'offline_cache_entries';
 
-  OfflineCacheService._internal();
+  static SharedPreferences? _prefsInstance;
+  static Database? _dbInstance;
+  static Future<Database?>? _dbFuture;
 
-  static SharedPreferences? getPrefsSync() => _cachedPrefs;
-
-  static Future<void> initialize() async {
-    _cachedPrefs = await SharedPreferences.getInstance();
+  // Cho phép truyền thẳng prefs đã lấy từ main() vào để giảm thời gian await
+  static void initSync(SharedPreferences prefs) {
+    _prefsInstance = prefs;
   }
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+  static SharedPreferences? getPrefsSync() => _prefsInstance;
+
+  static Future<void> ensureWarmCache() async {
+    await _getPrefs();
   }
 
-  Future<Database> _initDatabase() async {
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final path = join(documentsDirectory.path, 'offline_cache.db');
-    
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
+  static int get maxCacheAgeMs => _maxCacheAgeMs;
+
+  static String storageKey(String key) => _storageKey(key);
+
+  static Future<List<String>> listStoredKeys() async {
+    final prefs = await _getPrefs();
+    return prefs
+        .getKeys()
+        .where((key) => key.startsWith(_prefix))
+        .toList(growable: false)
+      ..sort();
   }
 
-  Future<void> _onCreate(Database db, int version) async {
-    // Table for Chat caching
-    await db.execute('''
-      CREATE TABLE chat_cache (
-        id TEXT PRIMARY KEY,
-        house_id TEXT,
-        payload TEXT,
-        updated_at INTEGER
-      )
-    ''');
+  static String _storageKey(String key) => '$_prefix$key';
 
-    // Table for Diary caching
-    await db.execute('''
-      CREATE TABLE diary_cache (
-        id TEXT PRIMARY KEY,
-        house_id TEXT,
-        payload TEXT,
-        updated_at INTEGER
-      )
-    ''');
-    
-    await db.execute('CREATE INDEX idx_chat_house ON chat_cache (house_id)');
-    await db.execute('CREATE INDEX idx_diary_house ON diary_cache (house_id)');
+  static bool _shouldUseDatabase(String key) =>
+      _offlineCachePolicy.shouldUseDatabase(key);
+
+  static Future<SharedPreferences> _getPrefs() async {
+    return _prefsInstance ??= await SharedPreferences.getInstance();
   }
 
-  Future<void> cacheData(String table, String id, String houseId, Map<String, dynamic> data) async {
-    final db = await database;
-    await db.insert(
-      table,
-      {
-        'id': id,
-        'house_id': houseId,
-        'payload': data.toString(), // Simplify for now, usually use jsonEncode
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  static Future<Database?> _getDatabase() async {
+    if (kIsWeb) return null;
+    if (_dbInstance != null) return _dbInstance;
+    if (_dbFuture != null) return _dbFuture!;
+    _dbFuture = _openDatabase();
+    final db = await _dbFuture!;
+    _dbInstance = db;
+    _dbFuture = null;
+    return db;
   }
 
-  Future<List<Map<String, dynamic>>> getCachedData(String table, String houseId) async {
-    final db = await database;
-    return await db.query(
-      table,
-      where: 'house_id = ?',
-      whereArgs: [houseId],
-      orderBy: 'updated_at DESC',
-    );
-  }
-
-  Future<void> clearCache(String table, {String? houseId}) async {
-    final db = await database;
-    if (houseId != null) {
-      await db.delete(table, where: 'house_id = ?', whereArgs: [houseId]);
-    } else {
-      await db.delete(table);
-    }
-  }
-
-  // Legacy compatibility methods for current controllers
-  static Future<void> saveCache(String key, dynamic data) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('offline_cache_$key', jsonEncode(data));
-  }
-
-  static Future<dynamic> loadCache(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('offline_cache_$key');
-    if (raw == null) return null;
+  static Future<Database?> _openDatabase() async {
     try {
-      return jsonDecode(raw);
+      final dbPath = await getDatabasesPath();
+      final db = await openDatabase(
+        p.join(dbPath, _dbName),
+        version: 1,
+        onCreate: (db, version) async {
+          await db.execute('''
+            CREATE TABLE $_cacheTable (
+              cache_key TEXT PRIMARY KEY,
+              payload TEXT NOT NULL,
+              ts INTEGER NOT NULL
+            )
+          ''');
+        },
+      );
+      return db;
     } catch (_) {
       return null;
     }
   }
 
-  static dynamic loadCacheSync(String key) {
-    // Note: This is a fake sync implementation using a memory cache or similar if needed.
-    // Since SharedPreferences doesn't support sync reading easily without a previous load,
-    // we return null for now to avoid blocking, or the caller should use the Future version.
-    return null;
+  static Future<void> _saveCacheToDatabase(
+    String key,
+    String encodedPayload,
+    int timestamp,
+  ) async {
+    final db = await _getDatabase();
+    if (db == null) return;
+    await db.insert(
+      _cacheTable,
+      {
+        'cache_key': key,
+        'payload': encodedPayload,
+        'ts': timestamp,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
+  static Future<String?> _loadRawCacheFromDatabase(String key) async {
+    final db = await _getDatabase();
+    if (db == null) return null;
+    final rows = await db.query(
+      _cacheTable,
+      columns: ['payload'],
+      where: 'cache_key = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['payload'] as String?;
+  }
+
+  static Future<void> _removeCacheFromDatabase(String key) async {
+    final db = await _getDatabase();
+    if (db == null) return;
+    await db.delete(
+      _cacheTable,
+      where: 'cache_key = ?',
+      whereArgs: [key],
+    );
+  }
+
+  static dynamic decodeJsonSync(String source) {
+    try {
+      return jsonDecode(source);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Lưu dữ liệu vào cache
+  static Future<void> saveCache(String key, dynamic data) async {
+    try {
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final payload = {
+        'ts': ts,
+        'data': data,
+      };
+      final encoded = await compute(_encodeCachePayload, payload);
+      if (_shouldUseDatabase(key)) {
+        await _saveCacheToDatabase(key, encoded, ts);
+        final prefs = _prefsInstance;
+        if (prefs != null) {
+          await prefs.remove(_storageKey(key));
+        }
+        return;
+      }
+      final prefs = await _getPrefs();
+      await prefs.setString(_storageKey(key), encoded);
+    } catch (_) {}
+  }
+
+  // Đọc dữ liệu từ cache đồng bộ (nếu prefs đã được init)
+  static dynamic loadCacheSync(String key) {
+    try {
+      final prefs = getPrefsSync();
+      if (prefs == null) return null;
+      final raw = prefs.getString(_storageKey(key));
+      if (raw == null) return null;
+
+      final payload = _resolveCachePayload(raw);
+      if (payload == null) {
+        prefs.remove(_storageKey(key));
+        return null;
+      }
+
+      return payload['data'];
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Đọc dữ liệu từ cache
+  static Future<dynamic> loadCache(String key) async {
+    try {
+      String? raw;
+      if (_shouldUseDatabase(key)) {
+        raw = await _loadRawCacheFromDatabase(key);
+      }
+      raw ??= (await _getPrefs()).getString(_storageKey(key));
+      if (raw == null) return null;
+
+      final payload = await compute(_resolveCachePayload, raw);
+      if (payload == null) {
+        await removeCache(key);
+        return null;
+      }
+
+      if (_shouldUseDatabase(key)) {
+        final prefs = _prefsInstance;
+        if (prefs != null && prefs.containsKey(_storageKey(key))) {
+          unawaited(prefs.remove(_storageKey(key)));
+        }
+      }
+
+      return payload['data'];
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Xoá cache cụ thể
+  static Future<void> removeCache(String key) async {
+    final prefs = await _getPrefs();
+    await prefs.remove(_storageKey(key));
+    if (_shouldUseDatabase(key)) {
+      await _removeCacheFromDatabase(key);
+    }
+  }
+
+  // Xoá toàn bộ cache
   static Future<void> clearAllCache() async {
-    final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((k) => k.startsWith('offline_cache_'));
-    for (final key in keys) {
+    final prefs = await _getPrefs();
+    final keys = prefs.getKeys().where((k) => k.startsWith(_prefix)).toList();
+    for (String key in keys) {
       await prefs.remove(key);
     }
-    await _database?.close();
-    _database = null;
+    final db = await _getDatabase();
+    if (db != null) {
+      await db.delete(_cacheTable);
+    }
   }
 }

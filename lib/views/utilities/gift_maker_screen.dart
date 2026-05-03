@@ -8,7 +8,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/gift_maker_service.dart';
 import '../../services/deeplink_service.dart';
@@ -267,9 +266,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   final _senderCtrl = TextEditingController();
   final _messageCtrl = TextEditingController();
   late Stream<List<GiftData>> _sentGiftsStream;
+  late Stream<List<GiftData>> _receivedGiftsStream;
 
   GiftType _selectedType = GiftType.giftBox;
-  bool _isChoosingType = true;
   bool _isCreating = false;
   String? _lastGiftId;
   File? _selectedImage;
@@ -314,6 +313,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   void _refreshGiftStreams() {
     _sentGiftsStream =
         _giftService.streamSentGifts(widget.houseId).asBroadcastStream();
+    _receivedGiftsStream =
+        _giftService.streamReceivedGifts(widget.houseId).asBroadcastStream();
   }
 
   @override
@@ -642,36 +643,6 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: () async {
-                            final link = _deeplinkService.generateGiftLink(draft);
-                            if (await canLaunchUrl(Uri.parse(link))) {
-                              await launchUrl(
-                                Uri.parse(link),
-                                mode: LaunchMode.externalApplication,
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.language_rounded),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF17192E),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                          ),
-                          label: Text(
-                            'Mở Web Quà Tặng',
-                            style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -725,9 +696,10 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
-        backgroundColor: const Color(0xFFFFF1F7),
+        extendBodyBehindAppBar: true,
+        backgroundColor: const Color(0xFF12051E),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
@@ -739,9 +711,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFFFF8AB3),
-                  Color(0xFFFFC2D8),
-                  Color(0xFFFFE3AF),
+                  Color(0xFFD4145A),
+                  Color(0xFFF54EA2),
+                  Color(0xFFFF7A7A),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -779,6 +751,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                   tabs: const [
                     Tab(text: 'Tạo quà'),
                     Tab(text: 'Đã gửi'),
+                    Tab(text: 'Đã nhận'),
                   ],
                 ),
               ),
@@ -792,9 +765,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0xFFFFF1F7),
-                      Color(0xFFFFDCEB),
-                      Color(0xFFFFF0C7),
+                      Color(0xFF12051E),
+                      Color(0xFF30104A),
+                      Color(0xFF17192E),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -815,18 +788,10 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                   child: Container(
                     width: double.infinity,
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFFFFFCFE),
-                          Color(0xFFFFF5FA),
-                          Color(0xFFFFF9E8),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
+                      color: Color(0xFFFFFBFD),
                       borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(28),
-                        topRight: Radius.circular(28),
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32),
                       ),
                     ),
                     child: TabBarView(
@@ -837,6 +802,13 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                           emptyTitle: 'Bạn chưa tạo quà nào',
                           emptySubtitle: 'Quà bạn đã tạo sẽ hiện ở đây.',
                           markOpened: false,
+                        ),
+                        _buildHistoryTab(
+                          stream: _receivedGiftsStream,
+                          emptyTitle: 'Bạn chưa nhận quà nào',
+                          emptySubtitle:
+                              'Khi có người gửi quà, bạn sẽ thấy ở đây.',
+                          markOpened: true,
                         ),
                       ],
                     ),
@@ -851,132 +823,111 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   }
 
   Widget _buildCreateTab() {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 350),
-      switchInCurve: SLCurves.easeOutQuicksand,
-      switchOutCurve: SLCurves.easeInQuicksand,
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0.05, 0),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          ),
-        );
-      },
-      child: _isChoosingType
-          ? _buildGiftTypeSelectionView()
-          : _buildGiftEditView(),
-    );
-  }
-
-  Widget _buildGiftTypeSelectionView() {
     return ListView(
-      key: const ValueKey('gift_type_selection'),
-      padding: const EdgeInsets.fromLTRB(12, 16, 12, 32),
+      padding: const EdgeInsets.fromLTRB(10, 12, 10, 28),
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        widget._buildHeroBanner(
+          selectedType: _selectedType,
+          onPreview: () => _openGiftPreview(
+            GiftData(
+              giftId: _lastGiftId ?? 'preview',
+              fromHouseId: widget.houseId,
+              fromName: _senderCtrl.text.trim().isEmpty
+                  ? widget.myName
+                  : _senderCtrl.text.trim(),
+              toHouseId: widget.houseId,
+              message: _messageCtrl.text.trim().isEmpty
+                  ? 'Món quà thử để xem trước.'
+                  : _messageCtrl.text.trim(),
+              imageUrl: _selectedImage?.path ?? '',
+              ts: DateTime.now().millisecondsSinceEpoch,
+              status: 'new',
+              giftType: _selectedType,
+              features: const {},
+            ),
+            markOpened: false,
+          ),
+        ),
+        SLSpacing.h12,
+        _sectionCard(
+          title: 'Chọn kiểu quà',
+          subtitle: '9 kiểu quà với cách mở và cảm giác khác nhau.',
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Chọn kiểu quà',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 22,
-                  color: const Color(0xFF111827),
-                ),
+              Column(
+                children: List.generate(GiftType.values.length, (index) {
+                  final type = GiftType.values[index];
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index == GiftType.values.length - 1 ? 0 : 12,
+                    ),
+                    child: _buildGiftTypeCard(type),
+                  );
+                }),
               ),
-              const SizedBox(height: 4),
-              Text(
-                '9 kiểu quà với cách mở và cảm giác khác nhau.',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF6B7280),
+              SLSpacing.h12,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF4F8),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFF2D6E2)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD81B60).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.auto_awesome_rounded,
+                        color: Color(0xFFD81B60),
+                        size: 20,
+                      ),
+                    ),
+                    SLSpacing.w10,
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.12),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Text(
+                          GiftMakerService.giftNote(_selectedType),
+                          key: ValueKey('selection_note_${_selectedType.name}'),
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w800,
+                            height: 1.5,
+                            color: const Color(0xFF4B5563),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 1,
-            mainAxisExtent: 110,
-            mainAxisSpacing: 12,
-          ),
-          itemCount: GiftType.values.length,
-          itemBuilder: (context, index) {
-            final type = GiftType.values[index];
-            return _buildGiftTypeCard(type);
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGiftEditView() {
-    final colors = widget._giftColors(_selectedType);
-    return ListView(
-      key: const ValueKey('gift_edit_view'),
-      padding: const EdgeInsets.fromLTRB(12, 16, 12, 32),
-      children: [
-        Row(
-          children: [
-            IconButton.filled(
-              onPressed: () => setState(() => _isChoosingType = true),
-              style: IconButton.styleFrom(
-                backgroundColor: const Color(0xFFF3F4F6),
-                foregroundColor: const Color(0xFF374151),
-              ),
-              icon: const Icon(Icons.arrow_back_rounded, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Nội dung quà',
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 18,
-                    ),
-                  ),
-                  Text(
-                    'Kiểu: ${GiftMakerService.giftLabel(_selectedType)}',
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFFD81B60),
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: colors.first.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                GiftMakerService.giftEmoji(_selectedType),
-                style: const TextStyle(fontSize: 22),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
+        SLSpacing.h12,
         _sectionCard(
-          title: 'Thông tin gửi quà',
-          subtitle: 'Viết những lời ngọt ngào nhất gửi đến người ấy nhé.',
+          title: 'Nội dung món quà',
+          subtitle: 'Quà được lưu ngay trong nhà hiện tại để hai bạn mở lại.',
           child: Column(
             children: [
               TextField(
@@ -987,95 +938,97 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                   Icons.badge_rounded,
                 ),
               ),
-              const SizedBox(height: 16),
+              SLSpacing.h12,
               TextField(
                 controller: _messageCtrl,
-                maxLines: 6,
+                maxLines: 5,
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                 decoration: _inputDecoration(
-                  'Viết lời nhắn thật dịu dàng...',
+                  'Viết lời nhắn thật dịu dàng hoặc một điều bạn muốn nói...',
                   Icons.favorite_rounded,
                 ),
               ),
-              const SizedBox(height: 16),
+              SLSpacing.h12,
               _buildImagePicker(),
+              SLSpacing.h12,
+              _buildLinkPromiseCard(),
+              SLSpacing.h12,
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openGiftPreview(
+                        GiftData(
+                          giftId: _lastGiftId ?? 'preview',
+                          fromHouseId: widget.houseId,
+                          fromName: _senderCtrl.text.trim().isEmpty
+                              ? widget.myName
+                              : _senderCtrl.text.trim(),
+                          toHouseId: widget.houseId,
+                          message: _messageCtrl.text.trim().isEmpty
+                              ? 'Món quà thử để xem trước.'
+                              : _messageCtrl.text.trim(),
+                          imageUrl: _selectedImage?.path ?? '',
+                          ts: DateTime.now().millisecondsSinceEpoch,
+                          status: 'new',
+                          giftType: _selectedType,
+                          features: const {},
+                        ),
+                        markOpened: false,
+                      ),
+                      icon: const Icon(Icons.visibility_rounded),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFD81B60),
+                        backgroundColor: Colors.white.withOpacity(0.9),
+                        side: const BorderSide(color: Color(0xFFF0D5E1)),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      label: Text(
+                        'Xem trước',
+                        style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SLSpacing.h16,
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isCreating ? null : _createGift,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD81B60),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                    surfaceTintColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                  ),
+                  child: _isCreating
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          'TẠO QUÀ',
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                          ),
+                        ),
+                ),
+              ),
             ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildLinkPromiseCard(),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _openGiftPreview(
-                  GiftData(
-                    giftId: _lastGiftId ?? 'preview',
-                    fromHouseId: widget.houseId,
-                    fromName: _senderCtrl.text.trim().isEmpty
-                        ? widget.myName
-                        : _senderCtrl.text.trim(),
-                    toHouseId: widget.houseId,
-                    message: _messageCtrl.text.trim().isEmpty
-                        ? 'Món quà thử để xem trước.'
-                        : _messageCtrl.text.trim(),
-                    imageUrl: _selectedImage?.path ?? '',
-                    ts: DateTime.now().millisecondsSinceEpoch,
-                    status: 'new',
-                    giftType: _selectedType,
-                    features: const {},
-                  ),
-                  markOpened: false,
-                ),
-                icon: const Icon(Icons.visibility_rounded),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFD81B60),
-                  backgroundColor: Colors.white,
-                  side: const BorderSide(color: Color(0xFFF0D5E1)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                label: Text(
-                  'Xem trước',
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _isCreating ? null : _createGift,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD81B60),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-              ),
-            ),
-            child: _isCreating
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Text(
-                    'TẠO VÀ GỬI QUÀ NGAY',
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 15,
-                    ),
-                  ),
           ),
         ),
       ],
@@ -1084,30 +1037,35 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
 
   Widget _buildGiftTypeCard(GiftType type) {
     final selected = type == _selectedType;
+    final colors = widget._giftColors(type);
     final foreground = widget._giftForeground(type);
     return _GiftTouchTile(
-      onTap: () => setState(() {
-        _selectedType = type;
-        _isChoosingType = false;
-      }),
-      borderRadius: BorderRadius.circular(24),
+      onTap: () => setState(() => _selectedType = type),
+      borderRadius: BorderRadius.circular(28),
       child: Ink(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            colors: [
+              Color.lerp(colors.first, Colors.white, selected ? 0 : 0.08)!,
+              Color.lerp(colors.last, Colors.white, selected ? 0 : 0.08)!,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: selected
-                ? const Color(0xFFD81B60).withOpacity(0.4)
-                : const Color(0xFFE5E7EB),
-            width: selected ? 2 : 1.2,
+                ? Colors.white.withOpacity(0.92)
+                : colors.first.withOpacity(0.36),
+            width: selected ? 2 : 1.1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: colors.first.withOpacity(selected ? 0.16 : 0.07),
+              blurRadius: selected ? 22 : 14,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
@@ -1118,7 +1076,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               height: 82,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
+                color: Colors.white.withOpacity(
+                  foreground == Colors.white ? 0.16 : 0.42,
+                ),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: AnimatedScale(
@@ -1136,201 +1096,61 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    GiftMakerService.giftLabel(type),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 17,
-                      color: const Color(0xFF111827),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          GiftMakerService.giftLabel(type),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 19,
+                            color: foreground,
+                          ),
+                        ),
+                      ),
+                      if (selected)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: foreground == Colors.white
+                                ? Colors.white.withOpacity(0.16)
+                                : Colors.black.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'Đã chọn',
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w900,
+                              color: foreground,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
+                  SLSpacing.h8,
                   Text(
                     widget._giftTeaser(type),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF6B7280),
-                      fontSize: 12.5,
-                      height: 1.3,
+                      color: foreground.withOpacity(0.84),
+                      height: 1.45,
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImagePicker() {
-    return _GiftTouchTile(
-      onTap: _pickImage,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: _selectedImage != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.file(_selectedImage!, fit: BoxFit.cover),
-                    )
-                  : const Icon(Icons.image_outlined, color: Color(0xFF6B7280)),
             ),
             SLSpacing.w12,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _selectedImage != null ? 'Đã chọn ảnh' : 'Đính kèm ảnh',
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF374151),
-                    ),
-                  ),
-                  Text(
-                    _selectedImage != null
-                        ? 'Ảnh sẽ hiện khi mở quà'
-                        : 'Không bắt buộc, giúp quà ý nghĩa hơn',
-                    style: SLTheme.quicksand(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF6B7280),
-                    ),
-                  ),
-                ],
-              ),
+            Icon(
+              Icons.arrow_forward_rounded,
+              color: foreground.withOpacity(0.84),
             ),
-            if (_selectedImage != null)
-              IconButton(
-                onPressed: () => setState(() => _selectedImage = null),
-                icon: const Icon(Icons.close_rounded, color: Color(0xFFD81B60)),
-              )
-            else
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildLinkPromiseCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFD1FAE5)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.auto_awesome_rounded, color: Color(0xFF059669)),
-          SLSpacing.w12,
-          Expanded(
-            child: Text(
-              'Link quà tặng sẽ tự động được tạo sau khi lưu xong để bạn gửi cho người thương.',
-              style: SLTheme.quicksand(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF065F46),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _sectionCard({
-    required String title,
-    required String subtitle,
-    required Widget child,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w900,
-              fontSize: 19,
-              color: const Color(0xFF111827),
-            ),
-          ),
-          SLSpacing.h4,
-          Text(
-            subtitle,
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF6B7280),
-            ),
-          ),
-          SLSpacing.h20,
-          child,
-        ],
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String hint, IconData icon) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: SLTheme.quicksand(
-        color: const Color(0xFF9CA3AF),
-        fontWeight: FontWeight.w700,
-        fontSize: 14,
-      ),
-      prefixIcon: Icon(icon, color: const Color(0xFFD81B60).withOpacity(0.7), size: 20),
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: const Color(0xFFE5E7EB).withOpacity(0.6)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: const Color(0xFFE5E7EB).withOpacity(0.6)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.2),
       ),
     );
   }
@@ -1344,49 +1164,204 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
     return StreamBuilder<List<GiftData>>(
       stream: stream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(color: Color(0xFFD81B60)),
           );
         }
-        final list = snapshot.data!;
-        if (list.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.card_giftcard_rounded,
-                    size: 64, color: Color(0xFFFCE7F3)),
-                SLSpacing.h16,
-                Text(
-                  emptyTitle,
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 17,
-                    color: const Color(0xFF374151),
-                  ),
-                ),
-                SLSpacing.h6,
-                Text(
-                  emptySubtitle,
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF9CA3AF),
-                  ),
-                ),
-              ],
+
+        if (snapshot.hasError) {
+          return _buildHistoryErrorState(snapshot.error);
+        }
+
+        final gifts = snapshot.data ?? const <GiftData>[];
+        if (gifts.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: SLTheme.emptyStatePanel(
+                icon: Icons.redeem_rounded,
+                title: emptyTitle,
+                subtitle: emptySubtitle,
+                accentColor: const Color(0xFFD81B60),
+              ),
             ),
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          itemCount: list.length,
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          itemCount: gifts.length,
+          separatorBuilder: (_, __) => SLSpacing.h12,
           itemBuilder: (context, index) {
-            final gift = list[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildGiftHistoryTile(gift, markOpened: markOpened),
+            final gift = gifts[index];
+            final colors = widget._giftColors(gift.giftType);
+            final actionColor =
+                Color.lerp(colors.first, Colors.black, 0.18) ?? colors.first;
+            final chipColor = gift.isOpened
+                ? const Color(0xFF16A34A)
+                : const Color(0xFFF59E0B);
+            return Container(
+              padding: SLSpacing.all16,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFFFFCFD),
+                    Color.lerp(colors.first, Colors.white, 0.88)!,
+                    Color.lerp(colors.last, Colors.white, 0.90)!,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(color: colors.first.withOpacity(0.18)),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.first.withOpacity(0.10),
+                    blurRadius: 22,
+                    spreadRadius: -8,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              colors.first.withOpacity(0.92),
+                              colors.last.withOpacity(0.82),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: SLRadius.lgAll,
+                          boxShadow: [
+                            BoxShadow(
+                              color: colors.first.withOpacity(0.18),
+                              blurRadius: 14,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          GiftMakerService.giftEmoji(gift.giftType),
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                      ),
+                      SLSpacing.w12,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              GiftMakerService.giftLabel(gift.giftType),
+                              style: SLTheme.quicksand(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 15,
+                                color: const Color(0xFF1F2937),
+                              ),
+                            ),
+                            SLSpacing.h4,
+                            Text(
+                              'Từ ${gift.fromName} • ${_formatTime(gift.ts)}',
+                              style: SLTheme.quicksand(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF6B7280),
+                                fontSize: 12.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: chipColor.withOpacity(0.12),
+                          borderRadius: SLRadius.pillAll,
+                        ),
+                        child: Text(
+                          gift.isOpened ? 'Đã mở' : 'Chưa mở',
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 11.5,
+                            color: chipColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SLSpacing.h12,
+                  Text(
+                    gift.message,
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF374151),
+                      height: 1.55,
+                    ),
+                  ),
+                  SLSpacing.h12,
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () => _openGiftPreview(
+                          gift,
+                          markOpened: markOpened && !gift.isOpened,
+                        ),
+                        icon: const Icon(Icons.open_in_new_rounded),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: actionColor,
+                          backgroundColor: Colors.white.withOpacity(0.76),
+                          side: BorderSide(
+                            color: colors.first.withOpacity(0.22),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        label: Text(
+                          'Xem quà',
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => _copyGiftLink(gift),
+                        icon: const Icon(Icons.link_rounded),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: actionColor,
+                          backgroundColor: colors.first.withOpacity(0.08),
+                          side: BorderSide(
+                            color: colors.first.withOpacity(0.28),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        label: Text(
+                          'Copy link',
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -1394,87 +1369,219 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
     );
   }
 
-  Widget _buildGiftHistoryTile(GiftData gift, {required bool markOpened}) {
-    final colors = widget._giftColors(gift.giftType);
-    final isOpened = gift.status == 'opened';
-
-    return _GiftTouchTile(
-      onTap: () => _openGiftPreview(gift, markOpened: markOpened),
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFF3F4F6)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+  Widget _buildHistoryErrorState(Object? error) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: SLTheme.emptyStatePanel(
+          icon: Icons.wifi_tethering_error_rounded,
+          title: 'Không tải được danh sách quà',
+          subtitle: 'Thử chuyển tab hoặc mở lại màn này.',
+          accentColor: const Color(0xFFD81B60),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [colors.first.withOpacity(0.12), colors.last.withOpacity(0.06)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Text(
-                GiftMakerService.giftEmoji(gift.giftType),
-                style: const TextStyle(fontSize: 28),
-              ),
+      ),
+    );
+  }
+
+  Widget _sectionCard({
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: const Color(0xFFF1E7EF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w900,
+              fontSize: 20,
+              color: const Color(0xFF111827),
             ),
-            SLSpacing.w16,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          GiftMakerService.giftLabel(gift.giftType),
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 16,
-                            color: const Color(0xFF111827),
-                          ),
-                        ),
-                      ),
-                      if (isOpened)
-                        const Icon(Icons.check_circle_rounded,
-                            color: Color(0xFF10B981), size: 16)
-                      else
-                        const Icon(Icons.new_releases_rounded,
-                            color: Color(0xFFD81B60), size: 16),
-                    ],
+          ),
+          SLSpacing.h8,
+          Text(
+            subtitle,
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF64748B),
+              height: 1.5,
+            ),
+          ),
+          SLSpacing.h16,
+          child,
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String hint, IconData icon) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: SLTheme.quicksand(
+        color: const Color(0xFF94A3B8),
+        fontWeight: FontWeight.w700,
+      ),
+      prefixIcon: Icon(icon, color: const Color(0xFF111827)),
+      filled: true,
+      fillColor: const Color(0xFFF8FAFC),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(22),
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(22),
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(22),
+        borderSide: const BorderSide(color: Color(0xFF111827), width: 1.4),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+    );
+  }
+
+  Widget _buildLinkPromiseCard() {
+    final colors = widget._giftColors(_selectedType);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color.lerp(colors.first, Colors.white, 0.86)!,
+            Color.lerp(colors.last, Colors.white, 0.88)!,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colors.first.withOpacity(0.20)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.72),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.link_rounded,
+              color: colors.first,
+              size: 22,
+            ),
+          ),
+          SLSpacing.w12,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Có link riêng sau khi tạo',
+                  style: SLTheme.quicksand(
+                    color: const Color(0xFF1F2937),
+                    fontWeight: FontWeight.w900,
                   ),
-                  SLSpacing.h4,
+                ),
+                SLSpacing.h4,
+                Text(
+                  'Bạn có thể copy link quà hoặc xem thử hiệu ứng trước khi gửi.',
+                  style: SLTheme.quicksand(
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w700,
+                    height: 1.4,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImagePicker() {
+    return _GiftTouchTile(
+      onTap: _pickImage,
+      borderRadius: BorderRadius.circular(24),
+      child: Ink(
+        width: double.infinity,
+        height: 156,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: _selectedImage != null
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.file(_selectedImage!, fit: BoxFit.cover),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedImage = null),
+                      child: Container(
+                        padding: SLSpacing.all8,
+                        decoration: const BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close,
+                            color: Colors.white, size: 18),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF111827).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(
+                      Icons.add_photo_alternate_rounded,
+                      color: Color(0xFF111827),
+                      size: 30,
+                    ),
+                  ),
+                  SLSpacing.h12,
                   Text(
-                    'Từ: ${gift.fromName} • ${_formatTime(gift.ts)}',
+                    'Thêm ảnh vào quà (không bắt buộc)',
                     style: SLTheme.quicksand(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
                       color: const Color(0xFF6B7280),
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],
               ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFFD1D5DB)),
-          ],
-        ),
       ),
     );
   }

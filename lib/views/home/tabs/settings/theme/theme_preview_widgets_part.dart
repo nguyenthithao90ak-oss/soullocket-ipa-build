@@ -1,6 +1,28 @@
 part of '../../settings_tab.dart';
 // ignore_for_file: unused_element
 
+class _ThemePreviewCountdownVisual {
+  const _ThemePreviewCountdownVisual({
+    required this.outerDecoration,
+    required this.innerDecoration,
+    required this.numberGradient,
+    required this.topLabelColor,
+    required this.bottomLabelColor,
+    required this.labelShadows,
+    required this.numberShadows,
+    required this.backdropType,
+  });
+
+  final BoxDecoration outerDecoration;
+  final BoxDecoration innerDecoration;
+  final List<Color> numberGradient;
+  final Color topLabelColor;
+  final Color bottomLabelColor;
+  final List<Shadow> labelShadows;
+  final List<Shadow> numberShadows;
+  final String backdropType;
+}
+
 extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
   Widget _buildThemeHomeLikePreviewCard(
     String imageUrl, {

@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/sl_theme.dart';
 import '../../../../models/diary_post.dart';
 import '../../../../utils/services/l10n_service.dart';
-import '../../../../widgets/skeleton_container.dart';
 
 class DiaryItem extends StatelessWidget {
   final DiaryPost post;
@@ -159,27 +157,22 @@ class DiaryItem extends StatelessWidget {
               SLSpacing.h16,
               ClipRRect(
                 borderRadius: SLRadius.lgAll,
-                child: Hero(
-                  tag: 'diary_image_${post.id}',
-                  child: CachedNetworkImage(
-                    imageUrl: post.imageUrl,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    memCacheWidth: postImageCacheWidth,
-                    fadeInDuration: const Duration(milliseconds: 200),
-                    placeholder: (context, url) => post.blurHash != null
-                        ? BlurHash(hash: post.blurHash!)
-                        : Container(
-                            height: 120,
-                            color: Colors.white.withOpacity(0.3),
-                            child: SkeletonContainer.rounded(
-                                width: double.infinity, height: 120),
-                          ),
-                    errorWidget: (_, __, ___) => Container(
-                      height: 120,
-                      color: Colors.white.withOpacity(0.3),
-                      child: const Icon(Icons.broken_image, color: Colors.grey),
-                    ),
+                child: CachedNetworkImage(
+                  imageUrl: post.imageUrl,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  memCacheWidth: postImageCacheWidth,
+                  fadeInDuration: Duration.zero,
+                  fadeOutDuration: Duration.zero,
+                  placeholderFadeInDuration: Duration.zero,
+                  placeholder: (context, url) => Container(
+                    height: 120,
+                    color: Colors.white.withOpacity(0.3),
+                  ),
+                  errorWidget: (_, __, ___) => Container(
+                    height: 120,
+                    color: Colors.white.withOpacity(0.3),
+                    child: const Icon(Icons.broken_image, color: Colors.grey),
                   ),
                 ),
               ),

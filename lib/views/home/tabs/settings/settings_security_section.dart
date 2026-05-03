@@ -37,147 +37,166 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           if (!isSingleMode) ...[
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              padding: SLSpacing.all16,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFFFFD1E1).withOpacity(0.3),
-                    const Color(0xFFFFF0F5).withOpacity(0.5),
-                  ],
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFF4F7), Color(0xFFFFEEF4)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFFFC1D1).withOpacity(0.5), width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFF78A8).withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                borderRadius: SLRadius.xlAll,
+                border: Border.all(color: const Color(0xFFF48FB1)),
               ),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.person_pin_rounded, color: Color(0xFFE57373), size: 16),
-                      const SizedBox(width: 6),
-                      Text(
-                        'ĐANG ĐĂNG NHẬP',
-                        style: SLTextStyles.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFE57373),
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'Đang đăng nhập',
+                    style: SLTextStyles.quicksand(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFFE57373),
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  SLSpacing.h8,
                   Text(
                     activeName,
                     textAlign: TextAlign.center,
                     style: SLTextStyles.quicksand(
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.w900,
                       color: const Color(0xFFD81B60),
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFFFC1D1).withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      _houseId == null ? 'Mã nhà: Chưa có' : 'ID: $_houseId',
-                      style: SLTextStyles.quicksand(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFFE8A0B6),
-                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            SLSpacing.h16,
-          ],
-          if (isSingleMode) ...[
-            Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFDEEF4),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  _houseId == null ? 'Mã nhà: Chưa có' : 'Mã nhà: $_houseId',
-                  style: SLTextStyles.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFE8A0B6),
-                  ),
-                ),
-              ),
-            ),
             SLSpacing.h12,
           ],
+          Center(
+            child: Text(
+              _houseId == null ? 'Mã nhà: Chưa có' : 'Mã nhà: $_houseId',
+              style: SLTextStyles.quicksand(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFFE8A0B6),
+              ),
+            ),
+          ),
+          SLSpacing.h12,
           _buildSecurityCard(
             title: 'Thông tin đăng nhập riêng tư',
             subtitle:
-                'Thông tin tài khoản dùng để đăng nhập và khôi phục khi cần thiết.',
+                'Sử dụng tài khoản Google hoặc email để đăng nhập an toàn.',
             borderColor: const Color(0xFFF0D6DF),
             backgroundColor: Colors.white,
             children: [
-              // --- EMAIL CHÍNH ---
-              _buildModernIdentityTile(
-                icon: Icons.email_rounded,
-                label: 'Email chính',
+              _buildSecurityLine(
+                label: 'Email',
                 value: _securityEmail.isEmpty
                     ? 'Chưa có dữ liệu'
                     : _authService.maskEmail(_securityEmail),
-                isVerified: _isMainEmailVerified,
-                onAction: !_isMainEmailVerified && _emailVerifyWaitSeconds <= 0
-                    ? _sendVerificationEmail
-                    : null,
-                actionLabel: _emailVerifyWaitSeconds > 0
-                    ? 'Thử lại sau ${_emailVerifyWaitSeconds}s'
-                    : 'Xác thực',
-                onSecondaryAction: !_isMainEmailVerified ? _changePrimaryEmailV2 : null,
-                secondaryActionLabel: 'Đổi email',
+                trailing: _buildSecurityBadge(
+                  _isMainEmailVerified ? 'Đã xác thực' : 'Chưa xác thực',
+                  background: _isMainEmailVerified
+                      ? const Color(0xFFE8F5E9)
+                      : const Color(0xFFFFCC80),
+                  foreground: _isMainEmailVerified
+                      ? const Color(0xFF2E7D32)
+                      : const Color(0xFFF57C00),
+                ),
               ),
-              SLSpacing.h12,
-              // --- EMAIL PHỤ ---
-              _buildModernIdentityTile(
-                icon: Icons.mark_email_read_rounded,
-                label: 'Email dự phòng',
+              SLSpacing.h8,
+              Row(
+                children: [
+                  if (!_isMainEmailVerified) ...[
+                    Expanded(
+                      child: _buildSecurityInlineButton(
+                        label: 'Đổi email khác',
+                        gradient: const [Color(0xFFFF5B5B), Color(0xFFFF7043)],
+                        onTap: _changePrimaryEmailV2,
+                      ),
+                    ),
+                    SLSpacing.w8,
+                  ],
+                  Expanded(
+                    child: _buildSecurityInlineButton(
+                      label: _isMainEmailVerified
+                          ? 'Đã xác thực'
+                          : (_emailVerifyWaitSeconds > 0
+                              ? 'Thử lại sau ${_emailVerifyWaitSeconds}s'
+                              : 'Xác thực ngay'),
+                      gradient: _isMainEmailVerified
+                          ? const [Color(0xFFA5D6A7), Color(0xFF66BB6A)]
+                          : const [Color(0xFFFFC107), Color(0xFFFF9800)],
+                      textColor:
+                          _isMainEmailVerified ? Colors.white : Colors.black87,
+                      onTap: _isMainEmailVerified
+                          ? () => _showToast('Email này đã được xác thực rồi')
+                          : (_emailVerifyWaitSeconds > 0
+                              ? null
+                              : _sendVerificationEmail),
+                    ),
+                  ),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Divider(height: 1),
+              ),
+              _buildSecurityLine(
+                label: 'Email phụ',
                 value: _secondaryEmail.isEmpty
                     ? 'Chưa thiết lập'
                     : _authService.maskEmail(_secondaryEmail),
-                isVerified: _secondaryEmail.isNotEmpty,
-                onAction: () => _showSecondaryEmailModal(), // Sử dụng modal thay vì input inline dài dòng
-                actionLabel: _secondaryEmail.isEmpty ? 'Thêm ngay' : 'Thay đổi',
-                statusLabel: _secondaryEmail.isEmpty ? 'Trống' : 'An toàn',
-                accentColor: const Color(0xFF9C27B0),
+                trailing: _buildSecurityBadge(
+                  _secondaryEmail.isEmpty ? 'Trống' : 'Đã có',
+                  background: _secondaryEmail.isEmpty
+                      ? const Color(0xFFF3E5F5)
+                      : const Color(0xFFB39DDB),
+                  foreground: const Color(0xFF6A1B9A),
+                ),
               ),
-              SLSpacing.h12,
-              // --- LIÊN KẾT GOOGLE ---
-              _buildModernIdentityTile(
-                icon: Icons.account_circle_rounded,
-                label: 'Tài khoản Google',
-                value: _googleLinked ? 'Đã liên kết' : 'Chưa liên kết',
-                isVerified: _googleLinked,
-                onAction: _googleLinked ? null : _linkGoogleAccount,
-                actionLabel: 'Liên kết',
-                isLoading: _isLinkingGoogle,
-                accentColor: const Color(0xFFEA4335),
-                showCheckmark: _googleLinked,
+              SLSpacing.h8,
+              _buildInput(
+                  _secondaryEmailCtrl, 'Nhập email phụ / email dự phòng'),
+              _buildSecurityInlineButton(
+                label:
+                    _secondaryEmail.isEmpty ? 'Thêm email phụ' : 'Thêm / đổi',
+                gradient: const [Color(0xFF8E24AA), Color(0xFF6A1B9A)],
+                onTap: _saveSecondaryEmail,
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Divider(height: 1),
+              ),
+              _buildGradientBtn(
+                label: _isLinkingGoogle
+                    ? 'ĐANG LIÊN KẾT GOOGLE...'
+                    : (_googleLinked
+                        ? 'ĐÃ LIÊN KẾT GOOGLE'
+                        : 'LIÊN KẾT GOOGLE'),
+                gradient: _googleLinked
+                    ? const [Color(0xFF43A047), Color(0xFF2E7D32)]
+                    : const [Color(0xFFEF5350), Color(0xFFD84315)],
+                onTap: _isLinkingGoogle
+                    ? () {}
+                    : (_googleLinked
+                        ? () => _showToast('Tài khoản đã liên kết Google.')
+                        : _linkGoogleAccount),
+              ),
+              SLSpacing.h8,
+              _buildGradientBtn(
+                label: _isLinkingApple
+                    ? 'ĐANG LIÊN KẾT APPLE...'
+                    : (_appleLinked ? 'ĐÃ LIÊN KẾT APPLE' : 'LIÊN KẾT APPLE'),
+                gradient: _appleLinked
+                    ? const [Color(0xFF424242), Color(0xFF212121)]
+                    : const [Color(0xFF212121), Color(0xFF000000)],
+                onTap: _isLinkingApple
+                    ? () {}
+                    : (_appleLinked
+                        ? () => _showToast('Tài khoản đã liên kết Apple.')
+                        : _linkAppleAccount),
               ),
             ],
           ),
@@ -220,64 +239,43 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 if (!_passwordLinked) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF9C4).withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFFBC02D).withOpacity(0.3)),
+                      color: const Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFFFE0B2)),
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.info_outline_rounded, color: Color(0xFFF57F17), size: 20),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Bạn đang dùng Google/Facebook nên chưa có mật khẩu riêng. Tạo mật khẩu tại đây để đăng nhập bằng email sau này nhé!',
-                            style: SLTheme.quicksand(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF5D4037),
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Bạn đang đăng nhập bằng Google/Facebook nên chưa có mật khẩu đăng nhập riêng. Hãy tạo mật khẩu ở đây để lần sau có thể đăng nhập bằng email và mật khẩu này.',
+                      style: SLTheme.quicksand(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8A4B08),
+                        height: 1.4,
+                      ),
                     ),
                   ),
-                  SLSpacing.h12,
+                  SLSpacing.h8,
                 ],
                 if (_passwordLinked)
                   TextField(
                     controller: _oldPassCtrl,
                     obscureText: true,
-                    style: SLTheme.quicksand(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w700,
-                    ),
                     decoration: InputDecoration(
                       hintText: 'Mật khẩu hiện tại',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: Colors.grey),
+                      prefixIcon:
+                          const Icon(Icons.lock_outline, color: Colors.grey),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                        borderRadius: SLRadius.mdAll,
                       ),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.8),
+                      fillColor: Colors.white,
                     ),
                   ),
-                if (_passwordLinked) SLSpacing.h12,
+                if (_passwordLinked) SLSpacing.h8,
                 TextField(
                   controller: _newPassCtrl,
                   obscureText: true,
-                  style: SLTheme.quicksand(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w700,
-                  ),
                   decoration: InputDecoration(
                     hintText: _passwordLinked
                         ? 'Mật khẩu mới (tối thiểu 6 ký tự)'
@@ -456,10 +454,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                           context.tr('security_q_locked_msg'),
                           success: false,
                         )
-                    : () async {
-                        if (!await _ensureCanModifySecurityInfo()) return;
-                        _saveRecoveryInfo();
-                      },
+                    : _saveRecoveryInfo,
               ),
             ],
           ),
@@ -497,10 +492,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               SLSpacing.h8,
               TextField(
                 controller: _housePinCtrl,
-                style: SLTheme.quicksand(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w700,
-                ),
                 decoration: InputDecoration(
                   hintText: context.tr('backup_pin_hint'),
                   prefixIcon: const Icon(Icons.pin_outlined),
@@ -516,10 +507,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 label: context.tr('save_backup_pin'),
                 gradient: const [Color(0xFFFFB74D), Color(0xFFF57C00)],
                 textColor: Colors.black,
-                onTap: () async {
-                  if (!await _ensureCanModifySecurityInfo()) return;
-                  _saveHousePin();
-                },
+                onTap: _saveHousePin,
               ),
             ],
           ),
@@ -748,7 +736,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   value: _isAppLockEnabled,
                   activeColor: const Color(0xFFD81B60),
                   onChanged: (v) async {
-                    if (!await _ensureCanModifySecurityInfo()) return;
                     if (v) {
                       if (_storedLockSecret.trim().isEmpty) {
                         await _setupNewPin();
@@ -784,10 +771,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             _buildModernSettingsRow(
               icon: Icons.pin_rounded,
               label: context.tr('change_pin'),
-              onTap: () async {
-                if (!await _ensureCanModifySecurityInfo()) return;
-                _handlePinChangeRequested();
-              },
+              onTap: _handlePinChangeRequested,
               trailing: const Icon(Icons.chevron_right_rounded,
                   color: Color(0xFFD81B60)),
             ),
@@ -855,7 +839,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             ),
             _buildModernSettingsRow(
               icon: Icons.military_tech_rounded,
-              label: context.tr('military_mode'),
+              label: context.tr('military_mode_title'),
               onTap: () async {
                 final enabledMessage = context.tr('military_mode_enabled');
                 final authSuccess = await _authenticateLockSettingsChange();

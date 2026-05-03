@@ -401,32 +401,7 @@ class DeviceManagerService {
 
       // Khôi phục logic pending cho thiết bị mới hoặc thiết bị đáng ngờ
       if (isNew) {
-        // --- SMART DETECTION: NHẬN DIỆN MÁY CŨ CÀI LẠI APP ---
-        // Khi xoá app cài lại hoặc nâng cấp OS, ID thiết bị có thể bị đổi.
-        // Nếu trùng model + platform với một máy TỪNG ĐƯỢC DUYỆT trong ngôi nhà này -> Tự duyệt luôn.
-        bool looksLikeKnownDevice = false;
-        String matchedDeviceId = '';
-        
-        for (final dev in existingDevices) {
-          final isApproved = dev['status']?.toString() == 'approved';
-          final modelMatches = dev['model'] == deviceInfo['model'];
-          final platformMatches = dev['platform'] == deviceInfo['platform'];
-          
-          // Ưu tiên khớp cả OS, nhưng nếu OS khác (do update) mà Model+Platform khớp thì vẫn tin cậy
-          if (isApproved && modelMatches && platformMatches) {
-            looksLikeKnownDevice = true;
-            matchedDeviceId = dev['deviceId']?.toString() ?? '';
-            break;
-          }
-        }
-
-        if (looksLikeKnownDevice) {
-          // Máy quen (cùng loại đã từng được duyệt), cho vào luôn không cần chờ 12h
-          updateData['status'] = 'approved';
-          updateData['is_admin'] = false; // Mặc định không cho quyền admin ngay, nhưng cho vào app
-          updateData['approved_reason'] = 'smart_match_known_model';
-          debugPrint('Smart Detection: Device matched with previously approved device $matchedDeviceId');
-        } else if (isSuspiciousSpoof) {
+        if (isSuspiciousSpoof) {
           // Bất kể là thiết bị thứ 1 hay thứ 10, nếu đáng ngờ thì khóa chờ duyệt ngay lập tức
           updateData['status'] = 'pending';
           updateData['is_admin'] = false;
@@ -435,9 +410,28 @@ class DeviceManagerService {
           updateData['status'] = 'approved';
           updateData['is_admin'] = true;
         } else {
-          // Máy hoàn toàn mới lạ -> pending
-          updateData['status'] = 'pending';
-          updateData['is_admin'] = false;
+          // --- SMART DETECTION: NHẬN DIỆN MÁY CŨ CÀI LẠI APP ---
+          // Khi xoá app cài lại trên iOS/Android, ID thiết bị có thể bị đổi.
+          // Nếu trùng model + os với 1 máy từng được duyệt -> Tự duyệt luôn bỏ qua pending.
+          bool looksLikeReinstalledDevice = false;
+          for (final dev in existingDevices) {
+            if (_isTrustedActiveDevice(dev) &&
+                dev['model'] == deviceInfo['model'] &&
+                dev['os'] == deviceInfo['os']) {
+              looksLikeReinstalledDevice = true;
+              break;
+            }
+          }
+
+          if (looksLikeReinstalledDevice) {
+            // Máy quen (cùng loại đã duyệt), cho vào luôn
+            updateData['status'] = 'approved';
+            updateData['is_admin'] = false;
+          } else {
+            // Máy hoàn toàn mới lạ -> pending
+            updateData['status'] = 'pending';
+            updateData['is_admin'] = false;
+          }
         }
       } else if (shouldAutoApproveByLimit && existingStatus == 'pending') {
         updateData['status'] = 'approved';

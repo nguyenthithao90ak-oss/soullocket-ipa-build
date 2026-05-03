@@ -267,10 +267,7 @@ class StickerLibraryScreen extends StatelessWidget {
                 itemCount: _stickers.length,
                 itemBuilder: (context, index) {
                   final assetPath = _stickers[index];
-                  return _StickerLibraryTile(
-                    assetPath: assetPath,
-                    index: index,
-                  );
+                  return _StickerLibraryTile(assetPath: assetPath);
                 },
               ),
             ),
@@ -282,13 +279,11 @@ class StickerLibraryScreen extends StatelessWidget {
 }
 
 class _StickerLibraryTile extends StatelessWidget {
-  const _StickerLibraryTile({
-    required this.assetPath,
-    required this.index,
-  });
+  const _StickerLibraryTile({required this.assetPath});
 
   final String assetPath;
-  final int index;
+
+  String get _fileName => assetPath.split('/').last;
 
   @override
   Widget build(BuildContext context) {
@@ -329,7 +324,7 @@ class _StickerLibraryTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),
               child: Text(
-                'Sticker ${index + 1}',
+                _fileName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,

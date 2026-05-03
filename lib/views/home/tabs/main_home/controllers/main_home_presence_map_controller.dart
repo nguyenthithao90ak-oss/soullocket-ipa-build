@@ -13,7 +13,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   }
 
   String _resolveRoleBadge(String role) {
-    return _resolveNameForRole(role);
+    return role == 'user1' ? 'Bạn nam' : 'Bạn nữ';
   }
 
   bool _shouldDisplayIncomingAlert(

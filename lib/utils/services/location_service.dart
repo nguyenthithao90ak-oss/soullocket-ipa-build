@@ -38,68 +38,43 @@ class LocationService {
       {BuildContext? context, bool forcePrompt = false}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final hasPrompted = forcePrompt ? false : (prefs.getBool('il_gps_prompted') ?? false);
+      final hasPrompted = prefs.getBool('il_gps_prompted') ?? false;
 
       var permission = await Geolocator.checkPermission().timeout(
         const Duration(seconds: 6),
         onTimeout: () => LocationPermission.denied,
       );
 
-      // Nếu forcePrompt = true, chúng ta sẽ cố gắng hỏi lại nếu chưa có quyền
-      if (forcePrompt && (permission == LocationPermission.denied || permission == LocationPermission.deniedForever)) {
-        if (context != null && context.mounted) {
-          if (permission == LocationPermission.deniedForever) {
-            // Nếu bị từ chối vĩnh viễn, hiển thị hướng dẫn vào cài đặt
-            await showDialog(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Quyền vị trí bị chặn'),
-                content: const Text('Bạn đã từ chối quyền vị trí vĩnh viễn. Vui lòng vào Cài đặt của điện thoại để cho phép SoulLocket truy cập vị trí thì mới sử dụng được bản đồ nhé.'),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đã hiểu')),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      Geolocator.openAppSettings();
-                    },
-                    child: const Text('Mở Cài đặt'),
-                  ),
-                ],
-              ),
-            );
-            return false;
-          }
-
-          // Hiển thị disclosure giải thích quyền lợi
-          final granted = await PermissionHelper.requestLocationWithDisclosure(
-            context,
-            title: 'Quyền truy cập vị trí',
-            disclosure:
-                'SoulLocket thu thập và cập nhật vị trí khi bạn mở app hoặc bật bản đồ chung để hiển thị khoảng cách, vị trí trực tiếp và các kỷ niệm/check-in trong ngôi nhà của bạn. App không xin quyền vị trí nền; khi bạn rời app hoặc tắt chia sẻ, việc cập nhật vị trí sẽ dừng. Dữ liệu vị trí chỉ được chia sẻ trong ngôi nhà của bạn cho tính năng bản đồ/kỷ niệm.',
-          );
-          await prefs.setBool('il_gps_prompted', true);
-          if (!granted) return false;
-          
-          permission = await Geolocator.checkPermission().timeout(
-            const Duration(seconds: 6),
-            onTimeout: () => LocationPermission.denied,
-          );
-        }
-      }
-
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      // Nếu đã từng hỏi quyền và không forcePrompt, và quyền đang bị denied thì không hỏi lại
+      if (permission == LocationPermission.denied &&
+          hasPrompted &&
+          !forcePrompt) {
         return false;
       }
 
-      // Đợi tối đa 3 giây để hệ thống phản hồi trạng thái dịch vụ (đề phòng delay)
-      bool serviceEnabled = false;
-      for (int i = 0; i < 3; i++) {
-        serviceEnabled = await Geolocator.isLocationServiceEnabled()
-            .timeout(const Duration(seconds: 2), onTimeout: () => kIsWeb);
-        if (serviceEnabled) break;
-        await Future.delayed(const Duration(milliseconds: 800));
+      if (permission == LocationPermission.denied) {
+        if (context == null || !context.mounted) return false;
+
+        final granted = await PermissionHelper.requestLocationWithDisclosure(
+          context,
+          title: 'Quyền truy cập vị trí',
+          disclosure:
+              'SoulLocket thu thập và cập nhật vị trí khi bạn mở app hoặc bật bản đồ chung để hiển thị khoảng cách, vị trí trực tiếp và các kỷ niệm/check-in trong ngôi nhà của bạn. App không xin quyền vị trí nền; khi bạn rời app hoặc tắt chia sẻ, việc cập nhật vị trí sẽ dừng. Dữ liệu vị trí chỉ được chia sẻ trong ngôi nhà của bạn cho tính năng bản đồ/kỷ niệm.',
+        );
+        await prefs.setBool('il_gps_prompted', true);
+        if (!granted) return false;
+        permission = await Geolocator.checkPermission().timeout(
+          const Duration(seconds: 6),
+          onTimeout: () => LocationPermission.denied,
+        );
       }
 
+      if (permission == LocationPermission.deniedForever) {
+        return false;
+      }
+
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled()
+          .timeout(const Duration(seconds: 6), onTimeout: () => kIsWeb);
       if (!serviceEnabled) {
         return false;
       }

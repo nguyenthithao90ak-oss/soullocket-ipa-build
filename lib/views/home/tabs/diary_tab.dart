@@ -18,11 +18,10 @@ import '../../../utils/services/admob_service.dart';
 import '../../../utils/services/memory_share_allowance_service.dart';
 import '../../../utils/services/memory_share_service.dart';
 import '../../../utils/sl_notice.dart';
+import '../../../widgets/cute_loading_indicator.dart';
 import '../../../widgets/share_bottom_sheet.dart';
-import '../../../widgets/skeleton_container.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'diary_composer.dart';
-
 import 'diary/controllers/diary_composer_controller.dart';
 import 'diary/controllers/diary_feed_controller.dart';
 import 'diary/controllers/diary_guard_controller.dart';
@@ -240,42 +239,8 @@ class _DiaryTabState extends State<DiaryTab> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 36),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.96),
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.14),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2.4),
-              ),
-              const SizedBox(width: 14),
-              Flexible(
-                child: Text(
-                  'Đang tạo liên kết...',
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w800,
-                    color: SLColors.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (_) => const Center(
+        child: CuteLoadingIndicator(color: SLColors.primary),
       ),
     );
 
@@ -395,12 +360,10 @@ class _DiaryTabState extends State<DiaryTab> {
     );
   }
 
-  Future<void> _downloadSingleImage(String? url) async {
-    final trimmed = url?.trim() ?? '';
-    if (trimmed.isEmpty) return;
+  Future<void> _downloadSingleImage(String url) async {
     await _memoryController.downloadSingleImage(
       context: context,
-      url: trimmed,
+      url: url,
       guardController: _guardController,
       showSnackBar: _showDiarySnackBar,
     );
@@ -683,8 +646,7 @@ class _DiaryTabState extends State<DiaryTab> {
 
           void closeOnVerticalSwipe(DragEndDetails details) {
             final velocity = details.primaryVelocity ?? 0;
-            // Giảm ngưỡng xuống 200 để vuốt nhẹ là đóng được ngay
-            if (velocity.abs() < 200) {
+            if (velocity.abs() < 500) {
               return;
             }
             Navigator.pop(dialogContext);
@@ -724,7 +686,6 @@ class _DiaryTabState extends State<DiaryTab> {
                     onVerticalDragEnd: closeOnVerticalSwipe,
                     child: PageView.builder(
                       controller: pageController,
-                      physics: const BouncingScrollPhysics(),
                       itemCount: allPhotos.length,
                       onPageChanged: (index) {
                         setState(() {
@@ -739,20 +700,17 @@ class _DiaryTabState extends State<DiaryTab> {
                           maxWidth: 900,
                         );
                         return InteractiveViewer(
-                          child: Hero(
-                            tag: 'memory_image_${item['id']}',
-                            child: Image(
-                              image: imageProvider,
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
-                              filterQuality: FilterQuality.medium,
-                              gaplessPlayback: true,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
-                              ),
+                          child: Image(
+                            image: imageProvider,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            filterQuality: FilterQuality.medium,
+                            gaplessPlayback: true,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
                             ),
                           ),
                         );
@@ -770,20 +728,17 @@ class _DiaryTabState extends State<DiaryTab> {
                           maxWidth: 900,
                         );
                         return InteractiveViewer(
-                          child: Hero(
-                            tag: 'memory_image_${initialItem['id']}',
-                            child: Image(
-                              image: imageProvider,
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
-                              filterQuality: FilterQuality.medium,
-                              gaplessPlayback: true,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
-                              ),
+                          child: Image(
+                            image: imageProvider,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            filterQuality: FilterQuality.medium,
+                            gaplessPlayback: true,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
                             ),
                           ),
                         );
@@ -939,7 +894,6 @@ class _DiaryTabState extends State<DiaryTab> {
       DateTime.fromMillisecondsSinceEpoch(timestamp),
     );
   }
-
 
   Future<void> _showMemoryInfoSheet(
     BuildContext dialogContext,

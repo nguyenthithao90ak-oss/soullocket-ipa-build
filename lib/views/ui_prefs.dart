@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/soul_locket_brand.dart';
@@ -179,8 +178,6 @@ class UiPrefs {
       ValueNotifier<UiPrefsState>(UiPrefsState.defaults);
   static final ValueNotifier<bool> captureModeNotifier =
       ValueNotifier<bool>(false);
-  static const MethodChannel _appControlChannel =
-      MethodChannel('soul_locket/app_control');
 
   static bool _loaded = false;
   static String _cachedAutoQuality = 'low';
@@ -340,17 +337,6 @@ class UiPrefs {
     final key = SoulLocketBrand.normalizeStyleKey(brandMarkKey);
     if (notifier.value.brandMarkKey == key) return;
     await saveState(notifier.value.copyWith(brandMarkKey: key));
-    await _applyNativeAppIcon(key);
-  }
-
-  static Future<void> _applyNativeAppIcon(String key) async {
-    if (kIsWeb) return;
-    try {
-      await _appControlChannel.invokeMethod<bool>(
-        'setAppIcon',
-        <String, String>{'iconKey': key},
-      );
-    } catch (_) {}
   }
 
   static Future<void> saveState(UiPrefsState state) async {

@@ -8,8 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/services/l10n_service.dart';
-import '../../../../../widgets/skeleton_container.dart';
-
+import '../../../../../widgets/cute_loading_indicator.dart';
 import '../controllers/diary_memory_controller.dart';
 import 'diary_tab_shell_sections.dart';
 
@@ -162,20 +161,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
               final isOffline = connSnapshot.hasData &&
                   connSnapshot.data == ConnectivityResult.none;
 
-              if (isOffline && widget.initialMemoriesCache == null) {
-                return DiaryHouseSetupCard(
-                  title: 'KHÔNG CÓ KẾT NỐI',
-                  message: 'Vui lòng kiểm tra internet để tải kỷ niệm mới nhất.',
-                  onRetry: widget.onRetry,
-                );
-              }
-
-              if (widget.memoriesStream == null || widget.houseId == null) {
-                return const _DiaryMemoryInlineLoading();
-              }
-
               return StreamBuilder<DatabaseEvent>(
-                stream: widget.memoriesStream,
+                stream: isOffline ? null : widget.memoriesStream,
                 builder: (context, snapshot) {
                   return FutureBuilder<dynamic>(
                     future: widget.memoriesCacheFuture,
@@ -514,7 +501,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
   }
 }
 
-class _DiaryMemoryPhotoRow extends StatefulWidget {
+class _DiaryMemoryPhotoRow extends StatelessWidget {
   final List<Map<String, dynamic>> rowPhotos;
   final int thumbnailCacheWidth;
   final ValueListenable<int> selectionListenable;
@@ -529,7 +516,6 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
   final Future<void> Function(Map<String, dynamic> photo) onEnsurePhotoUrl;
 
   const _DiaryMemoryPhotoRow({
-    super.key,
     required this.rowPhotos,
     required this.thumbnailCacheWidth,
     required this.selectionListenable,
@@ -541,38 +527,6 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
     required this.onEnsurePhotoUrl,
   });
 
-  @override
-  State<_DiaryMemoryPhotoRow> createState() => _DiaryMemoryPhotoRowState();
-}
-
-class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
-  final Map<String, int> _retryCount = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _refreshUrlsIfNeeded();
-  }
-
-  @override
-  void didUpdateWidget(covariant _DiaryMemoryPhotoRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.rowPhotos != oldWidget.rowPhotos) {
-      _refreshUrlsIfNeeded();
-    }
-  }
-
-  Future<void> _refreshUrlsIfNeeded() async {
-    for (final photo in widget.rowPhotos) {
-      if (_needsSignedRefresh(photo)) {
-        await widget.onEnsurePhotoUrl(photo);
-        if (mounted) {
-          setState(() {});
-        }
-      }
-    }
-  }
-
   bool _needsSignedRefresh(Map<String, dynamic> photo) {
     if (photo['privateMedia'] != true && photo['storageAccess'] != 'signed') {
       return false;
@@ -582,23 +536,13 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
         expiresAt <= DateTime.now().millisecondsSinceEpoch + 60000;
   }
 
-  String _resolvePhotoUrl(Map<String, dynamic> photo) {
-    final url = photo['url']?.toString().trim() ?? '';
-    if (url.isNotEmpty) return url;
-    final downloadUrl = photo['downloadUrl']?.toString().trim() ?? '';
-    if (downloadUrl.isNotEmpty) return downloadUrl;
-    final previewUrl = photo['previewUrl']?.toString().trim() ?? '';
-    if (previewUrl.isNotEmpty) return previewUrl;
-    return photo['thumbUrl']?.toString().trim() ?? '';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 10),
       child: Row(
         children: List.generate(3, (colIndex) {
-          if (colIndex >= widget.rowPhotos.length) {
+          if (colIndex >= rowPhotos.length) {
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(right: colIndex < 2 ? 8.0 : 10.0),
@@ -607,61 +551,10 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
             );
           }
 
-          final photo = widget.rowPhotos[colIndex];
-          final photoUrl = _resolvePhotoUrl(photo);
-          final photoId = photo['id']?.toString() ?? 'unknown_$colIndex';
-
-          // URL rỗng → hiện placeholder tĩnh, thử refresh 1 lần
-          if (photoUrl.isEmpty) {
-            final retries = _retryCount[photoId] ?? 0;
-            if (retries < 1) {
-              _retryCount[photoId] = retries + 1;
-              WidgetsBinding.instance.addPostFrameCallback((_) async {
-                if (!mounted) return;
-                try {
-                  await widget.onEnsurePhotoUrl(photo);
-                  if (mounted) setState(() {});
-                } catch (_) {}
-              });
-            }
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: colIndex < 2 ? 8.0 : 10.0),
-                child: AspectRatio(
-                  aspectRatio: 1.0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.image_not_supported_outlined,
-                          color: Color(0xFF94A3B8),
-                          size: 24,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Chưa có URL',
-                          style: SLTheme.quicksand(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }
-
+          final photo = rowPhotos[colIndex];
           final imageProvider = _DiaryMemoryImageProviders.thumbnail(
-            photoUrl,
-            widget.thumbnailCacheWidth,
+            (photo['url']?.toString() ?? '').trim(),
+            thumbnailCacheWidth,
           );
           return Expanded(
             child: Padding(
@@ -669,7 +562,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
               child: AspectRatio(
                 aspectRatio: 1.0,
                 child: ValueListenableBuilder<int>(
-                  valueListenable: widget.selectionListenable,
+                  valueListenable: selectionListenable,
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(18),
@@ -688,91 +581,44 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(18),
-                      child: Hero(
-                        tag: 'memory_image_${photo['id']}',
-                        child: Image(
-                          image: imageProvider,
-                          fit: BoxFit.cover,
-                          filterQuality: FilterQuality.medium,
-                          gaplessPlayback: true,
-                          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                            if (wasSynchronouslyLoaded) return child;
-                            return AnimatedOpacity(
-                              opacity: frame == null ? 0 : 1,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOut,
-                              child: child,
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            final retries = _retryCount[photoId] ?? 0;
-                            if (retries < 2) {
-                              _retryCount[photoId] = retries + 1;
-                              debugPrint(
-                                '[DiaryMemory] image load failed id=$photoId retry=${retries + 1} error=$error',
-                              );
-                              WidgetsBinding.instance.addPostFrameCallback((_) async {
-                                if (!mounted) return;
-                                try {
-                                  await widget.onEnsurePhotoUrl(photo);
-                                  if (mounted) setState(() {});
-                                } catch (refreshError) {
-                                  debugPrint(
-                                    '[DiaryMemory] refresh url failed id=$photoId error=$refreshError',
-                                  );
-                                }
-                              });
-                            }
-                            return Container(
-                              color: const Color(0xFFF8FAFC),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    retries >= 2
-                                        ? Icons.broken_image_outlined
-                                        : Icons.refresh_rounded,
-                                    color: const Color(0xFF94A3B8),
-                                    size: 24,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    retries >= 2 ? 'Không tải được' : 'Đang nạp lại...',
-                                    style: SLTheme.quicksand(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF94A3B8),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                      child: Image(
+                        image: imageProvider,
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.medium,
+                        gaplessPlayback: true,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.white.withOpacity(0.5),
+                            child: const Icon(
+                              Icons.broken_image,
+                              color: SLColors.textTertiary,
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
                   builder: (context, _, imageChild) {
-                    final isSelected = widget.selectedMemories.containsKey(photoId);
+                    final photoId = photo['id'];
+                    final isSelected = selectedMemories.containsKey(photoId);
 
                     return GestureDetector(
-                      onLongPress: () => widget.onToggleSelection(photo),
+                      onLongPress: () => onToggleSelection(photo),
                       onTap: () async {
-                        if (widget.isSelectionMode) {
-                          widget.onToggleSelection(photo);
+                        if (isSelectionMode) {
+                          onToggleSelection(photo);
                         } else {
                           if (_needsSignedRefresh(photo)) {
-                            await widget.onEnsurePhotoUrl(photo);
-                            if (mounted) setState(() {});
+                            await onEnsurePhotoUrl(photo);
                           }
-                          widget.onOpenMemory(photo, widget.allPhotos);
+                          onOpenMemory(photo, allPhotos);
                         }
                       },
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
                           imageChild!,
-                          if (widget.isSelectionMode)
+                          if (isSelectionMode)
                             Positioned.fill(
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 140),
@@ -1376,28 +1222,25 @@ class _DiaryMemoryInlineLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: const EdgeInsets.fromLTRB(22, 4, 22, 18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.88),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.82)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Giả lập header ngày
-          const SkeletonContainer.rounded(width: 120, height: 24),
-          const SizedBox(height: 16),
-          // Giả lập lưới ảnh 3 cột
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 9,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemBuilder: (context, index) => const SkeletonContainer.rounded(
-              width: double.infinity,
-              height: double.infinity,
-              borderRadius: BorderRadius.all(Radius.circular(18)),
+          const CuteLoadingIndicator(color: Color(0xFFD81B60), size: 26),
+          SLSpacing.w12,
+          Text(
+            'Đang mở kho kỷ niệm...',
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF7C6D83),
             ),
           ),
         ],

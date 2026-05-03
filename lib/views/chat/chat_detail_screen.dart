@@ -3,9 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:image_cropper/image_cropper.dart';
 import '../../models/chat_message.dart';
@@ -28,15 +26,6 @@ import '../../services/security_service.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/rapid_action_feedback_policy.dart';
 import '../../widgets/animated_rabbit_sticker.dart';
-import '../../services/connectivity_service.dart';
-import 'chat_friendly_helper.dart';
-import '../../widgets/skeleton_container.dart';
-import 'widgets/chat_input_area.dart';
-import 'widgets/chat_message_list.dart';
-
-
-
-
 
 part 'chat_detail/chat_detail_helpers_part.dart';
 part 'chat_detail/chat_detail_actions_part.dart';
@@ -140,22 +129,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     share: '\u0110\u00e3 chia s\u1ebb m\u1ed9t b\u00e0i vi\u1ebft',
   );
   late final Stream<ChatRoomMeta> _roomMetaStream;
-  void _replaceMessageState(List<ChatMessage> messages, {bool isFromCache = false}) {
-    _messages
-      ..clear()
-      ..addAll(messages);
-    _messageIds
-      ..clear()
-      ..addAll(messages.map((message) => message.id));
-    _oldestMessageKey = _messages.isEmpty ? null : _messages.last.id;
-    _newestMessageKey = _messages.isEmpty ? null : _messages.first.id;
-    
-    if (!isFromCache) {
-      unawaited(_saveMessagesToCache());
-    }
-    
-    setState(() {});
-  }
   StreamSubscription<ChatMessage>? _liveMessageSub;
   final List<ChatMessage> _messages = [];
   final Set<String> _messageIds = <String>{};
@@ -179,7 +152,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       '$_pendingChatImageUploadKeyPrefix$_chatPrefsScope';
   String get _pendingChatBackgroundUploadKey =>
       '$_pendingChatBackgroundUploadKeyPrefix$_chatPrefsScope';
-  String get _chatCachePrefsKey => 'chat_detail_cache_$_chatPrefsScope';
 
   @override
   void initState() {
@@ -196,43 +168,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     _messagesScrollController.addListener(_handleMessageScroll);
     _msgController.addListener(_handleComposerTextChanged);
     unawaited(_loadTargetBio());
-    unawaited(_loadCachedMessages().then((_) => _loadInitialMessages()));
+    unawaited(_loadInitialMessages());
     unawaited(_promptPendingChatUploadRetryIfNeeded());
-  }
-
-  Future<void> _loadCachedMessages() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_chatCachePrefsKey);
-      if (raw == null || raw.isEmpty) return;
-
-      final decoded = jsonDecode(raw);
-      if (decoded is! List) return;
-
-      final cached = decoded
-          .map((item) => ChatMessage.fromMap(
-                item['id']?.toString() ?? '',
-                Map<dynamic, dynamic>.from(item),
-              ))
-          .toList();
-
-      if (cached.isEmpty || !mounted) return;
-
-      _replaceMessageState(cached, isFromCache: true);
-    } catch (_) {
-      debugPrint('Failed to load chat cache: $_');
-    }
-  }
-
-  Future<void> _saveMessagesToCache() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      // Cache only the most recent 40 messages
-      final toCache = _messages.take(40).map((m) => m.toMap()..['id'] = m.id).toList();
-      await prefs.setString(_chatCachePrefsKey, jsonEncode(toCache));
-    } catch (_) {
-      debugPrint('Failed to save chat cache: $_');
-    }
   }
 
   Future<void> _loadChatPrefs() async {
@@ -271,25 +208,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
-  void _upsertLiveMessage(ChatMessage message) {
-    if (_messageIds.contains(message.id)) {
-      final index = _messages.indexWhere((m) => m.id == message.id);
-      if (index != -1) {
-        _messages[index] = message;
-        setState(() {});
-      }
-      return;
-    }
-    _messageIds.add(message.id);
-    _messages.insert(_findMessageInsertIndex(message), message);
-    if (_messages.isNotEmpty) {
-      _newestMessageKey = _messages.first.id;
-      _oldestMessageKey = _messages.last.id;
-    }
-    unawaited(_saveMessagesToCache());
-    setState(() {});
-  }
-
   Future<void> _saveNickname(String nickname) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_nicknamePrefsKey, nickname.trim());
@@ -317,90 +235,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isCheckingAuth) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        body: Column(
-          children: [
-            // Skeleton Header
-            Container(
-              height: MediaQuery.of(context).padding.top + 74,
-              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 2)),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    const SkeletonContainer.circle(size: 32),
-                    const SizedBox(width: 12),
-                    const SkeletonContainer.circle(size: 40),
-                    const SizedBox(width: 12),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        SkeletonContainer.rounded(width: 120, height: 16),
-                        SizedBox(height: 6),
-                        SkeletonContainer.rounded(width: 80, height: 12),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Skeleton Messages
-            Expanded(
-              child: ListView.builder(
-                itemCount: 8,
-                padding: const EdgeInsets.all(16),
-                itemBuilder: (context, index) {
-                  final isMe = index % 2 == 0;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                      children: [
-                        if (!isMe) ...[
-                          const SkeletonContainer.circle(size: 32),
-                          const SizedBox(width: 8),
-                        ],
-                        SkeletonContainer.rounded(
-                          width: MediaQuery.of(context).size.width * 0.6,
-                          height: 44,
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(16),
-                            topRight: const Radius.circular(16),
-                            bottomLeft: Radius.circular(isMe ? 16 : 4),
-                            bottomRight: Radius.circular(isMe ? 4 : 16),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            // Skeleton Input
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(color: Colors.white),
-              child: Row(
-                children: [
-                  const SkeletonContainer.circle(size: 36),
-                  const SizedBox(width: 12),
-                  const Expanded(child: SkeletonContainer.rounded(width: double.infinity, height: 40)),
-                  const SizedBox(width: 12),
-                  const SkeletonContainer.circle(size: 36),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
+      return const Scaffold(
+          body: Center(
+              child: CircularProgressIndicator(color: Color(0xFF0A7CFF))));
     }
 
     if (!_isAuthenticated) {

@@ -217,10 +217,6 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             controller: passwordCtrl,
             obscureText: true,
             autofocus: true,
-            style: SLTheme.quicksand(
-              color: const Color(0xFF1565C0),
-              fontWeight: FontWeight.w700,
-            ),
             decoration: const InputDecoration(
               labelText: 'Mật khẩu đăng nhập',
               prefixIcon: Icon(Icons.lock_rounded),
@@ -567,79 +563,6 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             onTap: _requestUserDataExportFromHealthCenter,
           ),
           const SizedBox(height: 16),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FBFF),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFDCE7F2)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3E0),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.link_rounded,
-                    color: Color(0xFFEF6C00),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Quản lý liên kết quà',
-                        style: SLTheme.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF243041),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Xem danh sách, huỷ hoặc xoá các liên kết gửi quà Món Quà Bất Ngờ mà bạn đã tạo.',
-                        style: SLTheme.quicksand(
-                          fontSize: 11.8,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF66758A),
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildActionBtn(
-            icon: Icons.link_rounded,
-            label: 'Quản lý liên kết',
-            gradient: const [Color(0xFFFFF3E0), Color(0xFFFFB74D)],
-            textColor: const Color(0xFFE65100),
-            onTap: () {
-              if (_houseId == null || _houseId!.trim().isEmpty) {
-                 _showToast('Bạn cần vào Nhà chung để sử dụng tính năng này.', success: false);
-                 return;
-              }
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SettingsGiftLinksManagerScreen(houseId: _houseId!),
-                ),
-              );
-            },
-          ),
-
           _buildAdvancedPanel(
             hideBackButton: true,
             showSaveButton: false,

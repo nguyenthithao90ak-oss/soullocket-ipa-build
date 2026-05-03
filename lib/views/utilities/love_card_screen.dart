@@ -44,26 +44,21 @@ class LoveCardService {
     String? imageUrl,
     int expiryMonths = LoveCardService.defaultExpiryMonths,
   }) async {
-    try {
-      final expiresAt = _expiresAtForMonths(expiryMonths);
-      final ref = _db.ref('houses/$houseId/love_cards').push();
-      await ref.set({
-        'fromUid': fromUid,
-        'senderName': senderName,
-        'signature': signature,
-        'content': content,
-        'theme': theme,
-        'bgColor': bgColor,
-        'imageUrl': imageUrl,
-        'isOpened': false,
-        'ts': ServerValue.timestamp,
-        'expiresAt': expiresAt,
-      });
-      return ref.key;
-    } catch (e) {
-      debugPrint('Error in sendCard: $e');
-      rethrow;
-    }
+    final expiresAt = _expiresAtForMonths(expiryMonths);
+    final ref = _db.ref('houses/$houseId/love_cards').push();
+    await ref.set({
+      'fromUid': fromUid,
+      'senderName': senderName,
+      'signature': signature,
+      'content': content,
+      'theme': theme,
+      'bgColor': bgColor,
+      'imageUrl': imageUrl,
+      'isOpened': false,
+      'ts': ServerValue.timestamp,
+      'expiresAt': expiresAt,
+    });
+    return ref.key;
   }
 
   String generatePublicCardLink({
@@ -115,33 +110,14 @@ class LoveCardService {
     }
 
     final payloadMap = payload.toMap()
-      ..['fromUid'] = fromUid.trim()
-      ..['houseId'] = houseId.trim()
-      ..['cardId'] = normalizedCardId
       ..['expiresAt'] = _expiresAtForMonths(expiryMonths);
 
-    final updates = <String, Object?>{
-      '${LoveCardLinkService.publicShareCollectionPath}/$shareId': payloadMap,
-      'houses/${houseId.trim()}/love_cards/$normalizedCardId/publicShareId': shareId,
-    };
-
-    Object? lastError;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        await _db.ref().update(updates);
-        lastError = null;
-        break;
-      } catch (error) {
-        lastError = error;
-        if (attempt >= 2 || !_isTransientLinkError(error)) {
-          break;
-        }
-        await Future<void>.delayed(Duration(milliseconds: 350 * (attempt + 1)));
-      }
-    }
-    if (lastError != null) {
-      throw lastError;
-    }
+    await Future.wait([
+      shareRef.set(payloadMap),
+      _db.ref('houses/$houseId/love_cards/$normalizedCardId/publicShareId').set(
+            shareId,
+          ),
+    ]);
 
     return shareId;
   }
@@ -167,21 +143,6 @@ class LoveCardService {
             .ref('${LoveCardLinkService.publicShareCollectionPath}/$normalizedShareId')
             .remove(),
     ]);
-  }
-
-  bool _isTransientLinkError(Object error) {
-    final message = error.toString().toLowerCase();
-    if (message.contains('permission-denied') ||
-        message.contains('unauthenticated') ||
-        message.contains('forbidden')) {
-      return false;
-    }
-    return message.contains('network') ||
-        message.contains('timeout') ||
-        message.contains('deadline') ||
-        message.contains('unavailable') ||
-        message.contains('temporarily') ||
-        message.contains('connection');
   }
 
   static const int defaultExpiryMonths = 2;
@@ -646,20 +607,13 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       await Future.delayed(const Duration(milliseconds: 260));
       await PendingUploadService.instance.clear(_pendingUploadKey);
       isSuccess = true;
-    } catch (e) {
-      debugPrint('Lỗi gửi thiệp: $e');
+    } catch (_) {
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Không gửi được thiệp: $e',
-            style: SLTheme.quicksand(fontWeight: FontWeight.w700, color: Colors.white),
-          ),
-          backgroundColor: Colors.red.shade800,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        const SnackBar(
+          content: Text('Không gửi được thiệp. Hãy thử lại sau.'),
         ),
       );
     } finally {

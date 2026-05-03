@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_blurhash/flutter_blurhash.dart';
 import '../../../services/story_service.dart';
 import '../../../core/sl_theme.dart';
 
@@ -156,19 +155,9 @@ class _StoryBarState extends State<StoryBar> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: story['url'],
-                    width: 58,
-                    height: 58,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => story['blurHash'] != null
-                        ? BlurHash(hash: story['blurHash'])
-                        : Container(color: Colors.white24),
-                    errorWidget: (context, url, error) =>
-                        const Icon(Icons.broken_image, color: Colors.white30),
-                  ),
+                  image: DecorationImage(
+                      image: CachedNetworkImageProvider(story['url']),
+                      fit: BoxFit.cover),
                 ),
               ),
             ),
@@ -196,14 +185,10 @@ class _StoryBarState extends State<StoryBar> {
               child: Container(color: Colors.black.withOpacity(0.95))),
           Container(
             constraints: const BoxConstraints(maxWidth: 450, maxHeight: 800),
-            child: CachedNetworkImage(
-              imageUrl: story['url'],
-              fit: BoxFit.contain,
-              placeholder: (context, url) => story['blurHash'] != null
-                  ? BlurHash(hash: story['blurHash'])
-                  : const Center(child: CircularProgressIndicator()),
-              errorWidget: (context, url, error) =>
-                  const Icon(Icons.broken_image, color: Colors.white, size: 50),
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: CachedNetworkImageProvider(story['url']),
+                  fit: BoxFit.contain),
             ),
           ),
           Positioned(

@@ -42,17 +42,99 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
     bool isChatClosed, {
     bool hasChatBackground = false,
   }) {
-    return ChatMessageList(
-      messages: _messages,
-      isInitialLoading: _isInitialMessagesLoading,
-      isLoadingOlder: _isLoadingOlderMessages,
-      isChatClosed: isChatClosed,
-      hasChatBackground: hasChatBackground,
-      isInternal: _isInternal,
-      myHouseId: widget.myHouseId,
-      currentRole: _currentRole,
-      scrollController: _messagesScrollController,
-      bubbleBuilder: (msg, isMe) => _buildMsgBubble(msg, isMe),
+    if (_isInitialMessagesLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF0A7CFF)),
+      );
+    }
+
+    if (_messages.isEmpty) {
+      return Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+          decoration: BoxDecoration(
+            color: hasChatBackground
+                ? Colors.white.withOpacity(0.72)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(24),
+            border: hasChatBackground
+                ? Border.all(color: Colors.white.withOpacity(0.38))
+                : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF0F2F5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.chat_bubble_outline,
+                  size: 36,
+                  color: Color(0xFF0A7CFF),
+                ),
+              ),
+              SLSpacing.h16,
+              Text(
+                isChatClosed
+                    ? 'Đoạn chat này đã đóng'
+                    : 'Bắt đầu cuộc trò chuyện',
+                style: SLTheme.quicksand(
+                  color: const Color(0xFF6B7280),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                ),
+              ),
+              SLSpacing.h8,
+              Text(
+                isChatClosed
+                    ? 'Bạn vẫn có thể xem lại tin nhắn cũ, nhưng chưa thể gửi tin nhắn mới.'
+                    : 'Gửi tin nhắn, sticker hoặc ảnh để bắt đầu.',
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  color: const Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w700,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    final itemCount = _messages.length + (_isLoadingOlderMessages ? 1 : 0);
+    return ListView.builder(
+      controller: _messagesScrollController,
+      padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
+      reverse: true,
+      itemCount: itemCount,
+      itemBuilder: (context, index) {
+        if (_isLoadingOlderMessages && index == _messages.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: Color(0xFF0A7CFF),
+                ),
+              ),
+            ),
+          );
+        }
+        final msg = _messages[index];
+        final isMe = _isInternal
+            ? msg.senderId == _currentRole
+            : msg.senderId == widget.myHouseId;
+        return _buildMsgBubble(msg, isMe);
+      },
     );
   }
 
@@ -83,17 +165,171 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
     bool isChatClosed, {
     bool hasChatBackground = false,
   }) {
-    return ChatInputArea(
-      controller: _msgController,
-      isUploading: _isUploading,
-      hasComposerText: _hasComposerText,
-      quickReactionEmoji: _quickReactionEmoji,
-      isChatClosed: isChatClosed,
-      hasChatBackground: hasChatBackground,
-      onStickerTap: _showStickerBottomSheet,
-      onPickImage: _pickImage,
-      onSend: _sendMsg,
-      onQuickReaction: _sendQuickLike,
+    if (isChatClosed) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+        color:
+            hasChatBackground ? Colors.white.withOpacity(0.92) : Colors.white,
+        child: Text(
+          'Tài khoản này không còn khả dụng nên cuộc chat hiện đã bị khóa.',
+          textAlign: TextAlign.center,
+          style: SLTheme.quicksand(
+            color: const Color(0xFFD81B60),
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: hasChatBackground ? Colors.white.withOpacity(0.9) : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: _showStickerBottomSheet,
+                child: const Padding(
+                  padding: EdgeInsets.only(right: 8, bottom: 4),
+                  child: Icon(
+                    Icons.add_circle,
+                    color: Color(0xFF0A7CFF),
+                    size: 30,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  constraints:
+                      const BoxConstraints(minHeight: 42, maxHeight: 110),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: hasChatBackground
+                        ? const Color(0xFFFFFFFF).withOpacity(0.82)
+                        : const Color(0xFFF0F2F5),
+                    borderRadius: BorderRadius.circular(24),
+                    border: hasChatBackground
+                        ? Border.all(color: Colors.white.withOpacity(0.35))
+                        : null,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: _isUploading ? null : _pickImage,
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: _isUploading
+                              ? const Padding(
+                                  padding: EdgeInsets.all(4),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(
+                                  Icons.image_outlined,
+                                  color: Color(0xFF0A7CFF),
+                                  size: 20,
+                                ),
+                        ),
+                      ),
+                      SLSpacing.w8,
+                      Expanded(
+                        child: TextField(
+                          controller: _msgController,
+                          maxLines: null,
+                          textInputAction: TextInputAction.send,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Color(0xFF1E293B),
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Nhắn tin...',
+                            hintStyle: SLTheme.quicksand(
+                              color: Colors.grey,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                          onSubmitted: (_) => _sendMsg(),
+                        ),
+                      ),
+                      SLSpacing.w8,
+                      GestureDetector(
+                        onTap: _showStickerBottomSheet,
+                        child: const SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: Icon(
+                            Icons.emoji_emotions_outlined,
+                            color: Color(0xFF6B7280),
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SLSpacing.w8,
+              GestureDetector(
+                onTap: _sendQuickLike,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: _hasComposerText
+                        ? const Color(0xFF0A7CFF)
+                        : const Color(0xFFEAF2FF),
+                    border: Border.all(
+                      color: const Color(0xFFC7DCFF),
+                      width: _hasComposerText ? 0 : 1,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: _hasComposerText
+                        ? const Icon(
+                            Icons.send_rounded,
+                            key: ValueKey('send'),
+                            color: Colors.white,
+                            size: 19,
+                          )
+                        : Text(
+                            _quickReactionEmoji,
+                            key: ValueKey('quick_$_quickReactionEmoji'),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              height: 1,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

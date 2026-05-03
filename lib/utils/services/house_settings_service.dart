@@ -22,15 +22,23 @@ class HouseSettingsService {
   }
 
   Future<Map<String, dynamic>> getStartDateChangePolicy(String houseId) async {
-    const isLocked = false;
-    const shouldWarn = false;
-
-
+    final snap = await _dbRef.child('houses/$houseId/settings').get();
+    final settings = _asStringDynamicMap(snap.value) ?? {};
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final cooldownUntil = _readEpochMs(settings['startDateCooldownUntil']);
+    final changedAt = _readEpochMs(settings['startDateChangedAt']);
+    final changeCount = _readEpochMs(settings['startDateChangeCount']) ?? 0;
+    final isLocked = cooldownUntil != null && cooldownUntil > now;
+    final shouldWarn = !isLocked &&
+        changeCount >= 2 &&
+        changedAt != null &&
+        now - changedAt >= 0 &&
+        now - changedAt < startDateChangeCooldown.inMilliseconds;
 
     return {
       'isLocked': isLocked,
       'shouldWarn': shouldWarn,
-      'cooldownUntil': null,
+      'cooldownUntil': cooldownUntil,
     };
   }
 
@@ -96,10 +104,8 @@ class HouseSettingsService {
   }) async {
     final trustState = await _deviceManagerService.getCurrentDeviceTrustState(
         autoApprove: true);
-    
-    // ✅ Luôn cho phép nếu là thiết bị tin cậy HOẶC thiết bị đang chờ duyệt 12h
-    if (trustState.isTrusted || trustState.isPendingApproval) return;
-    
+    if (trustState.isTrusted) return;
+    if (allowPendingApproval && trustState.isPendingApproval) return;
     if (trustState.isBlocked) {
       throw 'Thiết bị này đã bị chặn nên không thể thay đổi thông tin chung.';
     }
@@ -107,7 +113,7 @@ class HouseSettingsService {
     final unlockAtMs = trustState.autoApproveAtMs;
     final unlockLabel =
         unlockAtMs > 0 ? _formatDateTime(unlockAtMs) : 'sau đủ 12 giờ';
-    throw 'Thiết bị này chưa đủ tin cậy để thay đổi thông tin chung. '
+    throw 'Thiết bị này đang chờ duyệt nên chưa thể thay đổi thông tin chung. '
         'Hãy duyệt thiết bị ở máy tin cậy hoặc đợi đến $unlockLabel.';
   }
 
@@ -433,6 +439,7 @@ class HouseSettingsService {
     String dateStr, {
     bool startCooldown = false,
   }) async {
+    await _ensureCurrentDeviceCanModifySharedInfo(houseId);
     final safeDate = DateInputUtils.normalizeToIsoDate(
       dateStr,
       firstYear: 1900,
@@ -448,9 +455,22 @@ class HouseSettingsService {
     final settingsSnap = await _dbRef.child('houses/$houseId/settings').get();
     final settings = _asStringDynamicMap(settingsSnap.value) ?? {};
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    final changeCount = (_readEpochMs(settings['startDateChangeCount']) ?? 0) + 1;
-    const nextCooldownUntil = null;
-
+    final cooldownUntil = _readEpochMs(settings['startDateCooldownUntil']);
+    if (cooldownUntil != null && cooldownUntil > nowMs) {
+      throw 'Bạn cần chờ đủ 3 ngày mới có thể đổi ngày yêu tiếp.';
+    }
+    final changedAt = _readEpochMs(settings['startDateChangedAt']);
+    final oldChangeCount = _readEpochMs(settings['startDateChangeCount']) ?? 0;
+    final shouldWarn = oldChangeCount >= 2 &&
+        changedAt != null &&
+        nowMs - changedAt >= 0 &&
+        nowMs - changedAt < startDateChangeCooldown.inMilliseconds;
+    if (shouldWarn && !startCooldown) {
+      throw 'Nếu đổi tiếp, bạn cần xác nhận sẽ chờ 3 ngày mới có thể đổi lần sau.';
+    }
+    final changeCount = oldChangeCount + 1;
+    final nextCooldownUntil =
+        startCooldown ? nowMs + startDateChangeCooldown.inMilliseconds : null;
 
     try {
       await _dbRef.update({

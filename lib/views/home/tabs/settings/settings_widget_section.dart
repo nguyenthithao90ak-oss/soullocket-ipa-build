@@ -98,9 +98,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
   Widget _buildWidgetPanelTabBar() {
     final items = <(String, String, IconData)>[
-      (WidgetService.defaultWidgetStyleKey, 'Mặc định', Icons.widgets_rounded),
-      ('countdown', 'Đếm ngày', Icons.timer_outlined),
-      (_widgetPanelTabIconKey, 'Nhận diện', Icons.favorite_rounded),
+      (WidgetService.defaultWidgetStyleKey, 'Mac dinh', Icons.widgets_rounded),
+      ('countdown', 'Dem ngay', Icons.timer_outlined),
+      (_widgetPanelTabIconKey, 'Nhan dien', Icons.favorite_rounded),
     ];
 
     return Container(
@@ -113,8 +113,6 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       child: Row(
         children: items.map((item) {
           final isSelected = _widgetPanelTabKey == item.$1;
-          final isBrandMarkTab = item.$1 == _widgetPanelTabIconKey;
-
           return Expanded(
             child: GestureDetector(
               onTap: () => unawaited(_handleWidgetPanelTabChanged(item.$1)),
@@ -141,21 +139,13 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    isBrandMarkTab
-                        ? ValueListenableBuilder<UiPrefsState>(
-                            valueListenable: UiPrefs.notifier,
-                            builder: (context, ui, _) => SoulLocketBrandMark(
-                              styleKey: ui.brandMarkKey,
-                              size: 18,
-                            ),
-                          )
-                        : Icon(
-                            item.$3,
-                            size: 18,
-                            color: isSelected
-                                ? const Color(0xFF1F2A37)
-                                : const Color(0xFF64748B),
-                          ),
+                    Icon(
+                      item.$3,
+                      size: 18,
+                      color: isSelected
+                          ? const Color(0xFF1F2A37)
+                          : const Color(0xFF64748B),
+                    ),
                     const SizedBox(height: 5),
                     Text(
                       item.$2,
@@ -184,108 +174,25 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       builder: (context, ui, _) {
         final selectedKey = SoulLocketBrand.normalizeStyleKey(ui.brandMarkKey);
         return _buildWidgetSectionCard(
-          useBrandMarkIcon: true,
+          icon: Icons.favorite_rounded,
           title: 'Icon trong app',
           subtitle:
-              'Đổi viền tim và tông màu cho nhận diện hiển thị bên trong app.',
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: SoulLocketBrand.styles.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 0.82,
-            ),
-            itemBuilder: (context, index) {
-              final style = SoulLocketBrand.styles[index];
+              'Doi vien tim va tong mau cho nhan dien hien thi ben trong app.',
+          iconGradient: const [
+            Color(0xFFFF7EA8),
+            Color(0xFFA971FF),
+          ],
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: SoulLocketBrand.styles.map((style) {
               final isSelected = selectedKey == style.key;
               return GestureDetector(
-                onTap: () async {
-                  if (isSelected) return;
-
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      title: Text(
-                        'Đổi biểu tượng app?',
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 20,
-                        ),
-                      ),
-                      content: Text(
-                        'Bạn vừa chọn phong cách "${style.label}". Để thay đổi biểu tượng ngoài màn hình chính, ứng dụng cần được khởi động lại. Bạn có muốn thực hiện không?',
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF4B5563),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text(
-                            'Hủy',
-                            style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFD81B60),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: Text(
-                            'Đồng ý & Khởi động lại',
-                            style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (confirm == true) {
-                    await UiPrefs.setBrandMarkKey(style.key);
-                    
-                    try {
-                      // Gọi lệnh đổi icon native
-                      // Hiện tại alias đã khớp hoàn toàn với style.key: rose, mint, ocean, sunset, violet, midnight, aurora, sakura, gold
-                      await FlutterDynamicIcon.setAlternateIconName(style.key);
-                      
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          backgroundColor: const Color(0xFF2E7D32),
-                          content: Text(
-                              'Đã đổi sang phong cách ${style.label}! Hãy đóng app và mở lại để thấy icon mới.'),
-                        ),
-                      );
-                    } catch (e) {
-                      debugPrint('Lỗi đổi icon: $e');
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'Giao diện đã đổi! Icon ngoài màn hình sẽ được cập nhật ở bản build sau.'),
-                        ),
-                      );
-                    }
-                  }
-                },
+                onTap: () => unawaited(UiPrefs.setBrandMarkKey(style.key)),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+                  width: 104,
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? style.backgroundColors.first.withOpacity(0.12)
@@ -299,29 +206,28 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     ),
                   ),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       SoulLocketBrandMark(
                         styleKey: style.key,
-                        size: 48,
+                        size: 54,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Text(
                         style.label,
                         textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
-                          fontSize: 10.5,
+                          fontSize: 11.2,
                           fontWeight: FontWeight.w900,
                           color: const Color(0xFF243041),
+                          height: 1.2,
                         ),
                       ),
                       if (isSelected) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         const Icon(
                           Icons.check_circle_rounded,
-                          size: 16,
+                          size: 18,
                           color: Color(0xFF16A34A),
                         ),
                       ],
@@ -329,7 +235,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   ),
                 ),
               );
-            },
+            }).toList(growable: false),
           ),
         );
       },
@@ -373,7 +279,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ),
               const SizedBox(height: 4),
               Text(
-                'Nhận diện hiển thị trong app',
+                'Nhan dien hien thi trong app',
                 style: SLTheme.quicksand(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
@@ -443,6 +349,12 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         return;
       }
       try {
+        if (Theme.of(context).platform == TargetPlatform.iOS) {
+          await _persistAndSyncWidgetAppearance();
+          if (!mounted) return;
+          _showToast(context.tr('ios_widget_pin_guide'), success: true);
+          return;
+        }
         final supported = await HomeWidget.isRequestPinWidgetSupported();
         if (!mounted) return;
         if (supported != true) {
@@ -614,9 +526,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 const SizedBox(height: 12),
                 _buildWidgetSectionCard(
                   icon: Icons.timer_rounded,
-                  title: 'Widget đếm ngày',
+                  title: 'Widget dem ngay',
                   subtitle:
-                      'Chế độ này ưu tiên số ngày ở giữa và ngày bắt đầu bên dưới.',
+                      'Mode nay uu tien so ngay o giua va ngay bat dau ben duoi.',
                   iconGradient: const [
                     Color(0xFFFFB84D),
                     Color(0xFFFF7A59),
@@ -637,8 +549,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               if (_widgetPanelTabKey != _widgetPanelTabIconKey)
                 _buildWidgetSectionCard(
                   icon: Icons.add_to_home_screen_rounded,
-                  title: context.tr('android_real_widget'),
-                  subtitle: context.tr('add_widget_desc'),
+                  title: context.tr('home_screen_widget'),
+                  subtitle: Theme.of(context).platform == TargetPlatform.iOS
+                      ? null
+                      : context.tr('add_widget_desc'),
                   iconGradient: const [
                     Color(0xFF14B8A6),
                     Color(0xFF06B6D4),
@@ -646,7 +560,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (Theme.of(context).platform != TargetPlatform.iOS)
+                      if (Theme.of(context).platform != TargetPlatform.iOS) ...[
                         LayoutBuilder(
                           builder: (context, constraints) {
                             final useColumn = constraints.maxWidth < 330;
@@ -701,54 +615,67 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                             );
                           },
                         ),
+                        const SizedBox(height: 14),
+                      ],
                       if (Theme.of(context).platform == TargetPlatform.iOS) ...[
-                        const SizedBox(height: 12),
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF5FBFF),
+                            color: const Color(0xFFF0F9FF),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFCAEAF3)),
+                            border: Border.all(color: const Color(0xFFB9E6FE)),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                width: 34,
-                                height: 34,
+                                width: 32,
+                                height: 32,
                                 decoration: BoxDecoration(
-                                  color:
-                                      const Color(0xFF0EA5C6).withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: const Color(0xFF0EA5E9).withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Icon(
                                   Icons.info_outline_rounded,
-                                  color: Color(0xFF0B7285),
+                                  color: Color(0xFF0369A1),
+                                  size: 18,
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Hướng dẫn iOS',
+                                      'Hướng dẫn thêm Widget',
                                       style: SLTheme.quicksand(
-                                        fontSize: 12.6,
+                                        fontSize: 13,
                                         fontWeight: FontWeight.w900,
-                                        color: const Color(0xFF0B7285),
+                                        color: const Color(0xFF0369A1),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Để thêm Widget trên iOS:\n1. Nhấn giữ vào màn hình chính\n2. Bấm nút dấu [+] ở góc màn hình\n3. Tìm "SoulLocket" và Thêm tiện ích',
+                                      context.tr('ios_widget_pending'),
                                       style: SLTheme.quicksand(
-                                        fontSize: 11.8,
+                                        fontSize: 11.5,
                                         fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF667085),
-                                        height: 1.4,
+                                        color: const Color(0xFF475467),
+                                        height: 1.5,
                                       ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildGradientBtn(
+                                      label: 'Lưu & Đồng bộ cấu hình',
+                                      gradient: const [
+                                        Color(0xFF10C8E6),
+                                        Color(0xFF0E9EB0),
+                                      ],
+                                      onTap: () async {
+                                        await _persistAndSyncWidgetAppearance();
+                                        if (mounted) _showToast('Đã đồng bộ!', success: true);
+                                      },
                                     ),
                                   ],
                                 ),

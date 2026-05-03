@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/sl_theme.dart';
 import '../../services/ai_counselor_service.dart';
-import '../chat/chat_friendly_helper.dart';
 
 class FriendlyChatScreen extends StatefulWidget {
   const FriendlyChatScreen({
@@ -450,20 +449,14 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       return;
     }
 
-    String? finalReply = reply;
-    if (finalReply == null || finalReply.trim().isEmpty) {
-      // Fallback khi lỗi kết nối hoặc timeout
-      finalReply = ChatFriendlyHelper.getFriendlyResponse(
-        userText: text,
-        isOffline: true,
-      );
-    }
-
     setState(() {
       _isSending = false;
       _messages.add(
         _FriendlyChatMessage(
-          text: finalReply!.trim(),
+          text: (reply == null || reply.trim().isEmpty)
+              ? (_aiService.lastErrorMessage ??
+                  'Mình đang gặp trục trặc nên chưa trả lời được. Bạn thử lại sau một chút nhé, sorry.')
+              : reply.trim(),
           isUser: false,
           createdAt: DateTime.now().millisecondsSinceEpoch,
         ),

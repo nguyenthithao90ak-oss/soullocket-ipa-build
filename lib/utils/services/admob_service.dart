@@ -1,6 +1,5 @@
-﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
-import 'dart:io';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -18,13 +17,13 @@ import 'purchase_service.dart';
 import 'revenue_security_telemetry_service.dart';
 
 /// ============================================================
-///  AdMobService â€” GRA (Phase Production)
-///  Quáº£n lÃ½ toÃ n bá»™ quáº£ng cÃ¡o Google AdMob
+///  AdMobService — GRA (Phase Production)
+///  Quản lý toàn bộ quảng cáo Google AdMob
 ///
-///  ÄÆ¡n vá»‹ quáº£ng cÃ¡o tháº­t (ca-app-pub-6165771694697009):
-///  - Rewarded chÃ­nh (Xen_Ke_Thuong):   /3441513253
-///  - Rewarded Ä‘iá»ƒm danh (Diem_Danh):   /9710840883
-///  - Banner chÃ­nh (Banner_Chinh):       /5949757521
+///  Đơn vị quảng cáo thật (ca-app-pub-6165771694697009):
+///  - Rewarded chính (Xen_Ke_Thuong):   /3441513253
+///  - Rewarded điểm danh (Diem_Danh):   /9710840883
+///  - Banner chính (Banner_Chinh):       /5949757521
 ///  - Interstitial (trung_gian):         /6283299015
 ///  - App Open (mo_ung_dung):            /3305781889
 /// ============================================================
@@ -84,7 +83,7 @@ class AdMobService {
   factory AdMobService() => _instance;
   AdMobService._internal();
   static const int rewardedMainPoints = 50;
-  static const int dailyRewardedAdLimit = 10; // Giá»›i háº¡n 10 quáº£ng cÃ¡o/ngÃ y
+  static const int dailyRewardedAdLimit = 10; // Giới hạn 10 quảng cáo/ngày
   static const String _autoInterstitialNextAtPrefsKey =
       'il_auto_interstitial_next_at_ms_v1';
   static const String _appOpenLastShownDatePrefsKey =
@@ -92,9 +91,9 @@ class AdMobService {
   static const String _appOpenShownCountPrefsKey = 'il_app_open_shown_count_v1';
   static const String _appOpenShownDatePrefsKey = 'il_app_open_shown_date_v1';
   static const String _dailyRewardedAdCountPrefsKey =
-      'il_daily_rewarded_ad_count_v1'; // Theo dÃµi sá»‘ láº§n xem ads hÃ´m nay
+      'il_daily_rewarded_ad_count_v1'; // Theo dõi số lần xem ads hôm nay
   static const String _dailyRewardedAdDatePrefsKey =
-      'il_daily_rewarded_ad_date_v1'; // NgÃ y hiá»‡n táº¡i (yyyy-MM-dd)
+      'il_daily_rewarded_ad_date_v1'; // Ngày hiện tại (yyyy-MM-dd)
   static const int _autoInterstitialMinMinutes = 45;
   static const int _autoInterstitialMaxMinutes = 90;
   static const int _autoInterstitialRetryMinutes = 15;
@@ -104,57 +103,44 @@ class AdMobService {
   final ConsentService _consentService = ConsentService();
   final Random _random = Random();
 
-  // â”€â”€â”€ AD UNIT IDs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Debug mode  â†’ Google Test IDs (khÃ´ng tá»‘n tiá»n khi test)
-  // Release mode â†’ ID tháº­t tá»« AdMob Console cá»§a báº¡n
+  // ─── AD UNIT IDs ─────────────────────────────────────────────
+  // Debug mode  → Google Test IDs (không tốn tiền khi test)
+  // Release mode → ID thật từ AdMob Console của bạn
 
-    // ANDROID
-  static String _androidRewardedMainId = 'ca-app-pub-6165771694697009/3441513253';
-  static String _androidRewardedCheckinId = 'ca-app-pub-6165771694697009/9710840883';
-  static String _androidRewardedSoulGameId = 'ca-app-pub-6165771694697009/5113438527';
-  static String _androidBannerId = 'ca-app-pub-6165771694697009/5949757521';
-  static String _androidInterstitialId = 'ca-app-pub-6165771694697009/6283299015';
-  static String _androidAppOpenId = 'ca-app-pub-6165771694697009/3305781889';
+  // Fallback IDs (có thể giữ lại các ID thật hiện tại như bản phụ phòng hờ)
+  static String _rewardedMainId = 'ca-app-pub-6165771694697009/3441513253';
+  static String _rewardedCheckinId = 'ca-app-pub-6165771694697009/9710840883';
+  static String _rewardedSoulGameId = 'ca-app-pub-6165771694697009/5113438527';
+  static String _bannerId = 'ca-app-pub-6165771694697009/5949757521';
+  static String _interstitialId = 'ca-app-pub-6165771694697009/6283299015';
+  static String _appOpenId = 'ca-app-pub-6165771694697009/3305781889';
 
-  // IOS
-  static String _iosRewardedMainId = 'ca-app-pub-6165771694697009/8781411712';
-  static String _iosRewardedCheckinId = 'ca-app-pub-6165771694697009/8342428018';
-  static String _iosRewardedSoulGameId = 'ca-app-pub-6165771694697009/5716264675';
-  static String _iosBannerId = 'ca-app-pub-6165771694697009/6458500706';
-  static String _iosInterstitialId = 'ca-app-pub-6165771694697009/1798124404';
-  static String _iosAppOpenId = 'ca-app-pub-6165771694697009/7141026983';
+  /// Rewarded chính — "Xem quảng cáo nhận điểm"
+  static String get rewardedMainId =>
+      kDebugMode ? 'ca-app-pub-3940256099942544/5224354917' : _rewardedMainId;
 
-  static String get rewardedMainId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
-    return Platform.isIOS ? _iosRewardedMainId : _androidRewardedMainId;
-  }
+  /// Rewarded điểm danh 7 ngày
+  static String get rewardedCheckinId => kDebugMode
+      ? 'ca-app-pub-3940256099942544/5224354917'
+      : _rewardedCheckinId;
 
-  static String get rewardedCheckinId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
-    return Platform.isIOS ? _iosRewardedCheckinId : _androidRewardedCheckinId;
-  }
+  static String get rewardedSoulGameId => kDebugMode
+      ? 'ca-app-pub-3940256099942544/5224354917'
+      : _rewardedSoulGameId;
 
-  static String get rewardedSoulGameId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
-    return Platform.isIOS ? _iosRewardedSoulGameId : _androidRewardedSoulGameId;
-  }
+  /// Banner hiển thị thường trực
+  static String get bannerId =>
+      kDebugMode ? 'ca-app-pub-3940256099942544/6300978111' : _bannerId;
 
-  static String get bannerId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/2934735716' : 'ca-app-pub-3940256099942544/6300978111';
-    return Platform.isIOS ? _iosBannerId : _androidBannerId;
-  }
+  /// Interstitial — quảng cáo toàn màn hình giữa chừng
+  static String get interstitialId =>
+      kDebugMode ? 'ca-app-pub-3940256099942544/1033173712' : _interstitialId;
 
-  static String get interstitialId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/4411468910' : 'ca-app-pub-3940256099942544/1033173712';
-    return Platform.isIOS ? _iosInterstitialId : _androidInterstitialId;
-  }
+  /// App Open — quảng cáo khi mở app
+  static String get appOpenId =>
+      kDebugMode ? 'ca-app-pub-3940256099942544/9257395921' : _appOpenId;
 
-  static String get appOpenId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/5575463023' : 'ca-app-pub-3940256099942544/9257395921';
-    return Platform.isIOS ? _iosAppOpenId : _androidAppOpenId;
-  }
-
-  // â”€â”€â”€ REWARDED AD (CHÃNH) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── REWARDED AD (CHÍNH) ─────────────────────────────────────
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoading = false;
   RewardedAd? _soulGameRewardedAd;
@@ -243,7 +229,7 @@ class AdMobService {
         return;
       }
 
-      // Äá»“ng bá»™ ID Quáº£ng cÃ¡o tá»« Firebase nháº±m loáº¡i bá» HardCode Source
+      // Đồng bộ ID Quảng cáo từ Firebase nhằm loại bỏ HardCode Source
       try {
         final snap = await FirebaseDatabase.instance
             .ref('app_config/admob_ids')
@@ -251,20 +237,24 @@ class AdMobService {
             .timeout(const Duration(seconds: 4));
         if (snap.exists && snap.value is Map) {
           final map = Map<dynamic, dynamic>.from(snap.value as Map);
-                      if (map['rewardedMainId'] != null) _androidRewardedMainId = map['rewardedMainId'].toString();
-            if (map['rewardedCheckinId'] != null) _androidRewardedCheckinId = map['rewardedCheckinId'].toString();
-            if (map['rewardedSoulGameId'] != null) _androidRewardedSoulGameId = map['rewardedSoulGameId'].toString();
-            if (map['bannerId'] != null) _androidBannerId = map['bannerId'].toString();
-            if (map['interstitialId'] != null) _androidInterstitialId = map['interstitialId'].toString();
-            if (map['appOpenId'] != null) _androidAppOpenId = map['appOpenId'].toString();
-
-            if (map['ios_rewardedMainId'] != null) _iosRewardedMainId = map['ios_rewardedMainId'].toString();
-            if (map['ios_rewardedCheckinId'] != null) _iosRewardedCheckinId = map['ios_rewardedCheckinId'].toString();
-            if (map['ios_rewardedSoulGameId'] != null) _iosRewardedSoulGameId = map['ios_rewardedSoulGameId'].toString();
-            if (map['ios_bannerId'] != null) _iosBannerId = map['ios_bannerId'].toString();
-            if (map['ios_interstitialId'] != null) _iosInterstitialId = map['ios_interstitialId'].toString();
-            if (map['ios_appOpenId'] != null) _iosAppOpenId = map['ios_appOpenId'].toString();
-
+          if (map['rewardedMainId'] != null) {
+            _rewardedMainId = map['rewardedMainId'].toString();
+          }
+          if (map['rewardedCheckinId'] != null) {
+            _rewardedCheckinId = map['rewardedCheckinId'].toString();
+          }
+          if (map['rewardedSoulGameId'] != null) {
+            _rewardedSoulGameId = map['rewardedSoulGameId'].toString();
+          }
+          if (map['bannerId'] != null) {
+            _bannerId = map['bannerId'].toString();
+          }
+          if (map['interstitialId'] != null) {
+            _interstitialId = map['interstitialId'].toString();
+          }
+          if (map['appOpenId'] != null) {
+            _appOpenId = map['appOpenId'].toString();
+          }
         }
       } catch (e) {
         debugPrint('Failed to sync AdMob IDs: $e');
@@ -443,15 +433,15 @@ class AdMobService {
       return false;
     }
 
-    // CÃ¡ch 5 tiáº¿ng má»›i Ä‘Æ°á»£c hiá»‡n App Open Ad 1 láº§n
+    // Cách 5 tiếng mới được hiện App Open Ad 1 lần
     final lastShownMs = prefs.getInt(_appOpenLastShownDatePrefsKey) ?? 0;
     final nowMs = DateTime.now().millisecondsSinceEpoch;
 
     if (lastShownMs == 0) {
-      return true; // Láº§n Ä‘áº§u tiÃªn
+      return true; // Lần đầu tiên
     }
 
-    // 5 tiáº¿ng = 5 * 60 * 60 * 1000 = 18000000 ms
+    // 5 tiếng = 5 * 60 * 60 * 1000 = 18000000 ms
     final hoursDiff = (nowMs - lastShownMs) / (1000 * 60 * 60);
     if (hoursDiff >= 5) {
       return true;
@@ -473,19 +463,19 @@ class AdMobService {
         _appOpenLastShownDatePrefsKey, DateTime.now().millisecondsSinceEpoch);
   }
 
-  // â”€â”€â”€ DAILY REWARDED AD LIMIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── DAILY REWARDED AD LIMIT ──────────────────────────────────
   String _getTodayDateKey() {
     final now = DateTime.now();
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
-  /// Láº¥y sá»‘ láº§n xem quáº£ng cÃ¡o rewarded hÃ´m nay
+  /// Lấy số lần xem quảng cáo rewarded hôm nay
   Future<int> getDailyRewardedAdCount() async {
     final prefs = await SharedPreferences.getInstance();
     final storedDate = prefs.getString(_dailyRewardedAdDatePrefsKey);
     final todayDate = _getTodayDateKey();
 
-    // Náº¿u ngÃ y khÃ¡c, reset counter
+    // Nếu ngày khác, reset counter
     if (storedDate != todayDate) {
       await prefs.setInt(_dailyRewardedAdCountPrefsKey, 0);
       await prefs.setString(_dailyRewardedAdDatePrefsKey, todayDate);
@@ -495,25 +485,25 @@ class AdMobService {
     return prefs.getInt(_dailyRewardedAdCountPrefsKey) ?? 0;
   }
 
-  /// Kiá»ƒm tra xem hÃ´m nay cÃ²n Ä‘Æ°á»£c xem quáº£ng cÃ¡o khÃ´ng
+  /// Kiểm tra xem hôm nay còn được xem quảng cáo không
   Future<bool> canWatchRewardedAdToday() async {
     final count = await getDailyRewardedAdCount();
     return count < dailyRewardedAdLimit;
   }
 
-  /// Láº¥y sá»‘ láº§n cÃ²n láº¡i cÃ³ thá»ƒ xem hÃ´m nay
+  /// Lấy số lần còn lại có thể xem hôm nay
   Future<int> getRemainingDailyRewardedAds() async {
     final count = await getDailyRewardedAdCount();
     return (dailyRewardedAdLimit - count).clamp(0, dailyRewardedAdLimit);
   }
 
-  /// TÄƒng bá»™ Ä‘áº¿m lÃªn 1
+  /// Tăng bộ đếm lên 1
   Future<void> _incrementDailyRewardedAdCount() async {
     final prefs = await SharedPreferences.getInstance();
     final storedDate = prefs.getString(_dailyRewardedAdDatePrefsKey);
     final todayDate = _getTodayDateKey();
 
-    // Náº¿u ngÃ y khÃ¡c, reset counter rá»“i set thÃ nh 1
+    // Nếu ngày khác, reset counter rồi set thành 1
     if (storedDate != todayDate) {
       await prefs.setInt(_dailyRewardedAdCountPrefsKey, 1);
       await prefs.setString(_dailyRewardedAdDatePrefsKey, todayDate);
@@ -523,19 +513,19 @@ class AdMobService {
     }
   }
 
-  // â”€â”€â”€ REWARDED COOLDOWN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── REWARDED COOLDOWN ─────────────────────────────────────────
   int _lastRewardedShownMs = 0;
   static const int _rewardedCooldownMs = 45000; // 45 seconds
 
-  /// Hiá»ƒn thá»‹ quáº£ng cÃ¡o rewarded. Tráº£ vá» true náº¿u user xem Ä‘á»§.
+  /// Hiển thị quảng cáo rewarded. Trả về true nếu user xem đủ.
   Future<bool> showRewardedAd() async {
     if (kIsWeb) return false;
     if (await isProUser()) return false;
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     if (nowMs - _lastRewardedShownMs < _rewardedCooldownMs) {
-      debugPrint('AdMobService: Xem quáº£ng cÃ¡o quÃ¡ nhanh, Ä‘ang chá» cooldown.');
-      return false; // ChÆ°a qua cooldown
+      debugPrint('AdMobService: Xem quảng cáo quá nhanh, đang chờ cooldown.');
+      return false; // Chưa qua cooldown
     }
 
     await initialize();
@@ -584,8 +574,8 @@ class AdMobService {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     if (nowMs - _lastRewardedShownMs < _rewardedCooldownMs) {
       debugPrint(
-          'AdMobService: Xem quáº£ng cÃ¡o quÃ¡ nhanh (Soul Game), Ä‘ang chá» cooldown.');
-      return false; // ChÆ°a qua cooldown
+          'AdMobService: Xem quảng cáo quá nhanh (Soul Game), đang chờ cooldown.');
+      return false; // Chưa qua cooldown
     }
 
     await initialize();
@@ -628,7 +618,7 @@ class AdMobService {
     return completer.future;
   }
 
-  // â”€â”€â”€ BANNER AD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── BANNER AD ───────────────────────────────────────────────
   Future<BannerAd?> createBannerAd({required Function(Ad) onAdLoaded}) async {
     if (kIsWeb) return null;
     await initialize();
@@ -650,7 +640,7 @@ class AdMobService {
     return banner;
   }
 
-  // â”€â”€â”€ INTERSTITIAL AD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── INTERSTITIAL AD ─────────────────────────────────────────
   InterstitialAd? _interstitialAd;
   Timer? _autoInterstitialTimer;
   bool _autoInterstitialSchedulerEnabled = false;
@@ -679,7 +669,7 @@ class AdMobService {
       await loadInterstitialAd();
     }
 
-    // Náº¿u váº«n null (do táº£i lá»—i), thÃ¬ bá» qua
+    // Nếu vẫn null (do tải lỗi), thì bỏ qua
     if (_interstitialAd == null) return;
 
     final completer = Completer<void>();
@@ -691,7 +681,7 @@ class AdMobService {
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
         _interstitialAd = null;
-        loadInterstitialAd(); // Náº¡p sáºµn cÃ¡i tiáº¿p theo
+        loadInterstitialAd(); // Nạp sẵn cái tiếp theo
         AppLifecyclePresenceGuard.settle();
         if (!completer.isCompleted) completer.complete();
       },
@@ -794,16 +784,16 @@ class AdMobService {
         if (_rewardedAd != null) {
           final earnedReward = await showRewardedAd();
           if (earnedReward) {
-            // Xem háº¿t quáº£ng cÃ¡o báº¯t buá»™c -> Äáº·t láº¡i thá»i gian bÃ¬nh thÆ°á»ng (30-60p)
+            // Xem hết quảng cáo bắt buộc -> Đặt lại thời gian bình thường (30-60p)
             await _setNextAutoInterstitialAt(_generateNextAutoInterstitialAt());
           } else {
-            // ThoÃ¡t ngang quáº£ng cÃ¡o báº¯t buá»™c -> Äáº·t thá»i gian hiá»‡n láº¡i lÃ  10 phÃºt
+            // Thoát ngang quảng cáo bắt buộc -> Đặt thời gian hiện lại là 10 phút
             await _setNextAutoInterstitialAt(
               DateTime.now().add(const Duration(minutes: 10)),
             );
           }
         } else {
-          // Lá»—i táº£i quáº£ng cÃ¡o -> Thá»­ láº¡i sau 2 phÃºt
+          // Lỗi tải quảng cáo -> Thử lại sau 2 phút
           await _setNextAutoInterstitialAt(
             DateTime.now().add(
               const Duration(minutes: _autoInterstitialRetryMinutes),
@@ -862,7 +852,7 @@ class AdMobService {
     );
   }
 
-  // â”€â”€â”€ ÄIá»‚M THÆ¯á»žNG (FIREBASE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── ĐIỂM THƯỞNG (FIREBASE) ──────────────────────────────────
   Future<int> getUserPoints() async {
     final userRef = _currentUserRef;
     if (userRef == null) return 0;
@@ -1111,11 +1101,11 @@ class AdMobService {
   }
 
   Future<RewardClaimResult> claimRewardedAdPoints() async {
-    // Kiá»ƒm tra xem Ä‘Ã£ Ä‘áº¡t giá»›i háº¡n hÃ ng ngÃ y chÆ°a
+    // Kiểm tra xem đã đạt giới hạn hàng ngày chưa
     await canWatchRewardedAdToday();
     if (false) {
       debugPrint(
-          'AdMobService: ÄÃ£ Ä‘áº¡t giá»›i háº¡n $dailyRewardedAdLimit quáº£ng cÃ¡o/ngÃ y.');
+          'AdMobService: Đã đạt giới hạn $dailyRewardedAdLimit quảng cáo/ngày.');
       return const RewardClaimResult(
         ok: false,
         error: 'local_daily_limit_estimate',
@@ -1125,7 +1115,7 @@ class AdMobService {
     final response = await _claimRewardFromServer(source: 'rewarded_ad');
     final result = RewardClaimResult.fromResponse(response);
     if (result.ok) {
-      // Chá»‰ tÄƒng counter náº¿u claim thÃ nh cÃ´ng
+      // Chỉ tăng counter nếu claim thành công
       await _incrementDailyRewardedAdCount();
       return result;
     }
@@ -1138,7 +1128,7 @@ class AdMobService {
   }
 
   Future<RewardClaimResult> claimDailyCheckinReward() async {
-    // Láº§n thá»­ Ä‘áº§u tiÃªn
+    // Lần thử đầu tiên
     Map<String, dynamic>? response;
     try {
       response = await _claimRewardFromServer(source: 'daily_checkin');
@@ -1147,12 +1137,12 @@ class AdMobService {
     }
     final firstResult = RewardClaimResult.fromResponse(response);
 
-    // Náº¿u Ä‘Ã£ Ä‘iá»ƒm danh rá»“i hoáº·c thÃ nh cÃ´ng â†’ tráº£ vá» ngay
+    // Nếu đã điểm danh rồi hoặc thành công → trả về ngay
     if (firstResult.ok || firstResult.alreadyClaimed) {
       return firstResult;
     }
 
-    // Náº¿u lá»—i máº¡ng táº¡m thá»i â†’ tá»± retry 1 láº§n sau 1.5 giÃ¢y
+    // Nếu lỗi mạng tạm thời → tự retry 1 lần sau 1.5 giây
     if (firstResult.networkIssue) {
       debugPrint('Daily checkin: network issue, retrying in 1.5s...');
       await Future<void>.delayed(const Duration(milliseconds: 1500));

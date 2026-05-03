@@ -37,6 +37,19 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     return low;
   }
 
+  void _upsertLiveMessage(ChatMessage message) {
+    final existingIndex = _messages.indexWhere((item) => item.id == message.id);
+    if (existingIndex >= 0) {
+      _messages.removeAt(existingIndex);
+    } else {
+      _messageIds.add(message.id);
+    }
+    _messages.insert(_findMessageInsertIndex(message), message);
+    if (_messages.isNotEmpty) {
+      _newestMessageKey = _messages.first.id;
+      _oldestMessageKey = _messages.last.id;
+    }
+  }
 
   Future<void> _loadInitialMessages() async {
     setState(() => _isInitialMessagesLoading = true);
@@ -120,6 +133,17 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     }
   }
 
+  void _replaceMessageState(List<ChatMessage> messages) {
+    _messages
+      ..clear()
+      ..addAll(messages);
+    _messageIds
+      ..clear()
+      ..addAll(messages.map((message) => message.id));
+    _oldestMessageKey = _messages.isEmpty ? null : _messages.last.id;
+    _newestMessageKey = _messages.isEmpty ? null : _messages.first.id;
+    setState(() {});
+  }
 
   void _listenForNewMessages() {
     _liveMessageSub?.cancel();
@@ -240,23 +264,13 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                                 width: effectiveImageSize,
                                 height: effectiveImageSize,
                                 fit: BoxFit.cover,
-                                fadeInDuration: const Duration(milliseconds: 300),
-                                fadeOutDuration: const Duration(milliseconds: 300),
-                                placeholder: (context, url) => msg.blurHash != null
-                                    ? BlurHash(hash: msg.blurHash!)
-                                    : Container(
-                                        width: effectiveImageSize,
-                                        height: effectiveImageSize,
-                                        color: const Color(0xFFF2F2F7),
-                                        child: const Center(
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    Color(0xFF0A7CFF)),
-                                          ),
-                                        ),
-                                      ),
+                                placeholder: (context, url) => SizedBox(
+                                  width: effectiveImageSize,
+                                  height: effectiveImageSize,
+                                  child: const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                ),
                                 errorWidget: (context, url, error) => SizedBox(
                                   width: effectiveImageSize,
                                   height: effectiveImageSize,

@@ -1,20 +1,17 @@
 import 'soul_rhythm/soul_rhythm_models.dart';
 import 'soul_rhythm/soul_rhythm_painters.dart';
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/admob_service.dart';
 import '../ui_prefs.dart';
 import '../../core/sl_theme.dart';
 import 'soul_rhythm_music_config.dart';
-import '../../utils/services/game_download_service.dart';
 
 part 'soul_rhythm/ui/soul_rhythm_hud.dart';
 part 'soul_rhythm/ui/soul_rhythm_playfield.dart';
@@ -73,7 +70,7 @@ class SoulRhythmGame extends StatefulWidget {
 }
 
 class _SoulRhythmGameState extends State<SoulRhythmGame>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   static const String _highScoreKey = 'soul_rhythm_best_score';
   static const String _gameIconPath = 'assets/games/rhythm-tiles/icon.png';
   static const String _customTrackAssetPath =
@@ -228,11 +225,11 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _sfxPlayers = List.generate(
       4,
       (index) => AudioPlayer(playerId: 'soul_rhythm_sfx_$index'),
     );
-    _adMob.preloadSoulGameRewardedAd();
     _ticker = createTicker(_onTick);
     unawaited(_primePrefs());
     _loadHighScore();
@@ -289,9 +286,9 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     _cachedPrefs = prefs;
     return prefs;
   }
-
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _stateGeneration++;
     _cancelReviveCountdown();
     _cancelGameOverReveal();
@@ -305,6 +302,19 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     _playfieldFrame.dispose();
     _hudFrame.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(_bgPlayer.pause());
+      return;
+    }
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_syncBackgroundTrack(force: true));
+    }
   }
 
   Future<void> _loadHighScore() async {
@@ -682,18 +692,17 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
   }
 
   Future<void> _toggleLowGraphics() async {
-    final current = _graphicsProfile;
-    final next = current == 'low' ? 'balanced' : 'low';
     HapticFeedback.selectionClick();
-    if (_allowSfx(_lastSelectSfxUs, 90000)) {
-      _lastSelectSfxUs = _nowUs();
-      unawaited(_playSfx(_selectBytes, volume: 0.68));
-    }
+    final current = UiPrefs.notifier.value;
     await UiPrefs.saveState(
-      UiPrefs.notifier.value.copyWith(
-        graphicsQualityKey: next,
+      current.copyWith(
+        liteMode: false,
+        graphicsQualityKey: _isLowGraphics ? 'balanced' : 'low',
       ),
     );
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _backToMenu() {
@@ -912,25 +921,21 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
               ? 0.48
               : 0.36,
     );
-    await _bgPlayer.stop();
-    if (desiredTrack == 'custom') {
-      final fileName = p.basename(_customTrackAssetPath);
-      final localPath = await GameDownloadService().getLocalPath('soul_rhythm', fileName);
-      if (await File(localPath).exists()) {
-        debugPrint('Soul Rhythm: Using LOCAL track: $localPath');
-        await _bgPlayer.play(DeviceFileSource(localPath));
-      } else {
-        debugPrint('Soul Rhythm: Using ASSET track: $_customTrackAssetPath');
+    try {
+      await _bgPlayer.stop();
+      if (desiredTrack == 'custom') {
         await _bgPlayer.play(AssetSource(_customTrackAssetPath));
+        return;
       }
-      return;
+      await _bgPlayer.play(
+        BytesSource(
+          bytes!,
+          mimeType: 'audio/wav',
+        ),
+      );
+    } catch (_) {
+      _activeTrack = '';
     }
-    await _bgPlayer.play(
-      BytesSource(
-        bytes!,
-        mimeType: 'audio/wav',
-      ),
-    );
   }
 
   void _cancelReviveCountdown() {
@@ -1537,11 +1542,13 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     final playArea = _playAreaRect();
     final playfieldGeometry =
         _buildPlayfieldGeometry(playArea, _hitLineY(playArea));
+    final lowGraphics = _isLowGraphics;
+    final gridOpacity = lowGraphics ? 0.025 : (0.15 + (bgPulse * 0.2));
     final tileGlowBlur =
-        _isHighGraphics ? 25.0 : (_isLowGraphics ? 14.0 : 18.0);
-    final tileGlowSpread = _isHighGraphics ? 4.0 : (_isLowGraphics ? 1.6 : 2.8);
-    final tileShineBlur = _isHighGraphics ? 10.0 : (_isLowGraphics ? 4.0 : 7.0);
-    final hitLineBlur = _isHighGraphics ? 20.0 : (_isLowGraphics ? 10.0 : 14.0);
+        _isHighGraphics ? 25.0 : (lowGraphics ? 3.0 : 18.0);
+    final tileGlowSpread = _isHighGraphics ? 4.0 : (lowGraphics ? 0.0 : 2.8);
+    final tileShineBlur = _isHighGraphics ? 10.0 : (lowGraphics ? 0.0 : 7.0);
+    final hitLineBlur = _isHighGraphics ? 20.0 : (lowGraphics ? 2.0 : 14.0);
 
     return PopScope(
       canPop: _gameState == 'MENU',
@@ -1636,50 +1643,14 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
                 ),
               ),
             ),
-            Positioned(
-              top: MediaQuery.sizeOf(context).height * 0.4,
-              right: -50,
-              child: IgnorePointer(
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFFE040FB)
-                            .withOpacity(0.3 + (bgPulse * 0.2)),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: MediaQuery.sizeOf(context).height * 0.7,
-              left: -50,
-              child: IgnorePointer(
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFFFFEB3B)
-                            .withOpacity(0.15 + (bgPulse * 0.2)),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+
+
             Positioned.fill(
               child: IgnorePointer(
-                child: CustomPaint(
-                  painter: GridPainter(opacity: 0.15 + (bgPulse * 0.2)),
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    painter: GridPainter(opacity: gridOpacity),
+                  ),
                 ),
               ),
             ),

@@ -444,23 +444,23 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                     ? 7
                     : 12;
         final double headerHeight = extremeCompact
-            ? 62
+            ? 78
             : ultraCompact
-                ? 72
+                ? 88
                 : compactLayout
-                    ? 82
-                    : 96;
+                    ? 100
+                    : 120;
 
         return Padding(
           padding: EdgeInsets.fromLTRB(
             horizontalPadding,
             extremeCompact
-                ? 1
+                ? 2
                 : ultraCompact
-                    ? 2
+                    ? 4
                     : compactLayout
-                        ? 3
-                        : 5,
+                        ? 6
+                        : 10,
             horizontalPadding,
             max(
               extremeCompact ? 0.0 : (compactLayout ? 2.0 : 4.0),
@@ -589,9 +589,9 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
             : 56;
     final double sideGap = ultraCompact ? 6 : 10;
     return Padding(
-      padding: EdgeInsets.only(top: ultraCompact ? 0 : 2),
+      padding: EdgeInsets.only(top: ultraCompact ? 2 : 4),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           SizedBox(
             width: bestCardWidth,

@@ -23,10 +23,7 @@ class PinPadSetupModal extends StatefulWidget {
   final bool enableForgotPin;
   final String? forgotPinHint;
   final Future<bool> Function()? onForgotPin;
-  final bool enableBiometrics;
-  final VoidCallback? onBiometricPressed;
   final Function(String pin) onCompleted;
-
 
   const PinPadSetupModal({
     super.key,
@@ -42,11 +39,8 @@ class PinPadSetupModal extends StatefulWidget {
     this.enableForgotPin = false,
     this.forgotPinHint,
     this.onForgotPin,
-    this.enableBiometrics = false,
-    this.onBiometricPressed,
     required this.onCompleted,
   });
-
 
   static Future<String?> show(
     BuildContext context, {
@@ -62,10 +56,7 @@ class PinPadSetupModal extends StatefulWidget {
     bool enableForgotPin = false,
     String? forgotPinHint,
     Future<bool> Function()? onForgotPin,
-    bool enableBiometrics = false,
-    VoidCallback? onBiometricPressed,
   }) async {
-
     return Navigator.of(context, rootNavigator: true).push<String>(
       PageRouteBuilder<String>(
         opaque: true,
@@ -86,10 +77,7 @@ class PinPadSetupModal extends StatefulWidget {
             enableForgotPin: enableForgotPin,
             forgotPinHint: forgotPinHint,
             onForgotPin: onForgotPin,
-            enableBiometrics: enableBiometrics,
-            onBiometricPressed: onBiometricPressed,
             onCompleted: (pin) => Navigator.of(context).pop(pin),
-
           );
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -1166,18 +1154,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            if (widget.enableBiometrics && widget.onBiometricPressed != null)
-              _buildKeypadButton(
-                'bio',
-                context: context,
-                size: buttonSize,
-                icon: defaultTargetPlatform == TargetPlatform.iOS
-                    ? Icons.face_retouching_natural_rounded
-                    : Icons.fingerprint_rounded,
-                onTapOverride: widget.onBiometricPressed,
-              )
-            else
-              SizedBox(width: buttonSize, height: buttonSize),
+            SizedBox(width: buttonSize, height: buttonSize),
             _buildKeypadButton('0', context: context, size: buttonSize),
             _buildKeypadButton(
               'delete',
@@ -1196,13 +1173,11 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
     required BuildContext context,
     required double size,
     IconData? icon,
-    VoidCallback? onTapOverride,
   }) {
     bool isDelete = value == 'delete';
     final onTap = _isInputLocked
         ? null
-        : (onTapOverride ??
-            (isDelete ? _onDeletePressed : () => _onNumberPressed(value)));
+        : (isDelete ? _onDeletePressed : () => _onNumberPressed(value));
 
     return Material(
       color: Colors.transparent,

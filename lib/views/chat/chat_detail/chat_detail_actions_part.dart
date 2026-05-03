@@ -1,5 +1,6 @@
-part of '../chat_detail_screen.dart';
+// ignore_for_file: invalid_use_of_protected_member
 
+part of '../chat_detail_screen.dart';
 
 extension _ChatDetailActionsPart on _ChatDetailScreenState {
   Future<void> _checkChatLock() async {
@@ -41,17 +42,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     }
 
     try {
-      if (!ConnectivityService().isOnline) {
-        final offlineResponse = ChatFriendlyHelper.getFriendlyResponse(isOffline: true);
-        _showNotice(offlineResponse);
-        return;
-      }
       await _sendChatMessage(text);
       _msgController.clear();
-      HapticFeedback.lightImpact();
     } catch (e) {
-
-
       if (!mounted) return;
       _showChatError(e);
     }
@@ -92,9 +85,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       return;
     }
     await _sendSticker(_quickReactionEmoji);
-    HapticFeedback.mediumImpact();
   }
-
 
   Future<void> _addReaction(String messageId, String emoji) async {
     if (!await SecurityService().guardAction(
@@ -112,7 +103,6 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         _currentRole,
         emoji,
       );
-      HapticFeedback.selectionClick();
       return;
     }
     await _chatService.addReaction(
@@ -121,9 +111,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       messageId,
       emoji,
     );
-    HapticFeedback.selectionClick();
   }
-
 
   Future<void> _promptPendingChatUploadRetryIfNeeded() async {
     if (_didPromptPendingChatRetry || !mounted) {
@@ -324,17 +312,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     }
 
     try {
-      if (!ConnectivityService().isOnline) {
-        final offlineResponse = ChatFriendlyHelper.getFriendlyResponse(isOffline: true);
-        _showNotice(offlineResponse);
-        return false;
-      }
       await _sendChatMessage(sticker, type: 'sticker');
-      HapticFeedback.lightImpact();
       return true;
     } catch (e) {
-
-
       _showChatError(e);
       return false;
     }
@@ -634,23 +614,4 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       throw Exception('Không thể xóa file nền chat cũ trên Firebase Storage.');
     }
   }
-
-  Future<void> _sendFriendlyResponse() async {
-    final response = ChatFriendlyHelper.getFriendlyResponse(
-      isOffline: !ConnectivityService().isOnline,
-    );
-    
-    if (!ConnectivityService().isOnline) {
-      _showNotice(response);
-      return;
-    }
-
-    try {
-      await _sendChatMessage(response);
-      _showNotice('Đã gửi lời chúc thân thiện! ✨');
-    } catch (e) {
-      _showChatError(e);
-    }
-  }
 }
-

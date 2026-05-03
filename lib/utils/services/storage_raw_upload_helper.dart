@@ -47,14 +47,10 @@ class StorageRawUploadHelper {
       TaskSnapshot uploadTask;
 
       if (!kIsWeb && file.path.isNotEmpty) {
-        uploadTask = await _retryUpload(
-          () => ref.putFile(File(file.path), metadata),
-        );
+        uploadTask = await ref.putFile(File(file.path), metadata);
       } else {
         final fileBytes = await file.readAsBytes();
-        uploadTask = await _retryUpload(
-          () => ref.putData(fileBytes, metadata),
-        );
+        uploadTask = await ref.putData(fileBytes, metadata);
       }
 
       return uploadTask.ref.getDownloadURL();
@@ -64,41 +60,6 @@ class StorageRawUploadHelper {
         'Không tải tệp lên đám mây được: hãy kiểm tra kết nối mạng, đăng nhập và quyền truy cập tệp.',
       );
     }
-  }
-
-  bool _shouldRetryUploadError(Object error) {
-    if (error is FirebaseException) {
-      final code = error.code.trim().toLowerCase();
-      return code == 'retry-limit-exceeded' ||
-          code == 'unknown' ||
-          code == 'unavailable';
-    }
-    if (error is SocketException) return true;
-    final text = error.toString().toLowerCase();
-    return text.contains('timeout') ||
-        text.contains('timed out') ||
-        text.contains('network') ||
-        text.contains('unavailable') ||
-        text.contains('deadline') ||
-        text.contains('connection') ||
-        text.contains('kết nối') ||
-        text.contains('mạng');
-  }
-
-  Future<T> _retryUpload<T>(Future<T> Function() action) async {
-    Object? lastError;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        return await action();
-      } catch (error) {
-        lastError = error;
-        if (attempt >= 2 || !_shouldRetryUploadError(error)) {
-          rethrow;
-        }
-        await Future.delayed(Duration(milliseconds: 420 * (attempt + 1)));
-      }
-    }
-    throw lastError ?? Exception('Upload failed.');
   }
 
   Future<String> uploadMusicFileToPath({
@@ -133,14 +94,10 @@ class StorageRawUploadHelper {
       TaskSnapshot uploadTask;
 
       if (!kIsWeb && file.path.isNotEmpty) {
-        uploadTask = await _retryUpload(
-          () => ref.putFile(File(file.path), metadata),
-        );
+        uploadTask = await ref.putFile(File(file.path), metadata);
       } else {
         final fileBytes = await file.readAsBytes();
-        uploadTask = await _retryUpload(
-          () => ref.putData(fileBytes, metadata),
-        );
+        uploadTask = await ref.putData(fileBytes, metadata);
       }
 
       return uploadTask.ref.getDownloadURL();
@@ -221,13 +178,11 @@ class StorageRawUploadHelper {
 
     try {
       final ref = buildStorageRef(storagePath);
-      final uploadTask = await _retryUpload(
-        () => ref.putData(
-          fileBytes,
-          SettableMetadata(
-            contentType: resolvedContentType,
-            cacheControl: storageImmutableCacheControl,
-          ),
+      final uploadTask = await ref.putData(
+        fileBytes,
+        SettableMetadata(
+          contentType: resolvedContentType,
+          cacheControl: storageImmutableCacheControl,
         ),
       );
 

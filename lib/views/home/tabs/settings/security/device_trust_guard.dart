@@ -88,26 +88,14 @@ class DeviceTrustGuard {
     }
 
     try {
-      final trustState = await _deviceManagerService
-          .getCurrentDeviceTrustState(autoApprove: autoApprove)
-          .timeout(
-            const Duration(seconds: 8),
-            onTimeout: () => const DeviceTrustState(
-              houseId: '',
-              deviceId: 'unknown',
-              status: 'unknown',
-              firstSeenAtMs: 0,
-              autoApproveAtMs: 0,
-              exists: false,
-              isAdmin: false,
-            ),
-          );
+      // Thử lần 1 không timeout cứng để tránh false-unknown trên mạng chậm.
+      final trustState = await _loadTrustStateWithRetry(autoApprove: autoApprove);
 
       if (trustState.isTrusted) {
         return const DeviceTrustGuardState.trusted();
       }
 
-      if (trustState.status == 'pending') {
+      if (trustState.isPendingApproval) {
         return _pendingState(
           trustState: trustState,
           fallbackUnlockAtMs: fallbackUnlockAtMs,
@@ -121,6 +109,7 @@ class DeviceTrustGuard {
         );
       }
 
+      // Chỉ báo unavailable khi thực sự không đọc được trạng thái.
       if (!trustState.exists || trustState.status == 'unknown') {
         return const DeviceTrustGuardState.unavailable();
       }
@@ -129,5 +118,25 @@ class DeviceTrustGuard {
     } catch (_) {
       return const DeviceTrustGuardState.unavailable();
     }
+  }
+
+  /// Thử đọc trust state 2 lần để tránh trả về unknown do lỗi mạng thoáng qua.
+  Future<DeviceTrustState> _loadTrustStateWithRetry({
+    bool autoApprove = true,
+  }) async {
+    final first = await _deviceManagerService.getCurrentDeviceTrustState(
+      autoApprove: autoApprove,
+    );
+    // Kết quả rõ ràng → trả về ngay.
+    if (first.isTrusted || first.isPendingApproval || first.isBlocked) {
+      return first;
+    }
+    if (first.exists && first.status != 'unknown') {
+      return first;
+    }
+    // Lần 2 — retry khi lần đầu trả về unknown/not-exists.
+    return _deviceManagerService.getCurrentDeviceTrustState(
+      autoApprove: autoApprove,
+    );
   }
 }

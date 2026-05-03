@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 import '../../services/admob_service.dart';
 import '../../services/critical_data_sync_service.dart';
@@ -366,19 +365,6 @@ class AppEntryController {
       ),
     );
 
-    // Request App Tracking Transparency authorization before initializing AdMob
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-      await _runGuarded(
-        'request AppTrackingTransparency',
-        () async {
-          final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-          if (status == TrackingStatus.notDetermined) {
-            await AppTrackingTransparency.requestTrackingAuthorization();
-          }
-        },
-      );
-    }
-
     await _runGuarded(
       'initialize AdMob',
       () => _adMobService.initialize(),
@@ -442,7 +428,7 @@ class AppEntryController {
 
     if (!activeContext.mounted) return;
 
-    await LocationService().requestPermission(context: activeContext, forcePrompt: true);
+    await LocationService().requestPermission(context: activeContext);
     if (!activeContext.mounted) return;
 
     await NotificationService().requestPermissionAndInit();

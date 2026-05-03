@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
-import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -413,7 +412,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _setRealtimePipelinesActive(true);
 
     // Automatically bootstrap location when entering the map screen
-    _bootstrapLocationTracking(forcePrompt: true);
+    _bootstrapLocationTracking(forcePrompt: false);
 
     try {
       await Future.wait([
@@ -536,28 +535,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           forcePrompt: forcePrompt,
         )
         .timeout(const Duration(seconds: 12), onTimeout: () => false);
-
     if (!mounted) return;
-    
-    if (!started) {
-      // Kiểm tra xem thực sự là do tắt GPS hay do lỗi khác
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      setState(() {
-        _isBootstrappingLocation = false;
-        _locationStatusMessage = serviceEnabled 
-            ? 'GPS chưa sẵn sàng. Hãy đảm bảo bạn đã cấp quyền "Luôn cho phép" trong Cài đặt SoulLocket.'
-            : 'Bạn chưa bật định vị GPS. Hãy vuốt bảng điều khiển xuống để bật GPS nhé.';
-      });
-      return;
-    }
-
     setState(() {
       _isBootstrappingLocation = false;
-      _locationStatusMessage = null;
+      _locationStatusMessage = started
+          ? null
+          : 'GPS chưa sẵn sàng. Kiểm tra quyền vị trí rồi thử lại.';
     });
-
-    // Thêm hiệu ứng zoom nhẹ tới vị trí của mình khi vừa bật thành công
-    _fitToVisibleData(includeHistory: false);
   }
 
   void _scheduleMapReadyWatchdog() {

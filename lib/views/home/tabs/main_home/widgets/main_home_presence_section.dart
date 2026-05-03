@@ -237,12 +237,45 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (zodiacEmoji != '✦' && zodiacEmoji.isNotEmpty)
-                _buildModernZodiacBadge(zodiacEmoji, zodiacName),
-              if (zodiacEmoji != '✦' && zodiacEmoji.isNotEmpty && hasAge && displayAge.isNotEmpty)
-                const SizedBox(width: 6),
+              if (zodiacEmoji != '✦')
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Text(
+                    zodiacEmoji,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'Apple Color Emoji',
+                    ),
+                  ),
+                ),
               if (hasAge && displayAge.isNotEmpty)
-                _buildModernAgeBadge(displayAge, isUser1),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: badgeGradient,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: badgeGradient.last.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    displayAge,
+                    style: SLTheme.quicksand(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -311,78 +344,6 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             ],
           ),
       ],
-    );
-  }
-
-  Widget _buildModernZodiacBadge(String emoji, String name) {
-    // Xác định màu sắc dựa trên nguyên tố của cung
-    final detail = ZodiacUtils.zodiacDetails[name];
-    final element = detail?['element']?.toString() ?? '';
-    
-    Color baseColor;
-    if (element.contains('Lửa')) {
-      baseColor = const Color(0xFFFF5252);
-    } else if (element.contains('Nước')) {
-      baseColor = const Color(0xFF448AFF);
-    } else if (element.contains('Đất')) {
-      baseColor = const Color(0xFF81C784);
-    } else if (element.contains('Khí')) {
-      baseColor = const Color(0xFFAB47BC);
-    } else {
-      baseColor = const Color(0xFFFF9800);
-    }
-
-    return Container(
-      width: 26,
-      height: 26,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: baseColor.withOpacity(0.4),
-            blurRadius: 8,
-            spreadRadius: 1,
-          ),
-        ],
-        border: Border.all(color: baseColor.withOpacity(0.5), width: 1.5),
-      ),
-      child: Text(
-        emoji,
-        style: const TextStyle(fontSize: 14),
-      ),
-    );
-  }
-
-  Widget _buildModernAgeBadge(String age, bool isUser1) {
-    final gradient = _profileAccentGradient(isUser1);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [gradient[0], gradient[1]],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: gradient.last.withOpacity(0.3),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Text(
-        age,
-        style: SLTheme.quicksand(
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
-          color: Colors.white,
-          letterSpacing: 0.5,
-        ),
-      ),
     );
   }
 }
