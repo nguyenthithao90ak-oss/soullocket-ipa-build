@@ -428,7 +428,7 @@ class AppEntryController {
 
     if (!activeContext.mounted) return;
 
-    await LocationService().requestPermission(context: activeContext);
+    await LocationService().requestPermission(context: activeContext, forcePrompt: true);
     if (!activeContext.mounted) return;
 
     await NotificationService().requestPermissionAndInit();
