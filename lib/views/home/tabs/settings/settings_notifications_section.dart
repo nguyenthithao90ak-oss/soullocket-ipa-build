@@ -1,0 +1,436 @@
+part of '../settings_tab.dart';
+
+extension _SettingsTabNotificationsSection on _SettingsTabState {
+  String _notificationRoleKey() {
+    return _activeRoleKey == 'user2' ? 'user2' : 'user1';
+  }
+
+  String _notificationDisplayName() {
+    final role = _notificationRoleKey();
+    final name = (role == 'user2' ? _nameU2 : _nameU1).trim();
+    if (name.isNotEmpty) {
+      return name;
+    }
+    return role == 'user2' ? 'bạn nữ' : 'bạn nam';
+  }
+
+  Future<void> _persistNotificationsEnabledPref(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('il_notifications_enabled', value);
+  }
+
+  Future<void> _syncNotificationTopics(bool enabled) async {
+    if (enabled) {
+      await FirebaseMessaging.instance.subscribeToTopic('soullocket_global');
+      if ((_houseId ?? '').trim().isNotEmpty) {
+        await FirebaseMessaging.instance.subscribeToTopic('house_$_houseId');
+      }
+      return;
+    }
+
+    await FirebaseMessaging.instance.unsubscribeFromTopic('soullocket_global');
+    if ((_houseId ?? '').trim().isNotEmpty) {
+      await FirebaseMessaging.instance.unsubscribeFromTopic('house_$_houseId');
+    }
+  }
+
+  Future<void> _handleNotificationsEnabledChanged(bool value) async {
+    final previousValue = _notificationsEnabled;
+    final pushUpdateErrorTemplate = context.tr('push_update_error');
+    setState(() {
+      _notificationsEnabled = value;
+      _notifAnniversary = value;
+      _notifPost = value;
+      _notifChat = value;
+      _notifHeart = value;
+      _notifFriend = value;
+    });
+
+    try {
+      if (value) {
+        final hasPerm = await NotificationService().requestPermissionAndInit();
+        if (!hasPerm) {
+          if (!mounted) return;
+          setState(() {
+            _notificationsEnabled = false;
+            _notifAnniversary = false;
+            _notifPost = false;
+            _notifChat = false;
+            _notifHeart = false;
+            _notifFriend = false;
+          });
+          await _persistNotificationsEnabledPref(false);
+          _showToast(
+            'Bạn cần cấp quyền thông báo để bật nhắc ngủ và thông báo mới.',
+            success: false,
+          );
+          return;
+        }
+      }
+
+      await _persistNotificationsEnabledPref(value);
+      await _syncNotificationTopics(value);
+      if (value) {
+        await NotificationService().syncDailySleepReminder();
+      } else {
+        await NotificationService().cancelDailySleepReminder();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _notificationsEnabled = previousValue;
+        _notifAnniversary = previousValue;
+        _notifPost = previousValue;
+        _notifChat = previousValue;
+        _notifHeart = previousValue;
+        _notifFriend = previousValue;
+      });
+      await _persistNotificationsEnabledPref(previousValue);
+      _showToast(
+        pushUpdateErrorTemplate.replaceAll('{error}', e.toString()),
+        success: false,
+      );
+    }
+  }
+
+  void _showDisableNotificationsOutsideAppNotice() {
+    if (!mounted) {
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            'Quản lý thông báo push',
+            style: SLTheme.quicksand(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF1A1A2E),
+            ),
+          ),
+          content: Text(
+            'Thông báo push đang được bật ở mức hệ thống. Nếu muốn tắt hoặc bật lại quyền thông báo, hãy mở Cài đặt ứng dụng của điện thoại rồi chọn mục Thông báo.',
+            style: SLTheme.quicksand(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              height: 1.45,
+              color: const Color(0xFF475467),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Để sau',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFD81B60),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                unawaited(
+                  AppLifecyclePresenceGuard.guard(app_permission.openAppSettings),
+                );
+              },
+              child: Text(
+                'Mở cài đặt',
+                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  bool _shouldKeepAdvancedCacheKey(String key) {
+    const keepKeys = <String>{
+      'il_app_lock_enabled',
+      'il_use_biometrics',
+      'il_lock_timeout',
+      'il_military_mode',
+      'il_custom_lock',
+      'il_custom_lock_salt',
+      'il_custom_lock_length',
+      'il_custom_lock_configured_at',
+      'il_lock_scope_app',
+      'il_lock_scope_security',
+      'il_lock_scope_diary',
+      'il_lock_scope_chat',
+      'il_lock_scope_private',
+      'il_lang',
+      'il_role',
+      'il_house_id',
+      'il_device_id',
+      'il_login_ts',
+      'il_login_tracker',
+      'il_create_account_7d_v1',
+      'il_notifications_enabled',
+      'il_notif_anniversary',
+      'il_notif_post',
+      'il_notif_chat',
+      'il_notif_friend',
+      'il_notif_heart',
+      'il_touch_sound',
+      'il_confetti_fx',
+      'il_music_autoplay',
+      'il_auto_reply_text',
+      'il_rel_mode',
+      'il_theme_key',
+      'il_falling_effect',
+      'il_show_weather',
+      'il_show_status',
+    };
+
+    const keepPrefixes = <String>[
+      'il_widget_theme',
+      'il_widget_show_diary',
+      'il_widget_heart_animated',
+      'il_widget_heart_style',
+      'il_widget_heart_color',
+      'il_widget_preview_size',
+      'il_widget_diary_layout',
+      'il_widget_season_mode',
+    ];
+
+    if (keepKeys.contains(key)) {
+      return true;
+    }
+
+    for (final prefix in keepPrefixes) {
+      if (key == prefix || key.startsWith('${prefix}_')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ignore: unused_element
+  Widget _buildSleepReminderPreviewCard() {
+    final service = NotificationService();
+    final displayName = _notificationDisplayName();
+    final title = service.buildSleepReminderTitle(displayName);
+    final body = service.buildSleepReminderMessage(displayName);
+    final enabled = _notificationsEnabled;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+      decoration: BoxDecoration(
+        color: enabled ? const Color(0xFFEAF8F3) : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: enabled ? const Color(0xFFB7E4D0) : const Color(0xFFD9DEE7),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Nhắc ngủ 22:15 • chào sáng 05:55',
+            style: SLTextStyles.quicksand(
+              fontSize: 12.8,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Tên đang dùng: $displayName',
+            style: SLTextStyles.quicksand(
+              fontSize: 11.6,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF475467),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: SLTextStyles.quicksand(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF065F46),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            body,
+            style: SLTextStyles.quicksand(
+              fontSize: 11.4,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF344054),
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdvancedPanel({
+    bool hideBackButton = false,
+    bool showSaveButton = true,
+    bool showHeaderCard = true,
+  }) {
+    return _buildPanel(
+      hideBackButton: hideBackButton,
+      id: 'advanced',
+      title: showHeaderCard
+          ? context.tr('advanced')
+          : context.tr('notification_center'),
+      borderColor: const Color(0xFF006064),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showHeaderCard)
+            Container(
+              padding: SLSpacing.all12,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2FBFC),
+                borderRadius: SLRadius.lgAll,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr('notification_center'),
+                    style: SLTextStyles.quicksand(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF006064),
+                    ),
+                  ),
+                  SLSpacing.h8,
+                  _buildSwitchRow(
+                    context.tr('push_notification_label'),
+                    _notificationsEnabled,
+                    _handleNotificationsEnabledChanged,
+                    helperText: _notificationsEnabled
+                        ? 'Đã bật trong hệ thống. Nếu muốn tắt hoàn toàn, hãy tắt ở ngoài app.'
+                        : 'Bật để app xin quyền và nhận thông báo đẩy.',
+                    onTap: _notificationsEnabled
+                        ? _showDisableNotificationsOutsideAppNotice
+                        : null,
+                    ignoreDirectSwitchTap: _notificationsEnabled,
+                  ),
+                ],
+              ),
+            )
+          else
+            Container(
+              padding: SLSpacing.all12,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2FBFC),
+                borderRadius: SLRadius.lgAll,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSwitchRow(
+                    context.tr('push_notification_label'),
+                    _notificationsEnabled,
+                    _handleNotificationsEnabledChanged,
+                    helperText: _notificationsEnabled
+                        ? 'Đã bật trong hệ thống. Nếu muốn tắt hoàn toàn, hãy tắt ở ngoài app.'
+                        : 'Bật để app xin quyền và nhận thông báo đẩy.',
+                    onTap: _notificationsEnabled
+                        ? _showDisableNotificationsOutsideAppNotice
+                        : null,
+                    ignoreDirectSwitchTap: _notificationsEnabled,
+                  ),
+                ],
+              ),
+            ),
+          SLSpacing.h12,
+          Container(
+            padding: SLSpacing.all12,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F7FF),
+              borderRadius: SLRadius.lgAll,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.tr('interaction_effects'),
+                  style: SLTextStyles.quicksand(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF4A148C),
+                  ),
+                ),
+                SLSpacing.h8,
+                _buildSwitchRow(context.tr('show_weather'), _showWeather, (v) {
+                  setState(() => _showWeather = v);
+                  SoundService().playClick();
+                  unawaited(_persistHomeDisplayPrefsQuickly());
+                }),
+                _buildSwitchRow(context.tr('show_status'), _showStatus, (v) {
+                  setState(() => _showStatus = v);
+                  SoundService().playClick();
+                  unawaited(_persistHomeDisplayPrefsQuickly());
+                }),
+                _buildSwitchRow(context.tr('show_timer_home'), _homeShowTimer,
+                    (v) {
+                  setState(() => _homeShowTimer = v);
+                  SoundService().playClick();
+                  unawaited(_persistHomeDisplayPrefsQuickly());
+                }),
+              ],
+            ),
+          ),
+          if (showSaveButton) ...[
+            SLSpacing.h12,
+            _buildGradientBtn(
+              label: _isSavingAdvanced
+                  ? context.tr('saving')
+                  : context.tr('save_all_settings'),
+              gradient: const [Color(0xFF00BCD4), Color(0xFF0097A7)],
+              onTap: _isSavingAdvanced
+                  ? () {}
+                  : () async {
+                      SoundService().playClick();
+                      await _saveAdvancedSettingsV2();
+                    },
+            ),
+            SLSpacing.h8,
+            _buildGradientBtn(
+              label: context.tr('clear_cache'),
+              gradient: const [Color(0xFFffb74d), Color(0xFFf57c00)],
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                final allKeys = prefs.getKeys();
+                int cleared = 0;
+                for (final key in allKeys) {
+                  if (!_shouldKeepAdvancedCacheKey(key)) {
+                    await prefs.remove(key);
+                    cleared++;
+                  }
+                }
+                if (!mounted) return;
+                _showToast(
+                    context
+                        .tr('cleared_cache_msg')
+                        .replaceAll('{count}', cleared.toString()),
+                    success: true);
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
