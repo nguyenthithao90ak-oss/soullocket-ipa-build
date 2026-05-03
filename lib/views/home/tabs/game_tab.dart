@@ -334,12 +334,26 @@ class _GameHeader extends StatelessWidget {
               const SizedBox(width: 8),
               IconButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đang tối ưu và giải phóng dữ liệu game...')),
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      title: Text('Dữ liệu Game', style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
+                      content: Text(
+                        'Nếu gặp lỗi "unauthorized", bạn cần cập nhật Firebase Storage Rules cho thư mục game_assets thành public read.',
+                        style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Đã hiểu'),
+                        ),
+                      ],
+                    ),
                   );
                 },
-                icon: const Icon(Icons.cloud_download_outlined, color: Color(0xFFE91E63), size: 20),
-                tooltip: 'Tải dữ liệu game',
+                icon: const Icon(Icons.info_outline_rounded, color: Color(0xFFE91E63), size: 20),
+                tooltip: 'Thông tin dữ liệu',
               ),
               const SizedBox(width: 96),
             ],
