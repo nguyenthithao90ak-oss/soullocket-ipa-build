@@ -106,7 +106,7 @@ class GameDownloadService extends ChangeNotifier {
         );
         downloadedFiles++;
       }
- Broadway
+
       // Lưu trạng thái đã tải
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('game_downloaded_$gameId', true);
