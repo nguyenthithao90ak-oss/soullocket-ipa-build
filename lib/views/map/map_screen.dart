@@ -535,13 +535,28 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           forcePrompt: forcePrompt,
         )
         .timeout(const Duration(seconds: 12), onTimeout: () => false);
+
     if (!mounted) return;
+    
+    if (!started) {
+      // Kiểm tra xem thực sự là do tắt GPS hay do lỗi khác
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      setState(() {
+        _isBootstrappingLocation = false;
+        _locationStatusMessage = serviceEnabled 
+            ? 'GPS chưa sẵn sàng. Hãy đảm bảo bạn đã cấp quyền "Luôn cho phép" trong Cài đặt SoulLocket.'
+            : 'Bạn chưa bật định vị GPS. Hãy vuốt bảng điều khiển xuống để bật GPS nhé.';
+      });
+      return;
+    }
+
     setState(() {
       _isBootstrappingLocation = false;
-      _locationStatusMessage = started
-          ? null
-          : 'GPS chưa sẵn sàng. Kiểm tra quyền vị trí rồi thử lại.';
+      _locationStatusMessage = null;
     });
+
+    // Thêm hiệu ứng zoom nhẹ tới vị trí của mình khi vừa bật thành công
+    _fitToVisibleData(includeHistory: false);
   }
 
   void _scheduleMapReadyWatchdog() {
