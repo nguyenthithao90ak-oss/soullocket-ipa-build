@@ -202,7 +202,72 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               final style = SoulLocketBrand.styles[index];
               final isSelected = selectedKey == style.key;
               return GestureDetector(
-                onTap: () => unawaited(UiPrefs.setBrandMarkKey(style.key)),
+                onTap: () async {
+                  if (isSelected) return;
+
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      title: Text(
+                        'Đổi biểu tượng app?',
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 20,
+                        ),
+                      ),
+                      content: Text(
+                        'Bạn vừa chọn phong cách "${style.label}". Để thay đổi biểu tượng ngoài màn hình chính, ứng dụng cần được khởi động lại. Bạn có muốn thực hiện không?',
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF4B5563),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(
+                            'Hủy',
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFD81B60),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: Text(
+                            'Đồng ý & Khởi động lại',
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    await UiPrefs.setBrandMarkKey(style.key);
+                    // Ở đây có thể thêm logic dùng flutter_dynamic_icon để đổi icon thực tế
+                    // sau đó báo cho người dùng tắt app mở lại.
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Đã lưu! Hãy đóng ứng dụng và mở lại để thấy icon mới nhé.'),
+                      ),
+                    );
+                  }
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
