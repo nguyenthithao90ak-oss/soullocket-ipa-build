@@ -220,24 +220,34 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 if (!_passwordLinked) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFFFE0B2)),
+                      color: const Color(0xFFFFF9C4).withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFFBC02D).withOpacity(0.3)),
                     ),
-                    child: Text(
-                      'Bạn đang đăng nhập bằng Google/Facebook nên chưa có mật khẩu đăng nhập riêng. Hãy tạo mật khẩu ở đây để lần sau có thể đăng nhập bằng email và mật khẩu này.',
-                      style: SLTheme.quicksand(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8A4B08),
-                        height: 1.4,
-                      ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.info_outline_rounded, color: Color(0xFFF57F17), size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Bạn đang dùng Google/Facebook nên chưa có mật khẩu riêng. Tạo mật khẩu tại đây để đăng nhập bằng email sau này nhé!',
+                            style: SLTheme.quicksand(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF5D4037),
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SLSpacing.h8,
+                  SLSpacing.h12,
                 ],
+                if (_passwordLinked)
                   TextField(
                     controller: _oldPassCtrl,
                     obscureText: true,
@@ -247,16 +257,20 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     ),
                     decoration: InputDecoration(
                       hintText: 'Mật khẩu hiện tại',
-                      prefixIcon:
-                          const Icon(Icons.lock_outline, color: Colors.grey),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: Colors.grey),
                       border: OutlineInputBorder(
-                        borderRadius: SLRadius.mdAll,
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Colors.white.withOpacity(0.8),
                     ),
                   ),
-                if (_passwordLinked) SLSpacing.h8,
+                if (_passwordLinked) SLSpacing.h12,
                 TextField(
                   controller: _newPassCtrl,
                   obscureText: true,
