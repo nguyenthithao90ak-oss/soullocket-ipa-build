@@ -16,20 +16,45 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       final result = await _settingsSecurityController.ensureSharedInfoEditable(
         fallbackUnlockAtMs: _devicePendingUnlockAtMs,
       );
-      if (!mounted) {
-        return true;
-      }
+      if (!mounted) return true;
       setState(() {
         _isDevicePending = result.isPendingDevice;
         _devicePendingMessage = result.pendingMessage;
         _devicePendingUnlockAtMs = result.pendingUnlockAtMs;
       });
 
-      // Thiết bị đang chờ duyệt vẫn được phép sửa các mục Shared Info
-      // như Avatar, Ảnh nền, Username, Tiểu sử... Chỉ phần Bảo mật mới bị khóa.
+      // Luôn cho phép sửa các mục Shared Info (Tên, Ngày yêu, Avatar...)
       return true;
     } catch (e) {
       debugPrint('_ensureCanModifySharedInfo failed: $e');
+      return true;
+    }
+  }
+
+  Future<bool> _ensureCanModifySecurityInfo({bool showToast = true}) async {
+    try {
+      final result = await _settingsSecurityController.ensureSharedInfoEditable(
+        fallbackUnlockAtMs: _devicePendingUnlockAtMs,
+      );
+      if (!mounted) return true;
+      setState(() {
+        _isDevicePending = result.isPendingDevice;
+        _devicePendingMessage = result.pendingMessage;
+        _devicePendingUnlockAtMs = result.pendingUnlockAtMs;
+      });
+
+      if (result.isPendingDevice) {
+        if (showToast) {
+          _showToast(
+            'Thiết bị đang chờ duyệt. Mục bảo mật sẽ khả dụng sau 12 giờ.',
+            success: false,
+          );
+        }
+        return false;
+      }
+      return true;
+    } catch (e) {
+      debugPrint('_ensureCanModifySecurityInfo failed: $e');
       return true;
     }
   }
@@ -635,9 +660,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       ),
       continueLabel: 'Xác minh rồi liên kết',
     );
-    if (!canContinue) {
-      return;
-    }
+    if (!canContinue) return;
+    if (!await _ensureCanModifySecurityInfo()) return;
     setState(() => _isLinkingGoogle = true);
 
     try {
@@ -699,9 +723,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       ),
       continueLabel: 'Xác minh rồi đổi',
     );
-    if (!canContinue) {
-      return;
-    }
+    if (!canContinue) return;
+    if (!await _ensureCanModifySecurityInfo()) return;
 
     if (!_passwordLinked) {
       if ((user.email ?? '').trim().isEmpty) {
