@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../utilities/block_blast_game.dart';
@@ -9,6 +10,7 @@ import '../../utilities/soul_rhythm_game.dart';
 import '../../utilities/caro_neon_screen.dart';
 import '../../utilities/heart_catcher_game.dart';
 import '../../../utils/services/game_download_service.dart';
+import '../../../services/admob_service.dart';
 
 class GameTab extends StatefulWidget {
   const GameTab({super.key});
@@ -32,11 +34,40 @@ class _GameTabState extends State<GameTab> {
   };
 
   final Map<String, double> _downloadProgress = {};
+  
+  BannerAd? _bannerAd;
+  bool _isBannerReady = false;
 
   @override
   void initState() {
     super.initState();
     _loadDownloadStatus();
+    _loadBannerAd();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadBannerAd() async {
+    final adMob = AdMobService();
+    await adMob.initialize();
+    
+    if (await adMob.isProUser()) {
+      return;
+    }
+
+    _bannerAd = await adMob.createBannerAd(
+      onAdLoaded: (ad) {
+        if (mounted) {
+          setState(() {
+            _isBannerReady = true;
+          });
+        }
+      },
+    );
   }
 
   Future<void> _loadDownloadStatus() async {
@@ -218,6 +249,35 @@ class _GameTabState extends State<GameTab> {
                   },
                 ),
               ),
+              if (_isBannerReady && _bannerAd != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 24, 10, 0),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.4)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          width: _bannerAd!.size.width.toDouble(),
+                          height: _bannerAd!.size.height.toDouble(),
+                          child: AdWidget(ad: _bannerAd!),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
