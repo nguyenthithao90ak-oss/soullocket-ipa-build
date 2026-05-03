@@ -681,7 +681,8 @@ class _DiaryTabState extends State<DiaryTab> {
 
           void closeOnVerticalSwipe(DragEndDetails details) {
             final velocity = details.primaryVelocity ?? 0;
-            if (velocity.abs() < 500) {
+            // Giảm ngưỡng xuống 200 để vuốt nhẹ là đóng được ngay
+            if (velocity.abs() < 200) {
               return;
             }
             Navigator.pop(dialogContext);
