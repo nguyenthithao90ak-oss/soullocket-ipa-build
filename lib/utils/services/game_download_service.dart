@@ -50,8 +50,18 @@ class GameDownloadService extends ChangeNotifier {
         'Believer_ImagineDragons_Tutorial.mp3',
       ],
     ),
+    // New entries for Caro Neon and Heart Catcher (no external assets needed)
+    'caro_neon': const GameAssetInfo(
+      gameId: 'caro_neon',
+      storagePath: '',
+      relativePaths: [],
+    ),
+    'heart_catcher': const GameAssetInfo(
+      gameId: 'heart_catcher',
+      storagePath: '',
+      relativePaths: [],
+    ),
   };
-
   Future<String> getLocalPath(String gameId, String fileName) async {
     final directory = await getApplicationDocumentsDirectory();
     return '${directory.path}/games/$gameId/$fileName';
@@ -81,8 +91,21 @@ class GameDownloadService extends ChangeNotifier {
     final config = _gameConfigs[gameId];
     if (_isDownloading[gameId] ?? false) return;
     if (config == null) {
+      _isDownloading[gameId] = true;
+      _downloadProgress[gameId] = 0.0;
+      notifyListeners();
+
+      // Simulate download for bundled games
+      for (int i = 1; i <= 10; i++) {
+        await Future.delayed(const Duration(milliseconds: 150));
+        _downloadProgress[gameId] = i / 10.0;
+        notifyListeners();
+      }
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('game_downloaded_$gameId', true);
+      _downloadProgress.remove(gameId);
+      _isDownloading[gameId] = false;
       notifyListeners();
       return;
     }
@@ -92,54 +115,63 @@ class GameDownloadService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final gameDir = Directory('${directory.path}/games/$gameId');
-      if (!await gameDir.exists()) {
-        await gameDir.create(recursive: true);
-      }
-
-      int totalFiles = config.relativePaths.length;
-      int downloadedFiles = 0;
-
-      for (final fileName in config.relativePaths) {
-        final localPath = '${gameDir.path}/$fileName';
-        final localFile = File(localPath);
-        
-        if (await localFile.exists()) {
-          downloadedFiles++;
-          continue;
+      if (config.relativePaths.isEmpty) {
+        // Simulate download for bundled games so UI shows progress
+        for (int i = 1; i <= 10; i++) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          _downloadProgress[gameId] = i / 10.0;
+          notifyListeners();
         }
-        
-        // Sử dụng SDK để lấy URL download chính xác
-        final fullStoragePath = '${config.storagePath}/$fileName';
-        String remoteUrl;
-        try {
-          remoteUrl = await FirebaseStorage.instance.ref(fullStoragePath).getDownloadURL();
-        } catch (storageError) {
-          final errStr = storageError.toString().toLowerCase();
-          if (errStr.contains('object-not-found')) {
-            debugPrint('Game asset missing on Storage, fallback to bundled asset: $fullStoragePath');
+      } else {
+        final directory = await getApplicationDocumentsDirectory();
+        final gameDir = Directory('${directory.path}/games/$gameId');
+        if (!await gameDir.exists()) {
+          await gameDir.create(recursive: true);
+        }
+
+        int totalFiles = config.relativePaths.length;
+        int downloadedFiles = 0;
+
+        for (final fileName in config.relativePaths) {
+          final localPath = '${gameDir.path}/$fileName';
+          final localFile = File(localPath);
+
+          if (await localFile.exists()) {
             downloadedFiles++;
             continue;
           }
-          if (errStr.contains('unauthorized') || errStr.contains('permission-denied')) {
-            throw 'Lỗi phân quyền: Bạn cần cập nhật Storage Rules trên Firebase Console để cho phép đọc thư mục game_assets.';
-          }
-          rethrow;
-        }
 
-        await _dio.download(
-          remoteUrl,
-          localPath,
-          onReceiveProgress: (received, total) {
-            if (total != -1) {
-              double fileProgress = received / total;
-              _downloadProgress[gameId] = (downloadedFiles + fileProgress) / totalFiles;
-              notifyListeners();
+          // Sử dụng SDK để lấy URL download chính xác
+          final fullStoragePath = '${config.storagePath}/$fileName';
+          String remoteUrl;
+          try {
+            remoteUrl = await FirebaseStorage.instance.ref(fullStoragePath).getDownloadURL();
+          } catch (storageError) {
+            final errStr = storageError.toString().toLowerCase();
+            if (errStr.contains('object-not-found')) {
+              debugPrint('Game asset missing on Storage, fallback to bundled asset: $fullStoragePath');
+              downloadedFiles++;
+              continue;
             }
-          },
-        );
-        downloadedFiles++;
+            if (errStr.contains('unauthorized') || errStr.contains('permission-denied')) {
+              throw 'Lỗi phân quyền: Bạn cần cập nhật Storage Rules trên Firebase Console để cho phép đọc thư mục game_assets.';
+            }
+            rethrow;
+          }
+
+          await _dio.download(
+            remoteUrl,
+            localPath,
+            onReceiveProgress: (received, total) {
+              if (total != -1) {
+                double fileProgress = received / total;
+                _downloadProgress[gameId] = (downloadedFiles + fileProgress) / totalFiles;
+                notifyListeners();
+              }
+            },
+          );
+          downloadedFiles++;
+        }
       }
 
       // Lưu trạng thái đã tải

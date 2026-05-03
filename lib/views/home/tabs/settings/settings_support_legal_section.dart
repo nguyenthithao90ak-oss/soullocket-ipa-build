@@ -1,4 +1,4 @@
-part of '../settings_tab.dart';
+﻿part of '../settings_tab.dart';
 
 extension _SettingsTabSupportLegalSection on _SettingsTabState {
   void _openPolicyOverview() {
@@ -56,21 +56,16 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     );
   }
 
-  Future<void> _rateApp() async {
+    
+    Future<void> _rateApp() async {
     try {
       final InAppReview inAppReview = InAppReview.instance;
-      if (await inAppReview.isAvailable()) {
-        await inAppReview.requestReview();
-      } else {
-        // Fallback mở store nếu không gọi được bảng đánh giá trong app
-        await inAppReview.openStoreListing(
-          appStoreId: '6740344445', // SoulLocket iOS App ID
-          microsoftStoreId: null,
-        );
-      }
+      // Trong m?i tr??ng Debug, dialog th??ng kh?ng hi?n ra. Ta g?i m? th?ng Store.
+      await inAppReview.openStoreListing(
+        appStoreId: '6740344445', 
+      );
     } catch (e) {
-      debugPrint('Lỗi khi gọi bảng đánh giá: $e');
-      _showToast('Không thể mở bảng đánh giá lúc này. Vui lòng thử lại sau.');
+      debugPrint('L?i khi m? ??nh gi?: ');
     }
   }
 
@@ -452,3 +447,4 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/material.dart';
@@ -232,14 +232,20 @@ class _GameTabState extends State<GameTab> {
                           future: Future.wait([
                             downloadService.isGameDownloaded('soul_block'),
                             downloadService.isGameDownloaded('soul_rhythm'),
+                            downloadService.isGameDownloaded('caro_neon'),
+                            downloadService.isGameDownloaded('heart_catcher'),
                           ]).then((results) => {
                             'soul_block': results[0],
                             'soul_rhythm': results[1],
+                            'caro_neon': results[2],
+                            'heart_catcher': results[3],
                           }),
                           builder: (context, snapshot) {
                             final statuses = snapshot.data ?? {};
                             final soulBlockDownloaded = statuses['soul_block'] ?? false;
                             final soulRhythmDownloaded = statuses['soul_rhythm'] ?? false;
+                            final caroNeonDownloaded = statuses['caro_neon'] ?? false;
+                            final heartCatcherDownloaded = statuses['heart_catcher'] ?? false;
                             return GridView.count(
                               crossAxisCount: crossAxisCount,
                               crossAxisSpacing: spacing,
@@ -267,25 +273,27 @@ class _GameTabState extends State<GameTab> {
                                   label: 'Caro Neon',
                                   icon: Icons.grid_4x4_rounded,
                                   color: const Color(0xFF00E5FF),
-                                  isDownloaded: true,
-                                  onLongPress: () => _confirmDeleteGame(context, 'caro_neon', 'Caro Neon'),
-                                  onDelete: () => _confirmDeleteGame(context, 'caro_neon', 'Caro Neon'),
-                                  onTap: () => Navigator.push(
+                                  isDownloaded: caroNeonDownloaded,
+                                  downloadProgress: downloadService.getProgress('caro_neon'),
+                                  onLongPress: caroNeonDownloaded ? () => _confirmDeleteGame(context, 'caro_neon', 'Caro Neon') : null,
+                                  onDelete: caroNeonDownloaded ? () => _confirmDeleteGame(context, 'caro_neon', 'Caro Neon') : null,
+                                  onTap: () => _onGameTap('caro_neon', () => Navigator.push(
                                     context,
                                     MaterialPageRoute(builder: (_) => const CaroNeonScreen()),
-                                  ),
+                                  )),
                                 ),
                                 _GenericGameCard(
                                   label: 'Heart Catcher',
                                   icon: Icons.favorite_rounded,
                                   color: const Color(0xFFFF4081),
-                                  isDownloaded: true,
-                                  onLongPress: () => _confirmDeleteGame(context, 'heart_catcher', 'Heart Catcher'),
-                                  onDelete: () => _confirmDeleteGame(context, 'heart_catcher', 'Heart Catcher'),
-                                  onTap: () => Navigator.push(
+                                  isDownloaded: heartCatcherDownloaded,
+                                  downloadProgress: downloadService.getProgress('heart_catcher'),
+                                  onLongPress: heartCatcherDownloaded ? () => _confirmDeleteGame(context, 'heart_catcher', 'Heart Catcher') : null,
+                                  onDelete: heartCatcherDownloaded ? () => _confirmDeleteGame(context, 'heart_catcher', 'Heart Catcher') : null,
+                                  onTap: () => _onGameTap('heart_catcher', () => Navigator.push(
                                     context,
                                     MaterialPageRoute(builder: (_) => const HeartCatcherGame()),
-                                  ),
+                                  )),
                                 ),
                               ],
                             );
@@ -378,31 +386,7 @@ class _GameHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                      title: Text('Dữ liệu Game', style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
-                      content: Text(
-                        'Nếu gặp lỗi "unauthorized", bạn cần cập nhật Firebase Storage Rules cho thư mục game_assets thành public read.',
-                        style: SLTheme.quicksand(fontWeight: FontWeight.w700),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Đã hiểu'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.info_outline_rounded, color: Color(0xFFE91E63), size: 20),
-                tooltip: 'Thông tin dữ liệu',
-              ),
-              const SizedBox(width: 96),
+              
             ],
           ),
         ],
