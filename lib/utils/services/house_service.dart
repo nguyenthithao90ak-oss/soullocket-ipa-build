@@ -206,7 +206,12 @@ class HouseService {
     String? recoveryAnswer,
     String createdWith = 'email',
   }) async {
-    final user = _auth.currentUser;
+    var user = _auth.currentUser;
+    if (user == null) {
+      await Future.delayed(const Duration(milliseconds: 1000));
+      user = _auth.currentUser;
+    }
+
     if (user == null) {
       throw Exception('Bạn chưa đăng nhập.');
     }
