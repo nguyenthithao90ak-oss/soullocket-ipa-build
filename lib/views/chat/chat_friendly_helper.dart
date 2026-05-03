@@ -33,15 +33,61 @@ class ChatFriendlyHelper {
     'Chờ một lát mạng ổn định lại rồi chúng mình tiếp tục trò chuyện nhé! ⏳',
   ];
 
+  static const Map<String, List<String>> qaPairs = {
+    'mật khẩu|pass': [
+      'Để bảo vệ bạn, mình không thể xem hay đổi mật khẩu giúp bạn được. Bạn vào mục "Cài đặt" -> "Bảo mật" để tự quản lý nhé! 🔒',
+      'Bạn muốn đổi mật khẩu à? Hãy vào phần thiết lập Bảo mật trong app để thực hiện an toàn nhất nha. 🛡️',
+    ],
+    'buồn|chán|mệt': [
+      'Mình ở đây nghe bạn tâm sự nè. Hít một hơi thật sâu, mọi chuyện rồi sẽ ổn thôi mà. 🤗',
+      'Đừng buồn nữa nha, bạn tuyệt vời hơn bạn nghĩ nhiều đó. Gửi tới bạn một cái ôm thật chặt! 🫂',
+      'Nếu mệt quá thì nghỉ ngơi một chút nhé. SoulLocket luôn là nơi bình yên dành cho bạn. ✨',
+    ],
+    'yêu|thích': [
+      'Tình yêu là điều kỳ diệu nhất thế gian. Mong bạn và người ấy luôn hạnh phúc bên nhau! ❤️',
+      'Yêu thương chính mình cũng quan trọng lắm đó. Hãy luôn rạng rỡ như thế nhé! 🌸',
+    ],
+    'tên|là ai': [
+      'Mình là Trợ lý thân thiện của SoulLocket, rất vui được bầu bạn cùng bạn! 🤖💖',
+      'Bạn cứ gọi mình là bạn đồng hành nhé, mình luôn ở đây để lắng nghe bạn. ✨',
+    ],
+    'định vị|bản đồ|vị trí': [
+      'Tính năng Bản đồ giúp bạn và người ấy luôn thấy nhau. Đừng quên cấp quyền vị trí để hoạt động chính xác nha! 📍',
+      'Bạn có thể ghim những kỷ niệm đẹp trên bản đồ để lưu giữ khoảnh khắc của hai người đó. 🗺️✨',
+    ],
+  };
+
   static String getRandom(List<String> list) {
     return list[Random().nextInt(list.length)];
   }
 
-  static String getFriendlyResponse({bool isOffline = false}) {
+  static String findPredefinedResponse(String text) {
+    final lowerText = text.toLowerCase();
+    for (final entry in qaPairs.entries) {
+      final keys = entry.key.split('|');
+      if (keys.any((k) => lowerText.contains(k))) {
+        return getRandom(entry.value);
+      }
+    }
+    return '';
+  }
+
+  static String getFriendlyResponse({
+    String? userText,
+    bool isOffline = false,
+  }) {
+    // 1. Ưu tiên tìm trong danh sách thiết lập nếu có text
+    if (userText != null && userText.isNotEmpty) {
+      final predefined = findPredefinedResponse(userText);
+      if (predefined.isNotEmpty) return predefined;
+    }
+
+    // 2. Nếu offline và không khớp câu hỏi, dùng câu offline ngẫu nhiên
     if (isOffline) {
       return getRandom(offlineResponses);
     }
-    
+
+    // 3. Mặc định trả về câu ngẫu nhiên vui vẻ
     final all = [...greetings, ...wishes, ...encouragements];
     return getRandom(all);
   }
