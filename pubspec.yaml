@@ -1,5 +1,5 @@
 name: soullocket_app
-description: "SoulLocket - á»¨ng dá»¥ng nháº­t kÃ½ tÃ¬nh yÃªu vÃ  lÆ°u giá»¯ ká»· niá»‡m dÃ nh cho cÃ¡c cáº·p Ä‘Ã´i."
+description: "SoulLocket - Ứng dụng nhật ký tình yêu và lưu giữ kỷ niệm dành cho các cặp đôi."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+38
+version: 1.0.0+35
 
 environment:
   sdk: ^3.5.3
@@ -107,14 +107,6 @@ dependencies:
   timezone: ^0.9.4
   sign_in_with_apple: ^7.0.1
   record: 6.2.0
-  firebase_crashlytics: ^5.2.0
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
-  flutter_blurhash: ^0.9.1
-  blurhash: ^1.1.1
-  dio: ^5.7.0
-  flutter_dynamic_icon: ^2.1.0
-  app_tracking_transparency: ^2.0.6+1
 dependency_overrides:
   app_links: 6.3.2
   image_cropper_platform_interface: 7.1.0
@@ -137,15 +129,14 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon_cropped.png"
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/icon_cropped.png"
-  remove_alpha_ios: true
+  image_path: "assets/icon.png"
+  adaptive_icon_background: "#702190"
+  adaptive_icon_foreground: "assets/icon_foreground.png"
   web:
     generate: true
     image_path: "assets/icon.png"
-    background_color: "#FFFFFF"
-    theme_color: "#D81B60"
+    background_color: "#702190"
+    theme_color: "#702190"
 
 flutter_native_splash:
   color: "#000000"
@@ -171,6 +162,7 @@ flutter:
     - assets/models/heart.obj
     - assets/docs/
     - assets/3d.html
+    - assets/games/rhythm-tiles/
     - assets/images/
     - assets/images/interaction_stickers/
     - assets/images/interaction_stickers/custom/numbered/
@@ -185,7 +177,9 @@ flutter:
     - assets/splash_icon_rounded.png
     - assets/splash_icon_android12.png
     - assets/audio/soul_block/
+    - assets/audio/soul_rhythm_reference/
     - assets/audio/soul_rhythm_reference/tutorial_songs/
+    - assets/audio/soul_rhythm_reference/sfx/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

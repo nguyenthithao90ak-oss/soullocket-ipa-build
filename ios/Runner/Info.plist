@@ -10,71 +10,88 @@
 	<string>SoulLocket</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
-	
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundleAlternateIcons</key>
 		<dict>
-			<key>rose</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array><string>icon_rose</string></array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>mint</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array><string>icon_mint</string></array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>ocean</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array><string>icon_ocean</string></array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>sunset</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array><string>icon_sunset</string></array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>violet</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array><string>icon_violet</string></array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>midnight</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array><string>icon_midnight</string></array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
 			<key>aurora</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>icon_aurora</string></array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>sakura</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array><string>icon_sakura</string></array>
+				<array>
+					<string>icon_aurora</string>
+				</array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
 			<key>gold</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>icon_gold</string></array>
+				<array>
+					<string>icon_gold</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>midnight</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_midnight</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>mint</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_mint</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>ocean</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_ocean</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>rose</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_rose</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>sakura</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_sakura</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>sunset</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_sunset</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>violet</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_violet</string>
+				</array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
@@ -89,7 +106,111 @@
 			<false/>
 		</dict>
 	</dict>
-
+	<key>CFBundleIcons~ipad</key>
+	<dict>
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<key>aurora</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_aurora_ipad</string>
+					<string>icon_aurora_ipadPro</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>gold</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_gold_ipad</string>
+					<string>icon_gold_ipadPro</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>midnight</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_midnight_ipad</string>
+					<string>icon_midnight_ipadPro</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>mint</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_mint_ipad</string>
+					<string>icon_mint_ipadPro</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>ocean</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_ocean_ipad</string>
+					<string>icon_ocean_ipadPro</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>rose</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_rose_ipad</string>
+					<string>icon_rose_ipadPro</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>sakura</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_sakura_ipad</string>
+					<string>icon_sakura_ipadPro</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>sunset</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_sunset_ipad</string>
+					<string>icon_sunset_ipadPro</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>violet</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_violet_ipad</string>
+					<string>icon_violet_ipadPro</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+		</dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon</string>
+			</array>
+			<key>UIPrerenderedIcon</key>
+			<false/>
+		</dict>
+	</dict>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -150,27 +271,6 @@
 	<string>Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh hoặc video cho hồ sơ, bài đăng, nhật ký, ảnh ghép và các kỷ niệm trong ứng dụng.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Ứng dụng sử dụng dữ liệu này để cá nhân hóa quảng cáo và cải thiện trải nghiệm của bạn.</string>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UIStatusBarHidden</key>
-	<false/>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>
@@ -265,6 +365,27 @@
 			<key>SKAdNetworkIdentifier</key>
 			<string>r67qnicre2.skadnetwork</string>
 		</dict>
+	</array>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 </dict>
 </plist>

@@ -16,11 +16,9 @@ struct CoupleWidgetData {
     var stars1: String
     var stars2: String
     var bgTheme: String
-    var widgetStyleKey: String
     var heartAnimated: Bool
     var heartStyleKey: String
     var heartColorKey: String
-    var loveDateText: String
     var avatar1Path: String?
     var avatar2Path: String?
     var diaryImagePaths: [String]
@@ -51,11 +49,9 @@ struct CoupleWidgetData {
             stars1: defaults?.string(forKey: "stars1") ?? "--",
             stars2: defaults?.string(forKey: "stars2") ?? "--",
             bgTheme: defaults?.string(forKey: "bgTheme") ?? "pink",
-            widgetStyleKey: defaults?.string(forKey: "widgetStyleKey") ?? "classic",
             heartAnimated: defaults?.bool(forKey: "heartAnimated") ?? true,
             heartStyleKey: defaults?.string(forKey: "heartStyleKey") ?? "❤️",
             heartColorKey: defaults?.string(forKey: "heartColorKey") ?? "rose",
-            loveDateText: defaults?.string(forKey: "loveDateText") ?? "",
             avatar1Path: defaults?.string(forKey: "avatar1Path"),
             avatar2Path: defaults?.string(forKey: "avatar2Path"),
             diaryImagePaths: diaryPaths,
