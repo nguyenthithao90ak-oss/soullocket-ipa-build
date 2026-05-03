@@ -50,12 +50,30 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _shareApp() {
-    _showToast('Tính năng chia sẻ đang được cập nhật.', success: true);
+    SharePlus.share(
+      'SoulLocket - Ngôi nhà chung cho các cặp đôi. Cùng xây dựng không gian yêu thương, lưu giữ kỷ niệm và chơi game cùng nhau nhé! Tải ngay tại: https://soullocket.app',
+      subject: 'Tham gia SoulLocket cùng mình nhé!',
+    );
   }
 
-  void _rateApp() {
-    _showToast('Tính năng đánh giá đang được cập nhật.', success: true);
+  Future<void> _rateApp() async {
+    try {
+      final InAppReview inAppReview = InAppReview.instance;
+      if (await inAppReview.isAvailable()) {
+        await inAppReview.requestReview();
+      } else {
+        // Fallback mở store nếu không gọi được bảng đánh giá trong app
+        await inAppReview.openStoreListing(
+          appStoreId: '6740344445', // SoulLocket iOS App ID
+          microsoftStoreId: null,
+        );
+      }
+    } catch (e) {
+      debugPrint('Lỗi khi gọi bảng đánh giá: $e');
+      _showToast('Không thể mở bảng đánh giá lúc này. Vui lòng thử lại sau.');
+    }
   }
+ Broadway
 
   Future<void> _openSupportContact() async {
     await Navigator.push(
