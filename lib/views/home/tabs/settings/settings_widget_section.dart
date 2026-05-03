@@ -257,15 +257,35 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
                   if (confirm == true) {
                     await UiPrefs.setBrandMarkKey(style.key);
-                    // Ở đây có thể thêm logic dùng flutter_dynamic_icon để đổi icon thực tế
-                    // sau đó báo cho người dùng tắt app mở lại.
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            'Đã lưu! Hãy đóng ứng dụng và mở lại để thấy icon mới nhé.'),
-                      ),
-                    );
+                    
+                    try {
+                      // Gọi lệnh đổi icon native
+                      // Lưu ý: Tên style.key phải khớp với tên alias trong AndroidManifest.xml
+                      // Ví dụ: 'gold_luxury', 'aurora_glow'...
+                      if (style.key == 'rose_romance') {
+                        await FlutterDynamicIcon.setAlternateIconName(null); // Về icon mặc định
+                      } else {
+                        await FlutterDynamicIcon.setAlternateIconName(style.key);
+                      }
+                      
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: const Color(0xFF2E7D32),
+                          content: Text(
+                              'Đã đổi sang phong cách ${style.label}! Hãy đóng app và mở lại để thấy icon mới.'),
+                        ),
+                      );
+                    } catch (e) {
+                      debugPrint('Lỗi đổi icon: $e');
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Giao diện đã đổi! Icon ngoài màn hình sẽ được cập nhật ở bản build sau.'),
+                        ),
+                      );
+                    }
                   }
                 },
                 child: AnimatedContainer(
