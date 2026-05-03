@@ -2,7 +2,8 @@ part of '../../settings_tab.dart';
 
 extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
   Widget _buildWidgetSectionCard({
-    required IconData icon,
+    IconData? icon,
+    bool useBrandMarkIcon = false,
     required String title,
     String? subtitle,
     required Widget child,
@@ -47,7 +48,18 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
                   ),
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(icon, color: Colors.white, size: 21),
+                child: useBrandMarkIcon
+                    ? Center(
+                        child: ValueListenableBuilder<UiPrefsState>(
+                          valueListenable: UiPrefs.notifier,
+                          builder: (context, ui, _) => SoulLocketBrandMark(
+                            styleKey: ui.brandMarkKey,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : Icon(icon, color: Colors.white, size: 21),
               ),
               const SizedBox(width: 11),
               Expanded(
