@@ -1056,7 +1056,6 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
 
   Widget _buildGiftTypeCard(GiftType type) {
     final selected = type == _selectedType;
-    final colors = widget._giftColors(type);
     final foreground = widget._giftForeground(type);
     return _GiftTouchTile(
       onTap: () => setState(() {
@@ -1091,9 +1090,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               height: 82,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(
-                  foreground == Colors.white ? 0.16 : 0.42,
-                ),
+                color: const Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: AnimatedScale(
@@ -1111,41 +1108,34 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                          child: Text(
-                            GiftMakerService.giftLabel(type),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 17,
-                              color: const Color(0xFF111827),
-                            ),
-                          ),
-                        ),
-                      ],
+                  Text(
+                    GiftMakerService.giftLabel(type),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 17,
+                      color: const Color(0xFF111827),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget._giftTeaser(type),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF6B7280),
-                        fontSize: 12.5,
-                        height: 1.3,
-                      ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget._giftTeaser(type),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF6B7280),
+                      fontSize: 12.5,
+                      height: 1.3,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+          ],
         ),
       ),
     );

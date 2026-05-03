@@ -188,17 +188,24 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           title: 'Icon trong app',
           subtitle:
               'Đổi viền tim và tông màu cho nhận diện hiển thị bên trong app.',
-          child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: SoulLocketBrand.styles.map((style) {
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: SoulLocketBrand.styles.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 0.82,
+            ),
+            itemBuilder: (context, index) {
+              final style = SoulLocketBrand.styles[index];
               final isSelected = selectedKey == style.key;
               return GestureDetector(
                 onTap: () => unawaited(UiPrefs.setBrandMarkKey(style.key)),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
-                  width: 104,
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                  padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? style.backgroundColors.first.withOpacity(0.12)
@@ -212,28 +219,29 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     ),
                   ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SoulLocketBrandMark(
                         styleKey: style.key,
-                        size: 54,
+                        size: 48,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
                         style.label,
                         textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
-                          fontSize: 11.2,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.w900,
                           color: const Color(0xFF243041),
-                          height: 1.2,
                         ),
                       ),
                       if (isSelected) ...[
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         const Icon(
                           Icons.check_circle_rounded,
-                          size: 18,
+                          size: 16,
                           color: Color(0xFF16A34A),
                         ),
                       ],
@@ -241,7 +249,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   ),
                 ),
               );
-            }).toList(growable: false),
+            },
           ),
         );
       },
