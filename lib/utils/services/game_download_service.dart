@@ -58,6 +58,9 @@ class GameDownloadService extends ChangeNotifier {
   }
 
   Future<bool> isGameDownloaded(String gameId) async {
+    // Các game đã được tích hợp sẵn vào assets
+    if (gameId == 'soul_block' || gameId == 'soul_rhythm') return true;
+    
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('game_downloaded_$gameId') ?? false;
   }
