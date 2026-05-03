@@ -113,6 +113,7 @@ dependencies:
   flutter_blurhash: ^0.9.1
   blurhash: ^1.1.1
   dio: ^5.7.0
+  flutter_dynamic_icon: ^3.0.1
 dependency_overrides:
   app_links: 6.3.2
   image_cropper_platform_interface: 7.1.0
