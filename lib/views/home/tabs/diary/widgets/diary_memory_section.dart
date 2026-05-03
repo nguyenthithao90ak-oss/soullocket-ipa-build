@@ -633,6 +633,15 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                           fit: BoxFit.cover,
                           filterQuality: FilterQuality.medium,
                           gaplessPlayback: true,
+                          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                            if (wasSynchronouslyLoaded) return child;
+                            return AnimatedOpacity(
+                              opacity: frame == null ? 0 : 1,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                              child: child,
+                            );
+                          },
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               color: const Color(0xFFF2F2F7),
