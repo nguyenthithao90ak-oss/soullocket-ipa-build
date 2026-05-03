@@ -109,11 +109,15 @@ class GameDownloadService extends ChangeNotifier {
       _isDownloading[gameId] = false;
       notifyListeners();
     } catch (e) {
-      debugPrint('Lỗi tải game $gameId: $e');
+      String errorMessage = e.toString();
+      if (errorMessage.contains('unauthorized')) {
+        errorMessage = 'Lỗi phân quyền: Bạn cần cập nhật Storage Rules trên Firebase Console để cho phép đọc thư mục game_assets.';
+      }
+      debugPrint('Lỗi tải game $gameId: $errorMessage');
       _isDownloading[gameId] = false;
       _downloadProgress.remove(gameId);
       notifyListeners();
-      rethrow;
+      throw errorMessage;
     }
   }
 
