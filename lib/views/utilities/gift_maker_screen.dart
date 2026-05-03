@@ -644,6 +644,36 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () async {
+                            final link = _deeplinkService.generateGiftLink(draft);
+                            if (await canLaunchUrl(Uri.parse(link))) {
+                              await launchUrl(
+                                Uri.parse(link),
+                                mode: LaunchMode.externalApplication,
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.language_rounded),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF17192E),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                          label: Text(
+                            'Mở Web Quà Tặng',
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
