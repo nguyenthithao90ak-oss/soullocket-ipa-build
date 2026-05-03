@@ -91,8 +91,15 @@ class LocationService {
         return false;
       }
 
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled()
-          .timeout(const Duration(seconds: 6), onTimeout: () => kIsWeb);
+      // Đợi tối đa 3 giây để hệ thống phản hồi trạng thái dịch vụ (đề phòng delay)
+      bool serviceEnabled = false;
+      for (int i = 0; i < 3; i++) {
+        serviceEnabled = await Geolocator.isLocationServiceEnabled()
+            .timeout(const Duration(seconds: 2), onTimeout: () => kIsWeb);
+        if (serviceEnabled) break;
+        await Future.delayed(const Duration(milliseconds: 800));
+      }
+
       if (!serviceEnabled) {
         return false;
       }
