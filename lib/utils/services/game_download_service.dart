@@ -82,6 +82,12 @@ class GameDownloadService extends ChangeNotifier {
 
       for (final fileName in config.relativePaths) {
         final localPath = '${gameDir.path}/$fileName';
+        final localFile = File(localPath);
+        
+        if (await localFile.exists()) {
+          downloadedFiles++;
+          continue;
+        }
         
         // Sử dụng SDK để lấy URL download chính xác
         final fullStoragePath = '${config.storagePath}/$fileName';
@@ -100,7 +106,7 @@ class GameDownloadService extends ChangeNotifier {
         );
         downloadedFiles++;
       }
-
+ Broadway
       // Lưu trạng thái đã tải
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('game_downloaded_$gameId', true);
