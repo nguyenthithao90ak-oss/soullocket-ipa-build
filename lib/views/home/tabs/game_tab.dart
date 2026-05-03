@@ -115,6 +115,34 @@ class _GameTabState extends State<GameTab> {
     }
   }
 
+  Future<void> _confirmDeleteGame(BuildContext context, String gameId, String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text('Xóa dữ liệu?', style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
+        content: Text('Bạn muốn xóa dữ liệu đã tải của game $name để giải phóng bộ nhớ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Xóa ngay', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await GameDownloadService().deleteGameData(gameId);
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã xóa dữ liệu game $name.')),
+        );
+      }
+    }
+  }
+
   void _onGameTap(String gameId, VoidCallback onPlay) async {
     final service = GameDownloadService();
     final isDownloaded = await service.isGameDownloaded(gameId);
