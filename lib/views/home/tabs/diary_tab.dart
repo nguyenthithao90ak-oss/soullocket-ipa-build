@@ -722,6 +722,7 @@ class _DiaryTabState extends State<DiaryTab> {
                     onVerticalDragEnd: closeOnVerticalSwipe,
                     child: PageView.builder(
                       controller: pageController,
+                      physics: const BouncingScrollPhysics(),
                       itemCount: allPhotos.length,
                       onPageChanged: (index) {
                         setState(() {
