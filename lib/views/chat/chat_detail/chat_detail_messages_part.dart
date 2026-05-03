@@ -240,11 +240,14 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                                 width: effectiveImageSize,
                                 height: effectiveImageSize,
                                 fit: BoxFit.cover,
+                                fadeInDuration: const Duration(milliseconds: 300),
+                                fadeOutDuration: const Duration(milliseconds: 300),
                                 placeholder: (context, url) => msg.blurHash != null
                                     ? BlurHash(hash: msg.blurHash!)
-                                    : SizedBox(
+                                    : Container(
                                         width: effectiveImageSize,
                                         height: effectiveImageSize,
+                                        color: const Color(0xFFF2F2F7),
                                         child: const Center(
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
