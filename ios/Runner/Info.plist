@@ -18,63 +18,63 @@
 			<key>rose</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>rose</string></array>
+				<array><string>icon_rose</string></array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
 			<key>mint</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>mint</string></array>
+				<array><string>icon_mint</string></array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
 			<key>ocean</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>ocean</string></array>
+				<array><string>icon_ocean</string></array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
 			<key>sunset</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>sunset</string></array>
+				<array><string>icon_sunset</string></array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
 			<key>violet</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>violet</string></array>
+				<array><string>icon_violet</string></array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
 			<key>midnight</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>midnight</string></array>
+				<array><string>icon_midnight</string></array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
 			<key>aurora</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>aurora</string></array>
+				<array><string>icon_aurora</string></array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
 			<key>sakura</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>sakura</string></array>
+				<array><string>icon_sakura</string></array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
 			<key>gold</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
-				<array><string>gold</string></array>
+				<array><string>icon_gold</string></array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>

@@ -1633,14 +1633,39 @@ extension _CountdownModeIndependentScreenViewPart
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Không gian riêng cho bạn bè',
-                  style: SLTheme.quicksand(
-                    fontSize: 29,
-                    fontWeight: FontWeight.w900,
-                    color: titleColor,
-                    height: 1.02,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (Theme.of(context).platform == TargetPlatform.iOS) ...[
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 12, top: 2),
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: titleColor.withOpacity(0.08),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 20,
+                            color: titleColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                    Expanded(
+                      child: Text(
+                        'Không gian riêng cho bạn bè',
+                        style: SLTheme.quicksand(
+                          fontSize: 29,
+                          fontWeight: FontWeight.w900,
+                          color: titleColor,
+                          height: 1.02,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 10),
                 Text(
