@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:dio/http_client_adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
