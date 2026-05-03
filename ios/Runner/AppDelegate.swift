@@ -47,8 +47,43 @@ import UIKit
         }
         self.handleBootstrap(call: call, result: result)
       }
+      let appControlChannel = FlutterMethodChannel(
+        name: "soul_locket/app_control",
+        binaryMessenger: controller.binaryMessenger
+      )
+      appControlChannel.setMethodCallHandler { [weak self] call, result in
+        guard let self = self else {
+          result(FlutterError(code: "unavailable", message: nil, details: nil))
+          return
+        }
+        self.handleAppControl(call: call, result: result)
+      }
     }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  private func handleAppControl(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "setAppIcon":
+      guard let args = call.arguments as? [String: Any],
+            let iconKey = args["iconKey"] as? String else {
+        result(false)
+        return
+      }
+      let name: String? = (iconKey.lowercased() == "rose") ? nil : iconKey.lowercased()
+      if UIApplication.shared.supportsAlternateIcons {
+        UIApplication.shared.setAlternateIconName(name) { error in
+          result(error == nil)
+        }
+      } else {
+        result(false)
+      }
+    case "getCurrentAppIcon":
+      let current = UIApplication.shared.alternateIconName ?? "rose"
+      result(current)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
   }
 
   private func handleBootstrap(call: FlutterMethodCall, result: @escaping FlutterResult) {

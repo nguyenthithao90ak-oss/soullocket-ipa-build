@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/services/l10n_service.dart';
-import '../../../../../widgets/cute_loading_indicator.dart';
 import '../../../../../widgets/skeleton_container.dart';
 
 import '../controllers/diary_memory_controller.dart';
@@ -547,6 +546,8 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
 }
 
 class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
+  final Map<String, int> _retryCount = {};
+
   @override
   void initState() {
     super.initState();
@@ -581,6 +582,16 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
         expiresAt <= DateTime.now().millisecondsSinceEpoch + 60000;
   }
 
+  String _resolvePhotoUrl(Map<String, dynamic> photo) {
+    final url = photo['url']?.toString().trim() ?? '';
+    if (url.isNotEmpty) return url;
+    final downloadUrl = photo['downloadUrl']?.toString().trim() ?? '';
+    if (downloadUrl.isNotEmpty) return downloadUrl;
+    final previewUrl = photo['previewUrl']?.toString().trim() ?? '';
+    if (previewUrl.isNotEmpty) return previewUrl;
+    return photo['thumbUrl']?.toString().trim() ?? '';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -597,13 +608,57 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
           }
 
           final photo = widget.rowPhotos[colIndex];
-          final photoUrl = (photo['url']?.toString().trim().isNotEmpty ?? false)
-              ? photo['url'].toString().trim()
-              : (photo['downloadUrl']?.toString().trim().isNotEmpty ?? false)
-                  ? photo['downloadUrl'].toString().trim()
-                  : (photo['previewUrl']?.toString().trim().isNotEmpty ?? false)
-                      ? photo['previewUrl'].toString().trim()
-                      : (photo['thumbUrl']?.toString().trim() ?? '');
+          final photoUrl = _resolvePhotoUrl(photo);
+          final photoId = photo['id']?.toString() ?? 'unknown_$colIndex';
+
+          // URL rỗng → hiện placeholder tĩnh, thử refresh 1 lần
+          if (photoUrl.isEmpty) {
+            final retries = _retryCount[photoId] ?? 0;
+            if (retries < 1) {
+              _retryCount[photoId] = retries + 1;
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                if (!mounted) return;
+                try {
+                  await widget.onEnsurePhotoUrl(photo);
+                  if (mounted) setState(() {});
+                } catch (_) {}
+              });
+            }
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: colIndex < 2 ? 8.0 : 10.0),
+                child: AspectRatio(
+                  aspectRatio: 1.0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Color(0xFF94A3B8),
+                          size: 24,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Chưa có URL',
+                          style: SLTheme.quicksand(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+
           final imageProvider = _DiaryMemoryImageProviders.thumbnail(
             photoUrl,
             widget.thumbnailCacheWidth,
@@ -650,19 +705,39 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                             );
                           },
                           errorBuilder: (context, error, stackTrace) {
+                            final retries = _retryCount[photoId] ?? 0;
+                            if (retries < 2) {
+                              _retryCount[photoId] = retries + 1;
+                              debugPrint(
+                                '[DiaryMemory] image load failed id=$photoId retry=${retries + 1} error=$error',
+                              );
+                              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                                if (!mounted) return;
+                                try {
+                                  await widget.onEnsurePhotoUrl(photo);
+                                  if (mounted) setState(() {});
+                                } catch (refreshError) {
+                                  debugPrint(
+                                    '[DiaryMemory] refresh url failed id=$photoId error=$refreshError',
+                                  );
+                                }
+                              });
+                            }
                             return Container(
                               color: const Color(0xFFF8FAFC),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(
-                                    Icons.timer_off_outlined,
-                                    color: Color(0xFF94A3B8),
+                                  Icon(
+                                    retries >= 2
+                                        ? Icons.broken_image_outlined
+                                        : Icons.refresh_rounded,
+                                    color: const Color(0xFF94A3B8),
                                     size: 24,
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Chờ nạp lại...',
+                                    retries >= 2 ? 'Không tải được' : 'Đang nạp lại...',
                                     style: SLTheme.quicksand(
                                       fontSize: 9,
                                       fontWeight: FontWeight.w700,
@@ -678,7 +753,6 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                     ),
                   ),
                   builder: (context, _, imageChild) {
-                    final photoId = photo['id'];
                     final isSelected = widget.selectedMemories.containsKey(photoId);
 
                     return GestureDetector(

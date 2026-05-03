@@ -34,8 +34,110 @@ class HouseService {
   }
 
   firebase_auth.User? get currentUser => _auth.currentUser;
-  bool get _allowLegacyDirectCreateFallback => false;
+  bool get _allowLegacyDirectCreateFallback => true;
 
+  Future<String> createHouseForCurrentUser({
+    required String email,
+    required String houseName,
+    required String nameU1,
+    required String nameU2,
+    required String relationshipMode,
+    String? recoveryQuestion,
+    String? recoveryAnswer,
+    String createdWith = 'email',
+  }) async {
+    var user = _auth.currentUser;
+    if (user == null) {
+      await Future.delayed(const Duration(milliseconds: 1000));
+      user = _auth.currentUser;
+    }
+
+    if (user == null) {
+      throw Exception('Bạn chưa đăng nhập.');
+    }
+
+    final normalizedEmail = email.trim().toLowerCase();
+    final rawHouseName = houseName.trim();
+    final normalizedNameU1 =
+        nameU1.trim().isNotEmpty ? nameU1.trim() : _defaultNameU1;
+    final normalizedNameU2 =
+        nameU2.trim().isNotEmpty ? nameU2.trim() : _defaultNameU2;
+    final normalizedRelationshipMode =
+        relationshipMode.trim().toLowerCase() == 'single' ? 'single' : 'couple';
+    final normalizedRecoveryQuestion = (recoveryQuestion ?? '').trim();
+    final normalizedRecoveryAnswer = (recoveryAnswer ?? '').trim();
+    final normalizedCreatedWith =
+        createdWith.trim().isNotEmpty ? createdWith.trim() : 'email';
+
+    Future<String> createDirectFallback() {
+      return _createHouseDirectly(
+        email: normalizedEmail,
+        houseName: rawHouseName,
+        nameU1: normalizedNameU1,
+        nameU2: normalizedNameU2,
+        relationshipMode: normalizedRelationshipMode,
+        recoveryQuestion: normalizedRecoveryQuestion,
+        recoveryAnswer: normalizedRecoveryAnswer,
+        createdWith: normalizedCreatedWith,
+      );
+    }
+
+    try {
+      final callable = _functions.httpsCallable('createHouseSecure');
+      debugPrint('[HouseService] createHouseSecure start');
+      final response = await callable.call(<String, dynamic>{
+        'email': normalizedEmail,
+        'houseName': rawHouseName,
+        'nameU1': normalizedNameU1,
+        'nameU2': normalizedNameU2,
+        'relationshipMode': normalizedRelationshipMode,
+        'recoveryQuestion': normalizedRecoveryQuestion,
+        'recoveryAnswer': normalizedRecoveryAnswer,
+        'createdWith': normalizedCreatedWith,
+      }).timeout(const Duration(seconds: 12), onTimeout: () {
+        throw TimeoutException('createHouseSecure timed out');
+      });
+      debugPrint('[HouseService] createHouseSecure success');
+      final payload = _asStringDynamicMap(response.data);
+      if (payload == null) {
+        throw Exception('Không thể tạo nhà mới lúc này.');
+      }
+      final createdHouseId = payload['houseId']?.toString().trim() ?? '';
+      if (createdHouseId.isEmpty) {
+        throw Exception('Không thể tạo nhà mới lúc này.');
+      }
+      if (rawHouseName.isEmpty) {
+        await _syncCreatedHouseDefaults(
+          houseId: createdHouseId,
+          houseName: _defaultHouseName,
+          nameU1: normalizedNameU1,
+          nameU2: normalizedNameU2,
+          relationshipMode: normalizedRelationshipMode,
+        );
+      }
+      return createdHouseId;
+    } on FirebaseFunctionsException catch (error) {
+      if (_isDebugAppCheckFailure(error) && _allowLegacyDirectCreateFallback) {
+        debugPrint('[HouseService] createHouseSecure blocked, using direct fallback: $error');
+        return createDirectFallback();
+      }
+
+      final message = error.message?.trim();
+      if (message != null && message.isNotEmpty) {
+        throw Exception(message);
+      }
+      throw Exception('Không thể tạo nhà mới lúc này.');
+    } on TimeoutException catch (error, stackTrace) {
+      debugPrint(
+        '[HouseService] createHouseSecure timed out: $error\n$stackTrace',
+      );
+      if (_allowLegacyDirectCreateFallback) {
+        return createDirectFallback();
+      }
+      throw Exception(
+          'Tạo ngôi nhà đang mất quá nhiều thời gian. Vui lòng thử lại.');
+    }
+  }
   Future<String?> getCurrentHouseId({bool preferFresh = false}) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -196,105 +298,6 @@ class HouseService {
     return null;
   }
 
-  Future<String> createHouseForCurrentUser({
-    required String email,
-    required String houseName,
-    required String nameU1,
-    required String nameU2,
-    required String relationshipMode,
-    String? recoveryQuestion,
-    String? recoveryAnswer,
-    String createdWith = 'email',
-  }) async {
-    var user = _auth.currentUser;
-    if (user == null) {
-      await Future.delayed(const Duration(milliseconds: 1000));
-      user = _auth.currentUser;
-    }
-
-    if (user == null) {
-      throw Exception('Bạn chưa đăng nhập.');
-    }
-
-    final normalizedEmail = email.trim().toLowerCase();
-    final rawHouseName = houseName.trim();
-    final normalizedNameU1 =
-        nameU1.trim().isNotEmpty ? nameU1.trim() : _defaultNameU1;
-    final normalizedNameU2 =
-        nameU2.trim().isNotEmpty ? nameU2.trim() : _defaultNameU2;
-    final normalizedRelationshipMode =
-        relationshipMode.trim().toLowerCase() == 'single' ? 'single' : 'couple';
-    final normalizedRecoveryQuestion = (recoveryQuestion ?? '').trim();
-    final normalizedRecoveryAnswer = (recoveryAnswer ?? '').trim();
-    final normalizedCreatedWith =
-        createdWith.trim().isNotEmpty ? createdWith.trim() : 'email';
-
-    try {
-      final callable = _functions.httpsCallable('createHouseSecure');
-      debugPrint('[HouseService] createHouseSecure start');
-      final response = await callable.call(<String, dynamic>{
-        'email': normalizedEmail,
-        'houseName': rawHouseName,
-        'nameU1': normalizedNameU1,
-        'nameU2': normalizedNameU2,
-        'relationshipMode': normalizedRelationshipMode,
-        'recoveryQuestion': normalizedRecoveryQuestion,
-        'recoveryAnswer': normalizedRecoveryAnswer,
-        'createdWith': normalizedCreatedWith,
-      }).timeout(const Duration(seconds: 12), onTimeout: () {
-        throw TimeoutException('createHouseSecure timed out');
-      });
-      debugPrint('[HouseService] createHouseSecure success');
-      final payload = _asStringDynamicMap(response.data);
-      if (payload == null) {
-        throw Exception('Không thể tạo nhà mới lúc này.');
-      }
-      final createdHouseId = payload['houseId']?.toString().trim() ?? '';
-      if (createdHouseId.isEmpty) {
-        throw Exception('Không thể tạo nhà mới lúc này.');
-      }
-      if (rawHouseName.isEmpty) {
-        await _syncCreatedHouseDefaults(
-          houseId: createdHouseId,
-          houseName: _defaultHouseName,
-          nameU1: normalizedNameU1,
-          nameU2: normalizedNameU2,
-          relationshipMode: normalizedRelationshipMode,
-        );
-      }
-      return createdHouseId;
-    } on FirebaseFunctionsException catch (error) {
-      if (_isDebugAppCheckFailure(error)) {
-        throw Exception(kDebugMode
-            ? 'Bản debug hiện bị Firebase App Check chặn khi tạo nhà. Hãy thêm debug token của máy này rồi thử lại.'
-            : 'Thiết bị chưa được xác nhận nên chưa tạo nhà được. Hãy chờ một chút rồi thử lại.');
-      }
-
-      final message = error.message?.trim();
-      if (message != null && message.isNotEmpty) {
-        throw Exception(message);
-      }
-      throw Exception('Không thể tạo nhà mới lúc này.');
-    } on TimeoutException catch (error, stackTrace) {
-      debugPrint(
-        '[HouseService] createHouseSecure timed out: $error\n$stackTrace',
-      );
-      if (_allowLegacyDirectCreateFallback && kDebugMode) {
-        return _createHouseDirectly(
-          email: normalizedEmail,
-          houseName: rawHouseName,
-          nameU1: normalizedNameU1,
-          nameU2: normalizedNameU2,
-          relationshipMode: normalizedRelationshipMode,
-          recoveryQuestion: normalizedRecoveryQuestion,
-          recoveryAnswer: normalizedRecoveryAnswer,
-          createdWith: normalizedCreatedWith,
-        );
-      }
-      throw Exception(
-          'Tạo ngôi nhà đang mất quá nhiều thời gian. Vui lòng thử lại.');
-    }
-  }
 
   bool _isDebugAppCheckFailure(FirebaseFunctionsException error) {
     if (!kDebugMode) {

@@ -528,22 +528,37 @@ class DiaryMemoryController extends ChangeNotifier {
   }) async {
     final existingUrl = item['url']?.toString().trim() ?? '';
     final memoryId = item['id']?.toString().trim() ?? '';
-    final hasStoragePath =
-        (item['storagePath']?.toString().trim().isNotEmpty ?? false) ||
-            (item['storageKey']?.toString().trim().isNotEmpty ?? false);
-    if (memoryId.isEmpty || !hasStoragePath) {
+    if (memoryId.isEmpty) {
       return;
     }
     if (existingUrl.isNotEmpty && !_isMemoryUrlExpired(item)) {
       return;
     }
-    final result = await _privateMediaUrlService.resolve(
-      houseId: houseId,
-      mediaId: memoryId,
-      kind: 'memory_image',
+    if (FirebaseAuth.instance.currentUser == null) {
+      debugPrint(
+        '[DiaryMemory] skip signed url refresh: unauthenticated id=$memoryId',
+      );
+      return;
+    }
+    debugPrint(
+      '[DiaryMemory] refreshing signed url id=$memoryId urlEmpty=${existingUrl.isEmpty}',
     );
-    item['url'] = result.url;
-    item['urlExpiresAt'] = result.expiresAt;
+    try {
+      final result = await _privateMediaUrlService.resolve(
+        houseId: houseId,
+        mediaId: memoryId,
+        kind: 'memory_image',
+      );
+      item['url'] = result.url;
+      item['urlExpiresAt'] = result.expiresAt;
+      debugPrint(
+        '[DiaryMemory] signed url refreshed id=$memoryId urlLen=${result.url.length}',
+      );
+    } catch (e) {
+      debugPrint(
+        '[DiaryMemory] signed url refresh FAILED id=$memoryId error=$e',
+      );
+    }
   }
 
   void _normalizeMemoryPhotoUrl(Map<String, dynamic> item) {
