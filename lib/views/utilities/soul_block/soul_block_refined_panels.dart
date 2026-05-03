@@ -589,9 +589,9 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
             : 56;
     final double sideGap = ultraCompact ? 6 : 10;
     return Padding(
-      padding: EdgeInsets.only(top: ultraCompact ? 2 : 4),
+      padding: EdgeInsets.only(top: ultraCompact ? 0 : 2),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           SizedBox(
             width: bestCardWidth,
