@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,12 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class GameAssetInfo {
   final String gameId;
   final List<String> relativePaths;
-  final String baseUrl;
+  final String storagePath;
 
   const GameAssetInfo({
     required this.gameId,
     required this.relativePaths,
-    required this.baseUrl,
+    required this.storagePath,
   });
 }
 
@@ -32,7 +33,7 @@ class GameDownloadService extends ChangeNotifier {
   final Map<String, GameAssetInfo> _gameConfigs = {
     'soul_block': const GameAssetInfo(
       gameId: 'soul_block',
-      baseUrl: 'https://firebasestorage.googleapis.com/v0/b/soullocket-app.appspot.com/o/game_assets%2Fsoul_block%2F',
+      storagePath: 'game_assets/soul_block',
       relativePaths: [
         'soul_block_bgm.mp3',
         'big_win.mp3',
@@ -42,7 +43,7 @@ class GameDownloadService extends ChangeNotifier {
     ),
     'soul_rhythm': const GameAssetInfo(
       gameId: 'soul_rhythm',
-      baseUrl: 'https://firebasestorage.googleapis.com/v0/b/soullocket-app.appspot.com/o/game_assets%2Fsoul_rhythm%2F',
+      storagePath: 'game_assets/soul_rhythm',
       relativePaths: [
         'AxelF_CrazyFrog_Tutorial.mp3',
         '2PhutHon_Phao_tutorial.mp3',
@@ -81,8 +82,10 @@ class GameDownloadService extends ChangeNotifier {
 
       for (final fileName in config.relativePaths) {
         final localPath = '${gameDir.path}/$fileName';
-        // Đã sửa lỗi: Sử dụng Uri.encodeComponent để mã hóa tên file chuẩn Firebase Storage
-        final remoteUrl = '${config.baseUrl}${Uri.encodeComponent(fileName)}?alt=media';
+        
+        // Sử dụng SDK để lấy URL download chính xác
+        final fullStoragePath = '${config.storagePath}/$fileName';
+        final remoteUrl = await FirebaseStorage.instance.ref(fullStoragePath).getDownloadURL();
 
         await _dio.download(
           remoteUrl,
