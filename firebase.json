@@ -25,6 +25,10 @@
           "destination": "/verify-email-complete.html"
         },
         {
+          "source": "/gift",
+          "destination": "/gift.html"
+        },
+        {
           "source": "/love-card",
           "destination": "/love-card-open.html"
         },
