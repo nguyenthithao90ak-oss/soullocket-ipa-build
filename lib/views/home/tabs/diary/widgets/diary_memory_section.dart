@@ -644,11 +644,25 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                           },
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              color: const Color(0xFFF2F2F7),
-                              child: const Icon(
-                                Icons.broken_image_outlined,
-                                color: Color(0xFFD1D1D6),
-                                size: 20,
+                              color: const Color(0xFFF8FAFC),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.timer_off_outlined,
+                                    color: Color(0xFF94A3B8),
+                                    size: 24,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Chờ nạp lại...',
+                                    style: SLTheme.quicksand(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF94A3B8),
+                                    ),
+                                  ),
+                                ],
                               ),
                             );
                           },
