@@ -89,7 +89,7 @@ class GameDownloadService extends ChangeNotifier {
 
       for (final fileName in config.relativePaths) {
         final localPath = '${gameDir.path}/$fileName';
-        final remoteUrl = '${config.baseUrl}$fileName?alt=media';
+        final remoteUrl = '${config.baseUrl}${Uri.encodeComponent(fileName)}?alt=media';
 
         await _dio.download(
           remoteUrl,
