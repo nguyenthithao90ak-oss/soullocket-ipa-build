@@ -32,7 +32,7 @@ class GameDownloadService extends ChangeNotifier {
   final Map<String, GameAssetInfo> _gameConfigs = {
     'soul_block': const GameAssetInfo(
       gameId: 'soul_block',
-      baseUrl: 'https://firebasestorage.googleapis.com/v0/b/soullockket.appspot.com/o/game_assets%2Fsoul_block%2F',
+      baseUrl: 'https://firebasestorage.googleapis.com/v0/b/soullocket-app.appspot.com/o/game_assets%2Fsoul_block%2F',
       relativePaths: [
         'soul_block_bgm.mp3',
         'big_win.mp3',
@@ -42,7 +42,7 @@ class GameDownloadService extends ChangeNotifier {
     ),
     'soul_rhythm': const GameAssetInfo(
       gameId: 'soul_rhythm',
-      baseUrl: 'https://firebasestorage.googleapis.com/v0/b/soullockket.appspot.com/o/game_assets%2Fsoul_rhythm%2F',
+      baseUrl: 'https://firebasestorage.googleapis.com/v0/b/soullocket-app.appspot.com/o/game_assets%2Fsoul_rhythm%2F',
       relativePaths: [
         'AxelF_CrazyFrog_Tutorial.mp3',
         '2PhutHon_Phao_tutorial.mp3',
@@ -57,16 +57,8 @@ class GameDownloadService extends ChangeNotifier {
   }
 
   Future<bool> isGameDownloaded(String gameId) async {
-    final config = _gameConfigs[gameId];
-    if (config == null) return true; // Game không có assets nặng
-
-    for (final path in config.relativePaths) {
-      final localPath = await getLocalPath(gameId, path);
-      if (!await File(localPath).exists()) {
-        return false;
-      }
-    }
-    return true;
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('game_downloaded_$gameId') ?? false;
   }
 
   Future<void> downloadGame(String gameId) async {
@@ -89,6 +81,7 @@ class GameDownloadService extends ChangeNotifier {
 
       for (final fileName in config.relativePaths) {
         final localPath = '${gameDir.path}/$fileName';
+        // Đã sửa lỗi: Sử dụng Uri.encodeComponent để mã hóa tên file chuẩn Firebase Storage
         final remoteUrl = '${config.baseUrl}${Uri.encodeComponent(fileName)}?alt=media';
 
         await _dio.download(
