@@ -55,7 +55,6 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
                           builder: (context, ui, _) => SoulLocketBrandMark(
                             styleKey: ui.brandMarkKey,
                             size: 24,
-                            color: Colors.white,
                           ),
                         ),
                       )
