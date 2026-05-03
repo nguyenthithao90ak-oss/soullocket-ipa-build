@@ -914,7 +914,15 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     );
     await _bgPlayer.stop();
     if (desiredTrack == 'custom') {
-      await _bgPlayer.play(AssetSource(_customTrackAssetPath));
+      final fileName = p.basename(_customTrackAssetPath);
+      final localPath = await GameDownloadService().getLocalPath('soul_rhythm', fileName);
+      if (await File(localPath).exists()) {
+        debugPrint('Soul Rhythm: Using LOCAL track: $localPath');
+        await _bgPlayer.play(DeviceFileSource(localPath));
+      } else {
+        debugPrint('Soul Rhythm: Using ASSET track: $_customTrackAssetPath');
+        await _bgPlayer.play(AssetSource(_customTrackAssetPath));
+      }
       return;
     }
     await _bgPlayer.play(
