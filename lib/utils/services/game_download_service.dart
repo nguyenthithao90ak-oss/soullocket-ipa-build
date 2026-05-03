@@ -32,7 +32,7 @@ class GameDownloadService extends ChangeNotifier {
   final Map<String, GameAssetInfo> _gameConfigs = {
     'soul_block': const GameAssetInfo(
       gameId: 'soul_block',
-      baseUrl: 'https://firebasestorage.googleapis.com/v0/b/soullocket-app.appspot.com/o/game_assets%2Fsoul_block%2F',
+      baseUrl: 'https://firebasestorage.googleapis.com/v0/b/soullockket.appspot.com/o/game_assets%2Fsoul_block%2F',
       relativePaths: [
         'soul_block_bgm.mp3',
         'big_win.mp3',
@@ -42,7 +42,7 @@ class GameDownloadService extends ChangeNotifier {
     ),
     'soul_rhythm': const GameAssetInfo(
       gameId: 'soul_rhythm',
-      baseUrl: 'https://firebasestorage.googleapis.com/v0/b/soullocket-app.appspot.com/o/game_assets%2Fsoul_rhythm%2F',
+      baseUrl: 'https://firebasestorage.googleapis.com/v0/b/soullockket.appspot.com/o/game_assets%2Fsoul_rhythm%2F',
       relativePaths: [
         'AxelF_CrazyFrog_Tutorial.mp3',
         '2PhutHon_Phao_tutorial.mp3',
