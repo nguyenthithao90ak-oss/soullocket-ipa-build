@@ -321,9 +321,8 @@ class WidgetService {
       'Chạm để đồng bộ',
       'Mở app để cập nhật',
       'Mở app để đồng bộ',
-      'Mở app để cập nhật',
     };
-
+ Broadway
     for (final key in const ['status1', 'status2']) {
       final value = await HomeWidget.getWidgetData<String>(key);
       final normalized = value?.trim();
