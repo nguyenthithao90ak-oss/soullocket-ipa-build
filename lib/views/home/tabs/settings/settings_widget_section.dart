@@ -260,13 +260,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     
                     try {
                       // Gọi lệnh đổi icon native
-                      // Lưu ý: Tên style.key phải khớp với tên alias trong AndroidManifest.xml
-                      // Ví dụ: 'gold_luxury', 'aurora_glow'...
-                      if (style.key == 'rose_romance') {
-                        await FlutterDynamicIcon.setAlternateIconName(null); // Về icon mặc định
-                      } else {
-                        await FlutterDynamicIcon.setAlternateIconName(style.key);
-                      }
+                      // Hiện tại alias đã khớp hoàn toàn với style.key: rose, mint, ocean, sunset, violet, midnight, aurora, sakura, gold
+                      await FlutterDynamicIcon.setAlternateIconName(style.key);
                       
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
