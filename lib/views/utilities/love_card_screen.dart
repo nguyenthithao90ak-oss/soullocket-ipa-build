@@ -44,21 +44,26 @@ class LoveCardService {
     String? imageUrl,
     int expiryMonths = LoveCardService.defaultExpiryMonths,
   }) async {
-    final expiresAt = _expiresAtForMonths(expiryMonths);
-    final ref = _db.ref('houses/$houseId/love_cards').push();
-    await ref.set({
-      'fromUid': fromUid,
-      'senderName': senderName,
-      'signature': signature,
-      'content': content,
-      'theme': theme,
-      'bgColor': bgColor,
-      'imageUrl': imageUrl,
-      'isOpened': false,
-      'ts': ServerValue.timestamp,
-      'expiresAt': expiresAt,
-    });
-    return ref.key;
+    try {
+      final expiresAt = _expiresAtForMonths(expiryMonths);
+      final ref = _db.ref('houses/$houseId/love_cards').push();
+      await ref.set({
+        'fromUid': fromUid,
+        'senderName': senderName,
+        'signature': signature,
+        'content': content,
+        'theme': theme,
+        'bgColor': bgColor,
+        'imageUrl': imageUrl,
+        'isOpened': false,
+        'ts': ServerValue.timestamp,
+        'expiresAt': expiresAt,
+      });
+      return ref.key;
+    } catch (e) {
+      debugPrint('Error in sendCard: $e');
+      rethrow;
+    }
   }
 
   String generatePublicCardLink({
