@@ -1028,34 +1028,6 @@ extension _MapLocationLogicExt on _MapScreenState {
     _memorySignature = signature;
     if (!mounted) return;
 
-    final started = await _locationService
-        .startTracking(
-          widget.houseId,
-          widget.myRole,
-          context: context,
-          forcePrompt: forcePrompt,
-        )
-        .timeout(const Duration(seconds: 12), onTimeout: () => false);
-
-    if (!mounted) return;
-    
-    if (!started) {
-      // Kiểm tra xem thực sự là do tắt GPS hay do lỗi khác
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      setState(() {
-        _isBootstrappingLocation = false;
-        _locationStatusMessage = serviceEnabled 
-            ? 'GPS chưa sẵn sàng. Hãy đảm bảo bạn đã cấp quyền "Luôn cho phép" trong Cài đặt.'
-            : 'Bạn chưa bật định vị GPS. Hãy vuốt bảng điều khiển xuống để bật GPS nhé.';
-      });
-      return;
-    }
-
-    setState(() {
-      _isBootstrappingLocation = false;
-      _locationStatusMessage = null;
-    });
-
     _applyPanelStateUpdate(() {
       _memories = merged;
       _memorySummary = _buildMemorySummaryLabel(merged.length);
