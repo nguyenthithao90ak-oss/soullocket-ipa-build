@@ -182,6 +182,11 @@ class DiaryMemoryController extends ChangeNotifier {
     _setPendingUploadState(const <String>[], message: null, notify: notify);
   }
 
+  /// Public method to clear pending upload state (e.g., after user re-login).
+  Future<void> clearPendingUploadState({bool notify = true}) async {
+    await _clearPendingUploadState(notify: notify);
+  }
+
   Future<void> _restorePendingUploadState() async {
     final houseId = _currentHouseId?.trim() ?? '';
     if (houseId.isEmpty) {
