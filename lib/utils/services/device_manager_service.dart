@@ -435,8 +435,9 @@ class DeviceManagerService {
           updateData['status'] = 'approved';
           updateData['is_admin'] = true;
         } else {
-            updateData['is_admin'] = false;
-          }
+          // Máy hoàn toàn mới lạ -> pending
+          updateData['status'] = 'pending';
+          updateData['is_admin'] = false;
         }
       } else if (shouldAutoApproveByLimit && existingStatus == 'pending') {
         updateData['status'] = 'approved';
