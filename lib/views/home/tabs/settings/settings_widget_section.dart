@@ -184,14 +184,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       builder: (context, ui, _) {
         final selectedKey = SoulLocketBrand.normalizeStyleKey(ui.brandMarkKey);
         return _buildWidgetSectionCard(
-          icon: Icons.favorite_rounded,
+          useBrandMarkIcon: true,
           title: 'Icon trong app',
           subtitle:
               'Đổi viền tim và tông màu cho nhận diện hiển thị bên trong app.',
-          iconGradient: const [
-            Color(0xFFFF7EA8),
-            Color(0xFFA971FF),
-          ],
           child: Wrap(
             spacing: 10,
             runSpacing: 10,
