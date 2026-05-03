@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SoulLocket - Món Quà Tình Yêu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #D81B60;
+            --secondary: #F48FB1;
+            --accent: #FFD54F;
+            --bg-gradient: linear-gradient(135deg, #FFF0F5 0%, #FFE4E1 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Quicksand', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #4A4A4A;
+        }
+
+        /* Hiệu ứng tim bay lơ lửng */
+        .hearts-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .heart {
+            position: absolute;
+            color: var(--secondary);
+            opacity: 0.6;
+            animation: float 6s infinite ease-in;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(110vh) scale(0); opacity: 0; }
+            20% { opacity: 0.6; }
+            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+        }
+
+        /* Hộp quà */
+        .gift-container {
+            position: relative;
+            z-index: 10;
+            perspective: 1000px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .gift-container:active {
+            transform: scale(0.95);
+        }
+
+        .gift-box {
+            width: 200px;
+            height: 200px;
+            background: var(--primary);
+            position: relative;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .gift-box::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 100%;
+            background: var(--accent);
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .gift-box::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 40px;
+            background: var(--accent);
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .gift-lid {
+            position: absolute;
+            top: -10px;
+            left: -5px;
+            width: 210px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 8px;
+            z-index: 2;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.5s;
+        }
+
+        /* Nội dung món quà */
+        .gift-content {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            overflow-y: auto;
+            animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .photo-frame {
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 1;
+            background: #f0f0f0;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 8px solid white;
+        }
+
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .message-card {
+            background: #FFF9FB;
+            padding: 30px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            border: 2px dashed var(--secondary);
+            margin-bottom: 30px;
+        }
+
+        .from-label {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        .message-text {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 999px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(216, 27, 96, 0.2);
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pulse {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+
+        h2 { color: var(--primary); margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loader">
+        <div class="pulse"></div>
+    </div>
+
+    <div class="hearts-container" id="hearts"></div>
+
+    <div class="gift-container" id="giftBox" onclick="openGift()">
+        <div class="gift-lid"></div>
+        <div class="gift-box" id="giftEmoji">🎁</div>
+        <p style="text-align: center; font-weight: 700; color: #D81B60; margin-top: 20px;">Chạm để mở quà</p>
+    </div>
+
+    <div class="gift-content" id="content">
+        <div class="photo-frame" id="photoFrame" style="display: none;">
+            <img src="" id="giftImage" alt="Kỷ niệm">
+        </div>
+        
+        <div class="message-card">
+            <div class="from-label" id="fromName">Từ: Người thương</div>
+            <div class="message-text" id="giftMessage">Đang tải lời nhắn...</div>
+        </div>
+
+        <button class="close-btn" onclick="location.reload()">Đóng món quà</button>
+        <p style="margin-top: 20px; font-size: 12px; color: #999;">Tạo bởi SoulLocket App</p>
+    </div>
+
+    <script>
+        // Giải mã dữ liệu từ URL
+        function getGiftData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('gift');
+            
+            if (!token) return null;
+
+            try {
+                // Giải mã Base64Url
+                let base64 = token.replace(/-/g, '+').replace(/_/g, '/');
+                while (base64.length % 4) base64 += '=';
+                
+                const jsonStr = decodeURIComponent(escape(atob(base64)));
+                return JSON.parse(jsonStr);
+            } catch (e) {
+                console.error("Lỗi giải mã:", e);
+                return null;
+            }
+        }
+
+        // Tạo hiệu ứng tim bay
+        function createHearts() {
+            const container = document.getElementById('hearts');
+            const icons = ['❤️', '💖', '💗', '💕', '🌸'];
+            
+            for (let i = 0; i < 20; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.innerHTML = icons[Math.floor(Math.random() * icons.length)];
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                heart.style.animationDelay = Math.random() * 5 + 's';
+                heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
+                container.appendChild(heart);
+            }
+        }
+
+        function openGift() {
+            document.getElementById('giftBox').style.transform = 'scale(0) rotate(20deg)';
+            setTimeout(() => {
+                document.getElementById('content').style.display = 'flex';
+            }, 300);
+        }
+
+        window.onload = function() {
+            createHearts();
+            const data = getGiftData();
+            
+            if (data) {
+                document.getElementById('fromName').innerText = 'Từ: ' + (data.fromName || "Người thương");
+                document.getElementById('giftMessage').innerText = data.msg || data.message || "Gửi ngàn lời yêu thương!";
+                
+                if (data.img || data.imageUrl) {
+                    document.getElementById('giftImage').src = data.img || data.imageUrl;
+                    document.getElementById('photoFrame').style.display = 'block';
+                }
+
+                // Cập nhật Emoji dựa trên loại quà
+                const emojis = {
+                    'gift_box': '🎁',
+                    'love_letter': '✉️',
+                    'surprise_egg': '🥚',
+                    'bubble_wrap': '🫧',
+                    'scratch_reveal': '✨',
+                    'happy_birthday': '🎂',
+                    'your_heart': '❤️',
+                    'lovely_turkey': '🍗',
+                    'moon_wish': '🌙'
+                };
+                const type = data.giftType || 'gift_box';
+                document.getElementById('giftEmoji').innerText = emojis[type] || '🎁';
+            }
+
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                }, 500);
+            }, 1000);
+        };
+    </script>
+</body>
+</html>
