@@ -241,7 +241,10 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 if (_passwordLinked)
                   TextField(
                     controller: _oldPassCtrl,
-                    obscureText: true,
+                    style: SLTheme.quicksand(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w700,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Mật khẩu hiện tại',
                       prefixIcon:
@@ -257,6 +260,10 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 TextField(
                   controller: _newPassCtrl,
                   obscureText: true,
+                  style: SLTheme.quicksand(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w700,
+                  ),
                   decoration: InputDecoration(
                     hintText: _passwordLinked
                         ? 'Mật khẩu mới (tối thiểu 6 ký tự)'
