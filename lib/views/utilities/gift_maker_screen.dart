@@ -825,8 +825,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   Widget _buildCreateTab() {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 350),
-      switchInCurve: Curves.easeOutQuicksand,
-      switchOutCurve: Curves.easeInQuicksand,
+      switchInCurve: SLCurves.easeOutQuicksand,
+      switchOutCurve: SLCurves.easeInQuicksand,
       transitionBuilder: (Widget child, Animation<double> animation) {
         return FadeTransition(
           opacity: animation,
