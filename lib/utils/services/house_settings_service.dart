@@ -96,8 +96,10 @@ class HouseSettingsService {
   }) async {
     final trustState = await _deviceManagerService.getCurrentDeviceTrustState(
         autoApprove: true);
-    if (trustState.isTrusted) return;
-    if (allowPendingApproval && trustState.isPendingApproval) return;
+    
+    // ✅ Luôn cho phép nếu là thiết bị tin cậy HOẶC thiết bị đang chờ duyệt 12h
+    if (trustState.isTrusted || trustState.isPendingApproval) return;
+    
     if (trustState.isBlocked) {
       throw 'Thiết bị này đã bị chặn nên không thể thay đổi thông tin chung.';
     }
@@ -105,7 +107,7 @@ class HouseSettingsService {
     final unlockAtMs = trustState.autoApproveAtMs;
     final unlockLabel =
         unlockAtMs > 0 ? _formatDateTime(unlockAtMs) : 'sau đủ 12 giờ';
-    throw 'Thiết bị này đang chờ duyệt nên chưa thể thay đổi thông tin chung. '
+    throw 'Thiết bị này chưa đủ tin cậy để thay đổi thông tin chung. '
         'Hãy duyệt thiết bị ở máy tin cậy hoặc đợi đến $unlockLabel.';
   }
 
