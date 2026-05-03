@@ -322,7 +322,7 @@ class WidgetService {
       'Mở app để cập nhật',
       'Mở app để đồng bộ',
     };
- Broadway
+
     for (final key in const ['status1', 'status2']) {
       final value = await HomeWidget.getWidgetData<String>(key);
       final normalized = value?.trim();
