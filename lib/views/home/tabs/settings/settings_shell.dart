@@ -45,7 +45,9 @@ extension _SettingsTabShell on _SettingsTabState {
       return;
     }
     if (_shouldShowPendingDeviceGate(sectionId)) {
-      await _ensureCanModifySharedInfo(showToast: false);
+      if (!await _ensureCanModifySecurityInfo(showToast: false)) {
+        // Chỉ chặn nếu là mục bảo mật
+      }
       if (!mounted) return;
     }
     if (sectionId == 'countdownMode') {
