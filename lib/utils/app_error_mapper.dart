@@ -348,6 +348,12 @@ class AppErrorMapper {
         normalized.contains('internal error has occurred')) {
       return 'Dịch vụ đăng nhập đang gặp sự cố hệ thống. Vui lòng thử lại sau.';
     }
+    if (normalized.contains('máy chủ chưa cấu hình otp_secret') ||
+        normalized.contains('máy chủ chưa được cấu hình để gửi email otp') ||
+        normalized.contains('otp_secret') ||
+        normalized.contains('gmail_app_password')) {
+      return 'Dịch vụ gửi mã OTP chưa được thiết lập đầy đủ trên máy chủ. Hãy kiểm tra OTP_SECRET và Gmail App Password trong Firebase Secrets.';
+    }
     if (message.isEmpty) {
       return fallbackMessage ?? defaultServerMessage;
     }
