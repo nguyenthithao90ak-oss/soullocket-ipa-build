@@ -688,23 +688,13 @@ class _ConsentGateState extends State<ConsentGate> {
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        compact ? 12 : 16,
+        0,
         10,
-        compact ? 12 : 16,
+        0,
         bottomInset > 0 ? bottomInset + 10 : 12,
       ),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.97),
-        border: Border(
-          top: BorderSide(color: _panelBorder.withOpacity(0.88)),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 18,
-            offset: const Offset(0, -8),
-          ),
-        ],
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
