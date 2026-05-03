@@ -279,10 +279,68 @@
     <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
     <script>
+        // Định nghĩa bộ màu cho từng loại quà
+        const themePalette = {
+            'gift_box': {
+                primary: '#D81B60',
+                secondary: '#F48FB1',
+                bg: 'linear-gradient(135deg, #0f172a 0%, #450a0a 100%)',
+                accent: '#bf953f'
+            },
+            'love_letter': {
+                primary: '#E11D48',
+                secondary: '#FB7185',
+                bg: 'linear-gradient(135deg, #4c0519 0%, #881337 100%)',
+                accent: '#FCD34D'
+            },
+            'surprise_egg': {
+                primary: '#16A34A',
+                secondary: '#4ADE80',
+                bg: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
+                accent: '#FEF3C7'
+            },
+            'bubble_wrap': {
+                primary: '#2563EB',
+                secondary: '#60A5FA',
+                bg: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)',
+                accent: '#E0E7FF'
+            },
+            'scratch_reveal': {
+                primary: '#CA8A04',
+                secondary: '#FACC15',
+                bg: 'linear-gradient(135deg, #422006 0%, #713f12 100%)',
+                accent: '#FEF9C3'
+            },
+            'happy_birthday': {
+                primary: '#7C3AED',
+                secondary: '#A78BFA',
+                bg: 'linear-gradient(135deg, #2e1065 0%, #4c1d95 100%)',
+                accent: '#DDD6FE'
+            },
+            'your_heart': {
+                primary: '#BE123C',
+                secondary: '#FB7185',
+                bg: 'linear-gradient(135deg, #4c0519 0%, #9f1239 100%)',
+                accent: '#FFE4E6'
+            },
+            'lovely_turkey': {
+                primary: '#D97706',
+                secondary: '#FBBF24',
+                bg: 'linear-gradient(135deg, #451a03 0%, #78350f 100%)',
+                accent: '#FEF3C7'
+            },
+            'moon_wish': {
+                primary: '#4338CA',
+                secondary: '#6366F1',
+                bg: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+                accent: '#E0E7FF'
+            }
+        };
+
         let canvas, ctx, particles = [], animationFrame;
         
         class ConfettiParticle {
-            constructor() {
+            constructor(accentColor) {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height * 0.5 - 100;
                 this.size = Math.random() * 12 + 6;
@@ -290,7 +348,7 @@
                 this.speedX = Math.random() * 6 - 3;
                 this.rotation = Math.random() * 360;
                 this.rotationSpeed = Math.random() * 8 - 4;
-                this.color = ['#fcf6ba', '#bf953f', '#ffffff', '#e2e8f0', '#991b1b'][Math.floor(Math.random() * 5)];
+                this.color = [accentColor, '#ffffff', '#fcf6ba', '#e2e8f0', '#ffffff'][Math.floor(Math.random() * 5)];
                 this.shape = Math.random() > 0.4 ? 'circle' : 'rect';
                 this.opacity = Math.random() * 0.5 + 0.5;
             }
@@ -307,8 +365,8 @@
             }
         }
         
-        function launchConfetti() {
-            particles = []; for (let i = 0; i < 200; i++) particles.push(new ConfettiParticle());
+        function launchConfetti(accentColor) {
+            particles = []; for (let i = 0; i < 200; i++) particles.push(new ConfettiParticle(accentColor));
             if (animationFrame) cancelAnimationFrame(animationFrame);
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -320,6 +378,16 @@
                 if (stillAlive) animationFrame = requestAnimationFrame(animate);
             }
             animate();
+        }
+
+        function applyTheme(giftType) {
+            const theme = themePalette[giftType] || themePalette['gift_box'];
+            const root = document.documentElement;
+            root.style.setProperty('--primary-velvet', theme.primary);
+            root.style.setProperty('--secondary-velvet', theme.primary === '#D81B60' ? '#450a0a' : 'black');
+            document.body.style.backgroundColor = theme.primary === '#D81B60' ? '#0f172a' : theme.primary;
+            document.body.style.background = theme.bg;
+            return theme;
         }
 
         function getGiftData() {
@@ -334,6 +402,8 @@
             } catch (e) { return null; }
         }
 
+        let currentAccent = '#bf953f';
+
         function openGift() {
             const giftBox = document.getElementById('gift-box');
             const revealedContent = document.getElementById('revealed-content');
@@ -341,7 +411,7 @@
             const headerText = document.getElementById('header-text');
             
             giftBox.classList.add('opened');
-            launchConfetti();
+            launchConfetti(currentAccent);
             
             clickHint.style.opacity = '0';
             headerText.style.opacity = '0';
@@ -359,10 +429,7 @@
 
         function closeGift() {
             window.close();
-            // Nếu không đóng được (trình duyệt chặn), thì thông báo
-            setTimeout(() => {
-                alert("Cảm ơn bạn đã nhận món quà tuyệt vời này! ❤️");
-            }, 300);
+            setTimeout(() => { alert("Cảm ơn bạn đã nhận món quà tuyệt vời này! ❤️"); }, 300);
         }
 
         window.onload = function() {
@@ -373,6 +440,9 @@
             
             const data = getGiftData();
             if (data) {
+                const theme = applyTheme(data.giftType);
+                currentAccent = theme.accent;
+
                 const name = data.fromName || "Người thương";
                 document.getElementById('senderLabel').innerText = 'Từ: ' + name;
                 document.getElementById('fromNameHeader').innerText = name + ' gửi tặng bạn!';
