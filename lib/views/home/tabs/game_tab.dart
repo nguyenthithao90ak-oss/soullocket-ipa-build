@@ -207,6 +207,7 @@ class _GameTabState extends State<GameTab> {
                                   isDownloaded: isDownloaded,
                                   downloadProgress: downloadService.getProgress('soul_block'),
                                   onTap: () => _onGameTap('soul_block', () => _openSoulBlockGame(context)),
+                                  onLongPress: isDownloaded ? () => _confirmDeleteGame(context, 'soul_block', 'Soul Block') : null,
                                 );
                               }
                             ),
@@ -219,6 +220,7 @@ class _GameTabState extends State<GameTab> {
                                   isDownloaded: isDownloaded,
                                   downloadProgress: downloadService.getProgress('soul_rhythm'),
                                   onTap: () => _onGameTap('soul_rhythm', () => _openSoulGame(context)),
+                                  onLongPress: isDownloaded ? () => _confirmDeleteGame(context, 'soul_rhythm', 'Soul Rhythm') : null,
                                 );
                               }
                             ),
