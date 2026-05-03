@@ -91,7 +91,16 @@ class GameDownloadService extends ChangeNotifier {
         
         // Sử dụng SDK để lấy URL download chính xác
         final fullStoragePath = '${config.storagePath}/$fileName';
-        final remoteUrl = await FirebaseStorage.instance.ref(fullStoragePath).getDownloadURL();
+        String remoteUrl;
+        try {
+          remoteUrl = await FirebaseStorage.instance.ref(fullStoragePath).getDownloadURL();
+        } catch (storageError) {
+          final errStr = storageError.toString().toLowerCase();
+          if (errStr.contains('unauthorized') || errStr.contains('permission-denied')) {
+            throw 'Lỗi phân quyền: Bạn cần cập nhật Storage Rules trên Firebase Console để cho phép đọc thư mục game_assets.';
+          }
+          rethrow;
+        }
 
         await _dio.download(
           remoteUrl,
@@ -116,8 +125,8 @@ class GameDownloadService extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       String errorMessage = e.toString();
-      if (errorMessage.contains('unauthorized')) {
-        errorMessage = 'Lỗi phân quyền: Bạn cần cập nhật Storage Rules trên Firebase Console để cho phép đọc thư mục game_assets.';
+      if (errorMessage.contains('Exception:')) {
+        errorMessage = errorMessage.substring(errorMessage.indexOf(':') + 1).trim();
       }
       debugPrint('Lỗi tải game $gameId: $errorMessage');
       _isDownloading[gameId] = false;
