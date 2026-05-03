@@ -308,7 +308,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                     ),
                   ),
                 ),
-        ),
+            ],
+          ),
       ],
     );
   }
