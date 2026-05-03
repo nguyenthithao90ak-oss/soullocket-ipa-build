@@ -732,17 +732,27 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     } catch (e, st) {
       debugPrint('[HouseOnboarding] _createHouse failed: $e\n$st');
       if (!mounted) return;
-      final message = AppErrorMapper.resolve(
-        e,
-        fallbackMessage:
-            'Không tạo được ngôi nhà: hãy kiểm tra trạng thái đăng nhập và kết nối mạng.',
-      ).message;
+      final errorInfo = AppErrorMapper.resolve(e);
+      final message = errorInfo.message;
+
+      // 🔄 Tự động thử lại 1 lần nếu là lỗi Unauthenticated (do Auth chưa kịp sync)
+      if (errorInfo.isUserError &&
+          (e.toString().contains('Unauthenticated') ||
+              e.toString().contains('Bạn chưa đăng nhập'))) {
+        debugPrint('[HouseOnboarding] Auth sync delay detected, retrying in 1s...');
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          return _createHouse();
+        }
+      }
+
       if (widget.autoCreateOnly) {
         _setAutoCreateFailureMessage(message);
       } else {
         _showError(message);
       }
     } finally {
+ Broadway
       if (mounted && !handedOffToParent) {
         setState(() => _isLoading = false);
       }
