@@ -456,7 +456,10 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                           context.tr('security_q_locked_msg'),
                           success: false,
                         )
-                    : _saveRecoveryInfo,
+                    : () async {
+                        if (!await _ensureCanModifySecurityInfo()) return;
+                        _saveRecoveryInfo();
+                      },
               ),
             ],
           ),
@@ -513,7 +516,10 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 label: context.tr('save_backup_pin'),
                 gradient: const [Color(0xFFFFB74D), Color(0xFFF57C00)],
                 textColor: Colors.black,
-                onTap: _saveHousePin,
+                onTap: () async {
+                  if (!await _ensureCanModifySecurityInfo()) return;
+                  _saveHousePin();
+                },
               ),
             ],
           ),
@@ -742,6 +748,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   value: _isAppLockEnabled,
                   activeColor: const Color(0xFFD81B60),
                   onChanged: (v) async {
+                    if (!await _ensureCanModifySecurityInfo()) return;
                     if (v) {
                       if (_storedLockSecret.trim().isEmpty) {
                         await _setupNewPin();
@@ -777,7 +784,10 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             _buildModernSettingsRow(
               icon: Icons.pin_rounded,
               label: context.tr('change_pin'),
-              onTap: _handlePinChangeRequested,
+              onTap: () async {
+                if (!await _ensureCanModifySecurityInfo()) return;
+                _handlePinChangeRequested();
+              },
               trailing: const Icon(Icons.chevron_right_rounded,
                   color: Color(0xFFD81B60)),
             ),
