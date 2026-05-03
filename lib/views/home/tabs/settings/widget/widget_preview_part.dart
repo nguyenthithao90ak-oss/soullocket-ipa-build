@@ -273,6 +273,50 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     final secondary = palette[1];
     final glow = palette[2];
     final styleKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
+
+    // Nếu đang ở tab Nhận diện thì dùng Brand Mark (Logo App) thay vì Heart Emoji
+    final isBrandTab = _widgetPanelTabKey == _widgetPanelTabIconKey;
+
+    if (isBrandTab) {
+      return Center(
+        child: ValueListenableBuilder<UiPrefsState>(
+          valueListenable: UiPrefs.notifier,
+          builder: (context, ui, _) {
+            final phase = tick % 6;
+            final pulse = _widgetHeartAnimated
+                ? <double>[1.0, 1.05, 0.98, 1.04, 0.99, 1.02][phase]
+                : 1.0;
+            final floatY = _widgetHeartAnimated
+                ? <double>[0.0, -1.8, 0.8, -1.2, 0.5, -0.6][phase]
+                : 0.0;
+
+            return Transform.translate(
+              offset: Offset(0, floatY),
+              child: Transform.scale(
+                scale: pulse,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: primary.withOpacity(_widgetHeartAnimated ? 0.3 : 0.15),
+                        blurRadius: size * 0.25,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: SoulLocketBrandMark(
+                    styleKey: ui.brandMarkKey,
+                    size: size * 0.8,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    }
+
     final styleSeed = styleKey.runes.fold<int>(0, (sum, rune) => sum + rune);
     final colorSeed =
         _widgetHeartColorKey.runes.fold<int>(0, (sum, rune) => sum + rune);
