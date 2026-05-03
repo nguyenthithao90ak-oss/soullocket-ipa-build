@@ -50,7 +50,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _shareApp() {
-    SharePlus.share(
+    Share.share(
       'SoulLocket - Ngôi nhà chung cho các cặp đôi. Cùng xây dựng không gian yêu thương, lưu giữ kỷ niệm và chơi game cùng nhau nhé! Tải ngay tại: https://soullocket.app',
       subject: 'Tham gia SoulLocket cùng mình nhé!',
     );
