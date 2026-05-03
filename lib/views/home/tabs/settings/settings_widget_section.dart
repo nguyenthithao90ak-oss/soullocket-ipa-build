@@ -98,9 +98,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
   Widget _buildWidgetPanelTabBar() {
     final items = <(String, String, IconData)>[
-      (WidgetService.defaultWidgetStyleKey, 'Mac dinh', Icons.widgets_rounded),
-      ('countdown', 'Dem ngay', Icons.timer_outlined),
-      (_widgetPanelTabIconKey, 'Nhan dien', Icons.favorite_rounded),
+      (WidgetService.defaultWidgetStyleKey, 'Mặc định', Icons.widgets_rounded),
+      ('countdown', 'Đếm ngày', Icons.timer_outlined),
+      (_widgetPanelTabIconKey, 'Nhận diện', Icons.favorite_rounded),
     ];
 
     return Container(
@@ -177,7 +177,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           icon: Icons.favorite_rounded,
           title: 'Icon trong app',
           subtitle:
-              'Doi vien tim va tong mau cho nhan dien hien thi ben trong app.',
+              'Đổi viền tim và tông màu cho nhận diện hiển thị bên trong app.',
           iconGradient: const [
             Color(0xFFFF7EA8),
             Color(0xFFA971FF),
@@ -279,7 +279,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ),
               const SizedBox(height: 4),
               Text(
-                'Nhan dien hien thi trong app',
+                'Nhận diện hiển thị trong app',
                 style: SLTheme.quicksand(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
@@ -520,9 +520,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 const SizedBox(height: 12),
                 _buildWidgetSectionCard(
                   icon: Icons.timer_rounded,
-                  title: 'Widget dem ngay',
+                  title: 'Widget đếm ngày',
                   subtitle:
-                      'Mode nay uu tien so ngay o giua va ngay bat dau ben duoi.',
+                      'Chế độ này ưu tiên số ngày ở giữa và ngày bắt đầu bên dưới.',
                   iconGradient: const [
                     Color(0xFFFFB84D),
                     Color(0xFFFF7A59),
