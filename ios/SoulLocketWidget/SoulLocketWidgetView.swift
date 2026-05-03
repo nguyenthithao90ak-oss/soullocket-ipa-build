@@ -543,6 +543,66 @@ struct PersonCard: View {
     }
 }
 
+struct CountdownWidgetView: View {
+    let data: CoupleWidgetData
+    let theme: WidgetTheme
+
+    private var palette: HeartPalette {
+        HeartPalette.from(data.heartColorKey)
+    }
+
+    private var daysNumber: String {
+        let pattern = "[0-9]+"
+        if let range = data.daysText.range(of: pattern, options: .regularExpression) {
+            return String(data.daysText[range])
+        }
+        return "0"
+    }
+
+    private var loveDateLabel: String {
+        let trimmed = data.loveDateText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "" : "Từ \(trimmed)"
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 12) {
+                AvatarView(path: data.avatar1Path, name: data.name1, size: 68, accentColor: theme.accentColor)
+
+                HeartClusterView(
+                    styleKey: data.heartStyleKey,
+                    animated: false,
+                    palette: palette,
+                    size: 28,
+                    referenceDate: Date()
+                )
+
+                AvatarView(path: data.avatar2Path, name: data.name2, size: 68, accentColor: theme.accentColor)
+            }
+            .padding(.top, 6)
+
+            VStack(spacing: 0) {
+                Text(daysNumber)
+                    .font(.system(size: 38, weight: .black, design: .rounded))
+                    .foregroundColor(theme.textColor)
+
+                Text("ngày")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundColor(theme.textColor.opacity(0.8))
+            }
+
+            if !loveDateLabel.isEmpty {
+                Text(loveDateLabel)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundColor(theme.secondaryTextColor)
+                    .padding(.top, 4)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(10)
+    }
+}
+
 struct SoulLocketWidgetView: View {
     let entry: CoupleEntry
     @Environment(\.widgetFamily) var family
@@ -562,15 +622,19 @@ struct SoulLocketWidgetView: View {
                 PremiumAuroraBackdrop(accentColor: theme.accentColor)
             }
 
-            switch family {
-            case .systemSmall:
-                SmallWidgetView(data: entry.data, theme: theme)
-            case .systemMedium:
-                MediumWidgetView(data: entry.data, theme: theme)
-            case .systemLarge:
-                LargeWidgetView(data: entry.data, theme: theme)
-            default:
-                SmallWidgetView(data: entry.data, theme: theme)
+            if entry.data.widgetStyleKey == "countdown" {
+                CountdownWidgetView(data: entry.data, theme: theme)
+            } else {
+                switch family {
+                case .systemSmall:
+                    SmallWidgetView(data: entry.data, theme: theme)
+                case .systemMedium:
+                    MediumWidgetView(data: entry.data, theme: theme)
+                case .systemLarge:
+                    LargeWidgetView(data: entry.data, theme: theme)
+                default:
+                    SmallWidgetView(data: entry.data, theme: theme)
+                }
             }
         }
         .modifier(WidgetContainerBackground(theme: theme))

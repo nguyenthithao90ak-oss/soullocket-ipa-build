@@ -1,5 +1,6 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
+import 'dart:io';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -107,38 +108,56 @@ class AdMobService {
   // Debug mode  → Google Test IDs (không tốn tiền khi test)
   // Release mode → ID thật từ AdMob Console của bạn
 
-  // Fallback IDs (có thể giữ lại các ID thật hiện tại như bản phụ phòng hờ)
-  static String _rewardedMainId = 'ca-app-pub-6165771694697009/3441513253';
-  static String _rewardedCheckinId = 'ca-app-pub-6165771694697009/9710840883';
-  static String _rewardedSoulGameId = 'ca-app-pub-6165771694697009/5113438527';
-  static String _bannerId = 'ca-app-pub-6165771694697009/5949757521';
-  static String _interstitialId = 'ca-app-pub-6165771694697009/6283299015';
-  static String _appOpenId = 'ca-app-pub-6165771694697009/3305781889';
+  // ANDROID
+  static String _androidRewardedMainId = 'ca-app-pub-6165771694697009/3441513253';
+  static String _androidRewardedCheckinId = 'ca-app-pub-6165771694697009/9710840883';
+  static String _androidRewardedSoulGameId = 'ca-app-pub-6165771694697009/5113438527';
+  static String _androidBannerId = 'ca-app-pub-6165771694697009/5949757521';
+  static String _androidInterstitialId = 'ca-app-pub-6165771694697009/6283299015';
+  static String _androidAppOpenId = 'ca-app-pub-6165771694697009/3305781889';
+
+  // IOS
+  static String _iosRewardedMainId = 'ca-app-pub-6165771694697009/8781411712';
+  static String _iosRewardedCheckinId = 'ca-app-pub-6165771694697009/8342428018';
+  static String _iosRewardedSoulGameId = 'ca-app-pub-6165771694697009/5716264675';
+  static String _iosBannerId = 'ca-app-pub-6165771694697009/6458500706';
+  static String _iosInterstitialId = 'ca-app-pub-6165771694697009/1798124404';
+  static String _iosAppOpenId = 'ca-app-pub-6165771694697009/7141026983';
 
   /// Rewarded chính — "Xem quảng cáo nhận điểm"
-  static String get rewardedMainId =>
-      kDebugMode ? 'ca-app-pub-3940256099942544/5224354917' : _rewardedMainId;
+  static String get rewardedMainId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    return Platform.isIOS ? _iosRewardedMainId : _androidRewardedMainId;
+  }
 
   /// Rewarded điểm danh 7 ngày
-  static String get rewardedCheckinId => kDebugMode
-      ? 'ca-app-pub-3940256099942544/5224354917'
-      : _rewardedCheckinId;
+  static String get rewardedCheckinId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    return Platform.isIOS ? _iosRewardedCheckinId : _androidRewardedCheckinId;
+  }
 
-  static String get rewardedSoulGameId => kDebugMode
-      ? 'ca-app-pub-3940256099942544/5224354917'
-      : _rewardedSoulGameId;
+  static String get rewardedSoulGameId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    return Platform.isIOS ? _iosRewardedSoulGameId : _androidRewardedSoulGameId;
+  }
 
   /// Banner hiển thị thường trực
-  static String get bannerId =>
-      kDebugMode ? 'ca-app-pub-3940256099942544/6300978111' : _bannerId;
+  static String get bannerId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/2934735716' : 'ca-app-pub-3940256099942544/6300978111';
+    return Platform.isIOS ? _iosBannerId : _androidBannerId;
+  }
 
   /// Interstitial — quảng cáo toàn màn hình giữa chừng
-  static String get interstitialId =>
-      kDebugMode ? 'ca-app-pub-3940256099942544/1033173712' : _interstitialId;
+  static String get interstitialId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/4411468910' : 'ca-app-pub-3940256099942544/1033173712';
+    return Platform.isIOS ? _iosInterstitialId : _androidInterstitialId;
+  }
 
   /// App Open — quảng cáo khi mở app
-  static String get appOpenId =>
-      kDebugMode ? 'ca-app-pub-3940256099942544/9257395921' : _appOpenId;
+  static String get appOpenId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/5575463023' : 'ca-app-pub-3940256099942544/9257395921';
+    return Platform.isIOS ? _iosAppOpenId : _androidAppOpenId;
+  }
 
   // ─── REWARDED AD (CHÍNH) ─────────────────────────────────────
   RewardedAd? _rewardedAd;

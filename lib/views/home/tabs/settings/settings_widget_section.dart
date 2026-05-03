@@ -646,60 +646,61 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final useColumn = constraints.maxWidth < 330;
-                          if (useColumn) {
-                            return Column(
+                      if (Theme.of(context).platform != TargetPlatform.iOS)
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final useColumn = constraints.maxWidth < 330;
+                            if (useColumn) {
+                              return Column(
+                                children: [
+                                  _buildGradientBtn(
+                                    label: context.tr('add_widget'),
+                                    gradient: const [
+                                      Color(0xFF10C8E6),
+                                      Color(0xFF0E9EB0),
+                                    ],
+                                    onTap: handlePinWidget,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _buildGradientBtn(
+                                    label: context.tr('update_widget'),
+                                    gradient: const [
+                                      Color(0xFFFF7898),
+                                      Color(0xFFD81B60),
+                                    ],
+                                    onTap: handleRefreshWidget,
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Row(
                               children: [
-                                _buildGradientBtn(
-                                  label: context.tr('add_widget'),
-                                  gradient: const [
-                                    Color(0xFF10C8E6),
-                                    Color(0xFF0E9EB0),
-                                  ],
-                                  onTap: handlePinWidget,
+                                Expanded(
+                                  child: _buildGradientBtn(
+                                    label: context.tr('add_widget'),
+                                    gradient: const [
+                                      Color(0xFF10C8E6),
+                                      Color(0xFF0E9EB0),
+                                    ],
+                                    onTap: handlePinWidget,
+                                  ),
                                 ),
-                                const SizedBox(height: 10),
-                                _buildGradientBtn(
-                                  label: context.tr('update_widget'),
-                                  gradient: const [
-                                    Color(0xFFFF7898),
-                                    Color(0xFFD81B60),
-                                  ],
-                                  onTap: handleRefreshWidget,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildGradientBtn(
+                                    label: context.tr('update_widget'),
+                                    gradient: const [
+                                      Color(0xFFFF7898),
+                                      Color(0xFFD81B60),
+                                    ],
+                                    onTap: handleRefreshWidget,
+                                  ),
                                 ),
                               ],
                             );
-                          }
-
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: _buildGradientBtn(
-                                  label: context.tr('add_widget'),
-                                  gradient: const [
-                                    Color(0xFF10C8E6),
-                                    Color(0xFF0E9EB0),
-                                  ],
-                                  onTap: handlePinWidget,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildGradientBtn(
-                                  label: context.tr('update_widget'),
-                                  gradient: const [
-                                    Color(0xFFFF7898),
-                                    Color(0xFFD81B60),
-                                  ],
-                                  onTap: handleRefreshWidget,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
+                          },
+                        ),
                       if (Theme.of(context).platform == TargetPlatform.iOS) ...[
                         const SizedBox(height: 12),
                         Container(
@@ -732,7 +733,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      context.tr('ios_widget'),
+                                      'Hướng dẫn iOS',
                                       style: SLTheme.quicksand(
                                         fontSize: 12.6,
                                         fontWeight: FontWeight.w900,
@@ -741,7 +742,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      context.tr('ios_widget_pending'),
+                                      'Để thêm Widget trên iOS:\n1. Nhấn giữ vào màn hình chính\n2. Bấm nút dấu [+] ở góc màn hình\n3. Tìm "SoulLocket" và Thêm tiện ích',
                                       style: SLTheme.quicksand(
                                         fontSize: 11.8,
                                         fontWeight: FontWeight.w700,

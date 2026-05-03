@@ -68,6 +68,7 @@ import 'package:local_auth/local_auth.dart';
 import '../../utilities/device_manager_screen.dart';
 // import '../../auth/qr_authorize_scanner_screen.dart';
 import '../../utilities/user_support_chat_screen.dart';
+import 'settings/settings_gift_links_manager_screen.dart';
 import '../../../services/l10n_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/device_manager_service.dart';

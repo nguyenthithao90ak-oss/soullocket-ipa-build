@@ -367,6 +367,13 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             context,
             'Yêu cầu thành công. Tài khoản sẽ xóa sau $days ngày.',
           );
+
+          await _authService.signOut();
+          if (!mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
         } catch (e) {
           if (!mounted) return;
           SLNotice.showError(context, 'Lỗi: $e');
