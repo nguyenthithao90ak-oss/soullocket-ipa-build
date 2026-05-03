@@ -485,7 +485,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                           color: Colors.white.withOpacity(0.12),
                         ),
                       ),
-                      Column(
+                      SafeArea(
+              child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
