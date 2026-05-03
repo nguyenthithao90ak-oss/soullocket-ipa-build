@@ -480,6 +480,10 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               SLSpacing.h8,
               TextField(
                 controller: _housePinCtrl,
+                style: SLTheme.quicksand(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w700,
+                ),
                 decoration: InputDecoration(
                   hintText: context.tr('backup_pin_hint'),
                   prefixIcon: const Icon(Icons.pin_outlined),
