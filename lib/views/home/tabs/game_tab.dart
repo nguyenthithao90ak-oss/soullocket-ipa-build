@@ -399,11 +399,13 @@ class _GameLauncherTile extends StatelessWidget {
     required this.shadowColor,
     this.isDownloaded = false,
     this.downloadProgress,
+    this.onLongPress,
   });
 
   final String label;
   final String semanticsLabel;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final Widget preview;
   final Color borderColor;
   final Color shadowColor;
@@ -423,6 +425,7 @@ class _GameLauncherTile extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: onTap,
+          onLongPress: onLongPress,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
               child: Column(
@@ -533,10 +536,12 @@ class _SoulRhythmCard extends StatelessWidget {
     required this.onTap,
     this.isDownloaded = false,
     this.downloadProgress,
+    this.onLongPress,
   });
 
   final String imagePath;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final bool isDownloaded;
   final double? downloadProgress;
 
@@ -565,6 +570,7 @@ class _SoulRhythmCard extends StatelessWidget {
       label: 'Soul Rhythm',
       semanticsLabel: 'Soul Rhythm',
       onTap: onTap,
+      onLongPress: onLongPress,
       isDownloaded: isDownloaded,
       downloadProgress: downloadProgress,
       borderColor: const Color(0xFFFF77B7),
@@ -607,9 +613,11 @@ class _SoulBlockCard extends StatelessWidget {
     required this.onTap,
     this.isDownloaded = false,
     this.downloadProgress,
+    this.onLongPress,
   });
 
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final bool isDownloaded;
   final double? downloadProgress;
 
@@ -619,6 +627,7 @@ class _SoulBlockCard extends StatelessWidget {
       label: 'Soul Block',
       semanticsLabel: 'Soul Block',
       onTap: onTap,
+      onLongPress: onLongPress,
       isDownloaded: isDownloaded,
       downloadProgress: downloadProgress,
       borderColor: const Color(0xFFFFC857),
