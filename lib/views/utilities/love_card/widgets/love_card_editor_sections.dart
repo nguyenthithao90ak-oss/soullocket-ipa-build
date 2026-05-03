@@ -1270,51 +1270,62 @@ class _LoveCardMetaField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.94),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: const Color(0xFFFF8AA0).withOpacity(0.38),
+          color: const Color(0xFFFF8AA0).withOpacity(0.32),
+          width: 1.2,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(icon, color: const Color(0xFFD94D73), size: 16),
               const SizedBox(width: 8),
-              Text(
-                label,
-                style: SLTheme.quicksand(
-                  color: const Color(0xFF8D4563),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Quicksand',
+                    color: const Color(0xFF8D4563),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 2),
           TextField(
             controller: controller,
             minLines: minLines,
             maxLines: maxLines,
             cursorColor: const Color(0xFFD81B60),
             onChanged: onChanged,
-            style: SLTheme.quicksand(
+            textAlignVertical: TextAlignVertical.center,
+            style: TextStyle(
+              fontFamily: 'Quicksand',
               color: const Color(0xFF243041),
-              fontSize: 15,
-              height: 1.35,
+              fontSize: 15.5,
+              height: 1.4,
               fontWeight: FontWeight.w800,
             ),
             decoration: InputDecoration(
+              isDense: true,
               hintText: hintText,
-              hintStyle: SLTheme.quicksand(
-                color: const Color(0xFFB55A73),
+              hintStyle: TextStyle(
+                fontFamily: 'Quicksand',
+                color: const Color(0xFFB55A73).withOpacity(0.6),
                 fontWeight: FontWeight.w600,
               ),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.fromLTRB(0, 8, 0, 2),
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
             ),
           ),
         ],
