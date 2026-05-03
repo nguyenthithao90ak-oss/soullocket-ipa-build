@@ -1461,32 +1461,3 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
     );
   }
 }
-
-class _GiftBackdropPainter extends CustomPainter {
-  const _GiftBackdropPainter();
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 80);
-
-    canvas.drawCircle(
-      Offset(size.width * 0.15, size.height * 0.2),
-      120,
-      paint..color = const Color(0xFFD4145A).withOpacity(0.15),
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.85, size.height * 0.6),
-      150,
-      paint..color = const Color(0xFF30104A).withOpacity(0.2),
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.4, size.height * 0.9),
-      100,
-      paint..color = const Color(0xFF17192E).withOpacity(0.15),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
