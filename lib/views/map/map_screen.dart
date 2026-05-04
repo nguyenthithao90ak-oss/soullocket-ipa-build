@@ -1277,6 +1277,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final badgeWidth = marker.compact ? 74.0 : 104.0;
     final bubbleSize = marker.compact ? 34.0 : 42.0;
     final hasAvatar = marker.avatarUrl != null && marker.avatarUrl!.isNotEmpty;
+    final hasSecondaryAvatar =
+        marker.secondaryAvatarUrl != null && marker.secondaryAvatarUrl!.isNotEmpty;
+    final isPaired = hasSecondaryAvatar;
 
     return fm.Marker(
       key: ValueKey(marker.id),
@@ -1317,7 +1320,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   ),
                 ),
               SizedBox(
-                width: bubbleSize + 16,
+                width: isPaired ? bubbleSize + 30 : bubbleSize + 16,
                 height: bubbleSize + 16,
                 child: Stack(
                   alignment: Alignment.center,
@@ -1335,60 +1338,28 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                           ),
                         ),
                       ),
-                    Container(
-                      width: bubbleSize,
-                      height: bubbleSize,
-                      decoration: BoxDecoration(
-                        color: marker.compact ? marker.color : null,
-                        gradient: marker.compact
-                            ? null
-                            : LinearGradient(
-                                colors: [
-                                  Color.lerp(
-                                    marker.color,
-                                    Colors.white,
-                                    0.16,
-                                  )!,
-                                  marker.color,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                        shape: BoxShape.circle,
-                        boxShadow: marker.compact
-                            ? const []
-                            : [
-                                BoxShadow(
-                                  color: marker.color.withOpacity(0.28),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                        border: Border.all(
-                          color: marker.pulse
-                              ? marker.color.withOpacity(0.92)
-                              : Colors.white.withOpacity(
-                                  marker.compact ? 0.78 : 0.88,
-                                ),
-                          width:
-                              marker.pulse ? 2.2 : (marker.compact ? 1.2 : 1.6),
-                        ),
-                        image: hasAvatar
-                            ? DecorationImage(
-                                image: CachedNetworkImageProvider(
-                                    marker.avatarUrl!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child: hasAvatar
-                          ? null
-                          : Icon(
-                              marker.icon,
-                              color: Colors.white,
-                              size: marker.compact ? 16 : 20,
-                            ),
+                    _buildMapMarkerBubble(
+                      marker: marker,
+                      size: bubbleSize,
+                      avatarUrl: marker.avatarUrl,
+                      icon: marker.icon,
+                      color: marker.color,
+                      compact: marker.compact,
+                      pulse: marker.pulse,
                     ),
+                    if (isPaired)
+                      Transform.translate(
+                        offset: Offset(bubbleSize * 0.46, 0),
+                        child: _buildMapMarkerBubble(
+                          marker: marker,
+                          size: bubbleSize,
+                          avatarUrl: marker.secondaryAvatarUrl,
+                          icon: marker.secondaryIcon ?? Icons.favorite_rounded,
+                          color: marker.secondaryColor ?? _kMapPinkDeep,
+                          compact: marker.compact,
+                          pulse: marker.pulse,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -1600,9 +1571,11 @@ class _MapMarkerSpec {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
-  final bool compact;
   final bool pulse;
   final String? avatarUrl;
+  final String? secondaryAvatarUrl;
+  final IconData? secondaryIcon;
+  final Color? secondaryColor;
 
   const _MapMarkerSpec({
     required this.id,
@@ -1615,6 +1588,9 @@ class _MapMarkerSpec {
     this.compact = false,
     this.pulse = false,
     this.avatarUrl,
+    this.secondaryAvatarUrl,
+    this.secondaryIcon,
+    this.secondaryColor,
   });
 }
 
