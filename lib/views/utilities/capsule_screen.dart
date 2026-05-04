@@ -747,38 +747,98 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   }
 
   Widget _buildDatePicker() {
+    final hasDate = _unlockDate != null;
+    final daysLeft = hasDate
+        ? _unlockDate!.difference(DateTime.now()).inDays.clamp(0, 3650)
+        : null;
     return GestureDetector(
       onTap: () => _selectDate(context),
-      child: Container(
-        padding: SLSpacing.all16,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 148,
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _tileFill,
-          borderRadius: SLRadius.lgAll,
-          border: Border.all(color: _tileBorder),
+          gradient: LinearGradient(
+            colors: hasDate
+                ? [const Color(0xFFFFD1E3), const Color(0xFFFF8AA0)]
+                : [Colors.white.withOpacity(0.32), Colors.white.withOpacity(0.16)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: hasDate ? Colors.white.withOpacity(0.46) : Colors.white.withOpacity(0.30),
+          ),
+          boxShadow: hasDate
+              ? [
+                  BoxShadow(
+                    color: _accentColor.withOpacity(0.26),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.calendar_today, color: _textMuted, size: 20),
-                SLSpacing.w16,
-                Text(
-                  'Ngày mở thư:',
-                  style: SLTheme.quicksand(
-                    color: _textMuted,
-                    fontWeight: FontWeight.w700,
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(hasDate ? 0.26 : 0.16),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white.withOpacity(0.24)),
+                  ),
+                  child: Icon(
+                    hasDate ? Icons.event_available_rounded : Icons.calendar_month_rounded,
+                    color: hasDate ? const Color(0xFF5B2B6F) : Colors.white,
+                    size: 21,
                   ),
                 ),
+                const Spacer(),
+                if (hasDate)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.24),
+                      borderRadius: SLRadius.pillAll,
+                    ),
+                    child: Text(
+                      'Đổi',
+                      style: SLTheme.quicksand(
+                        color: const Color(0xFF5B2B6F),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
               ],
             ),
+            const Spacer(),
             Text(
-              _unlockDate == null
-                  ? 'Chọn ngày'
-                  : DateFormat('dd/MM/yyyy').format(_unlockDate!),
+              hasDate ? DateFormat('dd/MM/yyyy').format(_unlockDate!) : 'Chọn ngày mở',
               style: SLTheme.quicksand(
-                color: _textPrimary,
+                color: hasDate ? const Color(0xFF5B2B6F) : _textPrimary,
                 fontWeight: FontWeight.w900,
+                fontSize: hasDate ? 19 : 14,
+              ),
+            ),
+            SLSpacing.h4,
+            Text(
+              hasDate
+                  ? 'Còn khoảng $daysLeft ngày nữa'
+                  : 'Khi tới ngày này mới mở được thư',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: SLTheme.quicksand(
+                color: hasDate
+                    ? const Color(0xFF5B2B6F).withOpacity(0.78)
+                    : _textMuted,
+                fontWeight: FontWeight.w800,
+                fontSize: 11.5,
               ),
             ),
           ],
