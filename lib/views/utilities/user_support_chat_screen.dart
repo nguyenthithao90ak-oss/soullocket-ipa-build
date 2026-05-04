@@ -1474,7 +1474,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   Widget _buildInputBar() {
     if (_isResolved) {
       return const SizedBox.shrink();
-      /* return Container(
+      /*
         padding: EdgeInsets.fromLTRB(
           16,
           16,
@@ -1500,7 +1500,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             ),
           ),
         ),
-      ); */
+      */
     }
 
     final canSend =
