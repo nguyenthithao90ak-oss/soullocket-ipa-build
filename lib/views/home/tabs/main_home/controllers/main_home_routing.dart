@@ -54,6 +54,17 @@ extension _MainHomeRouting on _MainHomeTabState {
     });
   }
 
+  void _openSingleMatchHub() {
+    final houseId = _houseId?.trim() ?? '';
+    if (houseId.isEmpty) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SingleMatchHubScreen(houseId: houseId),
+      ),
+    );
+  }
+
   Future<void> _startHomeAvatarCall({
     required String targetRole,
     bool randomSingle = false,

@@ -108,10 +108,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                         isUser1: false,
                         hideMeta: true,
                         isGreyedOut: true,
-                        customOnTap: () => _startHomeAvatarCall(
-                          targetRole: 'user2',
-                          randomSingle: true,
-                        ),
+                        customOnTap: _openSingleMatchHub,
                       )
                     : _buildModernUserColumn(
                         name: nameU2,

@@ -18,6 +18,7 @@ import '../../chat/messenger_screen.dart';
 import '../../map/map_screen.dart';
 import '../../relationship/couple_connect_screen.dart';
 import '../../relationship/video_call_screen.dart';
+import '../../single_match/single_match_hub_screen.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
