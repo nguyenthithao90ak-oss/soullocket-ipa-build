@@ -140,7 +140,7 @@ class UiPrefsState {
     vaultHomeBadgeEnabled: true,
     vaultHomePreviewEnabled: true,
     vaultHomeHidePreviewWhenLocked: true,
-    transparentMode: false,
+    transparentMode: true,
     brandMarkKey: SoulLocketBrand.defaultStyleKey,
   );
 }
