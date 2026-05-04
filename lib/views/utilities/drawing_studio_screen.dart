@@ -809,42 +809,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                 ),
               ),
               SLSpacing.h12,
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: _isCanvasLocked
-                      ? const Color(0xFFFFF2F7)
-                      : const Color(0xFFFFFAFC),
-                  borderRadius: SLRadius.lgAll,
-                  border: Border.all(color: const Color(0xFFF3D8E3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      _isCanvasLocked
-                          ? Icons.lock_rounded
-                          : Icons.lock_open_rounded,
-                      size: 18,
-                      color: const Color(0xFFD81B60),
-                    ),
-                    SLSpacing.w8,
-                    Expanded(
-                      child: Text(
-                        _isCanvasLocked
-                            ? 'Khung vẽ đang khóa cuộn.'
-                            : 'Chạm 2 lần vào khung để khóa cuộn khi cần.',
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF8A5B76),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildCanvasStatusBar(),
               SLSpacing.h12,
               Row(
                 children: [
