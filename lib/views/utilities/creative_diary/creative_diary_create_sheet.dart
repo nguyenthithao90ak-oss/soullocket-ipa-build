@@ -180,3 +180,87 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
     );
   }
 }
+
+class _DiaryImagePickerTile extends StatelessWidget {
+  final XFile? image;
+  final VoidCallback onPick;
+  final VoidCallback onRemove;
+
+  const _DiaryImagePickerTile({
+    required this.image,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPick,
+      borderRadius: SLRadius.lgAll,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: SLColors.bgSubtle,
+          borderRadius: SLRadius.lgAll,
+          border: Border.all(color: SLColors.border),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                width: 54,
+                height: 54,
+                color: Colors.white,
+                child: image == null
+                    ? const Icon(
+                        Icons.add_photo_alternate_rounded,
+                        color: SLColors.primaryActive,
+                      )
+                    : Image.file(
+                        File(image!.path),
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
+            SLSpacing.w12,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    image == null ? 'Ảnh đính kèm' : 'Đã chọn ảnh',
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: SLColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    image == null
+                        ? 'Chọn ảnh từ máy, app sẽ tự upload'
+                        : 'Ảnh sẽ hiện nhỏ trong trang, bấm để xem rõ',
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: SLColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (image == null)
+              const Icon(Icons.chevron_right_rounded, color: SLColors.textTertiary)
+            else
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.close_rounded),
+                color: SLColors.primaryActive,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
