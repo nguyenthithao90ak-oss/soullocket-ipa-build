@@ -82,6 +82,30 @@ class HouseService {
       );
     }
 
+    Future<String> createAdminDebugFallback() async {
+      final callable = _functions.httpsCallable('createHouseSecureAdminDebug');
+      debugPrint('[HouseService] createHouseSecureAdminDebug start');
+      final response = await callable.call(<String, dynamic>{
+        'email': normalizedEmail,
+        'houseName': rawHouseName,
+        'nameU1': normalizedNameU1,
+        'nameU2': normalizedNameU2,
+        'relationshipMode': normalizedRelationshipMode,
+        'recoveryQuestion': normalizedRecoveryQuestion,
+        'recoveryAnswer': normalizedRecoveryAnswer,
+        'createdWith': normalizedCreatedWith,
+      }).timeout(const Duration(seconds: 12), onTimeout: () {
+        throw TimeoutException('createHouseSecureAdminDebug timed out');
+      });
+      debugPrint('[HouseService] createHouseSecureAdminDebug success');
+      final payload = _asStringDynamicMap(response.data);
+      final createdHouseId = payload?['houseId']?.toString().trim() ?? '';
+      if (createdHouseId.isEmpty) {
+        throw Exception('KhÃ´ng thá»ƒ táº¡o nhÃ  má»›i lÃºc nÃ y.');
+      }
+      return createdHouseId;
+    }
+
     try {
       final callable = _functions.httpsCallable('createHouseSecure');
       debugPrint('[HouseService] createHouseSecure start');
@@ -118,6 +142,13 @@ class HouseService {
       return createdHouseId;
     } on FirebaseFunctionsException catch (error) {
       if (_isDebugAppCheckFailure(error) && _allowLegacyDirectCreateFallback) {
+        try {
+          return await createAdminDebugFallback();
+        } catch (adminDebugError, stackTrace) {
+          debugPrint(
+            '[HouseService] createHouseSecureAdminDebug failed: $adminDebugError\n$stackTrace',
+          );
+        }
         debugPrint('[HouseService] createHouseSecure blocked, using direct fallback: $error');
         return createDirectFallback();
       }
