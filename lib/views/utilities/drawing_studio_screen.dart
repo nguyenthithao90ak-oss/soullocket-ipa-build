@@ -33,6 +33,12 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   final GlobalKey _canvasKey = GlobalKey();
   final List<_DrawStroke> _strokes = [];
   final DrawingStudioService _drawingService = DrawingStudioService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final Map<String, _DrawStroke> _realtimeStrokes = {};
+  final Set<String> _localPendingStrokeIds = {};
+  StreamSubscription<List<DrawingStudioStroke>>? _strokesSub;
+  StreamSubscription<DrawingStudioBackground>? _backgroundSub;
+  StreamSubscription<List<DrawingStudioPresence>>? _presenceSub;
 
   String _mode = 'frame';
   Color _currentColor = const Color(0xFFFF3B4D);
