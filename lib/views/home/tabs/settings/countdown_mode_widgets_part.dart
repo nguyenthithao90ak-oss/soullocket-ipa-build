@@ -886,7 +886,7 @@ class _CountdownModeCircle extends StatelessWidget {
                       onTap: onTopTap,
                       constraints: BoxConstraints(
                         minWidth: (resolvedSize * 0.52).clamp(150.0, 260.0),
-                        minHeight: (resolvedSize * 0.14).clamp(40.0, 64.0),
+                        minHeight: (resolvedSize * 0.11).clamp(28.0, 54.0),
                       ),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
@@ -936,7 +936,7 @@ class _CountdownModeCircle extends StatelessWidget {
                       onTap: onBottomTap,
                       constraints: BoxConstraints(
                         minWidth: (resolvedSize * 0.56).clamp(156.0, 276.0),
-                        minHeight: (resolvedSize * 0.14).clamp(40.0, 64.0),
+                        minHeight: (resolvedSize * 0.11).clamp(28.0, 54.0),
                       ),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
