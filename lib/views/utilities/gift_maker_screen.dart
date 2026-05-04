@@ -1010,7 +1010,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         const SizedBox(height: 24),
         Offstage(
           offstage: true,
-          children: [
+          child: Row(
+            children: [
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => _openGiftPreview(
@@ -1048,7 +1049,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         SizedBox(
