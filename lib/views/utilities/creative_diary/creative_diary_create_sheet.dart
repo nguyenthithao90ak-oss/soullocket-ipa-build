@@ -6,6 +6,7 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
     final titleCtrl = TextEditingController();
     final memoryCtrl = TextEditingController();
     final promptCtrl = TextEditingController();
+    final imageCtrl = TextEditingController();
 
     await showModalBottomSheet<void>(
       context: context,
