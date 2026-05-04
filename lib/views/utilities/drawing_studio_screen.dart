@@ -802,7 +802,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         final shortestSide = MediaQuery.sizeOf(context).shortestSide;
         final maxHeight = MediaQuery.sizeOf(context).height * 0.72;
         final minHeight = shortestSide < 380 ? 340.0 : 390.0;
-        final canvasHeight = (canvasWidth / ratio).clamp(minHeight, maxHeight);
+        final desiredHeight = canvasWidth / ratio;
+        final canvasHeight = desiredHeight.clamp(minHeight, maxHeight).toDouble();
 
         return Container(
           width: double.infinity,
