@@ -68,6 +68,22 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   void initState() {
     super.initState();
     _loadGallery();
+    _startRealtimeSync();
+  }
+
+  @override
+  void dispose() {
+    _strokesSub?.cancel();
+    _backgroundSub?.cancel();
+    _presenceSub?.cancel();
+    final uid = _auth.currentUser?.uid;
+    if (uid != null && uid.isNotEmpty) {
+      unawaited(_drawingService.removePresence(
+        houseId: widget.houseId,
+        uid: uid,
+      ));
+    }
+    super.dispose();
   }
 
   Future<void> _loadGallery() async {
