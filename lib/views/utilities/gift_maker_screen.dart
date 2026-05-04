@@ -1076,6 +1076,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
 
   Widget _buildGiftTypeCard(GiftType type) {
     final selected = type == _selectedType;
+    final colors = widget._giftColors(type);
     return _GiftTouchTile(
       onTap: () => setState(() {
         _selectedType = type;
@@ -1086,19 +1087,27 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          gradient: LinearGradient(
+            colors: selected
+                ? [colors.first, colors.last]
+                : [Colors.white, const Color(0xFFFFF7FB)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: selected
-                ? const Color(0xFFD81B60).withOpacity(0.4)
+                ? Colors.white.withOpacity(0.78)
                 : const Color(0xFFE5E7EB),
             width: selected ? 2 : 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: (selected ? colors.first : Colors.black).withOpacity(
+                selected ? 0.24 : 0.05,
+              ),
+              blurRadius: selected ? 22 : 12,
+              offset: Offset(0, selected ? 12 : 5),
             ),
           ],
         ),
@@ -1109,8 +1118,11 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               height: 82,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
+                color: Colors.white.withOpacity(selected ? 0.24 : 0.78),
                 borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.white.withOpacity(selected ? 0.34 : 0.9),
+                ),
               ),
               child: AnimatedScale(
                 scale: selected ? 1.06 : 1,
@@ -1134,7 +1146,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 17,
-                      color: const Color(0xFF111827),
+                      color: selected ? Colors.white : const Color(0xFF111827),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1144,7 +1156,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF6B7280),
+                      color: selected
+                          ? Colors.white.withOpacity(0.86)
+                          : const Color(0xFF6B7280),
                       fontSize: 12.5,
                       height: 1.3,
                     ),
@@ -1153,7 +1167,10 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: selected ? Colors.white : const Color(0xFF9CA3AF),
+            ),
           ],
         ),
       ),
