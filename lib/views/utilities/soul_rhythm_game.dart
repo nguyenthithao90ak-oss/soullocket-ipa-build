@@ -141,7 +141,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
           : _trackConfig.mixTitle;
   Uint8List? _menuLoopBytes;
   Uint8List? _gameLoopBytes;
-  bool _useCustomTrackAsset = true;
+  bool _useCustomTrackAsset = false;
   Uint8List? _customTrackBytes;
   Uint8List? _tapBytes;
   Uint8List? _perfectTapBytes;
@@ -600,7 +600,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
       masterGain: _trackConfig.gameGain,
     );
     _customTrackBytes = null;
-    _useCustomTrackAsset = true;
+    _useCustomTrackAsset = false;
     _tapBytes = _buildWaveBytes(
       [
         _tone(88, 24, 0.92),
@@ -919,9 +919,17 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
       if (await File(localPath).exists()) {
         debugPrint('Soul Rhythm: Using LOCAL track: $localPath');
         await _bgPlayer.play(DeviceFileSource(localPath));
-      } else {
-        debugPrint('Soul Rhythm: Using ASSET track: $_customTrackAssetPath');
-        await _bgPlayer.play(AssetSource(_customTrackAssetPath));
+        return;
+      }
+      final fallbackBytes = _gameState == 'PLAYING' ? _gameLoopBytes : _menuLoopBytes;
+      if (fallbackBytes != null && fallbackBytes.isNotEmpty) {
+        debugPrint('Soul Rhythm: Local track missing, using generated fallback.');
+        await _bgPlayer.play(
+          BytesSource(
+            fallbackBytes,
+            mimeType: 'audio/wav',
+          ),
+        );
       }
       return;
     }
