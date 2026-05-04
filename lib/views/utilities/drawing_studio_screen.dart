@@ -1395,16 +1395,43 @@ class _BackgroundChoice extends StatelessWidget {
             gradient: _gradientFor(id),
             border: Border.all(color: const Color(0xFFFFD5E5)),
           ),
-          child: Center(
-            child: Text(
-              label,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                color: id == 'night_stars' || id == 'blackboard'
-                    ? Colors.white
-                    : const Color(0xFFD81B60),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CustomPaint(
+                painter: _DrawingBackgroundPreviewPainter(id),
               ),
-            ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: SLRadius.lgAll,
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(
+                        id == 'night_stars' || id == 'blackboard' ? 0.22 : 0.08,
+                      ),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Text(
+                    label,
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w900,
+                      color: id == 'night_stars' || id == 'blackboard'
+                          ? Colors.white
+                          : const Color(0xFFD81B60),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
