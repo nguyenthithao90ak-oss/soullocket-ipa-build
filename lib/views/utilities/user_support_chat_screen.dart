@@ -335,28 +335,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     });
   }
 
-  Future<void> _startNewChat() async {
-    if (_ticketId == null) return;
-    final snapshot = await _db.ref('support_tickets/$_ticketId').get();
-    if (snapshot.exists) {
-      final ts = DateTime.now().millisecondsSinceEpoch;
-      await _db
-          .ref('support_tickets_history/$_ticketId/$ts')
-          .set(snapshot.value);
-      await _db.ref('support_tickets/$_ticketId').remove();
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _ticketStatus = 'new';
-      _selectedTopicId = null;
-      _lastPrefilledDraft = null;
-      _messages.clear();
-    });
-    _msgCtrl.clear();
-    _showGreeting();
-  }
-
   void _resetClosedTicketLocally() {
     setState(() {
       _ticketStatus = 'new';
