@@ -150,6 +150,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     );
   }
 
+  bool get _hasAnyStroke => _strokes.isNotEmpty || _realtimeStrokes.isNotEmpty;
+
   Future<void> _loadGallery() async {
     final items = await _drawingService.loadGallery(widget.houseId);
     if (!mounted) {
