@@ -30,147 +30,147 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
             child: StatefulBuilder(
               builder: (sheetContext, setSheetState) => SingleChildScrollView(
                 child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: SLColors.border,
-                        borderRadius: SLRadius.pillAll,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: SLColors.border,
+                          borderRadius: SLRadius.pillAll,
+                        ),
                       ),
                     ),
-                  ),
-                  SLSpacing.h12,
-                  _DiaryImagePickerTile(
-                    image: selectedImage,
-                    onPick: () async {
-                      final image = await ImagePickerRecoveryService.instance
-                          .pickImage(
-                        source: ImageSource.gallery,
-                        maxWidth: 1800,
-                        maxHeight: 1800,
-                        imageQuality: 88,
-                      );
-                      if (image == null) return;
-                      setSheetState(() => selectedImage = image);
-                    },
-                    onRemove: () => setSheetState(() => selectedImage = null),
-                  ),
-                  SLSpacing.h16,
-                  Text(
-                    'Thêm trang kỷ niệm mới',
-                    style: SLTheme.quicksand(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: SLColors.textPrimary,
+                    SLSpacing.h12,
+                    _DiaryImagePickerTile(
+                      image: selectedImage,
+                      onPick: () async {
+                        final image =
+                            await ImagePickerRecoveryService.instance.pickImage(
+                          source: ImageSource.gallery,
+                          maxWidth: 1800,
+                          maxHeight: 1800,
+                          imageQuality: 88,
+                        );
+                        if (image == null) return;
+                        setSheetState(() => selectedImage = image);
+                      },
+                      onRemove: () => setSheetState(() => selectedImage = null),
                     ),
-                  ),
-                  SLSpacing.h16,
-                  _DiaryInput(
-                    controller: titleCtrl,
-                    label: 'Tiêu đề',
-                    hintText: 'Ví dụ: Buổi tối xem phim cùng nhau',
-                  ),
-                  SLSpacing.h12,
-                  _DiaryInput(
-                    controller: memoryCtrl,
-                    label: 'Kỷ niệm',
-                    hintText: 'Viết vài dòng đáng nhớ...',
-                    maxLines: 4,
-                  ),
-                  SLSpacing.h12,
-                  _DiaryInput(
-                    controller: promptCtrl,
-                    label: 'Prompt',
-                    hintText: 'Một câu hỏi để gợi nhớ sâu hơn',
-                    maxLines: 2,
-                  ),
-                  SLSpacing.h16,
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isSaving
-                          ? null
-                          : () async {
-                              final navigator = Navigator.of(sheetContext);
-                              final title = titleCtrl.text.trim();
-                              final memory = memoryCtrl.text.trim();
-                              final prompt = promptCtrl.text.trim();
+                    SLSpacing.h16,
+                    Text(
+                      'Thêm trang kỷ niệm mới',
+                      style: SLTheme.quicksand(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: SLColors.textPrimary,
+                      ),
+                    ),
+                    SLSpacing.h16,
+                    _DiaryInput(
+                      controller: titleCtrl,
+                      label: 'Tiêu đề',
+                      hintText: 'Ví dụ: Buổi tối xem phim cùng nhau',
+                    ),
+                    SLSpacing.h12,
+                    _DiaryInput(
+                      controller: memoryCtrl,
+                      label: 'Kỷ niệm',
+                      hintText: 'Viết vài dòng đáng nhớ...',
+                      maxLines: 4,
+                    ),
+                    SLSpacing.h12,
+                    _DiaryInput(
+                      controller: promptCtrl,
+                      label: 'Prompt',
+                      hintText: 'Một câu hỏi để gợi nhớ sâu hơn',
+                      maxLines: 2,
+                    ),
+                    SLSpacing.h16,
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isSaving
+                            ? null
+                            : () async {
+                                final navigator = Navigator.of(sheetContext);
+                                final title = titleCtrl.text.trim();
+                                final memory = memoryCtrl.text.trim();
+                                final prompt = promptCtrl.text.trim();
 
-                              if (title.isEmpty || memory.isEmpty) {
-                                return;
-                              }
-                              if (_houseId == null || _houseId!.isEmpty) {
-                                return;
-                              }
-
-                              setState(() => _isSaving = true);
-                              try {
-                                var imageUrl = '';
-                                final image = selectedImage;
-                                if (image != null) {
-                                  final upload = await _storageService
-                                      .uploadGiftImage(_houseId!, image);
-                                  imageUrl = upload?.downloadUrl ?? '';
-                                }
-                                await _creativeDiaryService.saveCreativePage(
-                                  houseId: _houseId!,
-                                  content: memory,
-                                  metadata: {
-                                    'title': title,
-                                    if (imageUrl.isNotEmpty)
-                                      'imageUrl': imageUrl,
-                                    'prompt': prompt.isEmpty
-                                        ? 'Hãy thêm một chi tiết nhỏ để ghi nhớ lâu hơn.'
-                                        : prompt,
-                                  },
-                                );
-
-                                if (!mounted) {
+                                if (title.isEmpty || memory.isEmpty) {
                                   return;
                                 }
-                                navigator.pop();
-                                Future<void>.delayed(
-                                  const Duration(milliseconds: 250),
-                                  () {
-                                    if (!mounted || _pages.isEmpty) {
-                                      return;
-                                    }
-                                    _pageController.animateToPage(
-                                      0,
-                                      duration:
-                                          const Duration(milliseconds: 260),
-                                      curve: Curves.easeOut,
-                                    );
-                                  },
-                                );
-                              } finally {
-                                if (mounted) {
-                                  setState(() => _isSaving = false);
+                                if (_houseId == null || _houseId!.isEmpty) {
+                                  return;
                                 }
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: SLColors.primaryActive,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: SLRadius.lgAll,
+
+                                setState(() => _isSaving = true);
+                                try {
+                                  var imageUrl = '';
+                                  final image = selectedImage;
+                                  if (image != null) {
+                                    final upload = await _storageService
+                                        .uploadGiftImage(_houseId!, image);
+                                    imageUrl = upload?.downloadUrl ?? '';
+                                  }
+                                  await _creativeDiaryService.saveCreativePage(
+                                    houseId: _houseId!,
+                                    content: memory,
+                                    metadata: {
+                                      'title': title,
+                                      if (imageUrl.isNotEmpty)
+                                        'imageUrl': imageUrl,
+                                      'prompt': prompt.isEmpty
+                                          ? 'Hãy thêm một chi tiết nhỏ để ghi nhớ lâu hơn.'
+                                          : prompt,
+                                    },
+                                  );
+
+                                  if (!mounted) {
+                                    return;
+                                  }
+                                  navigator.pop();
+                                  Future<void>.delayed(
+                                    const Duration(milliseconds: 250),
+                                    () {
+                                      if (!mounted || _pages.isEmpty) {
+                                        return;
+                                      }
+                                      _pageController.animateToPage(
+                                        0,
+                                        duration:
+                                            const Duration(milliseconds: 260),
+                                        curve: Curves.easeOut,
+                                      );
+                                    },
+                                  );
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => _isSaving = false);
+                                  }
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: SLColors.primaryActive,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: SLRadius.lgAll,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        _isSaving ? 'Đang lưu...' : 'Lưu vào sổ tay',
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
+                        child: Text(
+                          _isSaving ? 'Đang lưu...' : 'Lưu vào sổ tay',
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
                 ),
               ),
             ),
@@ -251,7 +251,8 @@ class _DiaryImagePickerTile extends StatelessWidget {
               ),
             ),
             if (image == null)
-              const Icon(Icons.chevron_right_rounded, color: SLColors.textTertiary)
+              const Icon(Icons.chevron_right_rounded,
+                  color: SLColors.textTertiary)
             else
               IconButton(
                 onPressed: onRemove,
