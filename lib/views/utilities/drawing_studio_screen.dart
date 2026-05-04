@@ -378,6 +378,76 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     return byteData.buffer.asUint8List();
   }
 
+  Future<Uint8List> _captureStickerPng() async {
+    final canvasSize = _canvasKey.currentContext?.size;
+    if (canvasSize == null || canvasSize.width <= 0 || canvasSize.height <= 0) {
+      throw StateError('Không tìm thấy vùng vẽ.');
+    }
+    final strokes = _allVisibleStrokes;
+    if (strokes.isEmpty) {
+      throw StateError('Chưa có nét vẽ để cắt sticker.');
+    }
+
+    final bounds = _strokeBounds(strokes, canvasSize);
+    if (bounds == null || bounds.isEmpty) {
+      throw StateError('Chưa có nét vẽ để cắt sticker.');
+    }
+
+    final maxStrokeWidth = strokes.fold<double>(
+      0,
+      (maxWidth, stroke) => math.max(maxWidth, stroke.width),
+    );
+    final padding = math.max(28.0, maxStrokeWidth + 22);
+    final crop = Rect.fromLTRB(
+      (bounds.left - padding).clamp(0.0, canvasSize.width),
+      (bounds.top - padding).clamp(0.0, canvasSize.height),
+      (bounds.right + padding).clamp(0.0, canvasSize.width),
+      (bounds.bottom + padding).clamp(0.0, canvasSize.height),
+    );
+    final outputSize = Size(
+      math.max(96, crop.width).toDouble(),
+      math.max(96, crop.height).toDouble(),
+    );
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Offset.zero & outputSize);
+    canvas.translate(-crop.left, -crop.top);
+    _StickerPainter(strokes: strokes).paint(canvas, canvasSize);
+    final picture = recorder.endRecording();
+    final pixelRatio = math.min(MediaQuery.devicePixelRatioOf(context) * 2, 4.0);
+    final image = await picture.toImage(
+      (outputSize.width * pixelRatio).ceil(),
+      (outputSize.height * pixelRatio).ceil(),
+    );
+    picture.dispose();
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    if (byteData == null) {
+      throw StateError('Không xuất được sticker.');
+    }
+    return byteData.buffer.asUint8List();
+  }
+
+  Rect? _strokeBounds(List<_DrawStroke> strokes, Size canvasSize) {
+    double? left;
+    double? top;
+    double? right;
+    double? bottom;
+    for (final stroke in strokes) {
+      final points = stroke.resolvedPoints(canvasSize);
+      for (final point in points) {
+        left = left == null ? point.dx : math.min(left, point.dx);
+        top = top == null ? point.dy : math.min(top, point.dy);
+        right = right == null ? point.dx : math.max(right, point.dx);
+        bottom = bottom == null ? point.dy : math.max(bottom, point.dy);
+      }
+    }
+    if (left == null || top == null || right == null || bottom == null) {
+      return null;
+    }
+    return Rect.fromLTRB(left, top, right, bottom);
+  }
+
   Future<void> _selectBackground(String id) async {
     final uid = _auth.currentUser?.uid ?? '';
     setState(() => _backgroundId = id);
