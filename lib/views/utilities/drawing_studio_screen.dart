@@ -1764,7 +1764,6 @@ class _DrawingBackgroundPreviewPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const <_DrawStroke>[];
     _DrawingCanvasPainter(
       backgroundId: backgroundId,
       strokes: const <_DrawStroke>[],
