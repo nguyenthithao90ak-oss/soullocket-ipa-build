@@ -565,12 +565,22 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
   Future<void> _refreshUrlsIfNeeded() async {
     for (final photo in widget.rowPhotos) {
       if (_needsSignedRefresh(photo)) {
-        await widget.onEnsurePhotoUrl(photo);
-        if (mounted) {
-          setState(() {});
-        }
+        await _refreshPhotoUrl(photo);
       }
     }
+  }
+
+  Future<void> _refreshPhotoUrl(Map<String, dynamic> photo) async {
+    await widget.onEnsurePhotoUrl(photo);
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _refreshStalePhotoUrl(Map<String, dynamic> photo) async {
+    photo['url'] = '';
+    photo['urlExpiresAt'] = 0;
+    await _refreshPhotoUrl(photo);
   }
 
   bool _needsSignedRefresh(Map<String, dynamic> photo) {
