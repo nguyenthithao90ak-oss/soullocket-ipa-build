@@ -213,60 +213,6 @@ class MemoryShareService {
         'memory-share?token=${Uri.encodeQueryComponent(token)}';
   }
 
-  Future<MemoryShareResult> _createDirectShareLink({
-    required String houseId,
-    required List<Map<String, dynamic>> photos,
-    required int expiryDays,
-  }) async {
-    final resolvedExpiryDays = expiryDays.clamp(1, 183).toInt();
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final token = _generateShareToken();
-    final expiresAt = now + Duration(days: resolvedExpiryDays).inMilliseconds;
-    final uid = _auth.currentUser?.uid.trim() ?? '';
-    final share = <String, dynamic>{
-      'houseId': houseId,
-      if (uid.isNotEmpty) 'createdBy': uid,
-      'createdAt': now,
-      'expiresAt': expiresAt,
-      'ttlDays': resolvedExpiryDays,
-      'revoked': false,
-      'photoCount': photos.length,
-      'title': defaultShareTitle,
-      'description': defaultShareDescription,
-      'brandLabel': defaultBrandLabel,
-      'theme': defaultTheme,
-      'photos': photos,
-    };
-    await _database.ref().update({
-      'memory_shares/$token': share,
-      'houses/$houseId/memoryShares/$token': <String, dynamic>{
-        'createdAt': now,
-        'expiresAt': expiresAt,
-        'ttlDays': resolvedExpiryDays,
-        'photoCount': photos.length,
-        'revoked': false,
-        if (uid.isNotEmpty) 'createdBy': uid,
-      },
-    });
-    return MemoryShareResult(
-      token: token,
-      url: _buildPublicUrl(token, ''),
-      expiresAt: expiresAt,
-      photoCount: photos.length,
-    );
-  }
-
-  String _generateShareToken() {
-    const chars =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-    final random = Random.secure();
-    return List<String>.generate(
-      24,
-      (_) => chars[random.nextInt(chars.length)],
-      growable: false,
-    ).join();
-  }
-
   Future<bool> _warmUpAuthToken({bool forceRefresh = false}) async {
     final user = _auth.currentUser;
     if (user == null) {
