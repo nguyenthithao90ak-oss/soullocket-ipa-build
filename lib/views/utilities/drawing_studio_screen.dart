@@ -1757,6 +1757,26 @@ class _DrawStroke {
   });
 }
 
+class _DrawingBackgroundPreviewPainter extends CustomPainter {
+  final String backgroundId;
+
+  const _DrawingBackgroundPreviewPainter(this.backgroundId);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const <_DrawStroke>[];
+    _DrawingCanvasPainter(
+      backgroundId: backgroundId,
+      strokes: const <_DrawStroke>[],
+    ).paint(canvas, size);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DrawingBackgroundPreviewPainter oldDelegate) {
+    return oldDelegate.backgroundId != backgroundId;
+  }
+}
+
 class _DrawingCanvasPainter extends CustomPainter {
   final String backgroundId;
   final List<_DrawStroke> strokes;
