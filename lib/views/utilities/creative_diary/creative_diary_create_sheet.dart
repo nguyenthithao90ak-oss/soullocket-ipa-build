@@ -6,7 +6,7 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
     final titleCtrl = TextEditingController();
     final memoryCtrl = TextEditingController();
     final promptCtrl = TextEditingController();
-    final imageCtrl = TextEditingController();
+    XFile? selectedImage;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -27,8 +27,9 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
               borderRadius:
                   BorderRadius.vertical(top: Radius.circular(SLRadius.xl)),
             ),
-            child: SingleChildScrollView(
-              child: Column(
+            child: StatefulBuilder(
+              builder: (sheetContext, setSheetState) => SingleChildScrollView(
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -43,10 +44,20 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                     ),
                   ),
                   SLSpacing.h12,
-                  _DiaryInput(
-                    controller: imageCtrl,
-                    label: 'Ảnh đính kèm',
-                    hintText: 'Dán link ảnh nếu muốn trang có ảnh riêng',
+                  _DiaryImagePickerTile(
+                    image: selectedImage,
+                    onPick: () async {
+                      final image = await ImagePickerRecoveryService.instance
+                          .pickImage(
+                        source: ImageSource.gallery,
+                        maxWidth: 1800,
+                        maxHeight: 1800,
+                        imageQuality: 88,
+                      );
+                      if (image == null) return;
+                      setSheetState(() => selectedImage = image);
+                    },
+                    onRemove: () => setSheetState(() => selectedImage = null),
                   ),
                   SLSpacing.h16,
                   Text(
@@ -88,7 +99,6 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                               final title = titleCtrl.text.trim();
                               final memory = memoryCtrl.text.trim();
                               final prompt = promptCtrl.text.trim();
-                              final imageUrl = imageCtrl.text.trim();
 
                               if (title.isEmpty || memory.isEmpty) {
                                 return;
@@ -99,6 +109,13 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
 
                               setState(() => _isSaving = true);
                               try {
+                                var imageUrl = '';
+                                final image = selectedImage;
+                                if (image != null) {
+                                  final upload = await _storageService
+                                      .uploadGiftImage(_houseId!, image);
+                                  imageUrl = upload?.downloadUrl ?? '';
+                                }
                                 await _creativeDiaryService.saveCreativePage(
                                   houseId: _houseId!,
                                   content: memory,
@@ -154,6 +171,7 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                     ),
                   ),
                 ],
+                ),
               ),
             ),
           ),
