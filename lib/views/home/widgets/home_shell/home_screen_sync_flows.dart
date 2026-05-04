@@ -137,6 +137,9 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
               : settings.homeBlockTone.trim(),
           liteMode: currentUi.liteMode,
           graphicsQualityKey: currentUi.graphicsQualityKey,
+          transparentMode: source.containsKey('transparentMode')
+              ? settings.transparentMode
+              : currentUi.transparentMode,
           customBackgroundUrl: source.containsKey('customBackgroundUrl')
               ? settings.customBackgroundUrl.trim()
               : currentUi.customBackgroundUrl,
@@ -151,6 +154,7 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
             nextUi.countdownBottomLabel != currentUi.countdownBottomLabel ||
             nextUi.fontKey != currentUi.fontKey ||
             nextUi.homeBlockToneKey != currentUi.homeBlockToneKey ||
+            nextUi.transparentMode != currentUi.transparentMode ||
             nextUi.customBackgroundUrl != currentUi.customBackgroundUrl;
         if (shouldSync) {
           UiPrefs.saveState(nextUi);
