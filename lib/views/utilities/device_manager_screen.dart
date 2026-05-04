@@ -23,6 +23,8 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
   bool _isLoading = true;
   String _currentDeviceId = '';
   bool _currentDeviceCanManageDevices = false;
+  bool _securityDeviceSignalsAllowed = true;
+  String _loadMessage = '';
 
   @override
   void initState() {
@@ -43,12 +45,37 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     // Auto register current device when opening screen
     // This ensures current device info and IP are up to date and listed
     try {
+      _securityDeviceSignalsAllowed = await _svc.isSecurityDeviceSignalsAllowed();
       await _svc.registerCurrentDevice();
     } catch (e) {
       debugPrint('Error auto registering device: $e');
+      _loadMessage = 'Chưa thể đồng bộ thiết bị lên máy chủ.';
     }
 
-    final devices = await _svc.loadDevices();
+    List<Map<String, dynamic>> devices = const [];
+    try {
+      devices = await _svc.loadDevices();
+    } catch (e) {
+      debugPrint('Load devices failed: $e');
+      _loadMessage = 'Chưa thể tải danh sách thiết bị từ máy chủ.';
+    }
+    if (devices.isEmpty) {
+      final currentSnapshot = await _svc.getCurrentDeviceSnapshot();
+      devices = [
+        {
+          ...currentSnapshot,
+          'deviceId': _currentDeviceId,
+          'status': _securityDeviceSignalsAllowed ? 'pending' : 'local_only',
+          'last_seen': DateTime.now().millisecondsSinceEpoch,
+          'is_admin': false,
+        }
+      ];
+      _loadMessage = _securityDeviceSignalsAllowed
+          ? (_loadMessage.isNotEmpty
+              ? _loadMessage
+              : 'Chưa có dữ liệu máy chủ, đang hiển thị thiết bị hiện tại.')
+          : 'Bạn chưa bật quyền tín hiệu bảo mật thiết bị nên danh sách chỉ hiển thị trên máy này.';
+    }
     final currentDevice = devices.cast<Map<String, dynamic>?>().firstWhere(
           (device) => device?['deviceId'] == _currentDeviceId,
           orElse: () => null,
@@ -152,6 +179,8 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         return Colors.red;
       case 'pending':
         return Colors.orange;
+      case 'local_only':
+        return Colors.blueGrey;
       default:
         return Colors.grey;
     }
@@ -176,6 +205,8 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         final remainingHours =
             (remainingMs / Duration.millisecondsPerHour).ceil();
         return 'Còn $remainingHours giờ sẽ được duyệt';
+      case 'local_only':
+        return 'Chỉ trên máy này';
       default:
         return 'Không rõ';
     }
@@ -228,7 +259,6 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(color: Color(0xFFD81B60)))
-            : _devices.isEmpty
                 ? _buildEmpty()
                 : _buildList(),
       ),
@@ -257,9 +287,12 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
   Widget _buildList() {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 100, 16, 24),
-      itemCount: _devices.length,
+      itemCount: _devices.length + (_loadMessage.isNotEmpty ? 1 : 0),
       itemBuilder: (context, i) {
-        final device = _devices[i];
+        if (_loadMessage.isNotEmpty && i == 0) {
+          return _buildNoticeCard();
+        }
+        final device = _devices[i - (_loadMessage.isNotEmpty ? 1 : 0)];
         final status = device['status'] as String?;
         final id = device['deviceId'] as String? ?? '';
         final isMe = id == _currentDeviceId;
