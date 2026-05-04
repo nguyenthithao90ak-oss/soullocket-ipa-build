@@ -345,9 +345,13 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       body: Column(
         children: [
           SLSpacing.h16,
+          _buildTemplateBar(),
+          SLSpacing.h8,
           _buildLayoutBar(),
           SLSpacing.h8,
           _buildRatioBar(),
+          SLSpacing.h8,
+          _buildCaptionField(),
           SLSpacing.h16,
           Expanded(
             child: Padding(
@@ -460,6 +464,97 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTemplateBar() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Row(
+        children: List.generate(_collageTemplates.length, (index) {
+          final template = _collageTemplates[index];
+          final selected = _selectedTemplate == index;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedTemplate = index),
+            child: Container(
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: selected ? template.gradient : null,
+                color: selected ? null : Colors.white,
+                borderRadius: SLRadius.pillAll,
+                border: Border.all(
+                  color: selected ? Colors.white : const Color(0xFFE5E7EB),
+                ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: template.accent.withOpacity(0.22),
+                          blurRadius: 16,
+                          offset: const Offset(0, 7),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    template.icon,
+                    size: 16,
+                    color: selected ? Colors.white : template.accent,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    template.name,
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w900,
+                      color: selected ? Colors.white : const Color(0xFF475569),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildCaptionField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: TextField(
+        controller: _captionController,
+        maxLength: 56,
+        onChanged: (_) => setState(() {}),
+        decoration: InputDecoration(
+          counterText: '',
+          prefixIcon: const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60)),
+          hintText: 'Viết caption cho kỷ niệm...',
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: Color(0xFFF8D7E2)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: Color(0xFFF8D7E2)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.4),
+          ),
+        ),
+        style: SLTheme.quicksand(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          color: const Color(0xFF334155),
+        ),
       ),
     );
   }
