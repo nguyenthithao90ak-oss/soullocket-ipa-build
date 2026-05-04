@@ -534,12 +534,6 @@ class DiaryMemoryController extends ChangeNotifier {
     if (existingUrl.isNotEmpty && !_isMemoryUrlExpired(item)) {
       return;
     }
-    if (FirebaseAuth.instance.currentUser == null) {
-      debugPrint(
-        '[DiaryMemory] skip signed url refresh: unauthenticated id=$memoryId',
-      );
-      return;
-    }
     debugPrint(
       '[DiaryMemory] refreshing signed url id=$memoryId urlEmpty=${existingUrl.isEmpty}',
     );
