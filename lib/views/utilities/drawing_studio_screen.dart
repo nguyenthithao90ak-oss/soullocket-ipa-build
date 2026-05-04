@@ -1037,7 +1037,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed:
-                          _strokes.isEmpty || _isSaving ? null : _saveDrawing,
+                          !_hasAnyStroke || _isSaving ? null : _saveDrawing,
                       icon: _isSaving
                           ? const SizedBox(
                               width: 16,
