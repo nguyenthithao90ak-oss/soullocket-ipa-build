@@ -1071,7 +1071,6 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
 
   Widget _buildGiftTypeCard(GiftType type) {
     final selected = type == _selectedType;
-    final foreground = widget._giftForeground(type);
     return _GiftTouchTile(
       onTap: () => setState(() {
         _selectedType = type;
