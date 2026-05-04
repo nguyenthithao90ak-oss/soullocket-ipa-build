@@ -739,6 +739,21 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           ),
           SLSpacing.h16,
           Text(
+            'Tỉ lệ khung vẽ',
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFFD81B60),
+            ),
+          ),
+          SLSpacing.h8,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _ratioPresets.map(_buildRatioChip).toList(),
+          ),
+          SLSpacing.h16,
+          Text(
             'Bảng màu',
             style: SLTheme.quicksand(
               fontSize: 13,
