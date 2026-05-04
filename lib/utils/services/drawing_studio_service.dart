@@ -92,11 +92,157 @@ class DrawingStudioGalleryItem {
   }
 }
 
+class DrawingStudioBackground {
+  const DrawingStudioBackground({
+    required this.id,
+    this.type = 'template',
+    this.imageUrl = '',
+    this.storagePath = '',
+    this.updatedAt = 0,
+    this.updatedBy = '',
+  });
+
+  final String id;
+  final String type;
+  final String imageUrl;
+  final String storagePath;
+  final int updatedAt;
+  final String updatedBy;
+
+  static const fallback = DrawingStudioBackground(id: 'paper_grid');
+
+  factory DrawingStudioBackground.fromMap(Map<dynamic, dynamic>? map) {
+    if (map == null) return fallback;
+    final id = (map['id'] ?? '').toString().trim();
+    return DrawingStudioBackground(
+      id: id.isEmpty ? fallback.id : id,
+      type: (map['type'] ?? 'template').toString().trim(),
+      imageUrl: (map['imageUrl'] ?? '').toString().trim(),
+      storagePath: (map['storagePath'] ?? '').toString().trim(),
+      updatedAt: _readInt(map['updatedAt']),
+      updatedBy: (map['updatedBy'] ?? '').toString().trim(),
+    );
+  }
+
+  Map<String, dynamic> toMap({required String updatedBy}) {
+    return {
+      'id': id,
+      'type': type,
+      'imageUrl': imageUrl,
+      'storagePath': storagePath,
+      'updatedBy': updatedBy,
+      'updatedAt': ServerValue.timestamp,
+    };
+  }
+}
+
+class DrawingStudioStroke {
+  const DrawingStudioStroke({
+    required this.id,
+    required this.authorUid,
+    required this.authorName,
+    required this.colorValue,
+    required this.width,
+    required this.points,
+    this.tool = 'pen',
+    this.createdAt = 0,
+    this.endedAt = 0,
+  });
+
+  final String id;
+  final String authorUid;
+  final String authorName;
+  final int colorValue;
+  final double width;
+  final List<List<double>> points;
+  final String tool;
+  final int createdAt;
+  final int endedAt;
+
+  factory DrawingStudioStroke.fromMap(String id, Map<dynamic, dynamic>? map) {
+    final rawPoints = map?['points'];
+    final points = <List<double>>[];
+    if (rawPoints is List) {
+      for (final point in rawPoints) {
+        if (point is List && point.length >= 2) {
+          final x = _readDouble(point[0]).clamp(0.0, 1.0).toDouble();
+          final y = _readDouble(point[1]).clamp(0.0, 1.0).toDouble();
+          points.add([x, y]);
+        }
+      }
+    }
+
+    return DrawingStudioStroke(
+      id: id,
+      authorUid: (map?['authorUid'] ?? '').toString().trim(),
+      authorName: (map?['authorName'] ?? '').toString().trim(),
+      colorValue: _readInt(map?['color'], fallback: 0xFFFF3B4D),
+      width: _readDouble(map?['width'], fallback: 8).clamp(1.0, 40.0),
+      tool: (map?['tool'] ?? 'pen').toString().trim(),
+      points: points,
+      createdAt: _readInt(map?['createdAt']),
+      endedAt: _readInt(map?['endedAt']),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'authorUid': authorUid,
+      'authorName': authorName,
+      'color': colorValue,
+      'width': width,
+      'tool': tool,
+      'points': points,
+      'createdAt': createdAt,
+      'endedAt': ServerValue.timestamp,
+    };
+  }
+}
+
+class DrawingStudioPresence {
+  const DrawingStudioPresence({
+    required this.uid,
+    required this.name,
+    required this.isDrawing,
+    required this.colorValue,
+    required this.updatedAt,
+  });
+
+  final String uid;
+  final String name;
+  final bool isDrawing;
+  final int colorValue;
+  final int updatedAt;
+
+  factory DrawingStudioPresence.fromMap(String uid, Map<dynamic, dynamic>? map) {
+    return DrawingStudioPresence(
+      uid: uid,
+      name: (map?['name'] ?? '').toString().trim(),
+      isDrawing: map?['isDrawing'] == true,
+      colorValue: _readInt(map?['color'], fallback: 0xFFFF3B4D),
+      updatedAt: _readInt(map?['updatedAt']),
+    );
+  }
+}
+
+int _readInt(Object? value, {int fallback = 0}) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? fallback;
+}
+
+double _readDouble(Object? value, {double fallback = 0}) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? fallback;
+}
+
 class DrawingStudioService {
   DrawingStudioService({
-    Object? database,
+    FirebaseDatabase? database,
     Object? storageService,
-  });
+  }) : _db = database ?? FirebaseDatabase.instance;
+
+  final FirebaseDatabase _db;
 
   static const int maxGalleryItems = 20;
   static const String _galleryPrefsKey = 'drawing_studio_gallery_v2';
