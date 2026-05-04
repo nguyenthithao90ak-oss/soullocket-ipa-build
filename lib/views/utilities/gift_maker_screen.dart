@@ -676,13 +676,6 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
     );
   }
 
-  Future<void> _copyGiftLink(GiftData gift) async {
-    final link = _deeplinkService.generateGiftLink(gift);
-    await Clipboard.setData(ClipboardData(text: link));
-    if (!mounted) return;
-    _showSnack('Đã copy link quà');
-  }
-
   void _openGiftPreview(GiftData gift, {required bool markOpened}) {
     showDialog<void>(
       context: context,
