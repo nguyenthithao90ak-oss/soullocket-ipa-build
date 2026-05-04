@@ -86,6 +86,70 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     super.dispose();
   }
 
+  void _startRealtimeSync() {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null || uid.isEmpty || widget.houseId.trim().isEmpty) {
+      return;
+    }
+
+    _isSyncOnline = true;
+    unawaited(_updatePresence(isDrawing: false));
+
+    _strokesSub = _drawingService.streamStrokes(widget.houseId).listen((strokes) {
+      if (!mounted) return;
+      setState(() {
+        _realtimeStrokes
+          ..clear()
+          ..addEntries(
+            strokes.map(
+              (stroke) => MapEntry(stroke.id, _strokeFromRealtime(stroke)),
+            ),
+          );
+        _localPendingStrokeIds.removeWhere(_realtimeStrokes.containsKey);
+      });
+    });
+
+    _backgroundSub =
+        _drawingService.streamBackground(widget.houseId).listen((background) {
+      if (!mounted) return;
+      setState(() => _backgroundId = background.id);
+    });
+
+    _presenceSub = _drawingService.streamPresence(widget.houseId).listen((items) {
+      if (!mounted) return;
+      setState(() {
+        _presence = items.where((item) => item.uid != uid).toList();
+      });
+    });
+  }
+
+  Future<void> _updatePresence({required bool isDrawing}) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null || uid.isEmpty || widget.houseId.trim().isEmpty) {
+      return;
+    }
+    await _drawingService.updatePresence(
+      houseId: widget.houseId,
+      uid: uid,
+      name: widget.myName,
+      isDrawing: isDrawing,
+      colorValue: _currentColor.value,
+    );
+  }
+
+  _DrawStroke _strokeFromRealtime(DrawingStudioStroke stroke) {
+    return _DrawStroke(
+      id: stroke.id,
+      authorUid: stroke.authorUid,
+      color: Color(stroke.colorValue),
+      width: stroke.width,
+      points: stroke.points
+          .map((point) => Offset(point[0], point[1]))
+          .toList(growable: false),
+      normalized: true,
+    );
+  }
+
   Future<void> _loadGallery() async {
     final items = await _drawingService.loadGallery(widget.houseId);
     if (!mounted) {
