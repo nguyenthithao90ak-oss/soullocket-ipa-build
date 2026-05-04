@@ -1080,6 +1080,43 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   ),
                 ],
               ),
+              SLSpacing.h8,
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: !_hasAnyStroke || _isSavingSticker
+                          ? null
+                          : _saveStickerToGallery,
+                      icon: _isSavingSticker
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.auto_awesome_rounded),
+                      label: Text(
+                        _isSavingSticker ? 'Đang cắt...' : 'Cắt viền sticker',
+                      ),
+                      style: _primaryButtonStyle(),
+                    ),
+                  ),
+                  SLSpacing.w8,
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: !_hasAnyStroke || _isSavingToDevice || kIsWeb
+                          ? null
+                          : _saveStickerToDevice,
+                      icon: const Icon(Icons.cut_rounded),
+                      label: const Text('Lưu sticker'),
+                      style: _secondaryButtonStyle(),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         );
