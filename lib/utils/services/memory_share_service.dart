@@ -92,6 +92,20 @@ class MemoryShareService {
   final FirebaseFunctions _functions;
   final FirebaseAuth _auth;
 
+  Future<MemoryLimits> fetchLimits() async {
+    try {
+      final response = await _callWithAuthAndAppCheckRetry(() {
+        final callable = _functions.httpsCallable('getMemoryLimits');
+        return callable.call();
+      });
+      final raw = response.data;
+      if (raw is Map) {
+        return MemoryLimits.fromMap(raw);
+      }
+    } catch (_) {}
+    return fallbackMemoryLimits;
+  }
+
   Future<MemoryShareResult> createShareLink({
     required String houseId,
     required List<Map<String, dynamic>> photos,
