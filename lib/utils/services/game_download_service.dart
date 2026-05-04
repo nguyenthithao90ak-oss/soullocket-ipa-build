@@ -65,8 +65,12 @@ class GameDownloadService extends ChangeNotifier {
   Future<bool> isGameDownloaded(String gameId) async {
     final config = _gameConfigs[gameId];
     final prefs = await SharedPreferences.getInstance();
+    final savedStatus = prefs.getBool('game_downloaded_$gameId') ?? false;
+    if (savedStatus) {
+      return true;
+    }
     if (config == null || config.relativePaths.isEmpty) {
-      return prefs.getBool('game_downloaded_$gameId') ?? false;
+      return false;
     }
 
     final directory = await getApplicationDocumentsDirectory();
@@ -77,7 +81,8 @@ class GameDownloadService extends ChangeNotifier {
       }
     }
 
-    return prefs.getBool('game_downloaded_$gameId') ?? false;
+    await prefs.setBool('game_downloaded_$gameId', true);
+    return true;
   }
 
   Future<void> downloadGame(String gameId) async {
