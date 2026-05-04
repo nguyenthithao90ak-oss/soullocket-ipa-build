@@ -581,7 +581,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         aiReply = await AiCounselorService()
             .callTextGeneration(
               'Người dùng vừa gửi tin nhắn hỗ trợ Admin: $userText\n'
-              'Hãy trả lời như trợ lý hỗ trợ SoulLocket. Đưa ra hướng dẫn tạm thời ngắn gọn, không thay thế Admin, tối đa 4 câu.',
+                  'Hãy trả lời như trợ lý hỗ trợ SoulLocket. Đưa ra hướng dẫn tạm thời ngắn gọn, không thay thế Admin, tối đa 4 câu.',
               'Bạn là trợ lý AI lễ phép, cực kỳ ngắn gọn của SoulLocket.',
             )
             .timeout(const Duration(seconds: 6));
