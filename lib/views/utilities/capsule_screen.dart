@@ -219,6 +219,28 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       initialDate: _unlockDate ?? now.add(const Duration(days: 1)),
       firstDate: now,
       lastDate: DateTime(now.year + 10),
+      helpText: 'Chọn ngày mở thư',
+      cancelText: 'Hủy',
+      confirmText: 'Chọn ngày này',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: _buttonFill,
+              onPrimary: Colors.white,
+              surface: Color(0xFFFFF7FB),
+              onSurface: Color(0xFF2B1F66),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: _buttonFill,
+                textStyle: SLTheme.quicksand(fontWeight: FontWeight.w900),
+              ),
+            ),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
     if (picked != null && picked != _unlockDate) {
       setState(() {
