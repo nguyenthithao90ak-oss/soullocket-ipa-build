@@ -1007,7 +1007,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         const SizedBox(height: 16),
         _buildLinkPromiseCard(),
         const SizedBox(height: 24),
-        Row(
+        Offstage(
+          offstage: true,
           children: [
             Expanded(
               child: OutlinedButton.icon(
