@@ -402,7 +402,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                           )
                         : const SizedBox.shrink(),
                   ),
-                  if (hasPages)
+                  if (false && hasPages)
                     Padding(
                       padding: EdgeInsets.fromLTRB(
                         compact ? 14 : 16,
