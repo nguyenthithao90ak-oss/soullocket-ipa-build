@@ -841,6 +841,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
           ),
       ],
     );
+  }
 
   Widget _gap({double? width, double? height}) {
     return SizedBox(width: width, height: height);
