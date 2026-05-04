@@ -259,6 +259,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(color: Color(0xFFD81B60)))
+            : _devices.isEmpty
                 ? _buildEmpty()
                 : _buildList(),
       ),
