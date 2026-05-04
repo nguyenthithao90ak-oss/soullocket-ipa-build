@@ -842,6 +842,27 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       ],
     );
 
+  Widget _gap({double? width, double? height}) {
+    return SizedBox(width: width, height: height);
+  }
+
+  Widget _buildMosaicGrid(_CollageTemplate template) {
+    final count = _selectedLayout.clamp(1, _images.length).clamp(1, _maxImages);
+    final columns = count <= 4 ? 2 : 3;
+    return GridView.builder(
+      padding: EdgeInsets.zero,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        crossAxisSpacing: template.gap,
+        mainAxisSpacing: template.gap,
+        childAspectRatio: count == 5 ? 0.82 : 1,
+      ),
+      itemCount: count,
+      itemBuilder: (context, index) => _buildImageTile(index),
+    );
+  }
+
   Widget _buildImageTile(int index) {
     if (index >= _images.length) {
       return Container(
