@@ -888,6 +888,51 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     );
   }
 
+  Widget _buildCanvasStatusBar() {
+    final partnerDrawing = _presence.any((item) => item.isDrawing);
+    final statusText = partnerDrawing
+        ? '${_presence.firstWhere((item) => item.isDrawing).name.isEmpty ? 'Người kia' : _presence.firstWhere((item) => item.isDrawing).name} đang vẽ...'
+        : _isSyncOnline
+            ? 'Đồng bộ 2 người đang bật • ${_presence.length} người kia online'
+            : 'Chạm 2 lần vào khung để khóa cuộn khi cần.';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: partnerDrawing || _isCanvasLocked
+            ? const Color(0xFFFFF2F7)
+            : const Color(0xFFFFFAFC),
+        borderRadius: SLRadius.lgAll,
+        border: Border.all(color: const Color(0xFFF3D8E3)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            partnerDrawing
+                ? Icons.draw_rounded
+                : _isCanvasLocked
+                    ? Icons.lock_rounded
+                    : Icons.sync_rounded,
+            size: 18,
+            color: const Color(0xFFD81B60),
+          ),
+          SLSpacing.w8,
+          Expanded(
+            child: Text(
+              _isCanvasLocked ? 'Khung vẽ đang khóa cuộn. $statusText' : statusText,
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF8A5B76),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   ButtonStyle _primaryButtonStyle() {
     return ElevatedButton.styleFrom(
       backgroundColor: const Color(0xFFD81B60),
