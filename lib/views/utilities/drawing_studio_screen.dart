@@ -1538,10 +1538,98 @@ class _DrawingCanvasPainter extends CustomPainter {
     }
   }
 
-  void _paintStroke(Canvas canvas, _DrawStroke stroke) {
+  void _paintGrid(Canvas canvas, Size size, Color color) {
+    final gridPaint = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+    for (double x = 0; x <= size.width; x += 28) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+    for (double y = 0; y <= size.height; y += 28) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+  }
+
+  void _paintNotebook(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = const Color(0xFFBFD7FF).withOpacity(0.55)
+      ..strokeWidth = 1;
+    for (double y = 34; y <= size.height; y += 30) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+    }
+    canvas.drawLine(
+      const Offset(46, 0),
+      Offset(46, size.height),
+      Paint()
+        ..color = const Color(0xFFFF9DBB).withOpacity(0.55)
+        ..strokeWidth = 2,
+    );
+  }
+
+  void _paintPaperNoise(Canvas canvas, Size size, Color color) {
+    final paint = Paint()..color = color;
+    for (var i = 0; i < 56; i++) {
+      final x = ((i * 47) % math.max(size.width.toInt(), 1)).toDouble();
+      final y = ((i * 83) % math.max(size.height.toInt(), 1)).toDouble();
+      canvas.drawCircle(Offset(x, y), 1.2 + (i % 3) * 0.5, paint);
+    }
+  }
+
+  void _paintHearts(Canvas canvas, Size size) {
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+    for (var i = 0; i < 18; i++) {
+      textPainter.text = TextSpan(
+        text: '♡',
+        style: TextStyle(
+          color: const Color(0xFFFF80AA).withOpacity(0.18),
+          fontSize: 20.0 + (i % 4) * 7,
+          fontWeight: FontWeight.w900,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(
+          ((i * 73) % math.max(size.width.toInt(), 1)).toDouble(),
+          ((i * 97) % math.max(size.height.toInt(), 1)).toDouble(),
+        ),
+      );
+    }
+  }
+
+  void _paintStars(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.white.withOpacity(0.76);
+    for (var i = 0; i < 70; i++) {
+      final x = ((i * 59) % math.max(size.width.toInt(), 1)).toDouble();
+      final y = ((i * 41) % math.max(size.height.toInt(), 1)).toDouble();
+      canvas.drawCircle(Offset(x, y), 0.8 + (i % 3) * 0.45, paint);
+    }
+  }
+
+  void _paintFrame(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 14
+      ..color = const Color(0xFFFFFFFF).withOpacity(0.88);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(20, 20, size.width - 40, size.height - 40),
+        const Radius.circular(22),
+      ),
+      paint,
+    );
+  }
+
+  void _paintStroke(Canvas canvas, _DrawStroke stroke, Size size) {
     if (stroke.points.isEmpty) {
       return;
     }
+
+    final points = stroke.normalized
+        ? stroke.points
+            .map((point) => Offset(point.dx * size.width, point.dy * size.height))
+            .toList(growable: false)
+        : stroke.points;
 
     final paint = Paint()
       ..color = stroke.color
