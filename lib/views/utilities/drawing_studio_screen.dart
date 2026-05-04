@@ -398,11 +398,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           ),
         );
       },
-    ).then((value) {
-      if (value is String) {
-        unawaited(_selectBackground(value));
-      }
-    });
+    );
+    if (selected != null) {
+      await _selectBackground(selected);
+    }
   }
 
   Future<void> _saveDrawing() async {
