@@ -1880,6 +1880,73 @@ class _DrawStroke {
     this.authorUid = '',
     this.normalized = false,
   });
+
+  List<Offset> resolvedPoints(Size size) {
+    if (!normalized) {
+      return points;
+    }
+    return points
+        .map((point) => Offset(point.dx * size.width, point.dy * size.height))
+        .toList(growable: false);
+  }
+}
+
+class _StickerPainter extends CustomPainter {
+  final List<_DrawStroke> strokes;
+
+  const _StickerPainter({required this.strokes});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final stroke in strokes) {
+      _paintStickerStroke(canvas, stroke, size, stroke.width + 18, Colors.black.withOpacity(0.16));
+    }
+    for (final stroke in strokes) {
+      _paintStickerStroke(canvas, stroke, size, stroke.width + 12, Colors.white);
+    }
+    for (final stroke in strokes) {
+      _paintStickerStroke(canvas, stroke, size, stroke.width, stroke.color);
+    }
+  }
+
+  void _paintStickerStroke(
+    Canvas canvas,
+    _DrawStroke stroke,
+    Size size,
+    double width,
+    Color color,
+  ) {
+    final points = stroke.resolvedPoints(size);
+    if (points.isEmpty) {
+      return;
+    }
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..isAntiAlias = true;
+    if (points.length == 1) {
+      canvas.drawCircle(points.first, width / 2, paint);
+      return;
+    }
+    final path = Path()..moveTo(points.first.dx, points.first.dy);
+    for (var i = 1; i < points.length - 1; i++) {
+      final point = points[i];
+      final next = points[i + 1];
+      final midPoint = Offset(
+        (point.dx + next.dx) / 2,
+        (point.dy + next.dy) / 2,
+      );
+      path.quadraticBezierTo(point.dx, point.dy, midPoint.dx, midPoint.dy);
+    }
+    path.lineTo(points.last.dx, points.last.dy);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _StickerPainter oldDelegate) => true;
 }
 
 class _DrawingBackgroundPreviewPainter extends CustomPainter {
