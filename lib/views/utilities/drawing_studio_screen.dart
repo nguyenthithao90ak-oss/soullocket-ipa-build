@@ -159,7 +159,19 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     );
   }
 
-  bool get _hasAnyStroke => _strokes.isNotEmpty || _realtimeStrokes.isNotEmpty;
+  bool get _hasAnyStroke => _allVisibleStrokes.isNotEmpty;
+
+  List<_DrawStroke> get _allVisibleStrokes => [
+        ..._realtimeStrokes.values,
+        ..._strokes.where(
+          (stroke) => _localPendingStrokeIds.contains(stroke.id),
+        ),
+      ];
+
+  _CanvasRatioPreset get _selectedRatio => _ratioPresets.firstWhere(
+        (preset) => preset.id == _aspectRatioId,
+        orElse: () => _ratioPresets[1],
+      );
 
   Future<void> _loadGallery() async {
     final items = await _drawingService.loadGallery(widget.houseId);
