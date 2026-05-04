@@ -1,4 +1,3 @@
-# Enable GitHub Actions
 name: Build iOS IPA
 
 on:
@@ -54,7 +53,6 @@ jobs:
       APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
       APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
       APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
-      GOOGLE_SERVICE_INFO_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_BASE64 }}
 
     steps:
       - name: Checkout repository
@@ -93,7 +91,7 @@ jobs:
           DOMAIN_AUTH="${IOS_ASSOCIATED_DOMAIN_AUTH:-applinks:soullockket.firebaseapp.com}"
           EXPORT_METHOD="${IOS_EXPORT_METHOD:-app-store}"
           BUILD_NAME="${IOS_BUILD_NAME_INPUT:-}"
-          BUILD_NUMBER="${IOS_BUILD_NUMBER_INPUT:-${GITHUB_RUN_NUMBER}}"
+          BUILD_NUMBER="${IOS_BUILD_NUMBER_INPUT:-52}"
           export APP_BUNDLE_ID WIDGET_BUNDLE_ID RUNNER_TESTS_BUNDLE_ID APP_GROUP_ID DOMAIN_WEB DOMAIN_AUTH
 
           cat > ios/Flutter/AppConfig.local.xcconfig <<EOF
@@ -152,6 +150,24 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Build launcher icons
+        run: dart run flutter_launcher_icons
+
+      - name: Remove iOS app icon alpha channel
+        shell: bash
+        run: |
+          set -euo pipefail
+          find ios/Runner/Assets.xcassets/AppIcon.appiconset -name '*.png' -print0 | while IFS= read -r -d '' icon; do
+            tmp_jpeg="${icon}.opaque.jpg"
+            tmp_png="${icon}.opaque.png"
+            sips -s format jpeg "$icon" --out "$tmp_jpeg"
+            sips -s format png "$tmp_jpeg" --out "$tmp_png"
+            mv "$tmp_png" "$icon"
+            rm -f "$tmp_jpeg"
+          done
+
+      - name: Build native splash
+        run: dart run flutter_native_splash:create
 
       - name: Install CocoaPods
         shell: bash
@@ -174,7 +190,6 @@ jobs:
           echo -n "$P12_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
           echo -n "$RUNNER_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$RUNNER_PROFILE_PATH"
           echo -n "$WIDGET_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$WIDGET_PROFILE_PATH"
-
 
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
@@ -233,13 +248,6 @@ jobs:
           EOF
           echo "EXPORT_PLIST_PATH=$EXPORT_PLIST_PATH" >> "$GITHUB_ENV"
 
-
-      - name: Decode GoogleService-Info
-        run: |
-          if [[ -n "${GOOGLE_SERVICE_INFO_BASE64:-}" ]]; then
-            echo -n "$GOOGLE_SERVICE_INFO_BASE64" | base64 --decode > ios/Runner/GoogleService-Info.plist
-            echo "GoogleService-Info.plist created"
-          fi
       - name: Build signed IPA
         shell: bash
         run: |

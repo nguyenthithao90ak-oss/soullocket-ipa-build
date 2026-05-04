@@ -1212,7 +1212,7 @@ class AuthSignInService {
             ? LoginBehavior.dialogOnly
             : LoginBehavior.nativeWithFallback;
         final loginResult = await _facebookAuth.login(
-          permissions: const ['email', 'public_profile'],
+          permissions: const ['public_profile'],
           loginBehavior: loginBehavior,
           loginTracking: LoginTracking.enabled,
         );
@@ -1253,15 +1253,14 @@ class AuthSignInService {
 
       final resolvedEmail =
           userCredential.user?.email?.trim().toLowerCase() ?? '';
-      if (resolvedEmail.isEmpty) {
-        await signOut();
-        throw 'Tài khoản Facebook này chưa chia sẻ email. Hãy cấp quyền email trên Facebook hoặc dùng Google/Email để đăng nhập.';
-      }
+      final loginLimitKey = resolvedEmail.isNotEmpty
+          ? resolvedEmail
+          : 'facebook:${userCredential.user!.uid}';
 
       await SettingsSyncService().restoreSettingsFromCloud(
         userCredential.user!.uid,
       );
-      if (!await recordDailyLoginLimit(resolvedEmail)) {
+      if (!await recordDailyLoginLimit(loginLimitKey)) {
         await signOut();
         throw dailyLoginLimitMessage;
       }
