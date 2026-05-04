@@ -579,9 +579,10 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                         ),
                       ),
                       SLSpacing.h16,
-                      Row(
+                      Column(
                         children: [
-                          Expanded(
+                          SizedBox(
+                            width: double.infinity,
                             child: OutlinedButton.icon(
                               onPressed: () async {
                                 final navigator = Navigator.of(dialogContext);
@@ -615,8 +616,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                               ),
                             ),
                           ),
-                          SLSpacing.w10,
-                          Expanded(
+                          const SizedBox.shrink(),
+                          Offstage(
+                            offstage: true,
                             child: FilledButton.icon(
                               onPressed: () {
                                 Navigator.pop(dialogContext);
