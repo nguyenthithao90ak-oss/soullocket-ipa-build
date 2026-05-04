@@ -49,8 +49,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   bool _isDrawing = false;
   bool _isCanvasLocked = false;
   bool _isGalleryLoading = true;
+  bool _isSyncOnline = false;
   String? _activeGalleryActionId;
   List<DrawingStudioGalleryItem> _gallery = [];
+  List<DrawingStudioPresence> _presence = [];
 
   static const List<Color> _palette = [
     Color(0xFFFF3B4D),
