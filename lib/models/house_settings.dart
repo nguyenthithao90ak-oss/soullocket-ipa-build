@@ -163,8 +163,9 @@ class HouseSettings {
       friendRequestPolicy: (map['friendRequestPolicy'] ?? 'all').toString(),
       friendRequestLimit: toInt(map['friendRequestLimit']) ?? 30,
       homeBlockTone: (map['homeBlockTone'] ?? 'theme').toString(),
-      transparentMode:
-          map['transparentMode'] is bool ? map['transparentMode'] as bool : true,
+      transparentMode: map['transparentMode'] is bool
+          ? map['transparentMode'] as bool
+          : true,
       fallingEffect:
           (map['fallingEffect'] ?? defaultSettings.fallingEffect).toString(),
       avatarSizePx: toDouble(map['avatarSizePx'], defaultSettings.avatarSizePx),
