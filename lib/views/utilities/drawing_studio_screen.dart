@@ -65,6 +65,14 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     Color(0xFF000000),
   ];
 
+  static const List<_CanvasRatioPreset> _ratioPresets = [
+    _CanvasRatioPreset(id: '1_1', label: '1:1', ratio: 1),
+    _CanvasRatioPreset(id: '4_5', label: '4:5', ratio: 4 / 5),
+    _CanvasRatioPreset(id: '9_16', label: '9:16', ratio: 9 / 16),
+    _CanvasRatioPreset(id: '16_9', label: '16:9', ratio: 16 / 9),
+    _CanvasRatioPreset(id: 'a4', label: 'A4', ratio: 0.707),
+  ];
+
   @override
   void initState() {
     super.initState();
