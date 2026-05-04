@@ -126,30 +126,18 @@ class MemoryShareService {
     }
     final resolvedExpiryDays = expiryDays.clamp(1, limits.shareMaxTtlDays).toInt();
 
-    HttpsCallableResult<dynamic>? response;
-    try {
-      response = await _callWithAuthAndAppCheckRetry(() {
-        final callable = _functions.httpsCallable('createMemoryShareLink');
-        return callable.call(<String, dynamic>{
-          'houseId': normalizedHouseId,
-          'photos': safePhotos,
-          'expiryDays': resolvedExpiryDays,
-          'title': defaultShareTitle,
-          'description': defaultShareDescription,
-          'brandLabel': defaultBrandLabel,
-          'theme': defaultTheme,
-        });
+    final response = await _callWithAuthAndAppCheckRetry(() {
+      final callable = _functions.httpsCallable('createMemoryShareLink');
+      return callable.call(<String, dynamic>{
+        'houseId': normalizedHouseId,
+        'photos': safePhotos,
+        'expiryDays': resolvedExpiryDays,
+        'title': defaultShareTitle,
+        'description': defaultShareDescription,
+        'brandLabel': defaultBrandLabel,
+        'theme': defaultTheme,
       });
-    } on FirebaseFunctionsException catch (error) {
-      if (_isAuthFailure(error)) {
-        return _createDirectShareLink(
-          houseId: normalizedHouseId,
-          photos: safePhotos,
-          expiryDays: resolvedExpiryDays,
-        );
-      }
-      rethrow;
-    }
+    });
     final raw = response.data;
     if (raw is! Map) {
       throw Exception('Phản hồi tạo liên kết không hợp lệ.');
