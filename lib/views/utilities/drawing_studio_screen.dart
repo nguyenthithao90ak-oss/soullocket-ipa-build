@@ -1639,15 +1639,15 @@ class _DrawingCanvasPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round
       ..isAntiAlias = true;
 
-    if (stroke.points.length == 1) {
-      canvas.drawCircle(stroke.points.first, stroke.width / 2, paint);
+    if (points.length == 1) {
+      canvas.drawCircle(points.first, stroke.width / 2, paint);
       return;
     }
 
-    final path = Path()..moveTo(stroke.points.first.dx, stroke.points.first.dy);
-    for (var i = 1; i < stroke.points.length - 1; i++) {
-      final point = stroke.points[i];
-      final next = stroke.points[i + 1];
+    final path = Path()..moveTo(points.first.dx, points.first.dy);
+    for (var i = 1; i < points.length - 1; i++) {
+      final point = points[i];
+      final next = points[i + 1];
       final midPoint = Offset(
         (point.dx + next.dx) / 2,
         (point.dy + next.dy) / 2,
