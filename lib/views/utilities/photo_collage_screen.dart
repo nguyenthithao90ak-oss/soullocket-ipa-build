@@ -27,6 +27,10 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
   final HouseService _houseService = HouseService();
   final GlobalKey _captureKey = GlobalKey();
   int _selectedLayout = 1;
+  int _selectedTemplate = 0;
+  final TextEditingController _captionController = TextEditingController(
+    text: 'Một ngày đáng nhớ của chúng mình',
+  );
   final int _maxImages = 9;
   double _aspectRatio = 1.0;
   bool _isPicking = false;
@@ -38,6 +42,12 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
   void initState() {
     super.initState();
     unawaited(_promptPendingUploadRetryIfNeeded());
+  }
+
+  @override
+  void dispose() {
+    _captionController.dispose();
+    super.dispose();
   }
 
   Future<String?> _pendingUploadKey() async {
@@ -119,7 +129,12 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
         ..clear()
         ..addAll(retryImages);
       _selectedLayout = (pending['selectedLayout'] as num?)?.toInt() ?? 1;
+      _selectedTemplate = (pending['selectedTemplate'] as num?)?.toInt() ?? 0;
       _aspectRatio = (pending['aspectRatio'] as num?)?.toDouble() ?? 1.0;
+      final caption = pending['caption']?.toString().trim();
+      if (caption != null && caption.isNotEmpty) {
+        _captionController.text = caption;
+      }
     });
     await _saveToHouseAlbum();
   }
@@ -183,7 +198,9 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
             'imagePaths':
                 _images.map((item) => item.file.path).toList(growable: false),
             'selectedLayout': _selectedLayout,
+            'selectedTemplate': _selectedTemplate,
             'aspectRatio': _aspectRatio,
+            'caption': _captionController.text.trim(),
           },
           category: 'photo_collage',
         );
@@ -207,6 +224,8 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
           .set({
         'url': url,
         'template': 'layout_$_selectedLayout',
+        'style': _activeTemplate.name,
+        'caption': _captionController.text.trim(),
         'ts': ServerValue.timestamp,
         'source': 'photo_collage_screen',
       });
@@ -277,6 +296,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
     setState(() {
       _images.clear();
       _selectedLayout = 1;
+      _selectedTemplate = 0;
     });
   }
 
