@@ -428,7 +428,7 @@ class _GameLauncherTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const radius = 24.0;
-    const previewSize = 74.0;
+    const previewSize = 66.0;
 
     return Semantics(
       button: true,
