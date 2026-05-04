@@ -197,25 +197,6 @@ class GiftMakerScreen extends StatefulWidget {
                         ],
                       ),
                     ),
-                    FilledButton.icon(
-                      onPressed: onPreview,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFFD81B60),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      icon: const Icon(Icons.visibility_rounded),
-                      label: Text(
-                        'Xem trước',
-                        style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
