@@ -140,12 +140,11 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
         next.add(_CollagePhoto(file: file, bytes: await file.readAsBytes()));
       }
       if (!mounted) return;
-      if (!mounted) return;
       setState(() {
-        _images.addAll(next.take(_maxImages));
-        if (_selectedLayout == 1 && _images.length > 1) {
-          _selectedLayout = _images.length > 9 ? 9 : _images.length;
-        }
+        _images
+          ..clear()
+          ..addAll(next.take(_maxImages));
+        _selectedLayout = _smartLayoutForCount(_images.length);
       });
     } catch (e) {
       _showToast('Không thể chọn ảnh: $e');
@@ -258,6 +257,22 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
     }
   }
 
+  int _smartLayoutForCount(int count) {
+    if (count <= 1) return 1;
+    return count.clamp(2, _maxImages);
+  }
+
+  void _shuffleLayout() {
+    if (_images.length < 2) {
+      _showToast('Chọn ít nhất 2 ảnh để xáo trộn bố cục.');
+      return;
+    }
+    setState(() {
+      _images.shuffle();
+      _selectedLayout = _smartLayoutForCount(_images.length);
+    });
+  }
+
   void _clearImages() {
     setState(() {
       _images.clear();
@@ -293,11 +308,18 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
         elevation: 0.5,
         iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
         actions: [
-          if (_images.isNotEmpty)
+          if (_images.isNotEmpty) ...[
             IconButton(
+              tooltip: 'Tự làm đẹp',
+              onPressed: _shuffleLayout,
+              icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFD81B60)),
+            ),
+            IconButton(
+              tooltip: 'Xóa ảnh',
               onPressed: _clearImages,
               icon: const Icon(Icons.delete_sweep_rounded, color: Colors.red),
             ),
+          ],
         ],
       ),
       body: Column(
@@ -550,16 +572,16 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Bảng ghép ảnh',
+            'Memory Collage',
             style: SLTheme.quicksand(
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: FontWeight.w900,
               color: const Color(0xFFD81B60),
             ),
           ),
           SLSpacing.h8,
           Text(
-            'Ảnh ghép sẽ được lưu đúng như phần xem trước ở đây.',
+            'Tự sắp ảnh theo bố cục đẹp nhất. Bấm ✨ để xáo trộn và làm mới khung ghép.',
             style: SLTheme.quicksand(
               fontSize: 12.5,
               height: 1.6,
@@ -621,7 +643,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
             ),
             SLSpacing.h12,
             Text(
-              'Chưa có ảnh nào\nNhấn "Chọn ảnh" để bắt đầu',
+              'Chưa có ảnh nào\nChọn ảnh để app tự ghép bố cục đẹp',
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 color: Colors.grey[500],
