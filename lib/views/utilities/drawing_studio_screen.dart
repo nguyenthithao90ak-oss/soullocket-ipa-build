@@ -1055,7 +1055,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   SLSpacing.w8,
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: _strokes.isEmpty || _isSavingToDevice || kIsWeb
+                      onPressed: !_hasAnyStroke || _isSavingToDevice || kIsWeb
                           ? null
                           : _saveCurrentCanvasToDevice,
                       icon: _isSavingToDevice
