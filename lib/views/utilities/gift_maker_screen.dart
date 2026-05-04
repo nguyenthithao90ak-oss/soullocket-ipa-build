@@ -1012,43 +1012,43 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
           offstage: true,
           child: Row(
             children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _openGiftPreview(
-                  GiftData(
-                    giftId: _lastGiftId ?? 'preview',
-                    fromHouseId: widget.houseId,
-                    fromName: _senderCtrl.text.trim().isEmpty
-                        ? widget.myName
-                        : _senderCtrl.text.trim(),
-                    toHouseId: widget.houseId,
-                    message: _messageCtrl.text.trim().isEmpty
-                        ? 'Món quà thử để xem trước.'
-                        : _messageCtrl.text.trim(),
-                    imageUrl: _selectedImage?.path ?? '',
-                    ts: DateTime.now().millisecondsSinceEpoch,
-                    status: 'new',
-                    giftType: _selectedType,
-                    features: const {},
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _openGiftPreview(
+                    GiftData(
+                      giftId: _lastGiftId ?? 'preview',
+                      fromHouseId: widget.houseId,
+                      fromName: _senderCtrl.text.trim().isEmpty
+                          ? widget.myName
+                          : _senderCtrl.text.trim(),
+                      toHouseId: widget.houseId,
+                      message: _messageCtrl.text.trim().isEmpty
+                          ? 'Món quà thử để xem trước.'
+                          : _messageCtrl.text.trim(),
+                      imageUrl: _selectedImage?.path ?? '',
+                      ts: DateTime.now().millisecondsSinceEpoch,
+                      status: 'new',
+                      giftType: _selectedType,
+                      features: const {},
+                    ),
+                    markOpened: false,
                   ),
-                  markOpened: false,
-                ),
-                icon: const Icon(Icons.visibility_rounded),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFD81B60),
-                  backgroundColor: Colors.white,
-                  side: const BorderSide(color: Color(0xFFF0D5E1)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                  icon: const Icon(Icons.visibility_rounded),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFD81B60),
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFFF0D5E1)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
-                ),
-                label: Text(
-                  'Xem trước',
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                  label: Text(
+                    'Xem trước',
+                    style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                  ),
                 ),
               ),
-            ),
             ],
           ),
         ),
