@@ -17,6 +17,21 @@ class PrivateMediaUrlService {
 
   final FirebaseFunctions _functions;
 
+  Future<User?> _waitForCurrentUser() async {
+    final auth = FirebaseAuth.instance;
+    final currentUser = auth.currentUser;
+    if (currentUser != null) {
+      return currentUser;
+    }
+    try {
+      return auth.authStateChanges().firstWhere(
+            (user) => user != null,
+          ).timeout(const Duration(seconds: 3));
+    } catch (_) {
+      return auth.currentUser;
+    }
+  }
+
   Future<PrivateMediaUrlResult> resolve({
     required String houseId,
     required String mediaId,
