@@ -91,7 +91,6 @@ class MemoryShareService {
 
   final FirebaseFunctions _functions;
   final FirebaseAuth _auth;
-  final FirebaseDatabase _database;
 
   Future<MemoryShareResult> createShareLink({
     required String houseId,
