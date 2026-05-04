@@ -554,8 +554,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                               width: 38,
                               height: 38,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFD81B60)
-                                    .withOpacity(0.10),
+                                color:
+                                    const Color(0xFFD81B60).withOpacity(0.10),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: const Icon(
@@ -588,8 +588,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                                 final navigator = Navigator.of(dialogContext);
                                 await Clipboard.setData(
                                   ClipboardData(
-                                    text:
-                                        _deeplinkService.generateGiftLink(draft),
+                                    text: _deeplinkService
+                                        .generateGiftLink(draft),
                                   ),
                                 );
                                 if (!mounted) return;
@@ -649,7 +649,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                         width: double.infinity,
                         child: FilledButton.icon(
                           onPressed: () async {
-                            final link = _deeplinkService.generateGiftLink(draft);
+                            final link =
+                                _deeplinkService.generateGiftLink(draft);
                             if (await canLaunchUrl(Uri.parse(link))) {
                               await launchUrl(
                                 Uri.parse(link),
@@ -1319,7 +1320,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         fontWeight: FontWeight.w700,
         fontSize: 14,
       ),
-      prefixIcon: Icon(icon, color: const Color(0xFFD81B60).withOpacity(0.7), size: 20),
+      prefixIcon:
+          Icon(icon, color: const Color(0xFFD81B60).withOpacity(0.7), size: 20),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -1427,7 +1429,10 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [colors.first.withOpacity(0.12), colors.last.withOpacity(0.06)],
+                  colors: [
+                    colors.first.withOpacity(0.12),
+                    colors.last.withOpacity(0.06)
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
