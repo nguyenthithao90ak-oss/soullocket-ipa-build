@@ -1187,14 +1187,11 @@ class SLTheme {
     Color? color,
   }) {
     final ui = UiPrefs.notifier.value;
-    final resolvedGraphicsQuality = ui.liteMode
-        ? 'low'
-        : (ui.graphicsQualityKey == 'auto'
-            ? UiPrefs.getAutoGraphicsQuality()
-            : ui.graphicsQualityKey);
-    final useLiteGlass = ui.liteMode ||
-        resolvedGraphicsQuality == 'low' ||
-        (kIsWeb && resolvedGraphicsQuality != 'high');
+    final effectProfile = UiPrefs.resolveEffectProfile(
+      state: ui,
+      isWeb: kIsWeb,
+    );
+    final useLiteGlass = !effectProfile.premiumEffects;
     Color baseColor = color ?? glassCardColor;
     if (ui.transparentMode) {
       baseColor = baseColor.withOpacity(0.8);
@@ -1227,7 +1224,7 @@ class SLTheme {
           : ClipRRect(
               borderRadius: BorderRadius.circular(radius),
               child: FastBackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                 child: decoratedChild,
               ),
             ),

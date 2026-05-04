@@ -17,6 +17,11 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
     final z2 = ZodiacUtils.getZodiac(dobU2);
     final ageDaysU1 = _extractAgeDays(dobU1);
     final ageDaysU2 = _extractAgeDays(dobU2);
+    final effectProfile = UiPrefs.resolveEffectProfile(
+      state: UiPrefs.notifier.value,
+      isWeb: kIsWeb,
+    );
+    final showDecorGlow = !effectProfile.performanceMode;
 
     return Container(
       margin: EdgeInsets.zero,
@@ -31,44 +36,46 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          Positioned(
-            top: -8,
-            left: -4,
-            child: IgnorePointer(
-              child: Container(
-                width: 78,
-                height: 78,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFFFFB7D1).withOpacity(0.28),
-                      const Color(0xFFFFB7D1).withOpacity(0.02),
-                    ],
+          if (showDecorGlow) ...[
+            Positioned(
+              top: -8,
+              left: -4,
+              child: IgnorePointer(
+                child: Container(
+                  width: 78,
+                  height: 78,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFFFFB7D1).withOpacity(0.28),
+                        const Color(0xFFFFB7D1).withOpacity(0.02),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            right: -10,
-            bottom: -10,
-            child: IgnorePointer(
-              child: Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF8FD8FF).withOpacity(0.22),
-                      const Color(0xFF8FD8FF).withOpacity(0.02),
-                    ],
+            Positioned(
+              right: -10,
+              bottom: -10,
+              child: IgnorePointer(
+                child: Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFF8FD8FF).withOpacity(0.22),
+                        const Color(0xFF8FD8FF).withOpacity(0.02),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
           Row(
             mainAxisAlignment: compactMetaLayout
                 ? MainAxisAlignment.spaceEvenly
@@ -168,8 +175,6 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
       final match = RegExp(r'\d+').firstMatch(ageLabel);
       displayAge = match?.group(0) ?? '';
     }
-    final badgeGradient = _profileAccentGradient(isUser1);
-
     return Column(
       children: [
         if (isGreyedOut)
@@ -236,7 +241,10 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             children: [
               if (zodiacEmoji != '✦' && zodiacEmoji.isNotEmpty)
                 _buildModernZodiacBadge(zodiacEmoji, zodiacName),
-              if (zodiacEmoji != '✦' && zodiacEmoji.isNotEmpty && hasAge && displayAge.isNotEmpty)
+              if (zodiacEmoji != '✦' &&
+                  zodiacEmoji.isNotEmpty &&
+                  hasAge &&
+                  displayAge.isNotEmpty)
                 const SizedBox(width: 6),
               if (hasAge && displayAge.isNotEmpty)
                 _buildModernAgeBadge(displayAge, isUser1),
@@ -315,7 +323,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
     // Xác định màu sắc dựa trên nguyên tố của cung
     final detail = ZodiacUtils.zodiacDetails[name];
     final element = detail?['element']?.toString() ?? '';
-    
+
     Color baseColor;
     if (element.contains('Lửa')) {
       baseColor = const Color(0xFFFF5252);

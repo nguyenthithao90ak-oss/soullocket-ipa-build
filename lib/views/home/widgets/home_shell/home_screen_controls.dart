@@ -103,8 +103,14 @@ extension _HomeScreenShellControls on _HomeScreenState {
         return ValueListenableBuilder<int>(
           valueListenable: _backgroundTabIndexNotifier,
           builder: (context, currentIndex, _) {
+            final effectProfile = _resolveHomeEffectProfile(
+              UiPrefs.notifier.value,
+              pauseAnimations: _isUserTabSwiping,
+            );
             return AnimatedSize(
-              duration: const Duration(milliseconds: 180),
+              duration: effectProfile.performanceMode
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
               curve: Curves.easeOutCubic,
               alignment: Alignment.bottomCenter,
               child: _navCollapsed
@@ -130,14 +136,13 @@ extension _HomeScreenShellControls on _HomeScreenState {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final accent = _HomeScreenState._navItems[currentIndex].activeColor;
     final uiState = UiPrefs.notifier.value;
-    final graphicsQualityKey = uiState.liteMode
-        ? 'low'
-        : (uiState.graphicsQualityKey == 'auto'
-            ? UiPrefs.getAutoGraphicsQuality()
-            : uiState.graphicsQualityKey);
-    final isPerformanceMode = _isUserTabSwiping || graphicsQualityKey == 'low';
-    final useBackdropBlur =
-        !kIsWeb && !_isUserTabSwiping && graphicsQualityKey == 'high';
+    final effectProfile = _resolveHomeEffectProfile(
+      uiState,
+      pauseAnimations: _isUserTabSwiping,
+    );
+    final isPerformanceMode = effectProfile.performanceMode;
+    final useBackdropBlur = effectProfile.premiumEffects &&
+        MediaQuery.of(context).size.shortestSide >= 600;
     final navSurface = Container(
       padding: EdgeInsets.fromLTRB(6, 8, 6, bottomInset > 0 ? bottomInset : 8),
       decoration: BoxDecoration(
@@ -207,6 +212,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                 i,
                 isDark,
                 currentIndex: currentIndex,
+                isPerformanceMode: isPerformanceMode,
               ),
             ),
           ],
@@ -238,7 +244,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   child: !useBackdropBlur
                       ? navSurface
                       : BackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                          filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                           child: navSurface,
                         ),
                 ),
@@ -404,10 +410,12 @@ extension _HomeScreenShellControls on _HomeScreenState {
     int index,
     bool isDark, {
     required int currentIndex,
+    required bool isPerformanceMode,
   }) {
     final item = _HomeScreenState._navItems[index];
     final isActive = currentIndex == index;
-    final isPerformanceMode = _isUserTabSwiping;
+    final animationDuration =
+        isPerformanceMode ? Duration.zero : const Duration(milliseconds: 180);
     final inactiveColor = isDark
         ? Color.lerp(item.activeColor, Colors.white, 0.30) ?? item.activeColor
         : Color.lerp(item.activeColor, const Color(0xFF64748B), 0.22) ??
@@ -431,7 +439,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
           onTap: () => _switchToTab(index),
           borderRadius: SLRadius.lgAll,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
+            duration: animationDuration,
             curve: Curves.easeOutCubic,
             height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 6),
@@ -491,11 +499,11 @@ extension _HomeScreenShellControls on _HomeScreenState {
             ),
             child: Center(
               child: AnimatedScale(
-                duration: const Duration(milliseconds: 220),
+                duration: animationDuration,
                 curve: Curves.easeOutCubic,
-                scale: isActive ? 1.04 : 1,
+                scale: isActive && !isPerformanceMode ? 1.04 : 1,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
+                  duration: animationDuration,
                   curve: Curves.easeOutCubic,
                   width: 32,
                   height: 32,

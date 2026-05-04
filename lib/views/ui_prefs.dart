@@ -145,6 +145,21 @@ class UiPrefsState {
   );
 }
 
+@immutable
+class UiEffectProfile {
+  final String graphicsQualityKey;
+  final bool performanceMode;
+  final bool premiumEffects;
+  final bool animationEnabled;
+
+  const UiEffectProfile({
+    required this.graphicsQualityKey,
+    required this.performanceMode,
+    required this.premiumEffects,
+    required this.animationEnabled,
+  });
+}
+
 class UiPrefs {
   static const double minCountdownSizePx = 160.0;
   static const double maxCountdownSizePx = 700.0;
@@ -210,6 +225,28 @@ class UiPrefs {
   static bool get isLoaded => _loaded;
 
   static String getAutoGraphicsQuality() => _cachedAutoQuality;
+
+  static UiEffectProfile resolveEffectProfile({
+    required UiPrefsState state,
+    required bool isWeb,
+    bool pauseAnimations = false,
+  }) {
+    final graphicsQualityKey = state.liteMode
+        ? 'low'
+        : (state.graphicsQualityKey == 'auto'
+            ? getAutoGraphicsQuality()
+            : state.graphicsQualityKey);
+    final performanceMode =
+        pauseAnimations || state.liteMode || graphicsQualityKey == 'low';
+    final premiumEffects =
+        !isWeb && !performanceMode && graphicsQualityKey == 'high';
+    return UiEffectProfile(
+      graphicsQualityKey: graphicsQualityKey,
+      performanceMode: performanceMode,
+      premiumEffects: premiumEffects,
+      animationEnabled: !pauseAnimations && !performanceMode,
+    );
+  }
 
   static Future<String> _detectAutoQuality() async {
     if (kIsWeb) {

@@ -120,6 +120,73 @@ class _KeepAliveTabPageState extends State<_KeepAliveTabPage>
   }
 }
 
+class _LazyHomeTabPage extends StatefulWidget {
+  final int tabIndex;
+  final ValueListenable<int> activeIndexListenable;
+  final _HomeTabBuilder builder;
+
+  const _LazyHomeTabPage({
+    super.key,
+    required this.tabIndex,
+    required this.activeIndexListenable,
+    required this.builder,
+  });
+
+  @override
+  State<_LazyHomeTabPage> createState() => _LazyHomeTabPageState();
+}
+
+class _LazyHomeTabPageState extends State<_LazyHomeTabPage> {
+  bool _hasLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncLoadedState();
+    widget.activeIndexListenable.addListener(_syncLoadedState);
+  }
+
+  @override
+  void didUpdateWidget(covariant _LazyHomeTabPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.activeIndexListenable != widget.activeIndexListenable) {
+      oldWidget.activeIndexListenable.removeListener(_syncLoadedState);
+      widget.activeIndexListenable.addListener(_syncLoadedState);
+    }
+    _syncLoadedState();
+  }
+
+  @override
+  void dispose() {
+    widget.activeIndexListenable.removeListener(_syncLoadedState);
+    super.dispose();
+  }
+
+  void _syncLoadedState() {
+    if (_hasLoaded) return;
+    final activeIndex = widget.activeIndexListenable.value;
+    if ((widget.tabIndex - activeIndex).abs() > 1) return;
+    if (mounted) {
+      setState(() => _hasLoaded = true);
+    } else {
+      _hasLoaded = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasLoaded) return const SizedBox.expand();
+    return _KeepAliveTabPage(
+      key: PageStorageKey<String>('home-tab-${widget.tabIndex}'),
+      child: _TabActivationHost(
+        tabIndex: widget.tabIndex,
+        activeIndexListenable: widget.activeIndexListenable,
+        builder: widget.builder,
+      ),
+    );
+  }
+}
+
 class _HomeTabPagePhysics extends PageScrollPhysics {
   static const double _pageSwitchThreshold = 0.46;
   static const double _dragThreshold = 3.0;
@@ -359,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen>
   int _currentIndex = 0;
   bool _navCollapsed =
       OfflineCacheService.getPrefsSync()?.getBool(_navCollapsedPrefsKey) ??
-      false;
+          false;
   bool _navHiddenUntilRestart = false;
   bool _hideNavForDiarySelection = false;
   bool _didCheckCoupleOnboarding = false;
@@ -554,13 +621,11 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildTabPage(int index) {
-    return _KeepAliveTabPage(
-      key: PageStorageKey<String>('home-tab-$index'),
-      child: _TabActivationHost(
-        tabIndex: index,
-        activeIndexListenable: _activeTabIndexNotifier,
-        builder: _tabBuilders[index],
-      ),
+    return _LazyHomeTabPage(
+      key: PageStorageKey<String>('home-lazy-tab-$index'),
+      tabIndex: index,
+      activeIndexListenable: _activeTabIndexNotifier,
+      builder: _tabBuilders[index],
     );
   }
 
@@ -581,14 +646,21 @@ class _HomeScreenState extends State<HomeScreen>
     unawaited(_prewarmShellMedia());
   }
 
+  UiEffectProfile _resolveHomeEffectProfile(
+    UiPrefsState uiState, {
+    bool pauseAnimations = false,
+  }) {
+    return UiPrefs.resolveEffectProfile(
+      state: uiState,
+      isWeb: kIsWeb,
+      pauseAnimations: pauseAnimations,
+    );
+  }
+
   bool _hasSwipeReactiveUi() {
     final uiState = UiPrefs.notifier.value;
     final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
-    final graphicsQualityKey = uiState.liteMode
-        ? 'low'
-        : (uiState.graphicsQualityKey == 'auto'
-            ? UiPrefs.getAutoGraphicsQuality()
-            : uiState.graphicsQualityKey);
+    final effectProfile = _resolveHomeEffectProfile(uiState);
     final resolvedEffectKey = uiState.liteMode
         ? 'off'
         : _resolveEffectKey(uiState.fallingEffectKey, resolvedThemeKey);
@@ -599,7 +671,7 @@ class _HomeScreenState extends State<HomeScreen>
         musicService.isPlayingNotifier.value;
     final hasFallingEffect = resolvedEffectKey != 'off';
     final hasTouchEffects =
-        !kIsWeb && graphicsQualityKey == 'high' && resolvedEffectKey == 'off';
+        effectProfile.premiumEffects && resolvedEffectKey == 'off';
 
     return hasAnimatedMusicButton || hasFallingEffect || hasTouchEffects;
   }
@@ -1004,11 +1076,11 @@ class _HomeScreenState extends State<HomeScreen>
     return ValueListenableBuilder<UiPrefsState>(
       valueListenable: UiPrefs.notifier,
       builder: (context, uiState, _) {
-        final graphicsQualityKey = uiState.liteMode
-            ? 'low'
-            : (uiState.graphicsQualityKey == 'auto'
-                ? UiPrefs.getAutoGraphicsQuality()
-                : uiState.graphicsQualityKey);
+        final effectProfile = _resolveHomeEffectProfile(
+          uiState,
+          pauseAnimations: _isUserTabSwiping,
+        );
+        final graphicsQualityKey = effectProfile.graphicsQualityKey;
         final foregroundContent = Stack(
           children: [
             NotificationListener<ScrollNotification>(
@@ -1043,14 +1115,12 @@ class _HomeScreenState extends State<HomeScreen>
           final isDark = _isDarkTheme(resolvedThemeKey);
           final isMainHomeTab = _currentIndex == 0;
           final isHomeEffectsPaused = _isUserTabSwiping;
-          final shouldAnimateEffects = !kIsWeb &&
-              graphicsQualityKey == 'high' &&
-              resolvedEffectKey == 'off' &&
-              !isHomeEffectsPaused;
-          final shouldAnimateFallingEffect = !isHomeEffectsPaused &&
-              graphicsQualityKey != 'low' &&
-              (kIsWeb ? graphicsQualityKey == 'high' : true);
-          final enableTouchEffects = shouldAnimateEffects && !isHomeEffectsPaused;
+          final shouldAnimateEffects =
+              effectProfile.premiumEffects && resolvedEffectKey == 'off';
+          final shouldAnimateFallingEffect =
+              effectProfile.animationEnabled && resolvedEffectKey != 'off';
+          final enableTouchEffects =
+              shouldAnimateEffects && !isHomeEffectsPaused;
 
           Widget bodyContent = Stack(
             children: [
@@ -1075,7 +1145,9 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               foregroundChild,
-              if (isMainHomeTab && resolvedEffectKey != 'off' && !_isUserTabSwiping)
+              if (isMainHomeTab &&
+                  resolvedEffectKey != 'off' &&
+                  !_isUserTabSwiping)
                 Positioned.fill(
                   child: RepaintBoundary(
                     child: IgnorePointer(

@@ -51,63 +51,123 @@ class _ModernHomeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final uiState = UiPrefs.notifier.value;
+    final effectProfile = UiPrefs.resolveEffectProfile(
+      state: uiState,
+      isWeb: kIsWeb,
+    );
+    final showDecorGlow = !effectProfile.performanceMode;
+
     return Stack(
       children: [
         Positioned.fill(child: SLTheme.meshPattern()),
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: MediaQuery.of(context).padding.top + 36),
-                _MainHomeHeroCountdownSection(
-                  state: state,
-                  isSingle: isSingle,
-                  houseName: houseName,
-                  smartGreeting: smartGreeting,
-                  circleValue: circleValue,
-                  circleTopLabel: circleTopLabel,
-                  circleBottomLabel: circleBottomLabel,
-                  startDate: startDate,
-                  circleSize: circleSize,
-                  homeShowHouseName: homeShowHouseName,
-                  showDayCounter: showDayCounter,
-                  showLoveTimeDetail: showLoveTimeDetail,
-                  countdownStyleKey: countdownStyleKey,
-                  enableMotion: !state._deferHeavyHomeMotion,
-                  onEditStartDate: onEditStartDate,
-                  onEditTopLabel: onEditTopLabel,
-                  onEditBottomLabel: onEditBottomLabel,
-                ),
-                state._buildModernAvatarSection(
-                  isSingle: isSingle,
-                  nameU1: nameU1,
-                  nameU2: nameU2,
-                  avtUser1: avtUser1,
-                  avtUser2: avtUser2,
-                ),
-                SLSpacing.h16,
-                if (!isSingle)
-                  state._buildModernHighlightCard(
-                    startDate: startDate,
-                    isSingle: isSingle,
-                  ),
-                if (!isSingle) SLSpacing.h16,
-                state._buildModernMapCard(nameU1: nameU1, nameU2: nameU2),
-                SLSpacing.h16,
-                state._buildModernInsightCard(
-                  isSingle: isSingle,
-                  nameU1: nameU1,
-                  nameU2: nameU2,
-                ),
-                SLSpacing.h16,
-                state._buildHomeToolSlotSection(),
-                SLSpacing.gapH(140),
-              ],
+        if (showDecorGlow) ...[
+          Positioned(
+            top: -88,
+            right: -72,
+            child: _HomeDecorGlow(
+              size: 210,
+              color: SLColors.primary.withOpacity(0.16),
             ),
           ),
+          Positioned(
+            top: 250,
+            left: -96,
+            child: _HomeDecorGlow(
+              size: 230,
+              color: SLColors.secondary.withOpacity(0.13),
+            ),
+          ),
+        ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final horizontalPadding = SLResponsive.horizontalPaddingForWidth(
+              constraints.maxWidth,
+              compactPadding: 12,
+              handsetPadding: 16,
+              tabletPadding: 24,
+            );
+            final contentWidth = SLResponsive.maxContentWidthForWidth(
+              constraints.maxWidth,
+              handsetMax: 520,
+              tabletMax: 620,
+              desktopMax: 680,
+            );
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: contentWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: MediaQuery.of(context).padding.top + 36),
+                      RepaintBoundary(
+                        child: _MainHomeHeroCountdownSection(
+                          state: state,
+                          isSingle: isSingle,
+                          houseName: houseName,
+                          smartGreeting: smartGreeting,
+                          circleValue: circleValue,
+                          circleTopLabel: circleTopLabel,
+                          circleBottomLabel: circleBottomLabel,
+                          startDate: startDate,
+                          circleSize: circleSize,
+                          homeShowHouseName: homeShowHouseName,
+                          showDayCounter: showDayCounter,
+                          showLoveTimeDetail: showLoveTimeDetail,
+                          countdownStyleKey: countdownStyleKey,
+                          enableMotion: !state._deferHeavyHomeMotion,
+                          onEditStartDate: onEditStartDate,
+                          onEditTopLabel: onEditTopLabel,
+                          onEditBottomLabel: onEditBottomLabel,
+                        ),
+                      ),
+                      SLSpacing.h8,
+                      RepaintBoundary(
+                        child: state._buildModernAvatarSection(
+                          isSingle: isSingle,
+                          nameU1: nameU1,
+                          nameU2: nameU2,
+                          avtUser1: avtUser1,
+                          avtUser2: avtUser2,
+                        ),
+                      ),
+                      SLSpacing.h20,
+                      if (!isSingle)
+                        RepaintBoundary(
+                          child: state._buildModernHighlightCard(
+                            startDate: startDate,
+                            isSingle: isSingle,
+                          ),
+                        ),
+                      if (!isSingle) SLSpacing.h20,
+                      RepaintBoundary(
+                        child: state._buildModernMapCard(
+                          nameU1: nameU1,
+                          nameU2: nameU2,
+                        ),
+                      ),
+                      SLSpacing.h20,
+                      RepaintBoundary(
+                        child: state._buildModernInsightCard(
+                          isSingle: isSingle,
+                          nameU1: nameU1,
+                          nameU2: nameU2,
+                        ),
+                      ),
+                      SLSpacing.h20,
+                      RepaintBoundary(
+                        child: state._buildHomeToolSlotSection(),
+                      ),
+                      SLSpacing.gapH(148),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         ),
         _MainHomeHeroHeader(
           state: state,
@@ -120,3 +180,32 @@ class _ModernHomeBody extends StatelessWidget {
 }
 
 extension _MainHomeTabHeroSection on _MainHomeTabState {}
+
+class _HomeDecorGlow extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _HomeDecorGlow({
+    required this.size,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              color,
+              color.withOpacity(0.0),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

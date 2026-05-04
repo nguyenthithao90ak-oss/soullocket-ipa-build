@@ -168,6 +168,11 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
         const runSpacing = 12.0;
         final tileWidth =
             ((width - (columns - 1) * spacing) / columns).clamp(64.0, 110.0);
+        final effectProfile = UiPrefs.resolveEffectProfile(
+          state: UiPrefs.notifier.value,
+          isWeb: kIsWeb,
+        );
+        final imageCacheWidth = effectProfile.performanceMode ? 360 : 520;
 
         return Wrap(
           spacing: spacing,
@@ -207,7 +212,7 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
                       children: [
                         if (item.imageUrl != null && item.imageUrl!.isNotEmpty)
                           CachedNetworkImage(
-                            memCacheWidth: 720,
+                            memCacheWidth: imageCacheWidth,
                             imageUrl: item.imageUrl!,
                             fit: BoxFit.cover,
                             errorWidget: (_, __, ___) =>

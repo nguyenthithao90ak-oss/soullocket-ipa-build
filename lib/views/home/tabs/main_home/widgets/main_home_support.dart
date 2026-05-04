@@ -601,12 +601,11 @@ class _InteractionSuccessDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final uiState = UiPrefs.notifier.value;
-    final graphicsQuality = uiState.graphicsQualityKey == 'auto'
-        ? UiPrefs.getAutoGraphicsQuality()
-        : uiState.graphicsQualityKey;
-    final lightweightEffects = uiState.liteMode ||
-        graphicsQuality == 'low' ||
-        (kIsWeb && graphicsQuality != 'high');
+    final effectProfile = UiPrefs.resolveEffectProfile(
+      state: uiState,
+      isWeb: kIsWeb,
+    );
+    final lightweightEffects = !effectProfile.premiumEffects;
 
     final (dynamic iconOrEmoji, List<Color> gradient, Color accent) =
         switch (interactionType) {

@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+
+import '../views/ui_prefs.dart';
 
 /// Lazy-loads Lottie animations only when the widget is rendered.
 /// Saves 50-200KB per animation by deferring network requests.
@@ -41,6 +44,15 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
 
   @override
   Widget build(BuildContext context) {
+    final effectProfile = UiPrefs.resolveEffectProfile(
+      state: UiPrefs.notifier.value,
+      isWeb: kIsWeb,
+    );
+    if (!effectProfile.premiumEffects) {
+      return widget.errorWidget ??
+          SizedBox(width: widget.width, height: widget.height);
+    }
+
     if (!_shouldLoad) {
       // Show placeholder while waiting for load.
       return SizedBox(
