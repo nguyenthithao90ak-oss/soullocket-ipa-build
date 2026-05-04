@@ -824,7 +824,16 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   SLSpacing.w8,
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: _strokes.isEmpty ? null : _clearDrawing,
+                      onPressed: _showBackgroundPicker,
+                      icon: const Icon(Icons.wallpaper_rounded),
+                      label: const Text('Đổi nền'),
+                      style: _secondaryButtonStyle(),
+                    ),
+                  ),
+                  SLSpacing.w8,
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _hasAnyStroke ? _clearDrawing : null,
                       icon: const Icon(Icons.restart_alt_rounded),
                       label: const Text('Xóa nét vẽ'),
                       style: _secondaryButtonStyle(),
