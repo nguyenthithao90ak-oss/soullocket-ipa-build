@@ -22,11 +22,10 @@ class PrivateMediaUrlService {
     required String mediaId,
     required String kind,
   }) async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = await _waitForCurrentUser();
     if (user == null) {
       throw Exception('Vui lòng đăng nhập lại để xem nội dung này.');
     }
-    // Force refresh token to ensure authentication for Cloud Functions
     await user.getIdToken(true);
 
     final callable = _functions.httpsCallable('resolvePrivateMediaUrl');
