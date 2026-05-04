@@ -121,6 +121,34 @@ class _HabitScreenState extends State<HabitScreen> {
     return '${d.day}-${d.month}-${d.year}';
   }
 
+  void _showHabitInfo() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Theo dõi thói quen hoạt động thế nào?',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: Text(
+          '• Nhập tên thói quen rồi bấm + để tạo.\n'
+          '• Bấm biểu tượng đồng hồ nếu muốn đặt giờ nhắc.\n'
+          '• Nếu có đặt giờ, app sẽ gửi nhắc nhở trong ngày khi tới khoảng 30 phút trước giờ đã chọn trở đi.\n'
+          '• Mỗi thói quen chỉ nhắc 1 lần mỗi ngày, lưu bằng last_reminded_date.\n'
+          '• Bấm từng ô ngày để đánh dấu đã làm hoặc bỏ đánh dấu.\n'
+          '• Chuỗi ngày được tính theo các ngày đã hoàn thành gần nhất.',
+          style: SLTheme.quicksand(height: 1.45),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _habitController.dispose();
@@ -157,6 +185,14 @@ class _HabitScreenState extends State<HabitScreen> {
               color: Colors.white, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Giới thiệu theo dõi thói quen',
+            icon: const Icon(Icons.info_outline_rounded,
+                color: Colors.white, size: 22),
+            onPressed: _showHabitInfo,
+          ),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
