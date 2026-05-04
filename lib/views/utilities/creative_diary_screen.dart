@@ -665,6 +665,10 @@ class _DiaryPageCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
+          if (page.imageUrls.isNotEmpty) ...[
+            _DiaryAttachmentStrip(page: page),
+            const SizedBox(height: 14),
+          ],
           Expanded(
             child: Container(
               width: double.infinity,
