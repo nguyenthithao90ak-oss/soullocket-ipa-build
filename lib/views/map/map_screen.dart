@@ -1398,14 +1398,62 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _scheduleMapReadyWatchdog();
   }
 
-  void _queueMapIntroNotice() {
-    if (_didQueueMapIntroNotice) return;
-    _didQueueMapIntroNotice = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      unawaited(_maybeShowFirstMapNotice());
-    });
+  Widget _buildMapMarkerBubble({
+    required _MapMarkerSpec marker,
+    required double size,
+    required String? avatarUrl,
+    required IconData icon,
+    required Color color,
+    required bool compact,
+    required bool pulse,
+  }) {
+    final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: compact ? color : null,
+        gradient: compact
+            ? null
+            : LinearGradient(
+                colors: [Color.lerp(color, Colors.white, 0.16)!, color],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        shape: BoxShape.circle,
+        boxShadow: compact
+            ? const []
+            : [
+                BoxShadow(
+                  color: color.withOpacity(0.28),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+        border: Border.all(
+          color: pulse
+              ? color.withOpacity(0.92)
+              : Colors.white.withOpacity(compact ? 0.78 : 0.88),
+          width: pulse ? 2.2 : (compact ? 1.2 : 1.6),
+        ),
+        image: hasAvatar
+            ? DecorationImage(
+                image: CachedNetworkImageProvider(avatarUrl),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      child: hasAvatar
+          ? null
+          : Icon(
+              icon,
+              color: Colors.white,
+              size: compact ? 16 : 20,
+            ),
+    );
   }
+
+  void _queueMapIntroNotice() {
 }
 
 class _LiveUiSnapshot {
@@ -1568,9 +1616,9 @@ class _MapMarkerSpec {
   final ll.LatLng point;
   final IconData icon;
   final Color color;
-  final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool compact;
   final bool pulse;
   final String? avatarUrl;
   final String? secondaryAvatarUrl;
