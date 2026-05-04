@@ -718,7 +718,15 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                       height: canvasHeight,
                       width: double.infinity,
                       child: CustomPaint(
-                        painter: _DrawingCanvasPainter(strokes: _strokes),
+                        painter: _DrawingCanvasPainter(
+                          backgroundId: _backgroundId,
+                          strokes: [
+                            ..._realtimeStrokes.values,
+                            ..._strokes.where(
+                              (stroke) => _localPendingStrokeIds.contains(stroke.id),
+                            ),
+                          ],
+                        ),
                         child: const SizedBox.expand(),
                       ),
                     ),
