@@ -663,19 +663,23 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
   }
 
   Widget _buildCanvasCard() {
+    final template = _activeTemplate;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 8),
       padding: SLSpacing.all12,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFF2F7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: template.softGradient,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFF8D7E2)),
+        border: Border.all(color: template.accent.withOpacity(0.22)),
         boxShadow: [
+          BoxShadow(
+            color: template.accent.withOpacity(0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
           BoxShadow(
             color: const Color(0xFFD81B60).withOpacity(0.08),
             blurRadius: 22,
@@ -691,7 +695,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
             style: SLTheme.quicksand(
               fontSize: 17,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFFD81B60),
+              color: template.accent,
             ),
           ),
           SLSpacing.h8,
@@ -709,8 +713,14 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
             aspectRatio: _aspectRatio,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
                 borderRadius: SLRadius.xlAll,
+                boxShadow: [
+                  BoxShadow(
+                    color: template.accent.withOpacity(0.16),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               clipBehavior: Clip.hardEdge,
               child: Stack(
@@ -723,15 +733,16 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(4),
+                        color: Colors.white.withOpacity(0.76),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: template.accent.withOpacity(0.18)),
                       ),
                       child: Text(
                         'SoulLocket',
                         style: SLTheme.quicksand(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFFD81B60),
+                          color: template.accent,
                         ),
                       ),
                     ),
@@ -770,7 +781,73 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       );
     }
 
-    switch (_selectedLayout) {
+    final template = _activeTemplate;
+    final caption = _captionController.text.trim();
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        DecoratedBox(decoration: BoxDecoration(gradient: template.gradient)),
+        Padding(
+          padding: EdgeInsets.all(template.padding),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(template.radius),
+            child: switch (_selectedLayout) {
+              1 => _buildImageTile(0),
+              2 => Row(
+                  children: [
+                    Expanded(child: _buildImageTile(0)),
+                    _gap(width: template.gap),
+                    Expanded(child: _buildImageTile(1)),
+                  ],
+                ),
+              3 => Row(
+                  children: [
+                    Expanded(flex: 3, child: _buildImageTile(0)),
+                    _gap(width: template.gap),
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        children: [
+                          Expanded(child: _buildImageTile(1)),
+                          _gap(height: template.gap),
+                          Expanded(child: _buildImageTile(2)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              _ => _buildMosaicGrid(template),
+            },
+          ),
+        ),
+        if (caption.isNotEmpty)
+          Positioned(
+            left: template.padding + 12,
+            right: template.padding + 12,
+            bottom: template.padding + 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: template.captionColor,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white.withOpacity(0.36)),
+              ),
+              child: Text(
+                caption,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 13,
+                  height: 1.2,
+                  fontWeight: FontWeight.w900,
+                  color: template.captionTextColor,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
       case 1:
         return _buildImageTile(0);
       case 2:
