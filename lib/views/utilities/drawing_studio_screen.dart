@@ -1359,7 +1359,11 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   borderRadius: SLRadius.pillAll,
                 ),
                 child: Text(
-                  item.mode == 'frame' ? 'Khung' : 'Tranh',
+                  item.mode == 'sticker'
+                      ? 'Sticker'
+                      : item.mode == 'frame'
+                          ? 'Khung'
+                          : 'Tranh',
                   style: SLTheme.quicksand(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
