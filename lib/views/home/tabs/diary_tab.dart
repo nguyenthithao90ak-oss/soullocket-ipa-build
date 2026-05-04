@@ -197,9 +197,10 @@ class _DiaryTabState extends State<DiaryTab> {
       );
       return;
     }
-    if (photos.length > MemoryShareService.maxPhotosPerShare) {
+    final memoryLimits = await _memoryShareService.fetchLimits();
+    if (photos.length > memoryLimits.shareMaxItems) {
       _showDiarySnackBar(
-        'Mỗi liên kết chỉ hỗ trợ tối đa ${MemoryShareService.maxPhotosPerShare} ảnh. Hãy bỏ chọn bớt ảnh nhé.',
+        'Mỗi liên kết chỉ hỗ trợ tối đa ${memoryLimits.shareMaxItems} ảnh. Hãy bỏ chọn bớt ảnh nhé.',
         backgroundColor: const Color(0xFFE53935),
       );
       return;
