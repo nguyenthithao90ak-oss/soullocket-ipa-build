@@ -169,10 +169,12 @@ class MemoryShareService {
   }
 
   List<Map<String, dynamic>> _sanitizePhotos(
-      List<Map<String, dynamic>> photos) {
+    List<Map<String, dynamic>> photos,
+    int maxItems,
+  ) {
     final sanitized = <Map<String, dynamic>>[];
     for (final photo in photos) {
-      if (sanitized.length >= maxPhotosPerShare) {
+      if (sanitized.length >= maxItems) {
         break;
       }
       final url = _firstShareableUrl(photo);
