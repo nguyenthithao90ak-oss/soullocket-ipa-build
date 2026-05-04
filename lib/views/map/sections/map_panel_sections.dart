@@ -209,7 +209,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
     required String heroTag,
     required IconData icon,
     required Color color,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -229,7 +229,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
         backgroundColor: const Color(0xE618191A),
         elevation: 0,
         onPressed: onTap,
-        child: Icon(icon, color: color),
+        child: Icon(icon, color: onTap == null ? _kMapTextMuted : color),
       ),
     );
   }
@@ -560,6 +560,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       avatarUrl: widget.myAvatarUrl,
                       gpsPoint: uiSnap.myPoint,
                       addressText: uiSnap.myAddressText,
+                      updatedText: uiSnap.myUpdatedText,
                       isLive: uiSnap.myIsLive,
                       hasHistory: uiSnap.myHasHistory,
                     ),
@@ -585,6 +586,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       avatarUrl: widget.partnerAvatarUrl,
                       gpsPoint: uiSnap.partnerPoint,
                       addressText: uiSnap.partnerAddressText,
+                      updatedText: uiSnap.partnerUpdatedText,
                       isLive: uiSnap.partnerIsLive,
                       hasHistory: uiSnap.partnerHasHistory,
                     ),
@@ -601,6 +603,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
     required String avatarUrl,
     required _GpsPoint? gpsPoint,
     required String addressText,
+    required String updatedText,
     required bool isLive,
     required bool hasHistory,
   }) {
@@ -685,6 +688,29 @@ extension _MapPanelSectionsExt on _MapScreenState {
               color: _kMapTextMuted,
               height: 1.35,
             ),
+          ),
+          SLSpacing.h8,
+          Row(
+            children: [
+              Icon(
+                isLive ? Icons.bolt_rounded : Icons.history_rounded,
+                size: 13,
+                color: statusColor,
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  isLive ? 'Live • $updatedText' : 'Gần nhất • $updatedText',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: 10.6,
+                    fontWeight: FontWeight.w900,
+                    color: statusColor,
+                  ),
+                ),
+              ),
+            ],
           ),
           if (gpsPoint != null) ...[
             SLSpacing.h8,

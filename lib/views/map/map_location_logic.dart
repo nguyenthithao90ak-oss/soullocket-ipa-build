@@ -146,6 +146,8 @@ extension _MapLocationLogicExt on _MapScreenState {
     return [
       _myAddressText,
       _partnerAddressText,
+      _lastUpdatedLabel(myPoint?.ts),
+      _lastUpdatedLabel(partnerPoint?.ts),
       _distanceText,
       _routeDistanceText,
       _etaText,
@@ -1153,6 +1155,9 @@ extension _MapLocationLogicExt on _MapScreenState {
       isFetchingRoute: _isFetchingRoute,
       myAddressText: _myAddressText,
       partnerAddressText: _partnerAddressText,
+      myUpdatedText: _lastUpdatedLabel(_effectiveGpsForRole(widget.myRole)?.ts),
+      partnerUpdatedText:
+          _lastUpdatedLabel(_effectiveGpsForRole(widget.partnerRole)?.ts),
       distanceText: _distanceText,
       routeDistanceText: _routeDistanceText,
       etaText: _etaText,
@@ -1185,6 +1190,17 @@ extension _MapLocationLogicExt on _MapScreenState {
       _partnerAddressKey = partnerKey;
       _resolveAddressForPoint(partnerPoint, false);
     }
+  }
+
+  String _lastUpdatedLabel(int? ts) {
+    if (ts == null || ts <= 0) return 'Chưa có thời gian';
+    final age = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(ts),
+    );
+    if (age.inSeconds < 45) return 'Vừa cập nhật';
+    if (age.inMinutes < 60) return '${age.inMinutes} phút trước';
+    if (age.inHours < 24) return '${age.inHours} giờ trước';
+    return '${age.inDays} ngày trước';
   }
 
   void _refreshLiveDataSmart() {

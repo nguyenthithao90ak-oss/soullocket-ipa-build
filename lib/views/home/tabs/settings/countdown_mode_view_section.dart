@@ -1633,14 +1633,52 @@ extension _CountdownModeIndependentScreenViewPart
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Không gian riêng cho bạn bè',
-                  style: SLTheme.quicksand(
-                    fontSize: 29,
-                    fontWeight: FontWeight.w900,
-                    color: titleColor,
-                    height: 1.02,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        margin: const EdgeInsets.only(right: 10, top: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(
+                            themeData.isDark ? 0.10 : 0.58,
+                          ),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(
+                              themeData.isDark ? 0.14 : 0.72,
+                            ),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _surfaceShadowColor(themeData),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 17,
+                          color: titleColor,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        'Không gian riêng cho bạn bè',
+                        style: SLTheme.quicksand(
+                          fontSize: 29,
+                          fontWeight: FontWeight.w900,
+                          color: titleColor,
+                          height: 1.02,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 10),
                 Text(

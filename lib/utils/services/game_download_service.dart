@@ -50,14 +50,9 @@ class GameDownloadService extends ChangeNotifier {
         'Believer_ImagineDragons_Tutorial.mp3',
       ],
     ),
-    // New entries for Caro Neon and Heart Catcher (no external assets needed)
+    // New entry for Caro Neon (no external assets needed)
     'caro_neon': const GameAssetInfo(
       gameId: 'caro_neon',
-      storagePath: '',
-      relativePaths: [],
-    ),
-    'heart_catcher': const GameAssetInfo(
-      gameId: 'heart_catcher',
       storagePath: '',
       relativePaths: [],
     ),
@@ -69,8 +64,8 @@ class GameDownloadService extends ChangeNotifier {
 
   Future<bool> isGameDownloaded(String gameId) async {
     final config = _gameConfigs[gameId];
-    if (config == null) {
-      final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
+    if (config == null || config.relativePaths.isEmpty) {
       return prefs.getBool('game_downloaded_$gameId') ?? false;
     }
 
@@ -82,9 +77,7 @@ class GameDownloadService extends ChangeNotifier {
       }
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('game_downloaded_$gameId', true);
-    return true;
+    return prefs.getBool('game_downloaded_$gameId') ?? false;
   }
 
   Future<void> downloadGame(String gameId) async {

@@ -7,7 +7,7 @@ String _sanitizeOtpDialogError(Object error) {
   return error
       .toString()
       .replaceFirst('Exception: ', '')
-      .replaceFirst('Loi: ', '');
+      .replaceFirst('Lỗi: ', '');
 }
 
 Future<bool> showSettingsEmailOtpDialog({

@@ -353,6 +353,17 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
       child: Column(
         children: [
           _buildFloatingAction(
+            heroTag: 'map_refresh_gps_btn',
+            icon: _isBootstrappingLocation
+                ? Icons.hourglass_top_rounded
+                : Icons.gps_fixed_rounded,
+            color: const Color(0xFF10B981),
+            onTap: _isBootstrappingLocation
+                ? null
+                : () => _bootstrapLocationTracking(forcePrompt: true),
+          ),
+          SLSpacing.h12,
+          _buildFloatingAction(
             heroTag: 'map_checkin_btn',
             icon: Icons.add_location_alt_rounded,
             color: _kMapPinkDeep,

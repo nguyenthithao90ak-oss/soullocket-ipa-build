@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/material.dart';
@@ -8,7 +8,6 @@ import '../../../core/sl_theme.dart';
 import '../../utilities/block_blast_game.dart';
 import '../../utilities/soul_rhythm_game.dart';
 import '../../utilities/caro_neon_screen.dart';
-import '../../utilities/heart_catcher_game.dart';
 import '../../../utils/services/game_download_service.dart';
 import '../../../services/admob_service.dart';
 
@@ -30,7 +29,6 @@ class _GameTabState extends State<GameTab> {
     'soul_block': false,
     'soul_rhythm': false,
     'caro_neon': false,
-    'heart_catcher': false,
   };
 
   final Map<String, double> _downloadProgress = {};
@@ -233,19 +231,16 @@ class _GameTabState extends State<GameTab> {
                             downloadService.isGameDownloaded('soul_block'),
                             downloadService.isGameDownloaded('soul_rhythm'),
                             downloadService.isGameDownloaded('caro_neon'),
-                            downloadService.isGameDownloaded('heart_catcher'),
                           ]).then((results) => {
                             'soul_block': results[0],
                             'soul_rhythm': results[1],
                             'caro_neon': results[2],
-                            'heart_catcher': results[3],
                           }),
                           builder: (context, snapshot) {
                             final statuses = snapshot.data ?? {};
                             final soulBlockDownloaded = statuses['soul_block'] ?? false;
                             final soulRhythmDownloaded = statuses['soul_rhythm'] ?? false;
                             final caroNeonDownloaded = statuses['caro_neon'] ?? false;
-                            final heartCatcherDownloaded = statuses['heart_catcher'] ?? false;
                             return GridView.count(
                               crossAxisCount: crossAxisCount,
                               crossAxisSpacing: spacing,
@@ -280,19 +275,6 @@ class _GameTabState extends State<GameTab> {
                                   onTap: () => _onGameTap('caro_neon', () => Navigator.push(
                                     context,
                                     MaterialPageRoute(builder: (_) => const CaroNeonScreen()),
-                                  )),
-                                ),
-                                _GenericGameCard(
-                                  label: 'Heart Catcher',
-                                  icon: Icons.favorite_rounded,
-                                  color: const Color(0xFFFF4081),
-                                  isDownloaded: heartCatcherDownloaded,
-                                  downloadProgress: downloadService.getProgress('heart_catcher'),
-                                  onLongPress: heartCatcherDownloaded ? () => _confirmDeleteGame(context, 'heart_catcher', 'Heart Catcher') : null,
-                                  onDelete: heartCatcherDownloaded ? () => _confirmDeleteGame(context, 'heart_catcher', 'Heart Catcher') : null,
-                                  onTap: () => _onGameTap('heart_catcher', () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => const HeartCatcherGame()),
                                   )),
                                 ),
                               ],

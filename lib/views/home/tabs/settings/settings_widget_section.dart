@@ -224,6 +224,12 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         return;
       }
       try {
+        if (Theme.of(context).platform == TargetPlatform.iOS) {
+          await _persistAndSyncWidgetAppearance();
+          if (!mounted) return;
+          _showToast(context.tr('ios_widget_pin_guide'), success: true);
+          return;
+        }
         final supported = await HomeWidget.isRequestPinWidgetSupported();
         if (!mounted) return;
         if (supported != true) {
@@ -394,7 +400,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     Color(0xFFFF7A59),
                   ],
                   child: Text(
-                    'Dang dung kieu: ${_widgetStyleLabel(_widgetStyleKey)}',
+                    'Đang dùng kiểu: ${_widgetStyleLabel(_widgetStyleKey)}',
                     style: SLTheme.quicksand(
                       fontSize: 12.8,
                       fontWeight: FontWeight.w800,
@@ -416,60 +422,61 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final useColumn = constraints.maxWidth < 330;
-                          if (useColumn) {
-                            return Column(
+                      if (Theme.of(context).platform != TargetPlatform.iOS)
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final useColumn = constraints.maxWidth < 330;
+                            if (useColumn) {
+                              return Column(
+                                children: [
+                                  _buildGradientBtn(
+                                    label: context.tr('add_widget'),
+                                    gradient: const [
+                                      Color(0xFF10C8E6),
+                                      Color(0xFF0E9EB0),
+                                    ],
+                                    onTap: handlePinWidget,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _buildGradientBtn(
+                                    label: context.tr('update_widget'),
+                                    gradient: const [
+                                      Color(0xFFFF7898),
+                                      Color(0xFFD81B60),
+                                    ],
+                                    onTap: handleRefreshWidget,
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Row(
                               children: [
-                                _buildGradientBtn(
-                                  label: context.tr('add_widget'),
-                                  gradient: const [
-                                    Color(0xFF10C8E6),
-                                    Color(0xFF0E9EB0),
-                                  ],
-                                  onTap: handlePinWidget,
+                                Expanded(
+                                  child: _buildGradientBtn(
+                                    label: context.tr('add_widget'),
+                                    gradient: const [
+                                      Color(0xFF10C8E6),
+                                      Color(0xFF0E9EB0),
+                                    ],
+                                    onTap: handlePinWidget,
+                                  ),
                                 ),
-                                const SizedBox(height: 10),
-                                _buildGradientBtn(
-                                  label: context.tr('update_widget'),
-                                  gradient: const [
-                                    Color(0xFFFF7898),
-                                    Color(0xFFD81B60),
-                                  ],
-                                  onTap: handleRefreshWidget,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildGradientBtn(
+                                    label: context.tr('update_widget'),
+                                    gradient: const [
+                                      Color(0xFFFF7898),
+                                      Color(0xFFD81B60),
+                                    ],
+                                    onTap: handleRefreshWidget,
+                                  ),
                                 ),
                               ],
                             );
-                          }
-
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: _buildGradientBtn(
-                                  label: context.tr('add_widget'),
-                                  gradient: const [
-                                    Color(0xFF10C8E6),
-                                    Color(0xFF0E9EB0),
-                                  ],
-                                  onTap: handlePinWidget,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildGradientBtn(
-                                  label: context.tr('update_widget'),
-                                  gradient: const [
-                                    Color(0xFFFF7898),
-                                    Color(0xFFD81B60),
-                                  ],
-                                  onTap: handleRefreshWidget,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
+                          },
+                        ),
                       if (Theme.of(context).platform == TargetPlatform.iOS) ...[
                         const SizedBox(height: 12),
                         Container(

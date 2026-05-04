@@ -889,6 +889,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       isFetchingRoute: _isFetchingRoute,
       myAddressText: _myAddressText,
       partnerAddressText: _partnerAddressText,
+      myUpdatedText: _lastUpdatedLabel(_effectiveGpsForRole(widget.myRole)?.ts),
+      partnerUpdatedText:
+          _lastUpdatedLabel(_effectiveGpsForRole(widget.partnerRole)?.ts),
       distanceText: _distanceText,
       routeDistanceText: _routeDistanceText,
       etaText: _etaText,
@@ -1435,6 +1438,8 @@ class _LiveUiSnapshot {
   final bool isFetchingRoute;
   final String myAddressText;
   final String partnerAddressText;
+  final String myUpdatedText;
+  final String partnerUpdatedText;
   final String distanceText;
   final String routeDistanceText;
   final String etaText;
@@ -1451,6 +1456,8 @@ class _LiveUiSnapshot {
     required this.isFetchingRoute,
     required this.myAddressText,
     required this.partnerAddressText,
+    required this.myUpdatedText,
+    required this.partnerUpdatedText,
     required this.distanceText,
     required this.routeDistanceText,
     required this.etaText,
@@ -1468,6 +1475,8 @@ class _LiveUiSnapshot {
         isFetchingRoute: false,
         myAddressText: 'Chưa có vị trí',
         partnerAddressText: 'Chưa có vị trí',
+        myUpdatedText: 'Chưa có thời gian',
+        partnerUpdatedText: 'Chưa có thời gian',
         distanceText: 'Đang định vị...',
         routeDistanceText: '--',
         etaText: '--',
