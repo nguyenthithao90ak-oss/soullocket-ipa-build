@@ -18,11 +18,6 @@ class SocialAuthButtons extends StatelessWidget {
         iconKind: _SocialIconKind.google,
       ),
       _SocialProviderData(
-        providerId: 'Facebook',
-        caption: 'Facebook',
-        iconKind: _SocialIconKind.facebook,
-      ),
-      _SocialProviderData(
         providerId: 'Apple',
         caption: 'Apple',
         iconKind: _SocialIconKind.apple,
