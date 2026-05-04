@@ -1184,8 +1184,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (_myLocation != null) points.add(_myLocation!);
     if (_partnerLocation != null) points.add(_partnerLocation!);
     if (_routeSnapshot != null && _routeSnapshot!.points.isNotEmpty) {
-      points.add(_routeSnapshot!.points.first);
-      points.add(_routeSnapshot!.points.last);
+      points.addAll(
+        _compressLatLngPoints(_routeSnapshot!.points, maxPoints: 80),
+      );
     }
     if (includeHistory) {
       points.addAll(
