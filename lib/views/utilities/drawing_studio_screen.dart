@@ -298,17 +298,42 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   void _clearDrawing() {
-    if (_strokes.isEmpty) {
+    if (!_hasAnyStroke) {
       return;
     }
-    setState(() => _strokes.clear());
+    final uid = _auth.currentUser?.uid ?? '';
+    setState(() {
+      _strokes.clear();
+      _realtimeStrokes.clear();
+      _localPendingStrokeIds.clear();
+    });
+    if (uid.isNotEmpty) {
+      unawaited(_drawingService.clearRealtimeCanvas(
+        houseId: widget.houseId,
+        uid: uid,
+      ));
+    }
   }
 
   void _undoStroke() {
-    if (_strokes.isEmpty) {
+    final uid = _auth.currentUser?.uid ?? '';
+    if (_strokes.isNotEmpty) {
+      final stroke = _strokes.removeLast();
+      _localPendingStrokeIds.remove(stroke.id);
+      setState(() {});
       return;
     }
-    setState(() => _strokes.removeLast());
+    if (uid.isEmpty) return;
+    final ownStrokes = _realtimeStrokes.entries
+        .where((entry) => entry.value.authorUid == uid)
+        .toList();
+    if (ownStrokes.isEmpty) return;
+    final latest = ownStrokes.last;
+    setState(() => _realtimeStrokes.remove(latest.key));
+    unawaited(_drawingService.deleteStroke(
+      houseId: widget.houseId,
+      strokeId: latest.key,
+    ));
   }
 
   Future<Uint8List> _captureCanvasPng() async {
