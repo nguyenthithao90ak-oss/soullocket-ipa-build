@@ -963,6 +963,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
           ],
         ),
         const SizedBox(height: 20),
+        _buildEditHeroCard(colors),
+        const SizedBox(height: 18),
         _sectionCard(
           title: 'Thông tin gửi quà',
           subtitle: 'Viết những lời ngọt ngào nhất gửi đến người ấy nhé.',
