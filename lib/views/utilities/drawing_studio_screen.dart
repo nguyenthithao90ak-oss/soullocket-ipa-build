@@ -1654,7 +1654,7 @@ class _DrawingCanvasPainter extends CustomPainter {
       );
       path.quadraticBezierTo(point.dx, point.dy, midPoint.dx, midPoint.dy);
     }
-    final last = stroke.points.last;
+    final last = points.last;
     path.lineTo(last.dx, last.dy);
     canvas.drawPath(path, paint);
   }
