@@ -217,9 +217,9 @@ class LoginForm extends StatelessWidget {
           Center(
             child: Text(
               isVietnamese
-                  ? 'Đăng nhập / Đăng ký qua Google hoặc Facebook đồng nghĩa\n'
+                  ? 'Đăng nhập / Đăng ký qua Google hoặc Apple đồng nghĩa\n'
                       'bạn xác nhận đủ 13 tuổi và đồng ý với Điều khoản.'
-                  : 'By continuing with Google or Facebook, you confirm\nyou are 13+ and agree to our Terms.',
+                  : 'By continuing with Google or Apple, you confirm\nyou are 13+ and agree to our Terms.',
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 color: const Color(0xFF999999),

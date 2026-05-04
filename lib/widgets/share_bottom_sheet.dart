@@ -479,13 +479,6 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                   padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 12),
                   children: [
                     _buildExternalShareItem(
-                      icon: Icons.facebook_rounded,
-                      label: 'Facebook',
-                      color: const Color(0xFF1877F2),
-                      onTap: _shareToExternal,
-                      compact: compact,
-                    ),
-                    _buildExternalShareItem(
                       icon: Icons.message_rounded,
                       label: 'Zalo',
                       color: const Color(0xFF0068FF),
