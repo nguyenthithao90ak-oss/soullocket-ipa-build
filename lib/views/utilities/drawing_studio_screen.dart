@@ -329,6 +329,82 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     return byteData.buffer.asUint8List();
   }
 
+  Future<void> _selectBackground(String id) async {
+    final uid = _auth.currentUser?.uid ?? '';
+    setState(() => _backgroundId = id);
+    if (uid.isEmpty) return;
+    try {
+      await _drawingService.setBackground(
+        houseId: widget.houseId,
+        uid: uid,
+        background: DrawingStudioBackground(id: id),
+      );
+    } catch (_) {
+      _showSnack('Chưa đồng bộ được nền mới.');
+    }
+  }
+
+  Future<void> _showBackgroundPicker() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return SafeArea(
+          child: Container(
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 26,
+                  offset: const Offset(0, 14),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Chọn nền vẽ',
+                  style: SLTheme.quicksand(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFFD81B60),
+                  ),
+                ),
+                SLSpacing.h12,
+                GridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  shrinkWrap: true,
+                  childAspectRatio: 2.5,
+                  children: const [
+                    _BackgroundChoice(id: 'paper_grid', label: 'Giấy caro'),
+                    _BackgroundChoice(id: 'blank_paper', label: 'Giấy trắng'),
+                    _BackgroundChoice(id: 'hearts', label: 'Tim hồng'),
+                    _BackgroundChoice(id: 'night_stars', label: 'Đêm sao'),
+                    _BackgroundChoice(id: 'blackboard', label: 'Bảng phấn'),
+                    _BackgroundChoice(id: 'notebook', label: 'Vở kẻ dòng'),
+                    _BackgroundChoice(id: 'photo_frame', label: 'Khung ảnh'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).then((value) {
+      if (value is String) {
+        unawaited(_selectBackground(value));
+      }
+    });
+  }
+
   Future<void> _saveDrawing() async {
     if (_strokes.isEmpty || _isSaving) {
       return;
