@@ -593,53 +593,124 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   }
 
   Widget _buildImagePicker() {
+    final hasImage = _selectedImage != null;
     return GestureDetector(
       onTap: _pickImage,
-      child: Container(
-        padding: SLSpacing.all16,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 148,
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: _tileFill,
-          borderRadius: SLRadius.lgAll,
-          border: Border.all(color: _tileBorder),
+          gradient: LinearGradient(
+            colors: hasImage
+                ? [Colors.white.withOpacity(0.36), Colors.white.withOpacity(0.18)]
+                : [const Color(0x33FFFFFF), const Color(0x1FFFFFFF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: hasImage ? const Color(0xFFFFD1E3) : Colors.white.withOpacity(0.32),
+            width: hasImage ? 1.4 : 1,
+          ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.image, color: _textMuted, size: 20),
-                SLSpacing.w16,
-                Text(
-                  'Đính kèm ảnh:',
-                  style: SLTheme.quicksand(
-                    color: _textMuted,
-                    fontWeight: FontWeight.w700,
+        child: hasImage
+            ? Stack(
+                children: [
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Image.file(
+                        File(_selectedImage!.path),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            if (_selectedImage != null)
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  image: DecorationImage(
-                    image: FileImage(File(_selectedImage!.path)),
-                    fit: BoxFit.cover,
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        gradient: LinearGradient(
+                          colors: [Colors.transparent, Colors.black.withOpacity(0.44)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  Positioned(
+                    left: 10,
+                    right: 10,
+                    bottom: 10,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.image_rounded, color: Colors.white, size: 18),
+                        SLSpacing.w6,
+                        Expanded(
+                          child: Text(
+                            'Đã chọn ảnh',
+                            style: SLTheme.quicksand(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.20),
+                            borderRadius: SLRadius.pillAll,
+                          ),
+                          child: Text(
+                            'Đổi',
+                            style: SLTheme.quicksand(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               )
-            else
-              Text(
-                'Chọn ảnh',
-                style: SLTheme.quicksand(
-                  color: _textPrimary,
-                  fontWeight: FontWeight.w900,
-                ),
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withOpacity(0.26)),
+                    ),
+                    child: const Icon(Icons.add_photo_alternate_rounded,
+                        color: Colors.white, size: 24),
+                  ),
+                  SLSpacing.h10,
+                  Text(
+                    'Chọn ảnh',
+                    style: SLTheme.quicksand(
+                      color: _textPrimary,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                    ),
+                  ),
+                  SLSpacing.h4,
+                  Text(
+                    'Kỷ niệm đính kèm',
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      color: _textMuted,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
-          ],
-        ),
       ),
     );
   }
