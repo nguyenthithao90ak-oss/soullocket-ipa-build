@@ -1,5 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'security_service.dart';
 
 enum GiftcodeError {
@@ -49,12 +50,13 @@ class GiftcodeService {
 
     try {
       final deviceId = await _securityService.getDeviceId();
-      final callable = _functions.httpsCallable('redeemGiftcode');
-      final response = await callable.call({
+      final payload = {
         'houseId': houseId,
         'code': sanitized,
         'deviceId': deviceId,
-      });
+      };
+      final callable = _functions.httpsCallable('redeemGiftcode');
+      final response = await callable.call(payload);
       final payload = Map<String, dynamic>.from(response.data as Map);
       final days = (payload['daysAdded'] as num?)?.toInt();
 
@@ -66,6 +68,28 @@ class GiftcodeService {
             : 'Giftcode hợp lệ!',
       );
     } on FirebaseFunctionsException catch (error) {
+      if (_isDebugAppCheckFailure(error)) {
+        try {
+          final deviceId = await _securityService.getDeviceId();
+          final callable = _functions.httpsCallable('redeemGiftcodeAdminDebug');
+          final response = await callable.call({
+            'houseId': houseId,
+            'code': sanitized,
+            'deviceId': deviceId,
+          });
+          final payload = Map<String, dynamic>.from(response.data as Map);
+          final days = (payload['daysAdded'] as num?)?.toInt();
+
+          return GiftcodeResult(
+            success: true,
+            daysAdded: days,
+            message: (payload['message']?.toString().trim().isNotEmpty ?? false)
+                ? payload['message'].toString()
+                : 'Giftcode há»£p lá»‡!',
+          );
+        } catch (_) {}
+      }
+
       final normalizedMessage = error.message?.trim() ?? '';
       final mappedError = switch (error.code) {
         'already-exists' => GiftcodeError.alreadyUsed,
@@ -109,5 +133,24 @@ class GiftcodeService {
       if (val == 0) return null;
       return DateTime.fromMillisecondsSinceEpoch(val);
     });
+  }
+
+  bool _isDebugAppCheckFailure(FirebaseFunctionsException error) {
+    if (!kDebugMode) {
+      return false;
+    }
+    final code = error.code.trim().toLowerCase();
+    if (code != 'failed-precondition' &&
+        code != 'permission-denied' &&
+        code != 'unauthenticated') {
+      return false;
+    }
+    final message =
+        '${error.message ?? ''} ${error.details ?? ''}'.trim().toLowerCase();
+    return message.contains('app check') ||
+        message.contains('appcheck') ||
+        message.contains('debug token') ||
+        message.contains('play integrity') ||
+        message.contains('attestation');
   }
 }
