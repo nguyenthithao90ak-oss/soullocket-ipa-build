@@ -1888,10 +1888,10 @@ class _DrawingCanvasPainter extends CustomPainter {
     final gridPaint = Paint()
       ..color = color
       ..strokeWidth = 1;
-    for (double x = 0; x <= size.width; x += 28) {
+    for (double x = 0; x <= size.width; x += step) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
     }
-    for (double y = 0; y <= size.height; y += 28) {
+    for (double y = 0; y <= size.height; y += step) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
   }
