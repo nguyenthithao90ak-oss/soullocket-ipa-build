@@ -645,7 +645,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                     child: Row(
                       children: [
                         const Icon(Icons.image_rounded, color: Colors.white, size: 18),
-                        SLSpacing.w6,
+                        SLSpacing.gapW(6),
                         Expanded(
                           child: Text(
                             'Đã chọn ảnh',
