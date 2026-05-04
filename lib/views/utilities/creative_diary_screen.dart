@@ -1251,6 +1251,7 @@ class _DiaryPageData {
   final Color accent;
   final Color surface;
   final IconData icon;
+  final List<String> imageUrls;
 
   int get wordCount => RegExp(r'\S+').allMatches(memory.trim()).length;
 
@@ -1264,6 +1265,7 @@ class _DiaryPageData {
     required this.accent,
     required this.surface,
     required this.icon,
+    required this.imageUrls,
   });
 
   factory _DiaryPageData.fromMap(Map<dynamic, dynamic> raw, int index) {
@@ -1287,7 +1289,38 @@ class _DiaryPageData {
       accent: palette.accent,
       surface: palette.surface,
       icon: palette.icon,
+      imageUrls: _readImageUrls(raw, metadata),
     );
+  }
+
+  static List<String> _readImageUrls(
+    Map<dynamic, dynamic> raw,
+    Map<dynamic, dynamic> metadata,
+  ) {
+    final values = <String>[];
+    void addValue(Object? value) {
+      final text = '${value ?? ''}'.trim();
+      if (text.startsWith('http://') || text.startsWith('https://')) {
+        values.add(text);
+      }
+    }
+
+    addValue(raw['imageUrl']);
+    addValue(raw['photoUrl']);
+    addValue(metadata['imageUrl']);
+    addValue(metadata['photoUrl']);
+    for (final source in [raw['imageUrls'], metadata['imageUrls']]) {
+      if (source is Iterable) {
+        for (final item in source) {
+          addValue(item);
+        }
+      } else if (source is Map) {
+        for (final item in source.values) {
+          addValue(item);
+        }
+      }
+    }
+    return values.toSet().toList(growable: false);
   }
 }
 
