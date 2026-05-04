@@ -137,6 +137,21 @@ extension _SettingsTabThemeSection on _SettingsTabState {
   }
 
   Future<void> _handleThemeSelection(String themeKey) async {
+    final customBackgroundUrl =
+        (_draftCustomBackgroundUrl ?? UiPrefs.notifier.value.customBackgroundUrl)
+            .trim();
+    if (customBackgroundUrl.isNotEmpty && themeKey != 'off') {
+      LegacyWebUi.showNotice(
+        context,
+        message:
+            'Bạn đang sử dụng ảnh nền app nên không thể sử dụng chủ đề. Hãy xóa ảnh nền app trước nếu muốn đổi chủ đề.',
+        success: false,
+        title: 'Không thể dùng chủ đề',
+        icon: Icons.wallpaper_rounded,
+      );
+      return;
+    }
+
     if (themeKey == 'theme-vip-rotate') {
       await _loadVipStatus();
       if (!mounted) return;
