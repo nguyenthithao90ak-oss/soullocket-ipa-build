@@ -1294,6 +1294,37 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     );
   }
 
+  Widget _buildRatioChip(_CanvasRatioPreset preset) {
+    final selected = _aspectRatioId == preset.id;
+    return GestureDetector(
+      onTap: () => setState(() => _aspectRatioId = preset.id),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          gradient: selected
+              ? const LinearGradient(
+                  colors: [Color(0xFFFF7AAE), Color(0xFFD81B60)],
+                )
+              : null,
+          color: selected ? null : Colors.white,
+          borderRadius: SLRadius.pillAll,
+          border: Border.all(
+            color: selected ? Colors.transparent : const Color(0xFFF0D5E1),
+          ),
+        ),
+        child: Text(
+          preset.label,
+          style: SLTheme.quicksand(
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            color: selected ? Colors.white : const Color(0xFFD81B60),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildModeChip({
     required String label,
     required IconData icon,
