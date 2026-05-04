@@ -912,7 +912,7 @@ class _CountdownModeCircle extends StatelessWidget {
                     onTap: onValueTap,
                     constraints: BoxConstraints(
                       minWidth: (resolvedSize * 0.26).clamp(82.0, 148.0),
-                      minHeight: (resolvedSize * 0.16).clamp(56.0, 88.0),
+                      minHeight: (resolvedSize * 0.14).clamp(42.0, 76.0),
                     ),
                     child: Text(
                       value,
