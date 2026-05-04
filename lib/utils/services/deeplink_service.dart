@@ -178,11 +178,7 @@ class DeeplinkService {
   }
 
   static bool isSupportedGiftUri(Uri uri) {
-    if (!AppConfig.isTrustedWebUri(uri)) return false;
-    final path = uri.path.endsWith('/') && uri.path.length > 1
-        ? uri.path.substring(0, uri.path.length - 1)
-        : uri.path;
-    return path == '/gift' || path == '/gift.html';
+    return false;
   }
 
   static bool isSupportedLoveCardUri(Uri uri) {
