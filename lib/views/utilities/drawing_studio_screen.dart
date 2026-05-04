@@ -248,7 +248,51 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     if (!_isDrawing) {
       return;
     }
+    final stroke = _strokes.isNotEmpty ? _strokes.last : null;
     setState(() => _isDrawing = false);
+    unawaited(_updatePresence(isDrawing: false));
+    if (stroke != null) {
+      unawaited(_pushCompletedStroke(stroke));
+    }
+  }
+
+  Future<void> _pushCompletedStroke(_DrawStroke stroke) async {
+    final uid = _auth.currentUser?.uid ?? '';
+    if (uid.isEmpty || stroke.points.isEmpty) {
+      return;
+    }
+    final canvasSize = _canvasKey.currentContext?.size;
+    if (canvasSize == null || canvasSize.width <= 0 || canvasSize.height <= 0) {
+      return;
+    }
+    final normalizedPoints = stroke.points
+        .map(
+          (point) => <double>[
+            (point.dx / canvasSize.width).clamp(0.0, 1.0).toDouble(),
+            (point.dy / canvasSize.height).clamp(0.0, 1.0).toDouble(),
+          ],
+        )
+        .toList(growable: false);
+    try {
+      await _drawingService.pushStroke(
+        houseId: widget.houseId,
+        stroke: DrawingStudioStroke(
+          id: stroke.id,
+          authorUid: uid,
+          authorName: widget.myName,
+          colorValue: stroke.color.value,
+          width: stroke.width,
+          points: normalizedPoints,
+          createdAt: DateTime.now().millisecondsSinceEpoch,
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _localPendingStrokeIds.remove(stroke.id));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _localPendingStrokeIds.remove(stroke.id));
+      _showSnack('Chưa đồng bộ được nét vẽ này.');
+    }
   }
 
   void _clearDrawing() {
