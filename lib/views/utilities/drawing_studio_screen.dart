@@ -1470,27 +1470,71 @@ class _DrawStroke {
 }
 
 class _DrawingCanvasPainter extends CustomPainter {
+  final String backgroundId;
   final List<_DrawStroke> strokes;
 
-  const _DrawingCanvasPainter({required this.strokes});
+  const _DrawingCanvasPainter({
+    required this.backgroundId,
+    required this.strokes,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final backgroundPaint = Paint()..color = Colors.white;
-    canvas.drawRect(Offset.zero & size, backgroundPaint);
-
-    final gridPaint = Paint()
-      ..color = const Color(0xFFFFE6F0)
-      ..strokeWidth = 1;
-    for (double x = 0; x <= size.width; x += 28) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
-    }
-    for (double y = 0; y <= size.height; y += 28) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
+    _paintBackground(canvas, size);
 
     for (final stroke in strokes) {
-      _paintStroke(canvas, stroke);
+      _paintStroke(canvas, stroke, size);
+    }
+  }
+
+  void _paintBackground(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    switch (backgroundId) {
+      case 'blank_paper':
+        canvas.drawRect(rect, Paint()..color = const Color(0xFFFFFCF8));
+        _paintPaperNoise(canvas, size, const Color(0xFFFFF1E8));
+        break;
+      case 'hearts':
+        final paint = Paint()
+          ..shader = const LinearGradient(
+            colors: [Color(0xFFFFF5FA), Color(0xFFFFE3EF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ).createShader(rect);
+        canvas.drawRect(rect, paint);
+        _paintGrid(canvas, size, const Color(0xFFFFCFE0).withOpacity(0.55));
+        _paintHearts(canvas, size);
+        break;
+      case 'night_stars':
+        final paint = Paint()
+          ..shader = const LinearGradient(
+            colors: [Color(0xFF22133F), Color(0xFF5B3CA8)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ).createShader(rect);
+        canvas.drawRect(rect, paint);
+        _paintStars(canvas, size);
+        break;
+      case 'blackboard':
+        canvas.drawRect(rect, Paint()..color = const Color(0xFF183D36));
+        _paintGrid(canvas, size, Colors.white.withOpacity(0.06));
+        _paintPaperNoise(canvas, size, Colors.white.withOpacity(0.04));
+        break;
+      case 'notebook':
+        canvas.drawRect(rect, Paint()..color = const Color(0xFFFFFEFA));
+        _paintNotebook(canvas, size);
+        break;
+      case 'photo_frame':
+        canvas.drawRect(rect, Paint()..color = const Color(0xFFFFF7FB));
+        _paintGrid(canvas, size, const Color(0xFFFFD8E7).withOpacity(0.5));
+        _paintFrame(canvas, size);
+        break;
+      case 'paper_grid':
+      default:
+        canvas.drawRect(rect, Paint()..color = const Color(0xFFFFFEFC));
+        _paintGrid(canvas, size, const Color(0xFFFFE3EE));
+        _paintPaperNoise(canvas, size, const Color(0xFFFFF4F8));
+        break;
     }
   }
 
