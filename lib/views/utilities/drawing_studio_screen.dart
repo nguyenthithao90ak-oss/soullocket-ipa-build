@@ -455,8 +455,22 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     }
   }
 
+  Future<void> _addSavedGalleryItem(DrawingStudioGalleryItem saved) async {
+    final next = <DrawingStudioGalleryItem>[
+      saved,
+      ..._gallery.where((item) => item.id != saved.id),
+    ]..sort((a, b) => b.createdAtMs.compareTo(a.createdAtMs));
+
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _gallery = next.take(_maxGalleryItems).toList();
+    });
+  }
+
   Future<void> _saveDrawing() async {
-    if (_strokes.isEmpty || _isSaving) {
+    if (!_hasAnyStroke || _isSaving) {
       return;
     }
 
@@ -468,17 +482,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         data,
         mode: _mode,
       );
-      final next = <DrawingStudioGalleryItem>[
-        saved,
-        ..._gallery.where((item) => item.id != saved.id),
-      ]..sort((a, b) => b.createdAtMs.compareTo(a.createdAtMs));
-
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _gallery = next.take(_maxGalleryItems).toList();
-      });
+      await _addSavedGalleryItem(saved);
       _showSnack('Đã lưu vào Kho Vẽ trên máy.');
     } catch (error) {
       _showSnack(
@@ -487,6 +491,56 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  Future<void> _saveStickerToGallery() async {
+    if (!_hasAnyStroke || _isSavingSticker) {
+      return;
+    }
+
+    setState(() => _isSavingSticker = true);
+    try {
+      final data = await _captureStickerPng();
+      final saved = await _drawingService.saveDrawing(
+        widget.houseId,
+        data,
+        mode: 'sticker',
+      );
+      await _addSavedGalleryItem(saved);
+      _showSnack('Đã cắt viền và lưu sticker vào Kho Vẽ.');
+    } catch (error) {
+      _showSnack(
+        'Không thể tạo sticker: ${_errorText(error, fallback: 'Vui lòng thử lại.')}',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingSticker = false);
+      }
+    }
+  }
+
+  Future<void> _saveStickerToDevice() async {
+    if (!_hasAnyStroke || _isSavingToDevice || kIsWeb) {
+      return;
+    }
+
+    setState(() => _isSavingToDevice = true);
+    try {
+      final data = await _captureStickerPng();
+      await _drawingService.saveBytesToDevice(
+        data,
+        fileName: 'soullocket_sticker_${DateTime.now().millisecondsSinceEpoch}',
+      );
+      _showSnack('Đã lưu sticker về máy.');
+    } catch (error) {
+      _showSnack(
+        'Không thể lưu sticker: ${_errorText(error, fallback: 'Vui lòng kiểm tra quyền lưu ảnh.')}',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingToDevice = false);
       }
     }
   }
