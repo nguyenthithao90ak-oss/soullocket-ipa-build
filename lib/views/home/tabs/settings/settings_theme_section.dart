@@ -137,9 +137,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
   }
 
   Future<void> _handleThemeSelection(String themeKey) async {
-    final customBackgroundUrl =
-        (_draftCustomBackgroundUrl ?? UiPrefs.notifier.value.customBackgroundUrl)
-            .trim();
+    final customBackgroundUrl = (_draftCustomBackgroundUrl ??
+            UiPrefs.notifier.value.customBackgroundUrl)
+        .trim();
     if (customBackgroundUrl.isNotEmpty && themeKey != 'off') {
       LegacyWebUi.showNotice(
         context,
