@@ -26,7 +26,6 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   static const String _pendingUploadKeyPrefix = 'capsule_';
   static const Color _backgroundTop = Color(0xFFB224EF);
   static const Color _backgroundBottom = Color(0xFF7579FF);
-  static const Color _panelFill = Color(0x26FFFFFF);
   static const Color _tileFill = Color(0x1FFFFFFF);
   static const Color _tileBorder = Color(0x3DFFFFFF);
   static const Color _accentColor = Color(0xFFFF8AA0);
