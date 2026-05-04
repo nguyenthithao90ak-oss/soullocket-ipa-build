@@ -249,6 +249,116 @@ class DrawingStudioService {
   static const String _cachePrefix = 'drawing_studio_gallery_cloud_v1_';
   static const String _migratedPrefix = 'drawing_studio_gallery_migrated_v1_';
 
+  DatabaseReference _studioRef(String houseId) =>
+      _db.ref('houses/${houseId.trim()}/drawing_studio');
+
+  Stream<DrawingStudioBackground> streamBackground(String houseId) {
+    return _studioRef(houseId).child('background').onValue.map((event) {
+      final value = event.snapshot.value;
+      return DrawingStudioBackground.fromMap(value is Map ? value : null);
+    });
+  }
+
+  Stream<List<DrawingStudioStroke>> streamStrokes(String houseId) {
+    return _studioRef(houseId)
+        .child('strokes')
+        .limitToLast(1000)
+        .onValue
+        .map((event) {
+      final value = event.snapshot.value;
+      if (value is! Map) return const <DrawingStudioStroke>[];
+      final strokes = <DrawingStudioStroke>[];
+      for (final entry in value.entries) {
+        final stroke = DrawingStudioStroke.fromMap(
+          entry.key.toString(),
+          entry.value is Map ? entry.value as Map : null,
+        );
+        if (stroke.points.isNotEmpty) {
+          strokes.add(stroke);
+        }
+      }
+      strokes.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      return strokes;
+    });
+  }
+
+  Stream<List<DrawingStudioPresence>> streamPresence(String houseId) {
+    return _studioRef(houseId).child('presence').onValue.map((event) {
+      final value = event.snapshot.value;
+      if (value is! Map) return const <DrawingStudioPresence>[];
+      return value.entries
+          .map((entry) => DrawingStudioPresence.fromMap(
+                entry.key.toString(),
+                entry.value is Map ? entry.value as Map : null,
+              ))
+          .toList();
+    });
+  }
+
+  Future<void> updatePresence({
+    required String houseId,
+    required String uid,
+    required String name,
+    required bool isDrawing,
+    required int colorValue,
+  }) async {
+    final ref = _studioRef(houseId).child('presence/$uid');
+    await ref.onDisconnect().remove();
+    await ref.set({
+      'name': name,
+      'isDrawing': isDrawing,
+      'color': colorValue,
+      'updatedAt': ServerValue.timestamp,
+    });
+  }
+
+  Future<void> removePresence({
+    required String houseId,
+    required String uid,
+  }) async {
+    await _studioRef(houseId).child('presence/$uid').remove();
+  }
+
+  Future<void> setBackground({
+    required String houseId,
+    required String uid,
+    required DrawingStudioBackground background,
+  }) async {
+    await _studioRef(houseId)
+        .child('background')
+        .set(background.toMap(updatedBy: uid));
+  }
+
+  Future<String> pushStroke({
+    required String houseId,
+    required DrawingStudioStroke stroke,
+  }) async {
+    final ref = _studioRef(houseId).child('strokes').push();
+    await ref.set(stroke.toMap());
+    return ref.key ?? stroke.id;
+  }
+
+  Future<void> deleteStroke({
+    required String houseId,
+    required String strokeId,
+  }) async {
+    await _studioRef(houseId).child('strokes/$strokeId').remove();
+  }
+
+  Future<void> clearRealtimeCanvas({
+    required String houseId,
+    required String uid,
+  }) async {
+    final ref = _studioRef(houseId);
+    final sessionRef = ref.child('session');
+    await ref.child('strokes').remove();
+    await sessionRef.update({
+      'version': ServerValue.increment(1),
+      'clearedBy': uid,
+      'updatedAt': ServerValue.timestamp,
+    });
+  }
+
   Future<List<DrawingStudioGalleryItem>> loadGallery(String houseId) async {
     await _clearCloudMarkers(houseId);
     return _loadLocalGallery();
