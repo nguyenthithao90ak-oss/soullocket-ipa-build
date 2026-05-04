@@ -47,6 +47,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   double _strokeWidth = 8;
   bool _isSaving = false;
   bool _isSavingToDevice = false;
+  bool _isSavingSticker = false;
   bool _isDrawing = false;
   bool _isCanvasLocked = false;
   bool _isGalleryLoading = true;
