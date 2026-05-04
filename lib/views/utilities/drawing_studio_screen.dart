@@ -211,16 +211,22 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return;
     }
 
+    final uid = _auth.currentUser?.uid ?? '';
+    final strokeId = 'local_${DateTime.now().microsecondsSinceEpoch}';
     setState(() {
       _isDrawing = true;
       _strokes.add(
         _DrawStroke(
+          id: strokeId,
+          authorUid: uid,
           color: _currentColor,
           width: _strokeWidth,
           points: [point],
         ),
       );
+      _localPendingStrokeIds.add(strokeId);
     });
+    unawaited(_updatePresence(isDrawing: true));
   }
 
   void _appendStrokePoint(DragUpdateDetails details) {
