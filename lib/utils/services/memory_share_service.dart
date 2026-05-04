@@ -4,6 +4,63 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 const Duration _memoryShareAppCheckRetryDelay = Duration(milliseconds: 350);
 
+class MemoryLimits {
+  const MemoryLimits({
+    required this.shareMaxItems,
+    required this.shareDefaultTtlDays,
+    required this.shareMaxTtlDays,
+    required this.imageFreeDailyLimit,
+    required this.imageProDailyLimit,
+  });
+
+  factory MemoryLimits.fromMap(Map<dynamic, dynamic> data) {
+    final shareMaxTtlDays = _readLimitInt(
+      data['shareMaxTtlDays'],
+      fallbackMemoryLimits.shareMaxTtlDays,
+    ).clamp(1, 365).toInt();
+
+    return MemoryLimits(
+      shareMaxItems: _readLimitInt(
+        data['shareMaxItems'],
+        fallbackMemoryLimits.shareMaxItems,
+      ).clamp(1, 100).toInt(),
+      shareDefaultTtlDays: _readLimitInt(
+        data['shareDefaultTtlDays'],
+        fallbackMemoryLimits.shareDefaultTtlDays,
+      ).clamp(1, shareMaxTtlDays).toInt(),
+      shareMaxTtlDays: shareMaxTtlDays,
+      imageFreeDailyLimit: _readLimitInt(
+        data['imageFreeDailyLimit'],
+        fallbackMemoryLimits.imageFreeDailyLimit,
+      ).clamp(0, 1000).toInt(),
+      imageProDailyLimit: _readLimitInt(
+        data['imageProDailyLimit'],
+        fallbackMemoryLimits.imageProDailyLimit,
+      ).clamp(0, 1000).toInt(),
+    );
+  }
+
+  final int shareMaxItems;
+  final int shareDefaultTtlDays;
+  final int shareMaxTtlDays;
+  final int imageFreeDailyLimit;
+  final int imageProDailyLimit;
+}
+
+const MemoryLimits fallbackMemoryLimits = MemoryLimits(
+  shareMaxItems: 24,
+  shareDefaultTtlDays: 7,
+  shareMaxTtlDays: 183,
+  imageFreeDailyLimit: 10,
+  imageProDailyLimit: 30,
+);
+
+int _readLimitInt(Object? value, int fallback) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? fallback;
+}
+
 class MemoryShareResult {
   const MemoryShareResult({
     required this.token,
