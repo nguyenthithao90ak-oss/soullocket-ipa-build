@@ -798,11 +798,15 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final canvasWidth = constraints.maxWidth;
-        final canvasHeight = (canvasWidth * 1.18).clamp(430.0, 560.0);
+        final ratio = _selectedRatio.ratio;
+        final shortestSide = MediaQuery.sizeOf(context).shortestSide;
+        final maxHeight = MediaQuery.sizeOf(context).height * 0.72;
+        final minHeight = shortestSide < 380 ? 340.0 : 390.0;
+        final canvasHeight = (canvasWidth / ratio).clamp(minHeight, maxHeight);
 
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+          padding: const EdgeInsets.fromLTRB(4, 4, 4, 10),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(28),
