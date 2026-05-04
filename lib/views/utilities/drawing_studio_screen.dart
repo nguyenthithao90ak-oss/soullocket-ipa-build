@@ -663,10 +663,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
             physics: (_isDrawing || _isCanvasLocked)
                 ? const NeverScrollableScrollPhysics()
                 : const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(12, 6, 12, 24),
+            padding: const EdgeInsets.fromLTRB(6, 4, 6, 24),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 720),
+                constraints: const BoxConstraints(maxWidth: 960),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
