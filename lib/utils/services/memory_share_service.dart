@@ -102,14 +102,15 @@ class MemoryShareService {
       throw Exception('Chưa có mã nhà để tạo liên kết.');
     }
 
-    final safePhotos = _sanitizePhotos(photos);
+    final limits = await fetchLimits();
+    final safePhotos = _sanitizePhotos(photos, limits.shareMaxItems);
     if (safePhotos.isEmpty) {
       throw Exception('Chưa có ảnh hợp lệ để tạo liên kết.');
     }
-    if (safePhotos.length > maxPhotosPerShare) {
-      throw Exception('Mỗi liên kết chỉ hỗ trợ tối đa $maxPhotosPerShare ảnh.');
+    if (safePhotos.length > limits.shareMaxItems) {
+      throw Exception('Mỗi liên kết chỉ hỗ trợ tối đa ${limits.shareMaxItems} ảnh.');
     }
-    final resolvedExpiryDays = expiryDays.clamp(1, 183).toInt();
+    final resolvedExpiryDays = expiryDays.clamp(1, limits.shareMaxTtlDays).toInt();
 
     HttpsCallableResult<dynamic>? response;
     try {
