@@ -1698,6 +1698,18 @@ class _DrawingStudioPreviewScreenState
   }
 }
 
+class _CanvasRatioPreset {
+  final String id;
+  final String label;
+  final double ratio;
+
+  const _CanvasRatioPreset({
+    required this.id,
+    required this.label,
+    required this.ratio,
+  });
+}
+
 class _DrawStroke {
   final String id;
   final String authorUid;
