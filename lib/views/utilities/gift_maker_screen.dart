@@ -862,6 +862,11 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
       key: const ValueKey('gift_type_selection'),
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 32),
       children: [
+        widget._buildHeroBanner(
+          selectedType: _selectedType,
+          onPreview: () {},
+        ),
+        const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Column(
