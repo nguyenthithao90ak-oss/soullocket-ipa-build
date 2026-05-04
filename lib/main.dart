@@ -118,8 +118,8 @@ List<String> _detailsForSignatureStatus(_UnofficialBuildDetected error) {
 
 
 Future<void> _purgeDeprecatedSecrets() async {
-  final prefs = await SharedPreferences.getInstance();
-  OfflineCacheService.initSync(prefs);
+  await OfflineCacheService.initialize();
+  final prefs = OfflineCacheService.getPrefsSync()!;
   await prefs.remove('gemini_api_key');
   try {
     const secureStorage = FlutterSecureStorage();
@@ -492,7 +492,7 @@ Future<void> _purgeDeprecatedSecretsDeferred() async {
 
 Future<void> _warmUpOfflineCache() async {
   try {
-    await OfflineCacheService.ensureWarmCache();
+    await OfflineCacheService.initialize();
   } catch (e) {
     debugPrint('Prefs init error: $e');
   }

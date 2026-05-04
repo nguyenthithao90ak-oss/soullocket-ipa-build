@@ -52,6 +52,7 @@ class StoryService {
       sessionId: sessionId,
       target: 'story',
       authorName: authorName,
+      blurHash: upload?.blurHash,
     );
     await PendingUploadService.instance.clear(pendingKey);
   }

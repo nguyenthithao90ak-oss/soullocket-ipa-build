@@ -1,4 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PrivateMediaUrlResult {
   const PrivateMediaUrlResult({
@@ -21,6 +22,13 @@ class PrivateMediaUrlService {
     required String mediaId,
     required String kind,
   }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('Vui lòng đăng nhập lại để xem nội dung này.');
+    }
+    // Force refresh token to ensure authentication for Cloud Functions
+    await user.getIdToken(true);
+
     final callable = _functions.httpsCallable('resolvePrivateMediaUrl');
     final response = await callable.call(<String, dynamic>{
       'houseId': houseId.trim(),

@@ -49,6 +49,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
+  app_tracking_transparency:
+    dependency: "direct main"
+    description:
+      name: app_tracking_transparency
+      sha256: "1f71f4d8402552fbf8b191d4edab301f233c1af794878b7bc56c708470ffd74c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.6+1"
   archive:
     dependency: transitive
     description:
@@ -153,6 +161,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.13"
+  blurhash:
+    dependency: "direct main"
+    description:
+      name: blurhash
+      sha256: "9606bcbb744e99f66e75eaf25227966dc59a9ab8ce9ad8e66faab0ffe6edbdea"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
+  blurhash_dart:
+    dependency: transitive
+    description:
+      name: blurhash_dart
+      sha256: "43955b6c2e30a7d440028d1af0fa185852f3534b795cc6eb81fbf397b464409f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -393,6 +417,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.2"
+  dio:
+    dependency: "direct main"
+    description:
+      name: dio
+      sha256: aff32c08f92787a557dd5c0145ac91536481831a01b4648136373cddb0e64f8c
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.9.2"
+  dio_web_adapter:
+    dependency: transitive
+    description:
+      name: dio_web_adapter
+      sha256: "2f9e64323a7c3c7ef69567d5c800424a11f8337b8b228bad02524c9fb3c1f340"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.2"
   encrypt:
     dependency: "direct main"
     description:
@@ -553,6 +593,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.6.0"
+  firebase_crashlytics:
+    dependency: "direct main"
+    description:
+      name: firebase_crashlytics
+      sha256: "43a311b280d9391389a690d10e1ac0d458b965154a57de5be2f0857225aa2016"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.2.0"
+  firebase_crashlytics_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_crashlytics_platform_interface
+      sha256: "1b6a921ad6f0d08203ecc1310437a88cec357bc3cad27e1138f1e2c16dd71db9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.8.20"
   firebase_database:
     dependency: "direct main"
     description:
@@ -654,6 +710,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.2"
+  flutter_blurhash:
+    dependency: "direct main"
+    description:
+      name: flutter_blurhash
+      sha256: e97b9aff13b9930bbaa74d0d899fec76e3f320aba3190322dcc5d32104e3d25d
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.9.1"
   flutter_cache_manager:
     dependency: "direct main"
     description:
@@ -670,6 +734,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.1"
+  flutter_dynamic_icon:
+    dependency: "direct main"
+    description:
+      name: flutter_dynamic_icon
+      sha256: "25dd26c9f0920e331ebabc471c4bf4842ab0a9128a12e4d4c6c3e4029b8dfd8f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   flutter_facebook_auth:
     dependency: "direct main"
     description:

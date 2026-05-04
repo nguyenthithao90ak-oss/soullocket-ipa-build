@@ -28,6 +28,7 @@ import 'consent/consent_gate.dart';
 import 'home/home_screen.dart';
 import 'house_onboarding_screen.dart';
 import 'login_screen.dart';
+import 'home/tabs/diary/controllers/diary_memory_controller.dart';
 
 class AppEntry extends StatefulWidget {
   const AppEntry({super.key});
@@ -61,6 +62,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   String? _lastUserId;
   Future<AppEntryAccessState>? _accessStateFuture;
   AppEntryAccessState? _initialAccessState;
+  OverlayEntry? _privacyGuardEntry;
 
   @override
   void initState() {
@@ -191,6 +193,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   }
 
   void _applyAuthState(AppEntryAuthState state) {
+    if (state.isAuthenticated && !_isAuthenticated) {
+      unawaited(DiaryMemoryController().clearPendingUploadState(notify: false));
+    }
     setState(() {
       _isAuthenticated = state.isAuthenticated;
       _isCheckingAuth = state.isCheckingAuth;
@@ -346,7 +351,42 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _maintenanceSub?.cancel();
     _appEntryController.dispose();
+    _removePrivacyGuard();
     super.dispose();
+  }
+
+  void _showPrivacyGuard() {
+    if (_privacyGuardEntry != null || !mounted) return;
+    final overlay = Overlay.of(context);
+    _privacyGuardEntry = OverlayEntry(
+      builder: (context) => Container(
+        color: Colors.black,
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.security_rounded, color: Colors.white, size: 64),
+              SizedBox(height: 16),
+              Text(
+                'Chống nhìn trộm đang bật',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    overlay.insert(_privacyGuardEntry!);
+  }
+
+  void _removePrivacyGuard() {
+    _privacyGuardEntry?.remove();
+    _privacyGuardEntry = null;
   }
 
   @override
@@ -362,6 +402,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
 
     if (state == AppLifecycleState.resumed) {
+      _removePrivacyGuard();
       if (_appEntryController.hasPendingResume) {
         unawaited(_handleAppResumed());
       } else {
@@ -371,14 +412,24 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
 
     if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.inactive) {
       if (MilitaryLockService.isAuthenticatingBiometrics) return;
-      unawaited(
-        _appEntryController.handleAppBackgrounded(
-          keepPresenceOnline:
-              AppLifecyclePresenceGuard.shouldKeepPresenceOnline,
-        ),
-      );
+
+      unawaited(() async {
+        if (await MilitaryLockService().isMilitaryModeEnabled()) {
+          _showPrivacyGuard();
+        }
+      }());
+
+      if (state != AppLifecycleState.inactive) {
+        unawaited(
+          _appEntryController.handleAppBackgrounded(
+            keepPresenceOnline:
+                AppLifecyclePresenceGuard.shouldKeepPresenceOnline,
+          ),
+        );
+      }
     }
   }
 
@@ -427,7 +478,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           return BlockedScaffold(
             title: 'Lỗi xác thực',
             message: kDebugMode
-                ? 'Không thể kết nối Firebase Auth. Vui lòng thử lại.\n${snapshot.error}'
+                ? 'Không thể kết nối hệ thống xác thực. Vui lòng thử lại.\n${snapshot.error}'
                 : 'Không thể kiểm tra đăng nhập. Hãy kiểm tra mạng rồi mở lại ứng dụng.',
             onSignOut: () async {},
           );

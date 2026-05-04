@@ -101,7 +101,7 @@ abstract final class _L10nStaticData {
     'logout': 'Đăng xuất',
     'device_manager': 'Thiết bị đăng nhập',
     'qr_scan': 'Quét mã đăng nhập',
-    'military_mode': 'Chế độ Quân Đội',
+    'military_mode': 'Chống nhìn trộm',
     'app_lock': 'Bật Khóa App',
     'bio_auth': 'Dùng FaceID / Vân tay',
     'language': 'Ngôn ngữ',
@@ -169,7 +169,7 @@ abstract final class _L10nStaticData {
     'settings_email_invalid': 'Email mới không hợp lệ',
     'settings_email_same_as_current': 'Email mới đang trùng với email hiện tại',
     'settings_email_change_sent':
-        'Đổi email chính bằng mã OTP 6 số chưa được bật. Tính năng sẽ mở trong bản cập nhật tiếp theo.',
+        'Đã gửi link xác nhận đổi email đến {email}. Hãy bấm vào link rồi quay lại đăng nhập.',
     'settings_email_requires_recent_login':
         'Phiên đăng nhập đã cũ. Hãy đăng xuất rồi đăng nhập lại trước khi đổi email.',
     'settings_email_in_use': 'Email này đã được dùng cho tài khoản khác',
@@ -184,7 +184,7 @@ abstract final class _L10nStaticData {
     'settings_email_wait_before_resend':
         'Vui lòng đợi {wait} nữa trước khi gửi lại.',
     'settings_email_pending_latest':
-        'Mã OTP mới nhất vẫn còn hiệu lực. Hãy mở email mới nhất rồi nhập mã 6 số trong app.',
+        'Mail xác thực mới nhất vẫn còn hiệu lực. Hãy mở email mới nhất rồi bấm "Tôi đã bấm link".',
     'settings_email_verification_sent':
         'Đã gửi email xác thực đến {email}. Hãy mở email mới nhất, đừng dùng mail cũ để tránh mã hết hiệu lực.',
     'settings_email_send_failed': 'Không thể gửi email xác thực',
@@ -192,7 +192,7 @@ abstract final class _L10nStaticData {
         'Không thể gửi email xác thực: {error}',
     'settings_email_verified_success': 'Email đã được xác thực thành công.',
     'settings_email_not_verified_yet':
-        'Email chưa được xác thực. Hãy bấm xác thực và nhập mã 6 số được gửi qua email.',
+        'Chưa thấy email được xác thực. Hãy mở email mới nhất rồi bấm vào link xác minh.',
     'settings_email_check_failed':
         'Không thể kiểm tra trạng thái xác thực email.',
     'settings_email_check_failed_with_error':
@@ -634,10 +634,10 @@ abstract final class _L10nStaticData {
     'setup_pin': 'Thiết lập mã PIN',
     'setup_pin_success': 'Đã thiết lập mã PIN thành công!',
     'err_incorrect_pin': 'Mã PIN / mật khẩu khóa không đúng.',
-    'military_mode_title': 'Chế độ Quân Đội (Tối mật)',
+    'military_mode_title': 'Chống nhìn trộm (Tối mật)',
     'military_mode_desc':
-        'Lưu ý: Chế độ Quân Đội sẽ ẩn hoàn toàn màn hình đa nhiệm (App Switcher) để tránh bị nhìn trộm nội dung. Màn hình sẽ đen thui khi bạn vuốt ra ngoài.',
-    'military_mode_enabled': 'Đã bật chế độ Quân Đội tối mật!',
+        'Lưu ý: Chống nhìn trộm sẽ ẩn hoàn toàn màn hình đa nhiệm (App Switcher) để tránh bị nhìn trộm nội dung. Màn hình sẽ được che phủ khi bạn vuốt ra ngoài.',
+    'military_mode_enabled': 'Đã bật chế độ Chống nhìn trộm!',
     'use_biometrics': 'Dùng FaceID / Vân tay',
     'lock_scopes': 'Phạm vi cần khóa:',
     'lock_app_only': 'Chỉ khóa app',
@@ -687,14 +687,13 @@ abstract final class _L10nStaticData {
     'widget_err_not_supported': 'Thiết bị không hỗ trợ ghim widget tự động',
     'widget_pin_failed': 'Lỗi: Không thể ghim widget',
     'widget_pin_req_sent': 'Đã gửi yêu cầu ghim widget!',
-    'ios_widget_pin_guide': 'Đã lưu cấu hình! Giữ màn hình chính > Widget > SoulLocket để thêm.',
     'home_screen_widget': 'Widget màn hình chính',
     'widget_home_desc':
         'Widget sẽ được đưa ra màn hình chính điện thoại để xem nhanh mỗi ngày.',
     'android_real_widget': 'Android (Widget thật):',
     'ios_widget': 'iOS:',
     'ios_widget_pending':
-        'Giữ nút Home > chọn Widget > tìm SoulLocket > chọn kiểu > Thêm.',
+        'Chưa bật Widget Extension trên iOS (sẽ làm sau khi có Mac).',
     'support_legal': 'Hỗ trợ & Pháp lý',
     'about_soullocket': 'Giới thiệu SoulLocket',
     'user_guide': 'Hướng dẫn sử dụng',
@@ -976,7 +975,7 @@ abstract final class _L10nStaticData {
     'settings_email_invalid': 'The new email is invalid',
     'settings_email_same_as_current': 'The new email matches the current email',
     'settings_email_change_sent':
-        'Changing the primary email with a 6-digit OTP is not enabled yet. This will be available in a future update.',
+        'A confirmation link to change your email was sent to {email}. Please tap the link and then sign in again.',
     'settings_email_requires_recent_login':
         'Your session is too old. Please sign out and sign in again before changing your email.',
     'settings_email_in_use': 'This email is already used by another account',
@@ -991,7 +990,7 @@ abstract final class _L10nStaticData {
     'settings_email_wait_before_resend':
         'Please wait {wait} before sending again.',
     'settings_email_pending_latest':
-        'The latest OTP is still valid. Please open the newest email and enter the 6-digit code in the app.',
+        'The latest verification email is still valid. Please open the newest email and tap "I already tapped the link".',
     'settings_email_verification_sent':
         'A verification email was sent to {email}. Please open the newest email and avoid using older emails so the code does not expire.',
     'settings_email_send_failed': 'Unable to send the verification email',
@@ -1000,7 +999,7 @@ abstract final class _L10nStaticData {
     'settings_email_verified_success':
         'The email has been verified successfully.',
     'settings_email_not_verified_yet':
-        'The email is not verified yet. Please request verification and enter the 6-digit code sent by email.',
+        'The email is not verified yet. Please open the newest email and tap the verification link.',
     'settings_email_check_failed':
         'Unable to check the email verification status.',
     'settings_email_check_failed_with_error':
@@ -1771,14 +1770,13 @@ abstract final class _L10nStaticData {
     'widget_err_not_supported': 'Device does not support auto widget pinning',
     'widget_pin_failed': 'Error: Unable to pin widget',
     'widget_pin_req_sent': 'Widget pin request sent!',
-    'ios_widget_pin_guide': 'Config saved! Long-press Home > Widgets > SoulLocket to add.',
     'home_screen_widget': 'Home Screen Widget',
     'widget_home_desc':
         'Widget will be added to your home screen for quick viewing.',
     'android_real_widget': 'Android (Real Widget):',
     'ios_widget': 'iOS:',
     'ios_widget_pending':
-        'Long-press Home > Widgets > find SoulLocket > choose style > Add.',
+        'Widget Extension not yet enabled on iOS (pending Mac).',
     'support_legal': 'Support & Legal',
     'about_soullocket': 'About SoulLocket',
     'user_guide': 'User Guide',

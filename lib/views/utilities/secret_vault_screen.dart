@@ -179,7 +179,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
 
   Future<void> _prepareVault() async {
     if (_isPreparingVault) return;
-    _isPreparingVault = true;
+    if (mounted) {
+      setState(() => _isPreparingVault = true);
+    } else {
+      _isPreparingVault = true;
+    }
     if (!ConnectivityService().isOnline) {
       if (mounted) {
         setState(() {
@@ -188,7 +192,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               'Không có kết nối mạng.\nKho ảnh mật yêu cầu Internet để xác thực.';
         });
       }
-      _isPreparingVault = false;
+      if (mounted) {
+        setState(() => _isPreparingVault = false);
+      } else {
+        _isPreparingVault = false;
+      }
       return;
     }
 
@@ -218,7 +226,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       final passphrase = await _showPassphraseDialog(hasSetup: hasSetup);
       if (!mounted) return;
       if (passphrase == null) {
-        Navigator.of(context).maybePop();
+        if (mounted) {
+          setState(() {
+            _encryptionReady = false;
+            _isPreparingVault = false;
+            _encStatusMsg = 'Đã hủy mở kho mật.';
+          });
+        }
         return;
       }
 
@@ -289,7 +303,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         });
       }
     } finally {
-      _isPreparingVault = false;
+      if (mounted) {
+        setState(() => _isPreparingVault = false);
+      } else {
+        _isPreparingVault = false;
+      }
     }
   }
 

@@ -109,23 +109,36 @@ class MemoryShareService {
       if (sanitized.length >= maxPhotosPerShare) {
         break;
       }
-      final url = photo['url']?.toString().trim() ?? '';
-      if (!_isShareableUrl(url)) {
+      final url = _firstShareableUrl(photo);
+      if (url.isEmpty) {
         continue;
       }
-      final previewUrl = photo['previewUrl']?.toString().trim() ??
-          photo['thumbUrl']?.toString().trim() ??
-          photo['thumbnailUrl']?.toString().trim() ??
-          url;
+      final previewUrl = _firstShareableUrl(photo, preferPreview: true);
       sanitized.add(<String, dynamic>{
         'id': photo['id']?.toString().trim() ?? '',
         'url': url,
-        'previewUrl': _isShareableUrl(previewUrl) ? previewUrl : url,
+        'previewUrl': previewUrl.isNotEmpty ? previewUrl : url,
         'ts': _readInt(photo['ts'] ?? photo['timestamp'] ?? photo['date']),
         'authorName': photo['authorName']?.toString().trim() ?? '',
       });
     }
     return sanitized;
+  }
+
+  String _firstShareableUrl(
+    Map<String, dynamic> photo, {
+    bool preferPreview = false,
+  }) {
+    final keys = preferPreview
+        ? const ['previewUrl', 'thumbUrl', 'thumbnailUrl', 'url', 'downloadUrl']
+        : const ['url', 'downloadUrl', 'previewUrl', 'thumbUrl', 'thumbnailUrl'];
+    for (final key in keys) {
+      final value = photo[key]?.toString().trim() ?? '';
+      if (_isShareableUrl(value)) {
+        return value;
+      }
+    }
+    return '';
   }
 
   bool _isShareableUrl(String value) {

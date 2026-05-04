@@ -320,8 +320,7 @@ class WidgetService {
     const legacyPlaceholders = <String>{
       'Chạm để đồng bộ',
       'Mở app để cập nhật',
-      'Mo app de dong bo',
-      'Mo app de cap nhat',
+      'Mở app để đồng bộ',
     };
 
     for (final key in const ['status1', 'status2']) {

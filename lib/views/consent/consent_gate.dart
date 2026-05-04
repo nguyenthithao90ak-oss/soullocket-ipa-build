@@ -183,9 +183,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                       horizontalPadding,
                                       compact ? 12 : 16,
                                       horizontalPadding,
-                                      mediaPadding.bottom > 0
-                                          ? mediaPadding.bottom + 12
-                                          : 14,
+                                      14,
                                     ),
                                     child: Column(
                                       crossAxisAlignment:
@@ -250,6 +248,18 @@ class _ConsentGateState extends State<ConsentGate> {
                                             cookieLevel = value;
                                           }),
                                         ),
+                                        const SizedBox(height: 24),
+                                        _buildStartupAgreeBar(
+                                          compact: compact,
+                                          bottomInset: mediaPadding.bottom,
+                                          cookieLevel: cookieLevel,
+                                          onConfirm: () => Navigator.pop(
+                                            ctx,
+                                            _StartupConsentResult(
+                                              cookieLevel: cookieLevel,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -268,17 +278,6 @@ class _ConsentGateState extends State<ConsentGate> {
                                   ),
                                 ),
                               ],
-                            ),
-                          ),
-                          _buildStartupAgreeBar(
-                            compact: compact,
-                            bottomInset: mediaPadding.bottom,
-                            cookieLevel: cookieLevel,
-                            onConfirm: () => Navigator.pop(
-                              ctx,
-                              _StartupConsentResult(
-                                cookieLevel: cookieLevel,
-                              ),
                             ),
                           ),
                         ],
@@ -689,23 +688,13 @@ class _ConsentGateState extends State<ConsentGate> {
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        compact ? 12 : 16,
+        0,
         10,
-        compact ? 12 : 16,
+        0,
         bottomInset > 0 ? bottomInset + 10 : 12,
       ),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.97),
-        border: Border(
-          top: BorderSide(color: _panelBorder.withOpacity(0.88)),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 18,
-            offset: const Offset(0, -8),
-          ),
-        ],
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

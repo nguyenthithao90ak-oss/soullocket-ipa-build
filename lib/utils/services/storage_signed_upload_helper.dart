@@ -5,6 +5,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'blurhash_helper.dart';
 import 'storage_upload_result.dart';
 
 typedef StorageSignedSessionBuilder = Future<Map<String, dynamic>> Function(
@@ -131,7 +132,13 @@ class StorageSignedUploadHelper {
           headers: headers,
         );
 
-        return request.mapResult(session);
+        final blurHash = await BlurHashHelper.generateBlurHashFromBytes(uploadBytes);
+        final sessionWithBlur = Map<String, dynamic>.from(session);
+        if (blurHash != null) {
+          sessionWithBlur['blurHash'] = blurHash;
+        }
+
+        return request.mapResult(sessionWithBlur);
       } finally {
         if (tempCompressedPath != null) {
           final tempFile = File(tempCompressedPath);

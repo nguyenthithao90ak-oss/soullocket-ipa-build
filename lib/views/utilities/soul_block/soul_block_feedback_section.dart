@@ -119,11 +119,23 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     }
   }
 
+  Future<Source> _getBgmSource() async {
+    const fileName = 'soul_block_bgm.mp3';
+    final localPath = await GameDownloadService().getLocalPath('soul_block', fileName);
+    if (await File(localPath).exists()) {
+      debugPrint('Soul Block: Using LOCAL BGM: $localPath');
+      return DeviceFileSource(localPath);
+    }
+    debugPrint('Soul Block: Using ASSET BGM');
+    return AssetSource('audio/soul_block/$fileName');
+  }
+
   Future<void> _initBgm() async {
     try {
+      final source = await _getBgmSource();
       await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
       await _bgmPlayer.setVolume(0.52);
-      await _bgmPlayer.setSourceAsset('audio/soul_block/soul_block_bgm.mp3');
+      await _bgmPlayer.setSource(source);
       await _syncBgmWithSound(restartIfStopped: true);
     } catch (error) {
       debugPrint('Soul Block bgm init failed: $error');
@@ -139,20 +151,16 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
       await _bgmPlayer.setVolume(0.52);
       if (restartIfStopped) {
-        await _bgmPlayer.play(
-          AssetSource('audio/soul_block/soul_block_bgm.mp3'),
-          volume: 0.52,
-        );
+        final source = await _getBgmSource();
+        await _bgmPlayer.play(source, volume: 0.52);
         return;
       }
       await _bgmPlayer.resume();
     } catch (_) {
       if (restartIfStopped) {
         try {
-          await _bgmPlayer.play(
-            AssetSource('audio/soul_block/soul_block_bgm.mp3'),
-            volume: 0.52,
-          );
+          final source = await _getBgmSource();
+          await _bgmPlayer.play(source, volume: 0.52);
         } catch (_) {}
       }
     }
@@ -266,9 +274,20 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
 
   Future<Uint8List?> _loadAudioAssetBytes(String assetPath) async {
     try {
+      final fileName = p.basename(assetPath);
+      final localPath = await GameDownloadService().getLocalPath('soul_block', fileName);
+      final localFile = File(localPath);
+      
+      if (await localFile.exists()) {
+        debugPrint('Soul Block: Loading SFX from LOCAL: $localPath');
+        return await localFile.readAsBytes();
+      }
+
+      debugPrint('Soul Block: Loading SFX from ASSET: $assetPath');
       final ByteData data = await rootBundle.load(assetPath);
       return data.buffer.asUint8List();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Soul Block: Error loading SFX ($assetPath): $e');
       return null;
     }
   }

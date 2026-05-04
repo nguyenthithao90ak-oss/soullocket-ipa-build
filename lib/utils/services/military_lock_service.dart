@@ -350,6 +350,7 @@ class MilitaryLockService {
       expectedSecret: expectedSecret,
       reason: resolvedReason,
       houseId: houseId,
+      wantBiometrics: wantBiometrics,
     );
 
     if (pinSuccess && markUnlockedOnSuccess) {
@@ -382,6 +383,7 @@ class MilitaryLockService {
       expectedSecret: expectedSecret,
       reason: 'Nhập mã khóa hiện tại để thay đổi cài đặt bảo mật.',
       houseId: houseId,
+      wantBiometrics: allowBiometrics,
     );
   }
 
@@ -409,12 +411,14 @@ class MilitaryLockService {
             goToSettingsButton: 'Mở cài đặt',
             goToSettingsDescription:
                 'Hãy bật Face ID hoặc Touch ID cho SoulLocket trong phần cài đặt iPhone.',
-            cancelButton: 'Hủy',
+            cancelButton: 'Dùng mã PIN',
           ),
         ],
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false,
+          biometricOnly: true,
+          useErrorDialogs: true,
+
         ),
       );
     } catch (e) {
@@ -437,7 +441,7 @@ class MilitaryLockService {
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
             signInTitle: 'Xác thực sinh trắc học',
-            cancelButton: 'Dùng mật khẩu',
+            cancelButton: 'Dùng mã PIN',
             biometricHint: 'Chạm cảm biến hoặc nhìn vào camera',
             biometricNotRecognized: 'Không nhận diện được. Vui lòng thử lại.',
             biometricSuccess: 'Xác thực thành công!',
@@ -447,12 +451,14 @@ class MilitaryLockService {
             goToSettingsButton: 'Mở cài đặt',
             goToSettingsDescription:
                 'Hãy bật Face ID hoặc Touch ID cho SoulLocket trong phần cài đặt iPhone.',
-            cancelButton: 'Dùng mật khẩu',
+            cancelButton: 'Dùng mã PIN',
           ),
         ],
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false,
+          biometricOnly: true,
+          useErrorDialogs: true,
+
         ),
       );
     } catch (e) {
@@ -469,6 +475,7 @@ class MilitaryLockService {
     required LockSecretRecord expectedSecret,
     required String reason,
     String? houseId,
+    bool wantBiometrics = false,
   }) async {
     final normalizedExpectedSecret = expectedSecret.secret.trim();
     final bool hashedSecret = _isStoredSha256(normalizedExpectedSecret);
@@ -508,6 +515,15 @@ class MilitaryLockService {
           attempt: attempt,
           houseId: houseId,
         ),
+        enableBiometrics: wantBiometrics,
+        onBiometricPressed: () async {
+          final bioSuccess = await _authenticateWithDevice(
+            localizedReason: reason,
+          );
+          if (bioSuccess && context.mounted) {
+            Navigator.of(context).pop('');
+          }
+        },
       );
       return pin != null;
     }
@@ -635,6 +651,31 @@ class MilitaryLockService {
                         SLSpacing.h20,
                         Row(
                           children: [
+                            if (wantBiometrics) ...[
+                              IconButton(
+                                icon: Icon(
+                                  defaultTargetPlatform == TargetPlatform.iOS
+                                      ? Icons.face_retouching_natural_rounded
+                                      : Icons.fingerprint_rounded,
+                                  color: const Color(0xFFD81B60),
+                                ),
+                                onPressed:
+                                    remainingLockSeconds > 0 || isSubmitting
+                                        ? null
+                                        : () async {
+                                            final bioSuccess =
+                                                await _authenticateWithDevice(
+                                              localizedReason: reason,
+                                            );
+                                            if (bioSuccess &&
+                                                dialogContext.mounted) {
+                                              Navigator.of(dialogContext)
+                                                  .pop(true);
+                                            }
+                                          },
+                              ),
+                              SLSpacing.w8,
+                            ],
                             Expanded(
                                 child: TextButton(
                                     onPressed: () =>

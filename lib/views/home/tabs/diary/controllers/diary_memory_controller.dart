@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart'
     show ChangeNotifier, ValueNotifier, debugPrint, kIsWeb;
@@ -29,6 +29,7 @@ import 'package:soullocket_app/views/home/tabs/diary/controllers/diary_guard_con
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/widgets/cute_loading_indicator.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 typedef DiaryMemoryFlattenedItem = ({
   bool isHeader,
@@ -97,11 +98,15 @@ class DiaryMemoryController extends ChangeNotifier {
   Object? _lastCachedLiveMemoriesSource;
   List<String> _pendingUploadPaths = const <String>[];
   String? _pendingUploadMessage;
+  bool _isUploadingMemories = false;
 
   bool get isSelectionMode => _isSelectionMode;
+  int get selectedMemoriesCount => _selectedMemories.length;
   Map<String, Map<String, dynamic>> get selectedMemories => _selectedMemories;
   bool get isLoadingMoreMemories => _isLoadingMoreMemories;
-  bool get hasPendingUploadRetry => _pendingUploadPaths.isNotEmpty;
+  bool get isUploadingMemories => _isUploadingMemories;
+  bool get hasPendingUploadRetry =>
+      !_isUploadingMemories && _pendingUploadPaths.isNotEmpty;
   String get pendingUploadMessage =>
       _pendingUploadMessage ??
       'Lần upload Kỷ niệm trước đã bị gián đoạn. Bạn có thể thử lại.';
@@ -175,6 +180,11 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
     _setPendingUploadState(const <String>[], message: null, notify: notify);
+  }
+
+  /// Public method to clear pending upload state (e.g., after user re-login).
+  Future<void> clearPendingUploadState({bool notify = true}) async {
+    await _clearPendingUploadState(notify: notify);
   }
 
   Future<void> _restorePendingUploadState() async {
@@ -302,7 +312,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
   void syncHouseId(String? houseId) {
     final normalized = _normalizeHouseId(houseId);
-    if (_currentHouseId == normalized) {
+    if (_currentHouseId == normalized && _memoriesStream != null) {
       return;
     }
     _currentHouseId = normalized;
@@ -518,22 +528,52 @@ class DiaryMemoryController extends ChangeNotifier {
   }) async {
     final existingUrl = item['url']?.toString().trim() ?? '';
     final memoryId = item['id']?.toString().trim() ?? '';
-    final hasStoragePath =
-        (item['storagePath']?.toString().trim().isNotEmpty ?? false) ||
-            (item['storageKey']?.toString().trim().isNotEmpty ?? false);
-    if (memoryId.isEmpty || !hasStoragePath) {
+    if (memoryId.isEmpty) {
       return;
     }
     if (existingUrl.isNotEmpty && !_isMemoryUrlExpired(item)) {
       return;
     }
-    final result = await _privateMediaUrlService.resolve(
-      houseId: houseId,
-      mediaId: memoryId,
-      kind: 'memory_image',
+    if (FirebaseAuth.instance.currentUser == null) {
+      debugPrint(
+        '[DiaryMemory] skip signed url refresh: unauthenticated id=$memoryId',
+      );
+      return;
+    }
+    debugPrint(
+      '[DiaryMemory] refreshing signed url id=$memoryId urlEmpty=${existingUrl.isEmpty}',
     );
-    item['url'] = result.url;
-    item['urlExpiresAt'] = result.expiresAt;
+    try {
+      final result = await _privateMediaUrlService.resolve(
+        houseId: houseId,
+        mediaId: memoryId,
+        kind: 'memory_image',
+      );
+      item['url'] = result.url;
+      item['urlExpiresAt'] = result.expiresAt;
+      debugPrint(
+        '[DiaryMemory] signed url refreshed id=$memoryId urlLen=${result.url.length}',
+      );
+    } catch (e) {
+      debugPrint(
+        '[DiaryMemory] signed url refresh FAILED id=$memoryId error=$e',
+      );
+    }
+  }
+
+  void _normalizeMemoryPhotoUrl(Map<String, dynamic> item) {
+    final existingUrl = item['url']?.toString().trim() ?? '';
+    if (existingUrl.isNotEmpty) {
+      return;
+    }
+    final fallbackUrl = item['downloadUrl']?.toString().trim().isNotEmpty == true
+        ? item['downloadUrl'].toString().trim()
+        : item['previewUrl']?.toString().trim().isNotEmpty == true
+            ? item['previewUrl'].toString().trim()
+            : item['thumbUrl']?.toString().trim() ?? '';
+    if (fallbackUrl.isNotEmpty) {
+      item['url'] = fallbackUrl;
+    }
   }
 
   List<Map<String, dynamic>> _memoryPhotosFromSource(
@@ -555,6 +595,7 @@ class DiaryMemoryController extends ChangeNotifier {
         final item =
             Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
         item['id'] = key.toString();
+        _normalizeMemoryPhotoUrl(item);
         photos.add(item);
       });
     } else if (!useLiveSource && source is List) {
@@ -562,7 +603,9 @@ class DiaryMemoryController extends ChangeNotifier {
         if (item is! Map) {
           continue;
         }
-        photos.add(Map<String, dynamic>.from(item));
+        final normalizedItem = Map<String, dynamic>.from(item);
+        _normalizeMemoryPhotoUrl(normalizedItem);
+        photos.add(normalizedItem);
       }
     }
 
@@ -1162,7 +1205,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
       Map<String, dynamic>? finalized;
       Object? lastError;
-      for (var attempt = 0; attempt < 2; attempt++) {
+      for (var attempt = 0; attempt < 3; attempt++) {
         try {
           finalized = await _storageService.finalizeMemoryImageUpload(
             houseId: houseId,
@@ -1176,8 +1219,22 @@ class DiaryMemoryController extends ChangeNotifier {
           break;
         } catch (error) {
           lastError = error;
-          if (attempt == 0) {
-            await Future<void>.delayed(const Duration(milliseconds: 450));
+          
+          final errStr = error.toString().toLowerCase();
+          final isUnauthenticated = errStr.contains('unauthenticated') || errStr.contains('401');
+          
+          if (isUnauthenticated) {
+             try {
+               final user = FirebaseAuth.instance.currentUser;
+               if (user != null) {
+                 await user.getIdToken(true);
+                 debugPrint('Refreshed token after unauthenticated error in finalize.');
+               }
+             } catch (_) {}
+          }
+
+          if (attempt < 2) {
+            await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
             continue;
           }
         }
@@ -1338,53 +1395,57 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
 
-    final recoverablePaths = await _extractRecoverableImagePaths(images);
-    if (recoverablePaths.isNotEmpty) {
-      await _savePendingUploadState(
-        houseId: houseId,
-        paths: recoverablePaths,
-        message: presetImages == null
-            ? 'Nếu app bị tắt giữa chừng, bạn có thể thử lại upload Kỷ niệm.'
-            : 'Đang thử lại ảnh Kỷ niệm chưa tải xong.',
-      );
-    } else if (presetImages != null) {
-      await _clearPendingUploadState();
-    }
-
-    // Sau khi user chọn ảnh: resolve user + location song song
-    Future<Position?> locationFuture = Future.value(null);
-    if (!kIsWeb) {
-      locationFuture =
-          Geolocator.isLocationServiceEnabled().then((enabled) async {
-        if (!enabled) return null;
-        final permission = await Geolocator.checkPermission();
-        if (permission != LocationPermission.always &&
-            permission != LocationPermission.whileInUse) {
-          return null;
-        }
-        return Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.low,
-        ).timeout(const Duration(seconds: 1));
-      }).catchError((_) => null as Position?);
-    }
-
-    final postPickResults = await Future.wait([
-      guardController.resolveCurrentUser(),
-      locationFuture,
-    ]);
-
-    final user = postPickResults[0] as User?;
-    if (user == null) {
-      showSnackBar(
-        L10nService()
-            .translate('Phiên đăng nhập chưa sẵn sàng. Vui lòng thử lại.'),
-        backgroundColor: const Color(0xFFE53935),
-      );
-      return;
-    }
+    _isUploadingMemories = true;
+    notifyListeners();
 
     try {
+      final recoverablePaths = await _extractRecoverableImagePaths(images);
+      if (recoverablePaths.isNotEmpty) {
+        await _savePendingUploadState(
+          houseId: houseId,
+          paths: recoverablePaths,
+          message: presetImages == null
+              ? 'Nếu app bị tắt giữa chừng, bạn có thể thử lại upload Kỷ niệm.'
+              : 'Đang thử lại ảnh Kỷ niệm chưa tải xong.',
+        );
+      } else if (presetImages != null) {
+        await _clearPendingUploadState();
+      }
+
+      // Sau khi user chọn ảnh: resolve user + location song song
+      Future<Position?> locationFuture = Future.value(null);
+      if (!kIsWeb) {
+        locationFuture =
+            Geolocator.isLocationServiceEnabled().then((enabled) async {
+          if (!enabled) return null;
+          final permission = await Geolocator.checkPermission();
+          if (permission != LocationPermission.always &&
+              permission != LocationPermission.whileInUse) {
+            return null;
+          }
+          return Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.low,
+          ).timeout(const Duration(seconds: 1));
+        }).catchError((_) => null as Position?);
+      }
+
+      final postPickResults = await Future.wait([
+        guardController.resolveCurrentUser(),
+        locationFuture,
+      ]);
+
+      final user = postPickResults[0] as User?;
+      if (user == null) {
+        showSnackBar(
+          L10nService()
+              .translate('Phiên đăng nhập chưa sẵn sàng. Vui lòng thử lại.'),
+          backgroundColor: const Color(0xFFE53935),
+        );
+        return;
+      }
+
       final authorName = await feedController.resolveCurrentAuthorName(user);
+
       final authorEmail = user.email?.trim().toLowerCase() ?? '';
       final authorRole = feedController.currentAuthorRole;
 
@@ -1400,6 +1461,18 @@ class DiaryMemoryController extends ChangeNotifier {
           position = null;
           skippedMapPinBecauseLimit = true;
         }
+      }
+
+      final messenger = ScaffoldMessenger.of(context);
+
+      // Ensure Auth is ready and has a fresh token before starting batch upload
+      try {
+        final user = await guardController.resolveCurrentUser();
+        if (user != null) {
+          await user.getIdToken(true);
+        }
+      } catch (e) {
+        debugPrint('Auth warm-up failed: $e');
       }
 
       var uploadedCount = 0;
@@ -1488,19 +1561,24 @@ class DiaryMemoryController extends ChangeNotifier {
         ),
       );
     } catch (e) {
-      if (!context.mounted) {
-        return;
-      }
-      await _restorePendingUploadState();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            L10nService().format('diary_memory_upload_error', {'error': e}),
+
+      if (context.mounted) {
+        await _restorePendingUploadState();
+        final resolved = AppErrorMapper.resolve(e);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(resolved.message),
+            backgroundColor: const Color(0xFFE53935),
           ),
-        ),
-      );
+        );
+      }
+    } finally {
+      _isUploadingMemories = false;
+      notifyListeners();
     }
   }
+
+
 
   Future<void> _saveMemoryBytesToGallery(
     Uint8List bytes, {

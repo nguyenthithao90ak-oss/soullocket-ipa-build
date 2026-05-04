@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/sl_theme.dart';
 import '../../../../models/diary_post.dart';
 import '../../../../widgets/cute_loading_indicator.dart';
+import '../../../../widgets/skeleton_container.dart';
+
 
 class DiaryList extends StatelessWidget {
   final bool showDiaryPrivacyNotice;
@@ -44,9 +46,39 @@ class DiaryList extends StatelessWidget {
               if (showDiaryPrivacyNotice) buildDiaryPrivacyNotice(),
               buildDiaryComposerCard(),
               if (showBlockingLoader)
-                const Padding(
-                  padding: EdgeInsets.only(top: 48),
-                  child: CuteLoadingIndicator(color: SLColors.primary),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 48, 16, 0),
+                  child: Column(
+                    children: List.generate(
+                      3,
+                      (index) => Padding(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SkeletonContainer.circle(size: 44),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SkeletonContainer.rounded(
+                                    width: MediaQuery.of(context).size.width * 0.4,
+                                    height: 16,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const SkeletonContainer.rounded(
+                                    width: double.infinity,
+                                    height: 80,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 )
               else if (houseId == null)
                 buildHouseSetupState(

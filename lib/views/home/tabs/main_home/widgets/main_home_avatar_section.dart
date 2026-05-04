@@ -331,7 +331,7 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
                       _isCurrentImageReady)
                   ? 1
                   : 0,
-              duration: Duration.zero,
+              duration: const Duration(milliseconds: 300),
               child: child,
             );
           },

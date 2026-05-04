@@ -356,7 +356,9 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
   }
 
   bool get _shouldShowBottomBanner =>
-      _currentSegment == 0 && _isBottomBannerReady;
+      _currentSegment == 0 &&
+      _isBottomBannerReady &&
+      ModalRoute.of(context)?.isCurrent == true;
 
   List<UtilityApp> get _shortcutPinnedApps {
     return _pinnedApps

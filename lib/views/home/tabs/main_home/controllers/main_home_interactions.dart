@@ -150,6 +150,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
         'toRole': _partnerRole,
         'sentAt': nowMs,
         'ts': ServerValue.timestamp,
+      }).then((_) {
+        HapticFeedback.lightImpact();
       }).catchError((_) {
         _showLatestSnackBar('Không gửi được icon, kiểm tra mạng rồi thử lại.');
       }),
@@ -352,6 +354,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
         partnerName: partnerName,
         partnerOnline: partnerOnline,
       );
+      HapticFeedback.mediumImpact();
     } catch (e) {
       _showLatestSnackBar('Không thể gửi tín hiệu lúc này. Vui lòng thử lại.');
     }

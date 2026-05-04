@@ -128,12 +128,12 @@ class AppErrorMapper {
       case 'wrong-password':
         return const AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Sai mật khẩu. Vui lòng thử lại.',
+          message: 'Mã này chưa đúng rồi, nhớ lại một chút hoặc thử mã khác xem sao nhé! 🔒',
         );
       case 'invalid-credential':
         return const AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Thông tin đăng nhập không đúng. Vui lòng kiểm tra lại.',
+          message: 'Thông tin chưa đúng nè, kiểm tra kỹ lại một xíu nha! ✨',
         );
       case 'invalid-email':
         return const AppErrorInfo(
@@ -148,7 +148,7 @@ class AppErrorMapper {
       case 'weak-password':
         return const AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Mật khẩu quá yếu. Vui lòng nhập ít nhất 6 ký tự.',
+          message: 'Mật khẩu này hơi dễ đoán nè, nhập ít nhất 6 ký tự để an toàn hơn nha! 💪',
         );
       case 'popup-closed-by-user':
         return const AppErrorInfo(
@@ -184,7 +184,7 @@ class AppErrorMapper {
     if (code == 'unauthenticated' || code == 'requires-recent-login') {
       return const AppErrorInfo(
         kind: AppErrorKind.user,
-        message: 'Phiên đăng nhập đã hết. Vui lòng đăng nhập lại rồi thử lại.',
+        message: 'Đã lâu bạn chưa ghé, đăng nhập lại để tiếp tục viết tiếp chuyện tình mình nhé! 👋',
       );
     }
 
@@ -209,7 +209,7 @@ class AppErrorMapper {
       if (code == 'permission-denied' && (cleanMsg.isEmpty || cleanMsg == defaultServerMessage)) {
         return const AppErrorInfo(
           kind: AppErrorKind.server,
-          message: 'Bạn không có quyền thực hiện thao tác này hoặc dữ liệu bị từ chối truy cập.',
+          message: 'Chỗ này cần bạn cấp quyền một xíu để mình phục vụ tốt hơn nè! 🔑',
         );
       }
       return AppErrorInfo(
@@ -307,7 +307,7 @@ class AppErrorMapper {
         normalized.contains('requires-recent-login') ||
         normalized.contains('phiên đăng nhập') ||
         normalized.contains('đăng nhập để tạo liên kết')) {
-      return 'Phiên đăng nhập đã hết. Vui lòng đăng nhập lại rồi thử lại.';
+      return 'Đã lâu bạn chưa ghé, đăng nhập lại để tiếp tục viết tiếp chuyện tình mình nhé! 👋';
     }
     if (message.isEmpty) {
       return 'Thông tin bạn nhập chưa hợp lệ. Vui lòng kiểm tra lại.';
@@ -340,13 +340,19 @@ class AppErrorMapper {
         normalized.contains('play integrity') ||
         normalized.contains('attestation')) {
       if (kDebugMode) {
-        return 'Firebase App Check đang chặn thao tác này. Hãy thêm debug token đúng cho thiết bị hoặc kiểm tra cấu hình App Check rồi thử lại.';
+        return 'Hệ thống xác thực bảo mật đang chặn thao tác này. Hãy kiểm tra cấu hình bảo mật thiết bị hoặc debug token rồi thử lại.';
       }
       return 'Thiết bị chưa được xác nhận để thực hiện thao tác này. Hãy chờ vài giây rồi thử lại hoặc đăng nhập lại.';
     }
     if (normalized.contains('api key') ||
         normalized.contains('internal error has occurred')) {
       return 'Dịch vụ đăng nhập đang gặp sự cố hệ thống. Vui lòng thử lại sau.';
+    }
+    if (normalized.contains('máy chủ chưa cấu hình otp_secret') ||
+        normalized.contains('máy chủ chưa được cấu hình để gửi email otp') ||
+        normalized.contains('otp_secret') ||
+        normalized.contains('gmail_app_password')) {
+      return 'Dịch vụ gửi mã OTP chưa được thiết lập đầy đủ trên máy chủ. Hãy kiểm tra OTP_SECRET và Gmail App Password trong Firebase Secrets.';
     }
     if (message.isEmpty) {
       return fallbackMessage ?? defaultServerMessage;

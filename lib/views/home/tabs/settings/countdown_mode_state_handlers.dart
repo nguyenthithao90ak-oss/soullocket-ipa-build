@@ -1318,6 +1318,7 @@ extension _CountdownModeIndependentScreenStatePart
           ? await _countdownSpaceService.acceptRequest(
               requestId: request.requestId,
               currentHouseId: _selfSpaceHouseId,
+              myHouseName: _nameU1,
             )
           : await _countdownSpaceService.declineRequest(
               requestId: request.requestId,

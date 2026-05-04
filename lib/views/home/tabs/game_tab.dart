@@ -1,10 +1,16 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../utilities/block_blast_game.dart';
 import '../../utilities/soul_rhythm_game.dart';
+import '../../utilities/caro_neon_screen.dart';
+import '../../utilities/heart_catcher_game.dart';
+import '../../../utils/services/game_download_service.dart';
+import '../../../services/admob_service.dart';
 
 class GameTab extends StatefulWidget {
   const GameTab({super.key});
@@ -19,6 +25,142 @@ class _GameTabState extends State<GameTab> {
   static const AssetImage _soulRhythmIcon =
       AssetImage(GameTab.soulRhythmIconPath);
   bool _didPrecacheSoulRhythmIcon = false;
+
+  final Map<String, bool> _downloadedGames = {
+    'soul_block': false,
+    'soul_rhythm': false,
+    'caro_neon': false,
+    'heart_catcher': false,
+  };
+
+  final Map<String, double> _downloadProgress = {};
+  
+  BannerAd? _bannerAd;
+  bool _isBannerReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDownloadStatus();
+    _loadBannerAd();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadBannerAd() async {
+    final adMob = AdMobService();
+    await adMob.initialize();
+    
+    if (await adMob.isProUser()) {
+      return;
+    }
+
+    _bannerAd = await adMob.createBannerAd(
+      onAdLoaded: (ad) {
+        if (mounted) {
+          setState(() {
+            _isBannerReady = true;
+          });
+        }
+      },
+    );
+  }
+
+  Future<void> _loadDownloadStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      for (final key in _downloadedGames.keys) {
+        _downloadedGames[key] = prefs.getBool('game_downloaded_$key') ?? false;
+      }
+    });
+  }
+
+  Future<void> _saveDownloadStatus(String gameId, bool status) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('game_downloaded_$gameId', status);
+    setState(() {
+      _downloadedGames[gameId] = status;
+    });
+  }
+
+  Future<bool> _handleRealDownload(String gameId) async {
+    final service = GameDownloadService();
+    if (service.isDownloading(gameId)) return false;
+
+    try {
+      await service.downloadGame(gameId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã tải xong game! Chúc bạn chơi vui vẻ. 🎮'),
+            backgroundColor: Color(0xFF2E7D32),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi tải game: $e'),
+            backgroundColor: const Color(0xFFD32F2F),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return false;
+    }
+  }
+
+  Future<void> _confirmDeleteGame(BuildContext context, String gameId, String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text('Xóa dữ liệu?', style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
+        content: Text('Bạn muốn xóa dữ liệu đã tải của game $name để giải phóng bộ nhớ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Xóa ngay', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await GameDownloadService().deleteGameData(gameId);
+      if (mounted) {
+        await _loadDownloadStatus();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã xóa dữ liệu game $name.')),
+        );
+      }
+    }
+  }
+
+  void _onGameTap(String gameId, VoidCallback onPlay) async {
+    final service = GameDownloadService();
+    final isDownloaded = await service.isGameDownloaded(gameId);
+    if (!mounted) return;
+    if (isDownloaded) {
+      onPlay();
+      return;
+    }
+
+    final downloaded = await _handleRealDownload(gameId);
+    if (!mounted) return;
+    await _loadDownloadStatus();
+    if (downloaded && mounted) {
+      onPlay();
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -82,26 +224,115 @@ class _GameTabState extends State<GameTab> {
                     final crossAxisCount = constraints.maxWidth < 280 ? 2 : 3;
                     final spacing = constraints.maxWidth < 360 ? 10.0 : 14.0;
 
-                    return GridView.count(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: spacing,
-                      mainAxisSpacing: spacing + 2,
-                      childAspectRatio: crossAxisCount == 3 ? 0.8 : 0.92,
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      children: [
-                        _SoulBlockCard(
-                          onTap: () => _openSoulBlockGame(context),
-                        ),
-                        _SoulRhythmCard(
-                          imagePath: GameTab.soulRhythmIconPath,
-                          onTap: () => _openSoulGame(context),
-                        ),
-                      ],
+                    final downloadService = GameDownloadService();
+                    return ListenableBuilder(
+                      listenable: downloadService,
+                      builder: (context, _) {
+                        return FutureBuilder<Map<String, bool>>(
+                          future: Future.wait([
+                            downloadService.isGameDownloaded('soul_block'),
+                            downloadService.isGameDownloaded('soul_rhythm'),
+                            downloadService.isGameDownloaded('caro_neon'),
+                            downloadService.isGameDownloaded('heart_catcher'),
+                          ]).then((results) => {
+                            'soul_block': results[0],
+                            'soul_rhythm': results[1],
+                            'caro_neon': results[2],
+                            'heart_catcher': results[3],
+                          }),
+                          builder: (context, snapshot) {
+                            final statuses = snapshot.data ?? {};
+                            final soulBlockDownloaded = statuses['soul_block'] ?? false;
+                            final soulRhythmDownloaded = statuses['soul_rhythm'] ?? false;
+                            final caroNeonDownloaded = statuses['caro_neon'] ?? false;
+                            final heartCatcherDownloaded = statuses['heart_catcher'] ?? false;
+                            return GridView.count(
+                              crossAxisCount: crossAxisCount,
+                              crossAxisSpacing: spacing,
+                              mainAxisSpacing: spacing + 2,
+                              childAspectRatio: crossAxisCount == 3 ? 0.68 : 0.75,
+                              physics: const NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              children: [
+                                _SoulBlockCard(
+                                  isDownloaded: soulBlockDownloaded,
+                                  downloadProgress: downloadService.getProgress('soul_block'),
+                                  onTap: () => _onGameTap('soul_block', () => _openSoulBlockGame(context)),
+                                  onLongPress: soulBlockDownloaded ? () => _confirmDeleteGame(context, 'soul_block', 'Soul Block') : null,
+                                  onDelete: soulBlockDownloaded ? () => _confirmDeleteGame(context, 'soul_block', 'Soul Block') : null,
+                                ),
+                                _SoulRhythmCard(
+                                  imagePath: GameTab.soulRhythmIconPath,
+                                  isDownloaded: soulRhythmDownloaded,
+                                  downloadProgress: downloadService.getProgress('soul_rhythm'),
+                                  onTap: () => _onGameTap('soul_rhythm', () => _openSoulGame(context)),
+                                  onLongPress: soulRhythmDownloaded ? () => _confirmDeleteGame(context, 'soul_rhythm', 'Soul Rhythm') : null,
+                                  onDelete: soulRhythmDownloaded ? () => _confirmDeleteGame(context, 'soul_rhythm', 'Soul Rhythm') : null,
+                                ),
+                                _GenericGameCard(
+                                  label: 'Caro Neon',
+                                  icon: Icons.grid_4x4_rounded,
+                                  color: const Color(0xFF00E5FF),
+                                  isDownloaded: caroNeonDownloaded,
+                                  downloadProgress: downloadService.getProgress('caro_neon'),
+                                  onLongPress: caroNeonDownloaded ? () => _confirmDeleteGame(context, 'caro_neon', 'Caro Neon') : null,
+                                  onDelete: caroNeonDownloaded ? () => _confirmDeleteGame(context, 'caro_neon', 'Caro Neon') : null,
+                                  onTap: () => _onGameTap('caro_neon', () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const CaroNeonScreen()),
+                                  )),
+                                ),
+                                _GenericGameCard(
+                                  label: 'Heart Catcher',
+                                  icon: Icons.favorite_rounded,
+                                  color: const Color(0xFFFF4081),
+                                  isDownloaded: heartCatcherDownloaded,
+                                  downloadProgress: downloadService.getProgress('heart_catcher'),
+                                  onLongPress: heartCatcherDownloaded ? () => _confirmDeleteGame(context, 'heart_catcher', 'Heart Catcher') : null,
+                                  onDelete: heartCatcherDownloaded ? () => _confirmDeleteGame(context, 'heart_catcher', 'Heart Catcher') : null,
+                                  onTap: () => _onGameTap('heart_catcher', () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const HeartCatcherGame()),
+                                  )),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      }
                     );
                   },
                 ),
               ),
+              if (_isBannerReady && _bannerAd != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 24, 10, 0),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.4)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          width: _bannerAd!.size.width.toDouble(),
+                          height: _bannerAd!.size.height.toDouble(),
+                          child: AdWidget(ad: _bannerAd!),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -155,7 +386,7 @@ class _GameHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 96),
+              
             ],
           ),
         ],
@@ -195,14 +426,22 @@ class _GameLauncherTile extends StatelessWidget {
     required this.preview,
     required this.borderColor,
     required this.shadowColor,
+    this.isDownloaded = false,
+    this.downloadProgress,
+    this.onLongPress,
+    this.onDelete,
   });
 
   final String label;
   final String semanticsLabel;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
   final Widget preview;
   final Color borderColor;
   final Color shadowColor;
+  final bool isDownloaded;
+  final double? downloadProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -217,61 +456,124 @@ class _GameLauncherTile extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: previewSize,
-                  height: previewSize,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(radius),
-                    border: Border.all(
-                      color: borderColor.withOpacity(0.9),
-                      width: 1.4,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: shadowColor.withOpacity(0.22),
-                        blurRadius: 16,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 7),
-                      ),
-                      const BoxShadow(
-                        color: Color.fromRGBO(255, 255, 255, 0.12),
-                        blurRadius: 8,
-                        offset: Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(radius - 1),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        preview,
-                        const _TileGlossOverlay(),
+          onLongPress: onLongPress,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: previewSize,
+                    height: previewSize,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(radius),
+                      boxShadow: [
+                        BoxShadow(
+                          color: shadowColor.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 28,
-                  child: Center(
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF6B4A5D),
-                        height: 1.08,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(radius),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          preview,
+                          const _TileGlossOverlay(),
+                          if (isDownloaded && onDelete != null)
+                            Positioned(
+                              top: 6,
+                              right: 6,
+                              child: GestureDetector(
+                                onTap: onDelete,
+                                child: Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.58),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: Colors.white,
+                                    size: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF4A3440),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                GestureDetector(
+                  onTap: onTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDownloaded
+                            ? [const Color(0xFFE91E63), const Color(0xFFF48FB1)]
+                            : [borderColor, borderColor.withOpacity(0.7)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isDownloaded ? const Color(0xFFE91E63) : borderColor).withOpacity(0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: downloadProgress != null
+                        ? SizedBox(
+                            width: 60,
+                            height: 10,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(5),
+                              child: LinearProgressIndicator(
+                                value: downloadProgress,
+                                backgroundColor: Colors.white.withOpacity(0.2),
+                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isDownloaded ? Icons.play_arrow_rounded : Icons.file_download_outlined,
+                                color: Colors.white,
+                                size: 10,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                isDownloaded ? 'CHƠI NGAY' : 'TẢI XUỐNG',
+                                style: SLTheme.quicksand(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                   ),
                 ),
               ],
@@ -287,10 +589,18 @@ class _SoulRhythmCard extends StatelessWidget {
   const _SoulRhythmCard({
     required this.imagePath,
     required this.onTap,
+    this.isDownloaded = false,
+    this.downloadProgress,
+    this.onLongPress,
+    this.onDelete,
   });
 
   final String imagePath;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
+  final bool isDownloaded;
+  final double? downloadProgress;
 
   Widget _buildInstantPlaceholder() {
     return const DecoratedBox(
@@ -317,6 +627,10 @@ class _SoulRhythmCard extends StatelessWidget {
       label: 'Soul Rhythm',
       semanticsLabel: 'Soul Rhythm',
       onTap: onTap,
+      onLongPress: onLongPress,
+      onDelete: onDelete,
+      isDownloaded: isDownloaded,
+      downloadProgress: downloadProgress,
       borderColor: const Color(0xFFFF77B7),
       shadowColor: const Color(0xFFFF77B7),
       preview: Stack(
@@ -355,9 +669,17 @@ class _SoulRhythmCard extends StatelessWidget {
 class _SoulBlockCard extends StatelessWidget {
   const _SoulBlockCard({
     required this.onTap,
+    this.isDownloaded = false,
+    this.downloadProgress,
+    this.onLongPress,
+    this.onDelete,
   });
 
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
+  final bool isDownloaded;
+  final double? downloadProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -365,6 +687,10 @@ class _SoulBlockCard extends StatelessWidget {
       label: 'Soul Block',
       semanticsLabel: 'Soul Block',
       onTap: onTap,
+      onLongPress: onLongPress,
+      onDelete: onDelete,
+      isDownloaded: isDownloaded,
+      downloadProgress: downloadProgress,
       borderColor: const Color(0xFFFFC857),
       shadowColor: const Color(0xFF8CFF98),
       preview: const SizedBox.expand(
@@ -483,4 +809,57 @@ class _SoulBlockCardPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _GenericGameCard extends StatelessWidget {
+  const _GenericGameCard({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    this.isDownloaded = false,
+    this.downloadProgress,
+    this.onLongPress,
+    this.onDelete,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  final bool isDownloaded;
+  final double? downloadProgress;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return _GameLauncherTile(
+      label: label,
+      semanticsLabel: label,
+      onTap: onTap,
+      isDownloaded: isDownloaded,
+      downloadProgress: downloadProgress,
+      onLongPress: onLongPress,
+      onDelete: onDelete,
+      borderColor: color,
+      shadowColor: color,
+      preview: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.3), color.withOpacity(0.1)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            color: color,
+            size: 32,
+          ),
+        ),
+      ),
+    );
+  }
 }

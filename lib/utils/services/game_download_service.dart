@@ -56,6 +56,11 @@ class GameDownloadService extends ChangeNotifier {
       storagePath: '',
       relativePaths: [],
     ),
+    'heart_catcher': const GameAssetInfo(
+      gameId: 'heart_catcher',
+      storagePath: '',
+      relativePaths: [],
+    ),
   };
   Future<String> getLocalPath(String gameId, String fileName) async {
     final directory = await getApplicationDocumentsDirectory();

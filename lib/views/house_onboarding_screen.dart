@@ -72,6 +72,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   final bool _showLegacyIntro = false;
   Timer? _scrollHintTimer;
   String? _autoCreateFailureMessage;
+  int _authSyncRetryCount = 0;
+  int _transientCreateRetryCount = 0;
   String _selectedSecurityQuestion =
       L10nService().translate('Ngày sinh của bạn?');
 
@@ -686,6 +688,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         throw TimeoutException('_createHouse timed out');
       });
       debugPrint('[HouseOnboarding] _createHouse success: $createdHouseId');
+      _authSyncRetryCount = 0;
+      _transientCreateRetryCount = 0;
       if (!mounted) return;
       final resolvedHouseName = houseName;
 
@@ -732,11 +736,46 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     } catch (e, st) {
       debugPrint('[HouseOnboarding] _createHouse failed: $e\n$st');
       if (!mounted) return;
-      final message = AppErrorMapper.resolve(
-        e,
-        fallbackMessage:
-            'Không tạo được ngôi nhà: hãy kiểm tra trạng thái đăng nhập và kết nối mạng.',
-      ).message;
+      final errorInfo = AppErrorMapper.resolve(e);
+      final message = errorInfo.message;
+
+      if (errorInfo.isUserError &&
+          _authSyncRetryCount < 1 &&
+          (e.toString().contains('Unauthenticated') ||
+              e.toString().contains('Bạn chưa đăng nhập'))) {
+        _authSyncRetryCount += 1;
+        debugPrint('[HouseOnboarding] Auth sync delay detected, retrying in 1s...');
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          return _createHouse();
+        }
+      }
+      _authSyncRetryCount = 0;
+
+      final normalizedError = e.toString().toLowerCase();
+      final shouldRetryTransient = widget.autoCreateOnly &&
+          _transientCreateRetryCount < 2 &&
+          (e is TimeoutException ||
+              normalizedError.contains('timeout') ||
+              normalizedError.contains('timed out') ||
+              normalizedError.contains('network') ||
+              normalizedError.contains('unavailable') ||
+              normalizedError.contains('deadline') ||
+              normalizedError.contains('mạng') ||
+              normalizedError.contains('kết nối'));
+      if (shouldRetryTransient) {
+        _transientCreateRetryCount += 1;
+        debugPrint(
+          '[HouseOnboarding] transient create failure, retrying '
+          '${_transientCreateRetryCount}/2...',
+        );
+        await Future.delayed(Duration(seconds: _transientCreateRetryCount));
+        if (mounted) {
+          return _createHouse();
+        }
+      }
+      _transientCreateRetryCount = 0;
+
       if (widget.autoCreateOnly) {
         _setAutoCreateFailureMessage(message);
       } else {
@@ -853,7 +892,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        _autoCreateFailureMessage!,
+                        _autoCreateFailureMessage ?? 'Đã có lỗi xảy ra khi chuẩn bị ngôi nhà. Vui lòng thử lại.',
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
                           height: 1.45,
@@ -863,7 +902,13 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: _isLoading ? null : _createHouse,
+                        onPressed: _isLoading
+                            ? null
+                            : () {
+                                _authSyncRetryCount = 0;
+                                _transientCreateRetryCount = 0;
+                                _createHouse();
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFD81B60),
                           foregroundColor: Colors.white,

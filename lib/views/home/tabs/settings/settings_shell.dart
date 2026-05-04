@@ -45,7 +45,9 @@ extension _SettingsTabShell on _SettingsTabState {
       return;
     }
     if (_shouldShowPendingDeviceGate(sectionId)) {
-      await _ensureCanModifySharedInfo(showToast: false);
+      if (!await _ensureCanModifySecurityInfo(showToast: false)) {
+        return;
+      }
       if (!mounted) return;
     }
     if (sectionId == 'countdownMode') {
@@ -723,9 +725,7 @@ extension _SettingsTabShell on _SettingsTabState {
         border: const Color(0xFF73D5CC),
         textColor: const Color(0xFF0D7D81),
         onTap: () => _togglePanel('widget'),
-        badgeText: null
-//            ? context.tr('settings_badge_mobile')
-//            : context.tr('settings_badge_open'),
+        badgeText: kIsWeb ? context.tr('settings_badge_mobile') : null,
       ),
       _buildControlCard(
         icon: Icons.timelapse_rounded,
@@ -771,16 +771,8 @@ extension _SettingsTabShell on _SettingsTabState {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
-        final crossAxisCount = maxWidth >= 840
-            ? 3
-            : maxWidth >= 420
-                ? 2
-                : 1;
-        final childAspectRatio = crossAxisCount == 1
-            ? 1.82
-            : crossAxisCount == 2
-                ? (maxWidth < 520 ? 0.80 : 0.89)
-                : 0.94;
+        final crossAxisCount = maxWidth >= 840 ? 3 : 2;
+        final childAspectRatio = crossAxisCount == 3 ? 0.94 : 1.0;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
