@@ -1896,6 +1896,122 @@ class _DrawingCanvasPainter extends CustomPainter {
     }
   }
 
+  void _paintVignette(Canvas canvas, Size size, Color color) {
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [Colors.transparent, color],
+          stops: const [0.55, 1],
+        ).createShader(Offset.zero & size),
+    );
+  }
+
+  void _paintBokeh(Canvas canvas, Size size, Color color) {
+    final paint = Paint()..color = color;
+    for (var i = 0; i < 18; i++) {
+      final x = ((i * 67 + 24) % math.max(size.width.toInt(), 1)).toDouble();
+      final y = ((i * 91 + 38) % math.max(size.height.toInt(), 1)).toDouble();
+      canvas.drawCircle(Offset(x, y), 12 + (i % 5) * 8, paint);
+    }
+  }
+
+  void _paintMoon(Canvas canvas, Size size) {
+    final center = Offset(size.width * 0.78, size.height * 0.16);
+    canvas.drawCircle(center, size.shortestSide * 0.09, Paint()..color = const Color(0xFFFFF2B8));
+    canvas.drawCircle(
+      center.translate(size.shortestSide * 0.035, -size.shortestSide * 0.025),
+      size.shortestSide * 0.085,
+      Paint()..color = const Color(0xFF34216B),
+    );
+  }
+
+  void _paintNebula(Canvas canvas, Size size) {
+    final colors = [
+      const Color(0xFFFF7AB8).withOpacity(0.20),
+      const Color(0xFF7EE8FF).withOpacity(0.16),
+      const Color(0xFFFFD166).withOpacity(0.12),
+    ];
+    for (var i = 0; i < colors.length; i++) {
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(size.width * (0.25 + i * 0.18), size.height * (0.26 + i * 0.18)),
+          width: size.width * 0.56,
+          height: size.height * 0.18,
+        ),
+        Paint()..color = colors[i],
+      );
+    }
+  }
+
+  void _paintSparkles(Canvas canvas, Size size, Color color) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 24; i++) {
+      final center = Offset(
+        ((i * 53 + 17) % math.max(size.width.toInt(), 1)).toDouble(),
+        ((i * 79 + 31) % math.max(size.height.toInt(), 1)).toDouble(),
+      );
+      final r = 3.0 + (i % 3) * 1.5;
+      canvas.drawLine(center.translate(-r, 0), center.translate(r, 0), paint);
+      canvas.drawLine(center.translate(0, -r), center.translate(0, r), paint);
+    }
+  }
+
+  void _paintChalkDust(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.white.withOpacity(0.10);
+    for (var i = 0; i < 120; i++) {
+      final x = ((i * 37) % math.max(size.width.toInt(), 1)).toDouble();
+      final y = ((i * 61) % math.max(size.height.toInt(), 1)).toDouble();
+      canvas.drawCircle(Offset(x, y), 0.8 + (i % 4) * 0.35, paint);
+    }
+  }
+
+  void _paintPastelDots(Canvas canvas, Size size) {
+    final colors = [
+      const Color(0xFFFF7AB8).withOpacity(0.26),
+      const Color(0xFF69D2E7).withOpacity(0.25),
+      const Color(0xFFFFD166).withOpacity(0.28),
+      const Color(0xFFA78BFA).withOpacity(0.22),
+    ];
+    for (double y = 18; y < size.height; y += 42) {
+      for (double x = 18; x < size.width; x += 42) {
+        final index = ((x + y) ~/ 42) % colors.length;
+        canvas.drawCircle(Offset(x, y), 5.5, Paint()..color = colors[index]);
+      }
+    }
+  }
+
+  void _paintCheckerboard(Canvas canvas, Size size) {
+    const cell = 22.0;
+    final paints = [
+      Paint()..color = const Color(0xFFF4F4F5),
+      Paint()..color = const Color(0xFFE5E7EB),
+    ];
+    for (double y = 0; y < size.height; y += cell) {
+      for (double x = 0; x < size.width; x += cell) {
+        final index = ((x / cell).floor() + (y / cell).floor()) % 2;
+        canvas.drawRect(Rect.fromLTWH(x, y, cell, cell), paints[index]);
+      }
+    }
+  }
+
+  void _paintStickerGuide(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = const Color(0xFFFF7AAE).withOpacity(0.34);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(24, 24, size.width - 48, size.height - 48),
+        const Radius.circular(28),
+      ),
+      paint,
+    );
+  }
+
   void _paintNotebook(Canvas canvas, Size size) {
     final linePaint = Paint()
       ..color = const Color(0xFFBFD7FF).withOpacity(0.55)
