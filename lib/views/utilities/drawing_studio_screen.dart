@@ -2279,11 +2279,7 @@ class _DrawingCanvasPainter extends CustomPainter {
       return;
     }
 
-    final points = stroke.normalized
-        ? stroke.points
-            .map((point) => Offset(point.dx * size.width, point.dy * size.height))
-            .toList(growable: false)
-        : stroke.points;
+    final points = stroke.resolvedPoints(size);
 
     final paint = Paint()
       ..color = stroke.color
