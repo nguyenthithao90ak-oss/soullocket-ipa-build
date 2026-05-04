@@ -343,6 +343,9 @@ class HouseService {
     if (!isAppCheckCode) {
       return false;
     }
+    if (code == 'unauthenticated' && _auth.currentUser != null) {
+      return true;
+    }
     return message.contains('app check') ||
         message.contains('appcheck') ||
         message.contains('debug token') ||
