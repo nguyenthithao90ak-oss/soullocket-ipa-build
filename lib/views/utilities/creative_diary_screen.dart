@@ -724,6 +724,113 @@ class _DiaryPageCard extends StatelessWidget {
   }
 }
 
+class _DiaryAttachmentStrip extends StatelessWidget {
+  final _DiaryPageData page;
+
+  const _DiaryAttachmentStrip({required this.page});
+
+  @override
+  Widget build(BuildContext context) {
+    final firstImage = page.imageUrls.first;
+    final extraCount = page.imageUrls.length - 1;
+    return GestureDetector(
+      onTap: () => _openImage(context, firstImage),
+      child: Container(
+        height: 96,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: page.accent.withOpacity(0.16),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.network(
+                firstImage,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: page.surface,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.broken_image_rounded, color: page.accent),
+                ),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withOpacity(0.28),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 12,
+                bottom: 10,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.88),
+                    borderRadius: SLRadius.pillAll,
+                  ),
+                  child: Text(
+                    extraCount > 0 ? 'Bộ sưu tập +$extraCount' : 'Ảnh đính kèm',
+                    style: SLTheme.quicksand(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w900,
+                      color: page.accent,
+                    ),
+                  ),
+                ),
+              ),
+              const Positioned(
+                right: 12,
+                bottom: 10,
+                child: Icon(Icons.open_in_full_rounded, color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openImage(BuildContext context, String imageUrl) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(18),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: InteractiveViewer(
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Container(
+                height: 260,
+                color: Colors.white,
+                alignment: Alignment.center,
+                child: const Icon(Icons.broken_image_rounded),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _DiaryExportPageCard extends StatelessWidget {
   final _DiaryPageData page;
   final int pageNumber;
