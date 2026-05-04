@@ -98,9 +98,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
   Widget _buildWidgetPanelTabBar() {
     final items = <(String, String, IconData)>[
-      (WidgetService.defaultWidgetStyleKey, 'Mac dinh', Icons.widgets_rounded),
-      ('countdown', 'Dem ngay', Icons.timer_outlined),
-      (_widgetPanelTabIconKey, 'Nhan dien', Icons.favorite_rounded),
+      (WidgetService.defaultWidgetStyleKey, 'Mặc định', Icons.widgets_rounded),
+      ('countdown', 'Đếm ngày', Icons.timer_outlined),
     ];
 
     return Container(
@@ -113,6 +112,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       child: Row(
         children: items.map((item) {
           final isSelected = _widgetPanelTabKey == item.$1;
+
           return Expanded(
             child: GestureDetector(
               onTap: () => unawaited(_handleWidgetPanelTabChanged(item.$1)),
@@ -165,131 +165,6 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           );
         }).toList(growable: false),
       ),
-    );
-  }
-
-  Widget _buildBrandMarkPicker() {
-    return ValueListenableBuilder<UiPrefsState>(
-      valueListenable: UiPrefs.notifier,
-      builder: (context, ui, _) {
-        final selectedKey = SoulLocketBrand.normalizeStyleKey(ui.brandMarkKey);
-        return _buildWidgetSectionCard(
-          icon: Icons.favorite_rounded,
-          title: 'Icon trong app',
-          subtitle:
-              'Doi vien tim va tong mau cho nhan dien hien thi ben trong app.',
-          iconGradient: const [
-            Color(0xFFFF7EA8),
-            Color(0xFFA971FF),
-          ],
-          child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: SoulLocketBrand.styles.map((style) {
-              final isSelected = selectedKey == style.key;
-              return GestureDetector(
-                onTap: () => unawaited(UiPrefs.setBrandMarkKey(style.key)),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  width: 104,
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? style.backgroundColors.first.withOpacity(0.12)
-                        : const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: isSelected
-                          ? style.backgroundColors.last.withOpacity(0.9)
-                          : const Color(0xFFE4ECF4),
-                      width: isSelected ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SoulLocketBrandMark(
-                        styleKey: style.key,
-                        size: 54,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        style.label,
-                        textAlign: TextAlign.center,
-                        style: SLTheme.quicksand(
-                          fontSize: 11.2,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF243041),
-                          height: 1.2,
-                        ),
-                      ),
-                      if (isSelected) ...[
-                        const SizedBox(height: 6),
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          size: 18,
-                          color: Color(0xFF16A34A),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            }).toList(growable: false),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAppIconShowcase() {
-    return ValueListenableBuilder<UiPrefsState>(
-      valueListenable: UiPrefs.notifier,
-      builder: (context, ui, _) {
-        final style = SoulLocketBrand.styleFor(ui.brandMarkKey);
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                style.backgroundColors.first.withOpacity(0.16),
-                style.backgroundColors.last.withOpacity(0.08),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFE5ECF4)),
-          ),
-          child: Column(
-            children: [
-              SoulLocketBrandMark(
-                styleKey: style.key,
-                size: 92,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                style.label,
-                style: SLTheme.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF1F2A37),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Nhan dien hien thi trong app',
-                style: SLTheme.quicksand(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -349,12 +224,6 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         return;
       }
       try {
-        if (Theme.of(context).platform == TargetPlatform.iOS) {
-          await _persistAndSyncWidgetAppearance();
-          if (!mounted) return;
-          _showToast(context.tr('ios_widget_pin_guide'), success: true);
-          return;
-        }
         final supported = await HomeWidget.isRequestPinWidgetSupported();
         if (!mounted) return;
         if (supported != true) {
@@ -426,17 +295,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 ),
               ),
               const SizedBox(height: 10),
-              _widgetPanelTabKey == _widgetPanelTabIconKey
-                  ? _buildAppIconShowcase()
-                  : _buildWidgetPreview(),
+              _buildWidgetPreview(),
               const SizedBox(height: 14),
               _buildWidgetPanelTabBar(),
               const SizedBox(height: 12),
-              if (_widgetPanelTabKey == _widgetPanelTabIconKey) ...[
-                _buildBrandMarkPicker(),
-                const SizedBox(height: 12),
-              ],
-              if (_widgetPanelTabKey != _widgetPanelTabIconKey)
                 _buildWidgetSectionCard(
                   icon: Icons.palette_outlined,
                   title: context.tr('theme_widget_bg'),
@@ -457,8 +319,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     ],
                   ),
                 ),
-              if (_widgetPanelTabKey != _widgetPanelTabIconKey &&
-                  _widgetStyleKey == WidgetService.defaultWidgetStyleKey) ...[
+              if (_widgetStyleKey == WidgetService.defaultWidgetStyleKey) ...[
                 const SizedBox(height: 12),
                 _buildWidgetSectionCard(
                   icon: Icons.favorite_rounded,
@@ -521,14 +382,13 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   ),
                 ),
               ],
-              if (_widgetPanelTabKey != _widgetPanelTabIconKey &&
-                  _widgetStyleKey == 'countdown') ...[
+              if (_widgetStyleKey == 'countdown') ...[
                 const SizedBox(height: 12),
                 _buildWidgetSectionCard(
                   icon: Icons.timer_rounded,
-                  title: 'Widget dem ngay',
+                  title: 'Widget đếm ngày',
                   subtitle:
-                      'Mode nay uu tien so ngay o giua va ngay bat dau ben duoi.',
+                      'Chế độ này ưu tiên số ngày ở giữa và ngày bắt đầu bên dưới.',
                   iconGradient: const [
                     Color(0xFFFFB84D),
                     Color(0xFFFF7A59),
@@ -544,15 +404,11 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   ),
                 ),
               ],
-              if (_widgetPanelTabKey != _widgetPanelTabIconKey)
-                const SizedBox(height: 12),
-              if (_widgetPanelTabKey != _widgetPanelTabIconKey)
-                _buildWidgetSectionCard(
+              const SizedBox(height: 12),
+              _buildWidgetSectionCard(
                   icon: Icons.add_to_home_screen_rounded,
-                  title: context.tr('home_screen_widget'),
-                  subtitle: Theme.of(context).platform == TargetPlatform.iOS
-                      ? null
-                      : context.tr('add_widget_desc'),
+                  title: context.tr('android_real_widget'),
+                  subtitle: context.tr('add_widget_desc'),
                   iconGradient: const [
                     Color(0xFF14B8A6),
                     Color(0xFF06B6D4),
@@ -560,122 +416,108 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (Theme.of(context).platform != TargetPlatform.iOS) ...[
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final useColumn = constraints.maxWidth < 330;
-                            if (useColumn) {
-                              return Column(
-                                children: [
-                                  _buildGradientBtn(
-                                    label: context.tr('add_widget'),
-                                    gradient: const [
-                                      Color(0xFF10C8E6),
-                                      Color(0xFF0E9EB0),
-                                    ],
-                                    onTap: handlePinWidget,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _buildGradientBtn(
-                                    label: context.tr('update_widget'),
-                                    gradient: const [
-                                      Color(0xFFFF7898),
-                                      Color(0xFFD81B60),
-                                    ],
-                                    onTap: handleRefreshWidget,
-                                  ),
-                                ],
-                              );
-                            }
-
-                            return Row(
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final useColumn = constraints.maxWidth < 330;
+                          if (useColumn) {
+                            return Column(
                               children: [
-                                Expanded(
-                                  child: _buildGradientBtn(
-                                    label: context.tr('add_widget'),
-                                    gradient: const [
-                                      Color(0xFF10C8E6),
-                                      Color(0xFF0E9EB0),
-                                    ],
-                                    onTap: handlePinWidget,
-                                  ),
+                                _buildGradientBtn(
+                                  label: context.tr('add_widget'),
+                                  gradient: const [
+                                    Color(0xFF10C8E6),
+                                    Color(0xFF0E9EB0),
+                                  ],
+                                  onTap: handlePinWidget,
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _buildGradientBtn(
-                                    label: context.tr('update_widget'),
-                                    gradient: const [
-                                      Color(0xFFFF7898),
-                                      Color(0xFFD81B60),
-                                    ],
-                                    onTap: handleRefreshWidget,
-                                  ),
+                                const SizedBox(height: 10),
+                                _buildGradientBtn(
+                                  label: context.tr('update_widget'),
+                                  gradient: const [
+                                    Color(0xFFFF7898),
+                                    Color(0xFFD81B60),
+                                  ],
+                                  onTap: handleRefreshWidget,
                                 ),
                               ],
                             );
-                          },
-                        ),
-                        const SizedBox(height: 14),
-                      ],
+                          }
+
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: _buildGradientBtn(
+                                  label: context.tr('add_widget'),
+                                  gradient: const [
+                                    Color(0xFF10C8E6),
+                                    Color(0xFF0E9EB0),
+                                  ],
+                                  onTap: handlePinWidget,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildGradientBtn(
+                                  label: context.tr('update_widget'),
+                                  gradient: const [
+                                    Color(0xFFFF7898),
+                                    Color(0xFFD81B60),
+                                  ],
+                                  onTap: handleRefreshWidget,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                       if (Theme.of(context).platform == TargetPlatform.iOS) ...[
+                        const SizedBox(height: 12),
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF0F9FF),
+                            color: const Color(0xFFF5FBFF),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFB9E6FE)),
+                            border: Border.all(color: const Color(0xFFCAEAF3)),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                width: 32,
-                                height: 32,
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0EA5E9).withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(10),
+                                  color:
+                                      const Color(0xFF0EA5C6).withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(
                                   Icons.info_outline_rounded,
-                                  color: Color(0xFF0369A1),
-                                  size: 18,
+                                  color: Color(0xFF0B7285),
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Hướng dẫn thêm Widget',
+                                      'Hướng dẫn iOS',
                                       style: SLTheme.quicksand(
-                                        fontSize: 13,
+                                        fontSize: 12.6,
                                         fontWeight: FontWeight.w900,
-                                        color: const Color(0xFF0369A1),
+                                        color: const Color(0xFF0B7285),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      context.tr('ios_widget_pending'),
+                                      'Để thêm Widget trên iOS:\n1. Nhấn giữ vào màn hình chính\n2. Bấm nút dấu [+] ở góc màn hình\n3. Tìm "SoulLocket" và Thêm tiện ích',
                                       style: SLTheme.quicksand(
-                                        fontSize: 11.5,
+                                        fontSize: 11.8,
                                         fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF475467),
-                                        height: 1.5,
+                                        color: const Color(0xFF667085),
+                                        height: 1.4,
                                       ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _buildGradientBtn(
-                                      label: 'Lưu & Đồng bộ cấu hình',
-                                      gradient: const [
-                                        Color(0xFF10C8E6),
-                                        Color(0xFF0E9EB0),
-                                      ],
-                                      onTap: () async {
-                                        await _persistAndSyncWidgetAppearance();
-                                        if (mounted) _showToast('Đã đồng bộ!', success: true);
-                                      },
                                     ),
                                   ],
                                 ),

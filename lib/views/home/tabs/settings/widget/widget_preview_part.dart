@@ -273,6 +273,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     final secondary = palette[1];
     final glow = palette[2];
     final styleKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
+
     final styleSeed = styleKey.runes.fold<int>(0, (sum, rune) => sum + rune);
     final colorSeed =
         _widgetHeartColorKey.runes.fold<int>(0, (sum, rune) => sum + rune);

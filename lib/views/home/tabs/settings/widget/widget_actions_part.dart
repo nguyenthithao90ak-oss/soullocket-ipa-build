@@ -80,11 +80,6 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   }
 
   Future<void> _handleWidgetPanelTabChanged(String value) async {
-    if (value == _widgetPanelTabIconKey) {
-      setState(() => _widgetPanelTabKey = value);
-      return;
-    }
-
     final normalizedStyle = WidgetService.normalizeWidgetStyleKey(value);
     await _updateWidgetAppearanceDraft(() {
       _widgetPanelTabKey = normalizedStyle;

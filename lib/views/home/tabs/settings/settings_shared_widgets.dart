@@ -406,33 +406,6 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                     ],
                   ),
                 ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    constraints: BoxConstraints(maxWidth: badgeMaxWidth),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.88),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: textColor.withOpacity(0.25),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Text(
-                      resolvedBadgeText,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        color: textColor,
-                        fontWeight: FontWeight.w900,
-                        fontSize: badgeFontSize,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           );
