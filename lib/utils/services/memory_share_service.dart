@@ -117,12 +117,12 @@ class MemoryShareService {
     }
 
     final limits = await fetchLimits();
+    if (photos.length > limits.shareMaxItems) {
+      throw Exception('Mỗi liên kết chỉ hỗ trợ tối đa ${limits.shareMaxItems} ảnh.');
+    }
     final safePhotos = _sanitizePhotos(photos, limits.shareMaxItems);
     if (safePhotos.isEmpty) {
       throw Exception('Chưa có ảnh hợp lệ để tạo liên kết.');
-    }
-    if (safePhotos.length > limits.shareMaxItems) {
-      throw Exception('Mỗi liên kết chỉ hỗ trợ tối đa ${limits.shareMaxItems} ảnh.');
     }
     final resolvedExpiryDays = expiryDays.clamp(1, limits.shareMaxTtlDays).toInt();
 
