@@ -574,6 +574,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       avatarUrl: widget.myAvatarUrl,
                       gpsPoint: uiSnap.myPoint,
                       addressText: uiSnap.myAddressText,
+                      updatedText: uiSnap.myUpdatedText,
                       isLive: uiSnap.myIsLive,
                       hasHistory: uiSnap.myHasHistory,
                     ),
