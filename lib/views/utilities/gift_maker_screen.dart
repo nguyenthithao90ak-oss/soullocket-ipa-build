@@ -1214,7 +1214,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               style: const TextStyle(fontSize: 40),
             ),
           ),
-          SLSpacing.w14,
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
