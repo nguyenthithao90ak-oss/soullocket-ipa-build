@@ -1213,11 +1213,19 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       if (uniquePoints.length == 1) {
         _mapController.move(uniquePoints.first, 15.8);
       } else {
+        final size = MediaQuery.sizeOf(context);
+        final bottomPadding = (size.height * 0.32).clamp(210.0, 310.0);
+        final horizontalPadding = (size.width * 0.10).clamp(34.0, 56.0);
         _mapController.fitCamera(
           fm.CameraFit.coordinates(
             coordinates: uniquePoints,
-            padding: const EdgeInsets.fromLTRB(42, 118, 42, 250),
-            maxZoom: 16,
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              118,
+              horizontalPadding,
+              bottomPadding,
+            ),
+            maxZoom: 15.4,
           ),
         );
       }
