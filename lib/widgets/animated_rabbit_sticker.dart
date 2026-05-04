@@ -20,8 +20,8 @@ class AnimatedRabbitSticker extends StatelessWidget {
     this.width,
     this.height,
     this.fit = BoxFit.contain,
-    this.isAntiAlias = false,
-    this.filterQuality = FilterQuality.low,
+    this.isAntiAlias = true,
+    this.filterQuality = FilterQuality.high,
     this.errorBuilder,
   });
 
@@ -119,6 +119,9 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
         final isNumberedSticker = _normalizedPath.startsWith(
           _numberedStickerPrefix,
         );
+        final keepAspectRatio = _normalizedPath.startsWith(
+          _cutoutStickerPrefix,
+        );
 
         return RepaintBoundary(
           child: _buildMotion(
@@ -129,6 +132,7 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
             lift: lift,
             alignment:
                 isNumberedSticker ? Alignment.bottomCenter : Alignment.center,
+            keepAspectRatio: keepAspectRatio,
           ),
         );
       },
@@ -213,12 +217,14 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
     required double tertiary,
     required double lift,
     required Alignment alignment,
+    required bool keepAspectRatio,
   }) {
     switch (_preset) {
       case _StickerMotionPreset.bounce:
         final squash = (1 - lift) * 0.04;
         return _buildTransform(
           child,
+          keepAspectRatio: keepAspectRatio,
           alignment: alignment,
           dx: secondary * 1.2,
           dy: -2.2 - (lift * 4.6),
@@ -229,6 +235,7 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
       case _StickerMotionPreset.sway:
         return _buildTransform(
           child,
+          keepAspectRatio: keepAspectRatio,
           alignment: alignment,
           dx: primary * 2.6,
           dy: -1.0 - (lift * 2.3),
@@ -240,6 +247,7 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
         final pulse = (lift * 0.055) + (secondary.abs() * 0.01);
         return _buildTransform(
           child,
+          keepAspectRatio: keepAspectRatio,
           alignment: alignment,
           dx: secondary * 0.7,
           dy: -1.6 - (lift * 2.0),
@@ -250,6 +258,7 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
       case _StickerMotionPreset.wiggle:
         return _buildTransform(
           child,
+          keepAspectRatio: keepAspectRatio,
           alignment: alignment,
           dx: secondary * 1.8,
           dy: -1.0 - (lift * 2.5),
@@ -260,6 +269,7 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
       case _StickerMotionPreset.float:
         return _buildTransform(
           child,
+          keepAspectRatio: keepAspectRatio,
           alignment: alignment,
           dx: (primary * 1.6) + (secondary * 0.8),
           dy: -2.0 - (lift * 3.0),
@@ -271,6 +281,7 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
         final pop = math.max(0.0, primary);
         return _buildTransform(
           child,
+          keepAspectRatio: keepAspectRatio,
           alignment: alignment,
           dx: tertiary * 0.9,
           dy: -1.0 - (pop * 4.0),
@@ -289,7 +300,10 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
     required double angle,
     required double scaleX,
     required double scaleY,
+    required bool keepAspectRatio,
   }) {
+    final resolvedScaleX = keepAspectRatio ? (scaleX + scaleY) / 2 : scaleX;
+    final resolvedScaleY = keepAspectRatio ? resolvedScaleX : scaleY;
     return Transform.translate(
       offset: Offset(dx, dy),
       child: Transform.rotate(
@@ -297,7 +311,11 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
         angle: angle,
         child: Transform(
           alignment: alignment,
-          transform: Matrix4.diagonal3Values(scaleX, scaleY, 1),
+          transform: Matrix4.diagonal3Values(
+            resolvedScaleX,
+            resolvedScaleY,
+            1,
+          ),
           child: child,
         ),
       ),

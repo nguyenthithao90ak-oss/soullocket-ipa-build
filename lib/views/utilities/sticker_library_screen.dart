@@ -362,7 +362,7 @@ class _StickerArt extends StatelessWidget {
       child: Image.asset(
         assetPath,
         fit: fit,
-        isAntiAlias: false,
+        isAntiAlias: true,
         filterQuality: FilterQuality.high,
         errorBuilder: (_, __, ___) => const Center(
           child: Icon(
