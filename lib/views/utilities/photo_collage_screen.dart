@@ -680,13 +680,6 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
           ),
         ],
       ),
-          BoxShadow(
-            color: const Color(0xFFD81B60).withOpacity(0.08),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -875,4 +868,113 @@ class _CollagePhoto {
 
   final XFile file;
   final Uint8List bytes;
+}
+
+class _CollageTemplate {
+  const _CollageTemplate({
+    required this.name,
+    required this.icon,
+    required this.accent,
+    required this.gradient,
+    required this.softGradient,
+    required this.captionColor,
+    required this.captionTextColor,
+    this.padding = 10,
+    this.gap = 5,
+    this.radius = 22,
+  });
+
+  final String name;
+  final IconData icon;
+  final Color accent;
+  final LinearGradient gradient;
+  final LinearGradient softGradient;
+  final Color captionColor;
+  final Color captionTextColor;
+  final double padding;
+  final double gap;
+  final double radius;
+}
+
+const List<_CollageTemplate> _collageTemplates = [
+  _CollageTemplate(
+    name: 'Love',
+    icon: Icons.favorite_rounded,
+    accent: Color(0xFFD81B60),
+    gradient: LinearGradient(
+      colors: [Color(0xFFFFD1E2), Color(0xFFFFF7FB), Color(0xFFFFB3C8)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    softGradient: LinearGradient(
+      colors: [Color(0xFFFFFFFF), Color(0xFFFFF2F7)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    captionColor: Color(0xD9FFFFFF),
+    captionTextColor: Color(0xFFD81B60),
+  ),
+  _CollageTemplate(
+    name: 'Film',
+    icon: Icons.local_movies_rounded,
+    accent: Color(0xFF92400E),
+    gradient: LinearGradient(
+      colors: [Color(0xFF2B2118), Color(0xFFD6A15C), Color(0xFFFFF2D7)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    softGradient: LinearGradient(
+      colors: [Color(0xFFFFFBEB), Color(0xFFFFEDD5)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    captionColor: Color(0xEFFFFFF7),
+    captionTextColor: Color(0xFF78350F),
+    padding: 12,
+    gap: 6,
+  ),
+  _CollageTemplate(
+    name: 'Neon',
+    icon: Icons.auto_awesome_rounded,
+    accent: Color(0xFF7C3AED),
+    gradient: LinearGradient(
+      colors: [Color(0xFF12002F), Color(0xFF7C3AED), Color(0xFFFF4FA3)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    softGradient: LinearGradient(
+      colors: [Color(0xFFF5F3FF), Color(0xFFFFEFF8)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    captionColor: Color(0xCC160821),
+    captionTextColor: Color(0xFFFFFFFF),
+    padding: 9,
+    gap: 5,
+  ),
+  _CollageTemplate(
+    name: 'Clean',
+    icon: Icons.grid_view_rounded,
+    accent: Color(0xFF0F766E),
+    gradient: LinearGradient(
+      colors: [Color(0xFFFFFFFF), Color(0xFFE0F2FE), Color(0xFFCCFBF1)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    softGradient: LinearGradient(
+      colors: [Color(0xFFFFFFFF), Color(0xFFEFFDF8)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    captionColor: Color(0xEFFFFFFF),
+    captionTextColor: Color(0xFF0F766E),
+    padding: 8,
+    gap: 4,
+    radius: 18,
+  ),
+];
+
+extension _CollageTemplateAccess on _PhotoCollageScreenState {
+  _CollageTemplate get _activeTemplate =>
+      _collageTemplates[_selectedTemplate.clamp(0, _collageTemplates.length - 1)];
 }
