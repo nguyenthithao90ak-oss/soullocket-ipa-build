@@ -285,6 +285,23 @@
 		FFD045639550CC1988573DA8 /* icon_ocean_ipad@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon_ocean_ipad@2x.png"; path = "Runner/icon_ocean_ipad@2x.png"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		97C146EB1CF9000F007C117D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000022 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
@@ -449,6 +466,7 @@
 			buildPhases = (
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
+				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				A10000000000000000000024 /* Embed App Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
@@ -468,6 +486,7 @@
 			buildConfigurationList = A10000000000000000000034 /* Build configuration list for PBXNativeTarget "SoulLocketWidget" */;
 			buildPhases = (
 				A10000000000000000000021 /* Sources */,
+				A10000000000000000000022 /* Frameworks */,
 				A10000000000000000000023 /* Resources */,
 			);
 			buildRules = (

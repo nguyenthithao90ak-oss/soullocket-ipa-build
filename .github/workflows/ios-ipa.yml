@@ -312,6 +312,45 @@ jobs:
           ls -R build/ios/ipa
           test -n "$(find build/ios/ipa -name '*.ipa' -print -quit)"
 
+      - name: Verify iOS widget extension
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          IPA_PATH="$(find build/ios/ipa -name '*.ipa' -print -quit)"
+          VERIFY_DIR="$RUNNER_TEMP/ipa-widget-check"
+          rm -rf "$VERIFY_DIR"
+          mkdir -p "$VERIFY_DIR"
+          unzip -q "$IPA_PATH" -d "$VERIFY_DIR"
+
+          APP_PATH="$(find "$VERIFY_DIR/Payload" -maxdepth 1 -name '*.app' -print -quit)"
+          WIDGET_APPEX="$(find "$APP_PATH/PlugIns" -maxdepth 1 -name 'SoulLocketWidget.appex' -print -quit)"
+
+          if [[ -z "$WIDGET_APPEX" ]]; then
+            echo "SoulLocketWidget.appex was not embedded in the IPA." >&2
+            find "$APP_PATH" -maxdepth 3 -print >&2
+            exit 1
+          fi
+
+          echo "Found widget extension: $WIDGET_APPEX"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleDisplayName" "$WIDGET_APPEX/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$WIDGET_APPEX/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$WIDGET_APPEX/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundlePackageType" "$WIDGET_APPEX/Info.plist"
+          WIDGET_EXTENSION_POINT="$(/usr/libexec/PlistBuddy -c "Print :NSExtension:NSExtensionPointIdentifier" "$WIDGET_APPEX/Info.plist")"
+          echo "Widget extension point: $WIDGET_EXTENSION_POINT"
+          if [[ "$WIDGET_EXTENSION_POINT" != "com.apple.widgetkit-extension" ]]; then
+            echo "Widget extension point is not WidgetKit." >&2
+            exit 1
+          fi
+          codesign -d --entitlements :- "$WIDGET_APPEX" > "$RUNNER_TEMP/widget-entitlements.plist"
+          /usr/libexec/PlistBuddy -c "Print :com.apple.security.application-groups:0" "$RUNNER_TEMP/widget-entitlements.plist"
+
+          if ! /usr/libexec/PlistBuddy -c "Print :com.apple.security.application-groups:0" "$RUNNER_TEMP/widget-entitlements.plist" | grep -Fx "$APP_GROUP_ID"; then
+            echo "Widget App Group entitlement does not match APP_GROUP_ID=$APP_GROUP_ID" >&2
+            exit 1
+          fi
+
       - name: Upload IPA artifacts
         uses: actions/upload-artifact@v4
         with:
