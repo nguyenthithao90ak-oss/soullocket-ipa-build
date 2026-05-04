@@ -539,7 +539,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   Icons.edit_note,
                   maxLines: 4,
                 ),
-                SLSpacing.h14,
+                SLSpacing.gapH(14),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
