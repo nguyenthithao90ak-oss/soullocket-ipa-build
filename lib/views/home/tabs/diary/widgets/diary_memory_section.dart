@@ -770,8 +770,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                           widget.onToggleSelection(photo);
                         } else {
                           if (_needsSignedRefresh(photo)) {
-                            await widget.onEnsurePhotoUrl(photo);
-                            if (mounted) setState(() {});
+                            await _refreshPhotoUrl(photo);
                           }
                           widget.onOpenMemory(photo, widget.allPhotos);
                         }
