@@ -134,8 +134,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     _statusSub = _db.ref('support_tickets/$_ticketId/status').onValue.listen(
       (event) {
         if (!mounted || !event.snapshot.exists) return;
+        final nextStatus = event.snapshot.value?.toString() ?? 'new';
+        if (nextStatus == 'resolved' || nextStatus == 'closed') {
+          _resetClosedTicketLocally();
+          return;
+        }
         setState(() {
-          _ticketStatus = event.snapshot.value?.toString() ?? 'new';
+          _ticketStatus = nextStatus;
         });
       },
     );
@@ -342,6 +347,17 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     }
 
     if (!mounted) return;
+    setState(() {
+      _ticketStatus = 'new';
+      _selectedTopicId = null;
+      _lastPrefilledDraft = null;
+      _messages.clear();
+    });
+    _msgCtrl.clear();
+    _showGreeting();
+  }
+
+  void _resetClosedTicketLocally() {
     setState(() {
       _ticketStatus = 'new';
       _selectedTopicId = null;
