@@ -160,7 +160,7 @@ class DeeplinkService {
     // 3. Link trả về có cả id, h, g, và gift
     // Liên kết quà tặng cũ cần ?g=... &h=... và ?gift=... để mở không cần đăng nhập.
     return AppConfig.webUri(
-      '/gift',
+      '/gift-open-demo.html',
       queryParameters: {
         'id': gift.giftId,
         'h': gift.fromHouseId,
