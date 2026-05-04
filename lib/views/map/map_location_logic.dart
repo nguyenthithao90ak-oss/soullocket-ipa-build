@@ -1427,62 +1427,97 @@ extension _MapLocationLogicExt on _MapScreenState {
       partnerLatLng = partnerPoint.latLng;
     }
 
-    if (myPoint != null) {
+    if (myPoint != null &&
+        partnerPoint != null &&
+        partnerLatLng != null &&
+        _distance.as(ll.LengthUnit.Meter, myPoint.latLng, partnerPoint.latLng) <
+            10) {
       final accent = myLive ? _kMapBlue : const Color(0xFF64748B);
       liveMarkerSpecs.add(
         _MapMarkerSpec(
-          id: myLive ? 'my_live' : 'my_last_known',
+          id: 'couple_same_position',
           point: myPoint.latLng,
           icon: myLive
               ? Icons.person_pin_circle_rounded
               : Icons.history_toggle_off_rounded,
           color: accent,
-          title: widget.myName,
+          title: '${widget.myName} & ${widget.partnerName}',
           subtitle: _myAddressText,
-          pulse: myLive,
+          pulse: myLive || partnerLive,
           avatarUrl: widget.myAvatarUrl,
+          secondaryAvatarUrl: widget.partnerAvatarUrl,
+          secondaryIcon:
+              partnerLive ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          secondaryColor: partnerLive ? _kMapPinkDeep : _kMapPink,
           onTap: () => _showMapPointDialog(
-            title: widget.myName,
+            title: '${widget.myName} & ${widget.partnerName}',
             subtitle: _myAddressText,
             accent: accent,
-            icon: myLive
-                ? Icons.person_pin_circle_rounded
-                : Icons.history_toggle_off_rounded,
+            icon: Icons.favorite_rounded,
             coordinateText:
                 '${myPoint.lat.toStringAsFixed(5)}, ${myPoint.lng.toStringAsFixed(5)}',
             timestamp: myPoint.ts,
           ),
         ),
       );
-    }
+    } else {
+      if (myPoint != null) {
+        final accent = myLive ? _kMapBlue : const Color(0xFF64748B);
+        liveMarkerSpecs.add(
+          _MapMarkerSpec(
+            id: myLive ? 'my_live' : 'my_last_known',
+            point: myPoint.latLng,
+            icon: myLive
+                ? Icons.person_pin_circle_rounded
+                : Icons.history_toggle_off_rounded,
+            color: accent,
+            title: widget.myName,
+            subtitle: _myAddressText,
+            pulse: myLive,
+            avatarUrl: widget.myAvatarUrl,
+            onTap: () => _showMapPointDialog(
+              title: widget.myName,
+              subtitle: _myAddressText,
+              accent: accent,
+              icon: myLive
+                  ? Icons.person_pin_circle_rounded
+                  : Icons.history_toggle_off_rounded,
+              coordinateText:
+                  '${myPoint.lat.toStringAsFixed(5)}, ${myPoint.lng.toStringAsFixed(5)}',
+              timestamp: myPoint.ts,
+            ),
+          ),
+        );
+      }
 
-    if (partnerPoint != null && partnerLatLng != null) {
-      final accent = partnerLive ? _kMapPinkDeep : _kMapPink;
-      liveMarkerSpecs.add(
-        _MapMarkerSpec(
-          id: partnerLive ? 'partner_live' : 'partner_last_known',
-          point: partnerLatLng,
-          icon: partnerLive
-              ? Icons.favorite_rounded
-              : Icons.favorite_border_rounded,
-          color: accent,
-          title: widget.partnerName,
-          subtitle: _partnerAddressText,
-          pulse: partnerLive,
-          avatarUrl: widget.partnerAvatarUrl,
-          onTap: () => _showMapPointDialog(
-            title: widget.partnerName,
-            subtitle: _partnerAddressText,
-            accent: accent,
+      if (partnerPoint != null && partnerLatLng != null) {
+        final accent = partnerLive ? _kMapPinkDeep : _kMapPink;
+        liveMarkerSpecs.add(
+          _MapMarkerSpec(
+            id: partnerLive ? 'partner_live' : 'partner_last_known',
+            point: partnerLatLng,
             icon: partnerLive
                 ? Icons.favorite_rounded
                 : Icons.favorite_border_rounded,
-            coordinateText:
-                '${partnerPoint.lat.toStringAsFixed(5)}, ${partnerPoint.lng.toStringAsFixed(5)}',
-            timestamp: partnerPoint.ts,
+            color: accent,
+            title: widget.partnerName,
+            subtitle: _partnerAddressText,
+            pulse: partnerLive,
+            avatarUrl: widget.partnerAvatarUrl,
+            onTap: () => _showMapPointDialog(
+              title: widget.partnerName,
+              subtitle: _partnerAddressText,
+              accent: accent,
+              icon: partnerLive
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              coordinateText:
+                  '${partnerPoint.lat.toStringAsFixed(5)}, ${partnerPoint.lng.toStringAsFixed(5)}',
+              timestamp: partnerPoint.ts,
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
 
     if (!_isSingleRelationship &&
