@@ -1,9 +1,6 @@
-import 'dart:math';
-
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 
 const Duration _memoryShareAppCheckRetryDelay = Duration(milliseconds: 350);
 
