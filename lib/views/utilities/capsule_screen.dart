@@ -455,47 +455,115 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     return Container(
       margin: SLSpacing.all20,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(34),
         child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
           child: Container(
-            padding: SLSpacing.all20,
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
             decoration: BoxDecoration(
-              color: _panelFill,
-              borderRadius: SLRadius.xlAll,
-              border: Border.all(color: _tileBorder),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withOpacity(0.30),
+                  Colors.white.withOpacity(0.16),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(34),
+              border: Border.all(color: Colors.white.withOpacity(0.34)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 28,
+                  offset: const Offset(0, 16),
+                ),
+              ],
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFD1E3), Color(0xFFFF8AA0)],
+                        ),
+                        borderRadius: SLRadius.lgAll,
+                        boxShadow: [
+                          BoxShadow(
+                            color: _accentColor.withOpacity(0.28),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.mark_email_unread_rounded,
+                          color: Color(0xFF5B2B6F)),
+                    ),
+                    SLSpacing.w12,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Gửi một lá thư cho tương lai',
+                            style: SLTheme.quicksand(
+                              color: _textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          Text(
+                            'Chọn ảnh, ngày mở và khóa lại cho đúng thời điểm.',
+                            style: SLTheme.quicksand(
+                              color: _textMuted,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SLSpacing.h16,
                 _buildTextField(
                     _titleController, 'Tiêu đề thư...', Icons.title),
-                SLSpacing.h8,
+                SLSpacing.h10,
                 _buildTextField(
                   _contentController,
                   'Nội dung bức thư gửi tương lai...',
                   Icons.edit_note,
-                  maxLines: 3,
+                  maxLines: 4,
                 ),
-                SLSpacing.h8,
-                _buildImagePicker(),
-                SLSpacing.h8,
-                _buildDatePicker(),
+                SLSpacing.h14,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _buildDatePicker()),
+                    SLSpacing.w10,
+                    Expanded(child: _buildImagePicker()),
+                  ],
+                ),
                 SLSpacing.h16,
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _buttonFill,
                       foregroundColor: _textPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: SLRadius.lgAll,
-                        side: const BorderSide(color: _tileBorder),
+                        borderRadius: BorderRadius.circular(22),
+                        side: BorderSide(color: Colors.white.withOpacity(0.26)),
                       ),
                     ),
                     onPressed: _isUploading ? null : _addCapsule,
-                    child: _isUploading
+                    icon: _isUploading
                         ? const SizedBox(
                             width: 20,
                             height: 20,
@@ -505,14 +573,15 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                   AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : Text(
-                            'KHÓA THƯ VÀO TƯƠNG LAI',
-                            style: SLTheme.quicksand(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: _textPrimary,
-                            ),
-                          ),
+                        : const Icon(Icons.lock_clock_rounded),
+                    label: Text(
+                      _isUploading ? 'ĐANG KHÓA THƯ...' : 'KHÓA THƯ VÀO TƯƠNG LAI',
+                      style: SLTheme.quicksand(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: _textPrimary,
+                      ),
+                    ),
                   ),
                 )
               ],
