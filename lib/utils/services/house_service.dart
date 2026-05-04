@@ -149,7 +149,8 @@ class HouseService {
             '[HouseService] createHouseSecureAdminDebug failed: $adminDebugError\n$stackTrace',
           );
         }
-        debugPrint('[HouseService] createHouseSecure blocked, using direct fallback: $error');
+        debugPrint(
+            '[HouseService] createHouseSecure blocked, using direct fallback: $error');
         return createDirectFallback();
       }
 
@@ -169,6 +170,7 @@ class HouseService {
           'Tạo ngôi nhà đang mất quá nhiều thời gian. Vui lòng thử lại.');
     }
   }
+
   Future<String?> getCurrentHouseId({bool preferFresh = false}) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -328,7 +330,6 @@ class HouseService {
 
     return null;
   }
-
 
   bool _isDebugAppCheckFailure(FirebaseFunctionsException error) {
     if (!kDebugMode) {
