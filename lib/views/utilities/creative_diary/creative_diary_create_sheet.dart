@@ -88,6 +88,7 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                               final title = titleCtrl.text.trim();
                               final memory = memoryCtrl.text.trim();
                               final prompt = promptCtrl.text.trim();
+                              final imageUrl = imageCtrl.text.trim();
 
                               if (title.isEmpty || memory.isEmpty) {
                                 return;
@@ -103,6 +104,8 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                                   content: memory,
                                   metadata: {
                                     'title': title,
+                                    if (imageUrl.isNotEmpty)
+                                      'imageUrl': imageUrl,
                                     'prompt': prompt.isEmpty
                                         ? 'Hãy thêm một chi tiết nhỏ để ghi nhớ lâu hơn.'
                                         : prompt,
