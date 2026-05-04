@@ -50,13 +50,13 @@ class GiftcodeService {
 
     try {
       final deviceId = await _securityService.getDeviceId();
-      final payload = {
+      final requestPayload = {
         'houseId': houseId,
         'code': sanitized,
         'deviceId': deviceId,
       };
       final callable = _functions.httpsCallable('redeemGiftcode');
-      final response = await callable.call(payload);
+      final response = await callable.call(requestPayload);
       final payload = Map<String, dynamic>.from(response.data as Map);
       final days = (payload['daysAdded'] as num?)?.toInt();
 
