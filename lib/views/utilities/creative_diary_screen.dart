@@ -8,10 +8,13 @@ import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/sl_theme.dart';
 import '../../services/creative_diary_service.dart';
 import '../../services/house_service.dart';
+import '../../services/image_picker_recovery_service.dart';
+import '../../services/storage_service.dart';
 import '../../utils/services/admob_service.dart';
 import '../home/tabs/diary/controllers/diary_guard_controller.dart';
 
@@ -34,6 +37,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
 
   final PageController _pageController = PageController(viewportFraction: 0.96);
   final CreativeDiaryService _creativeDiaryService = CreativeDiaryService();
+  final StorageService _storageService = StorageService();
   final HouseService _houseService = HouseService();
   final DiaryGuardController _guardController = DiaryGuardController();
   final GlobalKey _exportBoundaryKey = GlobalKey();
