@@ -266,6 +266,43 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     );
   }
 
+  Widget _buildNoticeCard() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.92),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFD81B60).withOpacity(0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withOpacity(0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_rounded, color: Color(0xFFD81B60)),
+          SLSpacing.w8,
+          Expanded(
+            child: Text(
+              _loadMessage,
+              style: SLTheme.quicksand(
+                fontSize: 12.5,
+                height: 1.45,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF475569),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmpty() {
     return Center(
       child: Column(
