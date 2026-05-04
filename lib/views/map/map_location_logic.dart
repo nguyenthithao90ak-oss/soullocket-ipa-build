@@ -1424,15 +1424,6 @@ extension _MapLocationLogicExt on _MapScreenState {
     ll.LatLng? partnerLatLng;
     if (partnerPoint != null) {
       partnerLatLng = partnerPoint.latLng;
-      if (myPoint != null) {
-        final dist = _distance.as(
-            ll.LengthUnit.Meter, myPoint.latLng, partnerPoint.latLng);
-        if (dist < 10) {
-          // Visually shift the partner marker slightly to prevent overlap
-          partnerLatLng =
-              ll.LatLng(partnerPoint.lat + 0.00004, partnerPoint.lng + 0.00004);
-        }
-      }
     }
 
     if (myPoint != null) {
