@@ -1454,6 +1454,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   void _queueMapIntroNotice() {
+    if (_didQueueMapIntroNotice) return;
+    _didQueueMapIntroNotice = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_maybeShowFirstMapNotice());
+    });
+  }
 }
 
 class _LiveUiSnapshot {
@@ -1616,6 +1623,7 @@ class _MapMarkerSpec {
   final ll.LatLng point;
   final IconData icon;
   final Color color;
+  final String title;
   final String subtitle;
   final VoidCallback onTap;
   final bool compact;
