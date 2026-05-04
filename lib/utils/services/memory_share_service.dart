@@ -79,12 +79,10 @@ class MemoryShareService {
   MemoryShareService({
     FirebaseFunctions? functions,
     FirebaseAuth? auth,
-    FirebaseDatabase? database,
   })  : _functions = functions ?? FirebaseFunctions.instance,
-        _auth = auth ?? FirebaseAuth.instance,
-        _database = database ?? FirebaseDatabase.instance;
+        _auth = auth ?? FirebaseAuth.instance;
 
-  static const int maxPhotosPerShare = 24;
+  static int get maxPhotosPerShare => fallbackMemoryLimits.shareMaxItems;
   static const String defaultShareTitle = 'Kỷ niệm của chúng mình';
   static const String defaultShareDescription =
       'SoulLocket lưu giữ những khoảnh khắc riêng tư của hai bạn và biến chúng thành album kỷ niệm dễ chia sẻ.';
