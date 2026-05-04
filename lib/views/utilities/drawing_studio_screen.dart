@@ -1304,6 +1304,65 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 }
 
+class _BackgroundChoice extends StatelessWidget {
+  final String id;
+  final String label;
+
+  const _BackgroundChoice({
+    required this.id,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: SLRadius.lgAll,
+        onTap: () => Navigator.of(context).pop(id),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: SLRadius.lgAll,
+            gradient: _gradientFor(id),
+            border: Border.all(color: const Color(0xFFFFD5E5)),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w900,
+                color: id == 'night_stars' || id == 'blackboard'
+                    ? Colors.white
+                    : const Color(0xFFD81B60),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  LinearGradient _gradientFor(String id) {
+    switch (id) {
+      case 'hearts':
+        return const LinearGradient(colors: [Color(0xFFFFEEF6), Color(0xFFFFB4D0)]);
+      case 'night_stars':
+        return const LinearGradient(colors: [Color(0xFF24133F), Color(0xFF6A4BC2)]);
+      case 'blackboard':
+        return const LinearGradient(colors: [Color(0xFF183D36), Color(0xFF2E6B5F)]);
+      case 'notebook':
+        return const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFEAF3FF)]);
+      case 'photo_frame':
+        return const LinearGradient(colors: [Color(0xFFFFF7FB), Color(0xFFEDE7FF)]);
+      case 'blank_paper':
+        return const LinearGradient(colors: [Color(0xFFFFFCF8), Color(0xFFFFF2E8)]);
+      case 'paper_grid':
+      default:
+        return const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFEAF2)]);
+    }
+  }
+}
+
 class _DrawingStudioPreviewScreen extends StatefulWidget {
   final DrawingStudioGalleryItem item;
   final bool canSaveToDevice;
