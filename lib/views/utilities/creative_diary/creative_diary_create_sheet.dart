@@ -42,6 +42,12 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                       ),
                     ),
                   ),
+                  SLSpacing.h12,
+                  _DiaryInput(
+                    controller: imageCtrl,
+                    label: 'Ảnh đính kèm',
+                    hintText: 'Dán link ảnh nếu muốn trang có ảnh riêng',
+                  ),
                   SLSpacing.h16,
                   Text(
                     'Thêm trang kỷ niệm mới',
