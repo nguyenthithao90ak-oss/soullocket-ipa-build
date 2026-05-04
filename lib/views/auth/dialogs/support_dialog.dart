@@ -178,6 +178,30 @@ class AuthSupportDialog {
                                 'messages/$messageKey/ts':
                                     ServerValue.timestamp,
                               });
+
+                              await FirebaseDatabase.instance
+                                  .ref('appeals')
+                                  .push()
+                                  .set({
+                                'uid': user.uid,
+                                'type': 'support_contact',
+                                'name': name.isEmpty
+                                    ? L10nService().translate('KhÃ¡ch')
+                                    : name,
+                                'email': email.isEmpty
+                                    ? user.email?.trim() ??
+                                        L10nService().translate('KhÃ´ng cÃ³')
+                                    : email,
+                                'contact': email.isEmpty
+                                    ? user.email?.trim() ?? ''
+                                    : email,
+                                'reason': description,
+                                'message': description,
+                                'status': 'pending',
+                                'source': 'auth_support_dialog',
+                                'ticketId': user.uid,
+                                'ts': ServerValue.timestamp,
+                              });
                             } catch (_) {
                               if (!dialogContext.mounted) return;
                               AuthFeedbackDialogs.showError(
