@@ -1798,54 +1798,93 @@ class _DrawingCanvasPainter extends CustomPainter {
     final rect = Offset.zero & size;
     switch (backgroundId) {
       case 'blank_paper':
-        canvas.drawRect(rect, Paint()..color = const Color(0xFFFFFCF8));
-        _paintPaperNoise(canvas, size, const Color(0xFFFFF1E8));
+        _paintGradient(canvas, rect, const [Color(0xFFFFFBF3), Color(0xFFFFF0DF)]);
+        _paintVignette(canvas, size, const Color(0xFFE8B98A).withOpacity(0.16));
+        _paintPaperNoise(canvas, size, const Color(0xFFE8C8A8).withOpacity(0.22));
         break;
       case 'hearts':
-        final paint = Paint()
-          ..shader = const LinearGradient(
-            colors: [Color(0xFFFFF5FA), Color(0xFFFFE3EF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ).createShader(rect);
-        canvas.drawRect(rect, paint);
-        _paintGrid(canvas, size, const Color(0xFFFFCFE0).withOpacity(0.55));
+        _paintGradient(
+          canvas,
+          rect,
+          const [Color(0xFFFFECF5), Color(0xFFFF9BC3), Color(0xFFFFD6E7)],
+        );
+        _paintBokeh(canvas, size, const Color(0xFFFFFFFF).withOpacity(0.34));
         _paintHearts(canvas, size);
+        _paintSparkles(canvas, size, const Color(0xFFFFFFFF).withOpacity(0.72));
         break;
       case 'night_stars':
-        final paint = Paint()
-          ..shader = const LinearGradient(
-            colors: [Color(0xFF22133F), Color(0xFF5B3CA8)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ).createShader(rect);
-        canvas.drawRect(rect, paint);
+        _paintGradient(
+          canvas,
+          rect,
+          const [Color(0xFF130A2A), Color(0xFF34216B), Color(0xFF8C5FD5)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+        _paintMoon(canvas, size);
+        _paintNebula(canvas, size);
         _paintStars(canvas, size);
         break;
       case 'blackboard':
-        canvas.drawRect(rect, Paint()..color = const Color(0xFF183D36));
-        _paintGrid(canvas, size, Colors.white.withOpacity(0.06));
-        _paintPaperNoise(canvas, size, Colors.white.withOpacity(0.04));
+        _paintGradient(canvas, rect, const [Color(0xFF102E29), Color(0xFF225C51)]);
+        _paintGrid(canvas, size, Colors.white.withOpacity(0.08), step: 34);
+        _paintChalkDust(canvas, size);
         break;
       case 'notebook':
-        canvas.drawRect(rect, Paint()..color = const Color(0xFFFFFEFA));
+        _paintGradient(canvas, rect, const [Color(0xFFFFFEFB), Color(0xFFF5FAFF)]);
         _paintNotebook(canvas, size);
+        _paintPaperNoise(canvas, size, const Color(0xFFCADBFF).withOpacity(0.18));
         break;
       case 'photo_frame':
-        canvas.drawRect(rect, Paint()..color = const Color(0xFFFFF7FB));
-        _paintGrid(canvas, size, const Color(0xFFFFD8E7).withOpacity(0.5));
+        _paintGradient(
+          canvas,
+          rect,
+          const [Color(0xFFFFEEF7), Color(0xFFEDE7FF), Color(0xFFFFFBFE)],
+        );
+        _paintBokeh(canvas, size, const Color(0xFFFFFFFF).withOpacity(0.30));
         _paintFrame(canvas, size);
+        break;
+      case 'pastel_dots':
+        _paintGradient(
+          canvas,
+          rect,
+          const [Color(0xFFFFF5FB), Color(0xFFEAF8FF), Color(0xFFFFF6D8)],
+        );
+        _paintPastelDots(canvas, size);
+        break;
+      case 'sticker_sheet':
+        canvas.drawRect(rect, Paint()..color = const Color(0xFFFFFFFF));
+        _paintCheckerboard(canvas, size);
+        _paintStickerGuide(canvas, size);
         break;
       case 'paper_grid':
       default:
-        canvas.drawRect(rect, Paint()..color = const Color(0xFFFFFEFC));
-        _paintGrid(canvas, size, const Color(0xFFFFE3EE));
-        _paintPaperNoise(canvas, size, const Color(0xFFFFF4F8));
+        _paintGradient(canvas, rect, const [Color(0xFFFFFEFC), Color(0xFFFFEAF3)]);
+        _paintGrid(canvas, size, const Color(0xFFFFBFD7).withOpacity(0.70), step: 24);
+        _paintGrid(canvas, size, const Color(0xFFFF82B0).withOpacity(0.28), step: 96);
+        _paintPaperNoise(canvas, size, const Color(0xFFFFC7DB).withOpacity(0.25));
         break;
     }
   }
 
-  void _paintGrid(Canvas canvas, Size size, Color color) {
+  void _paintGradient(
+    Canvas canvas,
+    Rect rect,
+    List<Color> colors, {
+    Alignment begin = Alignment.topLeft,
+    Alignment end = Alignment.bottomRight,
+  }) {
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          colors: colors,
+          begin: begin,
+          end: end,
+        ).createShader(rect),
+    );
+  }
+
+  void _paintGrid(Canvas canvas, Size size, Color color, {double step = 28}) {
     final gridPaint = Paint()
       ..color = color
       ..strokeWidth = 1;
