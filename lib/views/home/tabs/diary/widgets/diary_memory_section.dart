@@ -723,8 +723,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                               WidgetsBinding.instance.addPostFrameCallback((_) async {
                                 if (!mounted) return;
                                 try {
-                                  await widget.onEnsurePhotoUrl(photo);
-                                  if (mounted) setState(() {});
+                                  await _refreshStalePhotoUrl(photo);
                                 } catch (refreshError) {
                                   debugPrint(
                                     '[DiaryMemory] refresh url failed id=$photoId error=$refreshError',
