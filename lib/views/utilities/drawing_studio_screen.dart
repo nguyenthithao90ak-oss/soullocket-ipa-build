@@ -430,7 +430,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
                   shrinkWrap: true,
-                  childAspectRatio: 2.5,
+                  childAspectRatio: 1.55,
                   children: const [
                     _BackgroundChoice(id: 'paper_grid', label: 'Giấy caro'),
                     _BackgroundChoice(id: 'blank_paper', label: 'Giấy trắng'),
@@ -439,6 +439,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                     _BackgroundChoice(id: 'blackboard', label: 'Bảng phấn'),
                     _BackgroundChoice(id: 'notebook', label: 'Vở kẻ dòng'),
                     _BackgroundChoice(id: 'photo_frame', label: 'Khung ảnh'),
+                    _BackgroundChoice(id: 'pastel_dots', label: 'Pastel dots'),
+                    _BackgroundChoice(id: 'sticker_sheet', label: 'Sticker'),
                   ],
                 ),
               ],
