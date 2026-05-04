@@ -1179,6 +1179,72 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
     );
   }
 
+  Widget _buildEditHeroCard(List<Color> colors) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [colors.first, colors.last, const Color(0xFF2B1736)],
+          stops: const [0, 0.58, 1],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: colors.first.withOpacity(0.24),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.18),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withOpacity(0.28)),
+            ),
+            child: Text(
+              GiftMakerService.giftEmoji(_selectedType),
+              style: const TextStyle(fontSize: 40),
+            ),
+          ),
+          SLSpacing.w14,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  GiftMakerService.giftLabel(_selectedType),
+                  style: SLTheme.quicksand(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  widget._giftTeaser(_selectedType),
+                  style: SLTheme.quicksand(
+                    color: Colors.white.withOpacity(0.84),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildImagePicker() {
     return _GiftTouchTile(
       onTap: _pickImage,
