@@ -345,7 +345,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   Future<void> _showBackgroundPicker() async {
-    await showModalBottomSheet<void>(
+    final selected = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
