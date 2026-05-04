@@ -25,6 +25,7 @@ class HouseSettings {
   final String countdownBottomLabel;
   final bool liteMode;
   final String graphicsQuality;
+  final bool transparentMode;
   final String relationshipMode;
   final int? modeLastChangedAt;
   final int? modeCooldownUntil;
@@ -59,6 +60,7 @@ class HouseSettings {
     this.countdownBottomLabel = '',
     this.liteMode = false,
     this.graphicsQuality = 'auto',
+    this.transparentMode = true,
     this.relationshipMode = 'single',
     this.modeLastChangedAt,
     this.modeCooldownUntil,
@@ -161,6 +163,8 @@ class HouseSettings {
       friendRequestPolicy: (map['friendRequestPolicy'] ?? 'all').toString(),
       friendRequestLimit: toInt(map['friendRequestLimit']) ?? 30,
       homeBlockTone: (map['homeBlockTone'] ?? 'theme').toString(),
+      transparentMode:
+          map['transparentMode'] is bool ? map['transparentMode'] as bool : true,
       fallingEffect:
           (map['fallingEffect'] ?? defaultSettings.fallingEffect).toString(),
       avatarSizePx: toDouble(map['avatarSizePx'], defaultSettings.avatarSizePx),
