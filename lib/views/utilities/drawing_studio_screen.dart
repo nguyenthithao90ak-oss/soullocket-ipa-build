@@ -41,6 +41,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   StreamSubscription<List<DrawingStudioPresence>>? _presenceSub;
 
   String _mode = 'frame';
+  String _backgroundId = 'paper_grid';
   Color _currentColor = const Color(0xFFFF3B4D);
   double _strokeWidth = 8;
   bool _isSaving = false;
