@@ -38,7 +38,6 @@ class NotificationService {
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
   StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
   bool _isInitialized = false;
-  bool _isInitializing = false;
   Future<void>? _initializingTask;
   bool _didCheckInitialMessage = false;
   String? _lastForegroundMessageKey;
@@ -105,7 +104,6 @@ class NotificationService {
       return;
     }
 
-    _isInitializing = true;
     final task = () async {
       try {
         await _localNotif
@@ -155,9 +153,7 @@ class NotificationService {
       } catch (error, stackTrace) {
         debugPrint('NotificationService initialize error: $error');
         debugPrintStack(stackTrace: stackTrace);
-      } finally {
-        _isInitializing = false;
-      }
+      } finally {}
     }();
 
     _initializingTask = task;
