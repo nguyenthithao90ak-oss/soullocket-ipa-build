@@ -113,9 +113,17 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     }
   }
 
-  Widget _buildTag(String label, Color bg, Color fg) {
+  Widget _buildTag(
+    String label,
+    Color bg,
+    Color fg, {
+    required double screenWidth,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: SLResponsive.dp(8, screenWidth, min: 0.92, max: 1.04),
+        vertical: SLResponsive.dp(4, screenWidth, min: 0.92, max: 1.04),
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
@@ -123,7 +131,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
       child: Text(
         label,
         style: SLTheme.quicksand(
-          fontSize: 10,
+          fontSize: SLResponsive.sp(10, screenWidth, min: 0.96, max: 1.04),
           fontWeight: FontWeight.w800,
           color: fg,
         ),
@@ -133,234 +141,260 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F0F5),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFD81B60),
-        foregroundColor: Colors.white,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Lịch sử hoạt động',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-              ),
-            ),
-            Text(
-              '${_list.length}/300',
-              style: SLTheme.quicksand(fontSize: 11, color: Colors.white70),
-            ),
-          ],
-        ),
-        actions: [
-          if (_list.isNotEmpty)
-            TextButton(
-              onPressed: _clearAll,
-              child: Text(
-                'Xóa hết',
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final compact = SLResponsive.isCompactWidth(screenWidth);
+    final textScaler = SLResponsive.textScalerFor(context);
+    final listPadding = EdgeInsets.all(
+      SLResponsive.dp(compact ? 14 : 16, screenWidth, min: 0.94, max: 1.08),
+    );
+    final cardBottomMargin = SLResponsive.dp(10, screenWidth, min: 0.94, max: 1.06);
+    final leadingBoxSize = SLResponsive.dp(compact ? 32 : 34, screenWidth);
+    final previewBoxSize = SLResponsive.dp(compact ? 48 : 52, screenWidth);
+    final previewRightMargin = SLResponsive.dp(10, screenWidth, min: 0.94, max: 1.06);
+    final previewRadius = SLResponsive.dp(12, screenWidth, min: 0.94, max: 1.06);
+
+    return MediaQuery(
+      data: mediaQuery.copyWith(textScaler: textScaler),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F0F5),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFD81B60),
+          foregroundColor: Colors.white,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Lịch sử hoạt động',
                 style: SLTheme.quicksand(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
+                  fontSize: SLResponsive.sp(compact ? 15.2 : 16, screenWidth),
                 ),
               ),
-            ),
-        ],
-      ),
-      body: _isLoading && _list.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFD81B60)),
-            )
-          : _list.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        '📋',
-                        style: TextStyle(fontSize: 52),
-                        textScaler: TextScaler.linear(1.0),
-                      ),
-                      SLSpacing.h12,
-                      Text(
-                        'Chưa có lịch sử.',
-                        style: SLTheme.quicksand(
-                          color: Colors.grey[500],
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+              Text(
+                '${_list.length}/300',
+                style: SLTheme.quicksand(
+                  fontSize: SLResponsive.sp(11, screenWidth),
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            if (_list.isNotEmpty)
+              TextButton(
+                onPressed: _clearAll,
+                child: Text(
+                  'Xóa hết',
+                  style: SLTheme.quicksand(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
                   ),
-                )
-              : Stack(
-                  children: [
-                    ListView.builder(
-                      padding: SLSpacing.all16,
-                      itemCount: _list.length,
-                      itemBuilder: (_, i) {
-                        final entry = _list[i];
-                        final time = DateFormat('dd/MM/yyyy HH:mm').format(
-                            DateTime.fromMillisecondsSinceEpoch(entry.ts));
-                        final isUser1 = entry.role != 'user2';
-                        final subtitle = entry.subtitle.trim();
-                        final source = entry.effectiveSourceLabel;
-                        final expired = entry.isRestoreExpired;
-                        final canRestore = entry.canRestore;
-                        final isRestoring = _restoringEntryId == entry.id;
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: SLSpacing.all12,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: SLRadius.mdAll,
-                            border: Border.all(color: const Color(0xFFEEEEEE)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 6,
-                              ),
-                            ],
+                ),
+              ),
+          ],
+        ),
+        body: _isLoading && _list.isEmpty
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFFD81B60)),
+              )
+            : _list.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '📋',
+                          style: TextStyle(
+                            fontSize: SLResponsive.sp(52, screenWidth, min: 0.92, max: 1.04),
                           ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: isUser1
-                                        ? const [
-                                            Color(0xFF42A5F5),
-                                            Color(0xFF1565C0)
-                                          ]
-                                        : const [
-                                            Color(0xFFFF6B9D),
-                                            Color(0xFFD81B60)
-                                          ],
-                                  ),
-                                  borderRadius: SLRadius.smAll,
+                        ),
+                        SizedBox(height: SLResponsive.dp(12, screenWidth)),
+                        Text(
+                          'Chưa có lịch sử.',
+                          style: SLTheme.quicksand(
+                            color: Colors.grey[500],
+                            fontSize: SLResponsive.sp(compact ? 14.2 : 15, screenWidth),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Stack(
+                    children: [
+                      ListView.builder(
+                        padding: listPadding,
+                        itemCount: _list.length,
+                        itemBuilder: (_, i) {
+                          final entry = _list[i];
+                          final time = DateFormat('dd/MM/yyyy HH:mm').format(
+                              DateTime.fromMillisecondsSinceEpoch(entry.ts));
+                          final isUser1 = entry.role != 'user2';
+                          final subtitle = entry.subtitle.trim();
+                          final source = entry.effectiveSourceLabel;
+                          final expired = entry.isRestoreExpired;
+                          final canRestore = entry.canRestore;
+                          final isRestoring = _restoringEntryId == entry.id;
+
+                          return Container(
+                            margin: EdgeInsets.only(bottom: cardBottomMargin),
+                            padding: SLSpacing.all12,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: SLRadius.mdAll,
+                              border: Border.all(color: const Color(0xFFEEEEEE)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 6,
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    isUser1 ? '👦' : '👧',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                              ),
-                              SLSpacing.w8,
-                              if (entry.hasPreview && entry.isImagePreview)
+                              ],
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Container(
-                                  width: 52,
-                                  height: 52,
-                                  margin: const EdgeInsets.only(right: 10),
-                                  clipBehavior: Clip.antiAlias,
+                                  width: leadingBoxSize,
+                                  height: leadingBoxSize,
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: const Color(0xFFF5F5F5),
+                                    gradient: LinearGradient(
+                                      colors: isUser1
+                                          ? const [
+                                              Color(0xFF42A5F5),
+                                              Color(0xFF1565C0)
+                                            ]
+                                          : const [
+                                              Color(0xFFFF6B9D),
+                                              Color(0xFFD81B60)
+                                            ],
+                                    ),
+                                    borderRadius: SLRadius.smAll,
                                   ),
-                                  child: Image.network(
-                                    entry.previewUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => const Icon(
-                                        Icons.image_not_supported_outlined),
-                                  ),
-                                )
-                              else if (entry.isVoicePreview)
-                                Container(
-                                  width: 52,
-                                  height: 52,
-                                  margin: const EdgeInsets.only(right: 10),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: const Color(0xFFFFF0F5),
-                                  ),
-                                  child: const Icon(Icons.mic_rounded,
-                                      color: Color(0xFFD81B60)),
-                                ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      entry.displayLine,
-                                      style: SLTheme.quicksand(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF222222),
+                                  child: Center(
+                                    child: Text(
+                                      isUser1 ? '👦' : '👧',
+                                      style: TextStyle(
+                                        fontSize: SLResponsive.sp(16, screenWidth),
                                       ),
                                     ),
-                                    if (subtitle.isNotEmpty) ...[
-                                      SLSpacing.h4,
+                                  ),
+                                ),
+                                SLSpacing.w8,
+                                if (entry.hasPreview && entry.isImagePreview)
+                                  Container(
+                                    width: previewBoxSize,
+                                    height: previewBoxSize,
+                                    margin: EdgeInsets.only(right: previewRightMargin),
+                                    clipBehavior: Clip.antiAlias,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(previewRadius),
+                                      color: const Color(0xFFF5F5F5),
+                                    ),
+                                    child: Image.network(
+                                      entry.previewUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                          Icons.image_not_supported_outlined),
+                                    ),
+                                  )
+                                else if (entry.isVoicePreview)
+                                  Container(
+                                    width: previewBoxSize,
+                                    height: previewBoxSize,
+                                    margin: EdgeInsets.only(right: previewRightMargin),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(previewRadius),
+                                      color: const Color(0xFFFFF0F5),
+                                    ),
+                                    child: const Icon(Icons.mic_rounded,
+                                        color: Color(0xFFD81B60)),
+                                  ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
                                       Text(
-                                        subtitle,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
+                                        entry.displayLine,
                                         style: SLTheme.quicksand(
-                                          fontSize: 11,
+                                          fontSize: SLResponsive.sp(compact ? 12.4 : 13, screenWidth),
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xFF222222),
+                                        ),
+                                      ),
+                                      if (subtitle.isNotEmpty) ...[
+                                        SLSpacing.h4,
+                                        Text(
+                                          subtitle,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: SLTheme.quicksand(
+                                            fontSize: SLResponsive.sp(11, screenWidth),
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF666666),
+                                          ),
+                                        ),
+                                      ],
+                                      SLSpacing.h6,
+                                      Wrap(
+                                        spacing: 6,
+                                        runSpacing: 6,
+                                        children: [
+                                          if (source.isNotEmpty)
+                                            _buildTag(
+                                              source,
+                                              const Color(0xFFEFF5FF),
+                                              const Color(0xFF2563EB),
+                                              screenWidth: screenWidth,
+                                            ),
+                                          if (expired)
+                                            _buildTag(
+                                              'Thông tin không tồn tại',
+                                              const Color(0xFFFFF1F2),
+                                              const Color(0xFFDC2626),
+                                              screenWidth: screenWidth,
+                                            ),
+                                        ],
+                                      ),
+                                      SLSpacing.h6,
+                                      Text(
+                                        time,
+                                        style: SLTheme.quicksand(
+                                          fontSize: SLResponsive.sp(10, screenWidth),
+                                          color: Colors.grey[500],
                                           fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF666666),
                                         ),
                                       ),
                                     ],
-                                    SLSpacing.h6,
-                                    Wrap(
-                                      spacing: 6,
-                                      runSpacing: 6,
-                                      children: [
-                                        if (source.isNotEmpty)
-                                          _buildTag(
-                                              source,
-                                              const Color(0xFFEFF5FF),
-                                              const Color(0xFF2563EB)),
-                                        if (expired)
-                                          _buildTag(
-                                              'Thông tin không tồn tại',
-                                              const Color(0xFFFFF1F2),
-                                              const Color(0xFFDC2626)),
-                                      ],
-                                    ),
-                                    SLSpacing.h6,
-                                    Text(
-                                      time,
-                                      style: SLTheme.quicksand(
-                                        fontSize: 10,
-                                        color: Colors.grey[500],
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (canRestore)
-                                TextButton(
-                                  onPressed:
-                                      isRestoring ? null : () => _restore(entry),
-                                  child: Text(
-                                    isRestoring ? 'Đang khôi phục...' : 'Khôi phục',
-                                    style: SLTheme.quicksand(
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFFD81B60),
-                                    ),
                                   ),
                                 ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    if (_isRefreshing)
-                      const Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: LinearProgressIndicator(minHeight: 2),
+                                if (canRestore)
+                                  TextButton(
+                                    onPressed:
+                                        isRestoring ? null : () => _restore(entry),
+                                    child: Text(
+                                      isRestoring ? 'Đang khôi phục...' : 'Khôi phục',
+                                      style: SLTheme.quicksand(
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFFD81B60),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                  ],
-                ),
+                      if (_isRefreshing)
+                        const Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: LinearProgressIndicator(minHeight: 2),
+                        ),
+                    ],
+                  ),
+      ),
     );
   }
 }
