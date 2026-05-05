@@ -90,6 +90,17 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
         );
       }
     }
+    final safeBackgroundUrl = backgroundUrl.trim();
+    if (safeBackgroundUrl.isNotEmpty) {
+      final backgroundSize = _resolveHomeBackgroundCacheSize();
+      providers.add(
+        CachedNetworkImageProvider(
+          safeBackgroundUrl,
+          maxWidth: backgroundSize.width,
+          maxHeight: backgroundSize.height,
+        ),
+      );
+    }
     if (providers.isEmpty) return;
 
     await Future.wait<void>(
