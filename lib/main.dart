@@ -31,7 +31,22 @@ import 'package:soullocket_app/views/app_entry.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  try {
+    if (Firebase.apps.isEmpty) {
+      await _initializeFirebaseBootstrap();
+    }
+  } catch (error, stackTrace) {
+    debugPrint('FCM background bootstrap error: $error');
+    debugPrintStack(stackTrace: stackTrace);
+    unawaited(ErrorLoggerService.instance.logError(
+      error,
+      stackTrace,
+      reason: 'fcm_background_bootstrap_error',
+      fatal: false,
+    ));
+  }
+}
 
 const MethodChannel _bootstrapChannel = MethodChannel('soul_locket/bootstrap');
 const String _signatureMethod = 'getAppSignatureStatus';
