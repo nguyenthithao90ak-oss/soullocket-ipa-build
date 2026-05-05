@@ -123,9 +123,7 @@ class HouseService {
     }
 
     try {
-      final callable = _functions.httpsCallable('createHouseSecure');
-      debugPrint('[HouseService] createHouseSecure start');
-      final response = await callable.call(<String, dynamic>{
+      final response = await _callCreateHouseSecureWithRetry(<String, dynamic>{
         'email': normalizedEmail,
         'houseName': rawHouseName,
         'nameU1': normalizedNameU1,
@@ -134,8 +132,7 @@ class HouseService {
         'recoveryQuestion': normalizedRecoveryQuestion,
         'recoveryAnswer': normalizedRecoveryAnswer,
         'createdWith': normalizedCreatedWith,
-      }).timeout(const Duration(seconds: 12), onTimeout: () {
-        throw TimeoutException('createHouseSecure timed out');
+        if ((otp ?? '').trim().isNotEmpty) 'otp': otp!.trim(),
       });
       debugPrint('[HouseService] createHouseSecure success');
       final payload = _asStringDynamicMap(response.data);
