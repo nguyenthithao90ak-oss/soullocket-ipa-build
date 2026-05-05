@@ -1035,17 +1035,30 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      TextButton(
-                        onPressed: _isLoading ? null : _signOutToLogin,
-                        child: Text(
-                          'Đăng xuất',
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFFD81B60),
+                      if (_needsEmailVerification(
+                        null,
+                        _autoCreateFailureMessage ?? '',
+                      )) ...[
+                        const SizedBox(height: 10),
+                        OutlinedButton.icon(
+                          onPressed: _isLoading ? null : _sendGmailVerification,
+                          icon: const Icon(Icons.mark_email_read_rounded),
+                          label: Text(
+                            'Xác minh Gmail',
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFFD81B60),
+                            side: const BorderSide(color: Color(0xFFD81B60)),
+                            minimumSize: const Size.fromHeight(50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
