@@ -102,6 +102,16 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     );
   }
 
+  Future<void> _replayFirstSetupGuide() async {
+    final replay = widget.onReplayFirstSetupGuide;
+    if (replay == null) {
+      _openFirstSetupGuideDocument();
+      return;
+    }
+    Navigator.of(context).maybePop();
+    await replay();
+  }
+
   void _openDeleteAccountRequestPage() {
     final uri = Uri.parse(AppConfig.deleteAccountPageUrl);
     launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -402,8 +412,15 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           const SizedBox(height: 10),
           _buildLegalBtn(
             icon: Icons.rocket_launch_rounded,
-            label: 'Hướng dẫn cài đặt lần đầu',
+            label: 'Mở hướng dẫn tương tác',
             color: const Color(0xFFD81B60),
+            onTap: _replayFirstSetupGuide,
+          ),
+          const SizedBox(height: 10),
+          _buildLegalBtn(
+            icon: Icons.article_rounded,
+            label: 'Tài liệu cài đặt lần đầu',
+            color: const Color(0xFF7B1FA2),
             onTap: _openFirstSetupGuideDocument,
           ),
           const SizedBox(height: 10),
