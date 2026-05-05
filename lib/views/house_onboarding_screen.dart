@@ -677,7 +677,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     }
   }
 
-  Future<void> _createHouse() async {
+  Future<void> _createHouse({String? houseCreationOtp}) async {
     FocusManager.instance.primaryFocus?.unfocus();
 
     await _hydrateMissingCreationPrerequisites(
