@@ -26,6 +26,7 @@ import 'package:soullocket_app/services/offline_cache_service.dart';
 import 'package:soullocket_app/services/security_service.dart';
 import 'package:soullocket_app/services/widget_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
 import 'package:soullocket_app/views/app_entry.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
@@ -166,6 +167,12 @@ void main() {
     FlutterError.onError = (details) {
       FlutterError.presentError(details);
       debugPrint(kDebugMode ? details.toString() : details.exceptionAsString());
+      unawaited(ErrorLoggerService.instance.logError(
+        details.exception,
+        details.stack,
+        reason: details.exceptionAsString(),
+        fatal: false,
+      ));
       unawaited(
         RevenueSecurityTelemetryService.instance.logSystemEvent(
           type: 'flutter_framework_error',
@@ -179,6 +186,12 @@ void main() {
     };
 
     PlatformDispatcher.instance.onError = (error, stackTrace) {
+      unawaited(ErrorLoggerService.instance.logError(
+        error,
+        stackTrace,
+        reason: 'platform_dispatcher',
+        fatal: true,
+      ));
       unawaited(
         RevenueSecurityTelemetryService.instance.logSystemEvent(
           type: 'platform_dispatcher_error',
@@ -268,6 +281,12 @@ void main() {
     }
   }, (error, stackTrace) {
     debugPrint('Uncaught zone error: $error');
+    unawaited(ErrorLoggerService.instance.logError(
+      error,
+      stackTrace,
+      reason: 'uncaught_zone_error',
+      fatal: true,
+    ));
     unawaited(
       RevenueSecurityTelemetryService.instance.logSystemEvent(
         type: 'uncaught_zone_error',
