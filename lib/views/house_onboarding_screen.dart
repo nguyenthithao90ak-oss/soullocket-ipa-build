@@ -16,7 +16,6 @@ import 'app_entry.dart';
 import 'app_entry/widgets/loading_scaffold.dart';
 import 'auth/widgets/gender_selection_dialog.dart';
 import 'auth/widgets/relationship_mode_dialog.dart';
-import 'login_screen.dart';
 import '../core/sl_theme.dart';
 
 class HouseOnboardingScreen extends StatefulWidget {
@@ -1205,41 +1204,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-  Widget _buildField({
-    required String label,
-    required TextEditingController controller,
-    required String hint,
-    String? helper,
-    int? maxLength,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel(label),
-        SLSpacing.h8,
-        TextField(
-          controller: controller,
-          maxLength: maxLength,
-          style: SLTheme.quicksand(fontWeight: FontWeight.w700),
-          decoration: _inputDecoration(
-            hint: hint,
-            prefixIcon: Icons.home_rounded,
-          ),
-        ),
-        if (helper != null) ...[
-          SLSpacing.h8,
-          Text(
-            helper,
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF887880),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
 
   // ignore: unused_element
   Widget _buildQuestionAvatarPlaceholder() {
