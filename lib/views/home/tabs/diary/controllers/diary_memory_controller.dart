@@ -1139,6 +1139,12 @@ class DiaryMemoryController extends ChangeNotifier {
             ? List<dynamic>.from(result['deletedItems'] as List)
             : const <dynamic>[],
       );
+      showSnackBar(
+        L10nService().translate(
+          'Ảnh đã được chuyển vào thùng rác. Bạn có 3 ngày để khôi phục.',
+        ),
+      );
+      notifyListeners();
     } catch (e) {
       final errorText = e.toString();
       final isNotFound = errorText.contains('firebase_functions/not-found') ||
@@ -1173,6 +1179,12 @@ class DiaryMemoryController extends ChangeNotifier {
               },
             ],
           );
+          showSnackBar(
+            L10nService().translate(
+              'Ảnh đã được chuyển vào thùng rác. Bạn có 3 ngày để khôi phục.',
+            ),
+          );
+          notifyListeners();
           return;
         }
       }
