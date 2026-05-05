@@ -7,15 +7,6 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       MaterialPageRoute(
         builder: (_) => DocumentViewerScreen(
           title: context.tr('privacy_policy'),
-part of '../settings_tab.dart';
-
-extension _SettingsTabSupportLegalSection on _SettingsTabState {
-  void _openPolicyOverview() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
-          title: context.tr('privacy_policy'),
           assetPath: 'assets/docs/privacy.html',
         ),
       ),
