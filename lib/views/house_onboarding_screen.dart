@@ -661,7 +661,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                 Text(
                   'Tài khoản này đã tạo hơn 5 nhà. Nhập mã xác nhận gửi về ${gate.maskedEmail.isNotEmpty ? gate.maskedEmail : email} để tiếp tục tạo nhà.',
                   style: SLTheme.quicksand(
-                    color: SLTheme.textSecondary,
+                    color: SLColors.textSecondary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
