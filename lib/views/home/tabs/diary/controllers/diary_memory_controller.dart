@@ -857,9 +857,9 @@ class DiaryMemoryController extends ChangeNotifier {
       }
       Navigator.of(context).pop();
       showSnackBar(
-        L10nService().format('diary_deleted_memories', {
+        '${L10nService().format('diary_deleted_memories', {
           'count': updatesCount,
-        }),
+        })} Bạn có 3 ngày để khôi phục từ lịch sử hoạt động.',
       );
       notifyListeners();
     } catch (e) {
