@@ -52,14 +52,13 @@ class HouseService {
   firebase_auth.User? get currentUser => _auth.currentUser;
   bool get _allowLegacyDirectCreateFallback => kDebugMode;
 
-  Future<String> _safeCurrentDeviceId() async {
+  Future<Map<String, String>> _safeCurrentDeviceSnapshot() async {
     try {
-      final deviceId =
-          await DeviceManagerService().getCurrentDeviceIdentifier();
-      return deviceId.trim();
+      final deviceInfo = await DeviceManagerService().getCurrentDeviceSnapshot();
+      return Map<String, String>.from(deviceInfo);
     } catch (error) {
-      debugPrint('[HouseService] deviceId unavailable: $error');
-      return '';
+      debugPrint('[HouseService] device snapshot unavailable: $error');
+      return const <String, String>{};
     }
   }
 
@@ -223,7 +222,10 @@ class HouseService {
     final normalizedRecoveryAnswer = (recoveryAnswer ?? '').trim();
     final normalizedCreatedWith =
         createdWith.trim().isNotEmpty ? createdWith.trim() : 'email';
-    final deviceId = await _safeCurrentDeviceId();
+    final deviceSnapshot = await _safeCurrentDeviceSnapshot();
+    final deviceId = (deviceSnapshot['deviceId'] ?? '').trim();
+    final deviceModel = (deviceSnapshot['model'] ?? '').trim();
+    final devicePlatform = (deviceSnapshot['platform'] ?? '').trim();
     if (deviceId.isEmpty) {
       throw Exception(
         'Không thể xác thực thiết bị để tạo nhà. Vui lòng mở lại ứng dụng và thử lại.',
@@ -279,6 +281,8 @@ class HouseService {
         'recoveryAnswer': normalizedRecoveryAnswer,
         'createdWith': normalizedCreatedWith,
         if (deviceId.isNotEmpty) 'deviceId': deviceId,
+        if (deviceModel.isNotEmpty) 'model': deviceModel,
+        if (devicePlatform.isNotEmpty) 'platform': devicePlatform,
         if ((otp ?? '').trim().isNotEmpty) 'otp': otp!.trim(),
       });
       debugPrint('[HouseService] createHouseSecure success');
@@ -324,6 +328,11 @@ class HouseService {
       if (_isDeviceRequiredError(error)) {
         throw Exception(
           'Không thể xác thực thiết bị để tạo nhà. Vui lòng mở lại ứng dụng và thử lại.',
+        );
+      }
+      if (message == 'HOUSE_CREATION_EMAIL_VERIFICATION_REQUIRED') {
+        throw Exception(
+          'Bạn cần xác minh email trước khi tạo thêm nhà trên thiết bị này.',
         );
       }
       if (message != null && message.isNotEmpty) {
