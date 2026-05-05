@@ -7,6 +7,15 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       MaterialPageRoute(
         builder: (_) => DocumentViewerScreen(
           title: context.tr('privacy_policy'),
+part of '../settings_tab.dart';
+
+extension _SettingsTabSupportLegalSection on _SettingsTabState {
+  void _openPolicyOverview() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DocumentViewerScreen(
+          title: context.tr('privacy_policy'),
           assetPath: 'assets/docs/privacy.html',
         ),
       ),
@@ -19,6 +28,70 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       MaterialPageRoute(
         builder: (_) => DocumentViewerScreen(
           title: context.tr('terms_of_use'),
+          assetPath: 'assets/docs/terms.html',
+        ),
+      ),
+    );
+  }
+
+  void _openCookieDocument() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DocumentViewerScreen(
+          title: context.tr('cookie_policy'),
+          assetPath: 'assets/docs/cookie-policy.html',
+        ),
+      ),
+    );
+  }
+
+  void _openAboutDocument() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DocumentViewerScreen(
+          title: context.tr('about_soullocket'),
+          assetPath: 'assets/docs/about.html',
+        ),
+      ),
+    );
+  }
+
+  void _shareApp() {
+    SharePlus.instance.share(
+      ShareParams(
+        text:
+            'SoulLocket - Ngôi nhà chung cho các cặp đôi. Cùng xây dựng không gian yêu thương, lưu giữ kỷ niệm và chơi game cùng nhau nhé! Tải ngay tại: https://soullocket.app',
+        subject: 'Tham gia SoulLocket cùng mình nhé!',
+      ),
+    );
+  }
+
+  Future<void> _rateApp() async {
+    try {
+      final InAppReview inAppReview = InAppReview.instance;
+      // Trong môi trường Debug, dialog thường không hiện ra. Ta gọi mở thẳng Store.
+      await inAppReview.openStoreListing(
+        appStoreId: '6740344445',
+      );
+    } catch (e) {
+      debugPrint('Lỗi khi mở đánh giá: $e');
+    }
+  }
+
+  Future<void> _openSupportContact() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const UserSupportChatScreen(),
+      ),
+    );
+  }
+
+  void _openGuideDocument() {
+    Navigator.push(
+      context,
       MaterialPageRoute(
         builder: (_) => DocumentViewerScreen(
           title: context.tr('user_guide'),
