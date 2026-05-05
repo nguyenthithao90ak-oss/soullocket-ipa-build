@@ -416,6 +416,11 @@ class AppEntryController {
       ),
     );
 
+    await _runGuarded(
+      'refresh widget shell after home session',
+      () => WidgetService.refreshWidgetShell(),
+    );
+
     return AppEntryHouseSessionResult(
       didScheduleInitialAppOpenAd: didScheduleInitialAppOpenAd,
     );
