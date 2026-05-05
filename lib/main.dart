@@ -505,14 +505,20 @@ Future<void> _requestIosTrackingAuthorization() async {
     return;
   }
 
-  try {
-    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-    if (status == TrackingStatus.notDetermined) {
-      await AppTrackingTransparency.requestTrackingAuthorization();
-    }
-  } catch (e) {
-    debugPrint('ATT request skipped: $e');
-  }
+  // Temporary App Store submission guard:
+  // keep ATT code path disabled for this release. To re-enable later,
+  // restore the request logic below and add NSUserTrackingUsageDescription
+  // back to ios/Runner/Info.plist before shipping a new iOS build.
+  return;
+
+  // try {
+  //   final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+  //   if (status == TrackingStatus.notDetermined) {
+  //     await AppTrackingTransparency.requestTrackingAuthorization();
+  //   }
+  // } catch (e) {
+  //   debugPrint('ATT request skipped: $e');
+  // }
 }
 
 void _scheduleDeferredBootstrap() {
