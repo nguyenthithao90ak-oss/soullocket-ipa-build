@@ -118,10 +118,10 @@ class UiPrefsState {
   }
 
   static const defaults = UiPrefsState(
-    themeKey: 'theme-pink-glow',
+    themeKey: 'theme-auto',
     fallingEffectKey: 'off',
     avatarSizePx: 90,
-    countdownSizePx: 270,
+    countdownSizePx: 500,
     avatarFrameKey: 'off',
     countdownStyleKey: 'rose_wave',
     countdownTopLabel: '',
