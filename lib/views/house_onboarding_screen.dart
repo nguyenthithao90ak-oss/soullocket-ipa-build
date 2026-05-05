@@ -844,7 +844,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       }
       _authSyncRetryCount = 0;
 
-      final normalizedError = e.toString().toLowerCase();
       final shouldRetryTransient = widget.autoCreateOnly &&
           _transientCreateRetryCount < 2 &&
           (e is TimeoutException ||
