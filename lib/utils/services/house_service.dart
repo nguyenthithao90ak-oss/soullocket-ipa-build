@@ -12,6 +12,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/single_match_service.dart';
 
+class HouseCreationOtpRequiredException implements Exception {
+  final String maskedEmail;
+  final int createdCount;
+
+  const HouseCreationOtpRequiredException({
+    required this.maskedEmail,
+    required this.createdCount,
+  });
+
+  @override
+  String toString() =>
+      'Tài khoản này đã tạo hơn 5 nhà. Nhập mã xác nhận gửi về Gmail để tiếp tục tạo nhà.';
+}
+
 class HouseService {
   static const String _defaultHouseName = 'Chúng mình';
   static const String _defaultNameU1 = 'Bạn Nam';
