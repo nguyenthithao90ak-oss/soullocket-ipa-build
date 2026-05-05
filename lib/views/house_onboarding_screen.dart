@@ -943,6 +943,26 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                           color: const Color(0xFF6D5C63),
                         ),
                       ),
+                      if (_autoCreateFailureDetail != null) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF1F5),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            'Chi tiết: $_autoCreateFailureDetail',
+                            textAlign: TextAlign.center,
+                            style: SLTheme.quicksand(
+                              height: 1.35,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF9F1239),
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: _isLoading
