@@ -25,6 +25,10 @@ class AppErrorMapper {
       'Không thể kết nối mạng. Vui lòng kiểm tra Wi‑Fi hoặc dữ liệu di động rồi thử lại.';
   static const String defaultServerMessage =
       'Máy chủ đang bận hoặc gặp sự cố. Vui lòng thử lại sau.';
+  static const String authSyncMessage =
+      'Phiên đăng nhập đang đồng bộ. Vui lòng chờ vài giây rồi thử lại.';
+  static const String recentLoginMessage =
+      'Đã lâu bạn chưa ghé, đăng nhập lại để tiếp tục viết tiếp chuyện tình mình nhé! 👋';
 
   static AppErrorInfo resolve(
     dynamic error, {
