@@ -1537,7 +1537,10 @@ class DiaryMemoryController extends ChangeNotifier {
         }
       }
 
-      messenger.showSnackBar(
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           duration: Duration(seconds: failedCount > 0 ? 5 : 3),
           content: Text(
@@ -1554,11 +1557,13 @@ class DiaryMemoryController extends ChangeNotifier {
         ),
       );
     } catch (e) {
-
       if (context.mounted) {
         await _restorePendingUploadState();
+        if (!context.mounted) {
+          return;
+        }
         final resolved = AppErrorMapper.resolve(e);
-        messenger.showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(resolved.message),
             backgroundColor: const Color(0xFFE53935),
