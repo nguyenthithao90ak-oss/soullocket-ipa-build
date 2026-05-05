@@ -1291,9 +1291,9 @@ class _LoveCardMetaField extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Quicksand',
-                    color: const Color(0xFF8D4563),
+                    color: Color(0xFF8D4563),
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                   ),
