@@ -702,30 +702,41 @@ class MyApp extends StatelessWidget {
           themeAnimationDuration: const Duration(milliseconds: 160),
           themeAnimationCurve: Curves.easeOutCubic,
           builder: (context, child) {
-            final content = L10nScope(
-              notifier: L10nService(),
-              child: child ?? const SizedBox.shrink(),
+            final mediaQuery = MediaQuery.of(context);
+            final screenWidth = mediaQuery.size.width;
+            final textScaler = SLResponsive.textScalerFor(context);
+            final content = MediaQuery(
+              data: mediaQuery.copyWith(textScaler: textScaler),
+              child: L10nScope(
+                notifier: L10nService(),
+                child: child ?? const SizedBox.shrink(),
+              ),
             );
 
             if (kIsWeb) {
+              final maxWidth = SLResponsive.maxContentWidthForWidth(screenWidth);
+              final outerPadding = SLResponsive.horizontalPaddingForWidth(screenWidth);
               return Container(
                 color: const Color(0xFFFDFDFD),
                 child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 500),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 30,
-                            offset: const Offset(0, 0),
-                          ),
-                        ],
-                      ),
-                      child: RepaintBoundary(
-                        child: ClipRect(child: content),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: outerPadding),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxWidth),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 30,
+                              offset: const Offset(0, 0),
+                            ),
+                          ],
+                        ),
+                        child: RepaintBoundary(
+                          child: ClipRect(child: content),
+                        ),
                       ),
                     ),
                   ),
