@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:blurhash/blurhash.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';

@@ -16,6 +16,7 @@ import 'app_entry.dart';
 import 'app_entry/widgets/loading_scaffold.dart';
 import 'auth/widgets/gender_selection_dialog.dart';
 import 'auth/widgets/relationship_mode_dialog.dart';
+import 'login_screen.dart';
 import '../core/sl_theme.dart';
 
 class HouseOnboardingScreen extends StatefulWidget {
@@ -69,6 +70,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   bool _dismissedScrollHint = false;
   bool _didQueueAutoCreate = false;
   bool _isPromptingCreationSetup = false;
+  final bool _showLegacyIntro = false;
   Timer? _scrollHintTimer;
   String? _autoCreateFailureMessage;
   String? _autoCreateFailureDetail;
@@ -281,6 +283,17 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return DateInputUtils.looksLikeBirthQuestion(question);
   }
 
+  void _normalizeRecoveryBirthAnswer() {
+    final normalized = DateInputUtils.normalizeForDisplay(
+      _recoveryACtrl.text,
+      firstYear: 1900,
+      lastYear: DateTime.now().year,
+      allowMissingYear: true,
+    );
+    _recoveryACtrl.text = normalized;
+    _recoveryACtrl.selection =
+        TextSelection.collapsed(offset: normalized.length);
+  }
 
   String? _normalizeRole(String? role) {
     final normalized = role?.trim();
@@ -717,6 +730,53 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     });
   }
 
+  Future<void> _signOutToLogin() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _autoCreateFailureMessage = null;
+    });
+    try {
+      await _clearPendingSignupDraft();
+      await _authService.signOut();
+      if (!mounted) return;
+
+      if (widget.onSignedOut != null) {
+        await widget.onSignedOut!.call();
+        return;
+      }
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      if (widget.autoCreateOnly) {
+        _setAutoCreateFailureMessage(
+          AppErrorMapper.resolve(
+            e,
+            fallbackMessage:
+                'Không tạo được ngôi nhà: hãy kiểm tra trạng thái đăng nhập và kết nối mạng.',
+          ).message,
+          error: e,
+        );
+        return;
+      }
+      _showError(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Không đăng xuất được: hãy kiểm tra kết nối mạng hoặc trạng thái đăng nhập hiện tại.',
+        ).message,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   Future<void> _createHouse({String? houseCreationOtp}) async {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -1127,6 +1187,202 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return const LoadingScaffold();
   }
 
+  Widget _buildScrollHint() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          borderRadius: SLRadius.pillAll,
+          border: Border.all(color: Colors.white.withOpacity(0.92)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Vuốt xuống để xem tiếp',
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF91536F),
+              ),
+            ),
+            SLSpacing.w8,
+            const Icon(
+              Icons.keyboard_double_arrow_down_rounded,
+              color: Color(0xFFD81B60),
+              size: 22,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackdropBubble({
+    required double size,
+    required Color color,
+  }) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+      ),
+    );
+  }
+
+  Widget _buildHeroChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.82),
+        borderRadius: SLRadius.pillAll,
+        border: Border.all(color: const Color(0x18D81B60)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: const Color(0xFFD81B60)),
+          SLSpacing.w8,
+          Text(
+            label,
+            style: SLTheme.quicksand(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF7A5566),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCallout({
+    required IconData icon,
+    required String title,
+    required String body,
+  }) {
+    return Container(
+      padding: SLSpacing.all12,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF6F9), Color(0xFFFFEEF4)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0x22D81B60)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+              color: Color(0xFFD81B60),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
+          SLSpacing.w12,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF8A1E46),
+                  ),
+                ),
+                SLSpacing.h4,
+                Text(
+                  body,
+                  style: SLTheme.quicksand(
+                    height: 1.4,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF6D5C63),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Container(
+      padding: SLSpacing.all16,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.8),
+        borderRadius: SLRadius.xlAll,
+        border: Border.all(color: const Color(0x14D81B60)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEEF4),
+                  borderRadius: SLRadius.mdAll,
+                ),
+                child: Icon(icon, color: const Color(0xFFD81B60)),
+              ),
+              SLSpacing.w8,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: SLTheme.quicksand(
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF8A1E46),
+                      ),
+                    ),
+                    SLSpacing.gapH(2),
+                    Text(
+                      subtitle,
+                      style: SLTheme.quicksand(
+                        fontSize: 12,
+                        height: 1.35,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF7A6A72),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SLSpacing.h12,
+          child,
+        ],
+      ),
+    );
+  }
 
   // ignore: unused_element
   Widget _buildModeCard({
@@ -1204,6 +1460,41 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
+  Widget _buildField({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    String? helper,
+    int? maxLength,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(label),
+        SLSpacing.h8,
+        TextField(
+          controller: controller,
+          maxLength: maxLength,
+          style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+          decoration: _inputDecoration(
+            hint: hint,
+            prefixIcon: Icons.home_rounded,
+          ),
+        ),
+        if (helper != null) ...[
+          SLSpacing.h8,
+          Text(
+            helper,
+            style: SLTheme.quicksand(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF887880),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 
   // ignore: unused_element
   Widget _buildQuestionAvatarPlaceholder() {
@@ -1221,4 +1512,47 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
+  Widget _buildLabel(String label) {
+    return Text(
+      label,
+      style: SLTheme.quicksand(
+        fontSize: 13,
+        color: const Color(0xFF6D5F67),
+        fontWeight: FontWeight.w900,
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration({
+    required String hint,
+    String? helper,
+    IconData? prefixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      helperText: helper,
+      hintStyle: SLTheme.quicksand(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+      ),
+      prefixIcon: prefixIcon == null
+          ? null
+          : Icon(prefixIcon, color: const Color(0xFFD81B60), size: 20),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: SLRadius.lgAll,
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: SLRadius.lgAll,
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: SLRadius.lgAll,
+        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.white,
+    );
+  }
 }

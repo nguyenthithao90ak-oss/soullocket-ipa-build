@@ -50,24 +50,22 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _shareApp() {
-    SharePlus.instance.share(
-      ShareParams(
-        text:
-            'SoulLocket - Ngôi nhà chung cho các cặp đôi. Cùng xây dựng không gian yêu thương, lưu giữ kỷ niệm và chơi game cùng nhau nhé! Tải ngay tại: https://soullocket.app',
-        subject: 'Tham gia SoulLocket cùng mình nhé!',
-      ),
+    Share.share(
+      'SoulLocket - Ngôi nhà chung cho các cặp đôi. Cùng xây dựng không gian yêu thương, lưu giữ kỷ niệm và chơi game cùng nhau nhé! Tải ngay tại: https://soullocket.app',
+      subject: 'Tham gia SoulLocket cùng mình nhé!',
     );
   }
 
-  Future<void> _rateApp() async {
+    
+    Future<void> _rateApp() async {
     try {
       final InAppReview inAppReview = InAppReview.instance;
-      // Trong môi trường Debug, dialog thường không hiện ra. Ta gọi mở thẳng Store.
+      // Trong m?i tr??ng Debug, dialog th??ng kh?ng hi?n ra. Ta g?i m? th?ng Store.
       await inAppReview.openStoreListing(
-        appStoreId: '6740344445',
+        appStoreId: '6740344445', 
       );
     } catch (e) {
-      debugPrint('Lỗi khi mở đánh giá: $e');
+      debugPrint('L?i khi m? ??nh gi?: ');
     }
   }
 

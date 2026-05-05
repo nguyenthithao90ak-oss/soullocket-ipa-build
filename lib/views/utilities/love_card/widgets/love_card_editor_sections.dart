@@ -1309,9 +1309,9 @@ class _LoveCardMetaField extends StatelessWidget {
             cursorColor: const Color(0xFFD81B60),
             onChanged: onChanged,
             textAlignVertical: TextAlignVertical.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Quicksand',
-              color: Color(0xFF243041),
+              color: const Color(0xFF243041),
               fontSize: 15.5,
               height: 1.4,
               fontWeight: FontWeight.w800,

@@ -76,14 +76,18 @@ class HouseService {
         }
 
         user = _auth.currentUser ?? user;
-        final token = await user
-            .getIdToken(forceRefreshToken || attempt > 0)
-            .timeout(const Duration(seconds: 5));
-        if (token?.trim().isNotEmpty == true) {
-          return;
+        if (user != null) {
+          try {
+            final token = await user
+                .getIdToken(forceRefreshToken || attempt > 0)
+                .timeout(const Duration(seconds: 5));
+            if ((token ?? '').trim().isNotEmpty) {
+              return;
+            }
+          } catch (error) {
+            debugPrint('[HouseService] getIdToken skipped: $error');
+          }
         }
-      } else {
-        debugPrint('[HouseService] user session not ready yet');
       }
 
       if (attempt < 4) {
