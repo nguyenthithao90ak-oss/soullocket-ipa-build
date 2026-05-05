@@ -551,27 +551,68 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return raw.length > 260 ? '${raw.substring(0, 260)}...' : raw;
   }
 
+  bool _needsEmailVerification(Object? error, String message) {
+    final normalized = '${message.toLowerCase()} ${error?.toString().toLowerCase() ?? ''}';
+    return normalized.contains('resource-exhausted') ||
+        normalized.contains('giới hạn') ||
+        normalized.contains('too many') ||
+        normalized.contains('quá nhiều') ||
+        normalized.contains('verify') ||
+        normalized.contains('xác minh');
+  }
+
   String _clearCreateFailureMessage(String message, Object? error) {
     final normalized = '${message.toLowerCase()} ${error?.toString().toLowerCase() ?? ''}';
     if (normalized.contains('unauthenticated') ||
         normalized.contains('chưa đăng nhập') ||
         normalized.contains('đăng nhập')) {
-      return 'Bị chặn vì phiên đăng nhập/Auth chưa sẵn sàng. Hãy thử lại; bản debug có thể mở form tạo nhà thủ công để test.';
+      return 'Phiên đăng nhập đang đồng bộ. App sẽ tự thử lại, bạn không cần đăng xuất.';
     }
     if (normalized.contains('permission-denied') ||
         normalized.contains('app check') ||
         normalized.contains('debug token') ||
         normalized.contains('play integrity')) {
-      return 'Bị chặn vì Firebase/App Check hoặc quyền database chưa cho phép bản debug tạo nhà.';
+      return 'Thiết bị đang được xác thực bảo mật. Vui lòng chờ vài giây rồi thử lại.';
+    }
+    if (_needsEmailVerification(error, message)) {
+      return 'Tài khoản cần xác minh Gmail trước khi tạo thêm ngôi nhà.';
     }
     if (normalized.contains('timeout') ||
         normalized.contains('network') ||
         normalized.contains('deadline') ||
         normalized.contains('mạng') ||
         normalized.contains('kết nối')) {
-      return 'Bị chặn vì mạng hoặc server phản hồi quá chậm khi tạo nhà.';
+      return 'Mạng hoặc server phản hồi chậm. App sẽ cho thử lại mà không đăng xuất tài khoản.';
     }
     return message;
+  }
+
+  Future<void> _sendGmailVerification() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('Phiên đăng nhập đang đồng bộ. Vui lòng thử lại sau vài giây.');
+      }
+      await user.sendEmailVerification();
+      if (!mounted) return;
+      setState(() {
+        _autoCreateFailureMessage =
+            'Đã gửi email xác minh tới ${user.email ?? 'Gmail của bạn'}. Hãy xác minh rồi quay lại bấm Thử lại.';
+        _autoCreateFailureDetail = null;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      _setAutoCreateFailureMessage(
+        AppErrorMapper.resolve(error).message,
+        error: error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _setAutoCreateFailureMessage(String message, {Object? error}) {
