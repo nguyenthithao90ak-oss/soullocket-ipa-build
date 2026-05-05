@@ -766,6 +766,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         recoveryQuestion: _enableRecovery ? recoveryQuestion : null,
         recoveryAnswer: _enableRecovery ? recoveryAnswer : null,
         createdWith: 'email',
+        otp: houseCreationOtp,
       )
           .timeout(const Duration(seconds: 15), onTimeout: () {
         throw TimeoutException('_createHouse timed out');
