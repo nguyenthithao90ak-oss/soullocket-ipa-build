@@ -500,16 +500,27 @@ Future<void> _initializeFirebaseAppCheck() async {
 
 void _scheduleDeferredBootstrap() {
   SchedulerBinding.instance.addPostFrameCallback((_) {
-    Future<void>(() async {
-      await Future.wait([
-        _initializeDeferredFirebaseAppCheck(),
-        _purgeDeprecatedSecretsDeferred(),
-        _warmUpOfflineCache(),
-        _warmUpLocalDatabase(),
-        _warmUpWidgetService(),
-      ]);
-      unawaited(_warmUpBackgroundServices());
-    });
+    unawaited(Future<void>(() async {
+      try {
+        await Future.wait([
+          _initializeDeferredFirebaseAppCheck(),
+          _purgeDeprecatedSecretsDeferred(),
+          _warmUpOfflineCache(),
+          _warmUpLocalDatabase(),
+          _warmUpWidgetService(),
+        ]);
+        unawaited(_warmUpBackgroundServices());
+      } catch (error, stackTrace) {
+        debugPrint('Deferred bootstrap error: $error');
+        debugPrintStack(stackTrace: stackTrace);
+        unawaited(ErrorLoggerService.instance.logError(
+          error,
+          stackTrace,
+          reason: 'deferred_bootstrap_error',
+          fatal: false,
+        ));
+      }
+    }));
   });
 }
 
