@@ -409,16 +409,23 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     if (clearedCount <= 0) {
       return;
     }
+    if (clearedCount >= 4) {
+      _showFloatingMessage(
+        'Amazing x$clearedCount',
+        color: const Color(0xFFFFD166),
+      );
+      return;
+    }
     if (clearedCount >= 3) {
       _showFloatingMessage(
-        'Burst x$clearedCount',
+        'Great x$clearedCount',
         color: const Color(0xFFFFD166),
       );
       return;
     }
     if (clearedCount == 2) {
       _showFloatingMessage(
-        'Double Clear',
+        'Nice x2',
         color: const Color(0xFF7AE7FF),
       );
     }
