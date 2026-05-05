@@ -648,8 +648,21 @@ class _DiaryTabState extends State<DiaryTab> {
   }
 
   Future<dynamic> _getMemoriesCacheFuture() {
+    return _memoryController.getMemoriesCacheFuture(_houseId);
+  }
+
   dynamic _getMemoriesCacheSync() {
     return _memoryController.getMemoriesCacheSync(_houseId);
+  }
+
+  Future<void> _deleteMemory(Map<String, dynamic> item) async {
+    await _memoryController.deleteMemory(
+      context: context,
+      houseId: _houseId,
+      item: item,
+      showSnackBar: _showDiarySnackBar,
+    );
+    _handleControllerChange();
   }
 
   void _showMemoryZoom(
