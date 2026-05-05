@@ -85,6 +85,68 @@ mixin _SoulBlockStrategyLogic {
     return combo.any((template) => template.cellCount <= 3 || template.width == 1 || template.height == 1);
   }
 
+  List<_SoulPieceTemplate> _stageBagTemplates(
+    List<_TemplateScore> fittingCandidates,
+    double progress,
+    double boardStress,
+  ) {
+    final easy = fittingCandidates
+        .where((item) => item.template.tier == 0)
+        .map((item) => item.template)
+        .toList(growable: false);
+    final mid = fittingCandidates
+        .where((item) => item.template.tier == 1)
+        .map((item) => item.template)
+        .toList(growable: false);
+    final hard = fittingCandidates
+        .where((item) => item.template.tier >= 2)
+        .map((item) => item.template)
+        .toList(growable: false);
+    final rescue = fittingCandidates
+        .where((item) => item.template.cellCount <= 3 ||
+            item.template.width == 1 ||
+            item.template.height == 1)
+        .map((item) => item.template)
+        .toList(growable: false);
+
+    final bag = <_SoulPieceTemplate>[];
+    void addSample(List<_SoulPieceTemplate> source, int count) {
+      for (final template in _weightedTemplateSample(source, count, progress)) {
+        if (!bag.contains(template)) {
+          bag.add(template);
+        }
+      }
+    }
+
+    if (progress < 0.28) {
+      addSample(easy, 7);
+      addSample(rescue, 3);
+      addSample(mid, 2);
+    } else if (progress < 0.62) {
+      addSample(easy, boardStress >= 0.58 ? 5 : 3);
+      addSample(mid, 5);
+      addSample(rescue, 2);
+      if (boardStress < 0.50) {
+        addSample(hard, 2);
+      }
+    } else {
+      addSample(rescue, boardStress >= 0.58 ? 4 : 2);
+      addSample(easy, boardStress >= 0.58 ? 3 : 1);
+      addSample(mid, 4);
+      addSample(hard, boardStress >= 0.58 ? 1 : 4);
+    }
+
+    for (final candidate in fittingCandidates) {
+      if (bag.length >= 10) {
+        break;
+      }
+      if (!bag.contains(candidate.template)) {
+        bag.add(candidate.template);
+      }
+    }
+    return bag;
+  }
+
   double _difficultyBiasForCombo(
     List<List<bool>> boardMask,
     List<_SoulPieceTemplate> combo,
@@ -218,6 +280,18 @@ mixin _SoulBlockStrategyLogic {
     for (final candidate in fittingCandidates.take(rankedTake)) {
       if (pooledTemplateIds.add(candidate.template.id)) {
         pool.add(candidate.template);
+      }
+    }
+    for (final template in _stageBagTemplates(
+      fittingCandidates,
+      progress,
+      boardStress,
+    )) {
+      if (pool.length >= 10) {
+        break;
+      }
+      if (pooledTemplateIds.add(template.id)) {
+        pool.add(template);
       }
     }
     final List<_SoulPieceTemplate> easierTemplates = fittingCandidates
