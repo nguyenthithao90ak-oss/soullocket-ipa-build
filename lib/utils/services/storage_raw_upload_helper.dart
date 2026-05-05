@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -85,11 +86,18 @@ class StorageRawUploadHelper {
         text.contains('mạng');
   }
 
+  static const Duration _uploadAttemptTimeout = Duration(seconds: 45);
+
   Future<T> _retryUpload<T>(Future<T> Function() action) async {
     Object? lastError;
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
-        return await action();
+        return await action().timeout(
+          _uploadAttemptTimeout,
+          onTimeout: () {
+            throw TimeoutException('Storage upload attempt timed out.');
+          },
+        );
       } catch (error) {
         lastError = error;
         if (attempt >= 2 || !_shouldRetryUploadError(error)) {
