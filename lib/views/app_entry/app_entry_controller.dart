@@ -327,6 +327,10 @@ class AppEntryController {
 
   Future<void> handleSignedOutSession() async {
     await _runGuarded(
+      'reset widget state after sign out',
+      () => WidgetService.resetWidgetState(),
+    );
+    await _runGuarded(
       'stop auto interstitial scheduler after sign out',
       () => _adMobService.stopAutoInterstitialScheduler(clearPersisted: true),
     );
