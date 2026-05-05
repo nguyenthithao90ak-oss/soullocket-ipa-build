@@ -728,7 +728,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
   }
 
   Future<void> _replayFirstSetupGuideFromSettings() async {
-    final houseId = (_houseId ?? '').trim();
+    final houseId = (await _houseService.getCurrentHouseId() ?? '').trim();
     if (houseId.isEmpty) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('il_first_setup_guide_pending_$houseId', '1');
