@@ -511,6 +511,104 @@ class DeviceManagerService {
     }
   }
 
+  Future<bool> _registerCurrentDeviceWithFunction() async {
+    try {
+      final deviceInfo = await _getDeviceInfo();
+      final ipPayload = await _resolveDeviceIpPayload();
+      final callable = _functions.httpsCallable('registerCurrentDeviceSecure');
+      await callable.call({
+        'deviceId': deviceInfo['deviceId'],
+        'model': deviceInfo['model'],
+        'os': deviceInfo['os'],
+        'platform': deviceInfo['platform'],
+        ...ipPayload,
+      });
+      return true;
+    } on FirebaseFunctionsException catch (e) {
+      debugPrint('registerCurrentDeviceSecure fallback to legacy DB write: ${e.code}');
+      return false;
+    } catch (e) {
+      debugPrint('registerCurrentDeviceSecure fallback to legacy DB write: $e');
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> _resolveDeviceIpPayload() async {
+    String ip = 'unknown';
+    String location = 'unknown';
+    String ipSource = 'unknown';
+    Map<String, dynamic> ipData = {};
+
+    Future<Map<String, dynamic>?> fetchIpData(
+        String url, String sourceName) async {
+      try {
+        final response =
+            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 4));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          data['source'] = sourceName;
+          return data;
+        }
+      } catch (e) {
+        debugPrint('fetchIpData $sourceName error: $e');
+      }
+      return null;
+    }
+
+    final sources = [
+      {'url': 'https://get.geojs.io/v1/ip/geo.json', 'name': 'geojs'},
+      {'url': 'https://ipapi.co/json/', 'name': 'ipapi'},
+      {'url': 'https://ip-api.com/json/', 'name': 'ip-api'},
+    ];
+
+    for (var s in sources) {
+      final data = await fetchIpData(s['url']!, s['name']!);
+      if (data != null && (data['ip'] != null || data['query'] != null)) {
+        ipData = data;
+        ip = (data['ip'] ?? data['query']).toString();
+        ipSource = s['name']!;
+        break;
+      }
+    }
+
+    if (ip == 'unknown') {
+      final data =
+          await fetchIpData('https://api.ipify.org?format=json', 'ipify');
+      if (data != null && data['ip'] != null) {
+        ipData = data;
+        ip = data['ip'].toString();
+        ipSource = 'ipify';
+      }
+    }
+
+    if (ip != 'unknown' && ipData.isNotEmpty) {
+      final city = ipData['city']?.toString() ?? '';
+      final region =
+          (ipData['region'] ?? ipData['regionName'])?.toString() ?? '';
+      final country =
+          (ipData['country'] ?? ipData['country_name'])?.toString() ?? '';
+      final locParts = [city, region, country].where((e) => e.isNotEmpty).toList();
+      if (locParts.isNotEmpty) {
+        location = locParts.join(', ');
+      }
+    }
+
+    return {
+      'ip': ip,
+      'location': location,
+      'city': ipData['city']?.toString() ?? '',
+      'region': (ipData['region'] ?? ipData['regionName'])?.toString() ?? '',
+      'country': (ipData['country'] ?? ipData['country_name'])?.toString() ?? '',
+      'timezone': ipData['timezone']?.toString() ?? '',
+      'latitude': (ipData['latitude'] ?? ipData['lat'])?.toString() ?? '',
+      'longitude': (ipData['longitude'] ?? ipData['lon'])?.toString() ?? '',
+      'org': (ipData['organization_name'] ?? ipData['org'] ?? ipData['isp'])
+              ?.toString() ??
+          '',
+      'ipSource': ipSource,
+    };
+  }
+
   StreamSubscription? _deviceStatusSub;
 
   /// Lắng nghe trạng thái thiết bị realtime để tự động đăng xuất nếu bị chặn/xóa
