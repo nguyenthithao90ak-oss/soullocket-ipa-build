@@ -102,6 +102,7 @@ dependencies:
   flutter_animate: ^4.5.2
   lottie: ^3.2.0
   flutter_image_compress: ^2.4.0
+  ffmpeg_kit_flutter_new: ^4.1.0
   cloud_functions: ^6.2.0
   flutter_timezone: ^4.1.1
   timezone: ^0.9.4
