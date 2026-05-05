@@ -197,7 +197,7 @@ class AppErrorMapper {
         kind: AppErrorKind.user,
         message: authSyncMessage,
       );
-    }}
+    }
 
     if (code == 'network-request-failed' ||
         code == 'deadline-exceeded' ||
