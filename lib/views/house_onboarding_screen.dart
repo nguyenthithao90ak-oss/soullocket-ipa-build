@@ -716,7 +716,9 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   void _setAutoCreateFailureMessage(String message, {Object? error}) {
     if (!mounted) return;
     final resolvedMessage = _clearCreateFailureMessage(message, error);
-    final detail = error == null ? null : _technicalFailureDetail(error);
+    final detail = kDebugMode && error != null
+        ? _technicalFailureDetail(error)
+        : null;
     if (_autoCreateFailureMessage == resolvedMessage &&
         _autoCreateFailureDetail == detail) {
       return;
@@ -1103,7 +1105,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                           color: const Color(0xFF6D5C63),
                         ),
                       ),
-                      if (_autoCreateFailureDetail != null) ...[
+                      if (kDebugMode && _autoCreateFailureDetail != null) ...[
                         const SizedBox(height: 10),
                         Container(
                           padding: const EdgeInsets.all(12),
