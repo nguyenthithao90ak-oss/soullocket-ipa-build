@@ -322,6 +322,7 @@ Future<void> _initializeFirebaseBootstrap() async {
     }
 
     await _initializeFirebaseAppCheck();
+    await ErrorLoggerService.instance.initialize();
   }
 }
 
