@@ -44,6 +44,83 @@ mixin _SoulBlockStrategyLogic {
     return max(0.12, tierWeight * sizePenalty);
   }
 
+  double _boardStressLevel(List<List<bool>> boardMask) {
+    final filledRatio = _filledCount(boardMask) /
+        (_strategyBoardSize * _strategyBoardSize);
+    final holesPressure = (_countHoles(boardMask) / 12).clamp(0.0, 1.0);
+    final edgePressure = (_countNearCompleteLines(boardMask) / 8).clamp(0.0, 1.0);
+    return ((filledRatio * 0.45) + (holesPressure * 0.30) + (edgePressure * 0.25))
+        .clamp(0.0, 1.0)
+        .toDouble();
+  }
+
+  int _countNearCompleteLines(List<List<bool>> boardMask) {
+    var count = 0;
+    for (var row = 0; row < _strategyBoardSize; row++) {
+      var filled = 0;
+      for (var col = 0; col < _strategyBoardSize; col++) {
+        if (boardMask[row][col]) filled += 1;
+      }
+      if (filled >= _strategyBoardSize - 2) {
+        count += 1;
+      }
+    }
+    for (var col = 0; col < _strategyBoardSize; col++) {
+      var filled = 0;
+      for (var row = 0; row < _strategyBoardSize; row++) {
+        if (boardMask[row][col]) filled += 1;
+      }
+      if (filled >= _strategyBoardSize - 2) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  bool _hasEasyAnchor(List<_SoulPieceTemplate> combo) {
+    return combo.any((template) => template.tier == 0 && template.cellCount <= 4);
+  }
+
+  bool _hasRecoveryPiece(List<_SoulPieceTemplate> combo) {
+    return combo.any((template) => template.cellCount <= 3 || template.width == 1 || template.height == 1);
+  }
+
+  double _difficultyBiasForCombo(
+    List<List<bool>> boardMask,
+    List<_SoulPieceTemplate> combo,
+    double progress,
+  ) {
+    final stress = _boardStressLevel(boardMask);
+    final avgTier = combo.fold<double>(0, (sum, item) => sum + item.tier) / combo.length;
+    final avgCells = combo.fold<double>(0, (sum, item) => sum + item.cellCount) / combo.length;
+    final hasEasyAnchor = _hasEasyAnchor(combo);
+    final hasRecoveryPiece = _hasRecoveryPiece(combo);
+
+    double bias = 0;
+    if (progress < 0.28) {
+      bias += hasEasyAnchor ? 34 : -26;
+      bias += avgTier <= 0.7 ? 16 : -18;
+      bias += avgCells <= 4.5 ? 10 : -12;
+    } else if (progress < 0.62) {
+      bias += hasRecoveryPiece ? 12 : -8;
+      bias += avgTier <= 1.2 ? 8 : -6;
+    } else {
+      bias += avgTier >= 1.0 ? 10 : 0;
+      bias += avgCells >= 4.5 ? 8 : 0;
+    }
+
+    if (stress >= 0.62) {
+      bias += hasRecoveryPiece ? 28 : -24;
+      bias += hasEasyAnchor ? 12 : -10;
+      bias += avgCells <= 4.8 ? 10 : -12;
+    } else if (stress <= 0.28 && progress >= 0.55) {
+      bias += avgTier >= 1.0 ? 10 : 0;
+      bias += avgCells >= 4.8 ? 6 : 0;
+    }
+
+    return bias;
+  }
+
   List<_SoulPieceTemplate> _weightedTemplateSample(
     List<_SoulPieceTemplate> templates,
     int count,
@@ -130,6 +207,7 @@ mixin _SoulBlockStrategyLogic {
     });
 
     final double progress = _batchDifficultyProgress;
+    final double boardStress = _boardStressLevel(boardMask);
     final pool = <_SoulPieceTemplate>[];
     final pooledTemplateIds = <String>{};
     final int rankedTake = progress < 0.30
@@ -150,7 +228,7 @@ mixin _SoulBlockStrategyLogic {
         .where((element) => element.template.tier <= 1)
         .map((element) => element.template)
         .toList(growable: false);
-    final supplementalTemplates = progress < 0.32
+    final supplementalTemplates = progress < 0.32 || boardStress >= 0.58
         ? _weightedTemplateSample(easierTemplates, 3, progress)
         : _weightedTemplateSample(diverseTemplates, 3, progress);
     for (final template in supplementalTemplates) {
@@ -172,7 +250,7 @@ mixin _SoulBlockStrategyLogic {
       }
     }
 
-    final bool forceEasyAnchor = progress < 0.24 &&
+    final bool forceEasyAnchor = (progress < 0.24 || boardStress >= 0.65) &&
         fittingCandidates.any((candidate) => candidate.template.tier == 0);
 
     final allCombos = _pickTemplateCombos(pool, 3);
@@ -186,13 +264,21 @@ mixin _SoulBlockStrategyLogic {
       final memo = <String, double>{};
       final rankedBatches = <_BatchChoice>[];
       for (final combo in allCombos) {
+        if (forceEasyAnchor && !_hasEasyAnchor(combo)) {
+          continue;
+        }
         final uniqueTiers = combo.map((e) => e.tier).toSet().length;
         final uniqueIds = combo.map((e) => e.id).toSet().length;
         final double varietyBonus = (uniqueTiers * 5.0) + (uniqueIds * 3.0);
-        
+        final difficultyBias =
+            _difficultyBiasForCombo(boardMask, combo, progress);
+
         final score = _evaluateBatchPlan(boardMask, combo, memo);
         if (score.isFinite) {
-          rankedBatches.add(_BatchChoice(templates: combo, score: score + varietyBonus));
+          rankedBatches.add(_BatchChoice(
+            templates: combo,
+            score: score + varietyBonus + difficultyBias,
+          ));
         }
       }
 
