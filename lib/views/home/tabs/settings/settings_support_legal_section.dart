@@ -31,31 +31,6 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       MaterialPageRoute(
         builder: (_) => DocumentViewerScreen(
           title: context.tr('cookie_policy'),
-          assetPath: 'assets/docs/cookie-policy.html',
-        ),
-      ),
-    );
-  }
-
-  void _openAboutDocument() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
-          title: context.tr('about_soullocket'),
-      final InAppReview inAppReview = InAppReview.instance;
-      // Trong m?i tr??ng Debug, dialog th??ng kh?ng hi?n ra. Ta g?i m? th?ng Store.
-      await inAppReview.openStoreListing(
-        appStoreId: '6740344445', 
-      );
-    } catch (e) {
-      debugPrint('L?i khi m? ??nh gi?: ');
-    }
-  }
-
-  Future<void> _openSupportContact() async {
-    await Navigator.push(
-      context,
       MaterialPageRoute(
         builder: (_) => const UserSupportChatScreen(),
       ),
