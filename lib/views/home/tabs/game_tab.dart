@@ -31,8 +31,7 @@ class _GameTabState extends State<GameTab> {
     'caro_neon': false,
   };
 
-  final Map<String, double> _downloadProgress = {};
-  
+
   BannerAd? _bannerAd;
   bool _isBannerReady = false;
 
@@ -77,13 +76,6 @@ class _GameTabState extends State<GameTab> {
     });
   }
 
-  Future<void> _saveDownloadStatus(String gameId, bool status) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('game_downloaded_$gameId', status);
-    setState(() {
-      _downloadedGames[gameId] = status;
-    });
-  }
 
   Future<bool> _handleRealDownload(String gameId) async {
     final service = GameDownloadService();
@@ -116,6 +108,7 @@ class _GameTabState extends State<GameTab> {
   }
 
   Future<void> _confirmDeleteGame(BuildContext context, String gameId, String name) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -136,7 +129,7 @@ class _GameTabState extends State<GameTab> {
       await GameDownloadService().deleteGameData(gameId);
       if (mounted) {
         await _loadDownloadStatus();
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger?.showSnackBar(
           SnackBar(content: Text('Đã xóa dữ liệu game $name.')),
         );
       }
