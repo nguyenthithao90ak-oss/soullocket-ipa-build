@@ -109,6 +109,14 @@ class WidgetService {
     );
   }
 
+  static Future<void> resetWidgetState({bool refresh = true}) async {
+    if (kIsWeb) return;
+
+    _runtimeWidgetData.clear();
+    _didBootstrap = false;
+    await ensureInitialized(forceUpdate: refresh);
+  }
+
   static String resolveSeasonEffect({
     required String seasonModeKey,
     String loveDate = '',
