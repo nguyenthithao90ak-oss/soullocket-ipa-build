@@ -64,7 +64,16 @@ class AppEntryAccessResolver {
         isMaintenance: false,
       );
       unawaited(
+        refreshAccessStateInBackground(
+          isAdmin: false,
+          cachedHouseId: cachedHouseId,
+          userId: user.uid,
+          onResolved: onBackgroundState,
+        ),
+      );
+      unawaited(
         _authService.isUserAdmin(user).then((isAdmin) {
+          if (!isAdmin) return;
           refreshAccessStateInBackground(
             isAdmin: isAdmin,
             cachedHouseId: cachedHouseId,
@@ -113,7 +122,18 @@ class AppEntryAccessResolver {
         userId != null &&
         cachedAuthUid == userId) {
       unawaited(
+        refreshAccessStateInBackground(
+          isAdmin: false,
+          cachedHouseId: cachedHouseId,
+          userId: userId,
+          onResolved: (state, {required userId, required cachedHouseId}) {
+            onBackgroundState(state);
+          },
+        ),
+      );
+      unawaited(
         _authService.isUserAdmin(user).then((isAdmin) {
+          if (!isAdmin) return;
           refreshAccessStateInBackground(
             isAdmin: isAdmin,
             cachedHouseId: cachedHouseId,
