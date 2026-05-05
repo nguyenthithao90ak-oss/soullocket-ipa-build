@@ -176,7 +176,7 @@ class StorageRawUploadHelper {
 
     final fileSize = await file.length();
     if (fileSize > storageMaxMusicUploadBytes) {
-      throw Exception('File nhạc vượt quá 10MB. Hãy chọn file nhỏ hơn.');
+      throw Exception('File nhạc vượt quá 20MB. Hãy chọn file nhỏ hơn.');
     }
 
     final extension = p.extension(sourceName).toLowerCase();
