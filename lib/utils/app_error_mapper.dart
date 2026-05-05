@@ -281,7 +281,6 @@ class AppErrorMapper {
         normalized.contains('invalid-email') ||
         normalized.contains('weak-password') ||
         normalized.contains('email-already-in-use') ||
-        normalized.contains('unauthenticated') ||
         normalized.contains('requires-recent-login') ||
         normalized.contains('phiên đăng nhập') ||
         normalized.contains('đăng nhập để tạo liên kết') ||
