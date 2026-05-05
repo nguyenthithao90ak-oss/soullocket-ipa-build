@@ -810,7 +810,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         _transientCreateRetryCount += 1;
         debugPrint(
           '[HouseOnboarding] transient create failure, retrying '
-          '${_transientCreateRetryCount}/2...',
+          '$_transientCreateRetryCount/2...',
         );
         await Future.delayed(Duration(seconds: _transientCreateRetryCount));
         if (mounted) {
