@@ -399,29 +399,44 @@ class ActivityHistoryService {
           memoryId: entry.entityId,
         );
       } catch (e) {
+        final errorText = e.toString();
+        final isNotFound = errorText.contains('firebase_functions/not-found') ||
+            errorText.contains('not-found') ||
+            errorText.contains('NOT_FOUND') ||
+            errorText.contains('Ảnh Kỷ niệm không còn trong thùng rác');
         final payload = Map<String, dynamic>.from(entry.restorePayload);
-        if (payload.isNotEmpty && entry.houseId.isNotEmpty) {
-          try {
-            final memoryId = entry.entityId.trim();
-            if (memoryId.isNotEmpty) {
-              payload['id'] = memoryId;
-              payload.remove('deletedAt');
-              payload.remove('purgeAt');
-              payload['restoredAt'] = DateTime.now().millisecondsSinceEpoch;
-              await _db.ref().update({
-                'houses/${entry.houseId}/memories/$memoryId': payload,
-                'houses/${entry.houseId}/memories_trash/$memoryId': null,
-                'houses/${entry.houseId}/memoriesCount': ServerValue.increment(1),
-              });
-            }
-          } catch (fallbackError) {
-            debugPrint(
-              'ActivityHistory diary memory fallback restore failed: $fallbackError',
-            );
+        final payloadPurgeAt = (payload['purgeAt'] as num?)?.toInt() ?? 0;
+        final effectiveExpiry = entry.restoreExpiresAt > 0
+            ? entry.restoreExpiresAt
+            : payloadPurgeAt;
+        final isExpired = effectiveExpiry > 0 &&
+            DateTime.now().millisecondsSinceEpoch > effectiveExpiry;
+        if (!isNotFound ||
+            payload.isEmpty ||
+            entry.houseId.isEmpty ||
+            isExpired) {
+          debugPrint('ActivityHistory diary memory restore failed: $e');
+          return false;
+        }
+
+        try {
+          final memoryId = entry.entityId.trim();
+          if (memoryId.isEmpty) {
             return false;
           }
-        } else {
-          debugPrint('ActivityHistory diary memory restore failed: $e');
+          payload['id'] = memoryId;
+          payload.remove('deletedAt');
+          payload.remove('purgeAt');
+          payload['restoredAt'] = DateTime.now().millisecondsSinceEpoch;
+          await _db.ref().update({
+            'houses/${entry.houseId}/memories/$memoryId': payload,
+            'houses/${entry.houseId}/memories_trash/$memoryId': null,
+            'houses/${entry.houseId}/memoriesCount': ServerValue.increment(1),
+          });
+        } catch (fallbackError) {
+          debugPrint(
+            'ActivityHistory diary memory fallback restore failed: $fallbackError',
+          );
           return false;
         }
       }
