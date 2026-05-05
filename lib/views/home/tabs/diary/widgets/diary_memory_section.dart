@@ -532,7 +532,6 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
   final Future<void> Function(Map<String, dynamic> photo) onEnsurePhotoUrl;
 
   const _DiaryMemoryPhotoRow({
-    super.key,
     required this.rowPhotos,
     required this.thumbnailCacheWidth,
     required this.selectionListenable,
