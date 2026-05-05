@@ -820,7 +820,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       _transientCreateRetryCount = 0;
 
       if (widget.autoCreateOnly) {
-        _setAutoCreateFailureMessage(message);
+        _setAutoCreateFailureMessage(message, error: e);
       } else {
         _showError(message);
       }
