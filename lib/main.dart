@@ -505,10 +505,20 @@ Future<void> _requestIosTrackingAuthorization() async {
     return;
   }
 
-  // Temporary App Store submission guard:
-  // keep ATT code path disabled for this release. To re-enable later,
-  // restore the request logic below and add NSUserTrackingUsageDescription
-  // back to ios/Runner/Info.plist before shipping a new iOS build.
+  // Temporary App Store submission guard for the current iPhone-only release.
+  // This function is intentionally disabled so the submitted iOS build does not
+  // request ATT permission while NSUserTrackingUsageDescription is removed.
+  //
+  // To restore the previous ATT + iPad-enabled behavior in a future release:
+  // 1) In this file, remove the `return;` below and restore the ATT request
+  //    block that uses AppTrackingTransparency.
+  // 2) In ios/Runner/Info.plist, add NSUserTrackingUsageDescription back.
+  // 3) In ios/Runner.xcodeproj/project.pbxproj, change every
+  //    TARGETED_DEVICE_FAMILY = 1;
+  //    back to:
+  //    TARGETED_DEVICE_FAMILY = "1,2";
+  // 4) Build and upload a new iOS binary, then update App Store Connect
+  //    privacy answers/screenshots to match that restored behavior.
   return;
 
   // try {
