@@ -1007,6 +1007,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       );
     }
 
+    return const LoadingScaffold();
     return Scaffold(
       body: Stack(
         children: [
