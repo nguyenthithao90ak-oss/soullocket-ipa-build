@@ -60,6 +60,7 @@ class HouseService {
     String? recoveryQuestion,
     String? recoveryAnswer,
     String createdWith = 'email',
+    String? otp,
   }) async {
     var user = _auth.currentUser;
     if (user == null) {
