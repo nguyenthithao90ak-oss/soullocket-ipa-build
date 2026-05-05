@@ -209,6 +209,7 @@ class PurchaseService {
 
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
   bool _initialized = false;
+  Future<void>? _initializing;
 
   final StreamController<VipPurchaseState> _statusController =
       StreamController<VipPurchaseState>.broadcast();
@@ -217,19 +218,43 @@ class PurchaseService {
 
   Future<void> initialize() async {
     if (_initialized) return;
+    if (_initializing != null) {
+      await _initializing;
+      return;
+    }
+
+    final task = _initializeInternal();
+    _initializing = task;
+    try {
+      await task;
+    } finally {
+      if (identical(_initializing, task)) {
+        _initializing = null;
+      }
+    }
+  }
+
+  Future<void> _initializeInternal() async {
+    if (_initialized) return;
 
     final available = await _iap.isAvailable();
     if (!available) {
       return;
     }
 
-    _purchaseSub = _iap.purchaseStream.listen(
-      _handlePurchaseUpdates,
-      onError: (_) => _statusController.add(VipPurchaseState.error),
-    );
+    try {
+      _purchaseSub = _iap.purchaseStream.listen(
+        _handlePurchaseUpdates,
+        onError: (_) => _statusController.add(VipPurchaseState.error),
+      );
 
-    await _iap.restorePurchases();
-    _initialized = true;
+      await _iap.restorePurchases();
+      _initialized = true;
+    } catch (error, stackTrace) {
+      debugPrint('PurchaseService initialize error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      _statusController.add(VipPurchaseState.error);
+    }
   }
 
   Future<bool> restorePurchases() async {
