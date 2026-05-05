@@ -354,9 +354,9 @@ class AppErrorMapper {
         normalized.contains('play integrity') ||
         normalized.contains('attestation')) {
       if (kDebugMode) {
-        return 'Hệ thống xác thực bảo mật đang chặn thao tác này. Hãy kiểm tra cấu hình bảo mật thiết bị hoặc debug token rồi thử lại.';
+        return 'Bản debug đang bị App Check chặn. Hãy kiểm tra debug token rồi thử lại.';
       }
-      return 'Thiết bị chưa được xác nhận để thực hiện thao tác này. Hãy chờ vài giây rồi thử lại hoặc đăng nhập lại.';
+      return 'Thiết bị đang được xác thực bảo mật. Vui lòng chờ vài giây rồi thử lại.';
     }
     if (normalized.contains('permission denied')) {
       return 'Máy chủ đang chặn thao tác này. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.';
