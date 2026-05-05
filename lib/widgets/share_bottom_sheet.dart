@@ -815,9 +815,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     required Color accentColor,
     required bool isSending,
     required VoidCallback? onTap,
+    required double screenWidth,
   }) {
-    final blockWidth = compact ? 86.0 : 94.0;
-    final avatarSize = compact ? 50.0 : 56.0;
+    final blockWidth = SLResponsive.dp(compact ? 86.0 : 94.0, screenWidth);
+    final avatarSize = SLResponsive.dp(compact ? 50.0 : 56.0, screenWidth);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedOpacity(
@@ -825,8 +826,15 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
         opacity: isSending ? 0.62 : 1,
         child: Container(
           width: blockWidth,
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          padding: const EdgeInsets.fromLTRB(8, 9, 8, 8),
+          margin: EdgeInsets.symmetric(
+            horizontal: SLResponsive.dp(6, screenWidth, min: 0.9, max: 1.0),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            SLResponsive.dp(8, screenWidth),
+            SLResponsive.dp(9, screenWidth),
+            SLResponsive.dp(8, screenWidth),
+            SLResponsive.dp(8, screenWidth),
+          ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -836,7 +844,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(SLResponsive.dp(22, screenWidth)),
             border: Border.all(color: accentColor.withOpacity(0.16)),
             boxShadow: const [
               BoxShadow(
@@ -854,15 +862,15 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                 alignment: Alignment.center,
                 children: [
                   Container(
-                    width: avatarSize + 8,
-                    height: avatarSize + 8,
+                    width: avatarSize + SLResponsive.dp(8, screenWidth),
+                    height: avatarSize + SLResponsive.dp(8, screenWidth),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(SLResponsive.dp(20, screenWidth)),
                     ),
                   ),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(SLResponsive.dp(18, screenWidth)),
                     child: Container(
                       width: avatarSize,
                       height: avatarSize,
@@ -876,42 +884,48 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 color: accentColor,
                               ),
                             )
-                          : Icon(icon, color: accentColor, size: compact ? 24 : 27),
+                          : Icon(
+                              icon,
+                              color: accentColor,
+                              size: SLResponsive.dp(compact ? 24 : 27, screenWidth),
+                            ),
                     ),
                   ),
                   Positioned(
-                    right: -3,
-                    bottom: -3,
+                    right: SLResponsive.dp(-3, screenWidth, min: 1, max: 1),
+                    bottom: SLResponsive.dp(-3, screenWidth, min: 1, max: 1),
                     child: Container(
-                      width: compact ? 20 : 22,
-                      height: compact ? 20 : 22,
+                      width: SLResponsive.dp(compact ? 20 : 22, screenWidth),
+                      height: SLResponsive.dp(compact ? 20 : 22, screenWidth),
                       decoration: BoxDecoration(
                         color: accentColor,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),
                       child: isSending
-                          ? const Padding(
-                              padding: EdgeInsets.all(4),
-                              child: CircularProgressIndicator(
+                          ? Padding(
+                              padding: EdgeInsets.all(
+                                SLResponsive.dp(4, screenWidth, min: 0.9, max: 1.0),
+                              ),
+                              child: const CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(
+                          : Icon(
                               Icons.send_rounded,
                               color: Colors.white,
-                              size: 11,
+                              size: SLResponsive.dp(11, screenWidth),
                             ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 7),
+              SizedBox(height: SLResponsive.dp(7, screenWidth)),
               Text(
                 label,
                 style: SLTheme.quicksand(
-                  fontSize: compact ? 11.2 : 11.8,
+                  fontSize: SLResponsive.sp(compact ? 11.2 : 11.8, screenWidth),
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF1E293B),
                 ),
@@ -932,28 +946,35 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     required Color color,
     required VoidCallback onTap,
     required bool compact,
+    required double screenWidth,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: compact ? 66 : 70,
-        margin: const EdgeInsets.symmetric(horizontal: 6),
+        width: SLResponsive.dp(compact ? 66 : 70, screenWidth),
+        margin: EdgeInsets.symmetric(
+          horizontal: SLResponsive.dp(6, screenWidth, min: 0.9, max: 1.0),
+        ),
         child: Column(
           children: [
             Container(
-              width: compact ? 46 : 50,
-              height: compact ? 46 : 50,
+              width: SLResponsive.dp(compact ? 46 : 50, screenWidth),
+              height: SLResponsive.dp(compact ? 46 : 50, screenWidth),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: compact ? 22 : 24),
+              child: Icon(
+                icon,
+                color: color,
+                size: SLResponsive.dp(compact ? 22 : 24, screenWidth),
+              ),
             ),
-            SLSpacing.h8,
+            SizedBox(height: SLResponsive.dp(8, screenWidth)),
             Text(
               label,
               style: SLTheme.quicksand(
-                fontSize: compact ? 11.5 : 12,
+                fontSize: SLResponsive.sp(compact ? 11.5 : 12, screenWidth),
                 fontWeight: FontWeight.w600,
               ),
               maxLines: 1,
