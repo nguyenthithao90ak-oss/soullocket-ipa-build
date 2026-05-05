@@ -13,7 +13,7 @@ class StoragePickerService {
 
   final ImagePicker _picker;
 
-  static const int pickerImageQuality = 85;
+  static const int pickerImageQuality = 94;
   static const double pickerMaxWidth = 1080;
   static const double pickerMaxHeight = 1080;
   static const int maxGallerySelectionPerBatch = 30;
