@@ -135,6 +135,10 @@ class _MainHomeTabState extends State<MainHomeTab> {
       'il_home_map_card_first_tap_seen_v1';
   static const String _insightCardFirstTapSeenPrefsKey =
       'il_home_insight_card_first_tap_seen_v1';
+  static const String _firstSetupGuidePendingPrefsPrefix =
+      'il_first_setup_guide_pending_';
+  static const String _firstSetupGuideSeenPrefsPrefix =
+      'il_first_setup_guide_seen_';
 
   void _safeSetState(VoidCallback fn) {
     if (!mounted) {
@@ -245,6 +249,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
   bool _showInsightCardFirstTapHint = !(OfflineCacheService.getPrefsSync()
           ?.getBool(_insightCardFirstTapSeenPrefsKey) ??
       false);
+  bool _firstSetupGuidePrompting = false;
   String _lastHomeSettingsPayloadSignature = '';
   String _lastWidgetSettingsSyncKey = '';
   bool _deferHeavyHomeMotion = false;
