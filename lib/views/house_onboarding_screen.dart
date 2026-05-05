@@ -822,13 +822,22 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       final errorInfo = AppErrorMapper.resolve(e);
       final message = errorInfo.message;
 
-      if (errorInfo.isUserError &&
-          _authSyncRetryCount < 1 &&
-          (e.toString().contains('Unauthenticated') ||
-              e.toString().contains('Bạn chưa đăng nhập'))) {
+      final normalizedError = e.toString().toLowerCase();
+      final shouldRetryAuthSync = widget.autoCreateOnly &&
+          _authSyncRetryCount < 4 &&
+          (normalizedError.contains('unauthenticated') ||
+              normalizedError.contains('chưa đăng nhập') ||
+              message.toLowerCase().contains('đồng bộ'));
+      if (shouldRetryAuthSync) {
         _authSyncRetryCount += 1;
-        debugPrint('[HouseOnboarding] Auth sync delay detected, retrying in 1s...');
-        await Future.delayed(const Duration(seconds: 1));
+        try {
+          await FirebaseAuth.instance.currentUser?.getIdToken(true);
+        } catch (_) {}
+        debugPrint(
+          '[HouseOnboarding] Auth sync delay detected, retrying '
+          '$_authSyncRetryCount/4...',
+        );
+        await Future.delayed(Duration(milliseconds: 700 * _authSyncRetryCount));
         if (mounted) {
           return _createHouse();
         }
