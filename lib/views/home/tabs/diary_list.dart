@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/sl_theme.dart';
 import '../../../../models/diary_post.dart';
-import '../../../../widgets/cute_loading_indicator.dart';
 import '../../../../widgets/skeleton_container.dart';
 
 
