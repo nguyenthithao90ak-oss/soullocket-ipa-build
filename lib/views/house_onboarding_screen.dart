@@ -888,7 +888,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.autoCreateOnly && !kDebugMode) {
+    if (widget.autoCreateOnly) {
       if (_autoCreateFailureMessage == null) {
         return const LoadingScaffold();
       }
