@@ -9,8 +9,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
 
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final pendingKey = '$_firstSetupGuidePendingPrefsPrefix$houseId';
-    final seenKey = '$_firstSetupGuideSeenPrefsPrefix$houseId';
+    final pendingKey = '${_MainHomeTabState._firstSetupGuidePendingPrefsPrefix}$houseId';
+    final seenKey = '${_MainHomeTabState._firstSetupGuideSeenPrefsPrefix}$houseId';
     final isPending = (prefs.getString(pendingKey) ?? '').trim() == '1';
     final isSeen = (prefs.getString(seenKey) ?? '').trim() == '1' ||
         (prefs.getBool(seenKey) ?? false);
@@ -29,8 +29,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
   Future<void> _markFirstSetupGuideSeen(String houseId) async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await prefs.setString('$_firstSetupGuideSeenPrefsPrefix$houseId', '1');
-    await prefs.remove('$_firstSetupGuidePendingPrefsPrefix$houseId');
+    await prefs.setString('${_MainHomeTabState._firstSetupGuideSeenPrefsPrefix}$houseId', '1');
+    await prefs.remove('${_MainHomeTabState._firstSetupGuidePendingPrefsPrefix}$houseId');
   }
 
   Future<void> _showFirstSetupGuideDialog({required String houseId}) async {
