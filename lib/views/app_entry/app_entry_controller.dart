@@ -19,6 +19,7 @@ import '../../services/security_service.dart';
 import '../../services/session/app_background_session_tracker.dart';
 import '../../services/session/session_connectivity_coordinator.dart';
 import '../../utils/services/consent_service.dart';
+import '../../utils/services/widget_service.dart';
 
 class AppEntryAuthState {
   final bool isAuthenticated;
