@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/sl_theme.dart';
 import '../../../../utils/services/gift_maker_service.dart';
 import '../../../../utils/sl_notice.dart';
-import '../../../../services/l10n_service.dart';
 
 class SettingsGiftLinksManagerScreen extends StatefulWidget {
   final String houseId;
