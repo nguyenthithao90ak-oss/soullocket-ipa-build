@@ -47,12 +47,14 @@ class _MobileCinemaVideoExportService implements CinemaVideoExportService {
     final outputPath = '${workDir.path}/soul_locket_$safeId.mp4';
     final frameSeconds = frameDuration.inMilliseconds / 1000.0;
     final listBuffer = StringBuffer();
+    String? lastFramePath;
 
     for (var index = 0; index < frames.length; index += 1) {
       final frame = frames[index];
       final cachedFile = await DefaultCacheManager().getSingleFile(frame.imageUrl);
       final extension = _extensionFor(cachedFile.path);
       final framePath = '${workDir.path}/frame_${index.toString().padLeft(3, '0')}$extension';
+      lastFramePath = framePath;
       await cachedFile.copy(framePath);
       listBuffer
         ..writeln("file '${_escapeConcatPath(framePath)}'")
@@ -64,7 +66,9 @@ class _MobileCinemaVideoExportService implements CinemaVideoExportService {
         ),
       );
     }
-    listBuffer.writeln("file '${_escapeConcatPath('${workDir.path}/frame_${(frames.length - 1).toString().padLeft(3, '0')}${_extensionFor((await DefaultCacheManager().getSingleFile(frames.last.imageUrl)).path)}')}'");
+    if (lastFramePath != null) {
+      listBuffer.writeln("file '${_escapeConcatPath(lastFramePath)}'");
+    }
     await File(imageListPath).writeAsString(listBuffer.toString());
 
     onProgress?.call(
