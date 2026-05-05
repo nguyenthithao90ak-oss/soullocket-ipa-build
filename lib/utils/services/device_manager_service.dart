@@ -636,6 +636,11 @@ class DeviceManagerService {
 
   /// Load danh sách tất cả thiết bị của user
   Future<List<Map<String, dynamic>>> loadDevices() async {
+    final functionDevices = await _loadDevicesFromFunction();
+    if (functionDevices != null) {
+      return functionDevices;
+    }
+
     final uid = _auth.currentUser?.uid;
     if (uid == null) return [];
 
@@ -676,6 +681,28 @@ class DeviceManagerService {
         final bTs = (b['last_seen'] as num?)?.toInt() ?? 0;
         return bTs.compareTo(aTs);
       });
+  }
+
+  Future<List<Map<String, dynamic>>?> _loadDevicesFromFunction() async {
+    try {
+      final currentDeviceId = await getCurrentDeviceIdentifier();
+      final callable = _functions.httpsCallable('getDeviceListSecure');
+      final result = await callable.call({'currentDeviceId': currentDeviceId});
+      final rawDevices = result.data is Map ? result.data['devices'] : null;
+      if (rawDevices is! List) {
+        return const [];
+      }
+      return rawDevices
+          .whereType<Map>()
+          .map((device) => Map<String, dynamic>.from(device))
+          .toList(growable: false);
+    } on FirebaseFunctionsException catch (e) {
+      debugPrint('getDeviceListSecure fallback to legacy DB read: ${e.code}');
+      return null;
+    } catch (e) {
+      debugPrint('getDeviceListSecure fallback to legacy DB read: $e');
+      return null;
+    }
   }
 
   /// Duyệt thiết bị đang ở trạng thái pending
