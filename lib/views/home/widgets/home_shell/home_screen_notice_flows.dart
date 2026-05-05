@@ -736,10 +736,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     if (!mounted) return;
     await _switchToTab(0);
     if (!mounted) return;
-    setState(() {
-      _tabPageCache.remove(0);
-      _tabPageCache[0] = _buildTabPage(0);
-    });
+    _rebuildCachedTabPage(0);
   }
 
   Future<bool> _handleExitAttempt() async {
