@@ -1458,8 +1458,6 @@ class DiaryMemoryController extends ChangeNotifier {
         }
       }
 
-      final messenger = ScaffoldMessenger.of(context);
-
       // Ensure Auth is ready and has a fresh token before starting batch upload
       try {
         final user = await guardController.resolveCurrentUser();
