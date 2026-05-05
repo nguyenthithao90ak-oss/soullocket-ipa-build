@@ -45,6 +45,7 @@ jobs:
       IOS_ASSOCIATED_DOMAIN_WEB: ${{ secrets.IOS_ASSOCIATED_DOMAIN_WEB }}
       IOS_ASSOCIATED_DOMAIN_AUTH: ${{ secrets.IOS_ASSOCIATED_DOMAIN_AUTH }}
       ENV_LOCAL_JSON_BASE64: ${{ secrets.ENV_LOCAL_JSON_BASE64 }}
+      GOOGLE_SERVICE_INFO_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_BASE64 }}
       P12_BASE64: ${{ secrets.P12_BASE64 }}
       P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
       KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
@@ -101,6 +102,10 @@ jobs:
           RUNNER_TESTS_BUNDLE_IDENTIFIER = ${RUNNER_TESTS_BUNDLE_ID}
           IOS_DEPLOYMENT_TARGET = 15.5
           EOF
+
+          if [[ -n "${GOOGLE_SERVICE_INFO_BASE64:-}" ]]; then
+            echo -n "$GOOGLE_SERVICE_INFO_BASE64" | base64 --decode > ios/Runner/GoogleService-Info.plist
+          fi
 
           python3 <<'PY'
           import os
