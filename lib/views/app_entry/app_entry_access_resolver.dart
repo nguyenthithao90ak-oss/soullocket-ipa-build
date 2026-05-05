@@ -177,7 +177,7 @@ class AppEntryAccessResolver {
     }
   }
 
-  void refreshAccessStateInBackground({
+  Future<void> refreshAccessStateInBackground({
     required bool isAdmin,
     required String? cachedHouseId,
     required String? userId,
@@ -187,7 +187,7 @@ class AppEntryAccessResolver {
       required String? cachedHouseId,
     }) onResolved,
   }) {
-    fetchRemoteAccessState(isAdmin).timeout(_remoteTimeout).then<void>((state) {
+    return fetchRemoteAccessState(isAdmin).timeout(_remoteTimeout).then<void>((state) {
       final sameHouseId = (state.houseId ?? '') == (cachedHouseId ?? '');
       if (sameHouseId && state.blockReason == null && !state.isMaintenance) {
         return;
