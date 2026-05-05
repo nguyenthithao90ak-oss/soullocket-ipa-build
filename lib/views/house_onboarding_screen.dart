@@ -615,6 +615,104 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     }
   }
 
+  Future<String?> _promptHouseCreationOtp(
+    HouseCreationOtpRequiredException gate,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final email = (user?.email ?? '').trim();
+    if (email.isEmpty) {
+      _setAutoCreateFailureMessage(
+        'Tài khoản cần có Gmail hợp lệ để nhận mã xác minh.',
+        error: gate,
+      );
+      return null;
+    }
+
+    try {
+      await _authService.sendOtpEmail(email);
+    } catch (error) {
+      if (!mounted) return null;
+      _setAutoCreateFailureMessage(
+        AppErrorMapper.resolve(error).message,
+        error: error,
+      );
+      return null;
+    }
+    if (!mounted) return null;
+
+    final otpController = TextEditingController();
+    try {
+      return showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            title: Text(
+              'Xác minh Gmail',
+              style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tài khoản này đã tạo hơn 5 nhà. Nhập mã xác nhận gửi về ${gate.maskedEmail.isNotEmpty ? gate.maskedEmail : email} để tiếp tục tạo nhà.',
+                  style: SLTheme.quicksand(
+                    color: SLTheme.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: otpController,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  maxLength: 6,
+                  decoration: const InputDecoration(
+                    labelText: 'Mã Gmail 6 số',
+                    counterText: '',
+                  ),
+                  onSubmitted: (_) {
+                    final otp = otpController.text.trim();
+                    if (otp.isNotEmpty) {
+                      Navigator.of(dialogContext).pop(otp);
+                    }
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(
+                  'Để sau',
+                  style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+                ),
+              ),
+              FilledButton(
+                onPressed: () {
+                  final otp = otpController.text.trim();
+                  if (otp.isNotEmpty) {
+                    Navigator.of(dialogContext).pop(otp);
+                  }
+                },
+                child: Text(
+                  'Xác nhận',
+                  style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      otpController.dispose();
+    }
+  }
+
   void _setAutoCreateFailureMessage(String message, {Object? error}) {
     if (!mounted) return;
     final resolvedMessage = _clearCreateFailureMessage(message, error);
