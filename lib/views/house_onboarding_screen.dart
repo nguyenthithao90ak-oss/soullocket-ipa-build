@@ -1221,47 +1221,4 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-  Widget _buildLabel(String label) {
-    return Text(
-      label,
-      style: SLTheme.quicksand(
-        fontSize: 13,
-        color: const Color(0xFF6D5F67),
-        fontWeight: FontWeight.w900,
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration({
-    required String hint,
-    String? helper,
-    IconData? prefixIcon,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      helperText: helper,
-      hintStyle: SLTheme.quicksand(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-      ),
-      prefixIcon: prefixIcon == null
-          ? null
-          : Icon(prefixIcon, color: const Color(0xFFD81B60), size: 20),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: SLRadius.lgAll,
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: SLRadius.lgAll,
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: SLRadius.lgAll,
-        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 2),
-      ),
-      filled: true,
-      fillColor: Colors.white,
-    );
-  }
 }
