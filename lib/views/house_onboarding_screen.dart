@@ -576,7 +576,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       return 'Thiết bị đang được xác thực bảo mật. Vui lòng chờ vài giây rồi thử lại.';
     }
     if (_needsEmailVerification(error, message)) {
-      return 'Tài khoản cần xác minh Gmail trước khi tạo thêm ngôi nhà.';
+      return 'Thiết bị này đã tạo trên 3 tài khoản/nhà. Hãy xác minh Gmail hoặc nhập mã để tiếp tục tạo nhà.';
     }
     if (normalized.contains('timeout') ||
         normalized.contains('network') ||
@@ -600,7 +600,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       if (!mounted) return;
       setState(() {
         _autoCreateFailureMessage =
-            'Đã gửi email xác minh tới ${user.email ?? 'Gmail của bạn'}. Hãy xác minh rồi quay lại bấm Thử lại.';
+            'Đã gửi email xác minh tới ${user.email ?? 'Gmail của bạn'}. Xác minh xong hãy quay lại bấm Thử lại để tiếp tục tạo nhà.';
         _autoCreateFailureDetail = null;
       });
     } catch (error) {
@@ -660,7 +660,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tài khoản này đã tạo hơn 5 nhà. Nhập mã xác nhận gửi về ${gate.maskedEmail.isNotEmpty ? gate.maskedEmail : email} để tiếp tục tạo nhà.',
+                  'Thiết bị này đã tạo trên 3 tài khoản/nhà. Nhập mã xác nhận gửi về ${gate.maskedEmail.isNotEmpty ? gate.maskedEmail : email} để tiếp tục tạo nhà.',
                   style: SLTheme.quicksand(
                     color: SLColors.textSecondary,
                     fontWeight: FontWeight.w700,
