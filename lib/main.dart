@@ -224,6 +224,7 @@ void main() {
     try {
       await _verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
+      await _requestIosTrackingAuthorization();
 
       if (!kIsWeb) {
         FirebaseMessaging.onBackgroundMessage(
