@@ -721,15 +721,9 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                           fit: BoxFit.cover,
                           filterQuality: FilterQuality.medium,
                           gaplessPlayback: true,
-                          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                            if (wasSynchronouslyLoaded) return child;
-                            return AnimatedOpacity(
-                              opacity: frame == null ? 0 : 1,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOut,
-                              child: child,
-                            );
-                          },
+                          frameBuilder:
+                              (context, child, frame, wasSynchronouslyLoaded) =>
+                                  child,
                           errorBuilder: (context, error, stackTrace) {
                             final retries = _retryCount[photoId] ?? 0;
                             if (retries < 2) {
