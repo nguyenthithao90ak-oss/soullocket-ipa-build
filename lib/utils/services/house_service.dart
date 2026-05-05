@@ -10,6 +10,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../services/device_manager_service.dart';
 import '../../services/single_match_service.dart';
 
 class HouseCreationOtpRequiredException implements Exception {
@@ -49,7 +50,18 @@ class HouseService {
   }
 
   firebase_auth.User? get currentUser => _auth.currentUser;
-  bool get _allowLegacyDirectCreateFallback => false;
+  bool get _allowLegacyDirectCreateFallback => kDebugMode;
+
+  Future<String> _safeCurrentDeviceId() async {
+    try {
+      final deviceId =
+          await DeviceManagerService().getCurrentDeviceIdentifier();
+      return deviceId.trim();
+    } catch (error) {
+      debugPrint('[HouseService] deviceId unavailable: $error');
+      return '';
+    }
+  }
 
   Future<void> _refreshCallableSecurityContext({bool force = false}) async {
     var user = _auth.currentUser;
@@ -195,6 +207,7 @@ class HouseService {
     final normalizedRecoveryAnswer = (recoveryAnswer ?? '').trim();
     final normalizedCreatedWith =
         createdWith.trim().isNotEmpty ? createdWith.trim() : 'email';
+    final deviceId = await _safeCurrentDeviceId();
 
     Future<String> createDirectFallback() {
       return _createHouseDirectly(
@@ -221,6 +234,7 @@ class HouseService {
         'recoveryQuestion': normalizedRecoveryQuestion,
         'recoveryAnswer': normalizedRecoveryAnswer,
         'createdWith': normalizedCreatedWith,
+        if (deviceId.isNotEmpty) 'deviceId': deviceId,
       }).timeout(const Duration(seconds: 12), onTimeout: () {
         throw TimeoutException('createHouseSecureAdminDebug timed out');
       });
@@ -243,6 +257,7 @@ class HouseService {
         'recoveryQuestion': normalizedRecoveryQuestion,
         'recoveryAnswer': normalizedRecoveryAnswer,
         'createdWith': normalizedCreatedWith,
+        if (deviceId.isNotEmpty) 'deviceId': deviceId,
         if ((otp ?? '').trim().isNotEmpty) 'otp': otp!.trim(),
       });
       debugPrint('[HouseService] createHouseSecure success');
