@@ -18,7 +18,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
 
     _firstSetupGuidePrompting = true;
     try {
-      await Future.delayed(const Duration(milliseconds: 450));
+      if (!mounted || !_isTabActive) return;
+      await WidgetsBinding.instance.endOfFrame;
       if (!mounted || !_isTabActive) return;
       await _showFirstSetupGuideDialog(houseId: houseId);
     } finally {
