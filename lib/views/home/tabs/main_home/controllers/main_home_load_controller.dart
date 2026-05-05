@@ -723,6 +723,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 _showWeather = nextShowWeather;
                 _isLoading = false;
               });
+              unawaited(_maybeShowFirstSetupGuide());
               _warmHomeMedia();
             } else if (visibilityPrefsChanged && mounted) {
               if (isStale()) return;
@@ -733,6 +734,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
             } else if (_isLoading && mounted) {
               if (isStale()) return;
               setState(() => _isLoading = false);
+              unawaited(_maybeShowFirstSetupGuide());
             }
 
             if (visibilityPrefsChanged) {
