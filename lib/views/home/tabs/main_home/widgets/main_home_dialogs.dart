@@ -3,6 +3,140 @@
 part of '../../main_home_tab.dart';
 
 extension _MainHomeTabDialogs on _MainHomeTabState {
+  Future<void> _maybeShowFirstSetupGuide() async {
+    final houseId = _houseId?.trim() ?? '';
+    if (houseId.isEmpty || _firstSetupGuidePrompting || !_isTabActive) return;
+
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    final pendingKey = '$_firstSetupGuidePendingPrefsPrefix$houseId';
+    final seenKey = '$_firstSetupGuideSeenPrefsPrefix$houseId';
+    final isPending = (prefs.getString(pendingKey) ?? '').trim() == '1';
+    final isSeen = (prefs.getString(seenKey) ?? '').trim() == '1' ||
+        (prefs.getBool(seenKey) ?? false);
+    if (!isPending || isSeen || !mounted) return;
+
+    _firstSetupGuidePrompting = true;
+    try {
+      await Future.delayed(const Duration(milliseconds: 450));
+      if (!mounted || !_isTabActive) return;
+      await _showFirstSetupGuideDialog(houseId: houseId);
+    } finally {
+      _firstSetupGuidePrompting = false;
+    }
+  }
+
+  Future<void> _markFirstSetupGuideSeen(String houseId) async {
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    await prefs.setString('$_firstSetupGuideSeenPrefsPrefix$houseId', '1');
+    await prefs.remove('$_firstSetupGuidePendingPrefsPrefix$houseId');
+  }
+
+  Future<void> _showFirstSetupGuideDialog({required String houseId}) async {
+    await showDialog<void>(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
+          title: Text(
+            'Hướng dẫn nhanh',
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w900,
+              color: SLTheme.primary,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 108,
+                  height: 108,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: SLTheme.primary.withOpacity(0.08),
+                    border: Border.all(
+                      color: SLTheme.primary.withOpacity(0.35),
+                      width: 2,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '520\nngày yêu',
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontWeight: FontWeight.w900,
+                        color: SLTheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Vòng đếm ngày trên màn hình chính là nơi hiển thị số ngày bên nhau.',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  color: SLColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Bấm vào số ngày để chỉnh ngày bắt đầu. Bấm chữ phía trên hoặc phía dưới để đổi “bên nhau”, “ngày yêu”.',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  color: SLColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Tên hai bạn có thể đổi bằng cách bấm vào avatar/tên trên màn hình chính hoặc vào Cài đặt.',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  color: SLColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await _markFirstSetupGuideSeen(houseId);
+                if (Navigator.of(dialogContext).canPop()) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+              child: Text(
+                'Đã hiểu',
+                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+              ),
+            ),
+            FilledButton(
+              onPressed: () async {
+                await _markFirstSetupGuideSeen(houseId);
+                if (Navigator.of(dialogContext).canPop()) {
+                  Navigator.of(dialogContext).pop();
+                }
+                if (mounted) {
+                  _showCountdownQuickCustomizeSheet();
+                }
+              },
+              child: Text(
+                'Thử chỉnh',
+                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   String _shortErrorMessage(dynamic error, String fallbackMessage) {
     if (kDebugMode) {
       final rawMessage = AppErrorMapper.cleanMessage(error);
