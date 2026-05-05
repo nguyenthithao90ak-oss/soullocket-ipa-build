@@ -258,255 +258,314 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     final screenWidth = mediaQuery.size.width;
     final screenHeight = mediaQuery.size.height;
     final compact = SLResponsive.isCompactWidth(screenWidth);
-    final contentHorizontalPadding = compact ? 14.0 : 16.0;
-    final friendsListHeight = compact ? 122.0 : 132.0;
-    final externalListHeight = compact ? 84.0 : 90.0;
+    final textScaler = SLResponsive.textScalerFor(context);
+    final contentHorizontalPadding = SLResponsive.dp(
+      compact ? 14.0 : 16.0,
+      screenWidth,
+      min: 0.92,
+      max: 1.08,
+    );
+    final friendsListHeight = SLResponsive.dp(
+      compact ? 122.0 : 132.0,
+      screenWidth,
+      min: 0.92,
+      max: 1.08,
+    );
+    final externalListHeight = SLResponsive.dp(
+      compact ? 84.0 : 90.0,
+      screenWidth,
+      min: 0.92,
+      max: 1.08,
+    );
 
     final sheetHeight = (screenHeight * 0.86).clamp(320.0, screenHeight);
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
-        child: SizedBox(
-          height: sheetHeight,
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: SLRadius.smAll,
+    return MediaQuery(
+      data: mediaQuery.copyWith(textScaler: textScaler),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
+          child: SizedBox(
+            height: sheetHeight,
+            child: Column(
+              children: [
+                Container(
+                  margin: EdgeInsets.symmetric(
+                    vertical: SLResponsive.dp(12, screenWidth),
+                  ),
+                  width: SLResponsive.dp(40, screenWidth),
+                  height: SLResponsive.dp(5, screenWidth, min: 0.9, max: 1.0),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: SLRadius.smAll,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        contentHorizontalPadding,
-                        2,
-                        contentHorizontalPadding,
-                        10,
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          contentHorizontalPadding,
+                          2,
+                          contentHorizontalPadding,
+                          SLResponsive.dp(10, screenWidth),
+                        ),
+                        child: _buildSharePreviewCard(
+                          compact: compact,
+                          screenWidth: screenWidth,
+                        ),
                       ),
-                      child: _buildSharePreviewCard(compact: compact),
-                    ),
-                    if (widget.loadInAppTargets) ...[
+                      if (widget.loadInAppTargets) ...[
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: contentHorizontalPadding,
+                            vertical: SLResponsive.dp(8, screenWidth),
+                          ),
+                          child: _buildSectionHeader(
+                            title: 'Gửi đến',
+                            subtitle: 'Bạn bè trò chuyện gần đây',
+                            compact: compact,
+                            screenWidth: screenWidth,
+                          ),
+                        ),
+                        if (_isLoading)
+                          SizedBox(
+                            height: friendsListHeight,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: SLResponsive.dp(
+                                  compact ? 16 : 18,
+                                  screenWidth,
+                                ),
+                              ),
+                              itemCount: 4,
+                              separatorBuilder: (_, __) => SizedBox(
+                                width: SLResponsive.dp(12, screenWidth),
+                              ),
+                              itemBuilder: (ctx, i) {
+                                return Column(
+                                  children: [
+                                    Container(
+                                      width: SLResponsive.dp(
+                                        compact ? 52 : 56,
+                                        screenWidth,
+                                      ),
+                                      height: SLResponsive.dp(
+                                        compact ? 52 : 56,
+                                        screenWidth,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: SLResponsive.dp(8, screenWidth),
+                                    ),
+                                    Container(
+                                      width: SLResponsive.dp(
+                                        compact ? 48 : 52,
+                                        screenWidth,
+                                      ),
+                                      height: SLResponsive.dp(10, screenWidth),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          )
+                        else if (_friends.isEmpty)
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              contentHorizontalPadding,
+                              SLResponsive.dp(6, screenWidth),
+                              contentHorizontalPadding,
+                              SLResponsive.dp(12, screenWidth),
+                            ),
+                            child: _buildEmptyStateCard(
+                              compact: compact,
+                              icon: Icons.people_alt_rounded,
+                              title: 'Chưa có bạn bè để chia sẻ',
+                              subtitle:
+                                  'Khi có cuộc trò chuyện phù hợp, mục này sẽ hiện ngay ở đây.',
+                              screenWidth: screenWidth,
+                            ),
+                          )
+                        else
+                          SizedBox(
+                            height: friendsListHeight,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: SLResponsive.dp(
+                                  compact ? 10 : 12,
+                                  screenWidth,
+                                ),
+                              ),
+                              itemCount: _friends.length,
+                              itemBuilder: (ctx, i) {
+                                final f = _friends[i];
+                                final isSending = _sendingTargetIds
+                                    .contains('friend:${f['id']}');
+                                return _buildShareTargetBlock(
+                                  compact: compact,
+                                  label: f['name'].toString(),
+                                  avatarUrl: f['avatar'].toString(),
+                                  icon: Icons.home_rounded,
+                                  accentColor: const Color(0xFFD81B60),
+                                  isSending: isSending,
+                                  onTap: isSending
+                                      ? null
+                                      : () => _sendToFriend(f['id']),
+                                  screenWidth: screenWidth,
+                                );
+                              },
+                            ),
+                          ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: contentHorizontalPadding,
+                            vertical: SLResponsive.dp(4, screenWidth),
+                          ),
+                          child: const Divider(
+                            height: 1,
+                            color: Color(0xFFF1F5F9),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: contentHorizontalPadding,
+                            vertical: SLResponsive.dp(8, screenWidth),
+                          ),
+                          child: _buildSectionHeader(
+                            title: 'Gửi vào nhóm',
+                            subtitle: 'Nhóm bạn vẫn còn là thành viên',
+                            compact: compact,
+                            screenWidth: screenWidth,
+                          ),
+                        ),
+                        if (_groups.isEmpty)
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              contentHorizontalPadding,
+                              SLResponsive.dp(6, screenWidth),
+                              contentHorizontalPadding,
+                              SLResponsive.dp(12, screenWidth),
+                            ),
+                            child: _buildEmptyStateCard(
+                              compact: compact,
+                              icon: Icons.groups_rounded,
+                              title: 'Chưa có nhóm phù hợp để chia sẻ',
+                              subtitle:
+                                  'Chỉ các nhóm còn quyền tham gia mới xuất hiện trong danh sách này.',
+                              screenWidth: screenWidth,
+                            ),
+                          )
+                        else
+                          SizedBox(
+                            height: friendsListHeight,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: SLResponsive.dp(
+                                  compact ? 10 : 12,
+                                  screenWidth,
+                                ),
+                              ),
+                              itemCount: _groups.length,
+                              itemBuilder: (ctx, i) {
+                                final group = _groups[i];
+                                final isSending = _sendingTargetIds
+                                    .contains('group:${group.id}');
+                                return _buildShareTargetBlock(
+                                  compact: compact,
+                                  label: group.name,
+                                  avatarUrl: '',
+                                  icon: Icons.groups_rounded,
+                                  accentColor: const Color(0xFF7C3AED),
+                                  isSending: isSending,
+                                  onTap: isSending
+                                      ? null
+                                      : () => _sendToGroup(group),
+                                  screenWidth: screenWidth,
+                                );
+                              },
+                            ),
+                          ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: contentHorizontalPadding,
+                            vertical: SLResponsive.dp(4, screenWidth),
+                          ),
+                          child: const Divider(
+                            height: 1,
+                            color: Color(0xFFF1F5F9),
+                          ),
+                        ),
+                      ],
                       Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: contentHorizontalPadding,
-                          vertical: 8,
+                          vertical: SLResponsive.dp(8, screenWidth),
                         ),
                         child: _buildSectionHeader(
-                          title: 'Gửi đến',
-                          subtitle: 'Bạn bè trò chuyện gần đây',
+                          title: 'Chia sẻ qua',
+                          subtitle: 'Ứng dụng bên ngoài và sao chép nhanh',
                           compact: compact,
+                          screenWidth: screenWidth,
                         ),
                       ),
-                      if (_isLoading)
-                        SizedBox(
-                          height: friendsListHeight,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: compact ? 16 : 18,
+                      SizedBox(
+                        height: externalListHeight,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: SLResponsive.dp(
+                              compact ? 10 : 12,
+                              screenWidth,
                             ),
-                            itemCount: 4,
-                            separatorBuilder: (_, __) => const SizedBox(width: 12),
-                            itemBuilder: (ctx, i) {
-                              return Column(
-                                children: [
-                                  Container(
-                                    width: compact ? 52 : 56,
-                                    height: compact ? 52 : 56,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[200],
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  SLSpacing.h8,
-                                  Container(
-                                    width: compact ? 48 : 52,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[200],
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
                           ),
-                        )
-                      else if (_friends.isEmpty)
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            contentHorizontalPadding,
-                            6,
-                            contentHorizontalPadding,
-                            12,
-                          ),
-                          child: _buildEmptyStateCard(
-                            compact: compact,
-                            icon: Icons.people_alt_rounded,
-                            title: 'Chưa có bạn bè để chia sẻ',
-                            subtitle:
-                                'Khi có cuộc trò chuyện phù hợp, mục này sẽ hiện ngay ở đây.',
-                          ),
-                        )
-                      else
-                        SizedBox(
-                          height: friendsListHeight,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: compact ? 10 : 12,
+                          children: [
+                            _buildExternalShareItem(
+                              icon: Icons.message_rounded,
+                              label: 'Zalo',
+                              color: const Color(0xFF0068FF),
+                              onTap: _shareToExternal,
+                              compact: compact,
+                              screenWidth: screenWidth,
                             ),
-                            itemCount: _friends.length,
-                            itemBuilder: (ctx, i) {
-                              final f = _friends[i];
-                              final isSending = _sendingTargetIds
-                                  .contains('friend:${f['id']}');
-                              return _buildShareTargetBlock(
-                                compact: compact,
-                                label: f['name'].toString(),
-                                avatarUrl: f['avatar'].toString(),
-                                icon: Icons.home_rounded,
-                                accentColor: const Color(0xFFD81B60),
-                                isSending: isSending,
-                                onTap: isSending
-                                    ? null
-                                    : () => _sendToFriend(f['id']),
-                              );
-                            },
-                          ),
-                        ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: contentHorizontalPadding,
-                          vertical: 4,
-                        ),
-                        child: const Divider(
-                          height: 1,
-                          color: Color(0xFFF1F5F9),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: contentHorizontalPadding,
-                          vertical: 8,
-                        ),
-                        child: _buildSectionHeader(
-                          title: 'Gửi vào nhóm',
-                          subtitle: 'Nhóm bạn vẫn còn là thành viên',
-                          compact: compact,
-                        ),
-                      ),
-                      if (_groups.isEmpty)
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            contentHorizontalPadding,
-                            6,
-                            contentHorizontalPadding,
-                            12,
-                          ),
-                          child: _buildEmptyStateCard(
-                            compact: compact,
-                            icon: Icons.groups_rounded,
-                            title: 'Chưa có nhóm phù hợp để chia sẻ',
-                            subtitle:
-                                'Chỉ các nhóm còn quyền tham gia mới xuất hiện trong danh sách này.',
-                          ),
-                        )
-                      else
-                        SizedBox(
-                          height: friendsListHeight,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: compact ? 10 : 12,
+                            _buildExternalShareItem(
+                              icon: Icons.copy_all_rounded,
+                              label: 'Sao chép',
+                              color: Colors.blueGrey,
+                              onTap: _copyToClipboard,
+                              compact: compact,
+                              screenWidth: screenWidth,
                             ),
-                            itemCount: _groups.length,
-                            itemBuilder: (ctx, i) {
-                              final group = _groups[i];
-                              final isSending = _sendingTargetIds
-                                  .contains('group:${group.id}');
-                              return _buildShareTargetBlock(
-                                compact: compact,
-                                label: group.name,
-                                avatarUrl: '',
-                                icon: Icons.groups_rounded,
-                                accentColor: const Color(0xFF7C3AED),
-                                isSending: isSending,
-                                onTap: isSending
-                                    ? null
-                                    : () => _sendToGroup(group),
-                              );
-                            },
-                          ),
-                        ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: contentHorizontalPadding,
-                          vertical: 4,
-                        ),
-                        child: const Divider(
-                          height: 1,
-                          color: Color(0xFFF1F5F9),
+                            _buildExternalShareItem(
+                              icon: Icons.share_rounded,
+                              label: 'Khác',
+                              color: Colors.grey,
+                              onTap: _shareToExternal,
+                              compact: compact,
+                              screenWidth: screenWidth,
+                            ),
+                          ],
                         ),
                       ),
+                      SizedBox(height: SLResponsive.dp(16, screenWidth)),
                     ],
-
-              // Share external
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: contentHorizontalPadding,
-                  vertical: 8,
+                  ),
                 ),
-                child: _buildSectionHeader(
-                  title: 'Chia sẻ qua',
-                  subtitle: 'Ứng dụng bên ngoài và sao chép nhanh',
-                  compact: compact,
-                ),
-              ),
-              SizedBox(
-                height: externalListHeight,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 12),
-                  children: [
-                    _buildExternalShareItem(
-                      icon: Icons.message_rounded,
-                      label: 'Zalo',
-                      color: const Color(0xFF0068FF),
-                      onTap: _shareToExternal,
-                      compact: compact,
-                    ),
-                    _buildExternalShareItem(
-                      icon: Icons.copy_all_rounded,
-                      label: 'Sao chép',
-                      color: Colors.blueGrey,
-                      onTap: _copyToClipboard,
-                      compact: compact,
-                    ),
-                    _buildExternalShareItem(
-                      icon: Icons.share_rounded,
-                      label: 'Khác',
-                      color: Colors.grey,
-                      onTap: _shareToExternal,
-                      compact: compact,
-                    ),
-                  ],
-                ),
-              ),
-                    SLSpacing.h16,
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
