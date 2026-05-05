@@ -1,4 +1,5 @@
-﻿import 'dart:io';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -70,7 +71,7 @@ class GameDataManager {
           await file.writeAsBytes(response.bodyBytes);
         }
       } catch (e) {
-        print('Error downloading $fileRelativePath: $e');
+        debugPrint('Error downloading $fileRelativePath: $e');
       }
 
       onProgress?.call((i + 1) / files.length);
