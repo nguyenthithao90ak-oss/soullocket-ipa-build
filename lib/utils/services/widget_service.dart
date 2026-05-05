@@ -60,20 +60,16 @@ class WidgetService {
       if (Platform.isIOS) {
         await HomeWidget.setAppGroupId(appGroupId);
       }
-    } catch (e) {
-      debugPrint('Widget setAppGroupId error: $e');
-    }
+      if (!_didBootstrap) {
+        await _seedDefaultWidgetData();
+        await _migrateLegacyStatusPlaceholders();
+        await _normalizeStoredWidgetData();
+        _didBootstrap = true;
+      }
 
-    if (!_didBootstrap) {
-      await _seedDefaultWidgetData();
-      await _migrateLegacyStatusPlaceholders();
-      await _normalizeStoredWidgetData();
-      _didBootstrap = true;
-    }
-
-    if (forceUpdate) {
-      await refreshWidgetShell();
-    }
+      if (forceUpdate) {
+        await refreshWidgetShell();
+      }
     } catch (error, stackTrace) {
       debugPrint('Widget bootstrap error: $error');
       debugPrintStack(stackTrace: stackTrace);
