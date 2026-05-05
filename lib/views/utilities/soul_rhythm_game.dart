@@ -257,12 +257,19 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
 
     _didPrecacheGameIcon = true;
     unawaited(
-      precacheImage(
-        _gameIconProvider(
-          devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-        ),
-        context,
-      ),
+      () async {
+        try {
+          await precacheImage(
+            _gameIconProvider(
+              devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+            ),
+            context,
+          );
+        } catch (error, stackTrace) {
+          debugPrint('Soul Rhythm icon precache failed: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
+      }(),
     );
   }
 
