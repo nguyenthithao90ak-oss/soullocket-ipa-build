@@ -54,7 +54,7 @@ class AuthAdminService {
       final snapshot = await _db
           .child(AppConfig.maintenanceModePath)
           .get()
-          .timeout(const Duration(seconds: 7));
+          .timeout(const Duration(seconds: 2));
       if (snapshot.exists) {
         return snapshot.value == true;
       }
@@ -62,7 +62,7 @@ class AuthAdminService {
       final legacySnapshot = await _db
           .child(AppConfig.legacyMaintenanceModePath)
           .get()
-          .timeout(const Duration(seconds: 7));
+          .timeout(const Duration(seconds: 2));
       return legacySnapshot.value == true;
     } catch (_) {
       return false;
@@ -95,7 +95,7 @@ class AuthAdminService {
       final bannedSnapshot = await _db
           .child('banned_users/${normalizeEmailKey(normalizedEmail)}')
           .get()
-          .timeout(const Duration(seconds: 7));
+          .timeout(const Duration(seconds: 2));
       if (bannedSnapshot.exists && !isAdmin) {
         return 'Tài khoản này đã bị khóa truy cập. Vui lòng liên hệ quản trị viên.';
       }
