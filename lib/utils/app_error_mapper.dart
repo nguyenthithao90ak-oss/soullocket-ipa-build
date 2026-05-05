@@ -313,11 +313,15 @@ class AppErrorMapper {
 
   static String _normalizeUserMessage(String message) {
     final normalized = message.toLowerCase();
-    if (normalized.contains('unauthenticated') ||
-        normalized.contains('requires-recent-login') ||
-        normalized.contains('phiên đăng nhập') ||
+    if (normalized.contains('unauthenticated')) {
+      return authSyncMessage;
+    }
+    if (normalized.contains('requires-recent-login')) {
+      return recentLoginMessage;
+    }
+    if (normalized.contains('phiên đăng nhập') ||
         normalized.contains('đăng nhập để tạo liên kết')) {
-      return 'Đã lâu bạn chưa ghé, đăng nhập lại để tiếp tục viết tiếp chuyện tình mình nhé! 👋';
+      return recentLoginMessage;
     }
     if (message.isEmpty) {
       return 'Thông tin bạn nhập chưa hợp lệ. Vui lòng kiểm tra lại.';
