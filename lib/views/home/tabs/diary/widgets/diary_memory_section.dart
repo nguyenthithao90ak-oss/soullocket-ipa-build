@@ -77,7 +77,7 @@ class DiaryMemorySection extends StatefulWidget {
 }
 
 class _DiaryMemorySectionState extends State<DiaryMemorySection> {
-  static const int _thumbnailWarmupCount = 36;
+  static const int _thumbnailWarmupCount = 18;
   PreparedDiaryMemoryFeed? _lastPreparedFeed;
   String _thumbnailWarmupSignature = '';
   bool _isUploadingMemory = false;
