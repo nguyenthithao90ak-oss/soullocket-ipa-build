@@ -74,9 +74,10 @@ class WidgetService {
     if (forceUpdate) {
       await refreshWidgetShell();
     }
-  } catch (error, stackTrace) {
-    debugPrint('Widget bootstrap error: $error');
-    debugPrintStack(stackTrace: stackTrace);
+    } catch (error, stackTrace) {
+      debugPrint('Widget bootstrap error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   static Future<void> requestPinWidget() async {
