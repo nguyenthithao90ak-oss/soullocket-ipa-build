@@ -9,13 +9,32 @@ class OfflineCacheService {
   static final OfflineCacheService instance = OfflineCacheService._internal();
   static Database? _database;
   static SharedPreferences? _cachedPrefs;
+  static Future<void>? _initializingPrefs;
 
   OfflineCacheService._internal();
 
   static SharedPreferences? getPrefsSync() => _cachedPrefs;
 
   static Future<void> initialize() async {
-    _cachedPrefs = await SharedPreferences.getInstance();
+    if (_cachedPrefs != null) {
+      return;
+    }
+    if (_initializingPrefs != null) {
+      await _initializingPrefs;
+      return;
+    }
+
+    final task = SharedPreferences.getInstance().then((prefs) {
+      _cachedPrefs = prefs;
+    });
+    _initializingPrefs = task;
+    try {
+      await task;
+    } finally {
+      if (identical(_initializingPrefs, task)) {
+        _initializingPrefs = null;
+      }
+    }
   }
 
   Future<Database> get database async {
