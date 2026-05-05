@@ -847,26 +847,6 @@ class _DiaryTabState extends State<DiaryTab> {
                           ),
                         ),
                         PopupMenuItem<String>(
-                          value: 'link',
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.link_rounded,
-                                color: Colors.white,
-                                size: 19,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Tạo liên kết',
-                                style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem<String>(
                           value: 'info',
                           child: Row(
                             children: [
@@ -915,9 +895,6 @@ class _DiaryTabState extends State<DiaryTab> {
                           case 'share':
                             Navigator.pop(dialogContext);
                             await _shareSingleMemory(currentItem);
-                            break;
-                          case 'link':
-                            await _copyMemoryImageLink(currentItem['url']);
                             break;
                           case 'info':
                             await _showMemoryInfoSheet(
