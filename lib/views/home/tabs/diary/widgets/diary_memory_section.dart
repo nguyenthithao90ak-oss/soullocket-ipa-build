@@ -136,6 +136,9 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
             _DiaryMemoryImageProviders.thumbnail(
                 url, widget.thumbnailCacheWidth),
             context,
+            onError: (error, stackTrace) {
+              debugPrint('[DiaryMemory] thumbnail warmup failed: $error');
+            },
           ),
         );
       }
