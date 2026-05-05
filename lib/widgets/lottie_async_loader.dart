@@ -34,8 +34,7 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
   @override
   void initState() {
     super.initState();
-    // Delay loading to ensure the widget is rendered first.
-    Future.delayed(widget.loadDelay, () {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         setState(() => _shouldLoad = true);
       }
