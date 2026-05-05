@@ -595,14 +595,29 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
         expiresAt <= DateTime.now().millisecondsSinceEpoch + 60000;
   }
 
-  String _resolvePhotoUrl(Map<String, dynamic> photo) {
-    final url = photo['url']?.toString().trim() ?? '';
-    if (url.isNotEmpty) return url;
-    final downloadUrl = photo['downloadUrl']?.toString().trim() ?? '';
-    if (downloadUrl.isNotEmpty) return downloadUrl;
+  bool _isLikelyTemporarySignedUrl(String url) {
+    return url.contains('X-Goog-Expires=') || url.contains('X-Goog-Signature=');
+  }
+
+  String _stableFallbackPhotoUrl(Map<String, dynamic> photo) {
+    final resolvedUrl = photo['resolvedUrl']?.toString().trim() ?? '';
+    if (resolvedUrl.isNotEmpty) return resolvedUrl;
+    final thumbUrl = photo['thumbUrl']?.toString().trim() ?? '';
+    if (thumbUrl.isNotEmpty) return thumbUrl;
     final previewUrl = photo['previewUrl']?.toString().trim() ?? '';
     if (previewUrl.isNotEmpty) return previewUrl;
-    return photo['thumbUrl']?.toString().trim() ?? '';
+    return photo['downloadUrl']?.toString().trim() ?? '';
+  }
+
+  String _resolvePhotoUrl(Map<String, dynamic> photo) {
+    final fallbackUrl = _stableFallbackPhotoUrl(photo);
+    final url = photo['url']?.toString().trim() ?? '';
+    if (fallbackUrl.isNotEmpty &&
+        (_needsSignedRefresh(photo) || _isLikelyTemporarySignedUrl(url))) {
+      return fallbackUrl;
+    }
+    if (url.isNotEmpty) return url;
+    return fallbackUrl;
   }
 
   @override
