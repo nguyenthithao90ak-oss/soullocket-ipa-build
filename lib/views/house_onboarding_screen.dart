@@ -613,13 +613,14 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     } catch (e) {
       if (!mounted) return;
       if (widget.autoCreateOnly) {
-        setState(() {
-          _autoCreateFailureMessage = AppErrorMapper.resolve(
+        _setAutoCreateFailureMessage(
+          AppErrorMapper.resolve(
             e,
             fallbackMessage:
                 'Không tạo được ngôi nhà: hãy kiểm tra trạng thái đăng nhập và kết nối mạng.',
-          ).message;
-        });
+          ).message,
+          error: e,
+        );
         return;
       }
       _showError(
