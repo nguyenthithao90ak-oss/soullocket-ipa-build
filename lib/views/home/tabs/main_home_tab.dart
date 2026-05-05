@@ -1,22 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
-import 'package:http/http.dart' as http;
-import 'package:image_cropper/image_cropper.dart';
-import '../../../services/house_service.dart';
-import '../../../services/home_startup_media_cache.dart';
-import '../../../services/love_insight_service.dart';
-import '../../../services/location_service.dart';
-import '../../../services/l10n_service.dart';
-import '../../../services/military_lock_service.dart';
-import '../../../services/presence_service.dart';
 import '../../../services/utility_service.dart';
 import '../../../services/house_settings_service.dart';
 import '../../../services/album_service.dart';
