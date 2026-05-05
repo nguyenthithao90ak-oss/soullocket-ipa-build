@@ -588,54 +588,68 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
   }
 
   Future<void> _initAudio() async {
-    await UiPrefs.ensureLoaded();
-    await _bgPlayer.setReleaseMode(ReleaseMode.loop);
-    await _bgPlayer.setVolume(0.34);
-    _menuLoopBytes = _buildWaveBytes(
-      _trackConfig.menuSteps.map(_toneFromSpec).toList(),
-      masterGain: _trackConfig.menuGain,
-    );
-    _gameLoopBytes = _buildWaveBytes(
-      _trackConfig.gameSteps.map(_toneFromSpec).toList(),
-      masterGain: _trackConfig.gameGain,
-    );
-    _customTrackBytes = null;
-    _useCustomTrackAsset = false;
-    _tapBytes = _buildWaveBytes(
-      [
-        _tone(88, 24, 0.92),
-        _tone(83, 34, 0.74),
-      ],
-      masterGain: 0.90,
-    );
-    _perfectTapBytes = _buildWaveBytes(
-      [
-        _tone(88, 24, 1.00),
-        _tone(95, 34, 0.94),
-        _tone(100, 54, 0.82),
-      ],
-      masterGain: 0.98,
-    );
-    _missBytes = _buildWaveBytes(
-      [
-        _tone(65, 70, 0.72),
-        _tone(53, 92, 0.56),
-      ],
-      masterGain: 0.82,
-    );
-    _selectBytes = _buildWaveBytes(
-      [
-        _tone(79, 54, 0.78),
-        _tone(84, 74, 0.72),
-      ],
-      masterGain: 0.86,
-    );
-    _audioReady = true;
-    for (final player in _sfxPlayers) {
-      unawaited(player.setReleaseMode(ReleaseMode.stop));
+    try {
+      await UiPrefs.ensureLoaded();
+      await _bgPlayer.setReleaseMode(ReleaseMode.loop);
+      await _bgPlayer.setVolume(0.34);
+      _menuLoopBytes = _buildWaveBytes(
+        _trackConfig.menuSteps.map(_toneFromSpec).toList(),
+        masterGain: _trackConfig.menuGain,
+      );
+      _gameLoopBytes = _buildWaveBytes(
+        _trackConfig.gameSteps.map(_toneFromSpec).toList(),
+        masterGain: _trackConfig.gameGain,
+      );
+      _customTrackBytes = null;
+      _useCustomTrackAsset = false;
+      _tapBytes = _buildWaveBytes(
+        [
+          _tone(88, 24, 0.92),
+          _tone(83, 34, 0.74),
+        ],
+        masterGain: 0.90,
+      );
+      _perfectTapBytes = _buildWaveBytes(
+        [
+          _tone(88, 24, 1.00),
+          _tone(95, 34, 0.94),
+          _tone(100, 54, 0.82),
+        ],
+        masterGain: 0.98,
+      );
+      _missBytes = _buildWaveBytes(
+        [
+          _tone(65, 70, 0.72),
+          _tone(53, 92, 0.56),
+        ],
+        masterGain: 0.82,
+      );
+      _selectBytes = _buildWaveBytes(
+        [
+          _tone(79, 54, 0.78),
+          _tone(84, 74, 0.72),
+        ],
+        masterGain: 0.86,
+      );
+      _audioReady = true;
+      for (final player in _sfxPlayers) {
+        unawaited(player.setReleaseMode(ReleaseMode.stop));
+      }
+      _handleUiPrefsChanged();
+      await _syncBackgroundTrack(force: true);
+    } catch (error, stackTrace) {
+      debugPrint('Soul Rhythm audio init failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      _audioReady = false;
+      _customTrackBytes = null;
+      _useCustomTrackAsset = false;
+      _menuLoopBytes = _menuLoopBytes ?? Uint8List(0);
+      _gameLoopBytes = _gameLoopBytes ?? Uint8List(0);
+      _tapBytes = _tapBytes ?? Uint8List(0);
+      _perfectTapBytes = _perfectTapBytes ?? Uint8List(0);
+      _missBytes = _missBytes ?? Uint8List(0);
+      _selectBytes = _selectBytes ?? Uint8List(0);
     }
-    _handleUiPrefsChanged();
-    await _syncBackgroundTrack(force: true);
   }
 
   void _handleUiPrefsChanged() {
