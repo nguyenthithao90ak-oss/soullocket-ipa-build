@@ -195,7 +195,7 @@ class StorageService {
       return await _auth
           .authStateChanges()
           .firstWhere((user) => user != null)
-          .timeout(const Duration(seconds: 2));
+          .timeout(const Duration(seconds: 6));
     } catch (_) {
       return _auth.currentUser;
     }
