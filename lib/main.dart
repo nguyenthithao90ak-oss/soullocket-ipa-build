@@ -37,6 +37,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     if (Firebase.apps.isEmpty) {
       await _initializeFirebaseBootstrap();
     }
+    await FirebaseDatabase.instance.setPersistenceEnabled(true);
   } catch (error, stackTrace) {
     debugPrint('FCM background bootstrap error: $error');
     debugPrintStack(stackTrace: stackTrace);
