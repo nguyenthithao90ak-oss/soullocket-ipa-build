@@ -185,10 +185,17 @@ class AppErrorMapper {
     final code = error.code.toLowerCase();
     final message = cleanMessage(error.message);
 
-    if (code == 'unauthenticated' || code == 'requires-recent-login') {
+    if (code == 'requires-recent-login') {
       return const AppErrorInfo(
         kind: AppErrorKind.user,
-        message: 'Đã lâu bạn chưa ghé, đăng nhập lại để tiếp tục viết tiếp chuyện tình mình nhé! 👋',
+        message: recentLoginMessage,
+      );
+    }
+
+    if (code == 'unauthenticated') {
+      return const AppErrorInfo(
+        kind: AppErrorKind.network,
+        message: authSyncMessage,
       );
     }
 
