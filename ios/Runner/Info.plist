@@ -269,8 +269,6 @@
 	<string>Ứng dụng cần quyền thêm ảnh vào thư viện để lưu ảnh kỷ niệm, ảnh ghép và nội dung bạn tạo từ ứng dụng về máy.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh hoặc video cho hồ sơ, bài đăng, nhật ký, ảnh ghép và các kỷ niệm trong ứng dụng.</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>Ứng dụng sử dụng dữ liệu này để cá nhân hóa quảng cáo và cải thiện trải nghiệm của bạn.</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>
