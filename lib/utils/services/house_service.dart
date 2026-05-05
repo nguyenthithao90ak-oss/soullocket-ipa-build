@@ -258,6 +258,8 @@ class HouseService {
         'recoveryAnswer': normalizedRecoveryAnswer,
         'createdWith': normalizedCreatedWith,
         if (deviceId.isNotEmpty) 'deviceId': deviceId,
+        if (deviceModel.isNotEmpty) 'model': deviceModel,
+        if (devicePlatform.isNotEmpty) 'platform': devicePlatform,
       }).timeout(const Duration(seconds: 12), onTimeout: () {
         throw TimeoutException('createHouseSecureAdminDebug timed out');
       });
