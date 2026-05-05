@@ -20,6 +20,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
   List<ActivityHistoryEntry> _list = [];
   bool _isLoading = true;
   bool _isRefreshing = false;
+  String? _restoringEntryId;
 
   @override
   void initState() {
@@ -86,12 +87,25 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
   }
 
   Future<void> _restore(ActivityHistoryEntry entry) async {
+    final entryId = entry.id.trim();
+    if (entryId.isEmpty || _restoringEntryId == entryId) {
+      return;
+    }
+    setState(() {
+      _restoringEntryId = entryId;
+    });
     final ok = await _svc.restoreEntry(entry);
     if (!mounted) return;
+    setState(() {
+      _restoringEntryId = null;
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content:
-            Text(ok ? 'Đã khôi phục mục này.' : 'Không thể khôi phục mục này.'),
+        content: Text(
+          ok
+              ? 'Đã khôi phục mục này.'
+              : 'Không thể khôi phục mục này hoặc mục đã quá hạn.',
+        ),
       ),
     );
     if (ok) {
@@ -194,6 +208,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                         final source = entry.effectiveSourceLabel;
                         final expired = entry.isRestoreExpired;
                         final canRestore = entry.canRestore;
+                        final isRestoring = _restoringEntryId == entry.id;
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 10),
@@ -322,9 +337,10 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                               ),
                               if (canRestore)
                                 TextButton(
-                                  onPressed: () => _restore(entry),
+                                  onPressed:
+                                      isRestoring ? null : () => _restore(entry),
                                   child: Text(
-                                    'Khôi phục',
+                                    isRestoring ? 'Đang khôi phục...' : 'Khôi phục',
                                     style: SLTheme.quicksand(
                                       fontWeight: FontWeight.w800,
                                       color: const Color(0xFFD81B60),
