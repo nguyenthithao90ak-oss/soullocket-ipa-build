@@ -598,7 +598,8 @@ class HouseService {
         'createdAt': nowMs,
         'updatedAt': nowMs,
         'settings': {
-          'theme': 'theme-pink-glow',
+          'theme': 'theme-auto',
+          'countdownSizePx': 500,
           'startDate': startDate,
           'font': "'Quicksand', sans-serif",
           'privacy': 'public',
