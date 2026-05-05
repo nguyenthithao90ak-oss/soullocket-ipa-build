@@ -233,8 +233,8 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
               child: Column(
                 children: <Widget>[
-                  Row(
-                    children: <Widget>[
+                   Row(
+                     children: <Widget>[
                       Expanded(
                         child: Row(
                           children: List<Widget>.generate(
@@ -335,10 +335,8 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                         icon: Icons.chevron_right_rounded,
                         onTap: _showNext,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  _buildVideoControls(accent),
+                   ],
+                 ),
                   const SizedBox(height: 18),
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -391,8 +389,16 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildQualitySelector(accent),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _buildControlChip(
+                      icon: Icons.tune_rounded,
+                      label: 'Cài đặt video',
+                      onTap: () => _showVideoSettingsSheet(accent),
+                      accent: accent,
+                    ),
+                  ),
                 ],
               ),
             ),
