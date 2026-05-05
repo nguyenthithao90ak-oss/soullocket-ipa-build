@@ -292,6 +292,10 @@ class AppEntryController {
       'record app open metric on resume',
       () => _recordAppOpenMetric(),
     );
+    await _runGuarded(
+      'refresh widget shell on resume',
+      () => WidgetService.refreshWidgetShell(),
+    );
     await _adMobService.resumeAutoInterstitialScheduler();
     _lastPausedAt = null;
     return AppEntryResumeResult(authState: authState);
