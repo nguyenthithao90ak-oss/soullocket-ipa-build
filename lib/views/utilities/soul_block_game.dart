@@ -1011,17 +1011,14 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         <Point<int>>[
           const Point<int>(2, 2),
           const Point<int>(3, 2),
-          const Point<int>(2, 3),
         ],
         <Point<int>>[
           const Point<int>(5, 2),
           const Point<int>(5, 3),
-          const Point<int>(5, 4),
         ],
         <Point<int>>[
           const Point<int>(2, 5),
           const Point<int>(3, 5),
-          const Point<int>(4, 5),
         ],
       ],
       <List<Point<int>>>[
@@ -1029,17 +1026,14 @@ class _SoulBlockGameState extends State<SoulBlockGame>
           const Point<int>(1, 1),
           const Point<int>(2, 1),
           const Point<int>(1, 2),
-          const Point<int>(2, 2),
         ],
         <Point<int>>[
           const Point<int>(5, 1),
           const Point<int>(5, 2),
-          const Point<int>(6, 2),
         ],
         <Point<int>>[
           const Point<int>(3, 5),
           const Point<int>(4, 5),
-          const Point<int>(5, 5),
           const Point<int>(4, 6),
         ],
       ],
@@ -1048,53 +1042,44 @@ class _SoulBlockGameState extends State<SoulBlockGame>
           const Point<int>(3, 1),
           const Point<int>(4, 1),
           const Point<int>(3, 2),
-          const Point<int>(4, 2),
         ],
         <Point<int>>[
           const Point<int>(1, 4),
           const Point<int>(2, 4),
-          const Point<int>(3, 4),
         ],
         <Point<int>>[
           const Point<int>(5, 4),
           const Point<int>(5, 5),
-          const Point<int>(5, 6),
         ],
       ],
       <List<Point<int>>>[
         <Point<int>>[
           const Point<int>(1, 2),
           const Point<int>(2, 2),
-          const Point<int>(3, 2),
         ],
         <Point<int>>[
           const Point<int>(4, 4),
           const Point<int>(5, 4),
           const Point<int>(4, 5),
-          const Point<int>(5, 5),
         ],
         <Point<int>>[
           const Point<int>(2, 6),
           const Point<int>(3, 6),
-          const Point<int>(4, 6),
         ],
       ],
       <List<Point<int>>>[
         <Point<int>>[
           const Point<int>(2, 1),
           const Point<int>(2, 2),
-          const Point<int>(2, 3),
         ],
         <Point<int>>[
           const Point<int>(4, 2),
           const Point<int>(5, 2),
-          const Point<int>(6, 2),
           const Point<int>(5, 3),
         ],
         <Point<int>>[
           const Point<int>(3, 5),
           const Point<int>(4, 5),
-          const Point<int>(4, 6),
         ],
       ],
     ];
