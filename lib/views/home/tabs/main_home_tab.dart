@@ -1,26 +1,3 @@
-import '../../utilities/diary_export_screen.dart';
-import '../../utilities/history_screen.dart';
-import '../../utilities/tarot_screen.dart';
-import '../../utilities/utility_sticker_icon.dart';
-import '../../utilities/utilities_config.dart';
-import '../../utilities/voice_screen.dart';
-import '../../utilities/wheel_screen.dart';
-import '../../utilities/wishlist_screen.dart';
-import '../../../utils/zodiac_utils.dart';
-import '../../../services/widget_service.dart';
-import '../../../services/daily_quest_service.dart';
-import '../../../utils/app_error_mapper.dart';
-import '../../../widgets/legacy_web_ui.dart';
-
-import 'package:soullocket_app/views/home/love_insights_screen.dart';
-import '../screens/global_search_screen.dart';
-import 'dart:ui' as ui;
-
-import '../../../widgets/lottie_async_loader.dart';
-
-part 'main_home/widgets/main_home_dialogs.dart';
-part '../widgets/main_home/main_home_hero_section.dart';
-part 'main_home/widgets/main_home_quick_actions.dart';
 part 'main_home/widgets/main_home_presence_section.dart';
 part 'main_home/widgets/main_home_status_cards.dart';
 part 'main_home/widgets/main_home_tool_slot_section.dart';
