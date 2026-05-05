@@ -270,11 +270,25 @@ class AdMobService {
         debugPrint('Failed to sync AdMob IDs: $e');
       }
 
-      await MobileAds.instance.initialize();
-      _sdkInitialized = true;
-      _loadRewardedAd();
-      _loadSoulGameRewardedAd();
-      unawaited(loadInterstitialAd());
+      try {
+        await MobileAds.instance.initialize();
+        _sdkInitialized = true;
+        _loadRewardedAd();
+        _loadSoulGameRewardedAd();
+        unawaited(loadInterstitialAd());
+      } catch (error, stackTrace) {
+        debugPrint('AdMob initialization error: $error');
+        debugPrintStack(stackTrace: stackTrace);
+        unawaited(
+          RevenueSecurityTelemetryService.instance.logSystemEvent(
+            type: 'admob_initialize_error',
+            reason: error.toString(),
+            extra: {
+              'stack': stackTrace.toString().split('\n').take(8).join('\n'),
+            },
+          ),
+        );
+      }
     } finally {
       if (!completer.isCompleted) {
         completer.complete();
