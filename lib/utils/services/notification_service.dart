@@ -39,6 +39,7 @@ class NotificationService {
   StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
   bool _isInitialized = false;
   bool _isInitializing = false;
+  Future<void>? _initializingTask;
   bool _didCheckInitialMessage = false;
   String? _lastForegroundMessageKey;
   DateTime? _lastForegroundShownAt;
@@ -86,7 +87,15 @@ class NotificationService {
 
   /// Khởi tạo toàn bộ hệ thống thông báo — gọi 1 lần trong main.dart
   Future<void> initialize() async {
-    if (_isInitializing) return;
+    if (_isInitialized) {
+      await _saveFcmToken();
+      await syncDailySleepReminder();
+      return;
+    }
+    if (_initializingTask != null) {
+      await _initializingTask;
+      return;
+    }
 
     // 1. Kiểm tra quyền thông báo hiện tại (KHÔNG TỰ Ý XIN QUYỀN)
     final permissionGranted = await hasPermission();
@@ -96,15 +105,10 @@ class NotificationService {
       return;
     }
 
-    if (_isInitialized) {
-      await _saveFcmToken();
-      await syncDailySleepReminder();
-      return;
-    }
-
     _isInitializing = true;
-    try {
-      await _localNotif
+    final task = () async {
+      try {
+        await _localNotif
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(_channel);
@@ -146,9 +150,22 @@ class NotificationService {
       }
 
       _isInitialized = true;
-      await syncDailySleepReminder();
+        await syncDailySleepReminder();
+      } catch (error, stackTrace) {
+        debugPrint('NotificationService initialize error: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      } finally {
+        _isInitializing = false;
+      }
+    }();
+
+    _initializingTask = task;
+    try {
+      await task;
     } finally {
-      _isInitializing = false;
+      if (identical(_initializingTask, task)) {
+        _initializingTask = null;
+      }
     }
   }
 
