@@ -19,27 +19,6 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       MaterialPageRoute(
         builder: (_) => DocumentViewerScreen(
           title: context.tr('terms_of_use'),
-          assetPath: 'assets/docs/terms.html',
-        ),
-      ),
-    );
-  }
-
-  void _openCookieDocument() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
-          title: context.tr('cookie_policy'),
-      MaterialPageRoute(
-        builder: (_) => const UserSupportChatScreen(),
-      ),
-    );
-  }
-
-  void _openGuideDocument() {
-    Navigator.push(
-      context,
       MaterialPageRoute(
         builder: (_) => DocumentViewerScreen(
           title: context.tr('user_guide'),
