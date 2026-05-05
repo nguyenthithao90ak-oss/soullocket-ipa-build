@@ -648,21 +648,8 @@ class _DiaryTabState extends State<DiaryTab> {
   }
 
   Future<dynamic> _getMemoriesCacheFuture() {
-    return _memoryController.getMemoriesCacheFuture(_houseId);
-  }
-
   dynamic _getMemoriesCacheSync() {
     return _memoryController.getMemoriesCacheSync(_houseId);
-  }
-
-  Future<void> _deleteMemory(Map<String, dynamic> item) async {
-    await _memoryController.deleteMemory(
-      context: context,
-      houseId: _houseId,
-      item: item,
-      showSnackBar: _showDiarySnackBar,
-    );
-    _handleControllerChange();
   }
 
   void _showMemoryZoom(
@@ -673,7 +660,28 @@ class _DiaryTabState extends State<DiaryTab> {
         allPhotos.indexWhere((photo) => photo['id'] == initialItem['id']);
     int currentIndex = initialIndex < 0 ? 0 : initialIndex;
     final pageController = PageController(initialPage: currentIndex);
+    final transformationControllers = <int, TransformationController>{};
+    final tapDownDetailsByIndex = <int, TapDownDetails>{};
+    bool isViewerZoomed = false;
     _warmMemoryViewerAroundIndex(allPhotos, currentIndex);
+
+    TransformationController controllerFor(int index) {
+      return transformationControllers.putIfAbsent(
+        index,
+        () => TransformationController(),
+      );
+    }
+
+    bool isZoomed(TransformationController controller) {
+      return controller.value.getMaxScaleOnAxis() > 1.02;
+    }
+
+    void disposeControllers() {
+      for (final controller in transformationControllers.values) {
+        controller.dispose();
+      }
+      transformationControllers.clear();
+    }
 
     showDialog<void>(
       context: context,
@@ -682,181 +690,36 @@ class _DiaryTabState extends State<DiaryTab> {
           final currentItem =
               allPhotos.isNotEmpty ? allPhotos[currentIndex] : initialItem;
 
+          void syncZoomState() {
+            final nextZoomed = transformationControllers.values.any(isZoomed);
+            if (isViewerZoomed == nextZoomed) {
+              return;
+            }
+            setState(() {
+              isViewerZoomed = nextZoomed;
+            });
+          }
+
+          void resetCurrentZoom() {
+            final controller = controllerFor(currentIndex);
+            if (!isZoomed(controller)) {
+              return;
+            }
+            controller.value = Matrix4.identity();
+            syncZoomState();
+          }
+
           void closeOnVerticalSwipe(DragEndDetails details) {
+            if (isViewerZoomed) {
+              return;
+            }
             final velocity = details.primaryVelocity ?? 0;
-            // Giảm ngưỡng xuống 200 để vuốt nhẹ là đóng được ngay
             if (velocity.abs() < 200) {
               return;
             }
             Navigator.pop(dialogContext);
           }
 
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: EdgeInsets.zero,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(dialogContext),
-                  child: Container(color: Colors.black.withOpacity(0.92)),
-                ),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withOpacity(0.42),
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.28),
-                          ],
-                          stops: const [0.0, 0.22, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                if (allPhotos.isNotEmpty)
-                  GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onVerticalDragEnd: closeOnVerticalSwipe,
-                    child: PageView.builder(
-                      controller: pageController,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: allPhotos.length,
-                      onPageChanged: (index) {
-                        setState(() {
-                          currentIndex = index;
-                        });
-                        _warmMemoryViewerAroundIndex(allPhotos, index);
-                      },
-                      itemBuilder: (context, index) {
-                        final item = allPhotos[index];
-                        final imageProvider = _memoryImageProvider(
-                          item['url']?.toString() ?? '',
-                          maxWidth: 1600,
-                        );
-                        return InteractiveViewer(
-                          minScale: 0.9,
-                          maxScale: 4.5,
-                          boundaryMargin: const EdgeInsets.all(96),
-                          clipBehavior: Clip.none,
-                          interactionEndFrictionCoefficient: 0.00008,
-                          child: Hero(
-                            tag: 'memory_image_${item['id']}',
-                            child: Image(
-                              image: imageProvider,
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
-                              filterQuality: FilterQuality.high,
-                              gaplessPlayback: true,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  )
-                else
-                  GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onVerticalDragEnd: closeOnVerticalSwipe,
-                    child: Builder(
-                      builder: (context) {
-                        final imageProvider = _memoryImageProvider(
-                          initialItem['url']?.toString() ?? '',
-                          maxWidth: 1600,
-                        );
-                        return InteractiveViewer(
-                          minScale: 0.9,
-                          maxScale: 4.5,
-                          boundaryMargin: const EdgeInsets.all(96),
-                          clipBehavior: Clip.none,
-                          interactionEndFrictionCoefficient: 0.00008,
-                          child: Hero(
-                            tag: 'memory_image_${initialItem['id']}',
-                            child: Image(
-                              image: imageProvider,
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
-                              filterQuality: FilterQuality.high,
-                              gaplessPlayback: true,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 14,
-                  right: 18,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.42),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.12),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.22),
-                          blurRadius: 18,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: PopupMenuButton<String>(
-                      tooltip: 'Tùy chọn ảnh',
-                      padding: const EdgeInsets.all(11),
-                      icon: const Icon(
-                        Icons.more_vert_rounded,
-                        color: Colors.white,
-                        size: 23,
-                      ),
-                      color: const Color(0xFF171A21),
-                      surfaceTintColor: const Color(0xFF171A21),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      itemBuilder: (menuContext) => [
-                        PopupMenuItem<String>(
-                          value: 'save',
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.download_rounded,
-                                color: Colors.white,
-                                size: 19,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Lưu ảnh',
-                                style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'share',
-                          child: Row(
-                            children: [
                               const Icon(
                                 Icons.link_rounded,
                                 color: Colors.white,
