@@ -27,6 +27,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   final _svc = ActivityHistoryService.instance;
   final _criticalSync = CriticalDataSyncService();
   List<ActivityHistoryEntry> _history = [];
+  String? _restoringEntryId;
 
   @override
   void initState() {
@@ -95,12 +96,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _restore(ActivityHistoryEntry entry) async {
+    final entryId = entry.id.trim();
+    if (entryId.isEmpty || _restoringEntryId == entryId) {
+      return;
+    }
+    setState(() {
+      _restoringEntryId = entryId;
+    });
     final ok = await _svc.restoreEntry(entry);
     if (!mounted) return;
+    setState(() {
+      _restoringEntryId = null;
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          ok ? 'Đã khôi phục mục này.' : 'Không thể khôi phục mục này.',
+          ok
+              ? 'Đã khôi phục mục này.'
+              : 'Không thể khôi phục mục này hoặc mục đã quá hạn.',
         ),
       ),
     );
@@ -285,6 +298,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         final canRestore = entry.canRestore;
         final expired = entry.isRestoreExpired;
         final source = entry.effectiveSourceLabel;
+        final isRestoring = _restoringEntryId == entry.id;
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(12),
@@ -416,18 +430,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     border: Border.all(color: const Color(0xFF334155)),
                   ),
                   child: IconButton(
-                    tooltip: 'Khôi phục',
+                    tooltip:
+                        isRestoring ? 'Đang khôi phục...' : 'Khôi phục',
                     constraints: const BoxConstraints.tightFor(
                       width: 36,
                       height: 36,
                     ),
                     padding: EdgeInsets.zero,
-                    onPressed: () => _restore(entry),
-                    icon: const Icon(
-                      Icons.restore_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
+                    onPressed: isRestoring ? null : () => _restore(entry),
+                    icon: isRestoring
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(
+                            Icons.restore_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                   ),
                 ),
             ],
