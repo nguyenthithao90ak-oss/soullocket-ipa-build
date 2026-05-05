@@ -345,7 +345,7 @@ class AppErrorMapper {
       return 'Thiết bị chưa được xác nhận để thực hiện thao tác này. Hãy chờ vài giây rồi thử lại hoặc đăng nhập lại.';
     }
     if (normalized.contains('permission denied')) {
-      return 'MÃ¡y chá»§ Ä‘ang cháº·n thao tÃ¡c nÃ y. Vui lÃ²ng thá»­ láº¡i sau hoáº·c liÃªn há»‡ há»— trá»£.';
+      return 'Máy chủ đang chặn thao tác này. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.';
     }
     if (normalized.contains('api key') ||
         normalized.contains('internal error has occurred')) {
