@@ -39,4 +39,4 @@ const List<String> storageMusicPickerExtensions = <String>[
   'mp4',
 ];
 
-const int storageMaxMusicUploadBytes = 10 * 1024 * 1024;
+const int storageMaxMusicUploadBytes = 20 * 1024 * 1024;
