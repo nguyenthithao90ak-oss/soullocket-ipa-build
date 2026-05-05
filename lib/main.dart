@@ -499,6 +499,21 @@ Future<void> _initializeFirebaseAppCheck() async {
   }
 }
 
+Future<void> _requestIosTrackingAuthorization() async {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+    return;
+  }
+
+  try {
+    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    if (status == TrackingStatus.notDetermined) {
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    }
+  } catch (e) {
+    debugPrint('ATT request skipped: $e');
+  }
+}
+
 void _scheduleDeferredBootstrap() {
   SchedulerBinding.instance.addPostFrameCallback((_) {
     unawaited(Future<void>(() async {
