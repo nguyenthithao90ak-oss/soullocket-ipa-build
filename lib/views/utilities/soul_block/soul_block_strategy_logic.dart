@@ -1,4 +1,4 @@
-﻿part of '../soul_block_game.dart';
+part of '../soul_block_game.dart';
 
 mixin _SoulBlockStrategyLogic {
   Random get _random;
@@ -573,6 +573,10 @@ mixin _SoulBlockStrategyLogic {
       }
     }
     return score;
+  }
+
+  int _countHoles(List<List<bool>> boardMask) {
+    return _countTightHoles(boardMask);
   }
 
   int _countTightHoles(List<List<bool>> boardMask) {
