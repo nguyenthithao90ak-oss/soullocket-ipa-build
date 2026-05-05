@@ -4,6 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'push_notification_helper.dart';
@@ -82,6 +83,7 @@ class DeviceManagerService {
 
   final _db = FirebaseDatabase.instance;
   final _auth = FirebaseAuth.instance;
+  final _functions = FirebaseFunctions.instance;
   final ConsentService _consentService = ConsentService();
   Map<String, String>? _cachedDeviceInfo;
   String? _cachedHouseId;
@@ -678,6 +680,9 @@ class DeviceManagerService {
 
   /// Duyệt thiết bị đang ở trạng thái pending
   Future<void> approveDevice(String deviceId) async {
+    if (await _callDeviceActionFunction('approveDeviceSecure', deviceId)) {
+      return;
+    }
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
     final houseSnap = await _db.ref('users/$uid/houseId').get();
@@ -692,6 +697,9 @@ class DeviceManagerService {
 
   /// Chặn thiết bị lạ (Vĩnh viễn)
   Future<void> blockDevice(String deviceId) async {
+    if (await _callDeviceActionFunction('blockDeviceSecure', deviceId)) {
+      return;
+    }
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
     final houseSnap = await _db.ref('users/$uid/houseId').get();
@@ -718,6 +726,9 @@ class DeviceManagerService {
 
   /// Xóa thiết bị khỏi danh sách (Không thể đăng nhập trong 1 giờ)
   Future<void> deleteDevice(String deviceId) async {
+    if (await _callDeviceActionFunction('deleteDeviceSecure', deviceId)) {
+      return;
+    }
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
     final houseSnap = await _db.ref('users/$uid/houseId').get();
@@ -728,6 +739,24 @@ class DeviceManagerService {
       'status': 'deleted',
       'deleted_at': ServerValue.timestamp,
     });
+  }
+
+  Future<bool> _callDeviceActionFunction(String functionName, String deviceId) async {
+    try {
+      final currentDeviceId = await getCurrentDeviceIdentifier();
+      final callable = _functions.httpsCallable(functionName);
+      await callable.call({
+        'deviceId': deviceId,
+        'currentDeviceId': currentDeviceId,
+      });
+      return true;
+    } on FirebaseFunctionsException catch (e) {
+      debugPrint('$functionName fallback to legacy DB write: ${e.code}');
+      return false;
+    } catch (e) {
+      debugPrint('$functionName fallback to legacy DB write: $e');
+      return false;
+    }
   }
 
   /// Lấy thông tin thiết bị hiện tại
