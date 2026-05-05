@@ -73,6 +73,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   final bool _showLegacyIntro = false;
   Timer? _scrollHintTimer;
   String? _autoCreateFailureMessage;
+  String? _autoCreateFailureDetail;
   int _authSyncRetryCount = 0;
   int _transientCreateRetryCount = 0;
   String _selectedSecurityQuestion =
