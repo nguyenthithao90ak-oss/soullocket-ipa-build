@@ -26,7 +26,7 @@ class AppErrorMapper {
   static const String defaultServerMessage =
       'Máy chủ đang bận hoặc gặp sự cố. Vui lòng thử lại sau.';
   static const String authSyncMessage =
-      'Phiên đăng nhập đang đồng bộ. Vui lòng chờ vài giây rồi thử lại.';
+      'Phiên đăng nhập đã hết. Vui lòng đăng nhập lại.';
   static const String recentLoginMessage =
       'Đã lâu bạn chưa ghé, đăng nhập lại để tiếp tục viết tiếp chuyện tình mình nhé! 👋';
 
@@ -194,10 +194,10 @@ class AppErrorMapper {
 
     if (code == 'unauthenticated') {
       return const AppErrorInfo(
-        kind: AppErrorKind.network,
+        kind: AppErrorKind.user,
         message: authSyncMessage,
       );
-    }
+    }}
 
     if (code == 'network-request-failed' ||
         code == 'deadline-exceeded' ||
