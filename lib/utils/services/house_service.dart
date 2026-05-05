@@ -51,6 +51,117 @@ class HouseService {
   firebase_auth.User? get currentUser => _auth.currentUser;
   bool get _allowLegacyDirectCreateFallback => false;
 
+  Future<void> _refreshCallableSecurityContext({bool force = false}) async {
+    var user = _auth.currentUser;
+    if (user == null) {
+      await Future.delayed(const Duration(milliseconds: 600));
+      user = _auth.currentUser;
+    }
+    if (user == null) {
+      return;
+    }
+
+    try {
+      await user.reload().timeout(const Duration(seconds: 4));
+    } catch (error) {
+      debugPrint('[HouseService] user.reload skipped: $error');
+    }
+
+    user = _auth.currentUser ?? user;
+    try {
+      await user.getIdToken(force).timeout(const Duration(seconds: 5));
+    } catch (error) {
+      debugPrint('[HouseService] getIdToken skipped: $error');
+    }
+
+    try {
+      await FirebaseAppCheck.instance
+          .getToken(force)
+          .timeout(const Duration(seconds: 5));
+    } catch (error) {
+      debugPrint('[HouseService] App Check token warmup skipped: $error');
+    }
+  }
+
+  Future<HttpsCallableResult<dynamic>> _callCreateHouseSecure(
+    Map<String, dynamic> payload,
+  ) async {
+    final callable = _functions.httpsCallable('createHouseSecure');
+    debugPrint('[HouseService] createHouseSecure start');
+    final response = await callable.call(payload).timeout(
+      const Duration(seconds: 12),
+      onTimeout: () {
+        throw TimeoutException('createHouseSecure timed out');
+      },
+    );
+    debugPrint('[HouseService] createHouseSecure success');
+    return response;
+  }
+
+  bool _shouldRetryCreateHouse(FirebaseFunctionsException error) {
+    final code = error.code.trim().toLowerCase();
+    final message = (error.message ?? '').trim().toLowerCase();
+    return code == 'unauthenticated' ||
+        code == 'unavailable' ||
+        code == 'deadline-exceeded' ||
+        code == 'failed-precondition' &&
+            (message.contains('app check') ||
+                message.contains('appcheck') ||
+                message.contains('debug token') ||
+                message.contains('play integrity') ||
+                message.contains('attestation')) ||
+        code == 'permission-denied' &&
+            (message.contains('app check') ||
+                message.contains('appcheck') ||
+                message.contains('debug token') ||
+                message.contains('play integrity') ||
+                message.contains('attestation'));
+  }
+
+  HouseCreationOtpRequiredException? _otpRequiredFromError(
+    FirebaseFunctionsException error,
+  ) {
+    final message = (error.message ?? '').trim();
+    final details = error.details;
+    Map<String, dynamic>? detailMap;
+    if (details is Map) {
+      detailMap = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(details));
+    }
+    final reason = detailMap?['reason']?.toString().trim() ?? '';
+    if (message != 'HOUSE_CREATION_OTP_REQUIRED' &&
+        reason != 'house_creation_otp_required') {
+      return null;
+    }
+    return HouseCreationOtpRequiredException(
+      maskedEmail: detailMap?['maskedEmail']?.toString().trim() ?? '',
+      createdCount: int.tryParse(
+            detailMap?['createdCount']?.toString() ?? '',
+          ) ??
+          5,
+    );
+  }
+
+  Future<HttpsCallableResult<dynamic>> _callCreateHouseSecureWithRetry(
+    Map<String, dynamic> payload,
+  ) async {
+    await _refreshCallableSecurityContext(force: true);
+    try {
+      return await _callCreateHouseSecure(payload);
+    } on FirebaseFunctionsException catch (error) {
+      final otpRequired = _otpRequiredFromError(error);
+      if (otpRequired != null) {
+        throw otpRequired;
+      }
+      if (!_shouldRetryCreateHouse(error)) {
+        rethrow;
+      }
+      debugPrint('[HouseService] createHouseSecure security sync retry: $error');
+      await Future.delayed(const Duration(milliseconds: 700));
+      await _refreshCallableSecurityContext(force: true);
+      return _callCreateHouseSecure(payload);
+    }
+  }
+
   Future<String> createHouseForCurrentUser({
     required String email,
     required String houseName,
