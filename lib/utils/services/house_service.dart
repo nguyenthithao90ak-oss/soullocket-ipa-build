@@ -24,7 +24,7 @@ class HouseCreationOtpRequiredException implements Exception {
 
   @override
   String toString() =>
-      'Tài khoản này đã tạo hơn 5 nhà. Nhập mã xác nhận gửi về Gmail để tiếp tục tạo nhà.';
+      'Thiết bị này đã tạo quá 3 nhà. Nhập mã xác nhận gửi về Gmail để tiếp tục tạo nhà.';
 }
 
 class HouseService {
@@ -149,8 +149,24 @@ class HouseService {
       createdCount: int.tryParse(
             detailMap?['createdCount']?.toString() ?? '',
           ) ??
-          5,
+          3,
     );
+  }
+
+  bool _isDeviceRequiredError(FirebaseFunctionsException error) {
+    final message = (error.message ?? '').trim();
+    final details = error.details;
+    if (message == 'HOUSE_CREATION_DEVICE_REQUIRED') {
+      return true;
+    }
+    if (details is Map) {
+      final detailMap = Map<String, dynamic>.from(
+        Map<dynamic, dynamic>.from(details),
+      );
+      final reason = detailMap['reason']?.toString().trim() ?? '';
+      return reason == 'house_creation_device_required';
+    }
+    return false;
   }
 
   Future<HttpsCallableResult<dynamic>> _callCreateHouseSecureWithRetry(
@@ -208,6 +224,11 @@ class HouseService {
     final normalizedCreatedWith =
         createdWith.trim().isNotEmpty ? createdWith.trim() : 'email';
     final deviceId = await _safeCurrentDeviceId();
+    if (deviceId.isEmpty) {
+      throw Exception(
+        'Không thể xác thực thiết bị để tạo nhà. Vui lòng mở lại ứng dụng và thử lại.',
+      );
+    }
 
     Future<String> createDirectFallback() {
       return _createHouseDirectly(
@@ -300,6 +321,11 @@ class HouseService {
       }
 
       final message = error.message?.trim();
+      if (_isDeviceRequiredError(error)) {
+        throw Exception(
+          'Không thể xác thực thiết bị để tạo nhà. Vui lòng mở lại ứng dụng và thử lại.',
+        );
+      }
       if (message != null && message.isNotEmpty) {
         throw Exception(message);
       }
