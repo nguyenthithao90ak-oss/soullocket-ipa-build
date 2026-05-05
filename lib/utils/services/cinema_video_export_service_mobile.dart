@@ -99,8 +99,8 @@ class _MobileCinemaVideoExportService implements CinemaVideoExportService {
     final session = await FFmpegKit.execute(command);
     final returnCode = await session.getReturnCode();
     if (!ReturnCode.isSuccess(returnCode)) {
-      final logs = await session.getAllLogsAsString();
-      throw Exception(logs.trim().isEmpty ? 'Không thể tạo video.' : logs.trim());
+      final logs = (await session.getAllLogsAsString())?.trim() ?? '';
+      throw Exception(logs.isEmpty ? 'Không thể tạo video.' : logs);
     }
 
     final outputFile = File(outputPath);
