@@ -32,6 +32,7 @@ import 'package:soullocket_app/views/ui_prefs.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  debugPrint('Handling background message: ${message.messageId ?? 'unknown'}');
   try {
     if (Firebase.apps.isEmpty) {
       await _initializeFirebaseBootstrap();
