@@ -633,6 +633,14 @@ class _HomeScreenState extends State<HomeScreen>
     return _tabPageCache.putIfAbsent(index, () => _buildTabPage(index));
   }
 
+  void _rebuildCachedTabPage(int index) {
+    if (!mounted) return;
+    setState(() {
+      _tabPageCache.remove(index);
+      _tabPageCache[index] = _buildTabPage(index);
+    });
+  }
+
   void _handleMusicPlaybackChanged() {
     _syncMusicAnimationState();
   }
