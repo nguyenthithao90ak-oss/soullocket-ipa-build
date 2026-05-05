@@ -641,6 +641,18 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
+  Future<void> _replayFirstSetupGuideFromSettings() async {
+    final houseId = (await _houseService.getCurrentHouseId() ?? '').trim();
+    if (houseId.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('il_first_setup_guide_pending_$houseId', '1');
+    await prefs.remove('il_first_setup_guide_seen_$houseId');
+    if (!mounted) return;
+    await _switchToTab(0);
+    if (!mounted) return;
+    _rebuildCachedTabPage(0);
+  }
+
   void _handleMusicPlaybackChanged() {
     _syncMusicAnimationState();
   }
