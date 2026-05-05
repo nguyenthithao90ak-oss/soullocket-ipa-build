@@ -62,27 +62,45 @@ class HouseService {
     }
   }
 
-  Future<void> _refreshCallableSecurityContext({bool force = false}) async {
-    var user = _auth.currentUser;
-    if (user == null) {
-      await Future.delayed(const Duration(milliseconds: 600));
-      user = _auth.currentUser;
+  Future<void> _waitForAuthenticatedSessionReady({
+    bool forceRefreshToken = false,
+  }) async {
+    firebase_auth.User? user = _auth.currentUser;
+    for (var attempt = 0; attempt < 5; attempt++) {
+      user = _auth.currentUser ?? user;
+      if (user != null) {
+        try {
+          await user.reload().timeout(const Duration(seconds: 4));
+        } catch (error) {
+          debugPrint('[HouseService] user.reload skipped: $error');
+        }
+
+        user = _auth.currentUser ?? user;
+        if (user != null) {
+          try {
+            final token = await user
+                .getIdToken(forceRefreshToken || attempt > 0)
+                .timeout(const Duration(seconds: 5));
+            if ((token ?? '').trim().isNotEmpty) {
+              return;
+            }
+          } catch (error) {
+            debugPrint('[HouseService] getIdToken skipped: $error');
+          }
+        }
+      }
+
+      if (attempt < 4) {
+        await Future.delayed(Duration(milliseconds: 450 + (attempt * 250)));
+      }
     }
+  }
+
+  Future<void> _refreshCallableSecurityContext({bool force = false}) async {
+    await _waitForAuthenticatedSessionReady(forceRefreshToken: force);
+    final user = _auth.currentUser;
     if (user == null) {
       return;
-    }
-
-    try {
-      await user.reload().timeout(const Duration(seconds: 4));
-    } catch (error) {
-      debugPrint('[HouseService] user.reload skipped: $error');
-    }
-
-    user = _auth.currentUser ?? user;
-    try {
-      await user.getIdToken(force).timeout(const Duration(seconds: 5));
-    } catch (error) {
-      debugPrint('[HouseService] getIdToken skipped: $error');
     }
 
     try {
@@ -202,13 +220,16 @@ class HouseService {
   }) async {
     var user = _auth.currentUser;
     if (user == null) {
-      await Future.delayed(const Duration(milliseconds: 1000));
+      await _waitForAuthenticatedSessionReady(forceRefreshToken: true);
       user = _auth.currentUser;
     }
 
     if (user == null) {
       throw Exception('Bạn chưa đăng nhập.');
     }
+
+    await _waitForAuthenticatedSessionReady(forceRefreshToken: true);
+    user = _auth.currentUser ?? user;
 
     final normalizedEmail = email.trim().toLowerCase();
     final rawHouseName = houseName.trim();
