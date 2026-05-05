@@ -34,104 +34,171 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
   }
 
   Future<void> _showFirstSetupGuideDialog({required String houseId}) async {
+    final guideSteps = <({IconData icon, String title, String body})>[
+      (
+        icon: Icons.favorite_rounded,
+        title: 'Chào mừng bạn đến với ngôi nhà mới',
+        body:
+            'Đây là hướng dẫn nhanh cho lần đầu dùng app. Bạn có thể bỏ qua hoặc xem từng bước.',
+      ),
+      (
+        icon: Icons.track_changes_rounded,
+        title: 'Vòng đếm ngày yêu',
+        body:
+            'Vùng được khoanh là nơi hiển thị số ngày bên nhau. Ví dụ: 520 ngày yêu.',
+      ),
+      (
+        icon: Icons.edit_calendar_rounded,
+        title: 'Bấm vào để chỉnh chữ và ngày',
+        body:
+            'Bấm số ngày để chỉnh ngày bắt đầu. Bấm chữ phía trên hoặc phía dưới để đổi “bên nhau”, “ngày yêu”.',
+      ),
+      (
+        icon: Icons.apps_rounded,
+        title: 'Các khu vực chính',
+        body:
+            'Nhật ký, album/kỷ niệm, cài đặt và bảo mật nằm ở các tab/chức năng bên dưới. Bạn có thể mở lại tài liệu hướng dẫn trong Cài đặt.',
+      ),
+    ];
     await showDialog<void>(
       context: context,
       useRootNavigator: true,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-          title: Text(
-            'Hướng dẫn nhanh',
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w900,
-              color: SLTheme.primary,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 108,
-                  height: 108,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: SLTheme.primary.withOpacity(0.08),
-                    border: Border.all(
-                      color: SLTheme.primary.withOpacity(0.35),
-                      width: 2,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '520\nngày yêu',
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        color: SLTheme.primary,
+        var stepIndex = 0;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final step = guideSteps[stepIndex];
+            final isLastStep = stepIndex == guideSteps.length - 1;
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
+              title: Text(
+                step.title,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w900,
+                  color: SLTheme.primary,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 116,
+                      height: 116,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: SLTheme.primary.withOpacity(0.08),
+                        border: Border.all(
+                          color: SLTheme.primary.withOpacity(0.35),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: SLTheme.primary.withOpacity(0.12),
+                            blurRadius: 24,
+                            spreadRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: stepIndex == 1
+                            ? Text(
+                                '520\nngày yêu',
+                                textAlign: TextAlign.center,
+                                style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w900,
+                                  color: SLTheme.primary,
+                                ),
+                              )
+                            : Icon(
+                                step.icon,
+                                size: 44,
+                                color: SLTheme.primary,
+                              ),
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Text(
+                    step.body,
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w700,
+                      color: SLColors.textSecondary,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var index = 0; index < guideSteps.length; index++)
+                        Container(
+                          width: index == stepIndex ? 18 : 7,
+                          height: 7,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(999),
+                            color: index == stepIndex
+                                ? SLTheme.primary
+                                : SLTheme.primary.withOpacity(0.22),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    await _markFirstSetupGuideSeen(houseId);
+                    if (Navigator.of(dialogContext).canPop()) {
+                      Navigator.of(dialogContext).pop();
+                    }
+                  },
+                  child: Text(
+                    'Bỏ qua',
+                    style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Vòng đếm ngày trên màn hình chính là nơi hiển thị số ngày bên nhau.',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w700,
-                  color: SLColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Bấm vào số ngày để chỉnh ngày bắt đầu. Bấm chữ phía trên hoặc phía dưới để đổi “bên nhau”, “ngày yêu”.',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w700,
-                  color: SLColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Tên hai bạn có thể đổi bằng cách bấm vào avatar/tên trên màn hình chính hoặc vào Cài đặt.',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w700,
-                  color: SLColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                await _markFirstSetupGuideSeen(houseId);
-                if (Navigator.of(dialogContext).canPop()) {
-                  Navigator.of(dialogContext).pop();
-                }
-              },
-              child: Text(
-                'Đã hiểu',
-                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-              ),
-            ),
-            FilledButton(
-              onPressed: () async {
-                await _markFirstSetupGuideSeen(houseId);
-                if (Navigator.of(dialogContext).canPop()) {
-                  Navigator.of(dialogContext).pop();
-                }
-                if (mounted) {
-                  _showCountdownQuickCustomizeSheet();
-                }
-              },
-              child: Text(
-                'Thử chỉnh',
-                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-              ),
-            ),
-          ],
+                if (stepIndex == 2)
+                  FilledButton(
+                    onPressed: () async {
+                      await _markFirstSetupGuideSeen(houseId);
+                      if (Navigator.of(dialogContext).canPop()) {
+                        Navigator.of(dialogContext).pop();
+                      }
+                      if (mounted) {
+                        _showCountdownQuickCustomizeSheet();
+                      }
+                    },
+                    child: Text(
+                      'Thử chỉnh',
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                    ),
+                  )
+                else
+                  FilledButton(
+                    onPressed: () async {
+                      if (isLastStep) {
+                        await _markFirstSetupGuideSeen(houseId);
+                        if (Navigator.of(dialogContext).canPop()) {
+                          Navigator.of(dialogContext).pop();
+                        }
+                        return;
+                      }
+                      setDialogState(() => stepIndex += 1);
+                    },
+                    child: Text(
+                      isLastStep ? 'Xong' : 'Tiếp tục',
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+              ],
+            );
+          },
         );
       },
     );
