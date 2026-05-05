@@ -113,43 +113,44 @@ class NotificationService {
               AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(_channel);
 
-      const AndroidInitializationSettings androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+        const AndroidInitializationSettings androidSettings =
+            AndroidInitializationSettings('@mipmap/ic_launcher');
 
-      const DarwinInitializationSettings iosSettings =
-          DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
-      );
+        const DarwinInitializationSettings iosSettings =
+            DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
 
-      const InitializationSettings initSettings = InitializationSettings(
-        android: androidSettings,
-        iOS: iosSettings,
-      );
+        const InitializationSettings initSettings = InitializationSettings(
+          android: androidSettings,
+          iOS: iosSettings,
+        );
 
-      await _localNotif.initialize(
-        initSettings,
-        onDidReceiveNotificationResponse: _onNotificationTap,
-      );
+        await _localNotif.initialize(
+          initSettings,
+          onDidReceiveNotificationResponse: _onNotificationTap,
+        );
 
-      await _saveFcmToken();
+        await _saveFcmToken();
 
-      _tokenRefreshSubscription ??= _fcm.onTokenRefresh.listen(_onTokenRefresh);
-      _foregroundSubscription ??=
-          FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-      _messageOpenedSubscription ??=
-          FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
+        _tokenRefreshSubscription ??=
+            _fcm.onTokenRefresh.listen(_onTokenRefresh);
+        _foregroundSubscription ??=
+            FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+        _messageOpenedSubscription ??=
+            FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
 
-      if (!_didCheckInitialMessage) {
-        final initialMessage = await _fcm.getInitialMessage();
-        _didCheckInitialMessage = true;
-        if (initialMessage != null) {
-          _handleMessageOpenedApp(initialMessage);
+        if (!_didCheckInitialMessage) {
+          final initialMessage = await _fcm.getInitialMessage();
+          _didCheckInitialMessage = true;
+          if (initialMessage != null) {
+            _handleMessageOpenedApp(initialMessage);
+          }
         }
-      }
 
-      _isInitialized = true;
+        _isInitialized = true;
         await syncDailySleepReminder();
       } catch (error, stackTrace) {
         debugPrint('NotificationService initialize error: $error');
