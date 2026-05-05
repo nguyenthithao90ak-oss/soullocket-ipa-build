@@ -178,9 +178,43 @@ class SLResponsive {
   static const double handset = 600;
   static const double tablet = 840;
   static const double desktop = 1200;
+  static const double _designWidth = 390;
 
   static bool isCompactWidth(double width) => width < compact;
   static bool isTabletWidth(double width) => width >= tablet;
+
+  static double scaleForWidth(
+    double width, {
+    double min = 0.88,
+    double max = 1.12,
+  }) {
+    if (width <= 0) return 1;
+    return (width / _designWidth).clamp(min, max).toDouble();
+  }
+
+  static double dp(
+    double value,
+    double width, {
+    double min = 0.88,
+    double max = 1.12,
+  }) {
+    return value * scaleForWidth(width, min: min, max: max);
+  }
+
+  static double sp(
+    double value,
+    double width, {
+    double min = 0.92,
+    double max = 1.10,
+  }) {
+    return value * scaleForWidth(width, min: min, max: max);
+  }
+
+  static TextScaler textScalerFor(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final scaled = scaler.scale(1);
+    return TextScaler.linear(scaled.clamp(0.9, 1.18).toDouble());
+  }
 
   static double horizontalPaddingForWidth(
     double width, {
