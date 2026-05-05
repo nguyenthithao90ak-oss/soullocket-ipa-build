@@ -50,7 +50,7 @@ class HouseService {
   }
 
   firebase_auth.User? get currentUser => _auth.currentUser;
-  bool get _allowLegacyDirectCreateFallback => kDebugMode;
+  bool get _allowLegacyDirectCreateFallback => false;
 
   Future<Map<String, String>> _safeCurrentDeviceSnapshot() async {
     try {
