@@ -153,9 +153,10 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               actions: [
                 TextButton(
                   onPressed: () async {
+                    final navigator = Navigator.of(dialogContext);
                     await _markFirstSetupGuideSeen(houseId);
-                    if (Navigator.of(dialogContext).canPop()) {
-                      Navigator.of(dialogContext).pop();
+                    if (navigator.canPop()) {
+                      navigator.pop();
                     }
                   },
                   child: Text(
@@ -166,9 +167,10 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                 if (stepIndex == 2)
                   FilledButton(
                     onPressed: () async {
+                      final navigator = Navigator.of(dialogContext);
                       await _markFirstSetupGuideSeen(houseId);
-                      if (Navigator.of(dialogContext).canPop()) {
-                        Navigator.of(dialogContext).pop();
+                      if (navigator.canPop()) {
+                        navigator.pop();
                       }
                       if (mounted) {
                         _showCountdownQuickCustomizeSheet();
@@ -183,9 +185,10 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                   FilledButton(
                     onPressed: () async {
                       if (isLastStep) {
+                        final navigator = Navigator.of(dialogContext);
                         await _markFirstSetupGuideSeen(houseId);
-                        if (Navigator.of(dialogContext).canPop()) {
-                          Navigator.of(dialogContext).pop();
+                        if (navigator.canPop()) {
+                          navigator.pop();
                         }
                         return;
                       }
