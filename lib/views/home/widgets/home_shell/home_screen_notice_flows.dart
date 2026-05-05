@@ -735,7 +735,11 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     await prefs.remove('il_first_setup_guide_seen_$houseId');
     if (!mounted) return;
     await _switchToTab(0);
-    await Future.delayed(const Duration(milliseconds: 120));
+    if (!mounted) return;
+    setState(() {
+      _tabPageCache.remove(0);
+      _tabPageCache[0] = _buildTabPage(0);
+    });
   }
 
   Future<bool> _handleExitAttempt() async {
