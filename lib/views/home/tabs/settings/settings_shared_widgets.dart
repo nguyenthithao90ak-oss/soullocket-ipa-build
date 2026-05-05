@@ -266,16 +266,12 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isNarrow = constraints.maxWidth < 180;
-          final resolvedBadgeText =
-              badgeText ?? context.tr('settings_badge_open');
           final labelMaxLines = isNarrow ? 2 : 1;
           final descMaxLines = isNarrow ? 4 : 3;
           final labelFontSize = isNarrow ? 15.0 : 16.0;
           final descFontSize = isNarrow ? 10.9 : 11.4;
-          final badgeFontSize = isNarrow ? 9.0 : 9.4;
           final iconSize = isNarrow ? 26.0 : 30.0;
           final miniIconSize = isNarrow ? 15.0 : 16.5;
-          final badgeMaxWidth = constraints.maxWidth * (isNarrow ? 0.42 : 0.36);
 
           return Container(
             decoration: BoxDecoration(

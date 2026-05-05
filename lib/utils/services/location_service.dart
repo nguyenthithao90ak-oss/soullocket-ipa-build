@@ -38,7 +38,6 @@ class LocationService {
       {BuildContext? context, bool forcePrompt = false}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final hasPrompted = forcePrompt ? false : (prefs.getBool('il_gps_prompted') ?? false);
 
       var permission = await Geolocator.checkPermission().timeout(
         const Duration(seconds: 6),
