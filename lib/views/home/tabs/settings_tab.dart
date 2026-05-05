@@ -343,11 +343,13 @@ class _SettingsBackgroundLayer extends StatelessWidget {
 class SettingsTab extends StatefulWidget {
   final bool embedded;
   final bool autoOpenCountdownMode;
+  final Future<void> Function()? onReplayFirstSetupGuide;
 
   const SettingsTab({
     super.key,
     this.embedded = false,
     this.autoOpenCountdownMode = false,
+    this.onReplayFirstSetupGuide,
   });
 
   @override
