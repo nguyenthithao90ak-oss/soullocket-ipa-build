@@ -34,7 +34,7 @@ class HouseService {
   }
 
   firebase_auth.User? get currentUser => _auth.currentUser;
-  bool get _allowLegacyDirectCreateFallback => true;
+  bool get _allowLegacyDirectCreateFallback => false;
 
   Future<String> createHouseForCurrentUser({
     required String email,
