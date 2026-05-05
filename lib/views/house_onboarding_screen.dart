@@ -544,9 +544,49 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return 'Thiếu vai trò tài khoản. Vui lòng đăng xuất rồi đăng nhập lại để chọn đúng trước khi tạo nhà.';
   }
 
-  void _setAutoCreateFailureMessage(String message) {
-    if (!mounted || _autoCreateFailureMessage == message) return;
-    setState(() => _autoCreateFailureMessage = message);
+  String _technicalFailureDetail(Object error) {
+    final raw = error.toString().trim();
+    if (raw.isEmpty) {
+      return 'Không có mã lỗi kỹ thuật.';
+    }
+    return raw.length > 260 ? '${raw.substring(0, 260)}...' : raw;
+  }
+
+  String _clearCreateFailureMessage(String message, Object? error) {
+    final normalized = '${message.toLowerCase()} ${error?.toString().toLowerCase() ?? ''}';
+    if (normalized.contains('unauthenticated') ||
+        normalized.contains('chưa đăng nhập') ||
+        normalized.contains('đăng nhập')) {
+      return 'Bị chặn vì phiên đăng nhập/Auth chưa sẵn sàng. Hãy thử lại; bản debug có thể mở form tạo nhà thủ công để test.';
+    }
+    if (normalized.contains('permission-denied') ||
+        normalized.contains('app check') ||
+        normalized.contains('debug token') ||
+        normalized.contains('play integrity')) {
+      return 'Bị chặn vì Firebase/App Check hoặc quyền database chưa cho phép bản debug tạo nhà.';
+    }
+    if (normalized.contains('timeout') ||
+        normalized.contains('network') ||
+        normalized.contains('deadline') ||
+        normalized.contains('mạng') ||
+        normalized.contains('kết nối')) {
+      return 'Bị chặn vì mạng hoặc server phản hồi quá chậm khi tạo nhà.';
+    }
+    return message;
+  }
+
+  void _setAutoCreateFailureMessage(String message, {Object? error}) {
+    if (!mounted) return;
+    final resolvedMessage = _clearCreateFailureMessage(message, error);
+    final detail = error == null ? null : _technicalFailureDetail(error);
+    if (_autoCreateFailureMessage == resolvedMessage &&
+        _autoCreateFailureDetail == detail) {
+      return;
+    }
+    setState(() {
+      _autoCreateFailureMessage = resolvedMessage;
+      _autoCreateFailureDetail = detail;
+    });
   }
 
   Future<void> _signOutToLogin() async {
