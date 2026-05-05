@@ -737,9 +737,14 @@ class _DiaryTabState extends State<DiaryTab> {
                         final item = allPhotos[index];
                         final imageProvider = _memoryImageProvider(
                           item['url']?.toString() ?? '',
-                          maxWidth: 900,
+                          maxWidth: 1600,
                         );
                         return InteractiveViewer(
+                          minScale: 0.9,
+                          maxScale: 4.5,
+                          boundaryMargin: const EdgeInsets.all(96),
+                          clipBehavior: Clip.none,
+                          interactionEndFrictionCoefficient: 0.00008,
                           child: Hero(
                             tag: 'memory_image_${item['id']}',
                             child: Image(
@@ -747,7 +752,7 @@ class _DiaryTabState extends State<DiaryTab> {
                               fit: BoxFit.contain,
                               width: double.infinity,
                               height: double.infinity,
-                              filterQuality: FilterQuality.medium,
+                              filterQuality: FilterQuality.high,
                               gaplessPlayback: true,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(
@@ -768,9 +773,14 @@ class _DiaryTabState extends State<DiaryTab> {
                       builder: (context) {
                         final imageProvider = _memoryImageProvider(
                           initialItem['url']?.toString() ?? '',
-                          maxWidth: 900,
+                          maxWidth: 1600,
                         );
                         return InteractiveViewer(
+                          minScale: 0.9,
+                          maxScale: 4.5,
+                          boundaryMargin: const EdgeInsets.all(96),
+                          clipBehavior: Clip.none,
+                          interactionEndFrictionCoefficient: 0.00008,
                           child: Hero(
                             tag: 'memory_image_${initialItem['id']}',
                             child: Image(
@@ -778,7 +788,7 @@ class _DiaryTabState extends State<DiaryTab> {
                               fit: BoxFit.contain,
                               width: double.infinity,
                               height: double.infinity,
-                              filterQuality: FilterQuality.medium,
+                              filterQuality: FilterQuality.high,
                               gaplessPlayback: true,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(
@@ -1055,13 +1065,13 @@ class _DiaryTabState extends State<DiaryTab> {
       if (url.isEmpty) {
         continue;
       }
-      final key = '900|$url';
+      final key = '1600|$url';
       if (!_warmedMemoryViewerKeys.add(key)) {
         continue;
       }
       unawaited(
         precacheImage(
-          _memoryImageProvider(url, maxWidth: 900),
+          _memoryImageProvider(url, maxWidth: 1600),
           context,
         ),
       );
