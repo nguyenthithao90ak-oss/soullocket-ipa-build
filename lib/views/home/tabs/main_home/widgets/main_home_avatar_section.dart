@@ -325,15 +325,7 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
             if (wasSynchronouslyLoaded || frame != null) {
               _markCurrentImageReady();
             }
-            return AnimatedOpacity(
-              opacity: (wasSynchronouslyLoaded ||
-                      frame != null ||
-                      _isCurrentImageReady)
-                  ? 1
-                  : 0,
-              duration: const Duration(milliseconds: 300),
-              child: child,
-            );
+            return child;
           },
           errorBuilder: (_, __, ___) {
             _markCurrentImageError();
