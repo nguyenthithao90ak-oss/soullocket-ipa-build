@@ -1543,7 +1543,7 @@ class AuthSignInService {
       headers: await AppCheckHttpHeaders.withRequiredToken({
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $idToken',
-      }, forceRefresh: true),
+      }),
     );
     if (response.statusCode != 200) {
       unawaited(
