@@ -72,6 +72,7 @@ import '../../utilities/wishlist_screen.dart';
 import '../../../utils/zodiac_utils.dart';
 import '../../../services/widget_service.dart';
 import '../../../services/daily_quest_service.dart';
+import '../../../core/constants/app_config.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../widgets/legacy_web_ui.dart';
 
