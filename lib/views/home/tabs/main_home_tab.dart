@@ -1746,10 +1746,10 @@ class _MainHomeTabState extends State<MainHomeTab> {
       countdownStyleKey: normalizedCountdownStyleKey,
       fallingEffectKey: normalizedFallingEffectKey,
     );
-    await UiPrefs.saveState(nextState);
 
     final houseId = (_houseId ?? '').trim();
     if (houseId.isEmpty) {
+      await UiPrefs.saveState(nextState);
       return;
     }
 
@@ -1765,7 +1765,6 @@ class _MainHomeTabState extends State<MainHomeTab> {
             : normalizedFallingEffectKey,
       );
     } catch (e) {
-      await UiPrefs.saveState(current);
       if (mounted) {
         _showLatestSnackBar(
             'Chưa thể tải thông tin mới lúc này. Vui lòng thử lại.');
