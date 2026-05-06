@@ -56,10 +56,15 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
       child: Stack(
         children: [
           RepaintBoundary(
-            child: _buildStaticPlayfieldLayer(
-              bgPulse: bgPulse,
-              laneCount: geometry.laneCount,
-            ),
+            child: _useReleaseSafePlayfield
+                ? _buildReleaseSafePlayfieldLayer(
+                    bgPulse: bgPulse,
+                    laneCount: geometry.laneCount,
+                  )
+                : _buildStaticPlayfieldLayer(
+                    bgPulse: bgPulse,
+                    laneCount: geometry.laneCount,
+                  ),
           ),
           RepaintBoundary(
             child: _buildTileLayer(
@@ -68,12 +73,13 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
               shineBlur: tileShineBlur,
             ),
           ),
-          RepaintBoundary(
-            child: _buildBeatVisualizerLayer(
-              bgPulse: bgPulse,
-              geometry: geometry,
+          if (!_useReleaseSafePlayfield)
+            RepaintBoundary(
+              child: _buildBeatVisualizerLayer(
+                bgPulse: bgPulse,
+                geometry: geometry,
+              ),
             ),
-          ),
           RepaintBoundary(
             child: _buildJudgeAndEffectsLayer(
               bgPulse: bgPulse,
@@ -206,6 +212,92 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.42, 1.0],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: RepaintBoundary(
+            child: CustomPaint(
+              painter: LanePainter(laneCount: laneCount),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReleaseSafePlayfieldLayer({
+    required double bgPulse,
+    required int laneCount,
+  }) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF14091F),
+                  const Color(0xFF1C1031),
+                  const Color(0xFF091427),
+                  const Color(0xFF050914),
+                ],
+                stops: const [0.0, 0.28, 0.7, 1.0],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.08),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          height: 120,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFFF6EC7)
+                        .withOpacity(0.08 + (bgPulse * 0.05)),
+                    const Color(0xFF6FE8FF)
+                        .withOpacity(0.06 + (bgPulse * 0.04)),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 14,
+          right: 14,
+          bottom: 14,
+          height: 116,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF00E5FF)
+                        .withOpacity(0.08 + (bgPulse * 0.05)),
+                    const Color(0xFFFF3D81)
+                        .withOpacity(0.04 + (bgPulse * 0.03)),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.48, 1.0],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                 ),
@@ -581,17 +673,18 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
   }) {
     return Stack(
       children: [
-        Positioned.fill(
-          child: IgnorePointer(
-            child: CustomPaint(
-              isComplex: true,
-              painter: _SoulEffectsPainter(
-                touchBursts: _touchBursts,
-                particles: _particles,
+        if (!_useReleaseSafePlayfield)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(
+                isComplex: true,
+                painter: _SoulEffectsPainter(
+                  touchBursts: _touchBursts,
+                  particles: _particles,
+                ),
               ),
             ),
           ),
-        ),
         for (final ft in _floatingTexts)
           Positioned(
             left: ft.x - 50,
