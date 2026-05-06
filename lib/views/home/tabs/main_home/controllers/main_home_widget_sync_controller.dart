@@ -191,12 +191,19 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
           ? settings['nameU2'].toString().trim()
           : 'Người ấy';
 
+      final configuredBucket = AppConfig.firebaseStorageBucket.trim();
+      final defaultMaleAvatarUrl = configuredBucket.isEmpty
+          ? ''
+          : 'https://firebasestorage.googleapis.com/v0/b/$configuredBucket/o/default_avatars%2Fmale.jpg?alt=media';
+      final defaultFemaleAvatarUrl = configuredBucket.isEmpty
+          ? ''
+          : 'https://firebasestorage.googleapis.com/v0/b/$configuredBucket/o/default_avatars%2Ffemale.jpg?alt=media';
       final avt1 = settings['avtUser1']?.toString().isNotEmpty == true
           ? settings['avtUser1'].toString()
-          : 'https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/default_avatars%2Fmale.jpg?alt=media';
+          : defaultMaleAvatarUrl;
       final avt2 = settings['avtUser2']?.toString().isNotEmpty == true
           ? settings['avtUser2'].toString()
-          : 'https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/default_avatars%2Ffemale.jpg?alt=media';
+          : defaultFemaleAvatarUrl;
 
       final status1Text = _presenceStatusText('user1');
       final status2Text = _presenceStatusText('user2');
