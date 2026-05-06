@@ -99,6 +99,7 @@ class DiaryMemoryController extends ChangeNotifier {
   List<String> _pendingUploadPaths = const <String>[];
   String? _pendingUploadMessage;
   bool _isUploadingMemories = false;
+  bool _isDisposed = false;
 
   bool get isSelectionMode => _isSelectionMode;
   int get selectedMemoriesCount => _selectedMemories.length;
@@ -117,6 +118,13 @@ class DiaryMemoryController extends ChangeNotifier {
   int get _memoryQueryLimit => _memoryVisibleLimit ?? _memoryCacheLimit;
 
   int get _memoryLoadMoreStep => AppConfig.albumPageSize;
+
+  void _notifyIfActive() {
+    if (_isDisposed) {
+      return;
+    }
+    notifyListeners();
+  }
 
   void _setPendingUploadState(
     List<String> paths, {
@@ -1584,7 +1592,7 @@ class DiaryMemoryController extends ChangeNotifier {
       }
     } finally {
       _isUploadingMemories = false;
-      notifyListeners();
+      _notifyIfActive();
     }
   }
 
@@ -1627,6 +1635,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isDisposed = true;
     selectionTickVN.dispose();
     super.dispose();
   }
