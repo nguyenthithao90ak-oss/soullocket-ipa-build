@@ -31,7 +31,26 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         20,
         compactMetaLayout ? 14 : 20,
       ),
-      decoration: _homeCardDecoration(radius: 28),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0x33FFFFFF),
+            const Color(0x22FFD8E7),
+            const Color(0x26322544),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: Colors.white.withOpacity(0.22), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF291521).withOpacity(0.14),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.center,
