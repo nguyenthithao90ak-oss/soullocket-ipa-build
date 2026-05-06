@@ -766,47 +766,6 @@ class MyApp extends StatelessWidget {
           },
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: SLColors.primary,
-              primary: SLColors.primary,
-              secondary: SLColors.secondary,
-              tertiary: SLColors.accentPurple,
-              surface: SLColors.bgCard,
-              surfaceContainerHighest: SLColors.bgSubtle,
-              error: SLColors.danger,
-            ),
-            useMaterial3: true,
-            scaffoldBackgroundColor: SLColors.bgMain,
-            canvasColor: SLColors.bgMain,
-            cardColor: SLColors.bgCard,
-            dividerColor: SLColors.border,
-            shadowColor: Colors.black.withOpacity(0.08),
-            splashFactory: InkRipple.splashFactory,
-                color: SLColors.textTertiary,
-                fontWeight: FontWeight.w700,
-              ),
-              labelStyle: SLTheme.quicksand(
-                color: SLColors.textSecond,
-                fontWeight: FontWeight.w700,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: SLRadius.lgAll,
-                borderSide: const BorderSide(color: SLColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: SLRadius.lgAll,
-                borderSide:
-                    const BorderSide(color: SLColors.primary, width: 1.6),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: SLRadius.lgAll,
-                borderSide: const BorderSide(color: SLColors.danger),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: SLRadius.lgAll,
                 borderSide:
                     const BorderSide(color: SLColors.danger, width: 1.6),
               ),
