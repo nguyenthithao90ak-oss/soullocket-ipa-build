@@ -1,11 +1,9 @@
 import 'dart:convert';
-import 'package:sqflite/sqflite.dart';
+
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'dart:async';
+import 'package:sqflite/sqflite.dart';
 
 class OfflineCacheService {
   static final OfflineCacheService instance = OfflineCacheService._internal();
@@ -13,16 +11,6 @@ class OfflineCacheService {
   static SharedPreferences? _cachedPrefs;
   static Future<void>? _initializingPrefs;
   static const int _defaultSchemaVersion = 1;
-  static const int _retryBaseDelayMs = 30000;
-  static const int _retryMaxDelayMs = 300000;
-  static const int _maxRetryCount = 6;
-  static bool _isSyncing = false;
-  static const String _queueStatusPending = 'pending';
-  static const String _queueStatusSyncing = 'syncing';
-  static const String _queueStatusSynced = 'synced';
-  static const String _queueStatusFailed = 'failed';
-  static final StreamController<Map<String, dynamic>> _queueController = StreamController<Map<String, dynamic>>.broadcast();
-  static Map<String, dynamic>? _lastQueueSummary;
 
   OfflineCacheService._internal();
 
@@ -56,40 +44,14 @@ class OfflineCacheService {
     return _database!;
   }
 
-  Future<Database?> _requireDatabase() async {
-    try {
-      return await database;
-    } catch (e) {
-      return null;
-    }
-  }
-
   Future<Database> _initDatabase() async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, 'offline_cache.db');
-    
-    return await openDatabase(
+
+    return openDatabase(
       path,
-      version: 2,
+      version: 1,
       onCreate: _onCreate,
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await db.execute('''
-            CREATE TABLE sync_queue (
-              id TEXT PRIMARY KEY,
-              path TEXT,
-              action TEXT,
-              payload TEXT,
-              status TEXT,
-              createdAt INTEGER,
-              timestamp INTEGER,
-              retryCount INTEGER,
-              lastError TEXT,
-              syncedAt INTEGER
-            )
-          ''');
-        }
-      }
     );
   }
 
@@ -111,150 +73,9 @@ class OfflineCacheService {
         updated_at INTEGER
       )
     ''');
-    
-    await db.execute('''
-      CREATE TABLE sync_queue (
-        id TEXT PRIMARY KEY,
-        path TEXT,
-        action TEXT,
-        payload TEXT,
-        status TEXT,
-        createdAt INTEGER,
-        timestamp INTEGER,
-        retryCount INTEGER,
-        lastError TEXT,
-        syncedAt INTEGER
-      )
-    ''');
 
     await db.execute('CREATE INDEX idx_chat_house ON chat_cache (house_id)');
     await db.execute('CREATE INDEX idx_diary_house ON diary_cache (house_id)');
-  }
-
-  static Future<void> syncPendingData() async {
-    if (_isSyncing) {
-      return;
-    }
-
-    final db = await instance._requireDatabase();
-    if (db == null) return;
-
-    final queue = await db.query(
-      'sync_queue',
-      where: 'status IN (?, ?)',
-      whereArgs: [_queueStatusPending, _queueStatusFailed],
-      orderBy: 'createdAt ASC, timestamp ASC',
-    );
-    if (queue.isEmpty) {
-      await instance._publishQueueSummary();
-      return;
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      await instance._publishQueueSummary();
-      return;
-    }
-
-    _isSyncing = true;
-    final fbDb = FirebaseDatabase.instance;
-
-    try {
-      var shouldStopProcessing = false;
-      for (final task in queue) {
-        if (shouldStopProcessing) {
-          break;
-        }
-
-        final id = task['id'] as String;
-        final taskPath = task['path'] as String;
-        final action = (task['action'] as String).toUpperCase();
-        final payloadStr = task['payload'] as String;
-        final retryCount = (task['retryCount'] as int?) ?? 0;
-        final status = task['status']?.toString() ?? _queueStatusPending;
-        final lastAttemptAt = (task['timestamp'] as int?) ?? 0;
-        if (retryCount >= _maxRetryCount) {
-          continue;
-        }
-        if (status == _queueStatusFailed &&
-            !instance._shouldRetryFailedTask(retryCount, lastAttemptAt)) {
-          continue;
-        }
-
-        await db.update(
-          'sync_queue',
-          {
-            'status': _queueStatusSyncing,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          },
-          where: 'id = ?',
-          whereArgs: [id],
-        );
-        await instance._publishQueueSummary();
-
-        try {
-          final dynamic data =
-              payloadStr.isEmpty ? null : json.decode(payloadStr);
-
-          switch (action) {
-            case 'SET':
-              await fbDb.ref(taskPath).set(data);
-              break;
-            case 'UPDATE':
-              await fbDb
-                  .ref(taskPath)
-                  .update(Map<String, dynamic>.from(data as Map));
-              break;
-            case 'PUSH':
-              await fbDb.ref(taskPath).push().set(data);
-              break;
-            case 'DELETE':
-              await fbDb.ref(taskPath).remove();
-              break;
-            default:
-              throw StateError('Unknown sync action: $action');
-          }
-
-          await db.update(
-            'sync_queue',
-            {
-              'status': _queueStatusSynced,
-              'lastError': null,
-              'syncedAt': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [id],
-          );
-          debugPrint('[SyncQueue] Synced $action -> $taskPath');
-        } catch (e) {
-          final nextRetryCount = retryCount + 1;
-          final retryable = instance._isRetryableError(e);
-          final reachedRetryLimit = nextRetryCount >= _maxRetryCount;
-          await db.update(
-            'sync_queue',
-            {
-              'status': _queueStatusFailed,
-              'retryCount': nextRetryCount,
-              'lastError': e.toString(),
-              'timestamp': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [id],
-          );
-          debugPrint('[SyncQueue] Failed $action -> $taskPath: $e');
-          if (!retryable || reachedRetryLimit) {
-            shouldStopProcessing = instance._isBlockingQueueError(e);
-          }
-        } finally {
-          await instance._publishQueueSummary();
-        }
-      }
-
-      await instance._purgeOldSyncedRows(db);
-    } finally {
-      _isSyncing = false;
-      await instance._publishQueueSummary();
-    }
   }
 
   Future<void> cacheData(
@@ -314,11 +135,13 @@ class OfflineCacheService {
 
   static Future<void> saveCache(String key, dynamic data) async {
     final prefs = await SharedPreferences.getInstance();
+    _cachedPrefs = prefs;
     await prefs.setString('offline_cache_$key', jsonEncode(data));
   }
 
   static Future<dynamic> loadCache(String key) async {
     final prefs = await SharedPreferences.getInstance();
+    _cachedPrefs = prefs;
     final raw = prefs.getString('offline_cache_$key');
     if (raw == null) return null;
     try {
@@ -385,85 +208,9 @@ class OfflineCacheService {
     return DateTime.now().millisecondsSinceEpoch - updatedAt >= staleAfterMs;
   }
 
-  bool _shouldRetryFailedTask(int retryCount, int lastAttemptAt) {
-    if (retryCount <= 0 || lastAttemptAt <= 0) {
-      return true;
-    }
-    final multiplier = retryCount > 10 ? 10 : retryCount;
-    final delayMs = (_retryBaseDelayMs * multiplier).clamp(
-      _retryBaseDelayMs,
-      _retryMaxDelayMs,
-    );
-    return DateTime.now().millisecondsSinceEpoch - lastAttemptAt >= delayMs;
-  }
-
-  bool _isRetryableError(Object error) {
-    final normalized = error.toString().toLowerCase();
-    if (normalized.contains('permission-denied') ||
-        normalized.contains('permission denied') ||
-        normalized.contains('invalid-argument') ||
-        normalized.contains('invalid argument') ||
-        normalized.contains('unauthenticated') ||
-        normalized.contains('app check') ||
-        normalized.contains('too many attempts')) {
-      return false;
-    }
-    return normalized.contains('network') ||
-        normalized.contains('socket') ||
-        normalized.contains('timeout') ||
-        normalized.contains('unavailable') ||
-        normalized.contains('disconnected') ||
-        normalized.contains('connection');
-  }
-
-  bool _isBlockingQueueError(Object error) {
-    final normalized = error.toString().toLowerCase();
-    return normalized.contains('unauthenticated') ||
-        normalized.contains('permission-denied') ||
-        normalized.contains('permission denied') ||
-        normalized.contains('app check');
-  }
-
-  Future<void> _purgeOldSyncedRows(Database db) async {
-    final syncedRows = await db.query(
-      'sync_queue',
-      where: 'status = ?',
-      whereArgs: [_queueStatusSynced],
-      orderBy: 'syncedAt DESC',
-    );
-    if (syncedRows.length <= 120) {
-      return;
-    }
-
-    final overflow = syncedRows.skip(120);
-    for (final row in overflow) {
-      await db.delete(
-        'sync_queue',
-        where: 'id = ?',
-        whereArgs: [row['id']],
-      );
-    }
-  }
-
-  Future<void> _publishQueueSummary() async {
-    if (_queueController.isClosed) {
-      return;
-    }
-    _lastQueueSummary = null;
-    final summary = await getQueueSummary(forceRefresh: true);
-    _queueController.add(summary);
-  }
-
-  Future<Map<String, dynamic>> getQueueSummary({bool forceRefresh = false}) async {
-    if (!forceRefresh && _lastQueueSummary != null) return _lastQueueSummary!;
-    final db = await database;
-    final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM sync_queue WHERE status != ?', [_queueStatusSynced])) ?? 0;
-    _lastQueueSummary = {'pendingCount': count};
-    return _lastQueueSummary!;
-  }
-
   static Future<void> clearAllCache() async {
     final prefs = await SharedPreferences.getInstance();
+    _cachedPrefs = prefs;
     final keys = prefs.getKeys().where((k) => k.startsWith('offline_cache_'));
     for (final key in keys) {
       await prefs.remove(key);
