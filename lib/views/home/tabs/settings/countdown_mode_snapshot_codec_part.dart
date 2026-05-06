@@ -36,6 +36,7 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
       avatarUrl2: snapshot.avatarUrl2,
       customBackgroundUrl: snapshot.customBackgroundUrl,
       centerIconType: snapshot.centerIconType,
+      updatedAtMs: snapshot.updatedAtMs,
     );
   }
 
@@ -61,6 +62,7 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
       'avatarUrl2': snapshot.avatarUrl2,
       'customBackgroundUrl': snapshot.customBackgroundUrl,
       'centerIconType': snapshot.centerIconType,
+      'updatedAtMs': snapshot.updatedAtMs,
     };
   }
 
@@ -125,6 +127,9 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
               data['center_icon_type'] ??
               fallback.centerIconType)
           .toString(),
+      updatedAtMs:
+          _readSerializedInt(data['updatedAtMs'] ?? data['updated_at_ms']) ??
+              fallback.updatedAtMs,
     );
   }
 
@@ -152,6 +157,16 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     return double.tryParse(value?.toString().trim() ?? '');
   }
 
+  int? _readSerializedInt(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    return int.tryParse(value?.toString().trim() ?? '');
+  }
+
   _CountdownSpaceSnapshot _captureCurrentSnapshot() {
     return _CountdownSpaceSnapshot(
       singleMode: _singleMode,
@@ -170,6 +185,7 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
       avatarUrl2: _avatarUrl2,
       customBackgroundUrl: _customBackgroundUrl,
       centerIconType: _centerIconType,
+      updatedAtMs: DateTime.now().millisecondsSinceEpoch,
     );
   }
 
@@ -190,6 +206,14 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     _avatarUrl2 = snapshot.avatarUrl2;
     _customBackgroundUrl = snapshot.customBackgroundUrl;
     _centerIconType = snapshot.centerIconType;
+  }
+
+  bool _isIncomingSnapshotNewer(String scope, _CountdownSpaceSnapshot incoming) {
+    final current = _spaceSnapshots[scope];
+    if (current == null) {
+      return true;
+    }
+    return incoming.updatedAtMs >= current.updatedAtMs;
   }
 
   _CountdownSpaceSnapshot _snapshotFromPrefs(
@@ -266,6 +290,7 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
       centerIconType:
           prefs.getString(_prefKey('center_icon_type', scope: scope)) ??
               'heart',
+      updatedAtMs: prefs.getInt(_prefKey('updated_at_ms', scope: scope)) ?? 0,
     );
   }
 
