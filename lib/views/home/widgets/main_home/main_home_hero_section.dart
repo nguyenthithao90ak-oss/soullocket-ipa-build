@@ -65,9 +65,9 @@ class _ModernHomeBody extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF2A1523).withOpacity(0.18),
-                  const Color(0xFF5B2544).withOpacity(0.12),
-                  const Color(0xFF120A11).withOpacity(0.08),
+                  const Color(0xFF2A1523).withValues(alpha: 0.18),
+                  const Color(0xFF5B2544).withValues(alpha: 0.12),
+                  const Color(0xFF120A11).withValues(alpha: 0.08),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -82,7 +82,7 @@ class _ModernHomeBody extends StatelessWidget {
             right: -72,
             child: _HomeDecorGlow(
               size: 210,
-              color: SLColors.primary.withOpacity(0.20),
+              color: SLColors.primary.withValues(alpha: 0.20),
             ),
           ),
           Positioned(
@@ -90,7 +90,7 @@ class _ModernHomeBody extends StatelessWidget {
             left: -96,
             child: _HomeDecorGlow(
               size: 230,
-              color: SLColors.secondary.withOpacity(0.16),
+              color: SLColors.secondary.withValues(alpha: 0.16),
             ),
           ),
         ],
