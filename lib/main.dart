@@ -781,22 +781,6 @@ class MyApp extends StatelessWidget {
             dividerColor: SLColors.border,
             shadowColor: Colors.black.withOpacity(0.08),
             splashFactory: InkRipple.splashFactory,
-            splashColor: SLColors.primary.withOpacity(0.05),
-            highlightColor: SLColors.primary.withOpacity(0.02),
-            hoverColor: SLColors.primary.withOpacity(0.02),
-            focusColor: SLColors.primary.withOpacity(0.03),
-            textTheme: SLTypography.textTheme(baseTextTheme),
-            appBarTheme: AppBarTheme(
-              backgroundColor: SLColors.bgElevated.withOpacity(0.92),
-              foregroundColor: SLColors.textPrimary,
-              elevation: 0,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              ),
-            ),
-            inputDecorationTheme: InputDecorationTheme(
-              filled: true,
-              fillColor: SLColors.bgElevated,
-              hintStyle: SLTheme.quicksand(
                 color: SLColors.textTertiary,
                 fontWeight: FontWeight.w700,
               ),
