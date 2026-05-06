@@ -1545,7 +1545,7 @@ class AuthSignInService {
         .replaceAll('deleteUserDataHttp', 'undoAccountDeletionHttp');
     final response = await _httpPost(
       Uri.parse(undoEndpoint),
-      headers: await AppCheckHttpHeaders.withRequiredToken({
+      headers: await AppCheckHttpHeaders.withOptionalToken({
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $idToken',
       }),
@@ -1763,7 +1763,7 @@ class AuthSignInService {
 
       final response = await _httpPost(
         Uri.parse(endpoint),
-        headers: await AppCheckHttpHeaders.withRequiredToken({
+        headers: await AppCheckHttpHeaders.withOptionalToken({
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
         }),
