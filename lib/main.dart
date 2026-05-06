@@ -763,6 +763,195 @@ class MyApp extends StatelessWidget {
               color: SLColors.bgMain,
               child: content,
             );
+          },
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: SLColors.primary,
+              primary: SLColors.primary,
+              secondary: SLColors.secondary,
+              tertiary: SLColors.accentPurple,
+              surface: SLColors.bgCard,
+              surfaceContainerHighest: SLColors.bgSubtle,
+              error: SLColors.danger,
+            ),
+            useMaterial3: true,
+            scaffoldBackgroundColor: SLColors.bgMain,
+            canvasColor: SLColors.bgMain,
+            cardColor: SLColors.bgCard,
+            dividerColor: SLColors.border,
+            shadowColor: Colors.black.withOpacity(0.08),
+            splashFactory: InkRipple.splashFactory,
+            splashColor: SLColors.primary.withOpacity(0.05),
+            highlightColor: SLColors.primary.withOpacity(0.02),
+            hoverColor: SLColors.primary.withOpacity(0.02),
+            focusColor: SLColors.primary.withOpacity(0.03),
+            textTheme: SLTypography.textTheme(baseTextTheme),
+            appBarTheme: AppBarTheme(
+              backgroundColor: SLColors.bgElevated.withOpacity(0.92),
+              foregroundColor: SLColors.textPrimary,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              centerTitle: true,
+              surfaceTintColor: Colors.transparent,
+              titleTextStyle: SLTypography.titleMedium,
+            ),
+            cardTheme: CardThemeData(
+              color: SLColors.bgCard,
+              elevation: 0,
+              margin: EdgeInsets.zero,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: SLRadius.xlAll,
+                side: const BorderSide(color: SLColors.borderLight),
+              ),
+            ),
+            checkboxTheme: CheckboxThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5),
+              ),
+              side: const BorderSide(color: SLColors.border),
+              fillColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return SLColors.primary;
+                }
+                return Colors.white;
+              }),
+              checkColor: WidgetStateProperty.all(Colors.white),
+            ),
+            dropdownMenuTheme: DropdownMenuThemeData(
+              textStyle: SLTheme.quicksand(
+                color: SLColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+              menuStyle: MenuStyle(
+                backgroundColor: WidgetStateProperty.all(SLColors.bgElevated),
+                surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
+                shape: WidgetStateProperty.all(
+                  RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
+                ),
+                side: WidgetStateProperty.all(
+                  const BorderSide(color: SLColors.borderLight),
+                ),
+              ),
+            ),
+            dividerTheme: const DividerThemeData(
+              color: SLColors.borderLight,
+              thickness: 1,
+              space: 1,
+            ),
+            dialogTheme: DialogThemeData(
+              backgroundColor: SLColors.bgElevated,
+              shape: RoundedRectangleBorder(
+                borderRadius: SLRadius.xlAll,
+              ),
+            ),
+            bottomSheetTheme: const BottomSheetThemeData(
+              backgroundColor: SLColors.bgElevated,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: SLColors.bgElevated,
+              hintStyle: SLTheme.quicksand(
+                color: SLColors.textTertiary,
+                fontWeight: FontWeight.w700,
+              ),
+              labelStyle: SLTheme.quicksand(
+                color: SLColors.textSecond,
+                fontWeight: FontWeight.w700,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: SLRadius.lgAll,
+                borderSide: const BorderSide(color: SLColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: SLRadius.lgAll,
+                borderSide:
+                    const BorderSide(color: SLColors.primary, width: 1.6),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: SLRadius.lgAll,
+                borderSide: const BorderSide(color: SLColors.danger),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: SLRadius.lgAll,
+                borderSide:
+                    const BorderSide(color: SLColors.danger, width: 1.6),
+              ),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                foregroundColor: SLColors.textInverse,
+                backgroundColor: SLColors.primary,
+                disabledForegroundColor: SLColors.textInverse.withOpacity(0.7),
+                disabledBackgroundColor: SLColors.primary.withOpacity(0.45),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
+                textStyle: SLTheme.quicksand(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: SLRadius.pillAll,
+                ),
+              ),
+            ),
+            outlinedButtonTheme: OutlinedButtonThemeData(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: SLColors.textPrimary,
+                side: const BorderSide(color: SLColors.border),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
+                textStyle: SLTheme.quicksand(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: SLRadius.pillAll,
+                ),
+              ),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: SLColors.primary,
+                textStyle: SLTheme.quicksand(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            navigationBarTheme: NavigationBarThemeData(
+              backgroundColor: SLColors.bgElevated.withOpacity(0.96),
+              surfaceTintColor: Colors.transparent,
+              indicatorColor: SLColors.primarySoft,
+              labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                final selected = states.contains(WidgetState.selected);
+                return SLTheme.quicksand(
+                  fontSize: 11.5,
+                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+                  color: selected ? SLColors.textPrimary : SLColors.textSecond,
+                );
+              }),
+            ),
+            snackBarTheme: SnackBarThemeData(
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
+              backgroundColor: SLColors.textPrimary,
+              contentTextStyle: SLTheme.quicksand(
+                color: SLColors.textInverse,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
