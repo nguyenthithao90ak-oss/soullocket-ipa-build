@@ -351,22 +351,22 @@ class _MainHomeTabState extends State<MainHomeTab> {
   BoxDecoration _homeCardDecoration({double radius = 24}) {
     final tone = UiPrefs.notifier.value.homeBlockToneKey;
     final color = switch (tone) {
-      'mist' => const Color(0xFFF7FBFF).withOpacity(0.65),
-      'rose' => const Color(0xFFFFF2F7).withOpacity(0.65),
-      'glass' => Colors.white.withOpacity(0.55),
-      _ => Colors.white.withOpacity(0.65),
+      'mist' => const Color(0xFFEEF4FF).withOpacity(0.42),
+      'rose' => const Color(0xFFFFE1EC).withOpacity(0.38),
+      'glass' => const Color(0xFF3A2434).withOpacity(0.22),
+      _ => const Color(0xFF43293A).withOpacity(0.20),
     };
     final borderColor = switch (tone) {
-      'mist' => const Color(0xFFE3F2FD).withOpacity(0.8),
-      'rose' => const Color(0xFFF8D7E4).withOpacity(0.8),
-      'glass' => Colors.white.withOpacity(0.6),
-      _ => Colors.white.withOpacity(0.6),
+      'mist' => const Color(0xFFDAE8FF).withOpacity(0.62),
+      'rose' => const Color(0xFFFFC7DA).withOpacity(0.60),
+      'glass' => Colors.white.withOpacity(0.22),
+      _ => const Color(0xFFFFD6E4).withOpacity(0.26),
     };
     final shadowColor = switch (tone) {
-      'mist' => const Color(0xFF64B5F6).withOpacity(0.08),
-      'rose' => SLColors.primary.withOpacity(0.08),
-      'glass' => Colors.white.withOpacity(0.05),
-      _ => SLColors.primary.withOpacity(0.08),
+      'mist' => const Color(0xFF64B5F6).withOpacity(0.10),
+      'rose' => SLColors.primary.withOpacity(0.12),
+      'glass' => Colors.black.withOpacity(0.14),
+      _ => const Color(0xFF2C1623).withOpacity(0.16),
     };
 
     return BoxDecoration(
@@ -375,11 +375,11 @@ class _MainHomeTabState extends State<MainHomeTab> {
       boxShadow: [
         BoxShadow(
           color: shadowColor,
-          blurRadius: 24,
-          offset: const Offset(0, 8),
+          blurRadius: 28,
+          offset: const Offset(0, 10),
         ),
       ],
-      border: Border.all(color: borderColor, width: 1.5),
+      border: Border.all(color: borderColor, width: 1.2),
     );
   }
 
