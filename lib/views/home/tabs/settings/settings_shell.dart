@@ -218,7 +218,10 @@ extension _SettingsTabShell on _SettingsTabState {
             : GiftMakerScreen(houseId: houseId, myName: myName);
         break;
       case 'giftcode':
-        screen = houseId.isEmpty
+        screen = houseId.isEmpty ||
+                (!kDebugMode &&
+                    !kIsWeb &&
+                    defaultTargetPlatform == TargetPlatform.iOS)
             ? null
             : GiftcodeScreen(houseId: houseId, myName: myName);
         break;
