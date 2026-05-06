@@ -38,6 +38,7 @@ class LocalDatabaseService {
   static const _queueStatusSynced = 'synced';
   static const int _retryBaseDelayMs = 30000;
   static const int _retryMaxDelayMs = 300000;
+  static const int _maxRetryCount = 6;
 
   final StreamController<SyncQueueSummary> _queueController =
       StreamController<SyncQueueSummary>.broadcast();
@@ -302,7 +303,12 @@ class LocalDatabaseService {
     final fbDb = FirebaseDatabase.instance;
 
     try {
+      var shouldStopProcessing = false;
       for (final task in queue) {
+        if (shouldStopProcessing) {
+          break;
+        }
+
         final id = task['id'] as String;
         final taskPath = task['path'] as String;
         final action = (task['action'] as String).toUpperCase();
@@ -310,6 +316,9 @@ class LocalDatabaseService {
         final retryCount = (task['retryCount'] as int?) ?? 0;
         final status = task['status']?.toString() ?? _queueStatusPending;
         final lastAttemptAt = (task['timestamp'] as int?) ?? 0;
+        if (retryCount >= _maxRetryCount) {
+          continue;
+        }
         if (status == _queueStatusFailed &&
             !_shouldRetryFailedTask(retryCount, lastAttemptAt)) {
           continue;
@@ -319,7 +328,7 @@ class LocalDatabaseService {
           'sync_queue',
           {
             'status': _queueStatusSyncing,
-            'timestamp': DateTime.now().millisecondsSinceEpoch
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
           },
           where: 'id = ?',
           whereArgs: [id],
@@ -361,11 +370,14 @@ class LocalDatabaseService {
           );
           debugPrint('[SyncQueue] Synced $action -> $taskPath');
         } catch (e) {
+          final nextRetryCount = retryCount + 1;
+          final retryable = _isRetryableError(e);
+          final reachedRetryLimit = nextRetryCount >= _maxRetryCount;
           await db.update(
             'sync_queue',
             {
               'status': _queueStatusFailed,
-              'retryCount': retryCount + 1,
+              'retryCount': nextRetryCount,
               'lastError': e.toString(),
               'timestamp': DateTime.now().millisecondsSinceEpoch,
             },
@@ -373,7 +385,9 @@ class LocalDatabaseService {
             whereArgs: [id],
           );
           debugPrint('[SyncQueue] Failed $action -> $taskPath: $e');
-          break;
+          if (!retryable || reachedRetryLimit) {
+            shouldStopProcessing = _isBlockingQueueError(e);
+          }
         } finally {
           await _publishQueueSummary();
         }
@@ -396,6 +410,33 @@ class LocalDatabaseService {
       _retryMaxDelayMs,
     );
     return DateTime.now().millisecondsSinceEpoch - lastAttemptAt >= delayMs;
+  }
+
+  bool _isRetryableError(Object error) {
+    final normalized = error.toString().toLowerCase();
+    if (normalized.contains('permission-denied') ||
+        normalized.contains('permission denied') ||
+        normalized.contains('invalid-argument') ||
+        normalized.contains('invalid argument') ||
+        normalized.contains('unauthenticated') ||
+        normalized.contains('app check') ||
+        normalized.contains('too many attempts')) {
+      return false;
+    }
+    return normalized.contains('network') ||
+        normalized.contains('socket') ||
+        normalized.contains('timeout') ||
+        normalized.contains('unavailable') ||
+        normalized.contains('disconnected') ||
+        normalized.contains('connection');
+  }
+
+  bool _isBlockingQueueError(Object error) {
+    final normalized = error.toString().toLowerCase();
+    return normalized.contains('unauthenticated') ||
+        normalized.contains('permission-denied') ||
+        normalized.contains('permission denied') ||
+        normalized.contains('app check');
   }
 
   Future<void> _purgeOldSyncedRows(Database db) async {
