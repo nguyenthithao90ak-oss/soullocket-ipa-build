@@ -1761,7 +1761,7 @@ class AuthSignInService {
         headers: await AppCheckHttpHeaders.withRequiredToken({
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
-        }, forceRefresh: true),
+        }),
         body: jsonEncode({
           'source': 'flutter_app',
         }),
