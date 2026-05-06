@@ -35,9 +35,19 @@ class AppCheckHttpHeaders {
   }) async {
     final mergedHeaders = Map<String, String>.from(headers);
 
+    Future<String?> loadToken(bool refresh) {
+      return FirebaseAppCheck.instance.getToken(refresh);
+    }
+
     try {
-      final token = await FirebaseAppCheck.instance.getToken(forceRefresh);
-      final normalizedToken = token?.trim() ?? '';
+      var token = await loadToken(forceRefresh);
+      var normalizedToken = token?.trim() ?? '';
+
+      if (normalizedToken.isEmpty && forceRefresh) {
+        token = await loadToken(false);
+        normalizedToken = token?.trim() ?? '';
+      }
+
       if (normalizedToken.isNotEmpty) {
         mergedHeaders[headerName] = normalizedToken;
         return mergedHeaders;
@@ -46,6 +56,16 @@ class AppCheckHttpHeaders {
         throw StateError('Firebase App Check token is empty.');
       }
     } catch (error) {
+      if (forceRefresh && error.toString().contains('Too many attempts')) {
+        try {
+          final fallbackToken = await loadToken(false);
+          final normalizedFallbackToken = fallbackToken?.trim() ?? '';
+          if (normalizedFallbackToken.isNotEmpty) {
+            mergedHeaders[headerName] = normalizedFallbackToken;
+            return mergedHeaders;
+          }
+        } catch (_) {}
+      }
       if (kDebugMode) {
         debugPrint('App Check token unavailable for HTTP headers: $error');
       }
