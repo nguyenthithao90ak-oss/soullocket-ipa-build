@@ -790,65 +790,6 @@ class MyApp extends StatelessWidget {
               backgroundColor: SLColors.bgElevated.withOpacity(0.92),
               foregroundColor: SLColors.textPrimary,
               elevation: 0,
-              scrolledUnderElevation: 0,
-              centerTitle: true,
-              surfaceTintColor: Colors.transparent,
-              titleTextStyle: SLTypography.titleMedium,
-            ),
-            cardTheme: CardTheme(
-              color: SLColors.bgCard,
-              elevation: 0,
-              margin: EdgeInsets.zero,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: SLRadius.xlAll,
-                side: const BorderSide(color: SLColors.borderLight),
-              ),
-            ),
-            checkboxTheme: CheckboxThemeData(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5),
-              ),
-              side: const BorderSide(color: SLColors.border),
-              fillColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return SLColors.primary;
-                }
-                return Colors.white;
-              }),
-              checkColor: WidgetStateProperty.all(Colors.white),
-            ),
-            dropdownMenuTheme: DropdownMenuThemeData(
-              textStyle: SLTheme.quicksand(
-                color: SLColors.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-              menuStyle: MenuStyle(
-                backgroundColor: WidgetStateProperty.all(SLColors.bgElevated),
-                surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
-                shape: WidgetStateProperty.all(
-                  RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-                ),
-                side: WidgetStateProperty.all(
-                  const BorderSide(color: SLColors.borderLight),
-                ),
-              ),
-            ),
-            dividerTheme: const DividerThemeData(
-              color: SLColors.borderLight,
-              thickness: 1,
-              space: 1,
-            ),
-            dialogTheme: DialogTheme(
-              backgroundColor: SLColors.bgElevated,
-              shape: RoundedRectangleBorder(
-                borderRadius: SLRadius.xlAll,
-              ),
-            ),
-            bottomSheetTheme: const BottomSheetThemeData(
-              backgroundColor: SLColors.bgElevated,
-              surfaceTintColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
             ),
