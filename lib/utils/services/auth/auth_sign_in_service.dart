@@ -1527,7 +1527,12 @@ class AuthSignInService {
       throw handleFirebaseAuthError(error);
     } catch (error) {
       if (error is String) rethrow;
-      throw 'Không thể xóa tài khoản lúc này: $error';
+      final resolvedError = AppErrorMapper.resolve(
+        error,
+        fallbackMessage:
+            'Không thể xóa tài khoản lúc này: hãy kiểm tra mạng và đăng nhập lại nếu cần.',
+      );
+      throw resolvedError.message;
     }
   }
 
