@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,36 +44,6 @@ class UtilityService {
   };
   static const Set<String> _debugOnlyIds = {
     'sticker_library',
-    'friendly_chat',
-  };
-  static final Set<String> _allAppIds =
-      allApps.map((UtilityApp app) => app.id).toSet();
-  static final Map<String, UtilityApp> _visibleAppsById = {
-    for (final UtilityApp app in allApps)
-      if (isUtilityVisibleInCurrentBuild(app.id)) app.id: app,
-  };
-
-  static String normalizeRelationshipMode(String? relationshipMode) {
-    final mode = relationshipMode?.trim().toLowerCase();
-    return mode == 'couple' ? 'couple' : 'single';
-  }
-
-  static bool isCoupleOnly(String id) => _coupleOnlyIds.contains(id);
-
-  static bool isUtilityVisibleInCurrentBuild(String id) {
-    return kDebugMode || !_debugOnlyIds.contains(id);
-  }
-
-  static bool isUtilityAllowed(String id, String? relationshipMode) {
-    final mode = normalizeRelationshipMode(relationshipMode);
-    if (mode == 'single' && isCoupleOnly(id)) return false;
-    return true;
-  }
-
-  static String blockedMessageForMode(String id, String? relationshipMode) {
-    if (isUtilityAllowed(id, relationshipMode)) {
-      return '';
-    }
     if (isCoupleOnly(id)) {
       return L10nService().translate('utility_couple_mode_blocked');
     }
