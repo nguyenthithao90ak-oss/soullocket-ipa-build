@@ -149,7 +149,11 @@ extension _CountdownModeIndependentScreenStatePart
       _incomingSpaceRequests
         ..clear()
         ..addAll(nextIncoming);
-      _spaceSnapshots.addAll(nextSnapshots);
+      nextSnapshots.forEach((houseId, snapshot) {
+        if (_isIncomingSnapshotNewer(houseId, snapshot)) {
+          _spaceSnapshots[houseId] = snapshot;
+        }
+      });
       _optimisticPendingSpaceHouseIds.removeWhere(
         outgoingStatuses.containsKey,
       );
@@ -161,7 +165,10 @@ extension _CountdownModeIndependentScreenStatePart
           openedSpaceId != _selfSpaceHouseId &&
           !_sharedSpaces.containsKey(openedSpaceId) &&
           nextSnapshots.containsKey(openedSpaceId)) {
-        _applySnapshot(nextSnapshots[openedSpaceId]!);
+        final nextSnapshot = nextSnapshots[openedSpaceId]!;
+        if (_isIncomingSnapshotNewer(openedSpaceId, nextSnapshot)) {
+          _applySnapshot(nextSnapshot);
+        }
       }
       _rebuildVisibleSpaces();
     });
@@ -205,14 +212,21 @@ extension _CountdownModeIndependentScreenStatePart
       _sharedSpaces
         ..clear()
         ..addAll(nextSharedSpaces);
-      _spaceSnapshots.addAll(nextSnapshots);
+      nextSnapshots.forEach((houseId, snapshot) {
+        if (_isIncomingSnapshotNewer(houseId, snapshot)) {
+          _spaceSnapshots[houseId] = snapshot;
+        }
+      });
       _optimisticPendingSpaceHouseIds.removeWhere(
         nextSharedSpaces.containsKey,
       );
       final openedSpaceId = _openedSpaceHouseId;
       if (openedSpaceId != null && openedSpaceId != _selfSpaceHouseId) {
         if (nextSnapshots.containsKey(openedSpaceId)) {
-          _applySnapshot(nextSnapshots[openedSpaceId]!);
+          final nextSnapshot = nextSnapshots[openedSpaceId]!;
+          if (_isIncomingSnapshotNewer(openedSpaceId, nextSnapshot)) {
+            _applySnapshot(nextSnapshot);
+          }
         } else if (!nextSharedSpaces.containsKey(openedSpaceId)) {
           didCloseRemovedSpace = true;
           _openedSpaceHouseId = null;
@@ -457,6 +471,45 @@ extension _CountdownModeIndependentScreenStatePart
       _transparentMode,
     );
     await prefs.setDouble(_prefKey('size_px', scope: scope), _countdownSizePx);
+    class _CountdownSpaceSnapshot {
+  const _CountdownSpaceSnapshot({
+    required this.singleMode,
+    required this.anchorDate,
+    required this.themeKey,
+    required this.styleKey,
+    required this.frameKey,
+    required this.fontKey,
+    required this.transparentMode,
+    required this.sizePx,
+    required this.topLabel,
+    required this.bottomLabel,
+    required this.nameU1,
+    required this.nameU2,
+    required this.avatarUrl1,
+    required this.avatarUrl2,
+    required this.customBackgroundUrl,
+    required this.centerIconType,
+    required this.updatedAtMs,
+  });
+
+  final bool singleMode;
+  final DateTime? anchorDate;
+  final String themeKey;
+  final String styleKey;
+  final String frameKey;
+  final String fontKey;
+  final bool transparentMode;
+  final double sizePx;
+  final String topLabel;
+  final String bottomLabel;
+  final String nameU1;
+  final String nameU2;
+  final String avatarUrl1;
+  final String avatarUrl2;
+  final String customBackgroundUrl;
+  final String centerIconType;
+  final int updatedAtMs;
+}
     await prefs.setString(
       _prefKey('bg_url', scope: scope),
       _customBackgroundUrl,
@@ -477,6 +530,10 @@ extension _CountdownModeIndependentScreenStatePart
     await prefs.setString(
       _prefKey('anchor_date', scope: scope),
       _anchorDate == null ? '' : DateInputUtils.formatIsoDate(_anchorDate!),
+    );
+    await prefs.setInt(
+      _prefKey('updated_at_ms', scope: scope),
+      snapshot.updatedAtMs,
     );
     if (mounted) {
       _safeSetState(() {
