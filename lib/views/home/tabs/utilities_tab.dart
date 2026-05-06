@@ -1132,7 +1132,12 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         screen = GiftMakerScreen(houseId: houseId, myName: _myName);
         break;
       case 'giftcode':
-        screen = GiftcodeScreen(houseId: houseId, myName: _myName);
+        screen = houseId.isEmpty ||
+                (!kDebugMode &&
+                    !kIsWeb &&
+                    defaultTargetPlatform == TargetPlatform.iOS)
+            ? null
+            : GiftcodeScreen(houseId: houseId, myName: _myName);
         break;
       case 'history':
         screen = HistoryScreen(houseId: houseId);
