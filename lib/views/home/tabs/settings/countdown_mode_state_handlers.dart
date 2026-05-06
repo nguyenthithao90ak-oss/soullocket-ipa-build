@@ -471,45 +471,6 @@ extension _CountdownModeIndependentScreenStatePart
       _transparentMode,
     );
     await prefs.setDouble(_prefKey('size_px', scope: scope), _countdownSizePx);
-    class _CountdownSpaceSnapshot {
-  const _CountdownSpaceSnapshot({
-    required this.singleMode,
-    required this.anchorDate,
-    required this.themeKey,
-    required this.styleKey,
-    required this.frameKey,
-    required this.fontKey,
-    required this.transparentMode,
-    required this.sizePx,
-    required this.topLabel,
-    required this.bottomLabel,
-    required this.nameU1,
-    required this.nameU2,
-    required this.avatarUrl1,
-    required this.avatarUrl2,
-    required this.customBackgroundUrl,
-    required this.centerIconType,
-    required this.updatedAtMs,
-  });
-
-  final bool singleMode;
-  final DateTime? anchorDate;
-  final String themeKey;
-  final String styleKey;
-  final String frameKey;
-  final String fontKey;
-  final bool transparentMode;
-  final double sizePx;
-  final String topLabel;
-  final String bottomLabel;
-  final String nameU1;
-  final String nameU2;
-  final String avatarUrl1;
-  final String avatarUrl2;
-  final String customBackgroundUrl;
-  final String centerIconType;
-  final int updatedAtMs;
-}
     await prefs.setString(
       _prefKey('bg_url', scope: scope),
       _customBackgroundUrl,
