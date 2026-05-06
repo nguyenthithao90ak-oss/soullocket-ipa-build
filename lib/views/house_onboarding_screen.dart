@@ -641,77 +641,110 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     }
     if (!mounted) return null;
 
-    final otpController = TextEditingController();
-    try {
-      return showDialog<String>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            title: Text(
-              'Xác minh Gmail',
-              style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Thiết bị này đã tạo trên 3 tài khoản/nhà. Nhập mã xác nhận gửi về ${gate.maskedEmail.isNotEmpty ? gate.maskedEmail : email} để tiếp tục tạo nhà.',
-                  style: SLTheme.quicksand(
-                    color: SLColors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                  ),
+    var otpValue = '';
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          title: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEEF5),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: otpController,
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.done,
-                  maxLength: 6,
-                  decoration: const InputDecoration(
-                    labelText: 'Mã Gmail 6 số',
-                    counterText: '',
-                  ),
-                  onSubmitted: (_) {
-                    final otp = otpController.text.trim();
-                    if (otp.isNotEmpty) {
-                      Navigator.of(dialogContext).pop(otp);
-                    }
-                  },
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(
-                  'Để sau',
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+                child: const Icon(
+                  Icons.mark_email_read_rounded,
+                  color: Color(0xFFD81B60),
                 ),
               ),
-              FilledButton(
-                onPressed: () {
-                  final otp = otpController.text.trim();
-                  if (otp.isNotEmpty) {
-                    Navigator.of(dialogContext).pop(otp);
-                  }
-                },
+              const SizedBox(width: 12),
+              Expanded(
                 child: Text(
-                  'Xác nhận',
+                  'Xác minh Gmail',
                   style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                 ),
               ),
             ],
-          );
-        },
-      );
-    } finally {
-      otpController.dispose();
-    }
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nhập mã xác nhận đã gửi về ${gate.maskedEmail.isNotEmpty ? gate.maskedEmail : email} để tiếp tục tạo nhà.',
+                  style: SLTheme.quicksand(
+                    color: SLColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF6FA),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFFFD3E4)),
+                  ),
+                  child: TextField(
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    maxLength: 6,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Mã Gmail 6 số',
+                      counterText: '',
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (value) => otpValue = value.trim(),
+                    onSubmitted: (_) {
+                      if (otpValue.isNotEmpty) {
+                        Navigator.of(dialogContext).pop(otpValue);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Để sau',
+                style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (otpValue.isNotEmpty) {
+                  Navigator.of(dialogContext).pop(otpValue);
+                }
+              },
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              ),
+              child: Text(
+                'Xác nhận',
+                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _setAutoCreateFailureMessage(String message, {Object? error}) {
