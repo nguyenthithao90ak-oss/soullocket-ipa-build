@@ -69,6 +69,7 @@ class _CountdownSpaceSnapshot {
     required this.avatarUrl2,
     required this.customBackgroundUrl,
     required this.centerIconType,
+    required this.updatedAtMs,
   });
 
   final bool singleMode;
@@ -87,6 +88,7 @@ class _CountdownSpaceSnapshot {
   final String avatarUrl2;
   final String customBackgroundUrl;
   final String centerIconType;
+  final int updatedAtMs;
 }
 
 class _CountdownSpaceAddResult {
