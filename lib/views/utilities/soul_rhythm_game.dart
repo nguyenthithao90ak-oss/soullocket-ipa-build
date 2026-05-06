@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -177,6 +178,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
 
   bool get _isLowGraphics => _graphicsProfile == 'low';
   bool get _isHighGraphics => _graphicsProfile == 'high';
+  bool get _useReleaseSafePlayfield => !kDebugMode && Platform.isAndroid;
 
   Color get _graphicsChipColor {
     switch (_graphicsProfile) {
