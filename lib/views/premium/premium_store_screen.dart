@@ -36,12 +36,17 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   bool _isVip = false;
   List<ProductDetails> _products = [];
   String _storeHint = 'Hiện chưa có gói PRO khả dụng trên cửa hàng này.';
+  bool _storeConfigured = false;
 
   bool get _isAppleStorePlatform =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   bool get _isAndroidStorePlatform =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  bool get _canPurchase => _storeConfigured && _products.isNotEmpty;
+
+  bool get _isStoreReviewSafe => !_canPurchase;
 
   String get _storeDisplayName {
     if (_isAppleStorePlatform) {
@@ -61,6 +66,14 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       return 'Thanh toán qua Google Play';
     }
     return 'Thanh toán trong ứng dụng';
+  }
+
+  bool _isConfiguredStoreAvailable(bool available) {
+    if (!available) return false;
+    if (_isAppleStorePlatform) {
+      return AppConfig.purchaseVerifyUrl.isNotEmpty;
+    }
+    return true;
   }
 
   String _buildStoreHint({
@@ -231,6 +244,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       _products = products;
       _isVip = isVip;
       _storeHint = storeHint;
+      _storeConfigured = _isConfiguredStoreAvailable(available);
       _isLoading = false;
     });
   }
@@ -275,7 +289,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   }
 
   Future<void> _restorePurchases() async {
-    if (_isLoading || _isPurchasing) return;
+    if (_isLoading || _isPurchasing || !_canPurchase) return;
     setState(() => _isLoading = true);
     await _purchaseService.restorePurchases();
     await _loadData();
@@ -463,6 +477,8 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                           const SizedBox(height: 24),
                           if (_isVip)
                             _buildVipActiveStatus()
+                          else if (_isStoreReviewSafe)
+                            _buildStoreNotConfiguredCard()
                           else
                             _buildProductSection(),
                           const SizedBox(height: 20),
@@ -513,6 +529,45 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStoreNotConfiguredCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withOpacity(0.10)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.storefront_rounded,
+            color: Color(0xFFF9C15A),
+            size: 32,
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Mua PRO chưa sẵn sàng trên bản phát hành này',
+            style: SLTheme.quicksand(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Phần thanh toán đang được tạm ẩn vì cửa hàng chưa thiết lập sản phẩm IAP đầy đủ. Khi cấu hình xong App Store Connect, phần mua sẽ tự mở lại.',
+            style: SLTheme.quicksand(
+              color: const Color(0xFFD8DDF0),
+              fontWeight: FontWeight.w600,
+              height: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -799,19 +854,15 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFFF9C15A).withOpacity(0.18),
-              borderRadius: BorderRadius.circular(14),
+              color: const Color(0xFFF9C15A).withOpacity(0.12),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFFF9C15A),
-              size: 22,
-            ),
+            child: Icon(icon, color: const Color(0xFFF9C15A)),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -821,7 +872,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   style: SLTheme.quicksand(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
-                    fontSize: 14,
+                    fontSize: 15,
                   ),
                 ),
                 const SizedBox(height: 6),
