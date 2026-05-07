@@ -1,4 +1,4 @@
-﻿part of '../settings_tab.dart';
+part of '../settings_tab.dart';
 // ignore_for_file: unused_element
 
 extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
@@ -143,7 +143,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F1A2D),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.10)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: SingleChildScrollView(
                     padding: EdgeInsets.fromLTRB(
@@ -529,7 +529,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                     fontSize: 12.2,
                     fontWeight: FontWeight.w700,
                     color: themeData.foreground
-                        .withOpacity(themeData.isDark ? 0.82 : 0.68),
+                        .withValues(alpha: themeData.isDark ? 0.82 : 0.68),
                     height: 1.4,
                   ),
                 ),
@@ -551,10 +551,10 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.10),
+                              color: Colors.white.withValues(alpha: 0.10),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.26),
+                                color: Colors.white.withValues(alpha: 0.26),
                               ),
                             ),
                             child: Center(
@@ -615,10 +615,10 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                           padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
                           decoration: BoxDecoration(
                             color: Colors.white
-                                .withOpacity(themeData.isDark ? 0.10 : 0.72),
+                                .withValues(alpha: themeData.isDark ? 0.10 : 0.72),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: Colors.white.withOpacity(0.24)),
+                                color: Colors.white.withValues(alpha: 0.24)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -664,7 +664,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                         size: 16,
                                         color: incomingRequest == null
                                             ? themeData.foreground
-                                                .withOpacity(0.72)
+                                                .withValues(alpha: 0.72)
                                             : accent,
                                       ),
                                     ),
@@ -687,12 +687,12 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                   borderRadius: BorderRadius.circular(12),
                                   gradient: LinearGradient(
                                     colors: [
-                                      accent.withOpacity(0.24),
-                                      Colors.white.withOpacity(0.10),
+                                      accent.withValues(alpha: 0.24),
+                                      Colors.white.withValues(alpha: 0.10),
                                     ],
                                   ),
                                   border: Border.all(
-                                      color: accent.withOpacity(0.34)),
+                                      color: accent.withValues(alpha: 0.34)),
                                 ),
                                 child: Center(
                                   child: Column(
@@ -708,7 +708,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                           fontSize: 10.5,
                                           fontWeight: FontWeight.w800,
                                           color: themeData.foreground
-                                              .withOpacity(0.86),
+                                              .withValues(alpha: 0.86),
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -731,7 +731,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                           fontSize: 11,
                                           fontWeight: FontWeight.w800,
                                           color: themeData.foreground
-                                              .withOpacity(0.84),
+                                              .withValues(alpha: 0.84),
                                         ),
                                       ),
                                     ],
