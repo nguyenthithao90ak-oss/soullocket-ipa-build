@@ -504,7 +504,7 @@ class _TarotScreenState extends State<TarotScreen>
             alignment: Alignment.center,
             child: Icon(
               Icons.auto_awesome_rounded,
-              color: Colors.white.withOpacity(0.92),
+              color: Colors.white.withValues(alpha: 0.92),
               size: width * 0.46,
             ),
           );
@@ -601,7 +601,7 @@ class _TarotScreenState extends State<TarotScreen>
             Text(
               context.tr('tarot_header_desc'),
               style: SLTheme.quicksand(
-                color: Colors.white.withOpacity(0.78),
+                color: Colors.white.withValues(alpha: 0.78),
                 fontWeight: FontWeight.w600,
                 fontSize: compact ? 12.2 : 14,
                 height: 1.35,
@@ -619,10 +619,10 @@ class _TarotScreenState extends State<TarotScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.14)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.24),
+                color: Colors.black.withValues(alpha: 0.24),
                 blurRadius: 28,
                 offset: const Offset(0, 18),
               ),
@@ -648,7 +648,7 @@ class _TarotScreenState extends State<TarotScreen>
                 Text(
                   context.tr('tarot_profile_loading'),
                   style: SLTheme.quicksand(
-                    color: Colors.white.withOpacity(0.72),
+                    color: Colors.white.withValues(alpha: 0.72),
                     fontWeight: FontWeight.w700,
                     fontSize: compact ? 12 : 13,
                   ),
@@ -747,8 +747,8 @@ class _TarotScreenState extends State<TarotScreen>
                             ),
                             border: Border.all(
                               color: selected
-                                  ? Colors.white.withOpacity(0.3)
-                                  : Colors.white.withOpacity(0.1),
+                                  ? Colors.white.withValues(alpha: 0.3)
+                                  : Colors.white.withValues(alpha: 0.1),
                             ),
                           ),
                           child: Column(
@@ -760,7 +760,7 @@ class _TarotScreenState extends State<TarotScreen>
                                 style: SLTheme.quicksand(
                                   color: selected
                                       ? Colors.white
-                                      : Colors.white.withOpacity(0.72),
+                                      : Colors.white.withValues(alpha: 0.72),
                                   fontWeight: FontWeight.w800,
                                   fontSize: compact ? 10.5 : 11,
                                 ),
@@ -782,7 +782,7 @@ class _TarotScreenState extends State<TarotScreen>
                                 overflow:
                                     compact ? null : TextOverflow.ellipsis,
                                 style: SLTheme.quicksand(
-                                  color: Colors.white.withOpacity(0.82),
+                                  color: Colors.white.withValues(alpha: 0.82),
                                   fontWeight: FontWeight.w600,
                                   fontSize: compact ? 11.8 : 13,
                                   height: 1.3,
@@ -792,7 +792,7 @@ class _TarotScreenState extends State<TarotScreen>
                               Text(
                                 '${spread.slots.length} ${context.tr('tarot_card_unit')}',
                                 style: SLTheme.quicksand(
-                                  color: Colors.white.withOpacity(0.78),
+                                  color: Colors.white.withValues(alpha: 0.78),
                                   fontWeight: FontWeight.w800,
                                   fontSize: compact ? 11.5 : 12,
                                 ),
@@ -821,8 +821,8 @@ class _TarotScreenState extends State<TarotScreen>
           decoration: BoxDecoration(
             borderRadius:
                 BorderRadius.circular(_panelRadiusFor(constraints.maxWidth)),
-            color: Colors.white.withOpacity(0.05),
-            border: Border.all(color: Colors.white.withOpacity(0.08)),
+            color: Colors.white.withValues(alpha: 0.05),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           ),
           child: Column(
             children: [
@@ -852,7 +852,7 @@ class _TarotScreenState extends State<TarotScreen>
                 context.tr('tarot_empty_desc'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
-                  color: Colors.white.withOpacity(0.72),
+                  color: Colors.white.withValues(alpha: 0.72),
                   fontWeight: FontWeight.w600,
                   fontSize: compact ? 13 : 14,
                   height: 1.45,
@@ -932,7 +932,7 @@ class _TarotScreenState extends State<TarotScreen>
               child: Text(
                 context.tr('tarot_reading_loading'),
                 style: SLTheme.quicksand(
-                  color: Colors.white.withOpacity(0.82),
+                  color: Colors.white.withValues(alpha: 0.82),
                   fontWeight: FontWeight.w700,
                   height: 1.45,
                 ),
@@ -948,7 +948,7 @@ class _TarotScreenState extends State<TarotScreen>
         child: Text(
           _analysisError!,
           style: SLTheme.quicksand(
-            color: Colors.white.withOpacity(0.78),
+            color: Colors.white.withValues(alpha: 0.78),
             fontWeight: FontWeight.w700,
             height: 1.45,
           ),
@@ -1004,7 +1004,7 @@ class _TarotScreenState extends State<TarotScreen>
               Text(
                 reading.energySummary,
                 style: SLTheme.quicksand(
-                  color: Colors.white.withOpacity(0.82),
+                  color: Colors.white.withValues(alpha: 0.82),
                   fontWeight: FontWeight.w700,
                   fontSize: compact ? 13 : 14,
                   height: 1.45,
@@ -1058,8 +1058,8 @@ class _TarotScreenState extends State<TarotScreen>
                 color: (pickedCard.isFlipped
                         ? const Color(0xFFFF8CC6)
                         : const Color(0xFF8B6DFF))
-                    .withOpacity(
-                        isPressed || pickedCard.isFlipped ? 0.24 : 0.08),
+                    .withValues(
+                        alpha: isPressed || pickedCard.isFlipped ? 0.24 : 0.08),
                 blurRadius: isPressed ? 30 : 18,
                 spreadRadius: isPressed ? 1.5 : 0,
                 offset: const Offset(0, 10),
@@ -1139,7 +1139,7 @@ class _TarotScreenState extends State<TarotScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           child: Stack(
             children: [
@@ -1166,7 +1166,7 @@ class _TarotScreenState extends State<TarotScreen>
                           vertical: compact ? 7 : 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
+                          color: Colors.white.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
@@ -1186,7 +1186,7 @@ class _TarotScreenState extends State<TarotScreen>
                         context.tr('tarot_tap_to_open'),
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
-                          color: Colors.white.withOpacity(0.66),
+                          color: Colors.white.withValues(alpha: 0.66),
                           fontWeight: FontWeight.w700,
                           fontSize: compact ? 12.5 : 13,
                         ),
@@ -1234,9 +1234,9 @@ class _TarotScreenState extends State<TarotScreen>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.white.withOpacity(0.06),
+                        Colors.white.withValues(alpha: 0.06),
                         Colors.transparent,
-                        Colors.black.withOpacity(0.12),
+                        Colors.black.withValues(alpha: 0.12),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -1294,9 +1294,9 @@ class _TarotScreenState extends State<TarotScreen>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.white.withOpacity(0.06),
+                          Colors.white.withValues(alpha: 0.06),
                           Colors.transparent,
-                          Colors.black.withOpacity(0.12),
+                          Colors.black.withValues(alpha: 0.12),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -1386,7 +1386,7 @@ class _TarotScreenState extends State<TarotScreen>
               Text(
                 meaning,
                 style: SLTheme.quicksand(
-                  color: Colors.white.withOpacity(0.84),
+                  color: Colors.white.withValues(alpha: 0.84),
                   fontWeight: FontWeight.w600,
                   fontSize: compact ? 13 : 14,
                   height: 1.45,
@@ -1401,8 +1401,8 @@ class _TarotScreenState extends State<TarotScreen>
           margin: const EdgeInsets.only(top: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(radius),
-            color: Colors.white.withOpacity(0.06),
-            border: Border.all(color: Colors.white.withOpacity(0.12)),
+            color: Colors.white.withValues(alpha: 0.06),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(radius),
@@ -1438,10 +1438,10 @@ class _TarotScreenState extends State<TarotScreen>
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color.withOpacity(0.16),
+        color: color.withValues(alpha: 0.16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 80,
             spreadRadius: 12,
           ),
@@ -1464,7 +1464,7 @@ class _TarotScreenState extends State<TarotScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.12)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
           child: child,
         );
@@ -1505,9 +1505,9 @@ class _TarotScreenState extends State<TarotScreen>
         vertical: compact ? 5.5 : 7,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.18),
+        color: color.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.32)),
+        border: Border.all(color: color.withValues(alpha: 0.32)),
       ),
       child: Text(
         text,
@@ -1537,9 +1537,9 @@ class _TarotScreenState extends State<TarotScreen>
           vertical: compact ? 9 : 10,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1550,7 +1550,7 @@ class _TarotScreenState extends State<TarotScreen>
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: SLTheme.quicksand(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontWeight: FontWeight.w700,
                 fontSize: compact ? 10.5 : 11,
               ),
@@ -1578,9 +1578,9 @@ class _TarotScreenState extends State<TarotScreen>
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(compact ? 18 : 20),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1599,7 +1599,7 @@ class _TarotScreenState extends State<TarotScreen>
           Text(
             facet.body,
             style: SLTheme.quicksand(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontWeight: FontWeight.w600,
               fontSize: compact ? 13 : 14,
               height: 1.45,
@@ -1639,7 +1639,7 @@ class _TarotDustPainter extends CustomPainter {
     final random = Random(7);
     final paint = Paint();
     for (var i = 0; i < 90; i++) {
-      paint.color = Colors.white.withOpacity(random.nextDouble() * 0.16);
+      paint.color = Colors.white.withValues(alpha: random.nextDouble() * 0.16);
       final dx = random.nextDouble() * size.width;
       final dy = random.nextDouble() * size.height;
       final radius = random.nextDouble() * 1.8 + 0.4;
