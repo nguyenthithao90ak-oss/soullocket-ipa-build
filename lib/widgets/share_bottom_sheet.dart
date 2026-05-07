@@ -730,7 +730,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
             width: SLResponsive.dp(compact ? 42 : 46, screenWidth),
             height: SLResponsive.dp(compact ? 42 : 46, screenWidth),
             decoration: BoxDecoration(
-              color: const Color(0xFFD81B60).withOpacity(0.12),
+              color: const Color(0xFFD81B60).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(SLResponsive.dp(16, screenWidth)),
             ),
             child: const Icon(
@@ -961,7 +961,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
               width: SLResponsive.dp(compact ? 46 : 50, screenWidth),
               height: SLResponsive.dp(compact ? 46 : 50, screenWidth),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
