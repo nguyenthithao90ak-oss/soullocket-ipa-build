@@ -1207,7 +1207,7 @@ class StorageService {
     XFile file, {
     int minWidth = 1080,
     int minHeight = 1080,
-    int quality = 75,
+    int quality = 78,
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
