@@ -1318,9 +1318,9 @@ class _DiaryTabState extends State<DiaryTab> {
 
   int _memoryThumbnailCacheWidth(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    return ((mediaQuery.size.width / 3) * mediaQuery.devicePixelRatio)
+    return ((mediaQuery.size.width / 3) * mediaQuery.devicePixelRatio * 1.18)
         .round()
-        .clamp(360, 1080);
+        .clamp(480, 1440);
   }
 
   int _postImageCacheWidth(BuildContext context) {
