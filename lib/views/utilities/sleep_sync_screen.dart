@@ -72,9 +72,7 @@ class _SleepSyncScreenState extends State<SleepSyncScreen> {
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          (_isSleeping ? Colors.amber : const Color(0xFFD81B60))
-                              .withOpacity(0.5),
+                          .withValues(alpha: 0.5),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     )
