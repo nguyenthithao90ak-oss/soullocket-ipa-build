@@ -288,11 +288,6 @@ class LocationService {
         accuracy: LocationAccuracy.best,
         distanceFilter: _kStreamDistanceFilterMeters,
         intervalDuration: const Duration(seconds: 10),
-        foregroundNotificationConfig: const ForegroundNotificationConfig(
-          notificationTitle: 'SoulLocket đang cập nhật vị trí',
-          notificationText: 'Ứng dụng đang cập nhật vị trí cho bản đồ của hai bạn.',
-          enableWakeLock: false,
-        ),
       );
     }
     if (!kIsWeb &&
