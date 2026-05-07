@@ -1187,13 +1187,13 @@ extension _SoulBlockPanels on _SoulBlockGameState {
           ),
           border: Border(
             top: BorderSide(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               width: 1,
             ),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.20),
+              color: Colors.black.withValues(alpha: 0.20),
               blurRadius: 12,
               offset: const Offset(0, -4),
             ),
@@ -1242,20 +1242,20 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: <Color>[
-                        _floatingTextColor.withOpacity(0.34),
-                        _floatingTextColor.withOpacity(0.16),
+                        _floatingTextColor.withValues(alpha: 0.34),
+                        _floatingTextColor.withValues(alpha: 0.16),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: _floatingTextColor.withOpacity(0.58),
+                      color: _floatingTextColor.withValues(alpha: 0.58),
                       width: 1.8,
                     ),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
-                        color: _floatingTextColor.withOpacity(0.18),
+                        color: _floatingTextColor.withValues(alpha: 0.18),
                         blurRadius: 18,
                         spreadRadius: -4,
                         offset: const Offset(0, 10),
@@ -1384,9 +1384,9 @@ extension _SoulBlockPanels on _SoulBlockGameState {
     required double sparkleOpacity,
     required int sparkleCount,
   }) {
-    final Color accentTransparent = snapshot.accent.withOpacity(0);
-    final Color accentGlow = snapshot.accent.withOpacity(0.86);
-    final Color whiteGlow = Colors.white.withOpacity(0.96);
+    final Color accentTransparent = snapshot.accent.withValues(alpha: 0);
+    final Color accentGlow = snapshot.accent.withValues(alpha: 0.86);
+    final Color whiteGlow = Colors.white.withValues(alpha: 0.96);
     return <Widget>[
       for (int index = 0;
           index < min(sparkleCount, _kMemoryBurstSparkleAngles.length);
@@ -1429,14 +1429,14 @@ extension _SoulBlockPanels on _SoulBlockGameState {
         borderRadius: BorderRadius.circular(30),
         gradient: LinearGradient(
           colors: <Color>[
-            snapshot.accent.withOpacity(0.34),
-            const Color(0xFF09111D).withOpacity(0.98),
+            snapshot.accent.withValues(alpha: 0.34),
+            const Color(0xFF09111D).withValues(alpha: 0.98),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: snapshot.accent.withOpacity(0.62),
+          color: snapshot.accent.withValues(alpha: 0.62),
           width: 2,
         ),
         boxShadow: profile.memoryBurstShadowScale <= 0
@@ -1444,14 +1444,14 @@ extension _SoulBlockPanels on _SoulBlockGameState {
             : <BoxShadow>[
                 BoxShadow(
                   color: snapshot.accent
-                      .withOpacity(0.28 * profile.memoryBurstShadowScale),
+                      .withValues(alpha: 0.28 * profile.memoryBurstShadowScale),
                   blurRadius: 28 * profile.memoryBurstShadowScale,
                   spreadRadius: -6,
                   offset: const Offset(0, 18),
                 ),
                 BoxShadow(
                   color: Colors.black
-                      .withOpacity(0.34 * profile.memoryBurstShadowScale),
+                      .withValues(alpha: 0.34 * profile.memoryBurstShadowScale),
                   blurRadius: 30 * profile.memoryBurstShadowScale,
                   spreadRadius: -10,
                   offset: const Offset(0, 20),
@@ -1474,7 +1474,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: <Color>[
-                            snapshot.accent.withOpacity(0.20),
+                            snapshot.accent.withValues(alpha: 0.20),
                             const Color(0xFF101722),
                           ],
                           begin: Alignment.topCenter,
@@ -1520,7 +1520,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: <Color>[
-                              snapshot.accent.withOpacity(0.26),
+                              snapshot.accent.withValues(alpha: 0.26),
                               const Color(0xFF162538),
                             ],
                           ),
@@ -1544,10 +1544,10 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.34),
+                          color: Colors.black.withValues(alpha: 0.34),
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.16),
+                            color: Colors.white.withValues(alpha: 0.16),
                           ),
                         ),
                         child: Text(
@@ -1573,7 +1573,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
               style: SLTheme.quicksand(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
-                color: Colors.white.withOpacity(0.88),
+                color: Colors.white.withValues(alpha: 0.88),
                 height: 1.25,
               ),
             ),
