@@ -953,11 +953,27 @@ class _DiaryTabState extends State<DiaryTab> {
               }
             }
 
+            void handleSwipeDown() {
+              final scale = transformationController.value.getMaxScaleOnAxis();
+              if (scale > 1.05) {
+                transformationController.value = Matrix4.identity();
+                handleTransformChanged();
+                return;
+              }
+              Navigator.pop(dialogContext);
+            }
+
             transformationController.addListener(handleTransformChanged);
 
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
               onLongPress: () => _showMemoryViewerActions(dialogContext, item),
+              onVerticalDragEnd: (details) {
+                final velocity = details.primaryVelocity ?? 0;
+                if (velocity > 220) {
+                  handleSwipeDown();
+                }
+              },
               child: ValueListenableBuilder<bool>(
                 valueListenable: panEnabledVN,
                 builder: (context, panEnabled, _) {
