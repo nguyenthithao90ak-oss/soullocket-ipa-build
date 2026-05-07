@@ -11,9 +11,9 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
       margin: const EdgeInsets.fromLTRB(20, 14, 20, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF4A1F1F).withOpacity(0.9),
+        color: const Color(0xFF4A1F1F).withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.redAccent.withOpacity(0.35)),
+        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,14 +94,14 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.12),
-                  Colors.white.withOpacity(0.05),
+                  Colors.white.withValues(alpha: 0.12),
+                  Colors.white.withValues(alpha: 0.05),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: Colors.white.withOpacity(0.15)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
             ),
             child: Column(
               children: [
@@ -109,7 +109,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                   'Kho lưu trữ riêng tư được mã hóa an toàn. 🔐\nChỉ hai bạn mới có thể xem được nội dung.',
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                       fontWeight: FontWeight.w600,
                       height: 1.5,
                       fontSize: 13.5),
@@ -129,7 +129,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                            color: const Color(0xFFE91E63).withOpacity(0.4),
+                            color: const Color(0xFFE91E63).withValues(alpha: 0.4),
                             blurRadius: 15,
                             offset: const Offset(0, 6))
                       ],
@@ -290,7 +290,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withOpacity(0.55)
+                                Colors.black.withValues(alpha: 0.55)
                               ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -306,7 +306,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 5, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.8),
+                              color: Colors.green.withValues(alpha: 0.8),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Row(
