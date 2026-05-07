@@ -1236,39 +1236,45 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                 ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 26,
-                    vertical: 16,
+                    horizontal: 30,
+                    vertical: 18,
                   ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: <Color>[
-                        _floatingTextColor.withValues(alpha: 0.34),
-                        _floatingTextColor.withValues(alpha: 0.16),
+                        _floatingTextColor.withValues(alpha: 0.46),
+                        _floatingTextColor.withValues(alpha: 0.20),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: _floatingTextColor.withValues(alpha: 0.58),
-                      width: 1.8,
+                      color: _floatingTextColor.withValues(alpha: 0.78),
+                      width: 2.2,
                     ),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
-                        color: _floatingTextColor.withValues(alpha: 0.18),
-                        blurRadius: 18,
-                        spreadRadius: -4,
+                        color: _floatingTextColor.withValues(alpha: 0.30),
+                        blurRadius: 24,
+                        spreadRadius: -2,
                         offset: const Offset(0, 10),
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.18),
+                        blurRadius: 18,
+                        spreadRadius: -6,
+                        offset: const Offset(0, 12),
                       ),
                     ],
                   ),
                   child: Text(
                     _floatingText ?? '',
                     style: SLTheme.quicksand(
-                      fontSize: 24,
+                      fontSize: 28,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
-                      letterSpacing: 0.9,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
