@@ -153,7 +153,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       );
       _showMessage('Đã gửi lời nhắn thoại lên nhà chung.');
     } catch (e) {
-      _showMessage('Không thể tải file audio: $e');
+      _showMessage('Không thể tải file audio lúc này. Hãy thử lại sau.');
     } finally {
       if (mounted) {
         setState(() => _isUploading = false);
