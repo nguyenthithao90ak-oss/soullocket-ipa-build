@@ -102,6 +102,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       }
 
       final file = result.files.single;
+      final bytes = file.bytes;
       if (bytes == null || bytes.isEmpty) {
         throw Exception('Không đọc được file audio.');
       }
