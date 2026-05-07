@@ -448,7 +448,9 @@ class _LoveCardHistoryItem extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isUnread ? Icons.mark_email_unread_rounded : Icons.drafts_rounded,
+                  isUnread
+                      ? Icons.mark_email_unread_rounded
+                      : Icons.drafts_rounded,
                   color: Colors.white,
                   size: 24,
                 ),
