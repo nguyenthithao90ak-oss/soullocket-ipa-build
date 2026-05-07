@@ -550,6 +550,119 @@ mixin _SoulBlockStrategyLogic {
     return true;
   }
 
+  Set<int> _occupiedRowsFor(_SoulPieceTemplate template, int startRow) {
+    return template.cells.map((cell) => startRow + cell.y).toSet();
+  }
+
+  Set<int> _occupiedColsFor(_SoulPieceTemplate template, int startCol) {
+    return template.cells.map((cell) => startCol + cell.x).toSet();
+  }
+
+  _PlacementResolution _placeTemplate(
+    List<List<_SoulTile?>> boardTiles,
+    _SoulPieceOption piece,
+    int startRow,
+    int startCol,
+  ) {
+    final nextBoard = List<List<_SoulTile?>>.generate(
+      _strategyBoardSize,
+      (row) => List<_SoulTile?>.from(boardTiles[row]),
+    );
+    final occupiedCells = <Point<int>>[];
+    for (final cell in piece.template.cells) {
+      final row = startRow + cell.y;
+      final col = startCol + cell.x;
+      nextBoard[row][col] = _SoulTile(
+        toneIndex: piece.toneIndex,
+        pieceId: piece.id,
+        placedTurn: 0,
+      );
+      occupiedCells.add(Point<int>(row, col));
+    }
+    return _PlacementResolution(
+      board: nextBoard,
+      occupiedCells: occupiedCells,
+      rowsToClear: _occupiedRowsFor(piece.template, startRow),
+      colsToClear: _occupiedColsFor(piece.template, startCol),
+    );
+  }
+
+  _LineClearResolution _clearAffectedLines(
+    List<List<_SoulTile?>> boardTiles,
+    Set<int> rowsToClear,
+    Set<int> colsToClear,
+  ) {
+    final nextBoard = List<List<_SoulTile?>>.generate(
+      _strategyBoardSize,
+      (row) => List<_SoulTile?>.from(boardTiles[row]),
+    );
+    final clearedRows = <int>{};
+    final clearedCols = <int>{};
+
+    for (final row in rowsToClear) {
+      final isFull = nextBoard[row].every((cell) => cell != null);
+      if (!isFull) {
+        continue;
+      }
+      clearedRows.add(row);
+      for (var col = 0; col < _strategyBoardSize; col++) {
+        nextBoard[row][col] = null;
+      }
+    }
+
+    for (final col in colsToClear) {
+      var isFull = true;
+      for (var row = 0; row < _strategyBoardSize; row++) {
+        if (nextBoard[row][col] == null) {
+          isFull = false;
+          break;
+        }
+      }
+      if (!isFull) {
+        continue;
+      }
+      clearedCols.add(col);
+      for (var row = 0; row < _strategyBoardSize; row++) {
+        nextBoard[row][col] = null;
+      }
+    }
+
+    return _LineClearResolution(
+      board: nextBoard,
+      clearedRows: clearedRows,
+      clearedCols: clearedCols,
+    );
+  }
+
+  _TurnResolution _resolveTurn(
+    List<List<_SoulTile?>> boardTiles,
+    _SoulPieceOption piece,
+    int startRow,
+    int startCol,
+    List<_SoulPieceOption> remainingTray,
+  ) {
+    final placement = _placeTemplate(boardTiles, piece, startRow, startCol);
+    final clearResolution = _clearAffectedLines(
+      placement.board,
+      placement.rowsToClear,
+      placement.colsToClear,
+    );
+    final clearedCount =
+        clearResolution.clearedRows.length + clearResolution.clearedCols.length;
+    final nextRecommendedMove = remainingTray.isEmpty
+        ? null
+        : _recommendMoveFor(clearResolution.board, remainingTray);
+    final noMovesLeft = remainingTray.isEmpty || nextRecommendedMove == null;
+    return _TurnResolution(
+      placement: placement,
+      clearResolution: clearResolution,
+      clearedCount: clearedCount,
+      remainingTray: remainingTray,
+      nextRecommendedMove: nextRecommendedMove,
+      noMovesLeft: noMovesLeft,
+    );
+  }
+
   _PlacementEval _simulatePlacement(
     List<List<bool>> boardMask,
     _SoulPieceTemplate template,
@@ -568,13 +681,13 @@ mixin _SoulBlockStrategyLogic {
     final clearedRows = <int>[];
     final clearedCols = <int>[];
 
-    for (var row = 0; row < _strategyBoardSize; row++) {
+    for (final row in _occupiedRowsFor(template, startRow)) {
       if (nextBoard[row].every((value) => value)) {
         clearedRows.add(row);
       }
     }
 
-    for (var col = 0; col < _strategyBoardSize; col++) {
+    for (final col in _occupiedColsFor(template, startCol)) {
       var full = true;
       for (var row = 0; row < _strategyBoardSize; row++) {
         if (!nextBoard[row][col]) {
@@ -621,6 +734,22 @@ mixin _SoulBlockStrategyLogic {
       heuristic: heuristic,
       boardAfter: nextBoard,
     );
+  }
+
+  bool _hasAnyPlayableMove(
+    List<List<_SoulTile?>> boardTiles,
+    List<_SoulPieceOption> tray,
+  ) {
+    for (final piece in tray) {
+      for (var row = 0; row <= _strategyBoardSize - piece.template.height; row++) {
+        for (var col = 0; col <= _strategyBoardSize - piece.template.width; col++) {
+          if (_canPlace(_boardMask(boardTiles), piece.template, row, col)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   int _countNearLines(List<List<bool>> boardMask) {
