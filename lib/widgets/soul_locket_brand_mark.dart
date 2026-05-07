@@ -35,12 +35,12 @@ class SoulLocketBrandMark extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: style.frameColor.withOpacity(0.92),
+          color: style.frameColor.withValues(alpha: 0.92),
           width: size * 0.018,
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: style.glowColor.withOpacity(0.26),
+            color: style.glowColor.withValues(alpha: 0.26),
             blurRadius: size * 0.24,
             offset: Offset(0, size * 0.1),
           ),
@@ -55,7 +55,7 @@ class SoulLocketBrandMark extends StatelessWidget {
             bottom: size * 0.16,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: style.surfaceColor.withOpacity(0.92),
+                color: style.surfaceColor.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(size * 0.23),
               ),
             ),
@@ -70,7 +70,7 @@ class SoulLocketBrandMark extends StatelessWidget {
                 color: style.sparkleColor,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                   width: size * 0.01,
                 ),
               ),
