@@ -783,7 +783,7 @@ class DeviceManagerService {
         .where((d) => d['status'] != 'deleted')
         .toList();
 
-    final merged = <Map<String, dynamic>>{};
+    final merged = <String, Map<String, dynamic>>{};
     for (final device in legacyDevices) {
       final id = device['deviceId']?.toString().trim() ?? '';
       if (id.isEmpty) continue;
