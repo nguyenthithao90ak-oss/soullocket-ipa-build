@@ -704,9 +704,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   borderRadius: SLRadius.pillAll,
-                  border: Border.all(color: Colors.white.withOpacity(0.45)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
                 ),
                 child: Row(
                   children: [
@@ -752,7 +752,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                         Container(
                           padding: SLSpacing.all12,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.72),
+                            color: Colors.white.withValues(alpha: 0.72),
                             borderRadius: SLRadius.lgAll,
                             border: Border.all(color: SLTheme.glassBorderThin),
                           ),
@@ -825,7 +825,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
             child: Icon(
               Icons.local_mall_rounded,
               size: 54,
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withValues(alpha: 0.18),
             ),
           ),
           Positioned(
@@ -834,7 +834,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
             child: Icon(
               Icons.stars_rounded,
               size: 42,
-              color: Colors.white.withOpacity(0.22),
+              color: Colors.white.withValues(alpha: 0.22),
             ),
           ),
           Positioned(
@@ -843,7 +843,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
             child: Icon(
               Icons.redeem_rounded,
               size: 48,
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withValues(alpha: 0.18),
             ),
           ),
           child,
@@ -934,7 +934,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.84),
+        color: Colors.white.withValues(alpha: 0.84),
         borderRadius: SLRadius.lgAll,
       ),
       child: Column(
@@ -973,7 +973,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               Container(
                   padding: SLSpacing.all16,
                   decoration: BoxDecoration(
-                      color: SLTheme.primary.withOpacity(0.14),
+                      color: SLTheme.primary.withValues(alpha: 0.14),
                       shape: BoxShape.circle),
                   child: const Icon(Icons.play_circle_filled,
                       color: SLTheme.primary, size: 36)),
@@ -1024,9 +1024,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                       child: LinearProgressIndicator(
                         value: _dailyAdCount / _dailyAdLimit,
                         minHeight: 6,
-                        backgroundColor: SLTheme.primary.withOpacity(0.2),
+                        backgroundColor: SLTheme.primary.withValues(alpha: 0.2),
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          SLTheme.primary.withOpacity(0.8),
+                          SLTheme.primary.withValues(alpha: 0.8),
                         ),
                       ),
                     ),
@@ -1053,7 +1053,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       child: Container(
         padding: SLSpacing.all16,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.88),
+          color: Colors.white.withValues(alpha: 0.88),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: SLTheme.glassBorderThin),
           boxShadow: SLShadow.subtle,
@@ -1215,7 +1215,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                     decoration: BoxDecoration(
                       color: checked
                           ? const Color(0xFFEAFBF2)
-                          : Colors.white.withOpacity(0.7),
+                          : Colors.white.withValues(alpha: 0.7),
                       borderRadius: SLRadius.mdAll,
                       border: Border.all(
                         color: checked
@@ -1243,7 +1243,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   (_checkedInToday || _isCheckingIn) ? null : _executeCheckin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: SLTheme.primary,
-                disabledBackgroundColor: SLTheme.primary.withOpacity(0.35),
+                disabledBackgroundColor: SLTheme.primary.withValues(alpha: 0.35),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: SLRadius.pillAll),
                 elevation: 0,
@@ -1343,7 +1343,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: SLTheme.glassBorderThin),
                     boxShadow: SLShadow.subtle,
@@ -1390,7 +1390,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                               color: SLColors.warningLight,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                  color: SLColors.warningGold.withOpacity(0.5)),
+                                  color: SLColors.warningGold.withValues(alpha: 0.5)),
                             ),
                             child: Text('+${q['points']} Điểm',
                                 style: SLTheme.quicksand(
@@ -1405,7 +1405,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                               onPressed: () {},
                               style: FilledButton.styleFrom(
                                 backgroundColor: (q['done'] as bool)
-                                    ? const Color(0xFF2EA86B).withOpacity(0.15)
+                                    ? const Color(0xFF2EA86B).withValues(alpha: 0.15)
                                     : SLColors.primaryLight,
                                 foregroundColor: (q['done'] as bool)
                                     ? const Color(0xFF2EA86B)
@@ -1447,12 +1447,12 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: BoxDecoration(
         color: affordable
-            ? Colors.white.withOpacity(0.94)
-            : Colors.white.withOpacity(0.72),
+            ? Colors.white.withValues(alpha: 0.94)
+            : Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(compact ? 18 : 20),
         border: Border.all(
           color: affordable
-              ? SLTheme.primary.withOpacity(0.26)
+              ? SLTheme.primary.withValues(alpha: 0.26)
               : SLTheme.glassBorderThin,
         ),
         boxShadow: compact ? SLShadow.subtle : SLTheme.cardShadow,
@@ -1528,8 +1528,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: affordable
-                    ? const Color(0xFF43A047).withOpacity(0.24)
-                    : SLTheme.primary.withOpacity(0.22),
+                    ? const Color(0xFF43A047).withValues(alpha: 0.24)
+                    : SLTheme.primary.withValues(alpha: 0.22),
               ),
             ),
             child: Column(
@@ -1671,8 +1671,8 @@ class _StoreGlow extends StatelessWidget {
           shape: BoxShape.circle,
           gradient: RadialGradient(
             colors: [
-              color.withOpacity(opacity),
-              color.withOpacity(0),
+              color.withValues(alpha: opacity),
+              color.withValues(alpha: 0),
             ],
           ),
         ),

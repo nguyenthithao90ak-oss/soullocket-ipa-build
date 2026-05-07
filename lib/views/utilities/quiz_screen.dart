@@ -338,7 +338,7 @@ class _QuizScreenState extends State<QuizScreen> {
         border: Border.all(color: const Color(0xFFFFD8EA)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withOpacity(0.08),
+            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -501,7 +501,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 width: double.infinity,
                 padding: SLSpacing.all20,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.95),
+                  color: Colors.white.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(color: const Color(0xFFFFD9E8)),
                 ),
@@ -679,12 +679,12 @@ class _QuizScreenState extends State<QuizScreen> {
       margin: const EdgeInsets.only(bottom: 14),
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.96),
+        color: Colors.white.withValues(alpha: 0.96),
         borderRadius: SLRadius.xlAll,
         border: Border.all(color: const Color(0xFFFFD8E8)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 14,
             offset: const Offset(0, 8),
           ),
@@ -877,7 +877,7 @@ class _QuizScreenState extends State<QuizScreen> {
       width: double.infinity,
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: const Color(0xFFFFD8E8)),
       ),
@@ -932,7 +932,7 @@ class _QuizScreenState extends State<QuizScreen> {
       width: double.infinity,
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: const Color(0xFFFFD8E8)),
       ),
@@ -972,7 +972,7 @@ class _QuizScreenState extends State<QuizScreen> {
       width: double.infinity,
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: sameAnswer ? const Color(0xFFCDEED7) : const Color(0xFFFFD8E8),
