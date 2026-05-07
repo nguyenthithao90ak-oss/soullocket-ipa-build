@@ -375,7 +375,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           int days = result['delayDays'] ?? 3;
           SLNotice.showSuccess(
             context,
-            'Yêu cầu thành công. Tài khoản sẽ xóa sau $days ngày.',
+            'Yêu cầu thành công. Tài khoản đã được lên lịch xóa sau $days ngày. Khi đã xóa thì không thể khôi phục.',
           );
 
           await _authService.signOut();
