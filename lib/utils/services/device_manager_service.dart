@@ -740,22 +740,25 @@ class DeviceManagerService {
   /// Load danh sách tất cả thiết bị của user
   Future<List<Map<String, dynamic>>> loadDevices() async {
     final functionDevices = await _loadDevicesFromFunction();
-    if (functionDevices != null) {
-      return functionDevices;
-    }
 
     final uid = _auth.currentUser?.uid;
-    if (uid == null) return [];
+    if (uid == null) {
+      return functionDevices ?? [];
+    }
 
     final houseSnap = await _db.ref('users/$uid/houseId').get();
     final houseId = houseSnap.value?.toString().trim();
-    if (houseId == null || houseId.isEmpty) return [];
+    if (houseId == null || houseId.isEmpty) {
+      return functionDevices ?? [];
+    }
 
     final snap = await _db.ref('houses/$houseId/security/devices').get();
-    if (!snap.exists) return [];
+    if (!snap.exists) {
+      return functionDevices ?? [];
+    }
 
     final data = Map<dynamic, dynamic>.from(snap.value as Map);
-    return data.entries
+    final legacyDevices = data.entries
         .map((e) {
           final device = Map<String, dynamic>.from(e.value as Map);
           device['deviceId'] = e.key;
@@ -778,12 +781,27 @@ class DeviceManagerService {
           return device;
         })
         .where((d) => d['status'] != 'deleted')
-        .toList()
-      ..sort((a, b) {
-        final aTs = (a['last_seen'] as num?)?.toInt() ?? 0;
-        final bTs = (b['last_seen'] as num?)?.toInt() ?? 0;
-        return bTs.compareTo(aTs);
-      });
+        .toList();
+
+    final merged = <Map<String, dynamic>>{};
+    for (final device in legacyDevices) {
+      final id = device['deviceId']?.toString().trim() ?? '';
+      if (id.isEmpty) continue;
+      merged[id] = device;
+    }
+    for (final device in functionDevices ?? const <Map<String, dynamic>>[]) {
+      final id = device['deviceId']?.toString().trim() ?? '';
+      if (id.isEmpty) continue;
+      merged[id] = device;
+    }
+
+    final devices = merged.values.toList(growable: false)..sort((a, b) {
+      final aTs = (a['last_seen'] as num?)?.toInt() ?? 0;
+      final bTs = (b['last_seen'] as num?)?.toInt() ?? 0;
+      return bTs.compareTo(aTs);
+    });
+
+    return devices.isEmpty ? (functionDevices ?? []) : devices;
   }
 
   Future<List<Map<String, dynamic>>?> _loadDevicesFromFunction() async {
