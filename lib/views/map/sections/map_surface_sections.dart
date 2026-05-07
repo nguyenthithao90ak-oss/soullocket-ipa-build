@@ -26,34 +26,13 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 62,
-                height: 62,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [_kMapPinkSoft, _kMapPinkDeep],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _kMapPinkDeep.withOpacity(0.28),
-                      blurRadius: 22,
-                      offset: const Offset(0, 10),
-                    ),
-              const SizedBox(
-                width: 26,
-                height: 26,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.6,
-                  color: _kMapPinkDeep,
-                ),
-              ),
-            ],
+          child: const SizedBox(
+            width: 26,
+            height: 26,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.6,
+              color: _kMapPinkDeep,
+            ),
           ),
         ),
       ),
