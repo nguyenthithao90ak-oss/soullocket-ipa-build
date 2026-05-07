@@ -443,9 +443,9 @@ class _StableShellBackgroundImageState
           )
         : const Size(430, 932);
     final cacheWidth =
-        (logicalSize.width * devicePixelRatio).round().clamp(720, 1440);
+        (logicalSize.width * devicePixelRatio).round().clamp(1080, 2160);
     final cacheHeight =
-        (logicalSize.height * devicePixelRatio).round().clamp(1280, 2560);
+        (logicalSize.height * devicePixelRatio).round().clamp(1920, 3840);
     final provider = CachedNetworkImageProvider(
       url,
       maxWidth: cacheWidth,
@@ -471,13 +471,13 @@ class _StableShellBackgroundImageState
             image: fallback,
             fit: BoxFit.cover,
             gaplessPlayback: true,
-            filterQuality: FilterQuality.low,
+            filterQuality: FilterQuality.high,
           ),
         Image(
           image: current,
           fit: BoxFit.cover,
           gaplessPlayback: true,
-          filterQuality: FilterQuality.medium,
+          filterQuality: FilterQuality.high,
           frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
             if (!_ready && (wasSynchronouslyLoaded || frame != null)) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -500,7 +500,7 @@ class _StableShellBackgroundImageState
                   image: fallback,
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
-                  filterQuality: FilterQuality.low,
+                  filterQuality: FilterQuality.high,
                 )
               : const SizedBox.shrink(),
         ),
