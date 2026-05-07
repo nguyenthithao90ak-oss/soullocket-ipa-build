@@ -716,9 +716,14 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                       counterText: '',
                       border: InputBorder.none,
                     ),
-                    onChanged: (value) => otpValue = value.trim(),
+                    onChanged: (value) {
+                      otpValue = value.trim();
+                      if (otpValue.length == 6) {
+                        Navigator.of(dialogContext).pop(otpValue);
+                      }
+                    },
                     onSubmitted: (_) {
-                      if (otpValue.isNotEmpty) {
+                      if (otpValue.length == 6) {
                         Navigator.of(dialogContext).pop(otpValue);
                       }
                     },
@@ -995,7 +1000,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         );
         await Future.delayed(Duration(milliseconds: 700 * _authSyncRetryCount));
         if (mounted) {
-          return _createHouse();
+          return _createHouse(houseCreationOtp: houseCreationOtp);
         }
       }
       _authSyncRetryCount = 0;
@@ -1018,7 +1023,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         );
         await Future.delayed(Duration(seconds: _transientCreateRetryCount));
         if (mounted) {
-          return _createHouse();
+          return _createHouse(houseCreationOtp: houseCreationOtp);
         }
       }
       _transientCreateRetryCount = 0;
