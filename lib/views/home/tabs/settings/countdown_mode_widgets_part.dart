@@ -27,6 +27,7 @@ const List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     label: 'Trái tim',
     emoji: '\u{1F496}',
     icon: Icons.favorite_rounded,
+    assetPath: null,
     gradient: [Color(0xFFFFFFFF), Color(0xFFFFF2F8)],
     accent: Color(0xFFD94C86),
   ),
@@ -407,7 +408,7 @@ class _CountdownModeSheetDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       isExpanded: true,
       iconEnabledColor: Colors.white70,
       dropdownColor: const Color(0xFF162136),
