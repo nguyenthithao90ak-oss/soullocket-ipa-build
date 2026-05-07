@@ -158,7 +158,7 @@ Widget buildUtilityStickerIcon({
                 image: provider,
                 fit: fit,
                 alignment: Alignment.center,
-                filterQuality: FilterQuality.low,
+                filterQuality: FilterQuality.high,
                 gaplessPlayback: true,
                 frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
                   if (wasSynchronouslyLoaded || frame != null) {
