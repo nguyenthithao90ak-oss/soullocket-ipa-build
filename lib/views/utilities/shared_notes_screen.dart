@@ -346,6 +346,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
           );
         }
 
+        if (snapshot.hasError) {
           return Padding(
             padding: SLSpacing.all16,
             child: Center(
@@ -357,6 +358,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               ),
             ),
           );
+        }
 
         if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
           return Padding(
