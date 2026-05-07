@@ -114,7 +114,7 @@ class _WeatherPainter extends CustomPainter {
       final dx = particle.x * size.width;
       final dy = particle.y * size.height;
       final offset = Offset(dx, dy);
-      paint.color = config.color.withOpacity(particle.opacity);
+      paint.color = config.color.withValues(alpha: particle.opacity);
 
       switch (config.type) {
         case 'hearts':
@@ -157,13 +157,13 @@ class _WeatherPainter extends CustomPainter {
 
   void _drawSun(Canvas canvas, Offset center, double size, Paint paint) {
     final glowPaint = Paint()
-      ..color = paint.color.withOpacity(0.18)
+      ..color = paint.color.withValues(alpha: 0.18)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
     canvas.drawCircle(center, size * 0.55, glowPaint);
     canvas.drawCircle(center, size * 0.28, paint);
 
     final rayPaint = Paint()
-      ..color = paint.color.withOpacity(0.55)
+      ..color = paint.color.withValues(alpha: 0.55)
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
     for (var i = 0; i < 8; i++) {
