@@ -58,7 +58,7 @@ class _MainHomeLoadingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const AbsorbPointer(
+    return const IgnorePointer(
       child: ColoredBox(
         color: Color(0x52FFF7FA),
         child: Center(
