@@ -274,8 +274,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                       child: ElevatedButton(
                         onPressed: _isRestarting ? null : _restartAfterGameOver,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF67E8FF),
-                          foregroundColor: const Color(0xFF07121E),
+                          backgroundColor: const Color(0xFFFF5C7A),
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
