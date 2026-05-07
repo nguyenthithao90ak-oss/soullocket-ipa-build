@@ -5,7 +5,7 @@ class _GiftBackdropPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final dotPaint = Paint()..color = Colors.white.withOpacity(0.06);
+    final dotPaint = Paint()..color = Colors.white.withValues(alpha: 0.06);
     const spacing = 34.0;
 
     for (double y = -spacing; y <= size.height + spacing; y += spacing) {
@@ -16,7 +16,7 @@ class _GiftBackdropPainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color = const Color(0xFFFF5D8F).withOpacity(0.07)
+      ..color = const Color(0xFFFF5D8F).withValues(alpha: 0.07)
       ..strokeWidth = 1;
 
     for (double x = -size.height; x <= size.width; x += 180) {
@@ -69,8 +69,8 @@ class _GiftTouchTileState extends State<_GiftTouchTile> {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: widget.borderRadius,
-            splashColor: const Color(0xFFD81B60).withOpacity(0.12),
-            highlightColor: const Color(0xFFD81B60).withOpacity(0.05),
+            splashColor: const Color(0xFFD81B60).withValues(alpha: 0.12),
+            highlightColor: const Color(0xFFD81B60).withValues(alpha: 0.05),
             onTap: widget.onTap,
             onTapDown: (_) => _setPressed(true),
             onTapUp: (_) => _setPressed(false),
