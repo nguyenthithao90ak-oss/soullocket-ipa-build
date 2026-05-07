@@ -1472,12 +1472,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _triggerScreenPulse();
       if (clearedNow >= 2) {
         _showComboBurst(clearedNow);
-      } else if (nextStreak >= 2) {
-        _showFloatingMessage(
-          'Chain x$nextStreak!',
-          color: const Color(0xFF00C3FF),
-        );
       }
+      if (nextStreak >= 2) {
+        _showStreakBurst(nextStreak);
+      }
+
     }
     if (beatBestThisMove) {
       _emitBestScoreFeedback();
