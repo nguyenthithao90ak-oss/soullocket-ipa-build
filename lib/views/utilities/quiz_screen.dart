@@ -280,7 +280,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.92),
+                            color: Colors.white.withValues(alpha: 0.92),
                             borderRadius: SLRadius.xlAll,
                           ),
                           child: TabBar(
@@ -601,7 +601,7 @@ class _QuizScreenState extends State<QuizScreen> {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: SLRadius.xlAll,
         border: Border.all(color: const Color(0xFFFFD9E8)),
       ),
