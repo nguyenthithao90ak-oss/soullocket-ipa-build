@@ -309,7 +309,7 @@ class _HealthScreenState extends State<HealthScreen>
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
             ),
           ),
         ),
@@ -413,8 +413,8 @@ class _HealthScreenState extends State<HealthScreen>
               padding: EdgeInsets.all(innerPadding),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.15),
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                color: Colors.white.withValues(alpha: 0.15),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
               ),
               child: !_hasConsent
                   ? Center(
@@ -455,7 +455,7 @@ class _HealthScreenState extends State<HealthScreen>
                               style: SLTheme.quicksand(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                             SLSpacing.h16,
@@ -562,9 +562,9 @@ class _HealthScreenState extends State<HealthScreen>
       child: Container(
         padding: SLSpacing.all16,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.3)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         ),
         child: InkWell(
           onTap: onTap,
@@ -604,10 +604,10 @@ class _HealthScreenState extends State<HealthScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.94),
+          color: Colors.white.withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: const Color(0xFFFF8AA0).withOpacity(0.55),
+            color: const Color(0xFFFF8AA0).withValues(alpha: 0.55),
           ),
         ),
         child: TextFormField(
@@ -647,9 +647,9 @@ class _HealthScreenState extends State<HealthScreen>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.16),
+              color: Colors.white.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.24)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
             ),
             child: Column(
               children: [
@@ -673,7 +673,7 @@ class _HealthScreenState extends State<HealthScreen>
                                 ? 'Người ấy sẽ thấy dự báo và gợi ý chăm sóc.'
                                 : 'Chỉ bạn thấy thông tin này trên máy hiện tại.',
                             style: SLTheme.quicksand(
-                              color: Colors.white.withOpacity(0.82),
+                              color: Colors.white.withValues(alpha: 0.82),
                               fontWeight: FontWeight.w600,
                               fontSize: 12.5,
                               height: 1.35,
@@ -697,9 +697,9 @@ class _HealthScreenState extends State<HealthScreen>
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.10),
+                    color: Colors.white.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.16)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
                   ),
                   child: Text(
                     'Dự báo chu kỳ chỉ mang tính tham khảo, không thay thế tư vấn y tế. Nếu chu kỳ bất thường kéo dài hoặc bạn thấy không ổn, hãy đi khám để được tư vấn chính xác hơn.',
@@ -739,9 +739,9 @@ class _HealthScreenState extends State<HealthScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.16),
+                      color: Colors.white.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: Colors.white.withOpacity(0.22)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
                     ),
                     child: Text(
                       DateFormat('dd/MM/yyyy').format(item),
@@ -773,9 +773,9 @@ class _HealthScreenState extends State<HealthScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: SLRadius.lgAll,
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -829,7 +829,7 @@ class WaterDropPainter extends CustomPainter {
 
     final paint = Paint()
       ..color = dropColor
-          .withOpacity(0.6 + 0.2 * math.sin(animationValue * 2 * math.pi))
+          .withValues(alpha: 0.6 + 0.2 * math.sin(animationValue * 2 * math.pi))
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -877,7 +877,7 @@ class WaterDropPainter extends CustomPainter {
 
     // Inner fill for wave effect
     final wavePaint = Paint()
-      ..color = dropColor.withOpacity(0.8)
+      ..color = dropColor.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
 
     final wavePath = Path();
