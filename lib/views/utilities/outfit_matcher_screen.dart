@@ -35,7 +35,11 @@ class OutfitMatcherService {
   Color suggestMatchingColor(Color myColor) {
     // Complementary color trick
     return Color.fromARGB(
-        255, 255 - myColor.red, 255 - myColor.green, 255 - myColor.blue);
+      255,
+      255 - (myColor.r * 255.0).round().clamp(0, 255),
+      255 - (myColor.g * 255.0).round().clamp(0, 255),
+      255 - (myColor.b * 255.0).round().clamp(0, 255),
+    );
   }
 }
 
@@ -89,7 +93,7 @@ class _OutfitMatcherScreenState extends State<OutfitMatcherScreen> {
             itemCount: _palette.length,
             itemBuilder: (ctx, i) {
               final c = _palette[i];
-              final selected = c.value == current.value;
+              final selected = c.toARGB32() == current.toARGB32();
               return GestureDetector(
                 onTap: () => onSelect(c),
                 child: AnimatedContainer(
@@ -106,7 +110,7 @@ class _OutfitMatcherScreenState extends State<OutfitMatcherScreen> {
                     boxShadow: selected
                         ? [
                             BoxShadow(
-                                color: c.withOpacity(0.6),
+                                color: c.withValues(alpha: 0.6),
                                 blurRadius: 10,
                                 spreadRadius: 2)
                           ]
@@ -161,7 +165,7 @@ class _OutfitMatcherScreenState extends State<OutfitMatcherScreen> {
                           borderRadius: BorderRadius.circular(20),
                           gradient: LinearGradient(colors: [
                             Colors.white12,
-                            Colors.white.withOpacity(0.05)
+                            Colors.white.withValues(alpha: 0.05)
                           ]),
                           border: Border.all(color: Colors.white24),
                         ),
@@ -233,9 +237,9 @@ class _OutfitMatcherScreenState extends State<OutfitMatcherScreen> {
                     onPressed: () async {
                       final scaffoldMessenger = ScaffoldMessenger.of(context);
                       await _svc.saveOutfit(widget.houseId, widget.myUid, {
-                        'top': _topColor.value,
-                        'bottom': _bottomColor.value,
-                        'shoes': _shoesColor.value,
+                        'top': _topColor.toARGB32(),
+                        'bottom': _bottomColor.toARGB32(),
+                        'shoes': _shoesColor.toARGB32(),
                       });
                       if (!mounted) return;
                       scaffoldMessenger.showSnackBar(const SnackBar(
