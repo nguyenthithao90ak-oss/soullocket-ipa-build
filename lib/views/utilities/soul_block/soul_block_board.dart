@@ -298,7 +298,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                     'View Leaderboard',
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFFFFD166),
+                      color: const Color(0xFFFFA1B7),
                     ),
                   ),
                 ),
