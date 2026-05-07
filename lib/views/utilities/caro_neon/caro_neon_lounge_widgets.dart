@@ -163,7 +163,7 @@ class _SceneTabChip extends StatelessWidget {
             gradient: LinearGradient(
               colors: selected
                   ? <Color>[
-                      color.withOpacity(0.22),
+                      color.withValues(alpha: 0.22),
                       const Color(0xFF130A21),
                     ]
                   : const <Color>[
@@ -186,7 +186,7 @@ class _SceneTabChip extends StatelessWidget {
             boxShadow: [
               if (selected)
                 BoxShadow(
-                  color: color.withOpacity(0.18),
+                  color: color.withValues(alpha: 0.18),
                   blurRadius: 18,
                   spreadRadius: 1,
                 ),
@@ -198,9 +198,9 @@ class _SceneTabChip extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(selected ? 0.18 : 0.08),
+                  color: color.withValues(alpha: selected ? 0.18 : 0.08),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: color.withOpacity(0.45)),
+                  border: Border.all(color: color.withValues(alpha: 0.45)),
                 ),
                 child: Icon(icon, color: color, size: 20),
               ),
@@ -275,10 +275,10 @@ class _LaunchStageCard extends StatelessWidget {
           bottomLeft: Radius.circular(22),
           bottomRight: Radius.circular(36),
         ),
-        border: Border.all(color: accent.withOpacity(0.42), width: 1.2),
+        border: Border.all(color: accent.withValues(alpha: 0.42), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.12),
+            color: accent.withValues(alpha: 0.12),
             blurRadius: 34,
             spreadRadius: 1,
             offset: const Offset(0, 18),
@@ -295,7 +295,7 @@ class _LaunchStageCard extends StatelessWidget {
               height: 118,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: accent.withOpacity(0.08),
+                color: accent.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -324,14 +324,14 @@ class _LaunchStageCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      accent.withOpacity(0.35),
-                      accent.withOpacity(0.12),
+                      accent.withValues(alpha: 0.35),
+                      accent.withValues(alpha: 0.12),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   shape: BoxShape.circle,
-                  border: Border.all(color: accent.withOpacity(0.52)),
+                  border: Border.all(color: accent.withValues(alpha: 0.52)),
                 ),
                 child: Icon(primaryIcon, color: Colors.white, size: 34),
               ),
@@ -398,7 +398,7 @@ class _LaunchPrimaryButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(26),
-        splashColor: Colors.white.withOpacity(0.16),
+        splashColor: Colors.white.withValues(alpha: 0.16),
         highlightColor: Colors.transparent,
         child: Ink(
           width: double.infinity,
@@ -412,7 +412,7 @@ class _LaunchPrimaryButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(26),
             boxShadow: [
               BoxShadow(
-                color: accent.withOpacity(0.34),
+                color: accent.withValues(alpha: 0.34),
                 blurRadius: 20,
                 spreadRadius: 1,
                 offset: const Offset(0, 8),
@@ -433,7 +433,7 @@ class _LaunchPrimaryButton extends StatelessWidget {
                     ),
                     gradient: LinearGradient(
                       colors: [
-                        Colors.white.withOpacity(0.22),
+                        Colors.white.withValues(alpha: 0.22),
                         Colors.transparent,
                       ],
                       begin: Alignment.topCenter,
@@ -448,7 +448,7 @@ class _LaunchPrimaryButton extends StatelessWidget {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: Colors.white.withValues(alpha: 0.18),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icon, color: Colors.white, size: 24),
@@ -481,7 +481,7 @@ class _LaunchPrimaryButton extends StatelessWidget {
                   ),
                   Icon(
                     Icons.arrow_forward_rounded,
-                    color: Colors.white.withOpacity(0.94),
+                    color: Colors.white.withValues(alpha: 0.94),
                     size: 22,
                   ),
                 ],
