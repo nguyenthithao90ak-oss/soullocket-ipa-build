@@ -271,12 +271,12 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.92),
+        color: Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFD81B60).withOpacity(0.18)),
+        border: Border.all(color: const Color(0xFFD81B60).withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withOpacity(0.08),
+            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),
@@ -344,11 +344,11 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
                 color:
-                    isMe ? Colors.blue : _statusColor(status).withOpacity(0.4),
+                    isMe ? Colors.blue : _statusColor(status).withValues(alpha: 0.4),
                 width: 2),
             boxShadow: [
               BoxShadow(
-                  color: _statusColor(status).withOpacity(0.08),
+                  color: _statusColor(status).withValues(alpha: 0.08),
                   blurRadius: 16,
                   offset: const Offset(0, 6)),
             ],
@@ -361,8 +361,8 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
               height: 50,
               decoration: BoxDecoration(
                 gradient: LinearGradient(colors: [
-                  _statusColor(status).withOpacity(0.2),
-                  _statusColor(status).withOpacity(0.05)
+                  _statusColor(status).withValues(alpha: 0.2),
+                  _statusColor(status).withValues(alpha: 0.05)
                 ]),
                 shape: BoxShape.circle,
               ),
@@ -453,7 +453,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
-                    color: _statusColor(status).withOpacity(0.12),
+                    color: _statusColor(status).withValues(alpha: 0.12),
                     borderRadius: SLRadius.mdAll,
                   ),
                   child: Text(
@@ -472,7 +472,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.05),
+                    color: Colors.grey.withValues(alpha: 0.05),
                     borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.circular(20),
                         bottomRight: Radius.circular(20)),
@@ -530,7 +530,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.05),
+                    color: Colors.grey.withValues(alpha: 0.05),
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20),
