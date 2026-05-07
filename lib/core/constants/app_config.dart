@@ -146,6 +146,11 @@ class AppConfig {
     defaultValue:
         'https://us-central1-soullockket.cloudfunctions.net/verifyPurchase',
   );
+  static const String vipSyncUrl = String.fromEnvironment(
+    'VIP_SYNC_URL',
+    defaultValue:
+        'https://us-central1-soullockket.cloudfunctions.net/syncVipEntitlementsHttp',
+  );
   static const String deleteAccountUrl = String.fromEnvironment(
     'DELETE_ACCOUNT_URL',
     defaultValue:
