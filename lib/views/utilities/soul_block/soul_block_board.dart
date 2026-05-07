@@ -52,12 +52,12 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                       end: Alignment.bottomRight,
                     ),
                     border: Border.all(
-                      color: _kSoulChrome.withOpacity(0.40),
+                      color: _kSoulChrome.withValues(alpha: 0.40),
                       width: 1.15,
                     ),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
-                        color: const Color(0xFF071226).withOpacity(0.18),
+                        color: const Color(0xFF071226).withValues(alpha: 0.18),
                         blurRadius: 14,
                         spreadRadius: -10,
                         offset: const Offset(0, 10),
@@ -77,7 +77,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                         end: Alignment.bottomRight,
                       ),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.08),
+                        color: Colors.white.withValues(alpha: 0.08),
                       ),
                     ),
                     child: Padding(
@@ -151,7 +151,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
-          color: Colors.black.withOpacity(0.54),
+          color: Colors.black.withValues(alpha: 0.54),
         ),
         child: Center(
           child: Container(
@@ -167,10 +167,10 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border: Border.all(color: Colors.white.withOpacity(0.10)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.34),
+                  color: Colors.black.withValues(alpha: 0.34),
                   blurRadius: 20,
                   offset: const Offset(0, 12),
                 ),
@@ -237,7 +237,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
                           side: BorderSide(
-                            color: Colors.white.withOpacity(0.12),
+                            color: Colors.white.withValues(alpha: 0.12),
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -414,12 +414,12 @@ extension _SoulBlockBoard on _SoulBlockGameState {
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: _kSoulChrome.withOpacity(0.32),
+          color: _kSoulChrome.withValues(alpha: 0.32),
           width: 1.0,
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: const Color(0xFF071226).withOpacity(0.16),
+            color: const Color(0xFF071226).withValues(alpha: 0.16),
             blurRadius: 12,
             spreadRadius: -8,
             offset: const Offset(0, 8),
@@ -438,9 +438,9 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                 ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
-                  color: Colors.white.withOpacity(0.10),
+                  color: Colors.white.withValues(alpha: 0.10),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.10),
+                    color: Colors.white.withValues(alpha: 0.10),
                   ),
                 ),
                 child: Text(
@@ -448,7 +448,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                   style: SLTheme.quicksand(
                     fontSize: compact ? 9.8 : 10.8,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white.withOpacity(0.78),
+                    color: Colors.white.withValues(alpha: 0.78),
                     letterSpacing: 0.75,
                   ),
                 ),
@@ -471,7 +471,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                   ),
                   boxShadow: <BoxShadow>[
                     BoxShadow(
-                      color: const Color(0xFFFFC95D).withOpacity(0.20),
+                      color: const Color(0xFFFFC95D).withValues(alpha: 0.20),
                       blurRadius: 8,
                       spreadRadius: -6,
                       offset: const Offset(0, 4),
@@ -530,7 +530,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: Colors.white.withOpacity(0.06),
+          color: Colors.white.withValues(alpha: 0.06),
         ),
       ),
       child: Center(
@@ -543,7 +543,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
               height: compact ? 7 : 8,
               margin: EdgeInsets.symmetric(horizontal: compact ? 2 : 3),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
+                color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -576,7 +576,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                       decoration: BoxDecoration(
                         gradient: RadialGradient(
                           colors: <Color>[
-                            Colors.white.withOpacity(isRecommended ? 0.10 : 0.05),
+                            Colors.white.withValues(alpha: isRecommended ? 0.10 : 0.05),
                             Colors.transparent,
                           ],
                           radius: 0.88,
@@ -613,7 +613,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                       width: 18,
                       height: 18,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFD166).withOpacity(0.18),
+                        color: const Color(0xFFFFD166).withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: const Color(0xFFFFD166).withOpacity(0.30),
