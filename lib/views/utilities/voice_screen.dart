@@ -949,11 +949,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
         final hasData =
             snapshot.hasData && snapshot.data?.snapshot.value != null;
-        if (snapshot.connectionState == ConnectionState.waiting && !hasData) {
-          return const Center(
-              child: CircularProgressIndicator(color: Colors.white));
-        }
-
+        if (snapshot.hasError) {
           return Center(
             child: Text(
               'Không tải được lời nhắn thoại lúc này. Hãy thử lại sau.',
@@ -962,6 +958,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
               textAlign: TextAlign.center,
             ),
           );
+        }
 
         if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
           return Center(
