@@ -108,6 +108,32 @@ class PermissionHelper {
     return false;
   }
 
+  static Future<bool> requestBackgroundLocationWithDisclosure(
+    BuildContext context, {
+    required String title,
+    required String disclosure,
+  }) async {
+    final status = await Geolocator.checkPermission();
+    if (status == LocationPermission.always) {
+      return true;
+    }
+    if (status == LocationPermission.deniedForever) {
+      return false;
+    }
+    if (!context.mounted) return false;
+
+    final shouldRequest =
+        await _showDisclosureDialog(context, title, disclosure);
+    if (shouldRequest != true) {
+      return false;
+    }
+
+    final result = await _withLifecyclePresenceGuard(
+      Geolocator.requestPermission,
+    );
+    return result == LocationPermission.always;
+  }
+
   static Future<bool?> _showDisclosureDialog(
       BuildContext context, String title, String disclosure) {
     if (!context.mounted) return Future.value(false);
