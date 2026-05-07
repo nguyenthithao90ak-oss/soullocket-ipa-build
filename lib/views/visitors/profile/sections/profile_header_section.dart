@@ -55,7 +55,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
     final avatarBadgeOffset = (avatarSize * 0.13).clamp(10.0, 14.0).toDouble();
     final avatarShadow = [
       BoxShadow(
-        color: Colors.black.withOpacity(0.25),
+        color: Colors.black.withValues(alpha: 0.25),
         blurRadius: 20,
         offset: const Offset(0, 8),
       ),
@@ -87,9 +87,9 @@ class VisitorProfileHeaderSection extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   Colors.black
-                      .withOpacity(headerImageUrl.isNotEmpty ? 0.12 : 0),
-                  Colors.black.withOpacity(
-                    headerImageUrl.isNotEmpty ? 0.26 : 0.05,
+                      .withValues(alpha: headerImageUrl.isNotEmpty ? 0.12 : 0),
+                  Colors.black.withValues(
+                    alpha: headerImageUrl.isNotEmpty ? 0.26 : 0.05,
                   ),
                 ],
                 begin: Alignment.topCenter,
@@ -107,8 +107,8 @@ class VisitorProfileHeaderSection extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: onOpenAppearance,
-                splashColor: Colors.white.withOpacity(0.06),
-                highlightColor: Colors.white.withOpacity(0.03),
+                splashColor: Colors.white.withValues(alpha: 0.06),
+                highlightColor: Colors.white.withValues(alpha: 0.03),
               ),
             ),
           ),
@@ -121,9 +121,9 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.18),
+                  color: Colors.black.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(SLRadius.pill),
-                  border: Border.all(color: Colors.white.withOpacity(0.16)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -249,10 +249,10 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(SLRadius.pill),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                       ),
                       child: Text(
@@ -279,7 +279,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       fontSize: 13,
-                      color: Colors.white.withOpacity(0.84),
+                      color: Colors.white.withValues(alpha: 0.84),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -350,7 +350,7 @@ class _VisitorProfileMeshPatternPainter extends CustomPainter {
       ..shader = RadialGradient(
         center: const Alignment(0.7, -0.5),
         radius: 0.7,
-        colors: [Colors.white.withOpacity(0.12), Colors.transparent],
+        colors: [Colors.white.withValues(alpha: 0.12), Colors.transparent],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), p1);
 
@@ -358,7 +358,7 @@ class _VisitorProfileMeshPatternPainter extends CustomPainter {
       ..shader = RadialGradient(
         center: const Alignment(-0.5, 0.8),
         radius: 0.6,
-        colors: [Colors.white.withOpacity(0.08), Colors.transparent],
+        colors: [Colors.white.withValues(alpha: 0.08), Colors.transparent],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), p2);
   }
