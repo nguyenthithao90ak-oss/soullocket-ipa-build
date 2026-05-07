@@ -809,7 +809,7 @@ class _SoulRhythmStagePainter extends CustomPainter {
           const Color(0xFF6FE8FF),
           t,
         )!
-            .withOpacity(0.12 + (bgPulse * 0.08));
+            .withValues(alpha: 0.12 + (bgPulse * 0.08));
         canvas.drawOval(
           Rect.fromCenter(
             center: Offset(size.width / 2, size.height * (0.30 + (t * 0.13))),
@@ -831,8 +831,8 @@ class _SoulRhythmStagePainter extends CustomPainter {
     final floorPaint = Paint()
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFF111C3F).withOpacity(0.70),
-          const Color(0xFF06101F).withOpacity(0.94),
+          const Color(0xFF111C3F).withValues(alpha: 0.70),
+          const Color(0xFF06101F).withValues(alpha: 0.94),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -842,7 +842,7 @@ class _SoulRhythmStagePainter extends CustomPainter {
     final gridPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..color = const Color(0xFF6FE8FF).withOpacity(lowGraphics ? 0.08 : 0.16);
+      ..color = const Color(0xFF6FE8FF).withValues(alpha: lowGraphics ? 0.08 : 0.16);
     for (int i = 0; i <= 8; i++) {
       final t = i / 8;
       final xTop = (size.width * 0.22) + ((size.width * 0.56) * t);
@@ -870,7 +870,7 @@ class _SoulRhythmStagePainter extends CustomPainter {
         ..lineTo(size.width * (side < 0 ? -0.05 : 1.05), size.height)
         ..close();
       beamPaint.color = (side < 0 ? const Color(0xFFFF3D81) : const Color(0xFF6FE8FF))
-          .withOpacity(lowGraphics ? 0.035 : 0.075 + (bgPulse * 0.05));
+          .withValues(alpha: lowGraphics ? 0.035 : 0.075 + (bgPulse * 0.05));
       canvas.drawPath(beam, beamPaint);
     }
   }
@@ -902,8 +902,8 @@ class _SoulEffectsPainter extends CustomPainter {
       if (opacity <= 0) continue;
 
       strokePaint
-        ..color = burst.color.withOpacity(
-          (burst.strong ? 0.9 : 0.55) * opacity,
+        ..color = burst.color.withValues(
+          alpha: (burst.strong ? 0.9 : 0.55) * opacity,
         )
         ..strokeWidth = burst.strong ? 3 : 2
         ..maskFilter = MaskFilter.blur(
@@ -918,7 +918,7 @@ class _SoulEffectsPainter extends CustomPainter {
       if (opacity <= 0) continue;
 
       fillPaint
-        ..color = particle.color.withOpacity(opacity)
+        ..color = particle.color.withValues(alpha: opacity)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
       canvas.drawCircle(Offset(particle.x + 3, particle.y + 3), 3, fillPaint);
     }
