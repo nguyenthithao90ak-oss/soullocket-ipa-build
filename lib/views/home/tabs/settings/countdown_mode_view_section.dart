@@ -1449,6 +1449,7 @@ extension _CountdownModeIndependentScreenViewPart
                               child: CachedNetworkImage(
                                 imageUrl: bgUrl,
                                 fit: BoxFit.cover,
+                                filterQuality: FilterQuality.high,
                                 fadeInDuration: const Duration(milliseconds: 180),
                                 memCacheWidth: 720,
                                 placeholder: (_, __) => DecoratedBox(
