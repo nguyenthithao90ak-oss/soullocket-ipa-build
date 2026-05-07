@@ -552,7 +552,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       decoration: BoxDecoration(
                         color: _isVipActive
                             ? const Color(0xFFFFF3C4)
-                            : Colors.white.withOpacity(0.72),
+                            : Colors.white.withValues(alpha: 0.72),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: _isVipActive
@@ -591,7 +591,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.65),
+                          color: Colors.white.withValues(alpha: 0.65),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Column(
@@ -625,7 +625,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.65),
+                          color: Colors.white.withValues(alpha: 0.65),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Column(
@@ -925,7 +925,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
           const SizedBox(height: 14),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: const Color(0xFFD9C4F2),
