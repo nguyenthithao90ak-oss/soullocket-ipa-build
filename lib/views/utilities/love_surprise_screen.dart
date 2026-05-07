@@ -231,7 +231,7 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: SLRadius.xlAll,
                     border: Border.all(color: Colors.white24),
                   ),
@@ -309,7 +309,7 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
               opacity: showBlockingLoader ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 300),
               child: Container(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha: 0.7),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -354,7 +354,7 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
             left: 8,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.36),
+                color: Colors.black.withValues(alpha: 0.36),
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white24),
               ),
