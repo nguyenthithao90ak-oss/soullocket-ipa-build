@@ -836,6 +836,8 @@ class LoveInsightService {
       offU2: offU2,
       daysSinceLastMemory: daysSinceLastMemory,
       balanceRatio: balanceRatio,
+      timeline: timeline,
+      now: now,
     );
 
     return LoveInsightData(
@@ -889,8 +891,19 @@ class LoveInsightService {
     required double offU2,
     required double daysSinceLastMemory,
     required double balanceRatio,
+    required List<LoveInsightTimelineEntry> timeline,
+    required DateTime now,
   }) async {
+    final milestoneSuggestion = _buildMilestoneSuggestion(
+      timeline: timeline,
+      now: now,
+      isSingle: isSingle,
+    );
+
     if (isSingle) {
+      if (memoryThisMonth <= 1 && activeDays <= 2 && milestoneSuggestion != null) {
+        return milestoneSuggestion;
+      }
       if (daysSinceLastMemory >= 6) {
         return 'Nhịp lưu giữ của bạn đang chậm lại vài ngày gần đây. Chỉ cần viết vài dòng ngắn hoặc lưu một khoảnh khắc nhỏ hôm nay là chỉ số sẽ ấm lên rõ rệt.';
       }
@@ -903,7 +916,13 @@ class LoveInsightService {
       if (loveScore >= 65) {
         return 'Nhịp sống của bạn đang đi đúng hướng. Chỉ cần thêm vài ngày ghi nhật ký hoặc lưu ảnh đều hơn là bảng chỉ số sẽ sáng lên rất nhanh.';
       }
+      if (milestoneSuggestion != null) {
+        return milestoneSuggestion;
+      }
       return 'Dạo này bạn đang hơi thiếu nhịp chăm sóc bản thân. Mỗi tối viết vài dòng và lưu một điều vui trong ngày sẽ giúp tinh thần ấm lại rõ rệt.';
+    }
+    if (memoryThisMonth <= 1 && activeDays <= 3 && milestoneSuggestion != null) {
+      return milestoneSuggestion;
     }
     if (daysSinceLastMemory >= 6) {
       return 'Dấu ấn chung của hai bạn đang hơi thưa ở những ngày gần đây. Chỉ cần một cuộc trò chuyện thật lòng hoặc một kỷ niệm nhỏ hôm nay là nhịp yêu sẽ sáng lại nhanh.';
@@ -923,7 +942,59 @@ class LoveInsightService {
     if (loveScore >= 65) {
       return 'Mối quan hệ đang khá ổn và có nền tảng tốt. Một cuộc trò chuyện chất lượng hoặc một bất ngờ nhỏ đúng lúc sẽ kéo cảm xúc đi lên rất nhanh.';
     }
+    if (milestoneSuggestion != null) {
+      return milestoneSuggestion;
+    }
     return 'Nhịp kết nối của hai bạn đang hơi nguội so với trước. Dành riêng vài phút mỗi ngày để hỏi han thật lòng sẽ giúp cảm xúc quay lại nhanh hơn.';
+  }
+
+  String? _buildMilestoneSuggestion({
+    required List<LoveInsightTimelineEntry> timeline,
+    required DateTime now,
+    required bool isSingle,
+  }) {
+    if (timeline.isEmpty) {
+      return null;
+    }
+
+    final today = _startOfDay(now);
+    LoveInsightTimelineEntry? nearestUpcoming;
+    LoveInsightTimelineEntry? nearestRecentPast;
+
+    for (final entry in timeline) {
+      final entryDay = _startOfDay(entry.date);
+      if (!entryDay.isBefore(today)) {
+        nearestUpcoming ??= entry;
+      } else {
+        nearestRecentPast ??= entry;
+        break;
+      }
+    }
+
+    if (nearestUpcoming != null) {
+      final daysUntil = nearestUpcoming.date.difference(today).inDays;
+      if (daysUntil <= 7) {
+        if (daysUntil <= 0) {
+          return isSingle
+              ? 'Hôm nay là một cột mốc đẹp của hành trình này. Ghi lại một khoảnh khắc nhỏ để ngày đặc biệt có dấu ấn riêng nhé.'
+              : 'Hôm nay là một cột mốc đẹp của hai bạn. Chỉ cần lưu lại một tấm ảnh hay một lời nhắn ngắn là đủ làm ngày này đáng nhớ hơn.';
+        }
+        return isSingle
+            ? 'Chỉ còn $daysUntil ngày nữa tới "${nearestUpcoming.title}". Giữ nhịp vài ghi chú nhỏ từ bây giờ sẽ giúp cột mốc này ý nghĩa hơn nhiều.'
+            : 'Chỉ còn $daysUntil ngày nữa tới "${nearestUpcoming.title}". Hai bạn có thể chuẩn bị một kỷ niệm nhỏ từ bây giờ để cảm xúc đến tự nhiên hơn.';
+      }
+    }
+
+    if (nearestRecentPast != null) {
+      final daysSince = today.difference(_startOfDay(nearestRecentPast.date)).inDays;
+      if (daysSince <= 7) {
+        return isSingle
+            ? '"${nearestRecentPast.title}" vừa đi qua. Đây là lúc đẹp để ghi lại cảm xúc còn mới, để hành trình này có thêm chiều sâu.'
+            : '"${nearestRecentPast.title}" vừa đi qua. Nếu hai bạn lưu lại một lời nhắn hay một tấm ảnh lúc này, cột mốc đó sẽ ở lại lâu hơn.';
+      }
+    }
+
+    return null;
   }
 
   List<LoveInsightTimelineEntry> _buildTimeline({
