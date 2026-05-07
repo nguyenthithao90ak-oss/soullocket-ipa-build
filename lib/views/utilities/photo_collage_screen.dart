@@ -877,6 +877,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
     return Image.memory(
       _images[index].bytes,
       fit: BoxFit.cover,
+      filterQuality: FilterQuality.high,
       gaplessPlayback: true,
     );
   }
