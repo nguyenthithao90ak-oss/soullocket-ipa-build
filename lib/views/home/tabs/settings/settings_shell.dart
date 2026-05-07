@@ -530,7 +530,7 @@ extension _SettingsTabShell on _SettingsTabState {
         color: _kSettingsHeaderBg,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -557,7 +557,7 @@ extension _SettingsTabShell on _SettingsTabState {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -611,12 +611,12 @@ extension _SettingsTabShell on _SettingsTabState {
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.94),
+          color: Colors.white.withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: const Color(0xFFD7E2EE)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 14,
               offset: const Offset(0, 6),
             ),
@@ -947,15 +947,15 @@ extension _SettingsTabShell on _SettingsTabState {
         margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.97),
+          color: Colors.white.withValues(alpha: 0.97),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: SLColors.primary.withOpacity(0.18),
+            color: SLColors.primary.withValues(alpha: 0.18),
             width: 1.6,
           ),
           boxShadow: [
             BoxShadow(
-              color: SLColors.primary.withOpacity(0.08),
+              color: SLColors.primary.withValues(alpha: 0.08),
               blurRadius: 18,
               offset: const Offset(0, 10),
             ),
@@ -1039,10 +1039,10 @@ extension _SettingsTabShell on _SettingsTabState {
       margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.97),
+        color: Colors.white.withValues(alpha: 0.97),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: const Color(0xFFD81B60).withOpacity(0.25),
+          color: const Color(0xFFD81B60).withValues(alpha: 0.25),
           width: 2,
         ),
       ),
@@ -1069,7 +1069,7 @@ extension _SettingsTabShell on _SettingsTabState {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD81B60).withOpacity(0.1),
+                    color: const Color(0xFFD81B60).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
