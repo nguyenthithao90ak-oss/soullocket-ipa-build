@@ -13,6 +13,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
           memCacheWidth: memCacheWidth,
           imageUrl: url,
           fit: BoxFit.scaleDown,
+          filterQuality: FilterQuality.high,
           alignment: Alignment.center,
           placeholder: (_, __) => const SizedBox(
             width: 36,
