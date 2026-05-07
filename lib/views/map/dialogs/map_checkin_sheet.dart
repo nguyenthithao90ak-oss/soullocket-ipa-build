@@ -45,7 +45,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
               ),
               SLSpacing.h16,
               Text(
-                'Check-in vị trí hiện tại',
+                'Check-in vị trí đã chọn',
                 style: SLTheme.quicksand(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -54,13 +54,13 @@ extension _MapCheckinSheetExt on _MapScreenState {
               ),
               SLSpacing.h8,
               Text(
-                'Toa do: ${_myLiveLocation!.latitude.toStringAsFixed(5)}, ${_myLiveLocation!.longitude.toStringAsFixed(5)}',
+                'Toạ độ: ${activePoint.latitude.toStringAsFixed(5)}, ${activePoint.longitude.toStringAsFixed(5)}',
                 style: SLTheme.quicksand(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: Colors.grey[400],
                 ),
-              ),
+              ),,
               SLSpacing.h16,
               _buildCheckinTextField(
                 controller: nameCtrl,
@@ -85,8 +85,8 @@ extension _MapCheckinSheetExt on _MapScreenState {
                         await _mapPinLimitService.getSnapshot(widget.houseId);
                     final isCurrentPlaceAlreadyPinned =
                         pinSnapshot.containsLocation(
-                      _myLiveLocation!.latitude,
-                      _myLiveLocation!.longitude,
+                      activePoint.latitude,
+                      activePoint.longitude,
                     );
                     if (pinSnapshot.isFull && !isCurrentPlaceAlreadyPinned) {
                       if (!ctx.mounted) return;
@@ -110,8 +110,8 @@ extension _MapCheckinSheetExt on _MapScreenState {
                         .child('checkins/${widget.houseId}')
                         .push()
                         .set({
-                      'lat': _myLiveLocation!.latitude,
-                      'lng': _myLiveLocation!.longitude,
+                      'lat': activePoint.latitude,
+                      'lng': activePoint.longitude,
                       'name': name,
                       'note': noteCtrl.text.trim(),
                       'role': widget.myRole,
