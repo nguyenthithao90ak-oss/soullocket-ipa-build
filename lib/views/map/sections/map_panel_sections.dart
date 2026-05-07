@@ -328,7 +328,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   ),
                 ],
               ),
-              SLSpacing.h14,
+              SLSpacing.h12,
               Row(
                 children: _isSingleRelationship
                     ? [
