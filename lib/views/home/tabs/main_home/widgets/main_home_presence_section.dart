@@ -55,7 +55,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          if (showDecorGlow) ...[
+          if (false && showDecorGlow) ...[
             Positioned(
               top: -8,
               left: -4,
