@@ -164,14 +164,12 @@ Future<void> _configureSystemUiForEdgeToEdge() async {
 
 void main() {
   runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
+    final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+    FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     _configureRenderingDefaults();
     await _configureSystemUiForEdgeToEdge();
     GoogleFonts.config.allowRuntimeFetching = !kIsWeb;
     if (!kIsWeb) {
-      FlutterNativeSplash.preserve(
-        widgetsBinding: WidgetsFlutterBinding.ensureInitialized(),
-      );
     }
 
     // Giữ dọc trên mobile; riêng macOS không khóa để cho phép xoay/ngang.
