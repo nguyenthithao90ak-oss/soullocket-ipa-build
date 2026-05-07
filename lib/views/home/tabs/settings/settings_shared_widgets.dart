@@ -808,8 +808,8 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required Color color,
     VoidCallback? onTap,
   }) {
-    final tileBg = color.withOpacity(0.08);
-    final tileBorder = color.withOpacity(0.22);
+    final tileBg = color.withValues(alpha: 0.08);
+    final tileBorder = color.withValues(alpha: 0.22);
 
     return GestureDetector(
       onTap: onTap ?? () => _showToast('Đang mở...'),
@@ -822,7 +822,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
           border: Border.all(color: tileBorder),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -834,7 +834,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 20),
@@ -854,7 +854,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
             ),
             Icon(
               Icons.open_in_new_rounded,
-              color: color.withOpacity(0.9),
+              color: color.withValues(alpha: 0.9),
               size: 18,
             ),
           ],
@@ -887,12 +887,12 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: value
-                ? const Color(0xFFD81B60).withOpacity(0.05)
+                ? const Color(0xFFD81B60).withValues(alpha: 0.05)
                 : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: value
-                  ? const Color(0xFFD81B60).withOpacity(0.2)
+                  ? const Color(0xFFD81B60).withValues(alpha: 0.2)
                   : const Color(0xFFE2E8F0),
               width: 1.2,
             ),
@@ -992,12 +992,12 @@ class _SparkleBetaBadge extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: Colors.white.withOpacity(0.88),
+          color: Colors.white.withValues(alpha: 0.88),
           width: 0.8,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF78A8).withOpacity(0.2),
+            color: const Color(0xFFFF78A8).withValues(alpha: 0.2),
             blurRadius: 10,
             spreadRadius: 0.2,
           ),
