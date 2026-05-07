@@ -910,9 +910,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
               end: Alignment.bottomCenter,
             ),
             border: Border.all(
-              color: Colors.white.withOpacity(
-                isPreview ? 0.52 : (isClearing ? 0.28 : 0.14),
-              ),
+              color: Colors.white.withValues(alpha: isPreview ? 0.52 : (isClearing ? 0.28 : 0.14)),
               width: isPreview ? 1.0 : 0.7,
             ),
           ),
