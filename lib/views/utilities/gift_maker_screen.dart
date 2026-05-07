@@ -1099,7 +1099,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
           boxShadow: [
             BoxShadow(
               color: (selected ? colors.first : Colors.black).withValues(
-                selected ? 0.24 : 0.05,
+                alpha: selected ? 0.24 : 0.05,
               ),
               blurRadius: selected ? 22 : 12,
               offset: Offset(0, selected ? 12 : 5),
