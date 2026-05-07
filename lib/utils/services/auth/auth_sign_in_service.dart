@@ -1761,6 +1761,7 @@ class AuthSignInService {
         throw 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại rồi thử xóa tài khoản.';
       }
 
+      final deviceId = await _houseContextService.getDeviceId();
       final response = await _httpPost(
         Uri.parse(endpoint),
         headers: await AppCheckHttpHeaders.withOptionalToken({
@@ -1769,6 +1770,7 @@ class AuthSignInService {
         }),
         body: jsonEncode({
           'source': 'flutter_app',
+          'deviceId': deviceId,
         }),
       ).timeout(const Duration(seconds: 20));
 
