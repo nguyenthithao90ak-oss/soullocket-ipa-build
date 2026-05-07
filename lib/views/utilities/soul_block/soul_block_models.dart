@@ -98,7 +98,6 @@ class _LineClearResolution {
   final Set<int> clearedCols;
 }
 
-
 class _TemplateScore {
   const _TemplateScore({
     required this.template,
