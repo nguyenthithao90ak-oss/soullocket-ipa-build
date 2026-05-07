@@ -148,7 +148,7 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
         const SizedBox(width: 8),
         Switch(
           value: value,
-          activeColor: Colors.white,
+          activeThumbColor: Colors.white,
           activeTrackColor: accentColor,
           inactiveThumbColor: Colors.white,
           inactiveTrackColor: const Color(0xFFD9E2EC),
