@@ -282,7 +282,7 @@ class LoveInsightService {
         _dbRef.child('houses/$houseId/metrics/app_open').get(),
       ]).timeout(const Duration(seconds: 5));
 
-      return _processInsightData(
+      final data = await _processInsightData(
         relationshipMode,
         monthStart,
         results[0].value,
@@ -292,7 +292,13 @@ class LoveInsightService {
         results[4].value,
         results[5].value,
       );
+      await _saveInsightCache(houseId, relationshipMode, data);
+      return data;
     } catch (e) {
+      final cached = await _loadInsightCache(houseId, relationshipMode);
+      if (cached != null) {
+        return cached;
+      }
       // Offline fallback
       return LoveInsightData(
         updatedAt: DateTime.now().millisecondsSinceEpoch,
@@ -331,6 +337,39 @@ class LoveInsightService {
         timeline: [],
       );
     }
+  }
+
+  String _insightCacheKey(String houseId, String relationshipMode) =>
+      'love_insight_${houseId.trim()}_${relationshipMode.trim()}';
+
+  Future<void> _saveInsightCache(
+    String houseId,
+    String relationshipMode,
+    LoveInsightData data,
+  ) async {
+    try {
+      await OfflineCacheService.saveCache(
+        _insightCacheKey(houseId, relationshipMode),
+        data.toMap(),
+      );
+    } catch (_) {}
+  }
+
+  Future<LoveInsightData?> _loadInsightCache(
+    String houseId,
+    String relationshipMode,
+  ) async {
+    try {
+      final cached = await OfflineCacheService.loadCache(
+        _insightCacheKey(houseId, relationshipMode),
+      );
+      if (cached is Map) {
+        return LoveInsightData.fromMap(
+          Map<String, dynamic>.from(Map<dynamic, dynamic>.from(cached)),
+        );
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<LoveInsightData> _processInsightData(
