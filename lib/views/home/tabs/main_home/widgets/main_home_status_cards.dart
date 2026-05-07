@@ -299,7 +299,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 SLSpacing.w8,
                 Flexible(
                   child: Text(
-                    isSingle ? 'TỔNG QUAN CỦA BẠN' : 'TỔNG QUAN HÔM NAY',
+                    isSingle ? 'TỔNG QUAN HÔM NAY' : 'HÀNH TRÌNH ĐÃ ĐI QUA',
                     maxLines: 1,
                     overflow: TextOverflow.visible,
                     style: SLTheme.quicksand(
