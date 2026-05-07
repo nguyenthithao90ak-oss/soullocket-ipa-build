@@ -133,19 +133,19 @@ class _CountdownModeStyleData {
           end: Alignment.bottomRight,
         ),
         outerBorder:
-            Border.all(color: Colors.white.withOpacity(0.34), width: 2.2),
+            Border.all(color: Colors.white.withValues(alpha: 0.34), width: 2.2),
         innerBorder:
-            Border.all(color: Colors.white.withOpacity(0.10), width: 1),
+            Border.all(color: Colors.white.withValues(alpha: 0.10), width: 1),
         shadows: const [],
         numberGradient: const [Colors.white, Color(0xFFFFD5E8)],
         topColor: Colors.white,
-        bottomColor: Colors.white.withOpacity(0.92),
+        bottomColor: Colors.white.withValues(alpha: 0.92),
         labelShadows: [
-          Shadow(color: Colors.black.withOpacity(0.24), blurRadius: 10),
+          Shadow(color: Colors.black.withValues(alpha: 0.24), blurRadius: 10),
         ],
         numberShadows: [
           Shadow(
-            color: Colors.black.withOpacity(0.22),
+            color: Colors.black.withValues(alpha: 0.22),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -170,12 +170,12 @@ class _CountdownModeStyleData {
             end: Alignment.bottomRight,
           ),
           outerBorder:
-              Border.all(color: Colors.white.withOpacity(0.86), width: 3.4),
+              Border.all(color: Colors.white.withValues(alpha: 0.86), width: 3.4),
           innerBorder:
-              Border.all(color: Colors.white.withOpacity(0.36), width: 1),
+              Border.all(color: Colors.white.withValues(alpha: 0.36), width: 1),
           shadows: [
             BoxShadow(
-              color: const Color(0xFFD94C86).withOpacity(0.14),
+              color: const Color(0xFFD94C86).withValues(alpha: 0.14),
               blurRadius: 24,
               offset: const Offset(0, 10),
             ),
@@ -184,11 +184,11 @@ class _CountdownModeStyleData {
           topColor: const Color(0xFFBF3D75),
           bottomColor: const Color(0xFF6E5B68),
           labelShadows: [
-            Shadow(color: Colors.white.withOpacity(0.82), blurRadius: 8),
+            Shadow(color: Colors.white.withValues(alpha: 0.82), blurRadius: 8),
           ],
           numberShadows: [
             Shadow(
-              color: const Color(0xFFD94C86).withOpacity(0.18),
+              color: const Color(0xFFD94C86).withValues(alpha: 0.18),
               blurRadius: 14,
               offset: const Offset(0, 5),
             ),
@@ -218,27 +218,27 @@ class _CountdownModeStyleData {
         return _CountdownModeStyleData(
           outerGradient: LinearGradient(
             colors: [
-              Colors.white.withOpacity(0.88),
-              const Color(0xFFE8F6FF).withOpacity(0.64)
+              Colors.white.withValues(alpha: 0.88),
+              const Color(0xFFE8F6FF).withValues(alpha: 0.64)
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           innerGradient: LinearGradient(
             colors: [
-              Colors.white.withOpacity(0.26),
-              Colors.white.withOpacity(0.10)
+              Colors.white.withValues(alpha: 0.26),
+              Colors.white.withValues(alpha: 0.10)
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           outerBorder:
-              Border.all(color: Colors.white.withOpacity(0.82), width: 3),
+              Border.all(color: Colors.white.withValues(alpha: 0.82), width: 3),
           innerBorder:
-              Border.all(color: Colors.white.withOpacity(0.38), width: 1.2),
+              Border.all(color: Colors.white.withValues(alpha: 0.38), width: 1.2),
           shadows: [
             BoxShadow(
-              color: const Color(0xFF8EC5FC).withOpacity(0.30),
+              color: const Color(0xFF8EC5FC).withValues(alpha: 0.30),
               blurRadius: 42,
               offset: const Offset(0, 18),
             ),
@@ -247,7 +247,7 @@ class _CountdownModeStyleData {
           topColor: const Color(0xFF2378A8),
           bottomColor: const Color(0xFF51606D),
           labelShadows: [
-            Shadow(color: Colors.white.withOpacity(0.84), blurRadius: 8)
+            Shadow(color: Colors.white.withValues(alpha: 0.84), blurRadius: 8)
           ],
           numberShadows: const [
             Shadow(
@@ -271,26 +271,26 @@ class _CountdownModeStyleData {
           innerGradient: LinearGradient(
             colors: styleKey == 'glow'
                 ? [
-                    const Color(0xFFFF8DB5).withOpacity(0.24),
-                    Colors.white.withOpacity(0.10)
+                    const Color(0xFFFF8DB5).withValues(alpha: 0.24),
+                    Colors.white.withValues(alpha: 0.10)
                   ]
                 : [
-                    Colors.white.withOpacity(0.24),
-                    Colors.white.withOpacity(0.10)
+                    Colors.white.withValues(alpha: 0.24),
+                    Colors.white.withValues(alpha: 0.10)
                   ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           outerBorder:
-              Border.all(color: Colors.white.withOpacity(0.86), width: 4.5),
+              Border.all(color: Colors.white.withValues(alpha: 0.86), width: 4.5),
           innerBorder:
-              Border.all(color: Colors.white.withOpacity(0.42), width: 1),
+              Border.all(color: Colors.white.withValues(alpha: 0.42), width: 1),
           shadows: [
             BoxShadow(
               color: (styleKey == 'glow'
                       ? const Color(0xFFFF5E92)
                       : const Color(0xFFFF77C8))
-                  .withOpacity(0.32),
+                  .withValues(alpha: 0.32),
               blurRadius: 38,
               offset: const Offset(0, 14),
             ),
@@ -305,14 +305,14 @@ class _CountdownModeStyleData {
               ? const Color(0xFF7A2C58)
               : const Color(0xFF4C6178),
           labelShadows: [
-            Shadow(color: Colors.white.withOpacity(0.82), blurRadius: 8)
+            Shadow(color: Colors.white.withValues(alpha: 0.82), blurRadius: 8)
           ],
           numberShadows: [
             Shadow(
               color: (styleKey == 'glow'
                       ? const Color(0xFFFF2F7A)
                       : const Color(0xFFFF3D9A))
-                  .withOpacity(0.28),
+                  .withValues(alpha: 0.28),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -345,22 +345,22 @@ class _CountdownModeStyleData {
           innerGradient: LinearGradient(
             colors: isCrystal
                 ? [
-                    Colors.white.withOpacity(0.24),
-                    Colors.white.withOpacity(0.10)
+                    Colors.white.withValues(alpha: 0.24),
+                    Colors.white.withValues(alpha: 0.10)
                   ]
                 : [
-                    Colors.white.withOpacity(0.06),
-                    Colors.white.withOpacity(0.02)
+                    Colors.white.withValues(alpha: 0.06),
+                    Colors.white.withValues(alpha: 0.02)
                   ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           outerBorder: Border.all(
-            color: Colors.white.withOpacity(isCrystal ? 0.92 : 0.22),
+            color: Colors.white.withValues(alpha: isCrystal ? 0.92 : 0.22),
             width: isCrystal ? 4 : 3,
           ),
           innerBorder: Border.all(
-            color: Colors.white.withOpacity(isCrystal ? 0.52 : 0.18),
+            color: Colors.white.withValues(alpha: isCrystal ? 0.52 : 0.18),
             width: 1,
           ),
           shadows: [
@@ -372,7 +372,7 @@ class _CountdownModeStyleData {
                           : isAurora
                               ? const Color(0xFF00FFC8)
                               : const Color(0xFF8A2BFF))
-                  .withOpacity(0.34),
+                  .withValues(alpha: 0.34),
               blurRadius: 46,
               offset: const Offset(0, 16),
             ),
@@ -405,8 +405,8 @@ class _CountdownModeStyleData {
           labelShadows: [
             Shadow(
               color: isCrystal
-                  ? Colors.white.withOpacity(0.90)
-                  : Colors.black.withOpacity(0.48),
+                  ? Colors.white.withValues(alpha: 0.90)
+                  : Colors.black.withValues(alpha: 0.48),
               blurRadius: 8,
             ),
           ],
@@ -417,7 +417,7 @@ class _CountdownModeStyleData {
                       : isLava
                           ? const Color(0xFFFF5A00)
                           : const Color(0xFF00E5FF))
-                  .withOpacity(0.30),
+                  .withValues(alpha: 0.30),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -433,19 +433,19 @@ class _CountdownModeStyleData {
           ),
           innerGradient: LinearGradient(
             colors: [
-              const Color(0xFFFFC6DA).withOpacity(0.32),
-              Colors.white.withOpacity(0.08)
+              const Color(0xFFFFC6DA).withValues(alpha: 0.32),
+              Colors.white.withValues(alpha: 0.08)
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           outerBorder:
-              Border.all(color: Colors.white.withOpacity(0.78), width: 4),
+              Border.all(color: Colors.white.withValues(alpha: 0.78), width: 4),
           innerBorder:
-              Border.all(color: Colors.white.withOpacity(0.18), width: 0.8),
+              Border.all(color: Colors.white.withValues(alpha: 0.18), width: 0.8),
           shadows: [
             BoxShadow(
-              color: const Color(0xFFFF69B4).withOpacity(0.22),
+              color: const Color(0xFFFF69B4).withValues(alpha: 0.22),
               blurRadius: 34,
               offset: const Offset(0, 14),
             ),
@@ -454,11 +454,11 @@ class _CountdownModeStyleData {
           topColor: const Color(0xFFD9508A),
           bottomColor: const Color(0xFF6B5B79),
           labelShadows: [
-            Shadow(color: Colors.white.withOpacity(0.74), blurRadius: 8)
+            Shadow(color: Colors.white.withValues(alpha: 0.74), blurRadius: 8)
           ],
           numberShadows: [
             Shadow(
-              color: const Color(0xFFFF7AA8).withOpacity(0.22),
+              color: const Color(0xFFFF7AA8).withValues(alpha: 0.22),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
