@@ -226,6 +226,7 @@ class _DiaryImagePickerTile extends StatelessWidget {
                     : Image.file(
                         File(image!.path),
                         fit: BoxFit.cover,
+                        filterQuality: FilterQuality.high,
                       ),
               ),
             ),
