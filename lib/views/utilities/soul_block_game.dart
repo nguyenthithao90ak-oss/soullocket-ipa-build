@@ -1476,7 +1476,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       if (nextStreak >= 2) {
         _showStreakBurst(nextStreak);
       }
-
     }
     if (beatBestThisMove) {
       _emitBestScoreFeedback();
