@@ -300,6 +300,7 @@ class PurchaseService {
   Future<bool> restorePurchases() async {
     final available = await _iap.isAvailable();
     if (!available) {
+      await syncVipEntitlements();
       return false;
     }
 
@@ -307,6 +308,7 @@ class PurchaseService {
       await initialize();
     } else {
       await _iap.restorePurchases();
+      await syncVipEntitlements();
     }
 
     return true;
