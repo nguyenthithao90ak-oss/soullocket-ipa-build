@@ -1,4 +1,4 @@
-﻿part of '../settings_tab.dart';
+part of '../settings_tab.dart';
 // ignore_for_file: dead_code, unused_element
 
 Future<XFile?> _cropCountdownModeAvatarFile(XFile file) async {
@@ -927,7 +927,7 @@ class _CountdownModeEditorScreenState
                                   controller: _leftCtrl,
                                   decoration: _fieldDecoration(
                                     label: 'Tên bên trái',
-                                    hint: 'Bạn',
+                                    hint: 'ngày',
                                   ),
                                   onChanged: (_) => setState(() {}),
                                 ),
