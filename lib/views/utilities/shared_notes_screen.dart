@@ -350,12 +350,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
           return Padding(
             padding: SLSpacing.all16,
             child: Center(
-              child: SLTheme.emptyStatePanel(
-                icon: Icons.error_outline_rounded,
-                title: 'Không tải được ghi chú',
-                subtitle: '${snapshot.error}',
-                accentColor: SLColors.danger,
-              ),
+                subtitle: 'Không tải được ghi chú lúc này. Hãy thử lại sau.',
             ),
           );
         }
