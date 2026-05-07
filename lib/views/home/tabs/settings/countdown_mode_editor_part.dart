@@ -697,14 +697,14 @@ class _CountdownModeEditorScreenState
             ),
           ),
           Positioned(
-            top: -60,
-            right: -40,
-            child: _CountdownModeGlowOrb(color: themeData.orbA, size: 220),
+            top: -36,
+            right: -18,
+            child: _CountdownModeGlowOrb(color: themeData.orbA, size: 236),
           ),
           Positioned(
-            left: -40,
-            bottom: 60,
-            child: _CountdownModeGlowOrb(color: themeData.orbB, size: 180),
+            left: -20,
+            bottom: 44,
+            child: _CountdownModeGlowOrb(color: themeData.orbB, size: 196),
           ),
           SafeArea(
             child: LayoutBuilder(
