@@ -1,4 +1,4 @@
-﻿part of '../settings_tab.dart';
+part of '../settings_tab.dart';
 
 extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
   void _showMessageImpl(String message) {
@@ -55,11 +55,11 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
     bool dark = false,
   }) {
     final fillColor =
-        dark ? const Color(0xFF162136) : Colors.white.withOpacity(0.88);
+        dark ? const Color(0xFF162136) : Colors.white.withValues(alpha: 0.88);
     final labelColor = dark ? Colors.white70 : const Color(0xFF8A5B76);
     final hintColor = dark ? Colors.white38 : const Color(0xFFB9A6B3);
     final borderColor =
-        dark ? Colors.white.withOpacity(0.12) : const Color(0xFFF3CBDD);
+        dark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFF3CBDD);
     return InputDecoration(
       labelText: label,
       hintText: hint,
@@ -108,7 +108,7 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
         border: Border.all(color: const Color(0xFFF6D4E2)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF231926).withOpacity(0.08),
+            color: const Color(0xFF231926).withValues(alpha: 0.08),
             blurRadius: 26,
             offset: const Offset(0, 12),
           ),
