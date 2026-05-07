@@ -1220,10 +1220,15 @@ class DiaryMemoryController extends ChangeNotifier {
     required String authorName,
     required String authorEmail,
     required String authorRole,
+    required int uploadQuality,
     Position? position,
   }) async {
     try {
-      final upload = await _storageService.uploadMemoryImage(houseId, image);
+      final upload = await _storageService.uploadMemoryImage(
+        houseId,
+        image,
+        quality: uploadQuality,
+      );
       final sessionId = upload?.sessionId?.trim() ?? '';
       if (upload == null || sessionId.isEmpty) {
         return 'Không thể tạo phiên tải ảnh.';
@@ -1499,6 +1504,8 @@ class DiaryMemoryController extends ChangeNotifier {
         debugPrint('Auth warm-up failed: $e');
       }
 
+      final memoryUploadQuality = vipAccess.isVip ? 82 : 78;
+
       var uploadedCount = 0;
       final errorMessages = <String>[];
 
@@ -1516,6 +1523,7 @@ class DiaryMemoryController extends ChangeNotifier {
                 authorName: authorName,
                 authorEmail: authorEmail,
                 authorRole: authorRole,
+                uploadQuality: memoryUploadQuality,
                 position: position,
               ),
           ],
