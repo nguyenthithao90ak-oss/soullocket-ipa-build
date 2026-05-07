@@ -23,6 +23,41 @@ struct CoupleWidgetData {
     var avatar2Path: String?
     var diaryImagePaths: [String]
     var showDiaryOnWidget: Bool
+    var startDateRaw: String
+    var dayUnitText: String
+
+    func resolvedDaysText(referenceDate: Date = Date()) -> String {
+        let unit = dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "ngày"
+            : dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let raw = startDateRaw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else {
+            return daysText
+        }
+
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        var startDate = formatter.date(from: raw)
+        if startDate == nil {
+            formatter.formatOptions = [.withInternetDateTime]
+            startDate = formatter.date(from: raw)
+        }
+        if startDate == nil {
+            let fallbackFormatter = DateFormatter()
+            fallbackFormatter.locale = Locale(identifier: "en_US_POSIX")
+            fallbackFormatter.dateFormat = "yyyy-MM-dd"
+            startDate = fallbackFormatter.date(from: raw)
+        }
+        guard let startDate else {
+            return daysText
+        }
+
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: referenceDate)
+        let startOfAnchor = calendar.startOfDay(for: startDate)
+        let days = max(0, calendar.dateComponents([.day], from: startOfAnchor, to: startOfToday).day ?? 0)
+        return "\(days) \(unit)"
+    }
 
     static func load() -> CoupleWidgetData {
         let defaults = UserDefaults(suiteName: appGroupID)
@@ -55,7 +90,9 @@ struct CoupleWidgetData {
             avatar1Path: defaults?.string(forKey: "avatar1Path"),
             avatar2Path: defaults?.string(forKey: "avatar2Path"),
             diaryImagePaths: diaryPaths,
-            showDiaryOnWidget: defaults?.bool(forKey: "showDiaryOnWidget") ?? false
+            showDiaryOnWidget: defaults?.bool(forKey: "showDiaryOnWidget") ?? false,
+            startDateRaw: defaults?.string(forKey: "startDateRaw") ?? "",
+            dayUnitText: defaults?.string(forKey: "dayUnitText") ?? "ngày"
         )
     }
 }
@@ -75,8 +112,9 @@ struct CoupleWidgetProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<CoupleEntry>) -> Void) {
-        let entry = CoupleEntry(date: Date(), data: CoupleWidgetData.load())
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date())!
+        let now = Date()
+        let entry = CoupleEntry(date: now, data: CoupleWidgetData.load())
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: now)!
         completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
     }
 }
