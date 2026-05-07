@@ -128,7 +128,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   ),
                   boxShadow: <BoxShadow>[
                     BoxShadow(
-                      color: const Color(0xFFF59E0B).withOpacity(0.18),
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
                       blurRadius: 14,
                       offset: const Offset(0, 7),
                     ),
@@ -205,7 +205,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     ),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
-                        color: const Color(0xFFEC4899).withOpacity(0.22),
+                        color: const Color(0xFFEC4899).withValues(alpha: 0.22),
                         blurRadius: 14,
                         offset: const Offset(0, 7),
                       ),
@@ -270,8 +270,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color: isSelected
-                  ? const Color(0xFFEC4899).withOpacity(0.42)
-                  : const Color(0xFFF6C16A).withOpacity(0.34),
+                  ? const Color(0xFFEC4899).withValues(alpha: 0.42)
+                  : const Color(0xFFF6C16A).withValues(alpha: 0.34),
             ),
           ),
           child: Text(
@@ -407,8 +407,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
               borderRadius: BorderRadius.circular(20),
               gradient: LinearGradient(
                 colors: <Color>[
-                  const Color(0xFFF59E0B).withOpacity(0.24),
-                  const Color(0xFFEC4899).withOpacity(0.14),
+                  const Color(0xFFF59E0B).withValues(alpha: 0.24),
+                  const Color(0xFFEC4899).withValues(alpha: 0.14),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -460,17 +460,17 @@ class _WishlistScreenState extends State<WishlistScreen> {
       padding: const EdgeInsets.fromLTRB(14, 13, 10, 13),
       decoration: BoxDecoration(
         color: isDone
-            ? const Color(0xFFF0FDF4).withOpacity(0.96)
-            : Colors.white.withOpacity(0.94),
+            ? const Color(0xFFF0FDF4).withValues(alpha: 0.96)
+            : Colors.white.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isDone
               ? const Color(0xFFBBF7D0)
-              : const Color(0xFFF6C16A).withOpacity(0.30),
+              : const Color(0xFFF6C16A).withValues(alpha: 0.30),
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: const Color(0xFF7C4A03).withOpacity(0.07),
+            color: const Color(0xFF7C4A03).withValues(alpha: 0.07),
             blurRadius: 16,
             spreadRadius: -8,
             offset: const Offset(0, 10),
