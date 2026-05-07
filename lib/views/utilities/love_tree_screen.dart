@@ -86,7 +86,7 @@ class _LoveTreeScreenState extends State<LoveTreeScreen>
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
             ),
           ),
         ),
@@ -243,9 +243,9 @@ class _LoveTreeScreenState extends State<LoveTreeScreen>
       child: Container(
         padding: SLSpacing.all16,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
+          color: Colors.white.withValues(alpha: 0.18),
           borderRadius: SLRadius.xlAll,
-          border: Border.all(color: Colors.white.withOpacity(0.3)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         ),
         child: child,
       ),
@@ -267,7 +267,8 @@ class _LoveTreePainter extends CustomPainter {
     final leafPaint = Paint()..color = leafColor;
     final flowerPaint = Paint()..color = const Color(0xFFFFC1E3);
 
-    final ground = Paint()..color = const Color(0xFF2E7D32).withOpacity(0.45);
+    final ground = Paint()
+      ..color = const Color(0xFF2E7D32).withValues(alpha: 0.45);
     canvas.drawOval(
         Rect.fromLTWH(size.width * 0.16, size.height * 0.82, size.width * 0.68,
             size.height * 0.13),
