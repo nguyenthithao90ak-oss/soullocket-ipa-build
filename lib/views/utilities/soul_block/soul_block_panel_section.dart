@@ -35,24 +35,24 @@ class _TopScoreCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            accent.withOpacity(0.22),
-            accent.withOpacity(0.08),
-            _kSoulPanelBottom.withOpacity(0.96),
+            accent.withValues(alpha: 0.22),
+            accent.withValues(alpha: 0.08),
+            _kSoulPanelBottom.withValues(alpha: 0.96),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(dense ? 16 : 18),
-        border: Border.all(color: accent.withOpacity(0.26)),
+        border: Border.all(color: accent.withValues(alpha: 0.26)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: accent.withOpacity(0.06),
+            color: accent.withValues(alpha: 0.06),
             blurRadius: 10,
             spreadRadius: -9,
             offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.14),
+            color: Colors.black.withValues(alpha: 0.14),
             blurRadius: 10,
             spreadRadius: -10,
             offset: const Offset(0, 6),
@@ -156,16 +156,16 @@ class _SettingsActionButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
               colors: <Color>[
-                accent.withOpacity(enabled ? 0.20 : 0.08),
-                const Color(0xFF162238).withOpacity(enabled ? 0.98 : 0.82),
+                accent.withValues(alpha: enabled ? 0.20 : 0.08),
+                const Color(0xFF162238).withValues(alpha: enabled ? 0.98 : 0.82),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
               color: enabled
-                  ? accent.withOpacity(0.28)
-                  : Colors.white.withOpacity(0.06),
+                  ? accent.withValues(alpha: 0.28)
+                  : Colors.white.withValues(alpha: 0.06),
             ),
           ),
           child: Row(
@@ -222,7 +222,7 @@ class _LeaderboardTile extends StatelessWidget {
         children: <Widget>[
           CircleAvatar(
             radius: 16,
-            backgroundColor: const Color(0xFF00C3FF).withOpacity(0.18),
+            backgroundColor: const Color(0xFF00C3FF).withValues(alpha: 0.18),
             child: Text(
               '$rank',
               style: SLTheme.quicksand(
@@ -300,7 +300,7 @@ class _SoulExplosionPainter extends CustomPainter {
       final double strokeWidth = 2.6 - (easedProgress * 1.2);
       _ringPaint
         ..strokeWidth = strokeWidth
-        ..color = accent.withOpacity(ringOpacity);
+        ..color = accent.withValues(alpha: ringOpacity);
       canvas.drawCircle(center, ringRadius, _ringPaint);
     }
 
@@ -343,7 +343,7 @@ class _SoulExplosionPainter extends CustomPainter {
       );
       canvas.rotate(rotation);
 
-      _particlePaint.color = particle.color.withOpacity(opacity);
+      _particlePaint.color = particle.color.withValues(alpha: opacity);
       if (particle.simpleDraw) {
         canvas.drawCircle(_kExplosionOrigin, width / 2.4, _particlePaint);
       } else if (particle.isShard) {
@@ -448,10 +448,10 @@ extension _SoulBlockLogoBuilder on _SoulBlockGameState {
         decoration: BoxDecoration(
           color: color,
           borderRadius: tileRadius,
-          border: Border.all(color: Colors.white.withOpacity(0.10)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: color.withOpacity(0.24),
+              color: color.withValues(alpha: 0.24),
               blurRadius: 10,
               spreadRadius: -6,
               offset: const Offset(0, 6),
@@ -469,16 +469,16 @@ extension _SoulBlockLogoBuilder on _SoulBlockGameState {
           borderRadius: borderRadius,
           gradient: LinearGradient(
             colors: <Color>[
-              _kSoulPanelTop.withOpacity(0.94),
+              _kSoulPanelTop.withValues(alpha: 0.94),
               _kSoulPanelBottom,
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: _kSoulChrome.withOpacity(0.30)),
+          border: Border.all(color: _kSoulChrome.withValues(alpha: 0.30)),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: _kSoulChrome.withOpacity(0.12),
+              color: _kSoulChrome.withValues(alpha: 0.12),
               blurRadius: 18,
               spreadRadius: -12,
               offset: const Offset(0, 10),
