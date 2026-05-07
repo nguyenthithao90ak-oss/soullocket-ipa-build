@@ -331,7 +331,7 @@ class LegacyWebUi {
                         Border.all(color: notice.iconTint.withValues(alpha: 0.14)),
                   ),
                   child: Icon(notice.icon, color: notice.iconTint, size: 20),
-                ),,
+                ),
                 SLSpacing.w10,
                 Expanded(
                   child: Column(
