@@ -1984,7 +1984,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
                 return IgnorePointer(
                   child: ColoredBox(
                     color: const Color(0xFFFFE398)
-                        .withOpacity(_backgroundFlashOpacity),
+                        .withValues(alpha: _backgroundFlashOpacity),
                   ),
                 );
               },
