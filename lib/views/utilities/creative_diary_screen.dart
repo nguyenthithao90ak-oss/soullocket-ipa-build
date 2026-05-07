@@ -760,6 +760,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
               Image.network(
                 firstImage,
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
                 errorBuilder: (_, __, ___) => Container(
                   color: page.surface,
                   alignment: Alignment.center,
@@ -822,6 +823,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
             child: Image.network(
               imageUrl,
               fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
               errorBuilder: (_, __, ___) => Container(
                 height: 260,
                 color: Colors.white,
