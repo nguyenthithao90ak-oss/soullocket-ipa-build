@@ -1878,7 +1878,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
               .whereType<_SoulPieceOption>()
               .toList(growable: false);
       final _RecommendedMove? recommendedMove = _recommendMoveFor(board, tray);
-      if (tray.isEmpty || recommendedMove == null) {
+      if (tray.isEmpty || !_hasAnyPlayableMove(board, tray)) {
         return null;
       }
       _pieceSequence = max(
