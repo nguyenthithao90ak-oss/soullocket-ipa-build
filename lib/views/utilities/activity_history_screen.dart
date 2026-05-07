@@ -294,6 +294,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                                     child: Image.network(
                                       entry.previewUrl,
                                       fit: BoxFit.cover,
+                                      filterQuality: FilterQuality.high,
                                       errorBuilder: (_, __, ___) => const Icon(
                                           Icons.image_not_supported_outlined),
                                     ),
