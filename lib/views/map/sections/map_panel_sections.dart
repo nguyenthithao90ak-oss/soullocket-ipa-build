@@ -240,16 +240,25 @@ extension _MapPanelSectionsExt on _MapScreenState {
       builder: (context, uiSnap, child) {
         final showGpsAction = !uiSnap.myIsLive && !_isBootstrappingLocation;
         return Container(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B).withOpacity(0.8),
-            borderRadius: SLRadius.xlAll,
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            gradient: const LinearGradient(
+              colors: [Color(0xEE1A2436), Color(0xDD291B2C)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Colors.white.withOpacity(0.10)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: _kMapPinkDeep.withOpacity(0.14),
+                blurRadius: 30,
+                offset: const Offset(0, 14),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.24),
+                blurRadius: 26,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
@@ -259,15 +268,24 @@ extension _MapPanelSectionsExt on _MapScreenState {
               Row(
                 children: [
                   Container(
-                    width: 38,
-                    height: 38,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [_kMapPinkSoft, _kMapPinkDeep],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      borderRadius: SLRadius.lgAll,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _kMapPinkDeep.withOpacity(0.30),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
-                    child: const Icon(Icons.map_outlined, color: Colors.white),
+                    child: const Icon(Icons.explore_rounded, color: Colors.white),
                   ),
                   SLSpacing.w12,
                   Expanded(
@@ -282,7 +300,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                     ? 'Tổng quan vị trí'
                                     : 'Tổng quan di chuyển',
                                 style: SLTheme.quicksand(
-                                  fontSize: 15,
+                                  fontSize: 15.5,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
@@ -299,9 +317,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: SLTheme.quicksand(
-                            fontSize: 11,
+                            fontSize: 11.1,
                             fontWeight: FontWeight.w700,
-                            color: _kMapTextMuted,
+                            color: Colors.white.withOpacity(0.66),
                             height: 1.35,
                           ),
                         ),
@@ -310,7 +328,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   ),
                 ],
               ),
-              SLSpacing.h12,
+              SLSpacing.h14,
               Row(
                 children: _isSingleRelationship
                     ? [
@@ -343,7 +361,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                           child: _buildMetricTile(
                             label: 'Thời gian',
                             value: uiSnap.etaText,
-                            accent: const Color(0xFF7C3AED),
+                            accent: const Color(0xFF8B5CF6),
                           ),
                         ),
                       ],
@@ -354,9 +372,13 @@ extension _MapPanelSectionsExt on _MapScreenState {
                 Container(
                   width: double.infinity,
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                      const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFFBEB),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFF8E1), Color(0xFFFFF1C7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     borderRadius: SLRadius.lgAll,
                     border: Border.all(color: const Color(0xFFFCD34D)),
                   ),
@@ -367,7 +389,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Icon(
-                            Icons.warning_amber_rounded,
+                            Icons.auto_awesome_rounded,
                             size: 18,
                             color: Color(0xFFD97706),
                           ),
@@ -420,9 +442,16 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.1),
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF10B981).withOpacity(0.16),
+                        const Color(0xFF0F172A).withOpacity(0.30),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     borderRadius: SLRadius.lgAll,
-                    border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFF34D399).withOpacity(0.34)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,14 +465,14 @@ extension _MapPanelSectionsExt on _MapScreenState {
                               height: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
-                                color: Color(0xFF10B981),
+                                color: Color(0xFF34D399),
                               ),
                             )
                           else
                             const Icon(
-                              Icons.location_on_rounded,
+                              Icons.sensors_rounded,
                               size: 18,
-                              color: Color(0xFF10B981),
+                              color: Color(0xFF34D399),
                             ),
                           SLSpacing.w10,
                           Expanded(
@@ -455,7 +484,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                   style: SLTheme.quicksand(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF10B981),
+                                    color: const Color(0xFF86EFAC),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -464,7 +493,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                   style: SLTheme.quicksand(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withOpacity(0.84),
                                     height: 1.4,
                                   ),
                                 ),
@@ -511,11 +540,18 @@ extension _MapPanelSectionsExt on _MapScreenState {
     required Color accent,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 11),
       decoration: BoxDecoration(
-        color: _kMapTileSurface,
-        borderRadius: SLRadius.lgAll,
-        border: Border.all(color: accent.withOpacity(0.2)),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF111827).withOpacity(0.86),
+            accent.withOpacity(0.10),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withOpacity(0.24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -527,7 +563,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 10.5,
               fontWeight: FontWeight.w800,
-              color: accent,
+              color: accent.withOpacity(0.96),
             ),
           ),
           SLSpacing.h6,
@@ -538,7 +574,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 13.5,
               fontWeight: FontWeight.w900,
-              color: _kMapTextSoft,
+              color: Colors.white,
             ),
           ),
         ],
@@ -623,14 +659,21 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF242526),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: roleColor.withOpacity(0.18)),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF151D2B),
+            roleColor.withOpacity(0.12),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: roleColor.withOpacity(0.22)),
         boxShadow: [
           BoxShadow(
-            color: roleColor.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
+            color: roleColor.withOpacity(0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -686,7 +729,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
-              color: _kMapTextMuted,
+              color: Colors.white.withOpacity(0.70),
               height: 1.35,
             ),
           ),
@@ -717,10 +760,10 @@ extension _MapPanelSectionsExt on _MapScreenState {
             SLSpacing.h8,
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: accuracyUi.color.withOpacity(0.12),
-                borderRadius: SLRadius.pillAll,
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: accuracyUi.color.withOpacity(0.20)),
               ),
               child: Row(
