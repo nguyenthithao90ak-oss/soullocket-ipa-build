@@ -196,11 +196,12 @@ extension _SoulBlockBoard on _SoulBlockGameState {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text(
-                  'Game Over',
+                  'GAME OVER',
                   style: SLTheme.quicksand(
-                    fontSize: 28,
+                    fontSize: 30,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                    color: const Color(0xFFFF7A9E),
+                    letterSpacing: 1.3,
                   ),
                 ),
                 const SizedBox(height: 8),
