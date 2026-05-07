@@ -414,6 +414,32 @@ class _LoveCardHistoryItem extends StatelessWidget {
             content: (card['content'] ?? '').toString(),
           );
         },
+        onLongPress: () async {
+          final bool? shouldDelete = await showDialog<bool>(
+            context: context,
+            builder: (BuildContext dialogContext) {
+              return AlertDialog(
+                title: const Text('Xóa liên kết thiệp?'),
+                content: const Text(
+                  'Liên kết này sẽ bị gỡ khỏi lịch sử chia sẻ. Bạn vẫn muốn xóa chứ?',
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: const Text('Hủy'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    child: const Text('Xóa'),
+                  ),
+                ],
+              );
+            },
+          );
+          if (shouldDelete == true) {
+            state._showSnackBar('Đang xóa liên kết thiệp...');
+          }
+        },
         borderRadius: BorderRadius.circular(28),
         child: Ink(
           padding: const EdgeInsets.all(18),
