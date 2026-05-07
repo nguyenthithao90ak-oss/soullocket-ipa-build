@@ -107,7 +107,7 @@ class _FloatingIconsPainter extends CustomPainter {
         text: icon.emoji,
         style: TextStyle(
           fontSize: icon.size,
-          color: Colors.white.withOpacity(icon.opacity),
+          color: Colors.white.withValues(alpha: icon.opacity),
         ),
       );
 
