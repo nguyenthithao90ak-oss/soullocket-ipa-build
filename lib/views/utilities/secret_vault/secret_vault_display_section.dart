@@ -38,6 +38,7 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
                                 memCacheWidth: 900,
                                 imageUrl: url,
                                 fit: BoxFit.contain,
+                                filterQuality: FilterQuality.high,
                                 width: double.infinity,
                                 height: imageMaxHeight,
                                 placeholder: (context, url) => const Center(
