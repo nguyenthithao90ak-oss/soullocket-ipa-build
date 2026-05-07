@@ -246,16 +246,16 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                               width: 52,
                               height: 52,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(
+                                color: Colors.white.withValues(alpha: 
                                     themeData.isDark ? 0.14 : 0.80),
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(
+                                  color: Colors.white.withValues(alpha: 
                                       themeData.isDark ? 0.24 : 0.92),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
+                                    color: Colors.black.withValues(alpha: 0.08),
                                     blurRadius: 18,
                                     offset: const Offset(0, 10),
                                   ),
@@ -308,7 +308,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                         style: SLTheme.textStyleForKey(
                                           uiState.fontKey,
                                           color:
-                                              themeData.foreground.withOpacity(
+                                              themeData.foreground.withValues(alpha: 
                                             themeData.isDark ? 0.82 : 0.72,
                                           ),
                                           fontSize: 13.5,
@@ -497,10 +497,10 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF101A2B),
                     borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: Colors.white.withOpacity(0.10)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.28),
+                        color: Colors.black.withValues(alpha: 0.28),
                         blurRadius: 28,
                         offset: const Offset(0, 18),
                       ),
@@ -668,7 +668,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
             Icon(
               Icons.hub_rounded,
               size: 18,
-              color: widget.foreground.withOpacity(widget.isDark ? 0.90 : 0.72),
+              color: widget.foreground.withValues(alpha: widget.isDark ? 0.90 : 0.72),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -687,10 +687,10 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4BA7FF).withOpacity(0.14),
+                  color: const Color(0xFF4BA7FF).withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: const Color(0xFF4BA7FF).withOpacity(0.18),
+                    color: const Color(0xFF4BA7FF).withValues(alpha: 0.18),
                   ),
                 ),
                 child: Text(
@@ -726,7 +726,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: widget.foreground,
                   side: BorderSide(
-                    color: Colors.white.withOpacity(
+                    color: Colors.white.withValues(alpha: 
                       widget.isDark ? 0.16 : 0.86,
                     ),
                   ),
@@ -789,7 +789,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
             widget.fontKey,
             fontSize: 11.5,
             fontWeight: FontWeight.w700,
-            color: widget.foreground.withOpacity(
+            color: widget.foreground.withValues(alpha: 
               widget.isDark ? 0.72 : 0.62,
             ),
             height: 1.45,
