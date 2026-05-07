@@ -576,7 +576,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       return 'Thiết bị đang được xác thực bảo mật. Vui lòng chờ vài giây rồi thử lại.';
     }
     if (_needsEmailVerification(error, message)) {
-      return 'Thiết bị này cần xác minh Gmail hoặc nhập mã bảo mật để tiếp tục tạo nhà.';
+      return 'Cần xác minh Gmail để tiếp tục tạo nhà.';
     }
     if (normalized.contains('timeout') ||
         normalized.contains('network') ||
