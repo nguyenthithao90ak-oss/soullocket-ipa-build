@@ -440,10 +440,23 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     if (streakCount < 2) {
       return;
     }
+    if (streakCount == 2) {
+      _showFloatingMessage(
+        'STREAK 2',
+        color: const Color(0xFF67E8FF),
+      );
+      return;
+    }
+    if (streakCount == 3) {
+      _showFloatingMessage(
+        'STREAK 3',
+        color: const Color(0xFFFFA1B7),
+      );
+      return;
+    }
     _showFloatingMessage(
-      'Streak $streakCount',
-      color:
-          streakCount >= 4 ? const Color(0xFFFF8A65) : const Color(0xFF67E8FF),
+      'STREAK x$streakCount',
+      color: const Color(0xFFFF8A65),
     );
   }
 
