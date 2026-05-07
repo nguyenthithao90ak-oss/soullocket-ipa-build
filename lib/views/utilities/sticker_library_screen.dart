@@ -401,11 +401,11 @@ class _StickerPreviewScreen extends StatelessWidget {
                 color: const Color(0xFF111111),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.45),
+                    color: Colors.black.withValues(alpha: 0.45),
                     blurRadius: 30,
                     spreadRadius: -10,
                     offset: const Offset(0, 16),
