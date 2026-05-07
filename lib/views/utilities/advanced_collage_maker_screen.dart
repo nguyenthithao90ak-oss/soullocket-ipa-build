@@ -73,7 +73,7 @@ class _AdvancedCollageMakerScreenState
       border: Border.all(color: borderColor, width: 1.2),
       boxShadow: [
         BoxShadow(
-          color: _advancedInk.withOpacity(0.08),
+          color: _advancedInk.withValues(alpha: 0.08),
           blurRadius: 22,
           offset: const Offset(0, 10),
         ),
@@ -286,7 +286,7 @@ class _AdvancedCollageMakerScreenState
       backgroundColor: _advancedCream,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: _advancedCream.withOpacity(0.92),
+        backgroundColor: _advancedCream.withValues(alpha: 0.92),
         surfaceTintColor: Colors.transparent,
         title: Text(
           'Advanced Collage',
@@ -459,7 +459,7 @@ class _AdvancedCollageMakerScreenState
                     boxShadow: [
                       BoxShadow(
                         color: (isSelected ? _advancedRoseDeep : _advancedInk)
-                            .withOpacity(isSelected ? 0.16 : 0.05),
+                            .withValues(alpha: isSelected ? 0.16 : 0.05),
                         blurRadius: isSelected ? 18 : 12,
                         offset: const Offset(0, 8),
                       ),
@@ -547,8 +547,8 @@ class _AdvancedCollageMakerScreenState
                       child: CustomPaint(
                         painter: _AdvancedCanvasBackdropPainter(
                           lineColor: _advancedLine,
-                          accentColor: _advancedRose.withOpacity(0.40),
-                          mistColor: _advancedMist.withOpacity(0.50),
+                          accentColor: _advancedRose.withValues(alpha: 0.40),
+                          mistColor: _advancedMist.withValues(alpha: 0.50),
                         ),
                       ),
                     ),
@@ -600,7 +600,7 @@ class _AdvancedCollageMakerScreenState
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: _advancedInk.withOpacity(
+                                    color: _advancedInk.withValues(alpha: 
                                       isSelected ? 0.14 : 0.08,
                                     ),
                                     blurRadius: isSelected ? 20 : 12,
@@ -809,7 +809,7 @@ class _AdvancedCollageMakerScreenState
               activeTrackColor: _advancedRoseDeep,
               inactiveTrackColor: _advancedLine,
               thumbColor: _advancedRoseDeep,
-              overlayColor: _advancedRose.withOpacity(0.18),
+              overlayColor: _advancedRose.withValues(alpha: 0.18),
               trackHeight: 3.2,
             ),
             child: Slider(
@@ -933,7 +933,7 @@ class _AdvancedCollageMakerScreenState
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: _advancedInk.withOpacity(
+                            color: _advancedInk.withValues(alpha: 
                               isSelected ? 0.12 : 0.06,
                             ),
                             blurRadius: isSelected ? 18 : 10,
@@ -1078,7 +1078,7 @@ class _AdvancedPaperBadge extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: _advancedInk.withOpacity(0.08),
+            color: _advancedInk.withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -1122,7 +1122,7 @@ class _AdvancedCanvasBackdropPainter extends CustomPainter {
     canvas.drawRect(Offset.zero & size, wash);
 
     final linePaint = Paint()
-      ..color = lineColor.withOpacity(0.45)
+      ..color = lineColor.withValues(alpha: 0.45)
       ..strokeWidth = 1;
     for (double y = 26; y < size.height; y += 28) {
       canvas.drawLine(Offset(16, y), Offset(size.width - 16, y), linePaint);
