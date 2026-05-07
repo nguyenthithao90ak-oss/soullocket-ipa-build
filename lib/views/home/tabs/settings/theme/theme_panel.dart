@@ -49,7 +49,7 @@ class ThemePanel extends StatelessWidget {
         border: Border.all(color: const Color(0xFFF7D2E2)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF231926).withOpacity(0.08),
+            color: const Color(0xFF231926).withValues(alpha: 0.08),
             blurRadius: 28,
             offset: const Offset(0, 12),
           ),
