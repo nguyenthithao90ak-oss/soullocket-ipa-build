@@ -740,10 +740,11 @@ mixin _SoulBlockStrategyLogic {
     List<List<_SoulTile?>> boardTiles,
     List<_SoulPieceOption> tray,
   ) {
+    final boardMask = _boardMask(boardTiles);
     for (final piece in tray) {
       for (var row = 0; row <= _strategyBoardSize - piece.template.height; row++) {
         for (var col = 0; col <= _strategyBoardSize - piece.template.width; col++) {
-          if (_canPlace(_boardMask(boardTiles), piece.template, row, col)) {
+          if (_canPlace(boardMask, piece.template, row, col)) {
             return true;
           }
         }
