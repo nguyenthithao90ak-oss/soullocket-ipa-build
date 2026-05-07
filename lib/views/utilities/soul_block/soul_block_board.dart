@@ -594,7 +594,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                       decoration: BoxDecoration(
                         gradient: RadialGradient(
                           colors: <Color>[
-                            Colors.white.withValues(alpha: isRecommended ? 0.10 : 0.05),
+                            Colors.white
+                                .withValues(alpha: isRecommended ? 0.10 : 0.05),
                             Colors.transparent,
                           ],
                           radius: 0.88,
@@ -614,8 +615,10 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                     ),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        minWidth: max(0, constraints.maxWidth - (hitPaddingX * 2)),
-                        minHeight: max(0, constraints.maxHeight - hitPaddingY - 5),
+                        minWidth:
+                            max(0, constraints.maxWidth - (hitPaddingX * 2)),
+                        minHeight:
+                            max(0, constraints.maxHeight - hitPaddingY - 5),
                       ),
                       child: RepaintBoundary(
                         child: _buildPieceGrid(piece, compact: compact),
@@ -634,7 +637,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                         color: const Color(0xFFFFD166).withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFFFFD166).withValues(alpha: 0.30),
+                          color:
+                              const Color(0xFFFFD166).withValues(alpha: 0.30),
                         ),
                       ),
                       child: const Icon(
@@ -732,8 +736,10 @@ extension _SoulBlockBoard on _SoulBlockGameState {
         final double previewGap = compact ? 1.6 : 2.0;
         final double previewStrideBase =
             previewGap * (_SoulBlockGameState._trayPreviewGridSize - 1);
-        final double usableWidth = max(0, constraints.maxWidth + (compact ? 14 : 18));
-        final double usableHeight = max(0, constraints.maxHeight + (compact ? 12 : 16));
+        final double usableWidth =
+            max(0, constraints.maxWidth + (compact ? 14 : 18));
+        final double usableHeight =
+            max(0, constraints.maxHeight + (compact ? 12 : 16));
         final double previewCell = min(
           (usableWidth - previewStrideBase) /
               _SoulBlockGameState._trayPreviewGridSize,
@@ -943,7 +949,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
               end: Alignment.bottomCenter,
             ),
             border: Border.all(
-              color: Colors.white.withValues(alpha: isPreview ? 0.52 : (isClearing ? 0.28 : 0.14)),
+              color: Colors.white.withValues(
+                  alpha: isPreview ? 0.52 : (isClearing ? 0.28 : 0.14)),
               width: isPreview ? 1.0 : 0.7,
             ),
           ),

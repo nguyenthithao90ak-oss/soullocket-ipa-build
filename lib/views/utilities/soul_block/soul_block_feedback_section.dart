@@ -121,7 +121,8 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
 
   Future<Source> _getBgmSource() async {
     const fileName = 'soul_block_bgm.mp3';
-    final localPath = await GameDownloadService().getLocalPath('soul_block', fileName);
+    final localPath =
+        await GameDownloadService().getLocalPath('soul_block', fileName);
     if (await File(localPath).exists()) {
       debugPrint('Soul Block: Using LOCAL BGM: $localPath');
       return DeviceFileSource(localPath);
@@ -275,9 +276,10 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   Future<Uint8List?> _loadAudioAssetBytes(String assetPath) async {
     try {
       final fileName = p.basename(assetPath);
-      final localPath = await GameDownloadService().getLocalPath('soul_block', fileName);
+      final localPath =
+          await GameDownloadService().getLocalPath('soul_block', fileName);
       final localFile = File(localPath);
-      
+
       if (await localFile.exists()) {
         debugPrint('Soul Block: Loading SFX from LOCAL: $localPath');
         return await localFile.readAsBytes();
@@ -442,9 +444,8 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     }
     _showFloatingMessage(
       'Streak $streakCount',
-      color: streakCount >= 4
-          ? const Color(0xFFFF8A65)
-          : const Color(0xFF67E8FF),
+      color:
+          streakCount >= 4 ? const Color(0xFFFF8A65) : const Color(0xFF67E8FF),
     );
   }
 
@@ -520,7 +521,8 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         (profile.tier == _SoulBlockPerformanceTier.mid && clearedCount >= 3);
     final int particleCount = subtle
         ? min((4 + (clearedCount * 2)).clamp(6, 10), profile.subtleParticleCap)
-        : min((6 + (clearedCount * 3)).clamp(10, 18), profile.strongParticleCap);
+        : min(
+            (6 + (clearedCount * 3)).clamp(10, 18), profile.strongParticleCap);
     final double maxDistance = subtle
         ? ((34 + (clearedCount * 7)).clamp(36, 72).toDouble() *
             profile.subtleDistanceScale)
