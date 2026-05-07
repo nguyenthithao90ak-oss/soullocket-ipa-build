@@ -911,7 +911,20 @@ extension _SoulBlockBoard on _SoulBlockGameState {
           color: Colors.black.withValues(alpha: isPreview ? 0.08 : 0.14),
           width: 0.55,
         ),
-        boxShadow: const <BoxShadow>[],
+        boxShadow: <BoxShadow>[
+          if (previewGlow > 0)
+            BoxShadow(
+              color: tone.withValues(alpha: previewGlow),
+              blurRadius: shortSide * 0.36,
+              spreadRadius: -shortSide * 0.04,
+            ),
+          if (clearingGlow > 0)
+            BoxShadow(
+              color: const Color(0xFFFFD166).withValues(alpha: clearingGlow),
+              blurRadius: shortSide * 0.44,
+              spreadRadius: -shortSide * 0.02,
+            ),
+        ],
       ),
       child: Padding(
         padding:
