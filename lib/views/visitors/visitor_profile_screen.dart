@@ -29,6 +29,7 @@ import 'profile/sections/profile_tab_content_section.dart';
 
 import '../community/community_settings_screen.dart';
 import '../home/tabs/short_video_feed_screen.dart';
+import '../home/widgets/visitor_heart_anim.dart';
 
 /// ============================================================
 ///  VisitorProfileScreen — GRA (Phase 42 — UI 2026 Overhaul)
@@ -898,6 +899,9 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           'hasContributed': true,
           'updatedAt': ServerValue.timestamp,
         });
+        if (mounted) {
+          VisitorHeartAnim.drop(context);
+        }
         _HeartDropCache.setDropped(storeKey, todayKey);
         try {
           await _db.ref('notifications/${widget.targetHouseId}').push().set({
