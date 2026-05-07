@@ -280,12 +280,12 @@ class _HeartDropButtonState extends State<HeartDropButton>
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: _dropped
-              ? const Color(0xFFE91E8C).withOpacity(0.15)
-              : Colors.white.withOpacity(0.08),
+              ? const Color(0xFFE91E8C).withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: _dropped
-                ? const Color(0xFFE91E8C).withOpacity(0.6)
+                ? const Color(0xFFE91E8C).withValues(alpha: 0.6)
                 : Colors.white24,
             width: 1.5,
           ),
