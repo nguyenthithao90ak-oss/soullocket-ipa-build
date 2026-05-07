@@ -288,6 +288,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
             memCacheWidth: cacheWidth,
             imageUrl: photo.source,
             fit: BoxFit.cover,
+            filterQuality: FilterQuality.high,
             fadeInDuration: Duration.zero,
             fadeOutDuration: Duration.zero,
             placeholder: (context, url) => const Center(
