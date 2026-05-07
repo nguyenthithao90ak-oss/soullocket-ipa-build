@@ -517,6 +517,7 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
                           memCacheWidth: 900,
                           imageUrl: widget.gift.imageUrl,
                           fit: BoxFit.cover,
+                          filterQuality: FilterQuality.high,
                           height: imageHeight,
                           width: double.infinity,
                           placeholder: (context, url) => const Center(
@@ -533,6 +534,7 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
                       : Image.file(
                           File(widget.gift.imageUrl),
                           fit: BoxFit.cover,
+                          filterQuality: FilterQuality.high,
                           height: imageHeight,
                           width: double.infinity,
                         ),
