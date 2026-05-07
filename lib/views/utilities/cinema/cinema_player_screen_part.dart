@@ -233,42 +233,8 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
               child: Column(
                 children: <Widget>[
-                   Row(
-                     children: <Widget>[
-                      Expanded(
-                        child: Row(
-                          children: List<Widget>.generate(
-                            widget.reel.items.length,
-                            (segmentIndex) {
-                              final isDone = segmentIndex < _index;
-                              final isActive = segmentIndex == _index;
-                              return Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    right: segmentIndex ==
-                                            widget.reel.items.length - 1
-                                        ? 0
-                                        : 4,
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(999),
-                                    child: SizedBox(
-                                      height: 4,
-                                      child: ColoredBox(
-                                        color: Colors.white.withValues(alpha: 0.16),
-                                        child: Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: isActive
-                                              ? TweenAnimationBuilder<double>(
-                                                  key: ValueKey<String>(
-                                                    'player-progress-$segmentIndex-$_index',
-                                                  ),
-                                                  tween: Tween<double>(
-                                                    begin: 0,
-                                                    end: 1,
-                                                  ),
-                                                  duration:
-                                                      _kCinemaFrameDuration,
+                  Row(
+                    children: <Widget>[
                       Expanded(
                         child: Row(
                           children: List<Widget>.generate(
@@ -369,10 +335,23 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                         icon: Icons.chevron_right_rounded,
                         onTap: _showNext,
                       ),
-                   ],
-                 ),
+                    ],
+                  ),
                   const SizedBox(height: 18),
                   Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.48),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        Container(
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
                             color: accent.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(14),
