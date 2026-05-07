@@ -500,6 +500,8 @@ class HouseService {
           .get()
           .timeout(const Duration(seconds: 3));
       return memberSnap.exists;
+    } on TimeoutException {
+      return false;
     } catch (e) {
       debugPrint('Error validating house membership: $e');
       return false;
