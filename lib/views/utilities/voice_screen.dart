@@ -231,7 +231,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
         await _stopRecordingAndUpload(reachedLimit: true);
       });
     } catch (e) {
-      _showMessage('Không thể bắt đầu ghi âm: $e');
+      _showMessage('Không thể bắt đầu ghi âm lúc này. Hãy thử lại sau.');
     }
   }
 
