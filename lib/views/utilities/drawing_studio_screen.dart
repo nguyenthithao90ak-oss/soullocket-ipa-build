@@ -1572,10 +1572,8 @@ class _BackgroundChoice extends StatelessWidget {
                   borderRadius: SLRadius.lgAll,
                   gradient: LinearGradient(
                     colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.14))
-                        id == 'night_stars' || id == 'blackboard' ? 0.22 : 0.08,
-                      ),
+                      Colors.black.withValues(alpha:
+                          id == 'night_stars' || id == 'blackboard' ? 0.22 : 0.08),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
