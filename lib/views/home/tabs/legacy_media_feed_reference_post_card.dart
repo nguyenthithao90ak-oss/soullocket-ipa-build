@@ -422,7 +422,7 @@ class _LegacyMediaFeedReferencePostCardState
       fit: StackFit.expand,
       children: [
         CachedNetworkImage(
-          memCacheWidth: 960,
+          memCacheWidth: 1800,
           imageUrl: _mediaUrl,
           fit: BoxFit.cover,
           fadeInDuration: Duration.zero,
@@ -439,7 +439,7 @@ class _LegacyMediaFeedReferencePostCardState
                 child: Opacity(
                   opacity: 0.82,
                   child: CachedNetworkImage(
-                    memCacheWidth: 1120,
+                    memCacheWidth: 1800,
                     imageUrl: _mediaUrl,
                     fit: BoxFit.cover,
                     fadeInDuration: Duration.zero,
@@ -579,7 +579,7 @@ class _LegacyMediaFeedReferencePostCardState
                                       maxScale: 4,
                                       child: SizedBox.expand(
                                         child: CachedNetworkImage(
-                                          memCacheWidth: 1800,
+                                          memCacheWidth: 2400,
                                           imageUrl: _mediaUrl,
                                           fit: BoxFit.contain,
                                           alignment: Alignment.center,

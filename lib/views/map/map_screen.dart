@@ -1359,17 +1359,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       ),
                     ),
                   ),
-                Icon(
-                  Icons.location_on_rounded,
-                  size: markerSize,
-                  color: marker.color,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withOpacity(0.28),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                SizedBox(
+                  width: markerSize,
+                  height: markerSize,
+                  child: CustomPaint(
+                    painter: _MapPinPainter(color: marker.color),
+                  ),
                 ),
                 Positioned(
                   bottom: marker.compact ? 22 : 29,
@@ -1792,5 +1787,62 @@ class _NearbyMapPinCandidate {
   String get displayTitle {
     final trimmed = title.trim();
     return trimmed.isEmpty ? kindLabel : trimmed;
+  }
+}
+
+class _MapPinPainter extends CustomPainter {
+  const _MapPinPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centerX = size.width / 2;
+    final circleRadius = size.width * 0.34;
+    final circleCenter = Offset(centerX, size.height * 0.36);
+    final tip = Offset(centerX, size.height);
+
+    final shadowPaint = Paint()
+      ..color = Colors.black.withOpacity(0.24)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    final shadowPath = _pinPath(circleCenter, circleRadius, tip)
+      ..shift(const Offset(0, 3));
+    canvas.drawPath(shadowPath, shadowPaint);
+
+    final pinPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final pinPath = _pinPath(circleCenter, circleRadius, tip);
+    canvas.drawPath(pinPath, pinPaint);
+
+    final strokePaint = Paint()
+      ..color = Colors.white.withOpacity(0.94)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+    canvas.drawPath(pinPath, strokePaint);
+  }
+
+  Path _pinPath(Offset circleCenter, double radius, Offset tip) {
+    return Path()
+      ..addOval(Rect.fromCircle(center: circleCenter, radius: radius))
+      ..moveTo(circleCenter.dx - radius * 0.62, circleCenter.dy + radius * 0.64)
+      ..quadraticBezierTo(
+        circleCenter.dx - radius * 0.16,
+        circleCenter.dy + radius * 1.48,
+        tip.dx,
+        tip.dy,
+      )
+      ..quadraticBezierTo(
+        circleCenter.dx + radius * 0.16,
+        circleCenter.dy + radius * 1.48,
+        circleCenter.dx + radius * 0.62,
+        circleCenter.dy + radius * 0.64,
+      )
+      ..close();
+  }
+
+  @override
+  bool shouldRepaint(covariant _MapPinPainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }
