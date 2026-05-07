@@ -427,151 +427,169 @@ class _LoveCardHistoryItem extends StatelessWidget {
     final expiresAt = _timestampFromValue(card['expiresAt']);
     final expiryText = expiresAt > 0 ? _formatTime(expiresAt) : 'Không có hạn';
     const previewText = 'Liên kết thiệp đã tạo sẵn để bạn gửi lại nhanh.';
-                              ? Icons.mark_email_unread_rounded
-                              : Icons.drafts_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          theme.chip,
-                          style: SLTheme.quicksand(
-                            color: Colors.white.withValues(alpha: 0.78),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Link thiệp đã tạo',
-                          style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _LoveCardStatusPill(
-                    label: 'Đang hoạt động',
-                    background: isUnread
-                        ? Colors.redAccent
-                        : Colors.white.withValues(alpha: 0.16),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                previewText,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: isUnread
-                    ? GoogleFonts.dancingScript(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        height: 1.3,
-                      )
-                    : SLTheme.quicksand(
-                        color: Colors.white.withValues(alpha: 0.86),
-                        fontSize: 14,
-                        height: 1.55,
-                        fontWeight: FontWeight.w700,
-                      ),
-              ),
-              if (hasImage) ...[
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.photo_rounded,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Có ảnh công khai',
-                        style: SLTheme.quicksand(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colors.first.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: colors.first.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
                 ),
-              ],
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Icon(
-                    Icons.schedule_rounded,
-                    color: Colors.white.withValues(alpha: 0.58),
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      timeStr,
+                child: Icon(
+                  isUnread ? Icons.mark_email_unread_rounded : Icons.drafts_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      theme.chip,
                       style: SLTheme.quicksand(
-                        color: Colors.white.withValues(alpha: 0.66),
+                        color: Colors.white.withValues(alpha: 0.78),
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Link thiệp đã tạo',
+                      style: SLTheme.quicksand(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _LoveCardStatusPill(
+                label: isUnread ? 'Chưa mở' : 'Đang hoạt động',
+                background: isUnread
+                    ? Colors.redAccent
+                    : Colors.white.withValues(alpha: 0.16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            previewText,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: isUnread
+                ? GoogleFonts.dancingScript(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                  )
+                : SLTheme.quicksand(
+                    color: Colors.white.withValues(alpha: 0.86),
+                    fontSize: 14,
+                    height: 1.55,
+                    fontWeight: FontWeight.w700,
                   ),
+          ),
+          if (hasImage) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.photo_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 6),
                   Text(
-                    'Hết hạn: $expiryText',
+                    'Có ảnh công khai',
                     style: SLTheme.quicksand(
-                      color: Colors.white.withValues(alpha: 0.66),
+                      color: Colors.white,
                       fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    tooltip: 'Chia sẻ link thiệp',
-                    onPressed: () async {
-                      final link = await state._buildPublicLinkForCard(card);
-                      await state._shareLoveCardLink(
-                        link: link,
-                        content: (card['content'] ?? '').toString(),
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.share_rounded,
-                      color: Colors.white,
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Gỡ liên kết',
-                    onPressed: () => state._deleteLoveCardLink(card),
-                    icon: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],
               ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Icon(
+                Icons.schedule_rounded,
+                color: Colors.white.withValues(alpha: 0.58),
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  timeStr,
+                  style: SLTheme.quicksand(
+                    color: Colors.white.withValues(alpha: 0.66),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                'Hết hạn: $expiryText',
+                style: SLTheme.quicksand(
+                  color: Colors.white.withValues(alpha: 0.66),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: 'Chia sẻ link thiệp',
+                onPressed: () async {
+                  final link = await state._buildPublicLinkForCard(card);
+                  await state._shareLoveCardLink(
+                    link: link,
+                    content: (card['content'] ?? '').toString(),
+                  );
+                },
+                icon: const Icon(
+                  Icons.share_rounded,
+                  color: Colors.white,
+                ),
+              ),
+              IconButton(
+                tooltip: 'Gỡ liên kết',
+                onPressed: () => state._deleteLoveCardLink(card),
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.white,
+                ),
+              ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
