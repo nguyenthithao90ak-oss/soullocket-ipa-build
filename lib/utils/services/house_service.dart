@@ -77,7 +77,7 @@ class HouseService {
 
         user = _auth.currentUser ?? user;
         try {
-          final token = await user!
+          final token = await user
               .getIdToken(forceRefreshToken || attempt > 0)
               .timeout(const Duration(seconds: 5));
           if ((token ?? '').trim().isNotEmpty) {
