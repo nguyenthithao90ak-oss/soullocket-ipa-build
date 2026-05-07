@@ -269,7 +269,7 @@ class _BucketListScreenState extends State<BucketListScreen>
     return SLTheme.softPanel(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      borderColor: const Color(0xFFF3B1CC).withOpacity(0.48),
+      borderColor: const Color(0xFFF3B1CC).withValues(alpha: 0.48),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -353,7 +353,7 @@ class _BucketListScreenState extends State<BucketListScreen>
     return SLTheme.softPanel(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-      borderColor: const Color(0xFFF3B1CC).withOpacity(0.42),
+      borderColor: const Color(0xFFF3B1CC).withValues(alpha: 0.42),
       child: Row(
         children: <Widget>[
           Expanded(
@@ -396,17 +396,17 @@ class _BucketListScreenState extends State<BucketListScreen>
       padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
       decoration: BoxDecoration(
         color: isDone
-            ? const Color(0xFFF0FDF4).withOpacity(0.96)
-            : Colors.white.withOpacity(0.95),
+            ? const Color(0xFFF0FDF4).withValues(alpha: 0.96)
+            : Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isDone
               ? const Color(0xFFBBF7D0)
-              : const Color(0xFFF3B1CC).withOpacity(0.34),
+              : const Color(0xFFF3B1CC).withValues(alpha: 0.34),
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: const Color(0xFF6A3254).withOpacity(0.06),
+            color: const Color(0xFF6A3254).withValues(alpha: 0.06),
             blurRadius: 16,
             spreadRadius: -8,
             offset: const Offset(0, 10),
@@ -512,7 +512,7 @@ class _ConfettiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (var p in pieces) {
       final paint = Paint()
-        ..color = p.color.withOpacity((1 - progress).clamp(0.0, 1.0));
+        ..color = p.color.withValues(alpha: (1 - progress).clamp(0.0, 1.0));
       final y = p.speed * progress * size.height * 1.5;
       final x = p.x * size.width + sin(progress * pi * 4 + p.x * 10) * 20;
       canvas.drawRRect(
