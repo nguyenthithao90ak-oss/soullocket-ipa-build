@@ -396,9 +396,9 @@ class _TravelHeroCard extends StatelessWidget {
       width: double.infinity,
       padding: SLSpacing.all20,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.72), width: 2),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.72), width: 2),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(
@@ -494,9 +494,9 @@ class _TravelInsightCard extends StatelessWidget {
       width: double.infinity,
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.84),
+        color: Colors.white.withValues(alpha: 0.84),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: Colors.white.withOpacity(0.7)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,12 +561,12 @@ class _TravelPinCard extends StatelessWidget {
     return Container(
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: SLRadius.xlAll,
         border: Border.all(
           color: pin.visited
-              ? SLColors.success.withOpacity(0.18)
-              : SLColors.primary.withOpacity(0.14),
+              ? SLColors.success.withValues(alpha: 0.18)
+              : SLColors.primary.withValues(alpha: 0.14),
         ),
         boxShadow: SLTheme.cardShadow,
       ),
@@ -878,7 +878,7 @@ class _TravelEmptyState extends StatelessWidget {
               width: 86,
               height: 86,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.88),
+                color: Colors.white.withValues(alpha: 0.88),
                 borderRadius: BorderRadius.circular(28),
               ),
               child: Icon(icon, size: 44, color: SLColors.primaryActive),
