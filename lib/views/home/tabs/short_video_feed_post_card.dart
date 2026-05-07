@@ -419,7 +419,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
       fit: StackFit.expand,
       children: [
         CachedNetworkImage(
-          memCacheWidth: 1200,
+          memCacheWidth: 1800,
           imageUrl: _mediaUrl,
           fit: BoxFit.cover,
           placeholder: (_, __) => Container(color: const Color(0xFF120716)),
@@ -435,7 +435,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                 child: Opacity(
                   opacity: 0.82,
                   child: CachedNetworkImage(
-                    memCacheWidth: 1400,
+                    memCacheWidth: 1800,
                     imageUrl: _mediaUrl,
                     fit: BoxFit.cover,
                     placeholder: (_, __) =>
@@ -574,7 +574,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                                       maxScale: 4,
                                       child: SizedBox.expand(
                                         child: CachedNetworkImage(
-                                          memCacheWidth: 1800,
+                                          memCacheWidth: 2400,
                                           imageUrl: _mediaUrl,
                                           fit: BoxFit.contain,
                                           alignment: Alignment.center,
