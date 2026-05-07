@@ -42,8 +42,8 @@ class DiaryMoodItem extends StatelessWidget {
                 boxShadow: [
                   BoxShadow(
                     color: selected
-                        ? color.withOpacity(0.32)
-                        : Colors.black.withOpacity(0.08),
+                        ? color.withValues(alpha: 0.32)
+                        : Colors.black.withValues(alpha: 0.08),
                     blurRadius: selected ? 18 : 10,
                     offset: const Offset(0, 6),
                   ),
