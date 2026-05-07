@@ -176,7 +176,7 @@ class _HabitScreenState extends State<HabitScreen> {
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
             ),
           ),
         ),
@@ -219,9 +219,9 @@ class _HabitScreenState extends State<HabitScreen> {
       margin: SLSpacing.all20,
       padding: SLSpacing.all20,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.25),
+        color: Colors.white.withValues(alpha: 0.25),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -230,10 +230,10 @@ class _HabitScreenState extends State<HabitScreen> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.94),
+                    color: Colors.white.withValues(alpha: 0.94),
                     borderRadius: SLRadius.lgAll,
                     border: Border.all(
-                      color: const Color(0xFFFF8AA0).withOpacity(0.5),
+                      color: const Color(0xFFFF8AA0).withValues(alpha: 0.5),
                     ),
                   ),
                   child: TextField(
@@ -264,7 +264,7 @@ class _HabitScreenState extends State<HabitScreen> {
                   decoration: BoxDecoration(
                     color: _selectedTime != null
                         ? Colors.amber[700]
-                        : Colors.white.withOpacity(0.15),
+                        : Colors.white.withValues(alpha: 0.15),
                     borderRadius: SLRadius.lgAll,
                   ),
                   child: Column(
@@ -416,9 +416,9 @@ class _HabitScreenState extends State<HabitScreen> {
                 child: Container(
                   padding: SLSpacing.all20,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: SLRadius.xlAll,
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,7 +456,7 @@ class _HabitScreenState extends State<HabitScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.3),
+                              color: Colors.orange.withValues(alpha: 0.3),
                               borderRadius: SLRadius.mdAll,
                             ),
                             child: Row(
@@ -512,8 +512,8 @@ class _HabitScreenState extends State<HabitScreen> {
                                   height: 38,
                                   decoration: BoxDecoration(
                                     color: isCompleted
-                                        ? Colors.greenAccent.withOpacity(0.8)
-                                        : Colors.white.withOpacity(0.1),
+                                        ? Colors.greenAccent.withValues(alpha: 0.8)
+                                        : Colors.white.withValues(alpha: 0.1),
                                     borderRadius: SLRadius.mdAll,
                                     border: Border.all(
                                       color: isCompleted
