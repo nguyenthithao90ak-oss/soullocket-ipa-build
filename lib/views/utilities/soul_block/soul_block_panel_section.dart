@@ -157,7 +157,8 @@ class _SettingsActionButton extends StatelessWidget {
             gradient: LinearGradient(
               colors: <Color>[
                 accent.withValues(alpha: enabled ? 0.20 : 0.08),
-                const Color(0xFF162238).withValues(alpha: enabled ? 0.98 : 0.82),
+                const Color(0xFF162238)
+                    .withValues(alpha: enabled ? 0.98 : 0.82),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -349,7 +350,8 @@ class _SoulExplosionPainter extends CustomPainter {
       for (int index = 0; index < _streakAngles.length; index++) {
         final double angle = _streakAngles[index];
         final double offsetX = _streakOffsets[index];
-        final double length = _streakLengths[index] * (0.45 + (easedProgress * 0.9));
+        final double length =
+            _streakLengths[index] * (0.45 + (easedProgress * 0.9));
         final double tailDrop = 16 + (easedProgress * 92);
         final Offset start = Offset(
           center.dx + offsetX,
@@ -361,7 +363,8 @@ class _SoulExplosionPainter extends CustomPainter {
         );
         _glowPaint
           ..strokeWidth = _streakWidths[index] * 2.4
-          ..color = _streakColors[index].withValues(alpha: streakOpacity * 0.24);
+          ..color =
+              _streakColors[index].withValues(alpha: streakOpacity * 0.24);
         _streakPaint
           ..strokeWidth = _streakWidths[index]
           ..color = _streakColors[index].withValues(alpha: streakOpacity);
