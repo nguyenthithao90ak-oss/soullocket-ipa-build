@@ -883,6 +883,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
       memCacheWidth: 1440,
       imageUrl: url,
       fit: BoxFit.cover,
+      filterQuality: FilterQuality.high,
       placeholder: (_, __) => Container(
         color: const Color(0xFF182334),
         alignment: Alignment.center,
@@ -915,6 +916,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
           memCacheWidth: memCacheWidth,
           imageUrl: url,
           fit: BoxFit.scaleDown,
+          filterQuality: FilterQuality.high,
           alignment: Alignment.center,
           placeholder: (_, __) => const SizedBox(
             width: 34,
