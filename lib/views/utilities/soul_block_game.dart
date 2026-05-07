@@ -1658,13 +1658,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       }
     }
 
-    var nextTray = List<_SoulPieceOption>.from(_tray);
-    var nextRecommended = _recommendMoveFor(nextBoard, nextTray);
-    if (nextRecommended == null) {
-      nextTray = List<_SoulPieceOption>.from(nextTray)
-        ..add(_spawnPieceFromTemplate(_kSoulBlockTemplates.first));
-      nextRecommended = _recommendMoveFor(nextBoard, nextTray);
-    }
+    final nextTray = List<_SoulPieceOption>.from(_tray);
+    final nextRecommended = _recommendMoveFor(nextBoard, nextTray);
+    final nextIsGameOver =
+        nextTray.isEmpty || !_hasAnyPlayableMove(nextBoard, nextTray);
 
     setState(() {
       _board = nextBoard;
@@ -1674,7 +1671,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _clearingCols = <int>{};
       _continueUsedThisRun = true;
       _isReviving = false;
-      _isGameOver = false;
+      _isGameOver = nextIsGameOver;
       _isBusy = false;
     });
 
