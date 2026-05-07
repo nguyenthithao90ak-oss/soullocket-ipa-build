@@ -113,6 +113,9 @@ class PresenceService {
     }
 
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    final normalizedIgnoredUid = ignoreUid?.trim();
+    final hasIgnoredUidFilter =
+        normalizedIgnoredUid != null && normalizedIgnoredUid.isNotEmpty;
     final sessions = data['sessions'];
     if (sessions is Map) {
       final freshSessionCount = _countFreshSessions(
@@ -122,6 +125,9 @@ class PresenceService {
       );
       if (freshSessionCount > 0) {
         return true;
+      }
+      if (hasIgnoredUidFilter) {
+        return false;
       }
     }
 
