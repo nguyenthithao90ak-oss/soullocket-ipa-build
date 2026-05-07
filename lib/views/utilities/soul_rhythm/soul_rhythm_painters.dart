@@ -124,7 +124,7 @@ class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final geometry = _resolveGridGeometry(size);
-    _paint.color = Colors.white.withOpacity(opacity * 0.2);
+    _paint.color = Colors.white.withValues(alpha: opacity * 0.2);
 
     for (final double x in geometry.vertical) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), _paint);
@@ -162,7 +162,7 @@ class LanePainter extends CustomPainter {
         colors: [
           Colors.white.withOpacity(accentOpacity),
           Colors.transparent,
-          Colors.black.withOpacity(0.06),
+          Colors.black.withValues(alpha: 0.06),
         ],
         stops: const [0.0, 0.42, 1.0],
         begin: Alignment.topCenter,
@@ -177,7 +177,7 @@ class LanePainter extends CustomPainter {
         _laneAccentPaint.shader = LinearGradient(
           colors: [
             Colors.transparent,
-            const Color(0xFF00E5FF).withOpacity(0.035),
+            const Color(0xFF00E5FF).withValues(alpha: 0.035),
             Colors.transparent,
           ],
           begin: Alignment.topCenter,
@@ -188,9 +188,9 @@ class LanePainter extends CustomPainter {
       }
     }
 
-    _dividerPaint.color = Colors.white.withOpacity(0.11);
-    _glowPaint.color = const Color(0xFF00E5FF).withOpacity(0.10);
-    _coreGlowPaint.color = const Color(0xFFFFFFFF).withOpacity(0.12);
+    _dividerPaint.color = Colors.white.withValues(alpha: 0.11);
+    _glowPaint.color = const Color(0xFF00E5FF).withValues(alpha: 0.10);
+    _coreGlowPaint.color = const Color(0xFFFFFFFF).withValues(alpha: 0.12);
 
     for (final double x in geometry.positions) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), _glowPaint);
@@ -246,8 +246,8 @@ class UnityBackgroundPainter extends CustomPainter {
     final Rect topBandRect = Rect.fromLTWH(0, 0, size.width, topBandHeight);
     _horizonPaint.shader = LinearGradient(
       colors: [
-        Colors.white.withOpacity(isHighGraphics ? 0.07 : 0.045),
-        const Color(0xFF00E5FF).withOpacity(isLowGraphics ? 0.03 : 0.05),
+        Colors.white.withValues(alpha: isHighGraphics ? 0.07 : 0.045),
+        const Color(0xFF00E5FF).withValues(alpha: isLowGraphics ? 0.03 : 0.05),
         Colors.transparent,
       ],
       stops: const [0.0, 0.35, 1.0],
@@ -264,8 +264,8 @@ class UnityBackgroundPainter extends CustomPainter {
     );
     _depthPaint.shader = RadialGradient(
       colors: [
-        const Color(0xFF9C6BFF).withOpacity(isHighGraphics ? 0.10 : 0.06),
-        const Color(0xFF00E5FF).withOpacity(isLowGraphics ? 0.025 : 0.04),
+        const Color(0xFF9C6BFF).withValues(alpha: isHighGraphics ? 0.10 : 0.06),
+        const Color(0xFF00E5FF).withValues(alpha: isLowGraphics ? 0.025 : 0.04),
         Colors.transparent,
       ],
       stops: const [0.0, 0.52, 1.0],
@@ -279,7 +279,7 @@ class UnityBackgroundPainter extends CustomPainter {
       radius: 0.96,
       colors: [
         Colors.transparent,
-        Colors.black.withOpacity(isLowGraphics ? 0.10 : 0.16),
+        Colors.black.withValues(alpha: isLowGraphics ? 0.10 : 0.16),
       ],
       stops: const [0.62, 1.0],
     ).createShader(vignetteRect);
@@ -336,7 +336,7 @@ class UnityBackgroundPainter extends CustomPainter {
             ? 0.07 + (pulse * 0.08)
             : 0.11 + (pulse * 0.12);
 
-    _gridPaint.color = Colors.white.withOpacity(gridOpacity);
+    _gridPaint.color = Colors.white.withValues(alpha: gridOpacity);
 
     final double gridOffset = (time * math.pi * 200) % _kGridSpacing;
     final perspectiveGrid = _resolvePerspectiveGrid(size);
@@ -378,10 +378,10 @@ class UnityBackgroundPainter extends CustomPainter {
             (math.sin(seed.alphaPhase + time * math.pi * 2) * 0.5 + 0.5) * 0.6;
 
         _particlePaint.color = (i % 3 == 0)
-            ? const Color(0xFF00E5FF).withOpacity(pAlpha)
+            ? const Color(0xFF00E5FF).withValues(alpha: pAlpha)
             : (i % 3 == 1)
-                ? const Color(0xFFFF0055).withOpacity(pAlpha)
-                : Colors.white.withOpacity(pAlpha);
+                ? const Color(0xFFFF0055).withValues(alpha: pAlpha)
+                : Colors.white.withValues(alpha: pAlpha);
 
         canvas.drawCircle(Offset(px, py), pSize, _particlePaint);
       }
@@ -400,7 +400,7 @@ class UnityBackgroundPainter extends CustomPainter {
     final rect = Rect.fromCenter(center: center, width: size, height: size);
     _orbPaint.shader = RadialGradient(
       colors: [
-        color.withOpacity((0.35 + (pulse * 0.25)) * glowLevel),
+        color.withValues(alpha: (0.35 + (pulse * 0.25)) * glowLevel),
         Colors.transparent,
       ],
     ).createShader(rect);
