@@ -180,7 +180,21 @@ class PresenceService {
   }
 
   static bool hasEverConnected(Map<dynamic, dynamic>? data) {
-    return lastSeenMs(data) != null;
+    if (data == null || data.isEmpty) {
+      return false;
+    }
+    if (lastSeenMs(data) != null) {
+      return true;
+    }
+    if (latestSessionTimestamp(data) != null) {
+      return true;
+    }
+    final activeSessionCount = data['activeSessionCount'];
+    if (activeSessionCount is num && activeSessionCount.toInt() > 0) {
+      return true;
+    }
+    final status = data['status']?.toString().trim().toLowerCase();
+    return status == 'online' || status == 'offline';
   }
 
   static bool isTemporarilyDisconnected(
