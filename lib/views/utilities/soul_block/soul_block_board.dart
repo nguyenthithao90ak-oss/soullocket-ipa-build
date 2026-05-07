@@ -616,7 +616,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                         color: const Color(0xFFFFD166).withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFFFFD166).withOpacity(0.30),
+                          color: const Color(0xFFFFD166).withValues(alpha: 0.30),
                         ),
                       ),
                       child: const Icon(
@@ -879,16 +879,16 @@ extension _SoulBlockBoard on _SoulBlockGameState {
         borderRadius: shellRadius,
         gradient: LinearGradient(
           colors: <Color>[
-            shellTop.withOpacity(isPreview ? 0.94 : 1.0),
-            tone.withOpacity(isPreview ? 0.92 : 1.0),
-            shellBottom.withOpacity(0.98),
+            shellTop.withValues(alpha: isPreview ? 0.94 : 1.0),
+            tone.withValues(alpha: isPreview ? 0.92 : 1.0),
+            shellBottom.withValues(alpha: 0.98),
           ],
           stops: const <double>[0, 0.52, 1],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
         border: Border.all(
-          color: Colors.black.withOpacity(isPreview ? 0.08 : 0.14),
+          color: Colors.black.withValues(alpha: isPreview ? 0.08 : 0.14),
           width: 0.55,
         ),
         boxShadow: const <BoxShadow>[],
@@ -901,9 +901,9 @@ extension _SoulBlockBoard on _SoulBlockGameState {
             borderRadius: faceRadius,
             gradient: LinearGradient(
               colors: <Color>[
-                faceTop.withOpacity(isPreview ? 0.94 : 1.0),
-                tone.withOpacity(isPreview ? 0.92 : 1.0),
-                faceBottom.withOpacity(0.98),
+                faceTop.withValues(alpha: isPreview ? 0.94 : 1.0),
+                tone.withValues(alpha: isPreview ? 0.92 : 1.0),
+                faceBottom.withValues(alpha: 0.98),
               ],
               stops: const <double>[0, 0.6, 1],
               begin: Alignment.topCenter,
@@ -928,7 +928,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
               height: max(0.9, shortSide * 0.055),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(shortSide),
-                color: Colors.white.withOpacity(isPreview ? 0.18 : 0.10),
+                color: Colors.white.withValues(alpha: isPreview ? 0.18 : 0.10),
               ),
             ),
           ),
@@ -953,7 +953,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: Colors.white.withOpacity(0.09),
+          color: Colors.white.withValues(alpha: 0.09),
           width: 0.7,
         ),
       ),
@@ -971,7 +971,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-              color: Colors.white.withOpacity(0.04),
+              color: Colors.white.withValues(alpha: 0.04),
               width: 0.6,
             ),
           ),
