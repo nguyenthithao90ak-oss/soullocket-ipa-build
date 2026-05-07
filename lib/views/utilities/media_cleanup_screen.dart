@@ -309,7 +309,7 @@ class _MediaCleanupScreenState extends State<MediaCleanupScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         flexibleSpace: ClipRect(
-          child: Container(color: Colors.black.withOpacity(0.4)),
+          child: Container(color: Colors.black.withValues(alpha: 0.4)),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new,
@@ -592,13 +592,13 @@ class _MediaCleanupScreenState extends State<MediaCleanupScreen>
                   padding: SLSpacing.all12,
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Colors.redAccent.withOpacity(0.2)
-                        : Colors.white.withOpacity(0.06),
+                        ? Colors.redAccent.withValues(alpha: 0.2)
+                        : Colors.white.withValues(alpha: 0.06),
                     borderRadius: SLRadius.lgAll,
                     border: Border.all(
                       color: isSelected
-                          ? Colors.redAccent.withOpacity(0.7)
-                          : Colors.white.withOpacity(0.1),
+                          ? Colors.redAccent.withValues(alpha: 0.7)
+                          : Colors.white.withValues(alpha: 0.1),
                       width: isSelected ? 1.5 : 1,
                     ),
                   ),
@@ -610,7 +610,7 @@ class _MediaCleanupScreenState extends State<MediaCleanupScreen>
                         child: Container(
                           width: 52,
                           height: 52,
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           child: isImage
                               ? Image.network(
                                   file.url,
