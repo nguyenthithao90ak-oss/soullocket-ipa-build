@@ -102,12 +102,11 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       }
 
       final file = result.files.single;
-      final bytes = file.bytes;
       if (bytes == null || bytes.isEmpty) {
-        throw Exception('Không đọc được dữ liệu audio.');
+        throw Exception('Không đọc được file audio.');
       }
       if (bytes.length > _maxPickedVoiceBytes) {
-        _showMessage('File audio quá nặng, vui lòng chọn file nhỏ hơn 6 MB.');
+        _showMessage('File audio này quá lớn, hãy chọn file khác nhỏ hơn.');
         return;
       }
 
