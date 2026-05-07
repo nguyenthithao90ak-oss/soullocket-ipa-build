@@ -69,9 +69,7 @@ class _SettingsGiftLinksManagerScreenState extends State<SettingsGiftLinksManage
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return Center(child: Text('Lỗi tải dữ liệu: ${snapshot.error}'));
-          }
+            return const Center(child: Text('Không tải được danh sách liên kết lúc này.'));
 
           final gifts = snapshot.data ?? [];
           if (gifts.isEmpty) {
