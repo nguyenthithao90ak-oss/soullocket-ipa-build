@@ -615,6 +615,7 @@ class _MediaCleanupScreenState extends State<MediaCleanupScreen>
                               ? Image.network(
                                   file.url,
                                   fit: BoxFit.cover,
+                                  filterQuality: FilterQuality.high,
                                   errorBuilder: (_, __, ___) => const Icon(
                                       Icons.broken_image,
                                       color: Colors.white38,
