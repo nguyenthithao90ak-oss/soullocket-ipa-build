@@ -954,16 +954,14 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
               child: CircularProgressIndicator(color: Colors.white));
         }
 
-        if (snapshot.hasError) {
           return Center(
             child: Text(
-              'Lỗi tải dữ liệu: ${snapshot.error}',
+              'Không tải được lời nhắn thoại lúc này. Hãy thử lại sau.',
               style: SLTheme.quicksand(
                   color: Colors.white70, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
           );
-        }
 
         if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
           return Center(
