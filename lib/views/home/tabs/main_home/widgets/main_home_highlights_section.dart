@@ -172,7 +172,10 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
           state: UiPrefs.notifier.value,
           isWeb: kIsWeb,
         );
-        final imageCacheWidth = effectProfile.performanceMode ? 360 : 520;
+        final imageCacheWidth =
+            (tileWidth * MediaQuery.devicePixelRatioOf(context) * 1.35)
+                .round()
+                .clamp(effectProfile.performanceMode ? 420 : 560, 960);
 
         return Wrap(
           spacing: spacing,
