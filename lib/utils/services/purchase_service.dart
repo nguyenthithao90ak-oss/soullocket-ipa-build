@@ -284,6 +284,7 @@ class PurchaseService {
         headers: headers,
         body: jsonEncode({'uid': user.uid}),
       );
+      await getVipAccessInfo();
 
       if (response.statusCode != 200) {
         debugPrint('VIP sync failed: ${response.statusCode} ${response.body}');
