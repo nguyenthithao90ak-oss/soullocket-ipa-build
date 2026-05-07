@@ -23,8 +23,7 @@ class HouseCreationOtpRequiredException implements Exception {
   });
 
   @override
-  String toString() =>
-      'Thiết bị này cần xác minh Gmail hoặc nhập mã bảo mật để tiếp tục tạo nhà.';
+  String toString() => 'Cần xác minh Gmail để tiếp tục tạo nhà.';
 }
 
 class HouseService {
