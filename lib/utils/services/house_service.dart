@@ -462,9 +462,12 @@ class HouseService {
         await prefs.setString(_authUidPrefsKey, uid);
         return legacyValue;
       }
+    } on TimeoutException {
+      // Fallback cache below handles slow network without spamming logs.
     } catch (e) {
       debugPrint('Error resolving house id: $e');
     }
+
 
     final fallback = prefs.getString('il_house_id')?.trim() ?? '';
     if (fallback.isEmpty) {
