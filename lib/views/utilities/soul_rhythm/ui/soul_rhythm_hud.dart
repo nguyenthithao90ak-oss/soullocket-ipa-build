@@ -23,7 +23,7 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.14)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.24),
