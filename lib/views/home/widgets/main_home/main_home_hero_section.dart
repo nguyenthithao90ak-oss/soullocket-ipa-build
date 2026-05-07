@@ -216,7 +216,7 @@ class _HomeDecorGlow extends StatelessWidget {
           gradient: RadialGradient(
             colors: [
               color,
-              color.withOpacity(0.0),
+              color.withValues(alpha: 0.0),
             ],
           ),
         ),
