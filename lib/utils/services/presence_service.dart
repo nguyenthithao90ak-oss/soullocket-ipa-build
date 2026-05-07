@@ -301,6 +301,8 @@ class PresenceService {
         preferredDevice: _activeDeviceType,
       );
       debugPrint('Presence heartbeat refreshed session $_mySessionId');
+    } on TimeoutException {
+      return;
     } catch (e) {
       debugPrint('Presence heartbeat failed: $e');
     }
