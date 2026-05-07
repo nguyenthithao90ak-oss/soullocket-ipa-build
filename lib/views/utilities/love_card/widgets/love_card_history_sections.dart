@@ -132,79 +132,88 @@ class _LoveCardHistoryHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-part of '../../love_card_screen.dart';
+    final mine =
+        cards.where((card) => card['fromUid'] == state.widget.myUid).length;
 
-class _LoveCardHistoryView extends StatelessWidget {
-  final _LoveCardScreenState state;
-
-  const _LoveCardHistoryView({
-    required this.state,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<Map<dynamic, dynamic>>>(
-      stream: state._cardsStream,
-      initialData: const <Map<dynamic, dynamic>>[],
-      builder: (context, snapshot) {
-        final cards = snapshot.data ?? const <Map<dynamic, dynamic>>[];
-
-        if (snapshot.hasError) {
-          return ListView(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              _LoveCardHistoryHero(
-                state: state,
-                cards: cards,
+              const _LoveCardGlassIcon(
+                icon: Icons.auto_stories_rounded,
+                size: 40,
               ),
-              const SizedBox(height: 18),
-              const _LoveCardHistoryErrorState(),
-            ],
-          );
-        }
-
-        if (cards.isEmpty) {
-          return ListView(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-            children: [
-              _LoveCardHistoryHero(
-                state: state,
-                cards: cards,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Kho link thiệp đã tạo',
+                      style: SLTheme.quicksand(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Chỉ hiện các liên kết bạn đã tạo. Link hết hạn hoặc bị gỡ sẽ tự biến mất.',
+                      style: SLTheme.quicksand(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 18),
-              const _LoveCardHistoryEmptyState(),
             ],
-          );
-        }
-
-        return ListView.separated(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
           ),
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-          itemCount: cards.length + 1,
-          separatorBuilder: (_, __) => const SizedBox(height: 14),
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return _LoveCardHistoryHero(
-                state: state,
-                cards: cards,
-              );
-            }
-
-            return _LoveCardHistoryItem(
-              state: state,
-              card: cards[index - 1],
-            );
-          },
-        );
-      },
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _LoveCardHistoryMetric(
+                  label: 'Link đã tạo',
+                  value: '${cards.length}',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _LoveCardHistoryMetric(
+                  label: 'Sắp hết hạn',
+                  value: '${cards.where((card) {
+                    final expiresAt = _timestampFromValue(card['expiresAt']);
+                    if (expiresAt <= 0) {
+                      return false;
+                    }
+                    final remaining =
+                        expiresAt - DateTime.now().millisecondsSinceEpoch;
+                    return remaining > 0 &&
+                        remaining <= const Duration(days: 7).inMilliseconds;
+                  }).length}',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _LoveCardHistoryMetric(
+                  label: 'Bạn tạo',
+                  value: '$mine',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
