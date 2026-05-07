@@ -791,10 +791,10 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
     }
 
     if (avatarUrl.trim().isNotEmpty) {
-      return Image.network(
-        avatarUrl.trim(),
+      return CachedNetworkImage(
+        imageUrl: avatarUrl.trim(),
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildFallback(),
+        errorWidget: (_, __, ___) => _buildFallback(),
       );
     }
 
