@@ -251,7 +251,7 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
         child: Row(
           children: [
             Icon(icon,
-                color: const Color(0xFFD81B60).withOpacity(0.7), size: 22),
+                color: const Color(0xFFD81B60).withValues(alpha: 0.7), size: 22),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
@@ -285,7 +285,7 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
           boxShadow: isPrimary
               ? [
                   BoxShadow(
-                      color: const Color(0xFFD81B60).withOpacity(0.2),
+                      color: const Color(0xFFD81B60).withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 4))
                 ]
