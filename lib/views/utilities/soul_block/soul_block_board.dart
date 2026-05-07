@@ -151,7 +151,15 @@ extension _SoulBlockBoard on _SoulBlockGameState {
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
-          color: Colors.black.withValues(alpha: 0.54),
+          gradient: LinearGradient(
+            colors: <Color>[
+              const Color(0x00B00020),
+              const Color(0x8820122A),
+              Colors.black.withValues(alpha: 0.72),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
         child: Center(
           child: Container(
