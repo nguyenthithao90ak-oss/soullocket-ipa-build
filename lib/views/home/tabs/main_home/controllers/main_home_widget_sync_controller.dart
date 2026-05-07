@@ -163,18 +163,39 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
     _pendingWidgetSettings = nextSettings;
     _pendingWidgetSyncIncludeDiaryMedia =
         _pendingWidgetSyncIncludeDiaryMedia || includeDiaryMedia;
+    if (_widgetSyncInFlight) {
+      return;
+    }
     _loveWidgetSyncDebounce?.cancel();
     _loveWidgetSyncDebounce =
         Timer(const Duration(milliseconds: 700), () async {
+      if (_widgetSyncInFlight) {
+        return;
+      }
       final pendingSettings = _pendingWidgetSettings;
       final shouldIncludeDiaryMedia = _pendingWidgetSyncIncludeDiaryMedia;
       _pendingWidgetSettings = null;
       _pendingWidgetSyncIncludeDiaryMedia = false;
       if (pendingSettings == null || !mounted || !_isTabActive) return;
-      await _syncLoveWidgetImpl(
-        pendingSettings,
-        includeDiaryMedia: shouldIncludeDiaryMedia,
-      );
+      _widgetSyncInFlight = true;
+      try {
+        await _syncLoveWidgetImpl(
+          pendingSettings,
+          includeDiaryMedia: shouldIncludeDiaryMedia,
+        );
+      } finally {
+        _widgetSyncInFlight = false;
+        final nextQueuedSettings = _pendingWidgetSettings;
+        final nextQueuedIncludeDiaryMedia = _pendingWidgetSyncIncludeDiaryMedia;
+        if (nextQueuedSettings != null && mounted && _isTabActive) {
+          _pendingWidgetSettings = null;
+          _pendingWidgetSyncIncludeDiaryMedia = false;
+          _scheduleLoveWidgetSyncImpl(
+            nextQueuedSettings,
+            includeDiaryMedia: nextQueuedIncludeDiaryMedia,
+          );
+        }
+      }
     });
   }
 
