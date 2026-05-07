@@ -18,7 +18,7 @@ class _GlowOrb extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: <Color>[color, color.withOpacity(0)],
+            colors: <Color>[color, color.withValues(alpha: 0)],
           ),
         ),
       ),
@@ -47,21 +47,21 @@ class _MenuMiniButton extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: <Color>[
-              Colors.white.withOpacity(0.10),
-              _kSoulPanelTop.withOpacity(0.12),
-              _kSoulPanelBottom.withOpacity(0.88),
+              Colors.white.withValues(alpha: 0.10),
+              _kSoulPanelTop.withValues(alpha: 0.12),
+              _kSoulPanelBottom.withValues(alpha: 0.88),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: Colors.white.withOpacity(0.10),
+            color: Colors.white.withValues(alpha: 0.10),
             width: 1.0,
           ),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: Colors.black.withOpacity(0.16),
+              color: Colors.black.withValues(alpha: 0.16),
               blurRadius: 12,
               spreadRadius: -8,
               offset: const Offset(0, 8),
@@ -84,7 +84,7 @@ class _MenuMiniButton extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 11.1,
                 fontWeight: FontWeight.w800,
-                color: Colors.white.withOpacity(0.78),
+                color: Colors.white.withValues(alpha: 0.78),
                 letterSpacing: 0.2,
               ),
             ),
