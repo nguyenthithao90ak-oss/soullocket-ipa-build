@@ -21,7 +21,7 @@ class _CaroBackdropPainter extends CustomPainter {
         center,
         radius,
         Paint()
-          ..color = color.withOpacity(0.14)
+          ..color = color.withValues(alpha: 0.14)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.7),
       );
     }
@@ -103,7 +103,7 @@ class _NeonMarkPainter extends CustomPainter {
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..color = color.withOpacity(highlight ? 0.8 : 0.48);
+      ..color = color.withValues(alpha: highlight ? 0.8 : 0.48);
 
     final corePaint = Paint()
       ..style = PaintingStyle.stroke
