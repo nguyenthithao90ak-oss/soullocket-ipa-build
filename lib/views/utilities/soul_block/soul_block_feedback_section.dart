@@ -411,26 +411,24 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     if (clearedCount <= 0) {
       return;
     }
-    if (clearedCount >= 4) {
+    if (clearedCount == 2) {
       _showFloatingMessage(
-        'Combo x$clearedCount',
-        color: const Color(0xFFFFD166),
+        'COMBO x2',
+        color: const Color(0xFF67E8FF),
       );
       return;
     }
-    if (clearedCount >= 3) {
+    if (clearedCount == 3) {
       _showFloatingMessage(
-        'Combo x$clearedCount',
+        'COMBO x3',
         color: const Color(0xFFFFB347),
       );
       return;
     }
-    if (clearedCount == 2) {
-      _showFloatingMessage(
-        'Combo x2',
-        color: const Color(0xFF7AE7FF),
-      );
-    }
+    _showFloatingMessage(
+      'COMBO x$clearedCount',
+      color: const Color(0xFFFFD166),
+    );
   }
 
   void _triggerScreenPulse() {
