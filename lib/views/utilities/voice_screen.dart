@@ -752,7 +752,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
             ),
           ),
         ),
@@ -793,9 +793,9 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       margin: SLSpacing.all20,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -861,9 +861,9 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.16),
+                color: Colors.white.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.28)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
               ),
               child: Row(
                 children: [
@@ -917,12 +917,12 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
         height: 48,
         decoration: BoxDecoration(
           color: onTap == null
-              ? Colors.white.withOpacity(0.08)
+              ? Colors.white.withValues(alpha: 0.08)
               : filled
                   ? Colors.redAccent
-                  : Colors.white.withOpacity(0.14),
+                  : Colors.white.withValues(alpha: 0.14),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.22)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1056,10 +1056,10 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                  color: Colors.white.withOpacity(0.3)),
+                                  color: Colors.white.withValues(alpha: 0.3)),
                             ),
                             child: Row(
                               children: [
@@ -1071,7 +1071,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                                     width: 40,
                                     height: 40,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.15),
+                                      color: Colors.white.withValues(alpha: 0.15),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
