@@ -466,6 +466,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
         _listenInteractionSignals(houseId);
         _listenReactionFlights(houseId);
         _bindHomeMapPreview(houseId);
+        unawaited(_ensureAppWideLocationTracking(houseId));
         if (_showWeather) {
           _startWeatherRefreshLoop(houseId);
         }
