@@ -215,9 +215,9 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: <Color>[
-                            Colors.black.withOpacity(0.18),
+                            Colors.black.withValues(alpha: 0.18),
                             Colors.transparent,
-                            Colors.black.withOpacity(0.78),
+                            Colors.black.withValues(alpha: 0.78),
                           ],
                         ),
                       ),
@@ -255,7 +255,41 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                                     child: SizedBox(
                                       height: 4,
                                       child: ColoredBox(
-                                        color: Colors.white.withOpacity(0.16),
+                                        color: Colors.white.withValues(alpha: 0.16),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: isActive
+                                              ? TweenAnimationBuilder<double>(
+                                                  key: ValueKey<String>(
+                                                    'player-progress-$segmentIndex-$_index',
+                                                  ),
+                                                  tween: Tween<double>(
+                                                    begin: 0,
+                                                    end: 1,
+                                                  ),
+                                                  duration:
+                                                      _kCinemaFrameDuration,
+                      Expanded(
+                        child: Row(
+                          children: List<Widget>.generate(
+                            widget.reel.items.length,
+                            (segmentIndex) {
+                              final isDone = segmentIndex < _index;
+                              final isActive = segmentIndex == _index;
+                              return Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                    right: segmentIndex ==
+                                            widget.reel.items.length - 1
+                                        ? 0
+                                        : 4,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(999),
+                                    child: SizedBox(
+                                      height: 4,
+                                      child: ColoredBox(
+                                        color: Colors.white.withValues(alpha: 0.16),
                                         child: Align(
                                           alignment: Alignment.centerLeft,
                                           child: isActive
@@ -278,14 +312,14 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                                                   },
                                                   child: ColoredBox(
                                                     color: Colors.white
-                                                        .withOpacity(0.9),
+                                                        .withValues(alpha: 0.9),
                                                   ),
                                                 )
                                               : FractionallySizedBox(
                                                   widthFactor: isDone ? 1 : 0,
                                                   child: ColoredBox(
                                                     color: Colors.white
-                                                        .withOpacity(0.88),
+                                                        .withValues(alpha: 0.88),
                                                   ),
                                                 ),
                                         ),
@@ -308,10 +342,10 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.32),
+                              color: Colors.black.withValues(alpha: 0.32),
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.14),
+                                color: Colors.white.withValues(alpha: 0.14),
                               ),
                             ),
                             child: const Icon(
@@ -339,19 +373,8 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                  ),
                   const SizedBox(height: 18),
                   Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.48),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: Colors.white.withOpacity(0.08)),
-                    ),
-                    child: Row(
-                      children: <Widget>[
-                        Container(
-                          width: 44,
-                          height: 44,
                           decoration: BoxDecoration(
-                            color: accent.withOpacity(0.18),
+                            color: accent.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Icon(
@@ -380,7 +403,7 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                                     : '${_index + 1}/${widget.reel.items.length} - Ảnh được lưu bởi ${item.authorName}',
                                 style: SLTheme.quicksand(
                                   fontSize: 13.5,
-                                  color: Colors.white.withOpacity(0.74),
+                                  color: Colors.white.withValues(alpha: 0.74),
                                 ),
                               ),
                             ],
