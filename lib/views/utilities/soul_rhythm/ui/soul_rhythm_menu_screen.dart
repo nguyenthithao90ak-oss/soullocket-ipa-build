@@ -64,8 +64,8 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                           borderRadius: BorderRadius.circular(26),
                           gradient: LinearGradient(
                             colors: [
-                              const Color(0xFF161024).withOpacity(0.96),
-                              const Color(0xFF0F1830).withOpacity(0.94),
+                              const Color(0xFF161024).withValues(alpha: 0.96),
+                              const Color(0xFF0F1830).withValues(alpha: 0.94),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -76,12 +76,12 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                           boxShadow: [
                             BoxShadow(
                               color: const Color(0xFF00E5FF)
-                                  .withOpacity(0.10 * menuGlowScale),
+                                  .withValues(alpha: 0.10 * menuGlowScale),
                               blurRadius: 18 + (10 * menuGlowScale),
                             ),
                             BoxShadow(
                               color: const Color(0xFFFF0055)
-                                  .withOpacity(0.14 * menuGlowScale),
+                                  .withValues(alpha: 0.14 * menuGlowScale),
                               blurRadius: 16 + (8 * menuGlowScale),
                               offset: const Offset(0, 10),
                             ),
@@ -196,10 +196,10 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                         width: double.infinity,
                         padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.055),
+                          color: Colors.white.withValues(alpha: 0.055),
                           borderRadius: BorderRadius.circular(22),
                           border:
-                              Border.all(color: Colors.white.withOpacity(0.09)),
+                              Border.all(color: Colors.white.withValues(alpha: 0.09)),,
                         ),
                         child: Column(
                           children: [
@@ -242,7 +242,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: SLRadius.lgAll,
                         ),
                         child: Text(
@@ -274,9 +274,9 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
         vertical: compact ? 10 : 12,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         children: [
@@ -324,7 +324,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
           child: InkWell(
             onTap: _startGame,
             borderRadius: BorderRadius.circular(24),
-            splashColor: Colors.white.withOpacity(0.16),
+            splashColor: Colors.white.withValues(alpha: 0.16),
             highlightColor: Colors.transparent,
             child: Ink(
               width: double.infinity,
@@ -367,7 +367,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                         ),
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white.withOpacity(0.22),
+                            Colors.white.withValues(alpha: 0.22),
                             Colors.transparent,
                           ],
                           begin: Alignment.topCenter,
@@ -382,7 +382,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.16),
+                          color: Colors.white.withValues(alpha: 0.16),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -420,7 +420,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                       ),
                       Icon(
                         Icons.arrow_forward_rounded,
-                        color: Colors.white.withOpacity(0.92),
+                        color: Colors.white.withValues(alpha: 0.92),
                         size: 20,
                       ),
                     ],
@@ -446,7 +446,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        splashColor: color.withOpacity(0.18),
+        splashColor: color.withValues(alpha: 0.18),
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
@@ -454,16 +454,16 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: active
-                ? color.withOpacity(0.16)
-                : Colors.white.withOpacity(0.05),
+                ? color.withValues(alpha: 0.16)
+                : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: active ? color.withOpacity(0.75) : Colors.white24,
+              color: active ? color.withValues(alpha: 0.75) : Colors.white24,
             ),
             boxShadow: active
                 ? [
                     BoxShadow(
-                      color: color.withOpacity(0.22),
+                      color: color.withValues(alpha: 0.22),
                       blurRadius: 12,
                       offset: const Offset(0, 5),
                     ),
@@ -537,7 +537,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white24),
       ),
@@ -591,7 +591,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
             _rebuildGameChartForDifficulty();
           });
         },
-        splashColor: const Color(0xFF00E5FF).withOpacity(0.18),
+        splashColor: const Color(0xFF00E5FF).withValues(alpha: 0.18),
         child: AnimatedScale(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
@@ -603,13 +603,13 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: isSelected
-                  ? const Color(0xFF00E5FF).withOpacity(0.18)
-                  : Colors.white.withOpacity(0.05),
+                  ? const Color(0xFF00E5FF).withValues(alpha: 0.18)
+                  : Colors.white.withValues(alpha: 0.05),
               borderRadius: SLRadius.xlAll,
               border: Border.all(
                 color: isSelected
                     ? const Color(0xFF00E5FF)
-                    : Colors.white.withOpacity(0.1),
+                    : Colors.white.withValues(alpha: 0.1),
                 width: isSelected ? 2 : 1,
               ),
               boxShadow: isSelected
@@ -630,8 +630,8 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                   height: 34,
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Colors.white.withOpacity(0.12)
-                        : Colors.white.withOpacity(0.04),
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : Colors.white.withValues(alpha: 0.04),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
