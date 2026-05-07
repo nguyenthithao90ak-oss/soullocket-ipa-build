@@ -534,11 +534,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         )
         .timeout(const Duration(seconds: 12), onTimeout: () => false);
 
-    if (started && mounted) {
-      // Intentionally do not auto-open background permission settings here.
-      // Background access should only be prompted from explicit user action.
-    }
-
     if (!mounted) return;
     
     if (!started) {
