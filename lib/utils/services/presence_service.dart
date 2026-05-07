@@ -249,6 +249,9 @@ class PresenceService {
     final targetChanged = previousHouseId != null &&
         previousRole != null &&
         (previousHouseId != houseId || previousRole != role);
+    debugPrint(
+      '[Presence] goOnline start role=$role house=$houseId targetChanged=$targetChanged device=${deviceType ?? 'flutter'}',
+    );
 
     if (targetChanged) {
       await _cleanupPresence(
@@ -272,6 +275,9 @@ class PresenceService {
         _mySessionId != null &&
         _lastOnlineFingerprint == nextFingerprint;
     if (canReuseCurrentSession) {
+      debugPrint(
+        '[Presence] goOnline reuse session=$_mySessionId role=$role house=$houseId',
+      );
       _setupConnectedListener();
       _startHeartbeat();
       await _heartbeat();
@@ -461,7 +467,7 @@ class PresenceService {
           'device': resolvedDevice,
       }).timeout(const Duration(seconds: 3));
       debugPrint(
-        'Presence aggregate refreshed: status=${freshSessionCount > 0 ? 'online' : 'offline'} sessions=$freshSessionCount',
+        '[Presence] aggregate role=${ref.key} status=${freshSessionCount > 0 ? 'online' : 'offline'} sessions=$freshSessionCount lastSeen=$resolvedLastSeen device=${resolvedDevice ?? '-'}',
       );
     } catch (e) {
       debugPrint('Presence aggregate refresh failed: $e');
@@ -518,6 +524,9 @@ class PresenceService {
     required String role,
     int? lastSeenMs,
   }) async {
+    debugPrint(
+      '[Presence] goOffline start role=$role house=$houseId session=${_mySessionId ?? '-'} lastSeen=${lastSeenMs ?? '-'}',
+    );
     _shouldBeOnline = false;
     _heartbeatTimer?.cancel();
     await _cleanupPresence(
@@ -632,6 +641,9 @@ class PresenceService {
     if (!_shouldBeOnline) {
       return;
     }
+    debugPrint(
+      '[Presence] connectivity restored role=${_activeRole ?? '-'} house=${_activeHouseId ?? '-'} session=${_mySessionId ?? '-'}',
+    );
     await _doGoOnline();
   }
 
