@@ -160,7 +160,7 @@ class LanePainter extends CustomPainter {
       final accentOpacity = lane.isEven ? 0.028 : 0.018;
       _laneShadePaint.shader = LinearGradient(
         colors: [
-          Colors.white.withOpacity(accentOpacity),
+          Colors.white.withValues(alpha: accentOpacity),
           Colors.transparent,
           Colors.black.withValues(alpha: 0.06),
         ],
