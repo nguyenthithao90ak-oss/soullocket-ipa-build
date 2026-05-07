@@ -477,7 +477,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 26,
                   offset: const Offset(0, 14),
                 ),
@@ -826,7 +826,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         border: Border.all(color: const Color(0xFFF7D3E1)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withOpacity(0.08),
+            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -956,7 +956,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
             border: Border.all(color: const Color(0xFFF0D5E1)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -1204,7 +1204,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.92),
+        color: Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(26),
         border: Border.all(color: const Color(0xFFFFD2E2)),
       ),
@@ -1336,7 +1336,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.86),
+                  color: Colors.white.withValues(alpha: 0.86),
                   borderRadius: SLRadius.pillAll,
                 ),
                 child: Text(
@@ -1355,7 +1355,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.86),
+                  color: Colors.white.withValues(alpha: 0.86),
                   borderRadius: SLRadius.pillAll,
                 ),
                 child: Text(
@@ -1381,7 +1381,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.88),
+                    color: Colors.white.withValues(alpha: 0.88),
                     shape: BoxShape.circle,
                   ),
                   child: isBusy
@@ -1414,7 +1414,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
-        color: bg.withOpacity(0.92),
+        color: bg.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -1452,7 +1452,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.35),
+              color: color.withValues(alpha: 0.35),
               blurRadius: selected ? 14 : 10,
               offset: const Offset(0, 4),
             ),
@@ -1573,7 +1573,7 @@ class _BackgroundChoice extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(
+                      Colors.black.withValues(alpha: 0.14))
                         id == 'night_stars' || id == 'blackboard' ? 0.22 : 0.08,
                       ),
                     ],
@@ -1779,7 +1779,7 @@ class _DrawingStudioPreviewScreenState
                         end: Alignment.bottomCenter,
                       ),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.08),
+                        color: Colors.white.withValues(alpha: 0.08),
                       ),
                     ),
                     child: LayoutBuilder(
@@ -1826,7 +1826,7 @@ class _DrawingStudioPreviewScreenState
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.96),
+            color: Colors.white.withValues(alpha: 0.96),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border.all(color: const Color(0xFFF0D5E1)),
           ),
@@ -1940,7 +1940,7 @@ class _StickerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final stroke in strokes) {
-      _paintStickerStroke(canvas, stroke, size, stroke.width + 18, Colors.black.withOpacity(0.16));
+      _paintStickerStroke(canvas, stroke, size, stroke.width + 18, Colors.black.withValues(alpha: 0.16));
     }
     for (final stroke in strokes) {
       _paintStickerStroke(canvas, stroke, size, stroke.width + 12, Colors.white);
@@ -2032,8 +2032,8 @@ class _DrawingCanvasPainter extends CustomPainter {
     switch (backgroundId) {
       case 'blank_paper':
         _paintGradient(canvas, rect, const [Color(0xFFFFFBF3), Color(0xFFFFF0DF)]);
-        _paintVignette(canvas, size, const Color(0xFFE8B98A).withOpacity(0.16));
-        _paintPaperNoise(canvas, size, const Color(0xFFE8C8A8).withOpacity(0.22));
+        _paintVignette(canvas, size, const Color(0xFFE8B98A).withValues(alpha: 0.16));
+        _paintPaperNoise(canvas, size, const Color(0xFFE8C8A8).withValues(alpha: 0.22));
         break;
       case 'hearts':
         _paintGradient(
@@ -2041,9 +2041,9 @@ class _DrawingCanvasPainter extends CustomPainter {
           rect,
           const [Color(0xFFFFECF5), Color(0xFFFF9BC3), Color(0xFFFFD6E7)],
         );
-        _paintBokeh(canvas, size, const Color(0xFFFFFFFF).withOpacity(0.34));
+        _paintBokeh(canvas, size, const Color(0xFFFFFFFF).withValues(alpha: 0.34));
         _paintHearts(canvas, size);
-        _paintSparkles(canvas, size, const Color(0xFFFFFFFF).withOpacity(0.72));
+        _paintSparkles(canvas, size, const Color(0xFFFFFFFF).withValues(alpha: 0.72));
         break;
       case 'night_stars':
         _paintGradient(
@@ -2059,13 +2059,13 @@ class _DrawingCanvasPainter extends CustomPainter {
         break;
       case 'blackboard':
         _paintGradient(canvas, rect, const [Color(0xFF102E29), Color(0xFF225C51)]);
-        _paintGrid(canvas, size, Colors.white.withOpacity(0.08), step: 34);
+        _paintGrid(canvas, size, Colors.white.withValues(alpha: 0.08), step: 34);
         _paintChalkDust(canvas, size);
         break;
       case 'notebook':
         _paintGradient(canvas, rect, const [Color(0xFFFFFEFB), Color(0xFFF5FAFF)]);
         _paintNotebook(canvas, size);
-        _paintPaperNoise(canvas, size, const Color(0xFFCADBFF).withOpacity(0.18));
+        _paintPaperNoise(canvas, size, const Color(0xFFCADBFF).withValues(alpha: 0.18));
         break;
       case 'photo_frame':
         _paintGradient(
@@ -2073,7 +2073,7 @@ class _DrawingCanvasPainter extends CustomPainter {
           rect,
           const [Color(0xFFFFEEF7), Color(0xFFEDE7FF), Color(0xFFFFFBFE)],
         );
-        _paintBokeh(canvas, size, const Color(0xFFFFFFFF).withOpacity(0.30));
+        _paintBokeh(canvas, size, const Color(0xFFFFFFFF).withValues(alpha: 0.30));
         _paintFrame(canvas, size);
         break;
       case 'pastel_dots':
@@ -2092,9 +2092,9 @@ class _DrawingCanvasPainter extends CustomPainter {
       case 'paper_grid':
       default:
         _paintGradient(canvas, rect, const [Color(0xFFFFFEFC), Color(0xFFFFEAF3)]);
-        _paintGrid(canvas, size, const Color(0xFFFFBFD7).withOpacity(0.70), step: 24);
-        _paintGrid(canvas, size, const Color(0xFFFF82B0).withOpacity(0.28), step: 96);
-        _paintPaperNoise(canvas, size, const Color(0xFFFFC7DB).withOpacity(0.25));
+        _paintGrid(canvas, size, const Color(0xFFFFBFD7).withValues(alpha: 0.70), step: 24);
+        _paintGrid(canvas, size, const Color(0xFFFF82B0).withValues(alpha: 0.28), step: 96);
+        _paintPaperNoise(canvas, size, const Color(0xFFFFC7DB).withValues(alpha: 0.25));
         break;
     }
   }
@@ -2161,9 +2161,9 @@ class _DrawingCanvasPainter extends CustomPainter {
 
   void _paintNebula(Canvas canvas, Size size) {
     final colors = [
-      const Color(0xFFFF7AB8).withOpacity(0.20),
-      const Color(0xFF7EE8FF).withOpacity(0.16),
-      const Color(0xFFFFD166).withOpacity(0.12),
+      const Color(0xFFFF7AB8).withValues(alpha: 0.20),
+      const Color(0xFF7EE8FF).withValues(alpha: 0.16),
+      const Color(0xFFFFD166).withValues(alpha: 0.12),
     ];
     for (var i = 0; i < colors.length; i++) {
       canvas.drawOval(
@@ -2194,7 +2194,7 @@ class _DrawingCanvasPainter extends CustomPainter {
   }
 
   void _paintChalkDust(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white.withOpacity(0.10);
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.10);
     for (var i = 0; i < 120; i++) {
       final x = ((i * 37) % math.max(size.width.toInt(), 1)).toDouble();
       final y = ((i * 61) % math.max(size.height.toInt(), 1)).toDouble();
