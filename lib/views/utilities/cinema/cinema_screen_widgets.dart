@@ -90,7 +90,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 Color(0xCC2E1525),
               ],
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.10)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
             boxShadow: const <BoxShadow>[
               BoxShadow(
                 color: Color(0x5A000000),
@@ -113,12 +113,12 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: <Color>[
-                          accent.withOpacity(0.26),
-                          Colors.white.withOpacity(0.10),
+                          accent.withValues(alpha: 0.26),
+                          Colors.white.withValues(alpha: 0.10),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.10)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                     ),
                     child: Icon(
                       reel == null
@@ -165,7 +165,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                           style: SLTheme.quicksand(
                             fontSize: compact ? 13 : 14,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white.withOpacity(0.72),
+                            color: Colors.white.withValues(alpha: 0.72),
                           ),
                         ),
                       ],
@@ -181,7 +181,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 style: SLTheme.quicksand(
                   fontSize: compact ? 13.5 : 14.5,
                   height: 1.48,
-                  color: Colors.white.withOpacity(0.86),
+                  color: Colors.white.withValues(alpha: 0.86),
                 ),
               ),
               SizedBox(height: compact ? 14 : 16),
@@ -230,7 +230,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               style: SLTheme.quicksand(
                 fontSize: 13.5,
                 height: 1.45,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
               ),
             ),
           ),
@@ -245,9 +245,9 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         children: <Widget>[
@@ -295,7 +295,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     height: 1.42,
-                    color: Colors.white.withOpacity(0.72),
+                    color: Colors.white.withValues(alpha: 0.72),
                   ),
                 ),
               ],
@@ -313,9 +313,9 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.045),
+        color: Colors.white.withValues(alpha: 0.045),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x44000000),
@@ -350,7 +350,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: <Color>[
-                                  Colors.black.withOpacity(0.18),
+                                  Colors.black.withValues(alpha: 0.18),
                                   Colors.transparent,
                                   const Color(0xED05070D),
                                 ],
@@ -400,13 +400,13 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: <Color>[
-                                        Colors.white.withOpacity(0.24),
-                                        Colors.black.withOpacity(0.24),
+                                        Colors.white.withValues(alpha: 0.24),
+                                        Colors.black.withValues(alpha: 0.24),
                                       ],
                                     ),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.30),
+                                      color: Colors.white.withValues(alpha: 0.30),
                                     ),
                                   ),
                                   child: const Icon(
@@ -441,7 +441,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                   style: SLTheme.quicksand(
                                     fontSize: 13.5,
                                     height: 1.4,
-                                    color: Colors.white.withOpacity(0.80),
+                                    color: Colors.white.withValues(alpha: 0.80),
                                   ),
                                 ),
                               ],
@@ -507,9 +507,9 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
       height: 112,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.045),
+        color: Colors.white.withValues(alpha: 0.045),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: SingleChildScrollView(
         controller: _filmstripController,
@@ -534,13 +534,13 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                   border: Border.all(
                     color: isActive
                         ? Color(reel.accentValue)
-                        : Colors.white.withOpacity(0.06),
+                        : Colors.white.withValues(alpha: 0.06),
                     width: isActive ? 2 : 1,
                   ),
                   boxShadow: isActive
                       ? <BoxShadow>[
                           BoxShadow(
-                            color: Color(reel.accentValue).withOpacity(0.26),
+                            color: Color(reel.accentValue).withValues(alpha: 0.26),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -560,7 +560,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                             end: Alignment.bottomCenter,
                             colors: <Color>[
                               Colors.transparent,
-                              Colors.black.withOpacity(0.54),
+                              Colors.black.withValues(alpha: 0.54),
                             ],
                           ),
                         ),
@@ -575,7 +575,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Color(reel.accentValue).withOpacity(0.92),
+                              color: Color(reel.accentValue).withValues(alpha: 0.92),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
@@ -617,9 +617,9 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.045),
+        color: Colors.white.withValues(alpha: 0.045),
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -634,7 +634,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: <Color>[
-                      Color(reel.accentValue).withOpacity(0.24),
+                      Color(reel.accentValue).withValues(alpha: 0.24),
                       Colors.white.withOpacity(0.08),
                     ],
                   ),
