@@ -234,7 +234,7 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
                                     strokeWidth: 2,
                                     valueColor:
                                         AlwaysStoppedAnimation<Color>(
-                                      const Color(0xFFD81B60).withValues(alpha: 0.75),
+                                      Color(0xFFD81B60).withValues(alpha: 0.75),
                                     ),
                                   ),
                                 ),
