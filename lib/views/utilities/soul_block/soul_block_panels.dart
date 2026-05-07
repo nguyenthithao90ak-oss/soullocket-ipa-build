@@ -1030,7 +1030,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                   decoration: BoxDecoration(
                     color: const Color(0xFF111827),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.08)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
