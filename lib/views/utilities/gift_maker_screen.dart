@@ -105,10 +105,10 @@ class GiftMakerScreen extends StatefulWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.white.withOpacity(0.14)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.24),
+            color: Colors.black.withValues(alpha: 0.24),
             blurRadius: 28,
             offset: const Offset(0, 18),
           ),
@@ -124,7 +124,7 @@ class GiftMakerScreen extends StatefulWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.14),
+                  color: Colors.white.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -150,7 +150,7 @@ class GiftMakerScreen extends StatefulWidget {
                 'Giữ cách mở quà như cũ, nhưng phần nhìn nổi bật hơn và xem trước ngay trên đầu màn.',
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w700,
-                  color: Colors.white.withOpacity(0.82),
+                  color: Colors.white.withValues(alpha: 0.82),
                   height: 1.5,
                 ),
               ),
@@ -173,10 +173,10 @@ class GiftMakerScreen extends StatefulWidget {
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.12),
+                        color: Colors.white.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.14),
+                          color: Colors.white.withValues(alpha: 0.14),
                         ),
                       ),
                       child: Row(
@@ -204,7 +204,7 @@ class GiftMakerScreen extends StatefulWidget {
                   _giftTeaser(selectedType),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
-                    color: foreground.withOpacity(0.88),
+                    color: foreground.withValues(alpha: 0.88),
                     height: 1.45,
                   ),
                 ),
@@ -462,7 +462,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                         child: Icon(
                           Icons.link_rounded,
                           size: 86,
-                          color: Colors.white.withOpacity(0.12),
+                          color: Colors.white.withValues(alpha: 0.12),
                         ),
                       ),
                       Column(
@@ -473,10 +473,10 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                             height: 58,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.16),
+                              color: Colors.white.withValues(alpha: 0.16),
                               borderRadius: BorderRadius.circular(22),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.18),
+                                color: Colors.white.withValues(alpha: 0.18),
                               ),
                             ),
                             child: Text(
@@ -498,7 +498,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                             GiftMakerService.giftLabel(draft.giftType),
                             style: SLTheme.quicksand(
                               fontWeight: FontWeight.w800,
-                              color: Colors.white.withOpacity(0.82),
+                              color: Colors.white.withValues(alpha: 0.82),
                             ),
                           ),
                         ],
@@ -536,7 +536,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                               height: 38,
                               decoration: BoxDecoration(
                                 color:
-                                    const Color(0xFFD81B60).withOpacity(0.10),
+                                    const Color(0xFFD81B60).withValues(alpha: 0.10),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: const Icon(
@@ -736,16 +736,16 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               child: Container(
                 height: 42,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
+                  color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white.withOpacity(0.18)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
                 ),
                 child: TabBar(
                   dividerColor: Colors.transparent,
                   indicatorSize: TabBarIndicatorSize.tab,
                   splashBorderRadius: BorderRadius.circular(999),
                   labelColor: const Color(0xFFD81B60),
-                  unselectedLabelColor: Colors.white.withOpacity(0.9),
+                  unselectedLabelColor: Colors.white.withValues(alpha: 0.9),
                   indicator: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(999),
