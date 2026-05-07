@@ -1324,7 +1324,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: const Color(0xFFF9C15A)),
+          Icon(icon, size: 18, color: const Color(0xFFF9C15A)),
           const SizedBox(width: 6),
           Text(
             label,
