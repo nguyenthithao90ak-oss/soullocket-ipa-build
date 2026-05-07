@@ -973,9 +973,9 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               width: 20,
               height: 20,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withOpacity(0.45)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
               ),
               child: Center(
                 child: Text(
@@ -1094,13 +1094,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFFD81B60).withOpacity(0.18)
-                    : const Color(0xFFD81B60).withOpacity(0.08),
+                    ? const Color(0xFFD81B60).withValues(alpha: 0.18)
+                    : const Color(0xFFD81B60).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected
                       ? const Color(0xFFD81B60)
-                      : const Color(0xFFD81B60).withOpacity(0.2),
+                      : const Color(0xFFD81B60).withValues(alpha: 0.2),
                 ),
               ),
               child: Text(
@@ -1141,7 +1141,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         border: Border.all(color: const Color(0xFFFFC3D5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1160,7 +1160,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD81B60).withOpacity(0.10),
+                      color: const Color(0xFFD81B60).withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -1395,7 +1395,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
