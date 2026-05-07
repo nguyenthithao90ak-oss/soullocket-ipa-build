@@ -575,11 +575,11 @@ class DiaryMemoryController extends ChangeNotifier {
   }
 
   void _normalizeMemoryPhotoUrl(Map<String, dynamic> item) {
-    final fallbackUrl = item['thumbUrl']?.toString().trim().isNotEmpty == true
-        ? item['thumbUrl'].toString().trim()
+    final fallbackUrl = item['downloadUrl']?.toString().trim().isNotEmpty == true
+        ? item['downloadUrl'].toString().trim()
         : item['previewUrl']?.toString().trim().isNotEmpty == true
             ? item['previewUrl'].toString().trim()
-            : item['downloadUrl']?.toString().trim() ?? '';
+            : item['thumbUrl']?.toString().trim() ?? '';
     if (fallbackUrl.isEmpty) {
       return;
     }
