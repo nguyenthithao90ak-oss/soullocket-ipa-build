@@ -41,17 +41,17 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFFFFD1E1).withOpacity(0.3),
-                    const Color(0xFFFFF0F5).withOpacity(0.5),
+                    const Color(0xFFFFD1E1).withValues(alpha: 0.3),
+                    const Color(0xFFFFF0F5).withValues(alpha: 0.5),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFFFC1D1).withOpacity(0.5), width: 1.5),
+                border: Border.all(color: const Color(0xFFFFC1D1).withValues(alpha: 0.5), width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF78A8).withOpacity(0.05),
+                    color: const Color(0xFFFF78A8).withValues(alpha: 0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -90,9 +90,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFFFC1D1).withOpacity(0.3)),
+                      border: Border.all(color: const Color(0xFFFFC1D1).withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       _houseId == null ? 'Mã nhà: Chưa có' : 'ID: $_houseId',
@@ -222,9 +222,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF9C4).withOpacity(0.4),
+                      color: const Color(0xFFFFF9C4).withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFFBC02D).withOpacity(0.3)),
+                      border: Border.all(color: const Color(0xFFFBC02D).withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,14 +260,14 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                       prefixIcon: const Icon(Icons.lock_outline_rounded, color: Colors.grey),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
                       ),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.8),
+                      fillColor: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                 if (_passwordLinked) SLSpacing.h12,
