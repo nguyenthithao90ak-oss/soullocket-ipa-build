@@ -217,6 +217,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
   Timer? _interactionRotationTimer;
   Map<String, dynamic>? _pendingWidgetSettings;
   bool _pendingWidgetSyncIncludeDiaryMedia = false;
+  bool _widgetSyncInFlight = false;
   String _lastLoveWidgetSignature = '';
   String _lastLoveWidgetAccountKey = '';
   String _presenceUiSignature = '';
