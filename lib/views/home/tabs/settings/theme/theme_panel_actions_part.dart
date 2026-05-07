@@ -156,7 +156,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.88),
+                color: Colors.white.withValues(alpha: 0.88),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: isActive
