@@ -169,8 +169,9 @@ void main() {
     await _configureSystemUiForEdgeToEdge();
     GoogleFonts.config.allowRuntimeFetching = !kIsWeb;
     if (!kIsWeb) {
-      // Không preserve splash screen nữa để app vào thẳng LoadingScaffold
-      // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+      FlutterNativeSplash.preserve(
+        widgetsBinding: WidgetsFlutterBinding.ensureInitialized(),
+      );
     }
 
     // Giữ dọc trên mobile; riêng macOS không khóa để cho phép xoay/ngang.
