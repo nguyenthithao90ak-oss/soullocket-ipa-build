@@ -396,6 +396,252 @@ class _DiaryTabState extends State<DiaryTab> {
     );
   }
 
+  Future<List<String>> _findActiveMemoryShareTokensForPhoto(
+    Map<String, dynamic> item,
+  ) async {
+    final houseId = _houseId?.trim() ?? '';
+    final photoId = item['id']?.toString().trim() ?? '';
+    if (houseId.isEmpty || photoId.isEmpty) {
+      return const <String>[];
+    }
+
+    final sharesIndexSnap = await FirebaseDatabase.instance
+        .ref('houses/$houseId/memoryShares')
+        .get();
+    if (!sharesIndexSnap.exists || sharesIndexSnap.value is! Map) {
+      return const <String>[];
+    }
+
+    final shareIndex =
+        Map<dynamic, dynamic>.from(sharesIndexSnap.value as Map<dynamic, dynamic>);
+    if (shareIndex.isEmpty) {
+      return const <String>[];
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final tokens = <String>[];
+    for (final entry in shareIndex.entries) {
+      final token = entry.key?.toString().trim() ?? '';
+      if (token.isEmpty) {
+        continue;
+      }
+      final shareMeta = entry.value is Map
+          ? Map<dynamic, dynamic>.from(entry.value as Map)
+          : const <dynamic, dynamic>{};
+      final revoked = shareMeta['revoked'] == true;
+      final expiresAt = (shareMeta['expiresAt'] as num?)?.toInt() ?? 0;
+      if (revoked || (expiresAt > 0 && expiresAt <= now)) {
+        continue;
+      }
+
+      final shareSnap =
+          await FirebaseDatabase.instance.ref('memory_shares/$token').get();
+      if (!shareSnap.exists || shareSnap.value is! Map) {
+        continue;
+      }
+      final share =
+          Map<dynamic, dynamic>.from(shareSnap.value as Map<dynamic, dynamic>);
+      if (share['revoked'] == true) {
+        continue;
+      }
+      final rootExpiresAt = (share['expiresAt'] as num?)?.toInt() ?? 0;
+      if (rootExpiresAt > 0 && rootExpiresAt <= now) {
+        continue;
+      }
+      final photos = share['photos'];
+      if (photos is! List) {
+        continue;
+      }
+      final containsPhoto = photos.any((photo) {
+        if (photo is! Map) {
+          return false;
+        }
+        final normalized = Map<dynamic, dynamic>.from(photo);
+        return (normalized['id']?.toString().trim() ?? '') == photoId;
+      });
+      if (containsPhoto) {
+        tokens.add(token);
+      }
+    }
+    return tokens;
+  }
+
+  Future<void> _revokeMemoryShareLinksForPhoto(
+    BuildContext dialogContext,
+    Map<String, dynamic> item,
+  ) async {
+    final tokens = await _findActiveMemoryShareTokensForPhoto(item);
+    if (tokens.isEmpty) {
+      _showDiarySnackBar(
+        'Ảnh này hiện chưa có liên kết chia sẻ nào còn hiệu lực.',
+        backgroundColor: const Color(0xFFE53935),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Thu hồi liên kết?',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: Text(
+          tokens.length > 1
+              ? 'Ảnh này đang nằm trong ${tokens.length} liên kết chia sẻ còn hiệu lực. Thu hồi tất cả các liên kết này?'
+              : 'Ảnh này đang có 1 liên kết chia sẻ còn hiệu lực. Bạn muốn thu hồi liên kết đó?',
+          style: SLTheme.quicksand(height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('Thu hồi'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CuteLoadingIndicator(color: Colors.white),
+      ),
+    );
+
+    try {
+      for (final token in tokens) {
+        await _memoryShareService.revokeShareLink(token);
+      }
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).pop();
+      Navigator.of(dialogContext).pop();
+      _showDiarySnackBar(
+        tokens.length > 1
+            ? 'Đã thu hồi ${tokens.length} liên kết chia sẻ của ảnh này.'
+            : 'Đã thu hồi liên kết chia sẻ của ảnh này.',
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).pop();
+      _showDiarySnackBar(
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể thu hồi liên kết lúc này. Vui lòng thử lại sau.',
+        ).message,
+        backgroundColor: const Color(0xFFE53935),
+      );
+    }
+  }
+
+  Future<void> _showMemoryViewerActions(
+    BuildContext dialogContext,
+    Map<String, dynamic> item,
+  ) async {
+    final activeTokens = await _findActiveMemoryShareTokensForPhoto(item);
+    if (!mounted) {
+      return;
+    }
+
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.download_rounded),
+                title: const Text('Lưu ảnh'),
+                onTap: () => Navigator.of(sheetContext).pop('save'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.ios_share_rounded),
+                title: const Text('Chia sẻ ảnh'),
+                onTap: () => Navigator.of(sheetContext).pop('share'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.info_outline_rounded),
+                title: const Text('Chi tiết ảnh'),
+                onTap: () => Navigator.of(sheetContext).pop('info'),
+              ),
+              if (activeTokens.isNotEmpty)
+                ListTile(
+                  leading: const Icon(
+                    Icons.link_off_rounded,
+                    color: Color(0xFFFF7043),
+                  ),
+                  title: Text(
+                    activeTokens.length > 1
+                        ? 'Thu hồi ${activeTokens.length} liên kết'
+                        : 'Thu hồi liên kết',
+                    style: SLTheme.quicksand(
+                      color: const Color(0xFFFF7043),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  onTap: () => Navigator.of(sheetContext).pop('revoke_share'),
+                ),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Color(0xFFFF6B6B),
+                ),
+                title: Text(
+                  'Xóa ảnh',
+                  style: SLTheme.quicksand(
+                    color: const Color(0xFFFF6B6B),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                onTap: () => Navigator.of(sheetContext).pop('delete'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    switch (action) {
+      case 'save':
+        await _downloadSingleImage(item['url']);
+        break;
+      case 'share':
+        Navigator.pop(dialogContext);
+        await _shareSingleMemory(item);
+        break;
+      case 'info':
+        await _showMemoryInfoSheet(dialogContext, item);
+        break;
+      case 'revoke_share':
+        await _revokeMemoryShareLinksForPhoto(dialogContext, item);
+        break;
+      case 'delete':
+        Navigator.pop(dialogContext);
+        await _deleteMemory(item);
+        break;
+    }
+  }
+
   Future<void> _downloadSingleImage(String? url) async {
     final trimmed = url?.trim() ?? '';
     if (trimmed.isEmpty) return;
@@ -695,24 +941,28 @@ class _DiaryTabState extends State<DiaryTab> {
               item['url']?.toString() ?? '',
               maxWidth: 1600,
             );
-            return InteractiveViewer(
-              minScale: 0.9,
-              maxScale: 4.5,
-              boundaryMargin: const EdgeInsets.all(96),
-              clipBehavior: Clip.none,
-              interactionEndFrictionCoefficient: 0.00008,
-              child: Hero(
-                tag: 'memory_image_${item['id']}',
-                child: Image(
-                  image: imageProvider,
-                  fit: BoxFit.contain,
-                  width: double.infinity,
-                  height: double.infinity,
-                  filterQuality: FilterQuality.high,
-                  gaplessPlayback: true,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.broken_image,
-                    color: Colors.grey,
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onLongPress: () => _showMemoryViewerActions(dialogContext, item),
+              child: InteractiveViewer(
+                minScale: 0.9,
+                maxScale: 4.5,
+                boundaryMargin: const EdgeInsets.all(96),
+                clipBehavior: Clip.none,
+                interactionEndFrictionCoefficient: 0.00008,
+                child: Hero(
+                  tag: 'memory_image_${item['id']}',
+                  child: Image(
+                    image: imageProvider,
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                    height: double.infinity,
+                    filterQuality: FilterQuality.high,
+                    gaplessPlayback: true,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.broken_image,
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
               ),
@@ -866,6 +1116,27 @@ class _DiaryTabState extends State<DiaryTab> {
                             ],
                           ),
                         ),
+                        if ((currentItem['id']?.toString().trim() ?? '').isNotEmpty)
+                          PopupMenuItem<String>(
+                            value: 'revoke_share',
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.link_off_rounded,
+                                  color: Color(0xFFFFB074),
+                                  size: 19,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Thu hồi liên kết',
+                                  style: SLTheme.quicksand(
+                                    color: const Color(0xFFFFB074),
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         PopupMenuItem<String>(
                           value: 'delete',
                           child: Row(
@@ -899,6 +1170,12 @@ class _DiaryTabState extends State<DiaryTab> {
                           case 'info':
                             await _showMemoryInfoSheet(
                                 dialogContext, currentItem);
+                            break;
+                          case 'revoke_share':
+                            await _revokeMemoryShareLinksForPhoto(
+                              dialogContext,
+                              currentItem,
+                            );
                             break;
                           case 'delete':
                             Navigator.pop(dialogContext);
