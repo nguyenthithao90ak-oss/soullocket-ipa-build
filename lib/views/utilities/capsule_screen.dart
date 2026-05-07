@@ -344,6 +344,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                     updated['image_url'],
                                     width: double.infinity,
                                     fit: BoxFit.cover,
+                                    filterQuality: FilterQuality.high,
                                   ),
                                 ),
                                 SLSpacing.h16,
@@ -622,6 +623,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       child: Image.file(
                         File(_selectedImage!.path),
                         fit: BoxFit.cover,
+                        filterQuality: FilterQuality.high,
                       ),
                     ),
                   ),
