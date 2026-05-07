@@ -191,7 +191,7 @@ class _TouchEffectPainter extends CustomPainter {
     for (final p in particles) {
       if (p.life <= 0) continue;
 
-      paint.color = p.color.withOpacity((p.life * 0.8).clamp(0.0, 1.0));
+      paint.color = p.color.withValues(alpha: (p.life * 0.8).clamp(0.0, 1.0));
       paint.maskFilter =
           useGlow ? MaskFilter.blur(BlurStyle.normal, p.size * 0.28) : null;
 
@@ -209,7 +209,7 @@ class _TouchEffectPainter extends CustomPainter {
       } else {
         canvas.drawCircle(Offset.zero, currentSize * 0.4, paint);
         paint.maskFilter = null;
-        paint.color = Colors.white.withOpacity(p.life.clamp(0.0, 1.0));
+        paint.color = Colors.white.withValues(alpha: p.life.clamp(0.0, 1.0));
         canvas.drawCircle(Offset.zero, currentSize * 0.15, paint);
       }
 
