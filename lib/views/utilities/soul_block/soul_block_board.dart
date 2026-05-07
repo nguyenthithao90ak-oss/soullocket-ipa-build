@@ -169,18 +169,26 @@ extension _SoulBlockBoard on _SoulBlockGameState {
               borderRadius: BorderRadius.circular(24),
               gradient: const LinearGradient(
                 colors: <Color>[
-                  Color(0xFF12233A),
-                  Color(0xFF09111E),
+                  Color(0xFF5A0A18),
+                  Color(0xFF17070D),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+              border: Border.all(
+                color: const Color(0xFFFF6B88).withValues(alpha: 0.28),
+              ),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.34),
-                  blurRadius: 20,
-                  offset: const Offset(0, 12),
+                  color: const Color(0xFFFF2D55).withValues(alpha: 0.22),
+                  blurRadius: 28,
+                  spreadRadius: -8,
+                  offset: const Offset(0, 14),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.40),
+                  blurRadius: 24,
+                  offset: const Offset(0, 14),
                 ),
               ],
             ),
