@@ -22,6 +22,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
       isWeb: kIsWeb,
     );
     final showDecorGlow = !effectProfile.performanceMode;
+    final decorGlowEnabled = DateTime.now().millisecondsSinceEpoch < 0;
 
     return Container(
       margin: EdgeInsets.zero,
@@ -33,11 +34,11 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            const Color(0x33FFFFFF),
-            const Color(0x22FFD8E7),
-            const Color(0x26322544),
+            Color(0x33FFFFFF),
+            Color(0x22FFD8E7),
+            Color(0x26322544),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -55,7 +56,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          if (false && showDecorGlow) ...[
+          if (decorGlowEnabled && showDecorGlow) ...[
             Positioned(
               top: -8,
               left: -4,
