@@ -488,12 +488,12 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
   List<BoxShadow> _paperShadow([Color color = _paperCocoa]) {
     return [
       BoxShadow(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         blurRadius: 20,
         offset: const Offset(0, 10),
       ),
       BoxShadow(
-        color: Colors.white.withOpacity(0.55),
+        color: Colors.white.withValues(alpha: 0.55),
         blurRadius: 6,
         offset: const Offset(-2, -2),
       ),
