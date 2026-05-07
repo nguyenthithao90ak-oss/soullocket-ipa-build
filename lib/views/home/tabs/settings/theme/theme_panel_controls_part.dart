@@ -1,4 +1,4 @@
-﻿part of '../../settings_tab.dart';
+part of '../../settings_tab.dart';
 
 extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   Widget _buildThemeSectionHeader(String title, IconData icon) {
@@ -470,13 +470,13 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
               border: Border.all(
                 color: selected
                     ? const Color(0xFFD81B60)
-                    : Colors.white.withOpacity(0.7),
+                    : Colors.white.withValues(alpha: 0.7),
                 width: selected ? 2 : 1,
               ),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFFD81B60)
-                      .withOpacity(selected ? 0.18 : 0.06),
+                      .withValues(alpha: selected ? 0.18 : 0.06),
                   blurRadius: selected ? 16 : 10,
                   offset: const Offset(0, 6),
                 ),
@@ -533,8 +533,8 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
             decoration: BoxDecoration(
               color: selected
-                  ? item.$4.withOpacity(0.16)
-                  : Colors.white.withOpacity(0.9),
+                  ? item.$4.withValues(alpha: 0.16)
+                  : Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
                 color: selected ? item.$4 : const Color(0xFFF1D4E1),
