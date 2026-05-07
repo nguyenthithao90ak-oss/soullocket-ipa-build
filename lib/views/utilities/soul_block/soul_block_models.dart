@@ -98,23 +98,6 @@ class _LineClearResolution {
   final Set<int> clearedCols;
 }
 
-class _TurnResolution {
-  const _TurnResolution({
-    required this.placement,
-    required this.clearResolution,
-    required this.clearedCount,
-    required this.remainingTray,
-    required this.nextRecommendedMove,
-    required this.noMovesLeft,
-  });
-
-  final _PlacementResolution placement;
-  final _LineClearResolution clearResolution;
-  final int clearedCount;
-  final List<_SoulPieceOption> remainingTray;
-  final _RecommendedMove? nextRecommendedMove;
-  final bool noMovesLeft;
-}
 
 class _TemplateScore {
   const _TemplateScore({
