@@ -72,7 +72,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                                 color: isSelected ? _paperRoseDeep : _paperMist,
                                 borderRadius: _paperRadius(flipped: true),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   width: 1.2,
                                 ),
                               ),
@@ -358,7 +358,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
           ),
           boxShadow: [
             BoxShadow(
-              color: preset.accent.withOpacity(isSelected ? 0.16 : 0.05),
+              color: preset.accent.withValues(alpha: isSelected ? 0.16 : 0.05),
               blurRadius: isSelected ? 18 : 10,
               offset: const Offset(0, 8),
             ),
@@ -373,13 +373,12 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? preset.accent.withOpacity(0.14)
-                    : Colors.white.withOpacity(0.88),
+                    : Colors.white.withValues(alpha: 0.88),
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? preset.accent.withOpacity(0.45)
-                      : _paperLine.withOpacity(0.7),
+                      ? preset.accent.withValues(alpha: 0.45)
+                      : _paperLine.withValues(alpha: 0.7),
                 ),
               ),
               child: Icon(
@@ -475,10 +474,10 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                           height: 34,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.72),
+                            color: Colors.white.withValues(alpha: 0.72),
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(
-                              color: preset.accent.withOpacity(
+                              color: preset.accent.withValues(alpha: 
                                 selected ? 0.42 : 0.22,
                               ),
                             ),
@@ -603,7 +602,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
             color: const Color(0xFFF4E9DE),
             borderRadius: outerRadius,
             border: Border.all(
-              color: const Color(0xFFDCC9B8).withOpacity(0.96),
+              color: const Color(0xFFDCC9B8).withValues(alpha: 0.96),
               width: 1.2,
             ),
             boxShadow: _paperShadow(),
@@ -624,11 +623,11 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                       color: _paperShell,
                       borderRadius: thumbRadius,
                       border: Border.all(
-                        color: activeAccent.withOpacity(0.18),
+                        color: activeAccent.withValues(alpha: 0.18),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: activeAccent.withOpacity(0.10),
+                          color: activeAccent.withValues(alpha: 0.10),
                           blurRadius: 14,
                           offset: const Offset(0, 6),
                         ),
