@@ -62,7 +62,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFD81B60).withOpacity(0.14),
+                    color: const Color(0xFFD81B60).withValues(alpha: 0.14),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -81,9 +81,9 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Colors.white.withOpacity(0.14),
+                              Colors.white.withValues(alpha: 0.14),
                               Colors.transparent,
-                              Colors.black.withOpacity(0.24),
+                              Colors.black.withValues(alpha: 0.24),
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
@@ -103,7 +103,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                                 vertical: 5,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.84),
+                                color: Colors.white.withValues(alpha: 0.84),
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
@@ -120,7 +120,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                               width: 18,
                               height: 18,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.82),
+                                color: Colors.white.withValues(alpha: 0.82),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -138,14 +138,14 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                           height: 78,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.78),
+                            color: Colors.white.withValues(alpha: 0.78),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.92),
+                              color: Colors.white.withValues(alpha: 0.92),
                               width: 4,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
+                                color: Colors.black.withValues(alpha: 0.12),
                                 blurRadius: 18,
                                 offset: const Offset(0, 8),
                               ),
@@ -208,7 +208,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                         child: Container(
                           height: 22,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.82),
+                            color: Colors.white.withValues(alpha: 0.82),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Row(
@@ -268,7 +268,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.78),
+              color: Colors.white.withValues(alpha: 0.78),
               borderRadius: BorderRadius.circular(999),
             ),
             child: const Icon(
@@ -320,9 +320,9 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
     return Container(
       height: 46,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.72),
+        color: Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.88)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
       child: Column(
