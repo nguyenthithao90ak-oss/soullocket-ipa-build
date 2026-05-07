@@ -281,10 +281,31 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
       );
     }
 
-    return Image.network(
-      imageUrl,
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Container(
+      fadeInDuration: const Duration(milliseconds: 180),
+      memCacheWidth: 1080,
+      placeholder: (_, __) => DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFFFFF3F8),
+              Color(0xFFFFE3EC),
+              Color(0xFFF6D7FF),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2.2,
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+          ),
+        ),
+      ),
+      errorWidget: (_, __, ___) => Container(
         color: const Color(0xFFFFEEF5),
         alignment: Alignment.center,
         child: const Icon(
