@@ -396,7 +396,7 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: SLColors.secondary.withOpacity(0.1),
+              color: SLColors.secondary.withValues(alpha: 0.1),
               borderRadius: SLRadius.smAll,
             ),
             child: Text(
@@ -443,15 +443,15 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
       margin: const EdgeInsets.only(top: 20, bottom: 8, left: 12, right: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: SLRadius.lgAll,
         border: Border.all(
-          color: const Color(0xFFFFB6C1).withOpacity(0.5),
+          color: const Color(0xFFFFB6C1).withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -701,12 +701,12 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                       borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF5C71D8).withOpacity(0.14),
+                          color: const Color(0xFF5C71D8).withValues(alpha: 0.14),
                           blurRadius: 14,
                           offset: const Offset(0, 6),
                         ),
                         BoxShadow(
-                          color: Colors.white.withOpacity(0.72),
+                          color: Colors.white.withValues(alpha: 0.72),
                           blurRadius: 8,
                           offset: const Offset(0, -2),
                         ),
@@ -796,8 +796,8 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                                 duration: const Duration(milliseconds: 140),
                                 curve: Curves.easeOut,
                                 color: isSelected
-                                    ? Colors.black.withOpacity(0.5)
-                                    : Colors.white.withOpacity(0.2),
+                                    ? Colors.black.withValues(alpha: 0.5)
+                                    : Colors.white.withValues(alpha: 0.2),
                                 child: isSelected
                                     ? const Icon(
                                         Icons.check_circle,
@@ -841,21 +841,21 @@ class _DiaryMemoryPatternPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final washPaint = Paint()..style = PaintingStyle.fill;
 
-    washPaint.color = const Color(0xFFFF7FB2).withOpacity(0.14);
+    washPaint.color = const Color(0xFFFF7FB2).withValues(alpha: 0.14);
     canvas.drawCircle(
       Offset(size.width * 0.86, size.height * 0.08),
       size.width * 0.32,
       washPaint,
     );
 
-    washPaint.color = const Color(0xFF69D2E7).withOpacity(0.16);
+    washPaint.color = const Color(0xFF69D2E7).withValues(alpha: 0.16);
     canvas.drawCircle(
       Offset(size.width * 0.06, size.height * 0.28),
       size.width * 0.24,
       washPaint,
     );
 
-    washPaint.color = const Color(0xFFFFD166).withOpacity(0.18);
+    washPaint.color = const Color(0xFFFFD166).withValues(alpha: 0.18);
     canvas.drawCircle(
       Offset(size.width * 0.82, size.height * 0.76),
       size.width * 0.30,
@@ -873,7 +873,7 @@ class _DiaryMemoryPatternPainter extends CustomPainter {
       (x: 0.52, y: 0.88, r: 2.7, color: const Color(0xFFFF7FB2)),
     ];
     for (final dot in dots) {
-      dotPaint.color = dot.color.withOpacity(0.28);
+      dotPaint.color = dot.color.withValues(alpha: 0.28);
       canvas.drawCircle(
         Offset(size.width * dot.x, size.height * dot.y),
         dot.r,
@@ -885,17 +885,17 @@ class _DiaryMemoryPatternPainter extends CustomPainter {
       canvas,
       Offset(size.width * 0.88, size.height * 0.34),
       0.72,
-      const Color(0xFFFF7FB2).withOpacity(0.16),
+      const Color(0xFFFF7FB2).withValues(alpha: 0.16),
     );
     _drawHeart(
       canvas,
       Offset(size.width * 0.18, size.height * 0.62),
       0.55,
-      const Color(0xFF7C8BFF).withOpacity(0.14),
+      const Color(0xFF7C8BFF).withValues(alpha: 0.14),
     );
 
     final labelPaint = Paint()
-      ..color = Colors.white.withOpacity(0.44)
+      ..color = Colors.white.withValues(alpha: 0.44)
       ..style = PaintingStyle.fill;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -973,22 +973,22 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.white.withOpacity(0.96),
-            const Color(0xFFFFF0F7).withOpacity(0.94),
+            Colors.white.withValues(alpha: 0.96),
+            const Color(0xFFFFF0F7).withValues(alpha: 0.94),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.86), width: 1.4),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.86), width: 1.4),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF7FB2).withOpacity(0.16),
+            color: const Color(0xFFFF7FB2).withValues(alpha: 0.16),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
           BoxShadow(
-            color: const Color(0xFF62C7B5).withOpacity(0.10),
+            color: const Color(0xFF62C7B5).withValues(alpha: 0.10),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -1002,7 +1002,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
             child: Icon(
               Icons.auto_awesome_rounded,
               size: 50,
-              color: const Color(0xFFFFC857).withOpacity(0.18),
+              color: const Color(0xFFFFC857).withValues(alpha: 0.18),
             ),
           ),
           Column(
@@ -1023,7 +1023,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF6F91).withOpacity(0.24),
+                          color: const Color(0xFFFF6F91).withValues(alpha: 0.24),
                           blurRadius: 18,
                           offset: const Offset(0, 8),
                         ),
