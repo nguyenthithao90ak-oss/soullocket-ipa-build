@@ -214,9 +214,9 @@ class _LeaderboardTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Row(
         children: <Widget>[
@@ -396,9 +396,9 @@ class _SettingsSwitchTile extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withOpacity(0.06)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -491,7 +491,7 @@ extension _SoulBlockLogoBuilder on _SoulBlockGameState {
             Positioned(
               top: size * 0.18,
               left: size * 0.18,
-              child: tile(_kSoulChrome.withOpacity(0.92)),
+              child: tile(_kSoulChrome.withValues(alpha: 0.92)),
             ),
             Positioned(
               top: size * 0.18,
@@ -501,12 +501,12 @@ extension _SoulBlockLogoBuilder on _SoulBlockGameState {
             Positioned(
               bottom: size * 0.18,
               left: size * 0.18,
-              child: tile(const Color(0xFF7CF29C).withOpacity(0.92)),
+              child: tile(const Color(0xFF7CF29C).withValues(alpha: 0.92)),
             ),
             Positioned(
               bottom: size * 0.18,
               right: size * 0.18,
-              child: tile(Colors.white.withOpacity(0.14)),
+              child: tile(Colors.white.withValues(alpha: 0.14)),
             ),
             Icon(
               Icons.auto_awesome_rounded,
