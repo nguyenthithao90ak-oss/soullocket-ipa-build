@@ -435,6 +435,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
             initialCenter:
                 _preferredFocusPoint() ?? const ll.LatLng(14.0583, 108.2772),
             initialZoom: _preferredFocusPoint() == null ? 5 : 15,
+            onTap: (_, point) => _handleMapTapForCheckin(point),
             onMapReady: () {
               if (!mounted) return;
               _isMapReady = true;
