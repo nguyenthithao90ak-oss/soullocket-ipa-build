@@ -635,7 +635,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                     end: Alignment.bottomRight,
                     colors: <Color>[
                       Color(reel.accentValue).withValues(alpha: 0.24),
-                      Colors.white.withOpacity(0.08),
+                      Colors.white.withValues(alpha: 0.08),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
