@@ -491,23 +491,25 @@ class GiftMakerService {
     required String giftId,
   }) async {
     try {
-      final updates = <String, Object?>{
-        'houses/$houseId/gift_links/$giftId': null,
-        'gift_links/$giftId': null,
-      };
-      
+      await _db.ref('houses/$houseId/gift_links/$giftId').remove();
+      await _db.ref('gift_links/$giftId').remove();
+
       final uid = _auth.currentUser?.uid;
       if (uid != null) {
-        final feedSnap = await _db.ref('gift_feed_sender/$uid').orderByChild('giftId').equalTo(giftId).get();
-        if (feedSnap.exists && feedSnap.value is Map) {
-          final data = Map<dynamic, dynamic>.from(feedSnap.value as Map);
-          for (final key in data.keys) {
-            updates['gift_feed_sender/$uid/$key'] = null;
+        try {
+          final feedSnap = await _db
+              .ref('gift_feed_sender/$uid')
+              .orderByChild('giftId')
+              .equalTo(giftId)
+              .get();
+          if (feedSnap.exists && feedSnap.value is Map) {
+            final data = Map<dynamic, dynamic>.from(feedSnap.value as Map);
+            for (final key in data.keys) {
+              await _db.ref('gift_feed_sender/$uid/$key').remove();
+            }
           }
-        }
+        } catch (_) {}
       }
-
-      await _db.ref().update(updates);
     } catch (e, stackTrace) {
       debugPrint('Error deleting gift link: $e - $stackTrace');
       rethrow;
