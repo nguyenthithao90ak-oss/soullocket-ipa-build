@@ -16,8 +16,8 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.16),
-                  Colors.white.withOpacity(0.02),
+                  Colors.white.withValues(alpha: 0.16),
+                  Colors.white.withValues(alpha: 0.02),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -26,7 +26,7 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
               border: Border.all(color: Colors.white.withOpacity(0.14)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.24),
+                  color: Colors.black.withValues(alpha: 0.24),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -155,14 +155,14 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.15),
-                Colors.white.withOpacity(0.02),
+                Colors.white.withValues(alpha: 0.15),
+                Colors.white.withValues(alpha: 0.02),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.15)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -216,15 +216,15 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
                   end: Alignment.bottomCenter,
                 )
               : null,
-          color: active ? null : Colors.white.withOpacity(0.06),
+          color: active ? null : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: active ? Colors.white.withOpacity(0.55) : Colors.white24,
+            color: active ? Colors.white.withValues(alpha: 0.55) : Colors.white24,
           ),
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: _SoulRhythmGameState._unityPink.withOpacity(0.30),
+                    color: _SoulRhythmGameState._unityPink.withValues(alpha: 0.30),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -256,10 +256,10 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.11),
-                  comboGlow.withOpacity(isHotCombo ? 0.26 : 0.19),
+                  Colors.white.withValues(alpha: 0.11),
+                  comboGlow.withValues(alpha: isHotCombo ? 0.26 : 0.19),
                   _SoulRhythmGameState._unityPink
-                      .withOpacity(isHotCombo ? 0.11 : 0.05),
+                      .withValues(alpha: isHotCombo ? 0.11 : 0.05),
                 ],
                 stops: const [0.0, 0.56, 1.0],
                 begin: Alignment.topLeft,
@@ -267,10 +267,10 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                  color: comboGlow.withOpacity(isHotCombo ? 0.78 : 0.65)),
+                  color: comboGlow.withValues(alpha: isHotCombo ? 0.78 : 0.65)),
               boxShadow: [
                 BoxShadow(
-                  color: comboGlow.withOpacity(isHotCombo ? 0.34 : 0.26),
+                  color: comboGlow.withValues(alpha: isHotCombo ? 0.34 : 0.26),
                   blurRadius: isHotCombo ? 32 : 28,
                   offset: const Offset(0, 10),
                 ),
@@ -330,9 +330,9 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.28),
+            color: Colors.black.withValues(alpha: 0.28),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.10)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -369,23 +369,23 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.white.withOpacity(0.16),
-              Colors.white.withOpacity(0.05),
+              Colors.white.withValues(alpha: 0.16),
+              Colors.white.withValues(alpha: 0.05),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.18)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
           boxShadow: [
             BoxShadow(
-              color: _SoulRhythmGameState._unityCyan.withOpacity(0.08),
+              color: _SoulRhythmGameState._unityCyan.withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Icon(icon, color: Colors.white.withOpacity(0.95), size: 16),
+        child: Icon(icon, color: Colors.white.withValues(alpha: 0.95), size: 16),
       ),
     );
   }
@@ -424,17 +424,17 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            color.withOpacity(0.22),
-            Colors.white.withOpacity(0.05),
+            color.withValues(alpha: 0.22),
+            Colors.white.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: SLRadius.pillAll,
-        border: Border.all(color: color.withOpacity(0.45)),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.16),
+            color: color.withValues(alpha: 0.16),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
