@@ -388,12 +388,15 @@ class _WheelScreenState extends State<WheelScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: SLTheme.primary.withOpacity(0.3), width: 1.5),
+        border: Border.all(
+          color: SLTheme.primary.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: SLTheme.primary.withOpacity(0.15),
+            color: SLTheme.primary.withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -407,7 +410,7 @@ class _WheelScreenState extends State<WheelScreen>
             padding:
                 const EdgeInsets.only(left: 16, top: 12, right: 16, bottom: 10),
             decoration: BoxDecoration(
-              color: SLTheme.primary.withOpacity(0.05),
+              color: SLTheme.primary.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -473,7 +476,7 @@ class _WheelScreenState extends State<WheelScreen>
               border: InputBorder.none,
               hintText: 'Ví dụ:\nAi nấu cơm?\nAi rửa bát?',
               hintStyle: SLTheme.quicksand(
-                color: SLTheme.textMuted.withOpacity(0.5),
+                color: SLTheme.textMuted.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -496,10 +499,10 @@ class _WheelScreenState extends State<WheelScreen>
               height: size + 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 boxShadow: [
                   BoxShadow(
-                    color: SLTheme.primary.withOpacity(0.2),
+                    color: SLTheme.primary.withValues(alpha: 0.2),
                     blurRadius: 20,
                     spreadRadius: 5,
                     offset: const Offset(0, 8),
@@ -546,7 +549,7 @@ class _WheelScreenState extends State<WheelScreen>
                             color: Colors.white,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
+                                color: Colors.black.withValues(alpha: 0.15),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -590,13 +593,13 @@ class _WheelScreenState extends State<WheelScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: SLTheme.primary.withOpacity(0.3), width: 1.5),
+                      color: SLTheme.primary.withValues(alpha: 0.3), width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: SLTheme.primary.withOpacity(0.15),
+                      color: SLTheme.primary.withValues(alpha: 0.15),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -628,7 +631,7 @@ class _WheelScreenState extends State<WheelScreen>
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: SLTheme.primary.withOpacity(0.4),
+                  color: SLTheme.primary.withValues(alpha: 0.4),
                   blurRadius: 16,
                   spreadRadius: 2,
                   offset: const Offset(0, 6),
@@ -658,7 +661,7 @@ class _WheelScreenState extends State<WheelScreen>
                   curve: Curves.easeOutBack)
               .shimmer(
                   duration: const Duration(milliseconds: 1500),
-                  color: Colors.white.withOpacity(0.6))
+                  color: Colors.white.withValues(alpha: 0.6))
               .elevation(duration: const Duration(milliseconds: 600)),
         SLSpacing.h20,
         Padding(
@@ -669,13 +672,13 @@ class _WheelScreenState extends State<WheelScreen>
               onPressed: _items.length < 2 || _isSpinning ? null : _spin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: SLTheme.primary,
-                disabledBackgroundColor: SLTheme.primary.withOpacity(0.5),
+                disabledBackgroundColor: SLTheme.primary.withValues(alpha: 0.5),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
                 elevation: 4,
-                shadowColor: SLTheme.primary.withOpacity(0.35),
+                shadowColor: SLTheme.primary.withValues(alpha: 0.35),
               ),
               child: Text(
                 _isSpinning ? 'ĐANG QUAY...' : 'BẮT ĐẦU QUAY',
@@ -698,12 +701,12 @@ class _WheelScreenState extends State<WheelScreen>
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: SLTheme.primary.withOpacity(0.16)),
+        border: Border.all(color: SLTheme.primary.withValues(alpha: 0.16)),
         boxShadow: [
           BoxShadow(
-            color: SLTheme.primary.withOpacity(0.12),
+            color: SLTheme.primary.withValues(alpha: 0.12),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -718,7 +721,7 @@ class _WheelScreenState extends State<WheelScreen>
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: SLTheme.primary.withOpacity(0.12),
+                  color: SLTheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
@@ -757,7 +760,7 @@ class _WheelScreenState extends State<WheelScreen>
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: SLTheme.primary.withOpacity(0.18),
+                    color: SLTheme.primary.withValues(alpha: 0.18),
                   ),
                 ),
                 child: Text(
@@ -777,9 +780,9 @@ class _WheelScreenState extends State<WheelScreen>
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
               decoration: BoxDecoration(
-                color: SLTheme.primary.withOpacity(0.05),
+                color: SLTheme.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: SLTheme.primary.withOpacity(0.12)),
+                border: Border.all(color: SLTheme.primary.withValues(alpha: 0.12)),
               ),
               child: Text(
                 'Chưa có lịch sử quay nào. Bấm SPIN để lưu 5 lần gần nhất.',
@@ -817,16 +820,16 @@ class _WheelScreenState extends State<WheelScreen>
             Colors.white,
             index == 0
                 ? const Color(0xFFFFF3F8)
-                : SLTheme.primary.withOpacity(0.05),
+                : SLTheme.primary.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SLTheme.primary.withOpacity(0.14)),
+        border: Border.all(color: SLTheme.primary.withValues(alpha: 0.14)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -886,7 +889,7 @@ class _WheelScreenState extends State<WheelScreen>
                         style: SLTheme.quicksand(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: SLTheme.textMuted.withOpacity(0.8),
+                          color: SLTheme.textMuted.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -899,7 +902,7 @@ class _WheelScreenState extends State<WheelScreen>
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF0F6),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: SLTheme.primary.withOpacity(0.18)),
+                  border: Border.all(color: SLTheme.primary.withValues(alpha: 0.18)),
                 ),
                 child: Text(
                   '${entry.options.length} mục',
@@ -948,13 +951,13 @@ class _WheelScreenState extends State<WheelScreen>
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: isWinner
-            ? SLTheme.primary.withOpacity(0.14)
+            ? SLTheme.primary.withValues(alpha: 0.14)
             : const Color(0xFFF7F7FB),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
           color: isWinner
-              ? SLTheme.primary.withOpacity(0.32)
-              : Colors.black.withOpacity(0.06),
+              ? SLTheme.primary.withValues(alpha: 0.32)
+              : Colors.black.withValues(alpha: 0.06),
         ),
       ),
       child: Row(
