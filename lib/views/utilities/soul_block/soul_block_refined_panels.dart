@@ -25,26 +25,26 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                         borderRadius: BorderRadius.circular(34),
                         gradient: LinearGradient(
                           colors: <Color>[
-                            Colors.white.withOpacity(0.18),
-                            _kSoulPanelTop.withOpacity(0.22),
-                            _kSoulPanelBottom.withOpacity(0.96),
+                            Colors.white.withValues(alpha: 0.18),
+                            _kSoulPanelTop.withValues(alpha: 0.22),
+                            _kSoulPanelBottom.withValues(alpha: 0.96),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         border: Border.all(
-                          color: _kSoulChrome.withOpacity(0.22),
+                          color: _kSoulChrome.withValues(alpha: 0.22),
                           width: 1.1,
                         ),
                         boxShadow: <BoxShadow>[
                           BoxShadow(
-                            color: const Color(0xFF182B63).withOpacity(0.30),
+                            color: const Color(0xFF182B63).withValues(alpha: 0.30),
                             blurRadius: 26,
                             spreadRadius: -10,
                             offset: const Offset(0, 18),
                           ),
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.20),
+                            color: Colors.black.withValues(alpha: 0.20),
                             blurRadius: 22,
                             spreadRadius: -12,
                             offset: const Offset(0, 16),
@@ -56,10 +56,10 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                           Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.08),
+                              color: Colors.white.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(28),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.12),
+                                color: Colors.white.withValues(alpha: 0.12),
                               ),
                             ),
                             child: _buildGameLogo(size: 88),
@@ -82,7 +82,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                             style: SLTheme.quicksand(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white.withOpacity(0.72),
+                              color: Colors.white.withValues(alpha: 0.72),
                               letterSpacing: 0.2,
                             ),
                           ),
@@ -96,14 +96,14 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                               borderRadius: BorderRadius.circular(22),
                               gradient: LinearGradient(
                                 colors: <Color>[
-                                  _kSoulChrome.withOpacity(0.24),
-                                  Colors.white.withOpacity(0.08),
+                                  _kSoulChrome.withValues(alpha: 0.24),
+                                  Colors.white.withValues(alpha: 0.08),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               border: Border.all(
-                                color: _kSoulChrome.withOpacity(0.34),
+                                color: _kSoulChrome.withValues(alpha: 0.34),
                                 width: 1.1,
                               ),
                             ),
@@ -125,7 +125,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                                       style: SLTheme.quicksand(
                                         fontSize: 10.4,
                                         fontWeight: FontWeight.w800,
-                                        color: Colors.white.withOpacity(0.70),
+                                        color: Colors.white.withValues(alpha: 0.70),
                                         letterSpacing: 0.8,
                                       ),
                                     ),
@@ -155,7 +155,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                       style: SLTheme.quicksand(
                         fontSize: 12.8,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white.withOpacity(0.70),
+                        color: Colors.white.withValues(alpha: 0.70),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -172,7 +172,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                           borderRadius: BorderRadius.circular(28),
                           boxShadow: <BoxShadow>[
                             BoxShadow(
-                              color: const Color(0xFF15295F).withOpacity(0.38),
+                              color: const Color(0xFF15295F).withValues(alpha: 0.38),
                               blurRadius: 28,
                               spreadRadius: -12,
                               offset: const Offset(0, 18),
@@ -249,14 +249,14 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                         borderRadius: BorderRadius.circular(26),
                         gradient: LinearGradient(
                           colors: <Color>[
-                            Colors.white.withOpacity(0.12),
-                            _kSoulPanelBottom.withOpacity(0.94),
+                            Colors.white.withValues(alpha: 0.12),
+                            _kSoulPanelBottom.withValues(alpha: 0.94),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.10),
+                          color: Colors.white.withValues(alpha: 0.10),
                         ),
                       ),
                       child: Row(
@@ -302,7 +302,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
     return IgnorePointer(
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: const Color(0xCC12214A).withOpacity(0.74),
+          color: const Color(0xCC12214A).withValues(alpha: 0.74),
         ),
         child: Center(
           child: Container(
@@ -312,19 +312,19 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
               borderRadius: BorderRadius.circular(28),
               gradient: LinearGradient(
                 colors: <Color>[
-                  Colors.white.withOpacity(0.16),
-                  _kSoulPanelTop.withOpacity(0.20),
-                  _kSoulPanelBottom.withOpacity(0.96),
+                  Colors.white.withValues(alpha: 0.16),
+                  _kSoulPanelTop.withValues(alpha: 0.20),
+                  _kSoulPanelBottom.withValues(alpha: 0.96),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               border: Border.all(
-                color: _kSoulChrome.withOpacity(0.30),
+                color: _kSoulChrome.withValues(alpha: 0.30),
               ),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.24),
+                  color: Colors.black.withValues(alpha: 0.24),
                   blurRadius: 24,
                   spreadRadius: -10,
                   offset: const Offset(0, 16),
@@ -352,7 +352,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                   style: SLTheme.quicksand(
                     fontSize: 11.6,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white.withOpacity(0.68),
+                    color: Colors.white.withValues(alpha: 0.68),
                     height: 1.35,
                   ),
                 ),
@@ -364,7 +364,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                     height: 8,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.10),
+                        color: Colors.white.withValues(alpha: 0.10),
                       ),
                       child: AnimatedBuilder(
                         animation: _playPulseController,
@@ -642,7 +642,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                     ? 10.8
                     : 11.6,
             fontWeight: FontWeight.w800,
-            color: Colors.white.withOpacity(0.74),
+            color: Colors.white.withValues(alpha: 0.74),
             letterSpacing: 1.1,
           ),
         ),
@@ -668,7 +668,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                 letterSpacing: 0.1,
                 shadows: <Shadow>[
                   Shadow(
-                    color: Colors.black.withOpacity(0.12),
+                    color: Colors.black.withValues(alpha: 0.12),
                     blurRadius: 12,
                     offset: const Offset(0, 5),
                   ),
