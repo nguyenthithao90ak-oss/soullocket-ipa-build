@@ -144,16 +144,16 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: textColor.withOpacity(0.08),
+          color: textColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(outerRadius),
           border:
-              Border.all(color: Colors.white.withOpacity(0.62), width: 0.95),
+              Border.all(color: Colors.white.withValues(alpha: 0.62), width: 0.95),
         ),
         child: Center(
           child: Icon(
             Icons.photo_library_rounded,
             size: width * 0.4,
-            color: textColor.withOpacity(0.45),
+            color: textColor.withValues(alpha: 0.45),
           ),
         ),
       );
@@ -208,7 +208,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: const Color(0xFFFF6B97).withOpacity(0.16),
+                          color: const Color(0xFFFF6B97).withValues(alpha: 0.16),
                           blurRadius: 12,
                           offset: const Offset(0, 5),
                         ),
@@ -309,8 +309,8 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    glow.withOpacity(0.92),
-                    primary.withOpacity(0.20),
+                    glow.withValues(alpha: 0.92),
+                    primary.withValues(alpha: 0.20),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.54, 1.0],
@@ -326,7 +326,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                   height: size * 0.14,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: secondary.withOpacity(0.34),
+                    color: secondary.withValues(alpha: 0.34),
                   ),
                 ),
               ),
@@ -339,7 +339,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                   height: size * 0.1,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: glow.withOpacity(0.86),
+                    color: glow.withValues(alpha: 0.86),
                   ),
                 ),
               ),
@@ -356,7 +356,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                     shadows: [
                       Shadow(
                         color: primary
-                            .withOpacity(_widgetHeartAnimated ? 0.28 : 0.16),
+                            .withValues(alpha: _widgetHeartAnimated ? 0.28 : 0.16),
                         blurRadius: size * 0.18,
                         offset: const Offset(0, 3),
                       ),
@@ -400,10 +400,10 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
 
     return LinearGradient(
       colors: [
-        colors[0].withOpacity(0.98),
-        colors[1].withOpacity(0.96),
-        colors[2].withOpacity(0.94),
-        colors[3].withOpacity(0.98),
+        colors[0].withValues(alpha: 0.98),
+        colors[1].withValues(alpha: 0.96),
+        colors[2].withValues(alpha: 0.94),
+        colors[3].withValues(alpha: 0.98),
       ],
       stops: [
         0.0,
@@ -454,8 +454,8 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                colors.first.withOpacity(opacity),
-                colors.last.withOpacity(opacity * 0.52),
+                colors.first.withValues(alpha: opacity),
+                colors.last.withValues(alpha: opacity * 0.52),
                 Colors.transparent,
               ],
               stops: const [0.0, 0.48, 1.0],
@@ -491,9 +491,9 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.white.withOpacity(0.12),
+                    Colors.white.withValues(alpha: 0.12),
                     Colors.transparent,
-                    Colors.white.withOpacity(0.06),
+                    Colors.white.withValues(alpha: 0.06),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -507,7 +507,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
             child: Icon(
               Icons.auto_awesome_rounded,
               size: cardWidth * 0.06,
-              color: Colors.white.withOpacity(0.72),
+              color: Colors.white.withValues(alpha: 0.72),
             ),
           ),
         ],
@@ -583,7 +583,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
             seasonKey == 'none' ? heartPalette.first : seasonPalette.first;
         final daysColor = theme.premium || themeKey == 'dark'
             ? Colors.white
-            : Color.alphaBlend(accentColor.withOpacity(0.18), textColor);
+            : Color.alphaBlend(accentColor.withValues(alpha: 0.18), textColor);
         final days = _loveDayCounter();
         final label1 =
             _nameU1.trim().isEmpty ? context.tr('role_male') : _nameU1.trim();
@@ -644,12 +644,12 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                         _widgetPreviewCardGradient(themeKey, theme.colors),
                     borderRadius: BorderRadius.circular(26),
                     border: Border.all(
-                      color: theme.borderColor.withOpacity(0.95),
+                      color: theme.borderColor.withValues(alpha: 0.95),
                       width: 1.4,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: theme.colors.first.withOpacity(0.22),
+                        color: theme.colors.first.withValues(alpha: 0.22),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -716,7 +716,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                             Text(
                               'ngay',
                               style: SLTheme.quicksand(
-                                color: daysColor.withOpacity(0.78),
+                                color: daysColor.withValues(alpha: 0.78),
                                 fontSize: isCompact ? 13 : 14,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -726,7 +726,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                               loveDateLabel,
                               textAlign: TextAlign.center,
                               style: SLTheme.quicksand(
-                                color: textColor.withOpacity(0.82),
+                                color: textColor.withValues(alpha: 0.82),
                                 fontSize: isCompact ? 11.8 : 12.6,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -751,12 +751,12 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                   gradient: _widgetPreviewCardGradient(themeKey, theme.colors),
                   borderRadius: BorderRadius.circular(26),
                   border: Border.all(
-                    color: theme.borderColor.withOpacity(0.95),
+                    color: theme.borderColor.withValues(alpha: 0.95),
                     width: 1.4,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colors.first.withOpacity(0.22),
+                      color: theme.colors.first.withValues(alpha: 0.22),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -875,19 +875,19 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         Container(
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.18),
+            color: Colors.white.withValues(alpha: 0.18),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withOpacity(0.24)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
           ),
           child: CircleAvatar(
             radius: radius,
-            backgroundColor: Colors.white.withOpacity(0.78),
+            backgroundColor: Colors.white.withValues(alpha: 0.78),
             backgroundImage:
                 avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
             child: avatarUrl.isEmpty
                 ? Icon(
                     Icons.person,
-                    color: textColor.withOpacity(0.75),
+                    color: textColor.withValues(alpha: 0.75),
                     size: iconSize,
                   )
                 : null,
@@ -968,10 +968,10 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
       width: widget.width,
       height: widget.height,
       decoration: BoxDecoration(
-        color: widget.textColor.withOpacity(0.08),
+        color: widget.textColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(_outerRadius),
         border: Border.all(
-          color: Colors.white.withOpacity(0.62),
+          color: Colors.white.withValues(alpha: 0.62),
           width: 0.95,
         ),
       ),
@@ -979,7 +979,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
         child: Icon(
           Icons.photo_library_rounded,
           size: widget.width * 0.4,
-          color: widget.textColor.withOpacity(0.45),
+          color: widget.textColor.withValues(alpha: 0.45),
         ),
       ),
     );
@@ -996,14 +996,14 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
       width: tileWidth,
       height: tileHeight,
       decoration: BoxDecoration(
-        color: widget.textColor.withOpacity(0.07),
+        color: widget.textColor.withValues(alpha: 0.07),
         borderRadius: borderRadius,
       ),
       child: imageUrl == null
           ? Icon(
               Icons.photo_library_rounded,
               size: iconSize,
-              color: widget.textColor.withOpacity(0.45),
+              color: widget.textColor.withValues(alpha: 0.45),
             )
           : ClipRRect(
               borderRadius: borderRadius,
@@ -1016,7 +1016,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
                   return Icon(
                     Icons.broken_image_rounded,
                     size: iconSize,
-                    color: widget.textColor.withOpacity(0.45),
+                    color: widget.textColor.withValues(alpha: 0.45),
                   );
                 },
               ),
@@ -1072,7 +1072,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(_outerRadius),
               border: Border.all(
-                color: Colors.white.withOpacity(0.68),
+                color: Colors.white.withValues(alpha: 0.68),
                 width: 0.95,
               ),
             ),
