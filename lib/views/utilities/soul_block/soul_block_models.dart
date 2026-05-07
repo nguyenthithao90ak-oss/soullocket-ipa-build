@@ -72,6 +72,50 @@ class _PlacementEval {
   final List<List<bool>> boardAfter;
 }
 
+class _PlacementResolution {
+  const _PlacementResolution({
+    required this.board,
+    required this.occupiedCells,
+    required this.rowsToClear,
+    required this.colsToClear,
+  });
+
+  final List<List<_SoulTile?>> board;
+  final List<Point<int>> occupiedCells;
+  final Set<int> rowsToClear;
+  final Set<int> colsToClear;
+}
+
+class _LineClearResolution {
+  const _LineClearResolution({
+    required this.board,
+    required this.clearedRows,
+    required this.clearedCols,
+  });
+
+  final List<List<_SoulTile?>> board;
+  final Set<int> clearedRows;
+  final Set<int> clearedCols;
+}
+
+class _TurnResolution {
+  const _TurnResolution({
+    required this.placement,
+    required this.clearResolution,
+    required this.clearedCount,
+    required this.remainingTray,
+    required this.nextRecommendedMove,
+    required this.noMovesLeft,
+  });
+
+  final _PlacementResolution placement;
+  final _LineClearResolution clearResolution;
+  final int clearedCount;
+  final List<_SoulPieceOption> remainingTray;
+  final _RecommendedMove? nextRecommendedMove;
+  final bool noMovesLeft;
+}
+
 class _TemplateScore {
   const _TemplateScore({
     required this.template,
