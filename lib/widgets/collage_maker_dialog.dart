@@ -219,7 +219,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
       border: Border.all(color: borderColor, width: 1.2),
       boxShadow: [
         BoxShadow(
-          color: _dialogPaperInk.withOpacity(0.08),
+          color: _dialogPaperInk.withValues(alpha: 0.08),
           blurRadius: 22,
           offset: const Offset(0, 10),
         ),
@@ -711,7 +711,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                               ? [
                                   BoxShadow(
                                     color:
-                                        _dialogPaperRoseDeep.withOpacity(0.10),
+                                        _dialogPaperRoseDeep.withValues(alpha: 0.10),
                                     blurRadius: 16,
                                     offset: const Offset(0, 8),
                                   )
@@ -745,7 +745,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                               ? [
                                   BoxShadow(
                                     color:
-                                        _dialogPaperMistDeep.withOpacity(0.10),
+                                        _dialogPaperMistDeep.withValues(alpha: 0.10),
                                     blurRadius: 16,
                                     offset: const Offset(0, 8),
                                   )
@@ -882,7 +882,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                                       decoration: BoxDecoration(
                                         color: isSelected
                                             ? _dialogPaperRoseDeep
-                                                .withOpacity(0.14)
+                                                .withValues(alpha: 0.14)
                                             : const Color(0xFFF3E5D9),
                                         borderRadius:
                                             BorderRadius.circular(999),
@@ -1080,7 +1080,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
           boxShadow: [
             BoxShadow(
               color: (isSelected ? preset.accent : _dialogPaperInk)
-                  .withOpacity(isSelected ? 0.14 : 0.05),
+                  .withValues(alpha: isSelected ? 0.14 : 0.05),
               blurRadius: isSelected ? 18 : 12,
               offset: const Offset(0, 8),
             ),
@@ -1181,8 +1181,8 @@ class _DialogStylePreviewPainter extends CustomPainter {
     );
 
     final framePaint = Paint()
-      ..color = accent.withOpacity(isSelected ? 0.85 : 0.60);
-    final softPaint = Paint()..color = Colors.white.withOpacity(0.82);
+      ..color = accent.withValues(alpha: isSelected ? 0.85 : 0.60);
+    final softPaint = Paint()..color = Colors.white.withValues(alpha: 0.82);
 
     switch (styleId) {
       case 'masonry':
@@ -1307,7 +1307,7 @@ class _DialogStylePreviewPainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color = _dialogPaperLine.withOpacity(0.70)
+      ..color = _dialogPaperLine.withValues(alpha: 0.70)
       ..strokeWidth = 1;
     canvas.drawLine(
       Offset(10, size.height - 12),
@@ -1342,10 +1342,10 @@ class _DialogStamp extends StatelessWidget {
           bottomLeft: Radius.circular(8),
           bottomRight: Radius.circular(16),
         ),
-        border: Border.all(color: _dialogPaperRose.withOpacity(0.65)),
+        border: Border.all(color: _dialogPaperRose.withValues(alpha: 0.65)),
         boxShadow: [
           BoxShadow(
-            color: _dialogPaperInk.withOpacity(0.08),
+            color: _dialogPaperInk.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
