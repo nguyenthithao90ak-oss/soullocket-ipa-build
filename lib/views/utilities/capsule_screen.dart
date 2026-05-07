@@ -325,7 +325,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                           border: Border.all(color: _dialogBorder),
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black.withOpacity(0.14),
+                                color: Colors.black.withValues(alpha: 0.14),
                                 blurRadius: 14)
                           ],
                         ),
@@ -415,7 +415,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
             ),
           ),
         ),
@@ -462,17 +462,17 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.30),
-                  Colors.white.withOpacity(0.16),
+                  Colors.white.withValues(alpha: 0.30),
+                  Colors.white.withValues(alpha: 0.16),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(34),
-              border: Border.all(color: Colors.white.withOpacity(0.34)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 28,
                   offset: const Offset(0, 16),
                 ),
@@ -493,7 +493,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                         borderRadius: SLRadius.lgAll,
                         boxShadow: [
                           BoxShadow(
-                            color: _accentColor.withOpacity(0.28),
+                            color: _accentColor.withValues(alpha: 0.28),
                             blurRadius: 18,
                             offset: const Offset(0, 8),
                           ),
@@ -558,7 +558,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(22),
-                        side: BorderSide(color: Colors.white.withOpacity(0.26)),
+                        side: BorderSide(color: Colors.white.withValues(alpha: 0.26)),
                       ),
                     ),
                     onPressed: _isUploading ? null : _addCapsule,
@@ -602,14 +602,14 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: hasImage
-                ? [Colors.white.withOpacity(0.36), Colors.white.withOpacity(0.18)]
+                ? [Colors.white.withValues(alpha: 0.36), Colors.white.withValues(alpha: 0.18)]
                 : [const Color(0x33FFFFFF), const Color(0x1FFFFFFF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: hasImage ? const Color(0xFFFFD1E3) : Colors.white.withOpacity(0.32),
+            color: hasImage ? const Color(0xFFFFD1E3) : Colors.white.withValues(alpha: 0.32),
             width: hasImage ? 1.4 : 1,
           ),
         ),
@@ -630,7 +630,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(18),
                         gradient: LinearGradient(
-                          colors: [Colors.transparent, Colors.black.withOpacity(0.44)],
+                          colors: [Colors.transparent, Colors.black.withValues(alpha: 0.44)],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -658,7 +658,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.20),
+                            color: Colors.white.withValues(alpha: 0.20),
                             borderRadius: SLRadius.pillAll,
                           ),
                           child: Text(
@@ -682,9 +682,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: Colors.white.withValues(alpha: 0.18),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withOpacity(0.26)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.26)),
                     ),
                     child: const Icon(Icons.add_photo_alternate_rounded,
                         color: Colors.white, size: 24),
@@ -760,18 +760,18 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           gradient: LinearGradient(
             colors: hasDate
                 ? [const Color(0xFFFFD1E3), const Color(0xFFFF8AA0)]
-                : [Colors.white.withOpacity(0.32), Colors.white.withOpacity(0.16)],
+                : [Colors.white.withValues(alpha: 0.32), Colors.white.withValues(alpha: 0.16)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: hasDate ? Colors.white.withOpacity(0.46) : Colors.white.withOpacity(0.30),
+            color: hasDate ? Colors.white.withValues(alpha: 0.46) : Colors.white.withValues(alpha: 0.30),
           ),
           boxShadow: hasDate
               ? [
                   BoxShadow(
-                    color: _accentColor.withOpacity(0.26),
+                    color: _accentColor.withValues(alpha: 0.26),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -787,9 +787,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(hasDate ? 0.26 : 0.16),
+                    color: Colors.white.withValues(alpha: hasDate ? 0.26 : 0.16),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withOpacity(0.24)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
                   ),
                   child: Icon(
                     hasDate ? Icons.event_available_rounded : Icons.calendar_month_rounded,
@@ -802,7 +802,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.24),
+                      color: Colors.white.withValues(alpha: 0.24),
                       borderRadius: SLRadius.pillAll,
                     ),
                     child: Text(
@@ -834,7 +834,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
               overflow: TextOverflow.ellipsis,
               style: SLTheme.quicksand(
                 color: hasDate
-                    ? const Color(0xFF5B2B6F).withOpacity(0.78)
+                    ? const Color(0xFF5B2B6F).withValues(alpha: 0.78)
                     : _textMuted,
                 fontWeight: FontWeight.w800,
                 fontSize: 11.5,
@@ -878,10 +878,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                     child: Container(
                       padding: SLSpacing.all16,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                         border:
-                            Border.all(color: Colors.white.withOpacity(0.3)),
+                            Border.all(color: Colors.white.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -901,8 +901,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                     horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: isOpen
-                                      ? Colors.green.withOpacity(0.3)
-                                      : Colors.orange.withOpacity(0.3),
+                                      ? Colors.green.withValues(alpha: 0.3)
+                                      : Colors.orange.withValues(alpha: 0.3),
                                   borderRadius: SLRadius.smAll,
                                 ),
                                 child: Text(
@@ -948,13 +948,13 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                     horizontal: 15, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: isOpen
-                                      ? _buttonFill.withOpacity(0.92)
-                                      : Colors.white.withOpacity(0.08),
+                                      ? _buttonFill.withValues(alpha: 0.92)
+                                      : Colors.white.withValues(alpha: 0.08),
                                   borderRadius: SLRadius.mdAll,
                                   border: Border.all(
                                     color: isOpen
-                                        ? Colors.white.withOpacity(0.24)
-                                        : Colors.white.withOpacity(0.12),
+                                        ? Colors.white.withValues(alpha: 0.24)
+                                        : Colors.white.withValues(alpha: 0.12),
                                   ),
                                 ),
                                 child: Text(
