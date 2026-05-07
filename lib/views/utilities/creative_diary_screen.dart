@@ -227,12 +227,12 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                     child: Container(
                       padding: EdgeInsets.all(compact ? 14 : 15),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.88),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.72),
-                          width: 1.6,
-                        ),
+                          color: Colors.white.withValues(alpha: 0.88),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.72),
+                            width: 1.6,
+                          ),
                         boxShadow: SLTheme.cardShadow,
                       ),
                       child: LayoutBuilder(
@@ -398,7 +398,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                                   decoration: BoxDecoration(
                                     color: active
                                         ? page.accent
-                                        : Colors.white.withOpacity(0.55),
+                                        : Colors.white.withValues(alpha: 0.55),
                                     borderRadius: SLRadius.pillAll,
                                   ),
                                 ),
@@ -419,10 +419,10 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.88),
+                          color: Colors.white.withValues(alpha: 0.88),
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.68),
+                            color: Colors.white.withValues(alpha: 0.68),
                           ),
                         ),
                         child: Row(
@@ -539,7 +539,7 @@ class _CreativeDiaryEmptyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: SLTheme.glassCardStrong,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.75), width: 2),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 2),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(
@@ -620,7 +620,7 @@ class _DiaryPageCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: SLTheme.glassCardStrong,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.white.withOpacity(0.75), width: 2),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 2),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(
@@ -679,7 +679,7 @@ class _DiaryPageCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
               decoration: BoxDecoration(
-                color: page.surface.withOpacity(0.75),
+                color: page.surface.withValues(alpha: 0.75),
                 borderRadius: SLRadius.xlAll,
               ),
               child: SingleChildScrollView(
@@ -719,7 +719,7 @@ class _DiaryPageCard extends StatelessWidget {
                   icon: Icons.lightbulb_rounded,
                   label: 'Có gợi nhớ',
                   color: SLColors.accentPurpleDark,
-                  background: SLColors.accentPurple.withOpacity(0.16),
+                  background: SLColors.accentPurple.withValues(alpha: 0.16),
                 ),
             ],
           ),
@@ -746,7 +746,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: page.accent.withOpacity(0.16),
+              color: page.accent.withValues(alpha: 0.16),
               blurRadius: 18,
               offset: const Offset(0, 10),
             ),
@@ -770,7 +770,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withOpacity(0.28),
+                      Colors.black.withValues(alpha: 0.28),
                       Colors.transparent,
                     ],
                     begin: Alignment.bottomCenter,
@@ -785,7 +785,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.88),
+                    color: Colors.white.withValues(alpha: 0.88),
                     borderRadius: SLRadius.pillAll,
                   ),
                   child: Text(
@@ -855,9 +855,9 @@ class _DiaryExportPageCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.white.withOpacity(0.98),
-            page.surface.withOpacity(0.88),
-            Colors.white.withOpacity(0.96),
+            Colors.white.withValues(alpha: 0.98),
+            page.surface.withValues(alpha: 0.88),
+            Colors.white.withValues(alpha: 0.96),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -868,9 +868,9 @@ class _DiaryExportPageCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.96),
+          color: Colors.white.withValues(alpha: 0.96),
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: Colors.white.withOpacity(0.9), width: 1.2),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -938,8 +938,8 @@ class _DiaryExportPageCard extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    page.surface.withOpacity(0.85),
-                    Colors.white.withOpacity(0.96),
+                    page.surface.withValues(alpha: 0.85),
+                    Colors.white.withValues(alpha: 0.96),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -988,7 +988,7 @@ class _DiaryExportPageCard extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: SLColors.accentPurple.withOpacity(0.14),
+                        color: SLColors.accentPurple.withValues(alpha: 0.14),
                         borderRadius: SLRadius.lgAll,
                       ),
                       child: const Icon(
@@ -1094,7 +1094,7 @@ class _DiaryExportProgressOverlay extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.96),
+                color: Colors.white.withValues(alpha: 0.96),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(color: Colors.white),
                 boxShadow: SLTheme.cardShadow,
