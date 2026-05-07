@@ -491,7 +491,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                          color: template.accent.withOpacity(0.22),
+                          color: template.accent.withValues(alpha: 0.22),
                           blurRadius: 16,
                           offset: const Offset(0, 7),
                         ),
@@ -588,7 +588,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                          color: const Color(0xFFD81B60).withOpacity(0.22),
+                          color: const Color(0xFFD81B60).withValues(alpha: 0.22),
                           blurRadius: 14,
                           offset: const Offset(0, 6),
                         ),
@@ -641,7 +641,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: const Color(0xFFD81B60).withOpacity(0.22),
+                          color: const Color(0xFFD81B60).withValues(alpha: 0.22),
                           blurRadius: 14,
                           offset: const Offset(0, 6),
                         ),
@@ -671,10 +671,10 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       decoration: BoxDecoration(
         gradient: template.softGradient,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: template.accent.withOpacity(0.22)),
+        border: Border.all(color: template.accent.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
-            color: template.accent.withOpacity(0.12),
+            color: template.accent.withValues(alpha: 0.12),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -709,7 +709,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
                 borderRadius: SLRadius.xlAll,
                 boxShadow: [
                   BoxShadow(
-                    color: template.accent.withOpacity(0.16),
+                    color: template.accent.withValues(alpha: 0.16),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -726,9 +726,9 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.76),
+                        color: Colors.white.withValues(alpha: 0.76),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: template.accent.withOpacity(0.18)),
+                        border: Border.all(color: template.accent.withValues(alpha: 0.18)),
                       ),
                       child: Text(
                         'SoulLocket',
@@ -823,7 +823,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
               decoration: BoxDecoration(
                 color: template.captionColor,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withOpacity(0.36)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.36)),
               ),
               child: Text(
                 caption,
