@@ -1522,10 +1522,19 @@ class AuthSignInService {
       return await _deleteAccountFromServer(user);
     } on firebase_auth.FirebaseAuthException catch (error) {
       if (error.code == 'requires-recent-login') {
-        throw 'Vì lý do bảo mật, vui lòng đăng nhập lại trước khi xóa tài khoản.';
+        await _reauthenticateCurrentUserWithLinkedProvider(user);
+        return await _deleteAccountFromServer(user);
       }
       throw handleFirebaseAuthError(error);
     } catch (error) {
+      final normalized = error.toString().toLowerCase();
+      if (normalized.contains('đăng nhập lại trước khi xóa tài khoản') ||
+          normalized.contains('đăng nhập lại rồi thử xóa tài khoản') ||
+          normalized.contains('phiên đăng nhập đã hết hạn') ||
+          normalized.contains('phiên đăng nhập không còn hợp lệ')) {
+        await _reauthenticateCurrentUserWithLinkedProvider(user);
+        return await _deleteAccountFromServer(user);
+      }
       if (error is String) rethrow;
       final resolvedError = AppErrorMapper.resolve(
         error,
