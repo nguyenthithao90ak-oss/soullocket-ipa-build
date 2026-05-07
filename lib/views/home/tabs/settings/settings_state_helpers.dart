@@ -616,7 +616,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                   .toString()
                   .trim();
           final resolvedLoveUnit =
-              (data['countdownBottomLabel'] ?? data['dayUnit'] ?? 'ngày yêu')
+              (data['countdownBottomLabel'] ?? data['dayUnit'] ?? 'ngày')
                   .toString()
                   .trim();
           if (mounted) {
@@ -638,7 +638,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _dobU1 = data['dobU1'] ?? '';
               _dobU2 = data['dobU2'] ?? '';
               _loveUnit =
-                  resolvedLoveUnit.isEmpty ? 'ngày yêu' : resolvedLoveUnit;
+                  resolvedLoveUnit.isEmpty ? 'ngày' : resolvedLoveUnit;
               _relationshipMode = relMode;
               _musicAutoplay = _musicAutoplay;
               _draftThemeKey ??= (data['theme'] ?? '').toString().trim().isEmpty
