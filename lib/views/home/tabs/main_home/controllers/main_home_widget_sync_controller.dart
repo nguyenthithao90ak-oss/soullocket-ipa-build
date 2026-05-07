@@ -207,8 +207,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
 
       final status1Text = _presenceStatusText('user1');
       final status2Text = _presenceStatusText('user2');
-      final isOnline1 = status1Text == 'Đang hoạt động';
-      final isOnline2 = status2Text == 'Đang hoạt động';
+      final isOnline1 = _isPresenceDataOnlineForRole('user1', _presenceForRole('user1'));
+      final isOnline2 = _isPresenceDataOnlineForRole('user2', _presenceForRole('user2'));
 
       final w1 = _widgetLocationTextForRole('user1');
       final w2 = _widgetLocationTextForRole('user2');
