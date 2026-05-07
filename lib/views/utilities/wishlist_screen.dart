@@ -231,7 +231,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8EC),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF6C16A).withOpacity(0.46)),
+        border: Border.all(color: const Color(0xFFF6C16A).withValues(alpha: 0.46)),
       ),
       child: TextField(
         controller: controller,
@@ -397,7 +397,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }) {
     return SLTheme.softPanel(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      borderColor: const Color(0xFFF6C16A).withOpacity(0.50),
+      borderColor: const Color(0xFFF6C16A).withValues(alpha: 0.50),
       child: Row(
         children: <Widget>[
           Container(
@@ -414,7 +414,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 end: Alignment.bottomRight,
               ),
               border:
-                  Border.all(color: const Color(0xFFF6C16A).withOpacity(0.50)),
+                  Border.all(color: const Color(0xFFF6C16A).withValues(alpha: 0.50)),
             ),
             child: const Icon(Icons.local_mall_rounded,
                 color: Color(0xFFB45309), size: 28),
@@ -492,7 +492,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 border: Border.all(
                   color: isDone
                       ? const Color(0xFF16A34A)
-                      : const Color(0xFFF6C16A).withOpacity(0.72),
+                      : const Color(0xFFF6C16A).withValues(alpha: 0.72),
                   width: 2,
                 ),
               ),
@@ -511,7 +511,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
               borderRadius: BorderRadius.circular(16),
               color: const Color(0xFFFFF4DB),
               border:
-                  Border.all(color: const Color(0xFFF6C16A).withOpacity(0.42)),
+                  Border.all(color: const Color(0xFFF6C16A).withValues(alpha: 0.42)),
             ),
             child: Icon(
               isDone ? Icons.done_all_rounded : Icons.card_giftcard_rounded,
@@ -556,7 +556,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                           color: const Color(0xFFFFF4DB),
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                              color: const Color(0xFFF6C16A).withOpacity(0.45)),
+                              color: const Color(0xFFF6C16A).withValues(alpha: 0.45)),
                         ),
                         child: Text(
                           _currencyFormat.format(price),
