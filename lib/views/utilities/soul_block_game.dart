@@ -570,9 +570,35 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     );
   }
 
+  List<_SoulPieceOption> _buildOpeningTray(List<List<_SoulTile?>> board) {
+    final List<_SoulPieceOption> tray = _buildSmartBatch(board);
+    final List<_SoulPieceTemplate> curatedTemplates =
+        <_SoulPieceTemplate>[
+      _kSoulBlockTemplates.firstWhere((template) => template.id == 'duo_h'),
+      _kSoulBlockTemplates.firstWhere((template) => template.id == 'duo_v'),
+      _kSoulBlockTemplates.firstWhere((template) => template.id == 'square_2'),
+    ];
+
+    final List<_SoulPieceOption> curated = <_SoulPieceOption>[];
+    for (final template in curatedTemplates) {
+      final _SoulPieceOption? option = tray.firstWhere(
+        (_SoulPieceOption item) => item.template.id == template.id,
+        orElse: () => _spawnPieceFromTemplate(template),
+      );
+      curated.add(option);
+    }
+
+    if (curated.any((piece) =>
+        _findPlacements(_boardMask(board), piece.template).isEmpty)) {
+      return tray.take(3).toList(growable: false);
+    }
+
+    return curated;
+  }
+
   _PreparedSoulRun _prepareFreshRun() {
     final nextBoard = _createOpeningBoard();
-    final nextTray = _buildSmartBatch(nextBoard);
+    final nextTray = _buildOpeningTray(nextBoard);
     return _PreparedSoulRun(
       board: nextBoard,
       tray: nextTray,
