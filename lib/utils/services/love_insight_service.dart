@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'ai_counselor_service.dart';
+import 'offline_cache_service.dart';
 import 'push_notification_helper.dart';
 
 class LoveInsightTimelineEntry {
