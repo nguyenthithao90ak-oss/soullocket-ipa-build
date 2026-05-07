@@ -113,7 +113,13 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                                   final image = selectedImage;
                                   if (image != null) {
                                     final upload = await _storageService
-                                        .uploadGiftImage(_houseId!, image);
+                                        .uploadGiftImage(
+                                      _houseId!,
+                                      image,
+                                      minWidth: 1440,
+                                      minHeight: 1440,
+                                      quality: 82,
+                                    );
                                     imageUrl = upload?.downloadUrl ?? '';
                                   }
                                   await _creativeDiaryService.saveCreativePage(
