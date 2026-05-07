@@ -216,7 +216,7 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
                     ]),
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.purple.withOpacity(0.5),
+                          color: Colors.purple.withValues(alpha: 0.5),
                           blurRadius: 30,
                           spreadRadius: 5)
                     ],
@@ -476,12 +476,12 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
             padding: SLSpacing.all12,
             decoration: BoxDecoration(
               color: isCurrent
-                  ? Colors.white.withOpacity(0.16)
-                  : Colors.white.withOpacity(0.08),
+                  ? Colors.white.withValues(alpha: 0.16)
+                  : Colors.white.withValues(alpha: 0.08),
               borderRadius: SLRadius.lgAll,
               border: Border.all(
                 color: isCurrent
-                    ? Colors.pinkAccent.withOpacity(0.6)
+                    ? Colors.pinkAccent.withValues(alpha: 0.6)
                     : Colors.white10,
               ),
             ),
@@ -491,7 +491,7 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.12),
+                    color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: SLRadius.mdAll,
                   ),
                   child: Icon(
