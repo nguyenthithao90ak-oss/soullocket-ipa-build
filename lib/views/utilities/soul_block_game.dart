@@ -630,7 +630,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _snapBackPieceId = null;
       _isBusy = false;
       _isGameOver = nextRun.tray.isEmpty || nextRun.recommendedMove == null;
-      _continueUsedThisRun = restoringExistingRun ? _continueUsedThisRun : false;
+      _continueUsedThisRun =
+          restoringExistingRun ? _continueUsedThisRun : false;
       _isReviving = false;
       _isRestarting = false;
       _isOpeningGameplay = false;
@@ -1502,8 +1503,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final replenishedTray =
         remainingTray.isEmpty ? _buildFastTray(resolvedBoard) : remainingTray;
     final nextRecommended = _recommendMoveFor(resolvedBoard, replenishedTray);
-    final noMovesLeft =
-        replenishedTray.isEmpty || !_hasAnyPlayableMove(resolvedBoard, replenishedTray);
+    final noMovesLeft = replenishedTray.isEmpty ||
+        !_hasAnyPlayableMove(resolvedBoard, replenishedTray);
 
     setState(() {
       _board = resolvedBoard;
@@ -1797,10 +1798,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
     final Map<String, dynamic> json = Map<String, dynamic>.from(raw);
     final String templateId = (json['templateId'] as String? ?? '').trim();
-    final _SoulPieceTemplate? template = _kSoulBlockTemplates.cast<_SoulPieceTemplate?>().firstWhere(
-      (_SoulPieceTemplate? item) => item?.id == templateId,
-      orElse: () => null,
-    );
+    final _SoulPieceTemplate? template =
+        _kSoulBlockTemplates.cast<_SoulPieceTemplate?>().firstWhere(
+              (_SoulPieceTemplate? item) => item?.id == templateId,
+              orElse: () => null,
+            );
     if (template == null) {
       return null;
     }
@@ -1877,7 +1879,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       }
       _pieceSequence = max(
         (json['pieceSequence'] as num?)?.toInt() ?? 0,
-        tray.fold<int>(0, (int maxId, _SoulPieceOption piece) => max(maxId, piece.id)),
+        tray.fold<int>(
+            0, (int maxId, _SoulPieceOption piece) => max(maxId, piece.id)),
       );
       _score = (json['score'] as num?)?.toInt() ?? 0;
       _bestScore = max(_bestScore, (json['bestScore'] as num?)?.toInt() ?? 0);
