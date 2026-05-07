@@ -643,35 +643,6 @@ mixin _SoulBlockStrategyLogic {
     );
   }
 
-  _TurnResolution _resolveTurn(
-    List<List<_SoulTile?>> boardTiles,
-    _SoulPieceOption piece,
-    int startRow,
-    int startCol,
-    List<_SoulPieceOption> remainingTray,
-  ) {
-    final placement = _placeTemplate(boardTiles, piece, startRow, startCol);
-    final clearResolution = _clearAffectedLines(
-      placement.board,
-      placement.rowsToClear,
-      placement.colsToClear,
-    );
-    final clearedCount =
-        clearResolution.clearedRows.length + clearResolution.clearedCols.length;
-    final nextRecommendedMove = remainingTray.isEmpty
-        ? null
-        : _recommendMoveFor(clearResolution.board, remainingTray);
-    final noMovesLeft = remainingTray.isEmpty || nextRecommendedMove == null;
-    return _TurnResolution(
-      placement: placement,
-      clearResolution: clearResolution,
-      clearedCount: clearedCount,
-      remainingTray: remainingTray,
-      nextRecommendedMove: nextRecommendedMove,
-      noMovesLeft: noMovesLeft,
-    );
-  }
-
   _PlacementEval _simulatePlacement(
     List<List<bool>> boardMask,
     _SoulPieceTemplate template,
