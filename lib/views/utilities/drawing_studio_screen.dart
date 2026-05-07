@@ -2204,10 +2204,10 @@ class _DrawingCanvasPainter extends CustomPainter {
 
   void _paintPastelDots(Canvas canvas, Size size) {
     final colors = [
-      const Color(0xFFFF7AB8).withOpacity(0.26),
-      const Color(0xFF69D2E7).withOpacity(0.25),
-      const Color(0xFFFFD166).withOpacity(0.28),
-      const Color(0xFFA78BFA).withOpacity(0.22),
+      const Color(0xFFFF7AB8).withValues(alpha: 0.26),
+      const Color(0xFF69D2E7).withValues(alpha: 0.25),
+      const Color(0xFFFFD166).withValues(alpha: 0.28),
+      const Color(0xFFA78BFA).withValues(alpha: 0.22),
     ];
     for (double y = 18; y < size.height; y += 42) {
       for (double x = 18; x < size.width; x += 42) {
@@ -2235,7 +2235,7 @@ class _DrawingCanvasPainter extends CustomPainter {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
-      ..color = const Color(0xFFFF7AAE).withOpacity(0.34);
+      ..color = const Color(0xFFFF7AAE).withValues(alpha: 0.34);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(24, 24, size.width - 48, size.height - 48),
@@ -2247,7 +2247,7 @@ class _DrawingCanvasPainter extends CustomPainter {
 
   void _paintNotebook(Canvas canvas, Size size) {
     final linePaint = Paint()
-      ..color = const Color(0xFFBFD7FF).withOpacity(0.55)
+      ..color = const Color(0xFFBFD7FF).withValues(alpha: 0.55)
       ..strokeWidth = 1;
     for (double y = 34; y <= size.height; y += 30) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
@@ -2256,7 +2256,7 @@ class _DrawingCanvasPainter extends CustomPainter {
       const Offset(46, 0),
       Offset(46, size.height),
       Paint()
-        ..color = const Color(0xFFFF9DBB).withOpacity(0.55)
+        ..color = const Color(0xFFFF9DBB).withValues(alpha: 0.55)
         ..strokeWidth = 2,
     );
   }
@@ -2276,7 +2276,7 @@ class _DrawingCanvasPainter extends CustomPainter {
       textPainter.text = TextSpan(
         text: '♡',
         style: TextStyle(
-          color: const Color(0xFFFF80AA).withOpacity(0.18),
+          color: const Color(0xFFFF80AA).withValues(alpha: 0.18),
           fontSize: 20.0 + (i % 4) * 7,
           fontWeight: FontWeight.w900,
         ),
@@ -2293,7 +2293,7 @@ class _DrawingCanvasPainter extends CustomPainter {
   }
 
   void _paintStars(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white.withOpacity(0.76);
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.76);
     for (var i = 0; i < 70; i++) {
       final x = ((i * 59) % math.max(size.width.toInt(), 1)).toDouble();
       final y = ((i * 41) % math.max(size.height.toInt(), 1)).toDouble();
@@ -2305,7 +2305,7 @@ class _DrawingCanvasPainter extends CustomPainter {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 14
-      ..color = const Color(0xFFFFFFFF).withOpacity(0.88);
+      ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.88);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(20, 20, size.width - 40, size.height - 40),
