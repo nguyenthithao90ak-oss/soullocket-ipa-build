@@ -1446,11 +1446,57 @@ extension _CountdownModeIndependentScreenViewPart
                         children: [
                           if (bgUrl.isNotEmpty)
                             Positioned.fill(
-                              child: Image.network(
-                                bgUrl,
+                              child: CachedNetworkImage(
+                                imageUrl: bgUrl,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
-                                    const SizedBox.shrink(),
+                                fadeInDuration: const Duration(milliseconds: 180),
+                                memCacheWidth: 720,
+                                placeholder: (_, __) => DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        accent.withOpacity(0.16),
+                                        Colors.white.withOpacity(
+                                          themeData.isDark ? 0.06 : 0.34,
+                                        ),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(accent),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (_, __, ___) => DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        accent.withOpacity(0.14),
+                                        Colors.white.withOpacity(
+                                          themeData.isDark ? 0.06 : 0.24,
+                                        ),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.image_outlined,
+                                      color: accent.withOpacity(0.76),
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           Positioned.fill(
