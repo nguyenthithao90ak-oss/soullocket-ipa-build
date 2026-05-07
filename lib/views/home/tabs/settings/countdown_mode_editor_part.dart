@@ -1396,7 +1396,7 @@ class _CountdownModeEditorScreenState
                                 ),
                                 const SizedBox(height: 12),
                                 DropdownButtonFormField<String>(
-                                  value: _fontKey,
+                                  initialValue: _fontKey,
                                   isExpanded: true,
                                   dropdownColor: const Color(0xFF162136),
                                   iconEnabledColor: Colors.white70,
@@ -1433,7 +1433,7 @@ class _CountdownModeEditorScreenState
                                 SwitchListTile.adaptive(
                                   value: _transparentMode,
                                   contentPadding: EdgeInsets.zero,
-                                  activeColor: const Color(0xFFD81B60),
+                                  activeThumbColor: const Color(0xFFD81B60),
                                   title: Text(
                                     'Kính mờ',
                                     style: SLTheme.quicksand(
