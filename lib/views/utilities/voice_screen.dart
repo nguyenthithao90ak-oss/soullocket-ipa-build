@@ -693,7 +693,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       }
       _showMessage('Đã gửi lại lời nhắn thoại lên nhà chung.');
     } catch (e) {
-      _showMessage('Không thể thử lại ghi âm: $e');
+      _showMessage('Không thể thử lại ghi âm lúc này. Hãy thử lại sau.');
     } finally {
       if (mounted) {
         setState(() {
