@@ -279,6 +279,45 @@ class _SoulExplosionPainter extends CustomPainter {
   final List<_ExplosionParticle> _particles;
   final Paint _particlePaint = Paint()..style = PaintingStyle.fill;
   final Paint _ringPaint = Paint()..style = PaintingStyle.stroke;
+  final Paint _streakPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round;
+  final Paint _glowPaint = Paint()..style = PaintingStyle.stroke;
+  final List<double> _streakAngles = <double>[
+    -pi / 4,
+    -pi / 8,
+    0,
+    pi / 8,
+    pi / 4,
+  ];
+  final List<double> _streakOffsets = <double>[
+    -18,
+    -8,
+    6,
+    16,
+    28,
+  ];
+  final List<double> _streakLengths = <double>[
+    32,
+    44,
+    56,
+    42,
+    34,
+  ];
+  final List<double> _streakWidths = <double>[
+    1.2,
+    1.8,
+    2.6,
+    1.8,
+    1.2,
+  ];
+  final List<Color> _streakColors = <Color>[
+    Color(0xFFFFF7D6),
+    Color(0xFFFFD36F),
+    Color(0xFFFF9F43),
+    Color(0xFFFF6B4A),
+    Color(0xFFFFE8A1),
+  ];
 
   @override
   void paint(Canvas canvas, Size size) {
