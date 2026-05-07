@@ -424,20 +424,20 @@ class _MainHomeTabState extends State<MainHomeTab> {
           shape: BoxShape.circle,
           gradient: LinearGradient(
             colors: [
-              const Color(0xFFFFF5FA).withOpacity(0.7),
-              const Color(0xFFFFD9E8).withOpacity(0.7)
+              const Color(0xFFFFF5FA).withValues(alpha: 0.7),
+              const Color(0xFFFFD9E8).withValues(alpha: 0.7)
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: Colors.white.withOpacity(0.75), width: 6),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 6),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF5E92).withOpacity(0.42),
+              color: const Color(0xFFFF5E92).withValues(alpha: 0.42),
               blurRadius: 48,
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 24,
               blurStyle: BlurStyle.inner,
             ),
@@ -1567,10 +1567,10 @@ class _MainHomeTabState extends State<MainHomeTab> {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF111827).withOpacity(0.26),
+                  color: const Color(0xFF111827).withValues(alpha: 0.26),
                   blurRadius: 26,
                   offset: const Offset(0, 12),
                 ),
@@ -1612,10 +1612,10 @@ class _MainHomeTabState extends State<MainHomeTab> {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF111827).withOpacity(0.28),
+                  color: const Color(0xFF111827).withValues(alpha: 0.28),
                   blurRadius: 28,
                   offset: const Offset(0, 14),
                 ),
