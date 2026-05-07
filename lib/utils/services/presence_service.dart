@@ -126,9 +126,9 @@ class PresenceService {
       if (freshSessionCount > 0) {
         return true;
       }
-      if (hasIgnoredUidFilter) {
-        return false;
-      }
+    }
+    if (hasIgnoredUidFilter) {
+      return false;
     }
 
     final activeSessionCount = data['activeSessionCount'];
