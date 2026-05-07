@@ -291,6 +291,10 @@ class AuthService {
     return _signInService.undoScheduledDeletion();
   }
 
+  Future<void> revokeOtherSessionsAfterPasswordChange() {
+    return _signInService.revokeOtherSessionsAfterPasswordChange();
+  }
+
   Future<void> sendPasswordResetEmail(String email) {
     return _recoveryService.sendPasswordResetEmail(email);
   }
