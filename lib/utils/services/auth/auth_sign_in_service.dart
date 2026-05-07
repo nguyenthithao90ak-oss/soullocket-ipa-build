@@ -1854,11 +1854,22 @@ class AuthSignInService {
 
     try {
       final idToken = await user.getIdToken(true) ?? '';
+      if (kDebugMode) {
+        debugPrint(
+          '_deleteAccountFromServer(): uid=${user.uid} '
+          'tokenEmpty=${idToken.isEmpty}',
+        );
+      }
       if (idToken.isEmpty) {
         throw 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại rồi thử xóa tài khoản.';
       }
 
       final deviceId = await _houseContextService.getDeviceId();
+      if (kDebugMode) {
+        debugPrint(
+          '_deleteAccountFromServer(): endpoint=$endpoint deviceId=$deviceId',
+        );
+      }
       final response = await _httpPost(
         Uri.parse(endpoint),
         headers: await AppCheckHttpHeaders.withOptionalToken({
@@ -1870,6 +1881,13 @@ class AuthSignInService {
           'deviceId': deviceId,
         }),
       ).timeout(const Duration(seconds: 20));
+
+      if (kDebugMode) {
+        debugPrint(
+          '_deleteAccountFromServer(): status=${response.statusCode} '
+          'body=${response.body}',
+        );
+      }
 
       if (response.statusCode != 200) {
         if (response.statusCode == 401 || response.statusCode == 403) {
