@@ -147,7 +147,20 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
     required bool includeDiaryMedia,
   }) {
     if (kIsWeb || !_isTabActive) return;
-    _pendingWidgetSettings = Map<String, dynamic>.from(settings);
+    final nextSettings = Map<String, dynamic>.from(settings);
+    final nextSettingsKey = _buildWidgetSettingsSyncKeyImpl(nextSettings);
+    final pendingSettings = _pendingWidgetSettings;
+    if (pendingSettings != null) {
+      final pendingSettingsKey = _buildWidgetSettingsSyncKeyImpl(pendingSettings);
+      final alreadyCoversRequest =
+          pendingSettingsKey == nextSettingsKey &&
+          (_pendingWidgetSyncIncludeDiaryMedia || !includeDiaryMedia);
+      if (alreadyCoversRequest) {
+        return;
+      }
+    }
+
+    _pendingWidgetSettings = nextSettings;
     _pendingWidgetSyncIncludeDiaryMedia =
         _pendingWidgetSyncIncludeDiaryMedia || includeDiaryMedia;
     _loveWidgetSyncDebounce?.cancel();
