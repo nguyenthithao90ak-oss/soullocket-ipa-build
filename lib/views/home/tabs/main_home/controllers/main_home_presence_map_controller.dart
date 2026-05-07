@@ -142,9 +142,6 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     if (_isCurrentForegroundRole(role)) {
       return 'Đang hoạt động';
     }
-    if (_isIgnoredUidOnlyPresence(role, data)) {
-      return 'Chưa từng mở app';
-    }
     final relMode =
         _houseSettings?['relationshipMode']?.toString().trim() ?? 'single';
     if (relMode != 'single' && role != _currentRole && data == null) {
