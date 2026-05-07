@@ -226,7 +226,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                       bottom: -110,
                       child: _GlowOrb(
                         size: 320,
-                        color: palette.envelope.withOpacity(0.22),
+                        color: palette.envelope.withValues(alpha: 0.22),
                       ),
                     ),
                     Positioned.fill(
@@ -438,7 +438,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.18),
+                color: Colors.black.withValues(alpha: 0.18),
                 blurRadius: 48,
                 offset: const Offset(0, 16),
               ),
@@ -451,7 +451,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                 right: -70,
                 child: _PaperGlow(
                   size: 260,
-                  color: palette.accent.withOpacity(0.12),
+                  color: palette.accent.withValues(alpha: 0.12),
                 ),
               ),
               Positioned(
@@ -459,7 +459,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                 bottom: -120,
                 child: _PaperGlow(
                   size: 300,
-                  color: palette.envelope.withOpacity(0.16),
+                  color: palette.envelope.withValues(alpha: 0.16),
                 ),
               ),
               Positioned.fill(
@@ -469,7 +469,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                       colors: [
                         Colors.white.withOpacity(0.55),
                         Colors.transparent,
-                        palette.envelopeLight.withOpacity(0.32),
+                        palette.envelopeLight.withValues(alpha: 0.32),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -506,7 +506,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                       _PaperBadge(
                                         label: palette.badge,
                                         background:
-                                            palette.accent.withOpacity(0.12),
+                                            palette.accent.withValues(alpha: 0.12),
                                         foreground: palette.accent,
                                       ),
                                       _PaperBadge(
@@ -555,7 +555,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                             Text(
                               palette.headline,
                               style: SLTheme.quicksand(
-                                color: palette.ink.withOpacity(0.92),
+                                color: palette.ink.withValues(alpha: 0.92),
                                 fontSize: 16,
                                 height: 1.45,
                                 fontWeight: FontWeight.w800,
@@ -592,7 +592,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                           gradient: LinearGradient(
                                             colors: [
                                               Colors.transparent,
-                                              Colors.black.withOpacity(0.18),
+                                              Colors.black.withValues(alpha: 0.18),
                                             ],
                                             begin: Alignment.topCenter,
                                             end: Alignment.bottomCenter,
@@ -610,14 +610,14 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                               padding:
                                   const EdgeInsets.fromLTRB(22, 22, 22, 26),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.58),
+                                color: Colors.white.withValues(alpha: 0.58),
                                 borderRadius: BorderRadius.circular(28),
                                 border: Border.all(
-                                  color: palette.accent.withOpacity(0.10),
+                                  color: palette.accent.withValues(alpha: 0.10),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: palette.accent.withOpacity(0.08),
+                                    color: palette.accent.withValues(alpha: 0.08),
                                     blurRadius: 26,
                                     offset: const Offset(0, 10),
                                   ),
@@ -632,7 +632,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                       vertical: 8,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: palette.accent.withOpacity(0.10),
+                                      color: palette.accent.withValues(alpha: 0.10),
                                       borderRadius: BorderRadius.circular(999),
                                     ),
                                     child: Row(
@@ -668,7 +668,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                   ),
                                   const SizedBox(height: 20),
                                   Divider(
-                                    color: palette.accent.withOpacity(0.16),
+                                    color: palette.accent.withValues(alpha: 0.16),
                                     height: 1,
                                   ),
                                   const SizedBox(height: 18),
@@ -688,10 +688,10 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                               width: double.infinity,
                               padding: const EdgeInsets.all(18),
                               decoration: BoxDecoration(
-                                color: palette.envelopeLight.withOpacity(0.88),
+                                color: palette.envelopeLight.withValues(alpha: 0.88),
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
-                                  color: palette.accent.withOpacity(0.10),
+                                  color: palette.accent.withValues(alpha: 0.10),
                                 ),
                               ),
                               child: Row(
@@ -700,7 +700,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                     width: 48,
                                     height: 48,
                                     decoration: BoxDecoration(
-                                      color: palette.accent.withOpacity(0.12),
+                                      color: palette.accent.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     alignment: Alignment.center,
@@ -755,7 +755,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                               minHeight: 7,
                               value: tearValue,
                               borderRadius: BorderRadius.circular(999),
-                              backgroundColor: palette.accent.withOpacity(0.08),
+                              backgroundColor: palette.accent.withValues(alpha: 0.08),
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 palette.accent,
                               ),
@@ -786,7 +786,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                             label: 'Sao chép lời nhắn',
                             icon: Icons.content_copy_rounded,
                             onTap: _copyCardContent,
-                            background: palette.accent.withOpacity(0.10),
+                            background: palette.accent.withValues(alpha: 0.10),
                             foreground: palette.accent,
                           ),
                         ),
