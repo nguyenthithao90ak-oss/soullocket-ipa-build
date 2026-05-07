@@ -54,9 +54,9 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.34),
+                      color: Colors.black.withValues(alpha: 0.34),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: Colors.white.withOpacity(0.12)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -101,17 +101,17 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                         : null,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(28),
                         border: Border.all(
                           color: _isAdjustingTitlePosition
-                              ? accent.withOpacity(0.9)
-                              : Colors.white.withOpacity(0.12),
+                              ? accent.withValues(alpha: 0.9)
+                              : Colors.white.withValues(alpha: 0.12),
                           width: _isAdjustingTitlePosition ? 1.8 : 1,
                         ),
                         boxShadow: <BoxShadow>[
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.22),
+                            color: Colors.black.withValues(alpha: 0.22),
                             blurRadius: 24,
                             offset: const Offset(0, 12),
                           ),
@@ -139,7 +139,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                               style: SLTheme.quicksand(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.white.withOpacity(0.78),
+                                color: Colors.white.withValues(alpha: 0.78),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -161,7 +161,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                               style: SLTheme.quicksand(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white.withOpacity(0.72),
+                                color: Colors.white.withValues(alpha: 0.72),
                               ),
                             ),
                             if (_isAdjustingTitlePosition) ...<Widget>[
@@ -180,7 +180,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                                     style: SLTheme.quicksand(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.white.withOpacity(0.82),
+                                      color: Colors.white.withValues(alpha: 0.82),
                                     ),
                                   ),
                                 ],
@@ -212,9 +212,9 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
+        color: Colors.black.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,7 +269,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
               style: SLTheme.quicksand(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -280,7 +280,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
               child: LinearProgressIndicator(
                 minHeight: 7,
                 value: _videoProgress!.clamp(0, 1),
-                backgroundColor: Colors.white.withOpacity(0.1),
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
                 valueColor: AlwaysStoppedAnimation<Color>(accent),
               ),
             ),
@@ -305,10 +305,10 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
               decoration: BoxDecoration(
                 color: const Color(0xFF151116),
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.35),
+                    color: Colors.black.withValues(alpha: 0.35),
                     blurRadius: 30,
                     offset: const Offset(0, -12),
                   ),
@@ -360,9 +360,9 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.35),
+        color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,7 +373,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
             style: SLTheme.quicksand(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 8),
@@ -395,13 +395,13 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? accent.withOpacity(0.28)
-                        : Colors.white.withOpacity(0.06),
+                        ? accent.withValues(alpha: 0.28)
+                        : Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isSelected
-                          ? accent.withOpacity(0.5)
-                          : Colors.white.withOpacity(0.1),
+                          ? accent.withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                   child: Column(
@@ -420,7 +420,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                         '~${preset.estimatedMbPer30Sec.toStringAsFixed(1)}MB/30s • ${preset.fps}fps',
                         style: SLTheme.quicksand(
                           fontSize: 9,
-                          color: Colors.white.withOpacity(0.48),
+                          color: Colors.white.withValues(alpha: 0.48),
                         ),
                       ),
                     ],
@@ -443,11 +443,11 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
   }) {
     final isEnabled = onTap != null;
     final backgroundColor = emphasized
-        ? accent.withOpacity(isEnabled ? 0.94 : 0.32)
-        : Colors.white.withOpacity(isEnabled ? 0.08 : 0.04);
+        ? accent.withValues(alpha: isEnabled ? 0.94 : 0.32)
+        : Colors.white.withValues(alpha: isEnabled ? 0.08 : 0.04);
     final foregroundColor = emphasized
         ? const Color(0xFF2B0711)
-        : Colors.white.withOpacity(isEnabled ? 0.92 : 0.36);
+        : Colors.white.withValues(alpha: isEnabled ? 0.92 : 0.36);
 
     return Material(
       color: Colors.transparent,
@@ -461,8 +461,8 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color: emphasized
-                  ? accent.withOpacity(isEnabled ? 0.96 : 0.18)
-                  : Colors.white.withOpacity(isEnabled ? 0.1 : 0.06),
+                  ? accent.withValues(alpha: isEnabled ? 0.96 : 0.18)
+                  : Colors.white.withValues(alpha: isEnabled ? 0.1 : 0.06),
             ),
           ),
           child: Row(
@@ -498,9 +498,9 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.34),
+            color: Colors.black.withValues(alpha: 0.34),
             borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: Colors.white.withOpacity(0.16)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
           ),
           child: Icon(icon, color: Colors.white),
         ),
