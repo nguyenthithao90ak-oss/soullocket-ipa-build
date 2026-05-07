@@ -1494,7 +1494,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                       memCacheWidth: cacheSize.width,
                       memCacheHeight: cacheSize.height,
                       fadeInDuration: Duration.zero,
-                      filterQuality: FilterQuality.low,
+                      filterQuality: FilterQuality.high,
                       imageBuilder: (context, imageProvider) {
                         return FittedBox(
                           fit: BoxFit.cover,
@@ -1507,7 +1507,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                             child: Image(
                               image: imageProvider,
                               fit: BoxFit.cover,
-                              filterQuality: FilterQuality.low,
+                              filterQuality: FilterQuality.high,
                               alignment: Alignment.center,
                             ),
                           ),
