@@ -215,15 +215,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: accent.withOpacity(0.16),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 13.5, color: accent),
-              ),
+              Icon(icon, size: 18, color: accent),
               const SizedBox(width: 7),
               Flexible(
                 child: Text(
