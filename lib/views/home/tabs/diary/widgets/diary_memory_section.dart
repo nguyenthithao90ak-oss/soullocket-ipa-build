@@ -1254,15 +1254,15 @@ class _DiaryMemoryLoadMoreCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 18),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.90),
+        color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: const Color(0xFF62C7B5).withOpacity(0.22),
+          color: const Color(0xFF62C7B5).withValues(alpha: 0.22),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5C71D8).withOpacity(0.08),
+            color: const Color(0xFF5C71D8).withValues(alpha: 0.08),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
