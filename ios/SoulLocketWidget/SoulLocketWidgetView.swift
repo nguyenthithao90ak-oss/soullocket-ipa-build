@@ -1,4 +1,4 @@
-﻿import WidgetKit
+import WidgetKit
 import SwiftUI
 import UIKit
 
@@ -615,7 +615,7 @@ struct SmallWidgetView: View {
                 diaryHeight: 54
             )
 
-            Text(data.daysText)
+            Text(data.resolvedDaysText(referenceDate: Date()))
                 .font(.system(size: 14, weight: .bold, design: .rounded))
                 .foregroundColor(theme.textColor)
                 .multilineTextAlignment(.center)
@@ -677,7 +677,7 @@ struct MediumWidgetView: View {
                     diaryHeight: 70
                 )
 
-                Text(data.daysText)
+                Text(data.resolvedDaysText(referenceDate: Date()))
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                     .foregroundColor(theme.textColor)
                     .multilineTextAlignment(.center)
@@ -735,7 +735,7 @@ struct LargeWidgetView: View {
                         diaryHeight: 84
                     )
 
-                    Text(data.daysText)
+                    Text(data.resolvedDaysText(referenceDate: Date()))
                         .font(.system(size: 15, weight: .bold, design: .rounded))
                         .foregroundColor(theme.textColor)
                         .multilineTextAlignment(.center)
