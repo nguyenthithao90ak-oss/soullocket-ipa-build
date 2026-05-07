@@ -487,7 +487,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             if (_isPurchasing)
               Positioned.fill(
                 child: ColoredBox(
-                  color: Colors.black.withOpacity(0.35),
+                  color: Colors.black.withValues(alpha: 0.35),
                   child: Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -495,7 +495,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                         vertical: 18,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF161A31).withOpacity(0.96),
+                        color: const Color(0xFF161A31).withValues(alpha: 0.96),
                         borderRadius: BorderRadius.circular(22),
                         border: Border.all(color: Colors.white12),
                       ),
@@ -534,9 +534,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.10)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -665,17 +665,17 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.white.withOpacity(0.12),
-            Colors.white.withOpacity(0.06),
+            Colors.white.withValues(alpha: 0.12),
+            Colors.white.withValues(alpha: 0.06),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF9C15A).withOpacity(0.18),
+            color: const Color(0xFFF9C15A).withValues(alpha: 0.18),
             blurRadius: 26,
             offset: const Offset(0, 18),
           ),
@@ -714,7 +714,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFF9C15A).withOpacity(0.32),
+                      color: const Color(0xFFF9C15A).withValues(alpha: 0.32),
                       blurRadius: 18,
                       offset: const Offset(0, 10),
                     ),
@@ -847,9 +847,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
+        color: Colors.white.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -858,7 +858,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFFF9C15A).withOpacity(0.12),
+              color: const Color(0xFFF9C15A).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: const Color(0xFFF9C15A)),
@@ -929,8 +929,8 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   const Color(0x22F37B9B),
                 ]
               : [
-                  Colors.white.withOpacity(0.08),
-                  Colors.white.withOpacity(0.05),
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.05),
                 ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -938,14 +938,14 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: featured
-              ? const Color(0xFFF9C15A).withOpacity(0.42)
-              : Colors.white.withOpacity(0.08),
+              ? const Color(0xFFF9C15A).withValues(alpha: 0.42)
+              : Colors.white.withValues(alpha: 0.08),
         ),
         boxShadow: [
           BoxShadow(
             color: featured
-                ? const Color(0xFFF9C15A).withOpacity(0.12)
-                : Colors.black.withOpacity(0.16),
+                ? const Color(0xFFF9C15A).withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.16),
             blurRadius: 22,
             offset: const Offset(0, 12),
           ),
@@ -1046,9 +1046,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withOpacity(0.06)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1112,9 +1112,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
+        color: Colors.white.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         children: [
@@ -1122,7 +1122,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             width: 58,
             height: 58,
             decoration: BoxDecoration(
-              color: const Color(0xFFF9C15A).withOpacity(0.14),
+              color: const Color(0xFFF9C15A).withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(18),
             ),
             child: const Icon(
@@ -1169,7 +1169,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: const Color(0xFFF9C15A).withOpacity(0.35)),
+        border: Border.all(color: const Color(0xFFF9C15A).withValues(alpha: 0.35)),
       ),
       child: Column(
         children: [
@@ -1177,7 +1177,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: const Color(0xFFF9C15A).withOpacity(0.16),
+              color: const Color(0xFFF9C15A).withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(22),
             ),
             child: const Icon(
@@ -1215,9 +1215,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         children: [
@@ -1238,7 +1238,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               onPressed: _isLoading || _isPurchasing ? null : _restorePurchases,
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
-                side: BorderSide(color: Colors.white.withOpacity(0.16)),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -1317,9 +1317,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1347,11 +1347,11 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color:
-            bright ? const Color(0xFFF9C15A) : Colors.white.withOpacity(0.08),
+            bright ? const Color(0xFFF9C15A) : Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
           color:
-              bright ? const Color(0xFFF9C15A) : Colors.white.withOpacity(0.08),
+              bright ? const Color(0xFFF9C15A) : Colors.white.withValues(alpha: 0.08),
         ),
       ),
       child: Text(
@@ -1400,8 +1400,8 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           shape: BoxShape.circle,
           gradient: RadialGradient(
             colors: [
-              color.withOpacity(0.28),
-              color.withOpacity(0.02),
+              color.withValues(alpha: 0.28),
+              color.withValues(alpha: 0.02),
             ],
           ),
         ),
@@ -1424,9 +1424,9 @@ class _PremiumInfoPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
