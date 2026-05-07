@@ -37,7 +37,7 @@ class ReactionPicker extends StatelessWidget {
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.3),
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (_) => ReactionPicker(
         onSelect: onSelect,
         currentReaction: currentReaction,
@@ -197,8 +197,8 @@ class _ReactionItemState extends State<_ReactionItem>
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? const Color(0xFFE91E8C).withOpacity(0.2)
-                : Colors.white.withOpacity(0.07),
+                ? const Color(0xFFE91E8C).withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.07),
             borderRadius: SLRadius.lgAll,
             border: Border.all(
               color: widget.isSelected
@@ -266,7 +266,7 @@ class _ReactionPopup extends StatelessWidget {
                   borderRadius: SLRadius.pillAll,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withValues(alpha: 0.4),
                       blurRadius: 20,
                       spreadRadius: 2,
                     ),
@@ -338,12 +338,12 @@ class ReactionCountBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: myReaction != null
-              ? const Color(0xFFE91E8C).withOpacity(0.15)
-              : Colors.white.withOpacity(0.08),
+              ? const Color(0xFFE91E8C).withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: myReaction != null
-                ? const Color(0xFFE91E8C).withOpacity(0.5)
+                ? const Color(0xFFE91E8C).withValues(alpha: 0.5)
                 : Colors.transparent,
           ),
         ),
