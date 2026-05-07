@@ -961,9 +961,10 @@ class _TopHotScreenState extends State<TopHotScreen>
       child: ClipOval(
         child: entry.avatar != null
             ? CachedNetworkImage(
-                memCacheWidth: 300,
+                memCacheWidth: 540,
                 imageUrl: entry.avatar!,
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
                 errorWidget: (_, __, ___) => _avatarFallback(entry.name),
               )
             : _avatarFallback(entry.name),
