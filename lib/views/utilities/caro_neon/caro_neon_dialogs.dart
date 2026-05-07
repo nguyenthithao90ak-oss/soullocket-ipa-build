@@ -69,10 +69,10 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(34),
                 ),
-                border: Border.all(color: accent.withOpacity(0.42), width: 1.2),
+                border: Border.all(color: accent.withValues(alpha: 0.42), width: 1.2),
                 boxShadow: [
                   BoxShadow(
-                    color: accent.withOpacity(0.14),
+                    color: accent.withValues(alpha: 0.14),
                     blurRadius: 34,
                     spreadRadius: 1,
                     offset: const Offset(0, 18),
@@ -308,7 +308,7 @@ class _StartChoiceCard extends StatelessWidget {
             gradient: LinearGradient(
               colors: selected
                   ? <Color>[
-                      accent.withOpacity(0.22),
+                      accent.withValues(alpha: 0.22),
                       const Color(0xFF130A21),
                     ]
                   : const <Color>[
@@ -326,7 +326,7 @@ class _StartChoiceCard extends StatelessWidget {
             boxShadow: [
               if (selected)
                 BoxShadow(
-                  color: accent.withOpacity(0.18),
+                  color: accent.withValues(alpha: 0.18),
                   blurRadius: 18,
                   spreadRadius: 1,
                 ),
@@ -339,9 +339,9 @@ class _StartChoiceCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.14),
+                  color: accent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: accent.withOpacity(0.42)),
+                  border: Border.all(color: accent.withValues(alpha: 0.42)),
                 ),
                 child: Icon(icon, color: accent, size: 22),
               ),
@@ -401,7 +401,7 @@ class _BotStyleChoiceChip extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             decoration: BoxDecoration(
               color:
-                  selected ? accent.withOpacity(0.14) : const Color(0x1B1B2235),
+                  selected ? accent.withValues(alpha: 0.14) : const Color(0x1B1B2235),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: selected ? accent : const Color(0x33486888),
