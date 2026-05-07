@@ -359,10 +359,10 @@ class _BlockListScreenState extends State<BlockListScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
-                    color: SLColors.dangerLight.withOpacity(0.82),
+                    color: SLColors.dangerLight.withValues(alpha: 0.82),
                     borderRadius: BorderRadius.circular(999),
                     border:
-                        Border.all(color: SLColors.danger.withOpacity(0.12)),
+                        Border.all(color: SLColors.danger.withValues(alpha: 0.12)),
                   ),
                   child: Text(
                     'ID $shortId',
