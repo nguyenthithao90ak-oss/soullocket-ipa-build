@@ -361,7 +361,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
       }
       setState(() {
         _hasError = true;
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _errorMessage = 'Không thể khôi phục mã PIN lúc này. Hãy thử lại sau.';
       });
     }
     if (!mounted) {

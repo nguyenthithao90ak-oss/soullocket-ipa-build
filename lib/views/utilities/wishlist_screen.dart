@@ -306,7 +306,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
               child: SLTheme.emptyStatePanel(
                 icon: Icons.error_outline_rounded,
                 title: 'Không tải được wishlist',
-                subtitle: '${snapshot.error}',
+                subtitle: 'Không tải được danh sách lúc này. Hãy thử lại sau.',
                 accentColor: SLColors.danger,
               ),
             ),
