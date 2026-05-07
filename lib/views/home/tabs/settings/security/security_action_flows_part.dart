@@ -714,6 +714,35 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       return;
     }
 
+    final logoutOtherDevices = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+            ),
+            title: Text(
+              'Đăng xuất thiết bị khác?',
+              style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+            ),
+            content: Text(
+              'Nếu đổi mật khẩu, bạn có thể chọn đăng xuất toàn bộ các thiết bị đã đăng nhập hiện có. Thiết bị đang dùng để đổi mật khẩu sẽ được giữ lại, còn các thiết bị khác sẽ bị buộc đăng nhập lại.',
+              style: SLTheme.quicksand(height: 1.45),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Không, chỉ đổi mật khẩu'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Có, đăng xuất tất cả thiết bị khác'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
     final canContinue = await _securityFlowGuard.guard(
       context,
       action: SensitiveActionType.changePassword,
@@ -764,11 +793,19 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       );
       await user.reauthenticateWithCredential(credential);
       await user.updatePassword(newPass);
+      if (logoutOtherDevices) {
+        await _authService.revokeOtherSessionsAfterPasswordChange();
+      }
       _oldPassCtrl.clear();
       _newPassCtrl.clear();
       if (!mounted) return;
       setState(() => _showPasswordEditor = false);
-      _showToast('Đổi mật khẩu thành công!', success: true);
+      _showToast(
+        logoutOtherDevices
+            ? 'Đổi mật khẩu thành công. Các thiết bị khác sẽ phải đăng nhập lại.'
+            : 'Đổi mật khẩu thành công!',
+        success: true,
+      );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
         _showToast('Mật khẩu cũ không đúng', success: false);
