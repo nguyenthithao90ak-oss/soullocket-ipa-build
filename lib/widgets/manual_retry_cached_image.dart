@@ -68,7 +68,7 @@ class _ManualRetryCachedImageState extends State<ManualRetryCachedImage> {
               Text(
                 l10n.translate('Không tải được ảnh'),
                 style: SLTheme.quicksand(
-                  color: Colors.white.withOpacity(0.92),
+                  color: Colors.white.withValues(alpha: 0.92),
                   fontWeight: FontWeight.w800,
                   fontSize: 13.5,
                 ),
@@ -80,7 +80,7 @@ class _ManualRetryCachedImageState extends State<ManualRetryCachedImage> {
                 label: Text(l10n.translate(widget.retryLabel)),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: BorderSide(color: Colors.white.withOpacity(0.35)),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
                   shape: RoundedRectangleBorder(
                     borderRadius: SLRadius.pillAll,
                   ),
