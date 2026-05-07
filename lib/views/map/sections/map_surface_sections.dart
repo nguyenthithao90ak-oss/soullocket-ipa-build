@@ -45,33 +45,6 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                       blurRadius: 22,
                       offset: const Offset(0, 10),
                     ),
-                  ],
-                ),
-                child: const Icon(Icons.map_rounded,
-                    color: Colors.white, size: 32),
-              ),
-              SLSpacing.h16,
-              Text(
-                'Đang mở bản đồ của bạn',
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
-              SLSpacing.h8,
-              Text(
-                'Đang tải vị trí, kỷ niệm và lộ trình mới nhất...',
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: _kMapTextMuted,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 18),
               const SizedBox(
                 width: 26,
                 height: 26,
@@ -168,9 +141,9 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
 
   Widget _buildMapStatusChips() {
     return Positioned(
-      top: 10,
+      top: 56,
       left: 12,
-      right: 76,
+      right: 84,
       child: ValueListenableBuilder<_LiveUiSnapshot>(
         valueListenable: _liveUiVN,
         builder: (context, uiSnap, _) {
@@ -217,7 +190,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               final double chipWidth = (constraints.maxWidth - 8) / 2;
               return Wrap(
                 spacing: 8,
-                runSpacing: 8,
+                runSpacing: 6,
                 children: chips
                     .map(
                       (chip) => SizedBox(
