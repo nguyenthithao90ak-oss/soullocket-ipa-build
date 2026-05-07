@@ -719,7 +719,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                         child: Image(
                           image: imageProvider,
                           fit: BoxFit.cover,
-                          filterQuality: FilterQuality.medium,
+                          filterQuality: FilterQuality.high,
                           gaplessPlayback: true,
                           frameBuilder:
                               (context, child, frame, wasSynchronouslyLoaded) =>
