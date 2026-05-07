@@ -44,7 +44,7 @@ class SessionConnectivityCoordinator {
   }
 
   Future<void> goOnlineNow() async {
-    _presenceTransitionToken++;
+    final token = ++_presenceTransitionToken;
     if (_pendingOfflineTimer != null) {
       debugPrint('[SessionConnectivity] Cancel pending offline transition.');
     }
@@ -61,6 +61,11 @@ class SessionConnectivityCoordinator {
       role: role,
       deviceType: _deviceType,
     );
+    if (token != _presenceTransitionToken ||
+        houseId != _currentHouseId ||
+        role != _currentRole) {
+      return;
+    }
     await _presenceService.markActiveNow();
   }
 
