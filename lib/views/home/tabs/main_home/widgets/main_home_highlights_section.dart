@@ -215,6 +215,31 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
                             memCacheWidth: imageCacheWidth,
                             imageUrl: item.imageUrl!,
                             fit: BoxFit.cover,
+                            placeholder: (_, __) => DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFFF8FB),
+                                    Color(0xFFFFEEF5),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor:
+                                        AlwaysStoppedAnimation<Color>(
+                                      const Color(0xFFD81B60).withOpacity(0.75),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                             errorWidget: (_, __, ___) =>
                                 _buildHighlightFallback(item),
                           )
