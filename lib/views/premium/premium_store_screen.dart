@@ -45,9 +45,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   bool get _isAndroidStorePlatform =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
-  bool get _canPurchase => _storeConfigured && _products.isNotEmpty;
-
-  bool get _isStoreReviewSafe => !_canPurchase;
+  bool get _canPurchase => _products.isNotEmpty;
 
   String get _storeDisplayName {
     if (_isAppleStorePlatform) {
@@ -478,8 +476,6 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                           const SizedBox(height: 24),
                           if (_isVip)
                             _buildVipActiveStatus()
-                          else if (_isStoreReviewSafe)
-                            _buildStoreNotConfiguredCard()
                           else
                             _buildProductSection(),
                           const SizedBox(height: 20),
