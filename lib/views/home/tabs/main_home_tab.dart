@@ -354,22 +354,22 @@ class _MainHomeTabState extends State<MainHomeTab> {
   BoxDecoration _homeCardDecoration({double radius = 24}) {
     final tone = UiPrefs.notifier.value.homeBlockToneKey;
     final color = switch (tone) {
-      'mist' => const Color(0xFFEEF4FF).withOpacity(0.42),
-      'rose' => const Color(0xFFFFE1EC).withOpacity(0.38),
-      'glass' => const Color(0xFF3A2434).withOpacity(0.22),
-      _ => const Color(0xFF43293A).withOpacity(0.20),
+      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.42),
+      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.38),
+      'glass' => const Color(0xFF3A2434).withValues(alpha: 0.22),
+      _ => const Color(0xFF43293A).withValues(alpha: 0.20),
     };
     final borderColor = switch (tone) {
-      'mist' => const Color(0xFFDAE8FF).withOpacity(0.62),
-      'rose' => const Color(0xFFFFC7DA).withOpacity(0.60),
-      'glass' => Colors.white.withOpacity(0.22),
-      _ => const Color(0xFFFFD6E4).withOpacity(0.26),
+      'mist' => const Color(0xFFDAE8FF).withValues(alpha: 0.62),
+      'rose' => const Color(0xFFFFC7DA).withValues(alpha: 0.60),
+      'glass' => Colors.white.withValues(alpha: 0.22),
+      _ => const Color(0xFFFFD6E4).withValues(alpha: 0.26),
     };
     final shadowColor = switch (tone) {
-      'mist' => const Color(0xFF64B5F6).withOpacity(0.10),
-      'rose' => SLColors.primary.withOpacity(0.12),
-      'glass' => Colors.black.withOpacity(0.14),
-      _ => const Color(0xFF2C1623).withOpacity(0.16),
+      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.10),
+      'rose' => SLColors.primary.withValues(alpha: 0.12),
+      'glass' => Colors.black.withValues(alpha: 0.14),
+      _ => const Color(0xFF2C1623).withValues(alpha: 0.16),
     };
 
     return BoxDecoration(
@@ -397,7 +397,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
           border: Border.all(color: const Color(0xFFF2EAF0), width: 2.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -406,14 +406,14 @@ class _MainHomeTabState extends State<MainHomeTab> {
       case 'glass':
         return BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withOpacity(0.55),
+          color: Colors.white.withValues(alpha: 0.55),
           border: Border.all(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             width: 4,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF8EC5FC).withOpacity(0.28),
+              color: const Color(0xFF8EC5FC).withValues(alpha: 0.28),
               blurRadius: 40,
               offset: const Offset(0, 18),
             ),
@@ -460,10 +460,10 @@ class _MainHomeTabState extends State<MainHomeTab> {
               Color(0xFFFF005D),
             ],
           ),
-          border: Border.all(color: Colors.white.withOpacity(0.70), width: 4),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.70), width: 4),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF00A8).withOpacity(0.38),
+              color: const Color(0xFFFF00A8).withValues(alpha: 0.38),
               blurRadius: 48,
               spreadRadius: 6,
             ),
@@ -479,10 +479,10 @@ class _MainHomeTabState extends State<MainHomeTab> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: Colors.white.withOpacity(0.78), width: 4),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.78), width: 4),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF69B4).withOpacity(0.28),
+              color: const Color(0xFFFF69B4).withValues(alpha: 0.28),
               blurRadius: 42,
             ),
           ],
@@ -490,15 +490,15 @@ class _MainHomeTabState extends State<MainHomeTab> {
       default:
         return BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withOpacity(0.7),
-          border: Border.all(color: Colors.white.withOpacity(0.75), width: 7),
+          color: Colors.white.withValues(alpha: 0.7),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 7),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF69B4).withOpacity(0.50),
+              color: const Color(0xFFFF69B4).withValues(alpha: 0.50),
               blurRadius: 45,
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 30,
               blurStyle: BlurStyle.inner,
             ),
@@ -1496,9 +1496,9 @@ class _MainHomeTabState extends State<MainHomeTab> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1507,7 +1507,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.16),
+              color: accent.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: accent, size: 18),
@@ -1933,9 +1933,9 @@ class _MainHomeTabState extends State<MainHomeTab> {
               ? accent
               : locked
                   ? const Color(0xFFD7C8CF)
-                  : accent.withOpacity(0.28);
+                  : accent.withValues(alpha: 0.28);
           final backgroundColor = selected
-              ? accent.withOpacity(0.14)
+              ? accent.withValues(alpha: 0.14)
               : locked
                   ? const Color(0xFFF8F2F4)
                   : Colors.white;
@@ -1961,7 +1961,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                   boxShadow: selected
                       ? [
                           BoxShadow(
-                            color: accent.withOpacity(0.18),
+                            color: accent.withValues(alpha: 0.18),
                             blurRadius: 14,
                             offset: const Offset(0, 6),
                           ),
@@ -2127,7 +2127,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                         width: 44,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.12),
+                          color: Colors.black.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
