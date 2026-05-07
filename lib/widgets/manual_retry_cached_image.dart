@@ -93,7 +93,6 @@ class _ManualRetryCachedImageState extends State<ManualRetryCachedImage> {
     }
 
     return CachedNetworkImage(
-      memCacheWidth: 900,
       key: ValueKey('${widget.imageUrl}#$_retryToken'),
       imageUrl: widget.imageUrl,
       width: widget.width,
@@ -102,7 +101,7 @@ class _ManualRetryCachedImageState extends State<ManualRetryCachedImage> {
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
       placeholderFadeInDuration: Duration.zero,
-      filterQuality: kIsWeb ? FilterQuality.low : FilterQuality.medium,
+      filterQuality: FilterQuality.high,
       placeholder: (context, url) => Container(
         width: widget.width,
         height: widget.height,
