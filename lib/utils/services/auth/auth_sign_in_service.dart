@@ -1536,34 +1536,56 @@ class AuthSignInService {
     }
   }
 
-  Future<void> undoScheduledDeletion() async {
+  Future<void> revokeOtherSessionsAfterPasswordChange() async {
     final user = _auth.currentUser;
-    if (user == null) throw 'Bạn chưa đăng nhập.';
+    if (user == null) {
+      throw 'Bạn chưa đăng nhập.';
+    }
+
     final idToken = await user.getIdToken(true) ?? '';
-    final undoEndpoint = AppConfig.deleteAccountUrl
+    if (idToken.isEmpty) {
+      throw 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.';
+    }
+
+    final endpoint = AppConfig.deleteAccountUrl
         .trim()
-        .replaceAll('deleteUserDataHttp', 'undoAccountDeletionHttp');
+        .replaceAll('deleteUserDataHttp', 'revokeOtherSessionsAfterPasswordChangeHttp');
     final response = await _httpPost(
-      Uri.parse(undoEndpoint),
+      Uri.parse(endpoint),
       headers: await AppCheckHttpHeaders.withOptionalToken({
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $idToken',
       }),
-    );
+      body: jsonEncode({
+        'source': 'flutter_app',
+      }),
+    ).timeout(const Duration(seconds: 20));
+
     if (response.statusCode != 200) {
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        unawaited(
+          RevenueSecurityTelemetryService.instance.logEvent(
+            type: 'revoke_other_sessions_failed',
+            reason: 'unauthorized',
+            severity: 'high',
+            extra: <String, Object?>{
+              'statusCode': response.statusCode,
+            },
+          ),
+        );
+        throw 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để áp dụng thay đổi bảo mật.';
+      }
       unawaited(
         RevenueSecurityTelemetryService.instance.logEvent(
-          type: 'undo_delete_failed',
+          type: 'revoke_other_sessions_failed',
           reason: 'server_rejected',
-          severity: response.statusCode == 401 || response.statusCode == 403
-              ? 'high'
-              : 'medium',
+          severity: 'medium',
           extra: <String, Object?>{
             'statusCode': response.statusCode,
           },
         ),
       );
-      throw 'Không hoàn tác được: trạng thái tài khoản chưa khôi phục được, hãy kiểm tra mạng rồi thử lại.';
+      throw 'Không thể đăng xuất các thiết bị khác lúc này. Vui lòng thử lại sau ít phút.';
     }
   }
 
