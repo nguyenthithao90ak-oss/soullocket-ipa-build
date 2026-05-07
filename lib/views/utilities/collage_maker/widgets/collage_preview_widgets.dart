@@ -282,7 +282,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
     double tileSize,
     bool compact,
   ) {
-    final cacheWidth = (tileSize * 3).round();
+    final cacheWidth = (tileSize * 4).round().clamp(480, 720);
     final image = photo.source.startsWith('http')
         ? CachedNetworkImage(
             memCacheWidth: cacheWidth,
@@ -302,7 +302,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
             File(photo.source),
             fit: BoxFit.cover,
             cacheWidth: cacheWidth,
-            filterQuality: FilterQuality.low,
+            filterQuality: FilterQuality.high,
           );
 
     return ClipRect(
