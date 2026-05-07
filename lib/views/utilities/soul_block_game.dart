@@ -612,8 +612,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final restoredTray = List<_SoulPieceOption>.from(nextRun.tray);
     final restoredRecommendedMove =
         _recommendMoveFor(restoredBoard, restoredTray);
-    final restoredGameOver =
-        restoredTray.isEmpty || !_hasAnyPlayableMove(restoredBoard, restoredTray);
+    final restoredGameOver = restoredTray.isEmpty ||
+        !_hasAnyPlayableMove(restoredBoard, restoredTray);
 
     setState(() {
       _board = restoredBoard;
