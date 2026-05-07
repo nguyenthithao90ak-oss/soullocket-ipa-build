@@ -37,7 +37,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                   Expanded(
                     child: Container(
                       height: 1,
-                      color: _paperLine.withOpacity(0.72),
+                      color: _paperLine.withValues(alpha: 0.72),
                     ),
                   ),
                   SizedBox(width: compact ? 6 : 8),
@@ -134,12 +134,12 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                                       width: 26,
                                       height: 26,
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.96),
+                                        color: Colors.white.withValues(alpha: 0.96),
                                         shape: BoxShape.circle,
                                         border: Border.all(color: _paperLine),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: _paperCocoa.withOpacity(0.10),
+                                            color: _paperCocoa.withValues(alpha: 0.10),
                                             blurRadius: 8,
                                             offset: const Offset(0, 3),
                                           ),
@@ -209,7 +209,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _paperCocoa.withOpacity(selected ? 0.16 : 0.08),
+                  color: _paperCocoa.withValues(alpha: selected ? 0.16 : 0.08),
                   blurRadius: selected ? 18 : 12,
                   offset: const Offset(0, 5),
                 ),
@@ -226,7 +226,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.36),
+                      color: Colors.black.withValues(alpha: 0.36),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -243,7 +243,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: _paperRoseDeep.withOpacity(0.16),
+                        color: _paperRoseDeep.withValues(alpha: 0.16),
                         borderRadius: tileRadius,
                       ),
                     ),
