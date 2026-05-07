@@ -368,7 +368,7 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
               top: 98,
               right: 26,
               child: _LoveCardBackdropBalloonPair(
-                leftColor: Colors.white.withOpacity(0.18),
+                leftColor: Colors.white.withValues(alpha: 0.18),
                 rightColor: colors.first.withValues(alpha: 0.22),
               ),
             ),
@@ -897,7 +897,7 @@ class _LoveCardHeroChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.10),
+        color: Colors.white.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
@@ -963,7 +963,7 @@ class _LoveCardHistoryMetric extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.10),
+        color: Colors.white.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
