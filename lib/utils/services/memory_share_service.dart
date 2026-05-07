@@ -156,6 +156,20 @@ class MemoryShareService {
     );
   }
 
+  Future<void> revokeShareLink(String token) async {
+    final normalizedToken = token.trim();
+    if (normalizedToken.isEmpty) {
+      throw Exception('Thiếu token liên kết để thu hồi.');
+    }
+
+    await _callWithAuthAndAppCheckRetry(() {
+      final callable = _functions.httpsCallable('revokeMemoryShareLink');
+      return callable.call(<String, dynamic>{
+        'token': normalizedToken,
+      });
+    });
+  }
+
   List<Map<String, dynamic>> _sanitizePhotos(
     List<Map<String, dynamic>> photos,
     int maxItems,
