@@ -573,6 +573,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                       Image.network(
                                         imageUrl,
                                         fit: BoxFit.cover,
+                                        filterQuality: FilterQuality.high,
                                         errorBuilder:
                                             (context, error, stackTrace) {
                                           return Container(
