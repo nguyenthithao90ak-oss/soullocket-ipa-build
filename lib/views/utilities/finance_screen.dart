@@ -402,13 +402,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
             color: isOverBudget
-                ? Colors.red.withOpacity(0.3)
-                : Colors.green.withOpacity(0.3),
+                ? Colors.red.withValues(alpha: 0.3)
+                : Colors.green.withValues(alpha: 0.3),
             width: 2),
         boxShadow: [
           BoxShadow(
               color:
-                  (isOverBudget ? Colors.red : Colors.green).withOpacity(0.05),
+                  (isOverBudget ? Colors.red : Colors.green).withValues(alpha: 0.05),
               blurRadius: 15,
               offset: const Offset(0, 5))
         ],
@@ -548,10 +548,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.amber.withOpacity(0.4), width: 2),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 2),
         boxShadow: [
           BoxShadow(
-              color: Colors.amber.withOpacity(0.1),
+              color: Colors.amber.withValues(alpha: 0.1),
               blurRadius: 15,
               offset: const Offset(0, 5))
         ],
@@ -741,9 +741,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
       margin: const EdgeInsets.fromLTRB(15, 8, 15, 8),
       padding: SLSpacing.all20,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.90),
+        color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.85), width: 2.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(
@@ -855,9 +855,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
       margin: const EdgeInsets.fromLTRB(15, 12, 15, 0),
       padding: SLSpacing.all20,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.90),
+        color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.85), width: 2.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(children: [
@@ -922,9 +922,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
       margin: SLSpacing.all16,
       padding: SLSpacing.all20,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.90),
+        color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.85), width: 2.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -994,7 +994,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             hintText: '${context.tr('amount')} (VND)...',
             hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
             prefixIcon: Icon(Icons.attach_money,
-                color: SLTheme.primary.withOpacity(0.6), size: 20),
+                color: SLTheme.primary.withValues(alpha: 0.6), size: 20),
             filled: true,
             fillColor: const Color(0xFFFFF5F7),
             enabledBorder: OutlineInputBorder(
@@ -1020,7 +1020,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             hintText: '${context.tr('note')} (tùy chọn)...',
             hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
             prefixIcon: Icon(Icons.notes,
-                color: SLTheme.primary.withOpacity(0.6), size: 20),
+                color: SLTheme.primary.withValues(alpha: 0.6), size: 20),
             filled: true,
             fillColor: const Color(0xFFFFF5F7),
             enabledBorder: OutlineInputBorder(
@@ -1059,7 +1059,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           border: Border.all(
               color: isSelected ? color : const Color(0xFFE8D5DF), width: 1.5),
           boxShadow: isSelected
-              ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 10)]
+              ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 10)]
               : null,
         ),
         alignment: Alignment.center,
@@ -1202,7 +1202,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                             width: 5)),
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 12,
                           offset: const Offset(0, 4))
                     ],
