@@ -572,8 +572,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
   List<_SoulPieceOption> _buildOpeningTray(List<List<_SoulTile?>> board) {
     final List<_SoulPieceOption> tray = _buildSmartBatch(board);
-    final List<_SoulPieceTemplate> curatedTemplates =
-        <_SoulPieceTemplate>[
+    final List<_SoulPieceTemplate> curatedTemplates = <_SoulPieceTemplate>[
       _kSoulBlockTemplates.firstWhere((template) => template.id == 'duo_h'),
       _kSoulBlockTemplates.firstWhere((template) => template.id == 'duo_v'),
       _kSoulBlockTemplates.firstWhere((template) => template.id == 'square_2'),
