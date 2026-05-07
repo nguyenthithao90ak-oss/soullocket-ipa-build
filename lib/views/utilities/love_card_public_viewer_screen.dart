@@ -210,7 +210,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                       left: -40,
                       child: _GlowOrb(
                         size: 300,
-                        color: Colors.white.withOpacity(0.18),
+                        color: Colors.white.withValues(alpha: 0.18),
                       ),
                     ),
                     Positioned(
