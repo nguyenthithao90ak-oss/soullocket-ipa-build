@@ -171,7 +171,7 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
                             ),
                             Switch(
                               value: visited,
-                              activeColor: SLColors.primaryActive,
+                              activeThumbColor: SLColors.primaryActive,
                               onChanged: (value) {
                                 setModalState(() => visited = value);
                               },
