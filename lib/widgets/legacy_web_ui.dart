@@ -99,12 +99,12 @@ class LegacyWebUi {
           border: Border.all(color: const Color(0xFFFFB7CB), width: 2.8),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF8F9F).withOpacity(0.20),
+              color: const Color(0xFFFF8F9F).withValues(alpha: 0.20),
               blurRadius: blur * 0.92,
               offset: Offset(0, yOffset),
             ),
             BoxShadow(
-              color: Colors.white.withOpacity(0.72),
+              color: Colors.white.withValues(alpha: 0.72),
               blurRadius: 1.4,
               spreadRadius: 0.6,
               blurStyle: BlurStyle.inner,
@@ -121,12 +121,12 @@ class LegacyWebUi {
           border: Border.all(color: const Color(0xFFF8F6FF), width: 2.3),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF9D9CFF).withOpacity(0.20),
+              color: const Color(0xFF9D9CFF).withValues(alpha: 0.20),
               blurRadius: blur * 0.88,
               offset: Offset(0, yOffset),
             ),
             BoxShadow(
-              color: Colors.white.withOpacity(0.62),
+              color: Colors.white.withValues(alpha: 0.62),
               blurRadius: 1.2,
               spreadRadius: 0.5,
               blurStyle: BlurStyle.inner,
@@ -143,12 +143,12 @@ class LegacyWebUi {
           border: Border.all(color: const Color(0xFFFFFAFC), width: 2.4),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF93B8).withOpacity(0.18),
+              color: const Color(0xFFFF93B8).withValues(alpha: 0.18),
               blurRadius: blur * 0.84,
               offset: Offset(0, yOffset),
             ),
             BoxShadow(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               blurRadius: 1.4,
               spreadRadius: 0.8,
               blurStyle: BlurStyle.inner,
@@ -159,22 +159,22 @@ class LegacyWebUi {
         return build(
           gradient: LinearGradient(
             colors: [
-              Colors.white.withOpacity(0.96),
-              const Color(0xFFE9F7FF).withOpacity(0.88),
-              const Color(0xFFF1ECFF).withOpacity(0.92),
+              Colors.white.withValues(alpha: 0.96),
+              const Color(0xFFE9F7FF).withValues(alpha: 0.88),
+              const Color(0xFFF1ECFF).withValues(alpha: 0.92),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: Colors.white.withOpacity(0.92), width: 2.4),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 2.4),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF8DCDFD).withOpacity(0.20),
+              color: const Color(0xFF8DCDFD).withValues(alpha: 0.20),
               blurRadius: blur * 0.86,
               offset: Offset(0, yOffset),
             ),
             BoxShadow(
-              color: accentColor.withOpacity(0.09),
+              color: accentColor.withValues(alpha: 0.09),
               blurRadius: 1.4,
               spreadRadius: 0.7,
               blurStyle: BlurStyle.inner,
@@ -191,7 +191,7 @@ class LegacyWebUi {
           border: Border.all(color: const Color(0xFFFFF8DE), width: 2.6),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFBC42).withOpacity(0.26),
+              color: const Color(0xFFFFBC42).withValues(alpha: 0.26),
               blurRadius: blur,
               offset: Offset(0, yOffset),
             ),
@@ -207,7 +207,7 @@ class LegacyWebUi {
           ),
           boxShadow: [
             BoxShadow(
-              color: accentColor.withOpacity(0.22),
+              color: accentColor.withValues(alpha: 0.22),
               blurRadius: blur,
               offset: Offset(0, yOffset),
             ),
@@ -223,9 +223,9 @@ class LegacyWebUi {
   }) {
     final palette = colors ??
         [
-          SLColors.bgElevated.withOpacity(0.98),
+          SLColors.bgElevated.withValues(alpha: 0.98),
           Color.lerp(accent, SLColors.bgElevated, 0.92) ?? SLColors.bgElevated,
-          SLColors.bgCard.withOpacity(0.96),
+          SLColors.bgCard.withValues(alpha: 0.96),
         ];
     return BoxDecoration(
       gradient: LinearGradient(
@@ -234,15 +234,15 @@ class LegacyWebUi {
         end: Alignment.bottomRight,
       ),
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: accent.withOpacity(0.18), width: 1.4),
+      border: Border.all(color: accent.withValues(alpha: 0.18), width: 1.4),
       boxShadow: [
         BoxShadow(
-          color: accent.withOpacity(0.08),
+          color: accent.withValues(alpha: 0.08),
           blurRadius: 28,
           offset: const Offset(0, 14),
         ),
         BoxShadow(
-          color: Colors.white.withOpacity(0.72),
+          color: Colors.white.withValues(alpha: 0.72),
           blurRadius: 1,
           spreadRadius: 1,
           blurStyle: BlurStyle.inner,
@@ -265,18 +265,18 @@ class LegacyWebUi {
       ),
       border: OutlineInputBorder(
         borderRadius: SLRadius.xlAll,
-        borderSide: BorderSide(color: accent.withOpacity(0.18), width: 1.2),
+        borderSide: BorderSide(color: accent.withValues(alpha: 0.18), width: 1.2),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: SLRadius.xlAll,
-        borderSide: BorderSide(color: accent.withOpacity(0.16), width: 1.2),
+        borderSide: BorderSide(color: accent.withValues(alpha: 0.16), width: 1.2),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: SLRadius.xlAll,
-        borderSide: BorderSide(color: accent.withOpacity(0.70), width: 1.8),
+        borderSide: BorderSide(color: accent.withValues(alpha: 0.70), width: 1.8),
       ),
       filled: true,
-      fillColor: SLColors.bgElevated.withOpacity(0.96),
+      fillColor: SLColors.bgElevated.withValues(alpha: 0.96),
       suffixIcon: suffixIcon,
       contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 16),
       isDense: true,
@@ -313,7 +313,7 @@ class LegacyWebUi {
               radius: 24,
               colors: notice.gradient,
             ).copyWith(
-              border: Border.all(color: notice.borderColor.withOpacity(0.30)),
+              border: Border.all(color: notice.borderColor.withValues(alpha: 0.30)),
             ),
             child: Row(
               children: [
@@ -322,16 +322,16 @@ class LegacyWebUi {
                   height: 38,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [notice.iconTint.withOpacity(0.16), Colors.white],
+                      colors: [notice.iconTint.withValues(alpha: 0.16), Colors.white],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: SLRadius.lgAll,
                     border:
-                        Border.all(color: notice.iconTint.withOpacity(0.14)),
+                        Border.all(color: notice.iconTint.withValues(alpha: 0.14)),
                   ),
                   child: Icon(notice.icon, color: notice.iconTint, size: 20),
-                ),
+                ),,
                 SLSpacing.w10,
                 Expanded(
                   child: Column(
@@ -398,7 +398,7 @@ class LegacyWebUi {
               radius: 24,
               colors: notice.gradient,
             ).copyWith(
-              border: Border.all(color: notice.borderColor.withOpacity(0.30)),
+              border: Border.all(color: notice.borderColor.withValues(alpha: 0.30)),
             ),
             child: Row(
               children: [
@@ -407,13 +407,13 @@ class LegacyWebUi {
                   height: 38,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [notice.iconTint.withOpacity(0.16), Colors.white],
+                      colors: [notice.iconTint.withValues(alpha: 0.16), Colors.white],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: SLRadius.lgAll,
                     border:
-                        Border.all(color: notice.iconTint.withOpacity(0.14)),
+                        Border.all(color: notice.iconTint.withValues(alpha: 0.14)),
                   ),
                   child: Icon(notice.icon, color: notice.iconTint, size: 20),
                 ),
@@ -460,7 +460,7 @@ class LegacyWebUi {
                     shape: RoundedRectangleBorder(
                       borderRadius: SLRadius.pillAll,
                       side:
-                          BorderSide(color: notice.iconTint.withOpacity(0.28)),
+                          BorderSide(color: notice.iconTint.withValues(alpha: 0.28)),
                     ),
                   ),
                   child: Text(actionLabel),
@@ -707,7 +707,7 @@ class _SlAnimatedVipFrameState extends State<SlAnimatedVipFrame>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: colors.last.withOpacity(0.26),
+                  color: colors.last.withValues(alpha: 0.26),
                   blurRadius: orbitDot * 0.9,
                   spreadRadius: 0.2,
                 ),
@@ -762,7 +762,7 @@ class _SlAnimatedVipFrameState extends State<SlAnimatedVipFrame>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFFC44D).withOpacity(0.26),
+                        color: const Color(0xFFFFC44D).withValues(alpha: 0.26),
                         blurRadius: widget.size * 0.18,
                         offset: Offset(0, widget.size * 0.08),
                       ),
@@ -777,12 +777,12 @@ class _SlAnimatedVipFrameState extends State<SlAnimatedVipFrame>
                         shape: shape,
                         borderRadius: radius,
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.62),
+                          color: Colors.white.withValues(alpha: 0.62),
                           width: ringBorder,
                         ),
                         gradient: RadialGradient(
                           colors: [
-                            Colors.white.withOpacity(0.22),
+                            Colors.white.withValues(alpha: 0.22),
                             Colors.transparent,
                           ],
                           stops: const [0.0, 1.0],
