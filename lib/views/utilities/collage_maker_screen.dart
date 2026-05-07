@@ -508,7 +508,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     return BoxDecoration(
       color: color,
       borderRadius: _paperRadius(flipped: flipped),
-      border: Border.all(color: borderColor.withOpacity(0.92), width: 1.2),
+      border: Border.all(color: borderColor.withValues(alpha: 0.92), width: 1.2),
       boxShadow: _paperShadow(),
     );
   }
@@ -1039,7 +1039,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: SLTheme.quicksand(
-                  color: Colors.white.withOpacity(0.82),
+                  color: Colors.white.withValues(alpha: 0.82),
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1050,7 +1050,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
               child: IconButton.filled(
                 onPressed: () => Navigator.pop(context),
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.white.withOpacity(0.14),
+                  backgroundColor: Colors.white.withValues(alpha: 0.14),
                   foregroundColor: Colors.white,
                 ),
                 icon: const Icon(Icons.close),
@@ -1101,7 +1101,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     return Scaffold(
       backgroundColor: _paperCream,
       appBar: AppBar(
-        backgroundColor: _paperCream.withOpacity(0.90),
+        backgroundColor: _paperCream.withValues(alpha: 0.90),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leadingWidth: 72,
@@ -1482,7 +1482,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                         boxShadow: [
                                           BoxShadow(
                                             color:
-                                                _paperCocoa.withOpacity(0.10),
+                                                _paperCocoa.withValues(alpha: 0.10),
                                             blurRadius: 22,
                                             offset: const Offset(0, 12),
                                           )
@@ -1516,7 +1516,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                                       vertical: 8),
                                               decoration: BoxDecoration(
                                                 color: _paperCocoa
-                                                    .withOpacity(0.78),
+                                                    .withValues(alpha: 0.78),
                                                 borderRadius:
                                                     _paperRadius(flipped: true),
                                               ),
