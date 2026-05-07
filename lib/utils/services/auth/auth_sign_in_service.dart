@@ -1518,12 +1518,35 @@ class AuthSignInService {
       throw 'Bạn chưa đăng nhập. Không thể xóa tài khoản.';
     }
 
+    if (kDebugMode) {
+      debugPrint(
+        'deleteAccount(): start uid=${user.uid} endpoint=$deleteEndpoint',
+      );
+    }
+
     try {
-      return await _deleteAccountFromServer(user);
+      final result = await _deleteAccountFromServer(user);
+      if (kDebugMode) {
+        debugPrint('deleteAccount(): success uid=${user.uid}');
+      }
+      return result;
     } on firebase_auth.FirebaseAuthException catch (error) {
+      if (kDebugMode) {
+        debugPrint(
+          'deleteAccount(): FirebaseAuthException code=${error.code} '
+          'message=${error.message}',
+        );
+      }
       if (error.code == 'requires-recent-login') {
+        if (kDebugMode) {
+          debugPrint('deleteAccount(): reauth required, retrying once');
+        }
         await _reauthenticateCurrentUserWithLinkedProvider(user);
-        return await _deleteAccountFromServer(user);
+        final result = await _deleteAccountFromServer(user);
+        if (kDebugMode) {
+          debugPrint('deleteAccount(): success after reauth uid=${user.uid}');
+        }
+        return result;
       }
       throw handleFirebaseAuthError(error);
     } catch (error) {
@@ -1532,8 +1555,20 @@ class AuthSignInService {
           normalized.contains('đăng nhập lại rồi thử xóa tài khoản') ||
           normalized.contains('phiên đăng nhập đã hết hạn') ||
           normalized.contains('phiên đăng nhập không còn hợp lệ')) {
+        if (kDebugMode) {
+          debugPrint(
+            'deleteAccount(): retrying after session error: $error',
+          );
+        }
         await _reauthenticateCurrentUserWithLinkedProvider(user);
-        return await _deleteAccountFromServer(user);
+        final result = await _deleteAccountFromServer(user);
+        if (kDebugMode) {
+          debugPrint('deleteAccount(): success after session retry uid=${user.uid}');
+        }
+        return result;
+      }
+      if (kDebugMode) {
+        debugPrint('deleteAccount(): failed with error=$error');
       }
       if (error is String) rethrow;
       final resolvedError = AppErrorMapper.resolve(
