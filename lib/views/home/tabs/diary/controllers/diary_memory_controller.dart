@@ -138,6 +138,17 @@ class DiaryMemoryController extends ChangeNotifier {
     }
   }
 
+  void _dismissCurrentDialog(BuildContext context) {
+    if (!context.mounted) {
+      return;
+    }
+    final navigator = Navigator.maybeOf(context, rootNavigator: true);
+    if (navigator == null || !navigator.canPop()) {
+      return;
+    }
+    navigator.pop();
+  }
+
   Future<List<String>> _extractRecoverableImagePaths(List<XFile> images) async {
     if (kIsWeb) {
       return const <String>[];
@@ -863,7 +874,7 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!context.mounted) {
         return;
       }
-      Navigator.of(context).pop();
+      _dismissCurrentDialog(context);
       showSnackBar(
         '${L10nService().format('diary_deleted_memories', {
           'count': updatesCount,
@@ -914,7 +925,7 @@ class DiaryMemoryController extends ChangeNotifier {
           if (!context.mounted) {
             return;
           }
-          Navigator.of(context).pop();
+          _dismissCurrentDialog(context);
           showSnackBar(
             '${L10nService().format('diary_deleted_memories', {
               'count': deletedItems.length,
@@ -927,7 +938,7 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!context.mounted) {
         return;
       }
-      Navigator.of(context).pop();
+      _dismissCurrentDialog(context);
       showSnackBar(
         L10nService().format('diary_delete_photo_error', {'error': e}),
         backgroundColor: const Color(0xFFE53935),
@@ -959,7 +970,7 @@ class DiaryMemoryController extends ChangeNotifier {
         if (!context.mounted) {
           return;
         }
-        Navigator.of(context).pop();
+        _dismissCurrentDialog(context);
         showSnackBar(
           'Chưa có quyền lưu ảnh vào album.',
           backgroundColor: const Color(0xFFE53935),
@@ -995,7 +1006,7 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!context.mounted) {
         return;
       }
-      Navigator.of(context).pop();
+      _dismissCurrentDialog(context);
 
       if (savedCount > 0) {
         _exitSelectionMode(notify: false);
@@ -1014,7 +1025,7 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!context.mounted) {
         return;
       }
-      Navigator.of(context).pop();
+      _dismissCurrentDialog(context);
       showSnackBar(
         L10nService().format('diary_save_image_error', {'error': e}),
         backgroundColor: const Color(0xFFE53935),
@@ -1042,7 +1053,7 @@ class DiaryMemoryController extends ChangeNotifier {
         if (!context.mounted) {
           return;
         }
-        Navigator.of(context).pop();
+        _dismissCurrentDialog(context);
         showSnackBar(
           'Chưa có quyền lưu ảnh vào album.',
           backgroundColor: const Color(0xFFE53935),
@@ -1065,13 +1076,13 @@ class DiaryMemoryController extends ChangeNotifier {
         if (!context.mounted) {
           return;
         }
-        Navigator.of(context).pop();
+        _dismissCurrentDialog(context);
         showSnackBar(L10nService().translate('diary_saved_image_to_album'));
       } else {
         if (!context.mounted) {
           return;
         }
-        Navigator.of(context).pop();
+        _dismissCurrentDialog(context);
         showSnackBar(
           'Không thể tải ảnh.',
           backgroundColor: const Color(0xFFE53935),
@@ -1081,7 +1092,7 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!context.mounted) {
         return;
       }
-      Navigator.of(context).pop();
+      _dismissCurrentDialog(context);
       showSnackBar(
         L10nService().format('diary_save_image_error', {'error': e}),
         backgroundColor: const Color(0xFFE53935),
