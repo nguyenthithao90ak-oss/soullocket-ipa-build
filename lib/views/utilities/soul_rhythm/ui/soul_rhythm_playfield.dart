@@ -103,10 +103,10 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF150A20).withOpacity(0.98),
-                  const Color(0xFF231138).withOpacity(0.96),
-                  const Color(0xFF081B31).withOpacity(0.94),
-                  const Color(0xFF030813).withOpacity(0.98),
+                  const Color(0xFF150A20).withValues(alpha: 0.98),
+                  const Color(0xFF231138).withValues(alpha: 0.96),
+                  const Color(0xFF081B31).withValues(alpha: 0.94),
+                  const Color(0xFF030813).withValues(alpha: 0.98),
                 ],
                 stops: const [0.0, 0.26, 0.68, 1.0],
                 begin: Alignment.topCenter,
@@ -114,7 +114,7 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
               ),
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: Colors.white.withOpacity(0.09),
+                color: Colors.white.withValues(alpha: 0.09),
               ),
             ),
             child: DecoratedBox(
@@ -122,9 +122,9 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                 borderRadius: BorderRadius.circular(28),
                 gradient: LinearGradient(
                   colors: [
-                    Colors.white.withOpacity(0.012),
+                    Colors.white.withValues(alpha: 0.012),
                     Colors.transparent,
-                    Colors.black.withOpacity(0.12),
+                    Colors.black.withValues(alpha: 0.12),
                   ],
                   stops: const [0.0, 0.38, 1.0],
                   begin: Alignment.topCenter,
@@ -145,9 +145,9 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                 gradient: RadialGradient(
                   colors: [
                     const Color(0xFFFFC94D)
-                        .withOpacity(_isLowGraphics ? 0.08 : 0.16),
+                        .withValues(alpha: _isLowGraphics ? 0.08 : 0.16),
                     const Color(0xFFFF6EC7)
-                        .withOpacity(_isLowGraphics ? 0.05 : 0.12),
+                        .withValues(alpha: _isLowGraphics ? 0.05 : 0.12),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.42, 1.0],
@@ -169,13 +169,13 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.05 + (bgPulse * 0.06)),
+                    color: Colors.white.withValues(alpha: 0.05 + (bgPulse * 0.06)),
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF6FE8FF)
-                          .withOpacity(0.05 + (bgPulse * 0.08)),
+                          .withValues(alpha: 0.05 + (bgPulse * 0.08)),
                       blurRadius: 28,
                     ),
                   ],
@@ -206,9 +206,9 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                 gradient: LinearGradient(
                   colors: [
                     const Color(0xFF00E5FF)
-                        .withOpacity(0.05 + (bgPulse * 0.08)),
+                        .withValues(alpha: 0.05 + (bgPulse * 0.08)),
                     const Color(0xFFFF3D81)
-                        .withOpacity(0.025 + (bgPulse * 0.04)),
+                        .withValues(alpha: 0.025 + (bgPulse * 0.04)),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.42, 1.0],
@@ -252,7 +252,7 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
               ),
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -268,9 +268,9 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                 gradient: LinearGradient(
                   colors: [
                     const Color(0xFFFF6EC7)
-                        .withOpacity(0.08 + (bgPulse * 0.05)),
+                        .withValues(alpha: 0.08 + (bgPulse * 0.05)),
                     const Color(0xFF6FE8FF)
-                        .withOpacity(0.06 + (bgPulse * 0.04)),
+                        .withValues(alpha: 0.06 + (bgPulse * 0.04)),
                     Colors.transparent,
                   ],
                   begin: Alignment.topCenter,
@@ -292,9 +292,9 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                 gradient: LinearGradient(
                   colors: [
                     const Color(0xFF00E5FF)
-                        .withOpacity(0.08 + (bgPulse * 0.05)),
+                        .withValues(alpha: 0.08 + (bgPulse * 0.05)),
                     const Color(0xFFFF3D81)
-                        .withOpacity(0.04 + (bgPulse * 0.03)),
+                        .withValues(alpha: 0.04 + (bgPulse * 0.03)),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.48, 1.0],
@@ -347,9 +347,9 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                 height: 52,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.18),
+                  color: Colors.black.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +382,7 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                       child: LinearProgressIndicator(
                         minHeight: 8,
                         value: currentLoopProgress.clamp(0.0, 1.0),
-                        backgroundColor: Colors.white.withOpacity(0.08),
+                        backgroundColor: Colors.white.withValues(alpha: 0.08),
                         valueColor: const AlwaysStoppedAnimation<Color>(
                           Color(0xFFFF6EC7),
                         ),
@@ -413,7 +413,7 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                                         ? (isMajor
                                             ? const Color(0xFFFFC94D)
                                             : const Color(0xFF6FE8FF))
-                                        : Colors.white.withOpacity(0.18),
+                                        : Colors.white.withValues(alpha: 0.18),
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                 ),
@@ -439,8 +439,8 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                       (strongBeat
                               ? const Color(0xFFFFC94D)
                               : const Color(0xFFFF6EC7))
-                          .withOpacity(pulseOpacity),
-                      const Color(0xFF6FE8FF).withOpacity(pulseOpacity * 0.76),
+                          .withValues(alpha: pulseOpacity),
+                      const Color(0xFF6FE8FF).withValues(alpha: pulseOpacity * 0.76),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.48, 1.0],
@@ -463,11 +463,11 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                       borderRadius: BorderRadius.circular(999),
                       gradient: SweepGradient(
                         colors: [
-                          const Color(0xFFFF6EC7).withOpacity(0.0),
-                          const Color(0xFFFF6EC7).withOpacity(0.36),
-                          const Color(0xFF6FE8FF).withOpacity(0.18),
-                          const Color(0xFFFFC94D).withOpacity(0.34),
-                          const Color(0xFFFF6EC7).withOpacity(0.0),
+                          const Color(0xFFFF6EC7).withValues(alpha: 0.0),
+                          const Color(0xFFFF6EC7).withValues(alpha: 0.36),
+                          const Color(0xFF6FE8FF).withValues(alpha: 0.18),
+                          const Color(0xFFFFC94D).withValues(alpha: 0.34),
+                          const Color(0xFFFF6EC7).withValues(alpha: 0.0),
                         ],
                       ),
                     ),
@@ -521,32 +521,32 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                                 Color.lerp(tile.color, Colors.white, 0.52)!,
                                 coreColor,
                                 shadowColor,
-                                Colors.black.withOpacity(0.45),
+                                Colors.black.withValues(alpha: 0.45),
                               ],
                               stops: const [0.0, 0.18, 0.85, 1.0],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                             ),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.92),
+                              color: Colors.white.withValues(alpha: 0.92),
                               width: 1.5,
                             ),
                           boxShadow: [
                             BoxShadow(
-                              color: tile.color.withOpacity(
-                                _isLowGraphics ? 0.62 : 0.88,
+                              color: tile.color.withValues(
+                                alpha: _isLowGraphics ? 0.62 : 0.88,
                               ),
                               blurRadius: glowBlur * 1.2,
                               spreadRadius: glowSpread * 1.1,
                             ),
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.35),
+                              color: Colors.black.withValues(alpha: 0.35),
                               blurRadius: _isLowGraphics ? 8 : 14,
                               offset: const Offset(0, 12),
                             ),
                             if (!_isLowGraphics)
                               BoxShadow(
-                                color: Colors.white.withOpacity(0.16),
+                                color: Colors.white.withValues(alpha: 0.16),
                                 blurRadius: shineBlur * 0.42,
                                 offset: const Offset(-2, -3),
                               ),
@@ -565,7 +565,7 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.white.withOpacity(0.98),
+                                        Colors.white.withValues(alpha: 0.98),
                                         Color.lerp(tile.color, Colors.white, 0.40)!,
                                       ],
                                       begin: Alignment.topCenter,
@@ -573,7 +573,7 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                                     ),
                                     border: Border(
                                       bottom: BorderSide(
-                                        color: Colors.white.withOpacity(0.32),
+                                        color: Colors.white.withValues(alpha: 0.32),
                                       ),
                                     ),
                                   ),
@@ -589,8 +589,8 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                                     borderRadius: BorderRadius.circular(999),
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.white.withOpacity(0.72),
-                                        Colors.white.withOpacity(0.08),
+                                        Colors.white.withValues(alpha: 0.72),
+                                        Colors.white.withValues(alpha: 0.08),
                                       ],
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
@@ -609,8 +609,8 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                                     gradient: LinearGradient(
                                       colors: [
                                         Colors.transparent,
-                                        Colors.black.withOpacity(0.20),
-                                        Colors.black.withOpacity(0.42),
+                                        Colors.black.withValues(alpha: 0.20),
+                                        Colors.black.withValues(alpha: 0.42),
                                       ],
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
@@ -627,10 +627,10 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                                     height: min(18.0, max(10.0, tile.width * 0.18)),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Colors.white.withOpacity(0.18),
+                                      color: Colors.white.withValues(alpha: 0.18),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.white.withOpacity(0.28),
+                                          color: Colors.white.withValues(alpha: 0.28),
                                           blurRadius: shineBlur * 0.65,
                                         ),
                                       ],
@@ -642,9 +642,9 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.white.withOpacity(0.10),
+                                        Colors.white.withValues(alpha: 0.10),
                                         Colors.transparent,
-                                        Colors.black.withOpacity(0.10),
+                                        Colors.black.withValues(alpha: 0.10),
                                       ],
                                       stops: const [0.0, 0.42, 1.0],
                                       begin: Alignment.topLeft,
@@ -702,7 +702,7 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                     color: ft.color,
                     shadows: [
                       Shadow(
-                        color: ft.color.withOpacity(0.8),
+                        color: ft.color.withValues(alpha: 0.8),
                         blurRadius: 10,
                       )
                     ],
@@ -731,18 +731,18 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
           gradient: LinearGradient(
             colors: [
               Colors.transparent,
-              _SoulRhythmGameState._unityCyan.withOpacity(0.16),
-              Colors.white.withOpacity(0.92),
-              _SoulRhythmGameState._unityCyan.withOpacity(0.82),
-              _SoulRhythmGameState._unityPink.withOpacity(0.24),
+              _SoulRhythmGameState._unityCyan.withValues(alpha: 0.16),
+              Colors.white.withValues(alpha: 0.92),
+              _SoulRhythmGameState._unityCyan.withValues(alpha: 0.82),
+              _SoulRhythmGameState._unityPink.withValues(alpha: 0.24),
               Colors.transparent,
             ],
             stops: const [0.0, 0.16, 0.46, 0.72, 0.88, 1.0],
           ),
           boxShadow: [
             BoxShadow(
-              color: _SoulRhythmGameState._unityCyan.withOpacity(
-                0.34 + (bgPulse * 0.17),
+              color: _SoulRhythmGameState._unityCyan.withValues(
+                alpha: 0.34 + (bgPulse * 0.17),
               ),
               blurRadius: hitLineBlur,
             ),
@@ -755,11 +755,11 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
             margin: const EdgeInsets.symmetric(horizontal: 34),
             height: 2,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
+              color: Colors.white.withValues(alpha: 0.95),
               borderRadius: SLRadius.pillAll,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.55),
+                  color: Colors.white.withValues(alpha: 0.55),
                   blurRadius: 6,
                 ),
               ],
@@ -789,8 +789,8 @@ class _SoulRhythmStagePainter extends CustomPainter {
 
     glowPaint.shader = RadialGradient(
       colors: [
-        const Color(0xFFFFC94D).withOpacity(lowGraphics ? 0.06 : 0.16),
-        const Color(0xFFFF3D81).withOpacity(lowGraphics ? 0.04 : 0.12),
+        const Color(0xFFFFC94D).withValues(alpha: lowGraphics ? 0.06 : 0.16),
+        const Color(0xFFFF3D81).withValues(alpha: lowGraphics ? 0.04 : 0.12),
         Colors.transparent,
       ],
       stops: const [0.0, 0.48, 1.0],
