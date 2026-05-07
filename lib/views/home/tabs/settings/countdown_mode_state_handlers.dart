@@ -1471,7 +1471,7 @@ extension _CountdownModeIndependentScreenStatePart
       labelText: label,
       hintText: hint,
       filled: true,
-      fillColor: Colors.white.withOpacity(0.06),
+      fillColor: Colors.white.withValues(alpha: 0.06),
       labelStyle: SLTheme.quicksand(
         color: Colors.white70,
         fontWeight: FontWeight.w800,
@@ -1482,11 +1482,11 @@ extension _CountdownModeIndependentScreenStatePart
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.12)),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.12)),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
