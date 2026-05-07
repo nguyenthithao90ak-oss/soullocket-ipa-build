@@ -130,7 +130,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               style: SLTheme.quicksand(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF8A94A6),
+                color: SLColors.textSecondary,
               ),
             ),
           ],
