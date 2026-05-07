@@ -176,7 +176,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                           : null,
                       fillColor: isAction
                           ? const Color(0xFFFFF0F6)
-                          : Colors.white.withOpacity(0.94),
+                          : Colors.white.withValues(alpha: 0.94),
                       textColor: isPrimary
                           ? Colors.white
                           : isAction
@@ -199,12 +199,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.96),
+        color: Colors.white.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 18,
             offset: const Offset(0, 10),
           ),
@@ -265,7 +265,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: SLRadius.xlAll,
         border: Border.all(color: const Color(0xFFFFE0EC)),
       ),
@@ -349,7 +349,7 @@ class _CalculatorButton extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
