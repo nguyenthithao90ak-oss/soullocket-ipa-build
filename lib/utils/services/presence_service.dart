@@ -125,8 +125,8 @@ class PresenceService {
       }
     }
 
-    final activeSessionCount = _readEpochMs(data['activeSessionCount']);
-    if (activeSessionCount != null && activeSessionCount > 0) {
+    final activeSessionCount = data['activeSessionCount'];
+    if (activeSessionCount is num && activeSessionCount.toInt() > 0) {
       return true;
     }
 
