@@ -31,12 +31,12 @@ class DiaryTabBtn extends StatelessWidget {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: active ? Colors.white.withOpacity(0.92) : Colors.transparent,
+          color: active ? Colors.white.withValues(alpha: 0.92) : Colors.transparent,
           borderRadius: SLRadius.lgAll,
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: accent.withOpacity(0.14),
+                    color: accent.withValues(alpha: 0.14),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -60,21 +60,21 @@ class DiaryTabBtn extends StatelessWidget {
                       )
                     : LinearGradient(
                         colors: [
-                          Colors.white.withOpacity(0.92),
-                          Colors.white.withOpacity(0.72),
+                          Colors.white.withValues(alpha: 0.92),
+                          Colors.white.withValues(alpha: 0.72),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                 border: Border.all(
                   color: active
-                      ? Colors.white.withOpacity(0.65)
-                      : palette.first.withOpacity(0.16),
+                      ? Colors.white.withValues(alpha: 0.65)
+                      : palette.first.withValues(alpha: 0.16),
                 ),
                 boxShadow: active
                     ? [
                         BoxShadow(
-                          color: palette.first.withOpacity(0.20),
+                          color: palette.first.withValues(alpha: 0.20),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -84,7 +84,7 @@ class DiaryTabBtn extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 14,
-                color: active ? Colors.white : palette.first.withOpacity(0.82),
+                color: active ? Colors.white : palette.first.withValues(alpha: 0.82),
               ),
             ),
             SLSpacing.w8,
