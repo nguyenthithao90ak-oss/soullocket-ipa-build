@@ -71,7 +71,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                             end: Alignment.bottomRight,
                           ),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                           ),
                           boxShadow: [
                             BoxShadow(
