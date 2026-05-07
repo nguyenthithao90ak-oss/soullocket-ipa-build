@@ -80,10 +80,10 @@ class _IntroChip extends StatelessWidget {
           bottomLeft: Radius.circular(8),
           bottomRight: Radius.circular(16),
         ),
-        border: Border.all(color: _paperRose.withOpacity(0.45)),
+        border: Border.all(color: _paperRose.withValues(alpha: 0.45)),
         boxShadow: [
           BoxShadow(
-            color: _paperCocoa.withOpacity(0.06),
+            color: _paperCocoa.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -167,13 +167,13 @@ class _MemoryMascotBackgroundPainter extends CustomPainter {
           bottomLeft: const Radius.circular(14),
           bottomRight: const Radius.circular(30),
         ),
-        softPaint..color = card.$2.withOpacity(0.48),
+        softPaint..color = card.$2.withValues(alpha: 0.48),
       );
       canvas.restore();
     }
 
     final rulePaint = Paint()
-      ..color = const Color(0xFFD9C7B8).withOpacity(0.32)
+      ..color = const Color(0xFFD9C7B8).withValues(alpha: 0.32)
       ..strokeWidth = 1;
     for (double y = 96; y < size.height; y += 92) {
       canvas.drawLine(
@@ -192,19 +192,19 @@ class _MemoryMascotBackgroundPainter extends CustomPainter {
         canvas,
         pin.$1,
         8,
-        pin.$2.withOpacity(0.30),
+        pin.$2.withValues(alpha: 0.30),
       );
       _MascotPainterKit.drawHeart(
         canvas,
         pin.$1.translate(16, -12),
         6.5,
-        pin.$2.withOpacity(0.18),
+        pin.$2.withValues(alpha: 0.18),
       );
     }
 
     final cornerPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..color = _paperRose.withOpacity(0.34)
+      ..color = _paperRose.withValues(alpha: 0.34)
       ..strokeWidth = 1.2;
     for (final corner in <Offset>[
       const Offset(18, 24),
