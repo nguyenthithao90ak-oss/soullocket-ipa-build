@@ -129,7 +129,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF101828).withOpacity(0.08),
+                            color: const Color(0xFF101828).withValues(alpha: 0.08),
                             blurRadius: 12,
                             offset: const Offset(0, 5),
                           ),
@@ -280,7 +280,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             border: Border.all(color: const Color(0xFFE4EBF3)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF101828).withOpacity(0.14),
+                color: const Color(0xFF101828).withValues(alpha: 0.14),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
@@ -495,7 +495,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                 height: 34,
                                 decoration: BoxDecoration(
                                   color:
-                                      const Color(0xFF0EA5C6).withOpacity(0.12),
+                                      const Color(0xFF0EA5C6).withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(
