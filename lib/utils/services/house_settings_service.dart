@@ -551,21 +551,38 @@ class HouseSettingsService {
     String? countdownStyleKey,
   }) async {
     await _ensureCurrentDeviceCanModifySharedInfo(houseId);
+    final safeHouseId = houseId.trim();
+    final safeFallingEffectKey = fallingEffectKey?.trim();
+    final safeCountdownStyleKey = countdownStyleKey?.trim();
     final updates = <String, dynamic>{
-      'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
-      'houses/$houseId/updatedAt': ServerValue.timestamp,
+      'houses/$safeHouseId/settings/updatedAt': ServerValue.timestamp,
+      'houses/$safeHouseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$safeHouseId/updatedAt': ServerValue.timestamp,
+      'house_profiles/$safeHouseId/updated_at': ServerValue.timestamp,
+      'houses_public/$safeHouseId/updatedAt': ServerValue.timestamp,
+      'houses_public/$safeHouseId/updated_at': ServerValue.timestamp,
     };
 
-    if (fallingEffectKey != null) {
-      updates['houses/$houseId/settings/fallingEffect'] =
-          fallingEffectKey.trim();
+    if (safeFallingEffectKey != null && safeFallingEffectKey.isNotEmpty) {
+      updates.addAll({
+        'houses/$safeHouseId/settings/fallingEffect': safeFallingEffectKey,
+        'house_profiles/$safeHouseId/settings/fallingEffect':
+            safeFallingEffectKey,
+        'houses_public/$safeHouseId/settings/fallingEffect':
+            safeFallingEffectKey,
+      });
     }
-    if (countdownStyleKey != null) {
-      updates['houses/$houseId/settings/countdownStyle'] =
-          countdownStyleKey.trim();
+    if (safeCountdownStyleKey != null && safeCountdownStyleKey.isNotEmpty) {
+      updates.addAll({
+        'houses/$safeHouseId/settings/countdownStyle': safeCountdownStyleKey,
+        'house_profiles/$safeHouseId/settings/countdownStyle':
+            safeCountdownStyleKey,
+        'houses_public/$safeHouseId/settings/countdownStyle':
+            safeCountdownStyleKey,
+      });
     }
 
-    if (updates.length <= 2) {
+    if (updates.length <= 6) {
       return;
     }
 
