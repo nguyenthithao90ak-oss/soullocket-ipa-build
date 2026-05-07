@@ -181,7 +181,7 @@ class _SongsScreenState extends State<SongsScreen> {
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
             ),
           ),
         ),
@@ -217,9 +217,9 @@ class _SongsScreenState extends State<SongsScreen> {
       margin: SLSpacing.all20,
       padding: SLSpacing.all20,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -262,10 +262,10 @@ class _SongsScreenState extends State<SongsScreen> {
       {int maxLines = 1}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.94),
+        color: Colors.white.withValues(alpha: 0.94),
         borderRadius: SLRadius.lgAll,
         border: Border.all(
-          color: const Color(0xFFFF8AA0).withOpacity(0.5),
+          color: const Color(0xFFFF8AA0).withValues(alpha: 0.5),
         ),
       ),
       child: TextField(
@@ -293,9 +293,9 @@ class _SongsScreenState extends State<SongsScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       padding: SLSpacing.all20,
       decoration: BoxDecoration(
-        color: Colors.yellowAccent.withOpacity(0.2),
+        color: Colors.yellowAccent.withValues(alpha: 0.2),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: Colors.yellowAccent.withOpacity(0.3)),
+        border: Border.all(color: Colors.yellowAccent.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -366,9 +366,9 @@ class _SongsScreenState extends State<SongsScreen> {
                   child: Container(
                     padding: SLSpacing.all16,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
