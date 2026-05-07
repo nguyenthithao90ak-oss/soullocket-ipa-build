@@ -41,7 +41,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: gradient.last.withOpacity(0.18),
+                color: gradient.last.withValues(alpha: 0.18),
                 blurRadius: 12,
                 offset: const Offset(0, 5),
               ),
@@ -77,7 +77,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
         border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: borderColor.withOpacity(0.10),
+            color: borderColor.withValues(alpha: 0.10),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -91,7 +91,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             style: SLTheme.quicksand(
               fontSize: 16,
               fontWeight: FontWeight.w900,
-              color: borderColor.withOpacity(0.95),
+              color: borderColor.withValues(alpha: 0.95),
             ),
           ),
           if (subtitle != null && subtitle.trim().isNotEmpty) ...[
@@ -145,7 +145,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: accentColor, size: 20),
@@ -236,7 +236,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             boxShadow: isPrimary
                 ? [
                     BoxShadow(
-                      color: accentColor.withOpacity(0.2),
+                      color: accentColor.withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     )
