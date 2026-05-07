@@ -73,8 +73,8 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
         providers.add(
           CachedNetworkImageProvider(
             safeAvatarUrl1,
-            maxWidth: 300,
-            maxHeight: 300,
+            maxWidth: 720,
+            maxHeight: 720,
           ),
         );
       }
@@ -84,8 +84,8 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
         providers.add(
           CachedNetworkImageProvider(
             safeAvatarUrl2,
-            maxWidth: 300,
-            maxHeight: 300,
+            maxWidth: 720,
+            maxHeight: 720,
           ),
         );
       }
