@@ -939,32 +939,53 @@ class _DiaryTabState extends State<DiaryTab> {
           Widget buildViewerImage(Map<String, dynamic> item) {
             final imageProvider = _memoryImageProvider(
               item['url']?.toString() ?? '',
-              maxWidth: 1600,
+              maxWidth: 2200,
             );
+            final transformationController = TransformationController();
+            final panEnabledVN = ValueNotifier<bool>(false);
+
+            void handleTransformChanged() {
+              final matrix = transformationController.value;
+              final scale = matrix.getMaxScaleOnAxis();
+              final shouldEnablePan = scale > 1.02;
+              if (panEnabledVN.value != shouldEnablePan) {
+                panEnabledVN.value = shouldEnablePan;
+              }
+            }
+
+            transformationController.addListener(handleTransformChanged);
+
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
               onLongPress: () => _showMemoryViewerActions(dialogContext, item),
-              child: InteractiveViewer(
-                minScale: 0.9,
-                maxScale: 4.5,
-                boundaryMargin: const EdgeInsets.all(96),
-                clipBehavior: Clip.none,
-                interactionEndFrictionCoefficient: 0.00008,
-                child: Hero(
-                  tag: 'memory_image_${item['id']}',
-                  child: Image(
-                    image: imageProvider,
-                    fit: BoxFit.contain,
-                    width: double.infinity,
-                    height: double.infinity,
-                    filterQuality: FilterQuality.high,
-                    gaplessPlayback: true,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.broken_image,
-                      color: Colors.grey,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: panEnabledVN,
+                builder: (context, panEnabled, _) {
+                  return InteractiveViewer(
+                    transformationController: transformationController,
+                    panEnabled: panEnabled,
+                    minScale: 1.0,
+                    maxScale: 4.5,
+                    boundaryMargin: const EdgeInsets.all(24),
+                    clipBehavior: Clip.none,
+                    interactionEndFrictionCoefficient: 0.00008,
+                    child: Hero(
+                      tag: 'memory_image_${item['id']}',
+                      child: Image(
+                        image: imageProvider,
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: double.infinity,
+                        filterQuality: FilterQuality.high,
+                        gaplessPlayback: true,
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.broken_image,
+                          color: Colors.grey,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             );
           }
@@ -1283,7 +1304,7 @@ class _DiaryTabState extends State<DiaryTab> {
     final mediaQuery = MediaQuery.of(context);
     return ((mediaQuery.size.width / 3) * mediaQuery.devicePixelRatio)
         .round()
-        .clamp(240, 720);
+        .clamp(360, 1080);
   }
 
   int _postImageCacheWidth(BuildContext context) {
@@ -1315,13 +1336,13 @@ class _DiaryTabState extends State<DiaryTab> {
       if (url.isEmpty) {
         continue;
       }
-      final key = '1600|$url';
+      final key = '2200|$url';
       if (!_warmedMemoryViewerKeys.add(key)) {
         continue;
       }
       unawaited(
         precacheImage(
-          _memoryImageProvider(url, maxWidth: 1600),
+          _memoryImageProvider(url, maxWidth: 2200),
           context,
         ),
       );
