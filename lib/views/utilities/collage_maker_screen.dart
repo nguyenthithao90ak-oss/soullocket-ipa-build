@@ -985,7 +985,11 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     final bytes = _generatedCollageBytes;
     if (bytes == null) return;
     await _showZoomPreview(
-      child: Image.memory(bytes, fit: BoxFit.contain),
+      child: Image.memory(
+        bytes,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.high,
+      ),
       title: 'Xem ảnh ghép',
       fullScreen: true,
     );
@@ -998,6 +1002,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
               memCacheWidth: 1440,
               imageUrl: url,
               fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
               placeholder: (context, url) =>
                   const Center(child: CircularProgressIndicator()),
               errorWidget: (context, url, error) => const Icon(
@@ -1006,7 +1011,11 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                 size: 48,
               ),
             )
-          : Image.file(File(url), fit: BoxFit.contain),
+          : Image.file(
+              File(url),
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+            ),
       title: 'Xem ảnh',
     );
   }
