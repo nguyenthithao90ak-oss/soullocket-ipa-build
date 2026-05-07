@@ -25,7 +25,7 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
         border: Border.all(color: const Color(0xFFE6ECF3)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.04),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -112,7 +112,7 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: accentColor.withOpacity(value ? 0.14 : 0.10),
+            color: accentColor.withValues(alpha: value ? 0.14 : 0.10),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(icon, color: accentColor, size: 21),
