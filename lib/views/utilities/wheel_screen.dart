@@ -236,6 +236,7 @@ class _WheelScreenState extends State<WheelScreen>
       } else {
         throw Exception('Không tìm thấy quán ăn nào xung quanh.');
       }
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
