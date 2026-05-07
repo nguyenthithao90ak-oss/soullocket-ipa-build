@@ -158,7 +158,7 @@ class _EnvelopeStage extends StatelessWidget {
                   top: 20,
                   child: _GlowOrb(
                     size: 180,
-                    color: Colors.white.withOpacity(0.20),
+                    color: Colors.white.withValues(alpha: 0.20),
                   ),
                 ),
                 Positioned(
@@ -167,7 +167,7 @@ class _EnvelopeStage extends StatelessWidget {
                   bottom: 0,
                   child: _EnvelopePocket(
                     color: palette.envelope,
-                    shadow: palette.accent.withOpacity(0.24),
+                    shadow: palette.accent.withValues(alpha: 0.24),
                   ),
                 ),
                 Positioned(
@@ -187,7 +187,7 @@ class _EnvelopeStage extends StatelessWidget {
                   top: 32,
                   child: Icon(
                     palette.leadingIcon,
-                    color: Colors.white.withOpacity(0.86),
+                    color: Colors.white.withValues(alpha: 0.86),
                     size: 26,
                   ),
                 ),
@@ -196,7 +196,7 @@ class _EnvelopeStage extends StatelessWidget {
                   top: 34,
                   child: Icon(
                     palette.trailingIcon,
-                    color: Colors.white.withOpacity(0.86),
+                    color: Colors.white.withValues(alpha: 0.86),
                     size: 24,
                   ),
                 ),
@@ -213,14 +213,14 @@ class _EnvelopeStage extends StatelessWidget {
                           vertical: 18,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.16),
+                          color: Colors.white.withValues(alpha: 0.16),
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.22),
+                            color: Colors.white.withValues(alpha: 0.22),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.12),
+                              color: Colors.black.withValues(alpha: 0.12),
                               blurRadius: 24,
                               offset: const Offset(0, 8),
                             ),
@@ -259,15 +259,15 @@ class _EnvelopeStage extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.10),
+                color: Colors.white.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: Colors.white.withOpacity(0.16)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
               ),
               child: Text(
                 hintText,
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
-                  color: Colors.white.withOpacity(0.94),
+                  color: Colors.white.withValues(alpha: 0.94),
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                 ),
@@ -336,7 +336,7 @@ class _PaperTearStrip extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.12),
+                color: accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               alignment: Alignment.center,
@@ -390,7 +390,7 @@ class _EnvelopePocket extends StatelessWidget {
         ],
       ),
       child: CustomPaint(
-        painter: _EnvelopePocketPainter(color: color.withOpacity(0.94)),
+        painter: _EnvelopePocketPainter(color: color.withValues(alpha: 0.94)),
         child: const SizedBox.expand(),
       ),
     );
@@ -425,7 +425,7 @@ class _EnvelopePocketPainter extends CustomPainter {
     final shinePaint = Paint()
       ..shader = LinearGradient(
         colors: [
-          Colors.white.withOpacity(0.28),
+          Colors.white.withValues(alpha: 0.28),
           Colors.transparent,
         ],
         begin: Alignment.topCenter,
@@ -460,7 +460,7 @@ class _EnvelopeFlapPainter extends CustomPainter {
     final paint = Paint()
       ..shader = LinearGradient(
         colors: [
-          Colors.white.withOpacity(0.38),
+          Colors.white.withValues(alpha: 0.38),
           color,
         ],
         begin: Alignment.topCenter,
@@ -519,11 +519,11 @@ class _TearStripPainter extends CustomPainter {
         end: Alignment.bottomCenter,
       ).createShader(Offset.zero & size);
     final border = Paint()
-      ..color = accent.withOpacity(0.12)
+      ..color = accent.withValues(alpha: 0.12)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
 
-    canvas.drawShadow(path, Colors.black.withOpacity(0.10), 10, false);
+    canvas.drawShadow(path, Colors.black.withValues(alpha: 0.10), 10, false);
     canvas.drawPath(path, fill);
     canvas.drawPath(path, border);
   }
@@ -585,25 +585,25 @@ class _ThemeAmbientPainter extends CustomPainter {
           canvas,
           Offset(size.width * 0.14, size.height * 0.16),
           16,
-          accent.withOpacity(0.16 * reveal),
+          accent.withValues(alpha: 0.16 * reveal),
         );
         _drawHeart(
           canvas,
           Offset(size.width * 0.84, size.height * 0.28),
           22,
-          softAccent.withOpacity(0.18 * reveal),
+          softAccent.withValues(alpha: 0.18 * reveal),
         );
         _drawSparkle(
           canvas,
           Offset(size.width * 0.78, size.height * 0.12),
           12,
-          Colors.white.withOpacity(0.34 * reveal),
+          Colors.white.withValues(alpha: 0.34 * reveal),
         );
         _drawSparkle(
           canvas,
           Offset(size.width * 0.24, size.height * 0.26),
           10,
-          Colors.white.withOpacity(0.26 * reveal),
+          Colors.white.withValues(alpha: 0.26 * reveal),
         );
         break;
       case _ViewerThemeEffectKind.birthday:
@@ -611,13 +611,13 @@ class _ThemeAmbientPainter extends CustomPainter {
           canvas,
           Offset(size.width * 0.18, size.height * 0.18),
           22,
-          softAccent.withOpacity(0.22 * reveal),
+          softAccent.withValues(alpha: 0.22 * reveal),
         );
         _drawBalloon(
           canvas,
           Offset(size.width * 0.84, size.height * 0.16),
           26,
-          Colors.white.withOpacity(0.18 * reveal),
+          Colors.white.withValues(alpha: 0.18 * reveal),
         );
         for (var i = 0; i < 9; i++) {
           final x = size.width * (0.12 + i * 0.085);
@@ -627,7 +627,7 @@ class _ThemeAmbientPainter extends CustomPainter {
             Offset(x, y),
             Size(i.isEven ? 12 : 8, i.isEven ? 4 : 8),
             (i.isEven ? 0.42 : -0.52) + (i * 0.03),
-            Color.lerp(accent, softAccent, i / 8)!.withOpacity(0.28 * reveal),
+            Color.lerp(accent, softAccent, i / 8)!.withValues(alpha: 0.28 * reveal),
           );
         }
         break;
@@ -636,27 +636,27 @@ class _ThemeAmbientPainter extends CustomPainter {
           canvas,
           Offset(size.width * 0.84, size.height * 0.18),
           32,
-          Colors.white.withOpacity(0.22 * reveal),
+          Colors.white.withValues(alpha: 0.22 * reveal),
           2,
         );
         _drawRing(
           canvas,
           Offset(size.width * 0.84, size.height * 0.18),
           20,
-          const Color(0xFFFFD98B).withOpacity(0.38 * reveal),
+          const Color(0xFFFFD98B).withValues(alpha: 0.38 * reveal),
           1.5,
         );
         _drawSparkle(
           canvas,
           Offset(size.width * 0.16, size.height * 0.18),
           12,
-          const Color(0xFFFFE3A2).withOpacity(0.34 * reveal),
+          const Color(0xFFFFE3A2).withValues(alpha: 0.34 * reveal),
         );
         _drawSparkle(
           canvas,
           Offset(size.width * 0.26, size.height * 0.12),
           9,
-          Colors.white.withOpacity(0.24 * reveal),
+          Colors.white.withValues(alpha: 0.24 * reveal),
         );
         break;
       case _ViewerThemeEffectKind.miss:
@@ -664,20 +664,20 @@ class _ThemeAmbientPainter extends CustomPainter {
           canvas,
           Offset(size.width * 0.84, size.height * 0.17),
           28,
-          Colors.white.withOpacity(0.20 * reveal),
+          Colors.white.withValues(alpha: 0.20 * reveal),
           backdrop,
         );
         _drawSparkle(
           canvas,
           Offset(size.width * 0.18, size.height * 0.14),
           9,
-          Colors.white.withOpacity(0.26 * reveal),
+          Colors.white.withValues(alpha: 0.26 * reveal),
         );
         _drawSparkle(
           canvas,
           Offset(size.width * 0.26, size.height * 0.22),
           7,
-          softAccent.withOpacity(0.22 * reveal),
+          softAccent.withValues(alpha: 0.22 * reveal),
         );
         break;
     }
@@ -732,8 +732,8 @@ class _BurstParticlesPainter extends CustomPainter {
           );
           final sizeFactor = lerpDouble(8, 18 - (i % 4), fade) ?? 10;
           final color = Color.lerp(
-            accent.withOpacity(0.90 * fade),
-            softAccent.withOpacity(0.78 * fade),
+            accent.withValues(alpha: 0.90 * fade),
+            softAccent.withValues(alpha: 0.78 * fade),
             i.isEven ? 0.24 : 0.68,
           )!;
           if (i % 3 == 0) {
@@ -752,8 +752,8 @@ class _BurstParticlesPainter extends CustomPainter {
             sin(angle) * distance,
           );
           final color = Color.lerp(
-            accent.withOpacity(0.92 * fade),
-            softAccent.withOpacity(0.70 * fade),
+            accent.withValues(alpha: 0.92 * fade),
+            softAccent.withValues(alpha: 0.70 * fade),
             (i % 5) / 4,
           )!;
           if (i.isEven) {
@@ -780,8 +780,8 @@ class _BurstParticlesPainter extends CustomPainter {
             origin,
             lerpDouble(24 + (i * 8), 90 + (i * 28), eased) ?? 36,
             Color.lerp(
-              accent.withOpacity(0.20 * fade),
-              const Color(0xFFFFD98B).withOpacity(0.28 * fade),
+              accent.withValues(alpha: 0.20 * fade),
+              const Color(0xFFFFD98B).withValues(alpha: 0.28 * fade),
               i / 2,
             )!,
             1.4 + (2 - i) * 0.4,
@@ -795,8 +795,8 @@ class _BurstParticlesPainter extends CustomPainter {
             sin(angle) * distance,
           );
           final color = i.isEven
-              ? const Color(0xFFFFE3A2).withOpacity(0.54 * fade)
-              : softAccent.withOpacity(0.46 * fade);
+              ? const Color(0xFFFFE3A2).withValues(alpha: 0.54 * fade)
+              : softAccent.withValues(alpha: 0.46 * fade);
           if (i % 3 == 0) {
             _drawSparkle(canvas, center, 10, color);
           } else {
@@ -814,8 +814,8 @@ class _BurstParticlesPainter extends CustomPainter {
             (sin(angle) * distance) + driftY,
           );
           final color = Color.lerp(
-            softAccent.withOpacity(0.62 * fade),
-            Colors.white.withOpacity(0.52 * fade),
+            softAccent.withValues(alpha: 0.62 * fade),
+            Colors.white.withValues(alpha: 0.52 * fade),
             i / 13,
           )!;
           if (i.isEven) {
@@ -960,7 +960,7 @@ void _drawBalloon(Canvas canvas, Offset center, double size, Color color) {
     center.translate(0, size * 0.56),
     center.translate(size * 0.18, size * 1.42),
     Paint()
-      ..color = color.withOpacity(0.82)
+      ..color = color.withValues(alpha: 0.82)
       ..strokeWidth = 1.4,
   );
 }
@@ -1031,7 +1031,7 @@ class _PaperGlow extends StatelessWidget {
           gradient: RadialGradient(
             colors: [
               color,
-              color.withOpacity(0),
+              color.withValues(alpha: 0),
             ],
           ),
         ),
@@ -1061,8 +1061,8 @@ class _ViewerCircleButton extends StatelessWidget {
           height: 42,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.14),
-            border: Border.all(color: Colors.white.withOpacity(0.16)),
+            color: Colors.white.withValues(alpha: 0.14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
           ),
           child: Icon(icon, color: Colors.white, size: 19),
         ),
