@@ -219,12 +219,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _cancelTransientMapWork(resetRouteFetch: true);
     _setRealtimePipelinesActive(false);
     _setPartnerListenerActive(false);
-    unawaited(
-      _locationService.stopTracking(
-        houseId: widget.houseId,
-        role: widget.myRole,
-      ),
-    );
     _mapReadyTimeout?.cancel();
     _mapController.dispose();
     _staticMarkersVN.dispose();
@@ -245,6 +239,14 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         _scheduleMapReadyWatchdog();
       }
       _scheduleLiveRefresh();
+      unawaited(
+        _locationService.startTracking(
+          widget.houseId,
+          widget.myRole,
+          context: context,
+          forcePrompt: false,
+        ),
+      );
       return;
     }
 
@@ -257,17 +259,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       _cancelTransientMapWork(resetRouteFetch: true);
       _setRealtimePipelinesActive(false);
       _setPartnerListenerActive(false);
-      unawaited(
-        _locationService.stopTracking(
-          houseId: widget.houseId,
-          role: widget.myRole,
-        ),
-      );
       if (!mounted) return;
       setState(() {
         _isBootstrappingLocation = false;
         _locationStatusMessage =
-            'GPS tạm dừng khi app ra nền. Mở lại bản đồ và bấm "Bật GPS" để cập nhật.';
+            'SoulLocket sẽ tiếp tục cập nhật vị trí nếu bạn đã cấp quyền vị trí luôn luôn.';
       });
     }
   }
@@ -537,6 +533,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         )
         .timeout(const Duration(seconds: 12), onTimeout: () => false);
 
+    if (started && mounted) {
+      unawaited(_locationService.requestBackgroundPermission(context: context));
+    }
+
     if (!mounted) return;
     
     if (!started) {
@@ -545,7 +545,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       setState(() {
         _isBootstrappingLocation = false;
         _locationStatusMessage = serviceEnabled 
-            ? 'GPS chưa sẵn sàng. Hãy đảm bảo bạn đã cấp quyền "Luôn cho phép" trong Cài đặt SoulLocket.'
+            ? 'GPS chưa sẵn sàng. Hãy đảm bảo bạn đã cấp quyền vị trí cho SoulLocket.'
             : 'Bạn chưa bật định vị GPS. Hãy vuốt bảng điều khiển xuống để bật GPS nhé.';
       });
       return;
