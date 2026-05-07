@@ -170,10 +170,10 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                 Positioned.fill(
                   child: Opacity(
                     opacity: themeData.imageOpacity,
-                    child: Image.network(
-                      uiState.customBackgroundUrl,
+                    child: CachedNetworkImage(
+                      imageUrl: uiState.customBackgroundUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      errorWidget: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
