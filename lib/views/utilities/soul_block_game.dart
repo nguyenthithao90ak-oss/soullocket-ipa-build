@@ -608,10 +608,17 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _memoryBurstController.stop();
     _explosionController.stop();
 
+    final restoredBoard = _cloneBoard(nextRun.board);
+    final restoredTray = List<_SoulPieceOption>.from(nextRun.tray);
+    final restoredRecommendedMove =
+        _recommendMoveFor(restoredBoard, restoredTray);
+    final restoredGameOver =
+        restoredTray.isEmpty || !_hasAnyPlayableMove(restoredBoard, restoredTray);
+
     setState(() {
-      _board = _cloneBoard(nextRun.board);
-      _tray = List<_SoulPieceOption>.from(nextRun.tray);
-      _recommendedMove = nextRun.recommendedMove;
+      _board = restoredBoard;
+      _tray = restoredTray;
+      _recommendedMove = restoredRecommendedMove;
       _score = restoringExistingRun ? _score : 0;
       _combo = restoringExistingRun ? _combo : 0;
       _streak = restoringExistingRun ? _streak : 0;
@@ -629,7 +636,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _memoryBurstSnapshot = null;
       _snapBackPieceId = null;
       _isBusy = false;
-      _isGameOver = nextRun.tray.isEmpty || nextRun.recommendedMove == null;
+      _isGameOver = restoredGameOver;
       _continueUsedThisRun =
           restoringExistingRun ? _continueUsedThisRun : false;
       _isReviving = false;
