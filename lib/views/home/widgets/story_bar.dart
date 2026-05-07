@@ -107,10 +107,10 @@ class _StoryBarState extends State<StoryBar> {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: Colors.white.withOpacity(0.4), width: 2),
+                        color: Colors.white.withValues(alpha: 0.4), width: 2),
                   ),
                   child: const Center(
                       child: Icon(Icons.add_a_photo,
@@ -193,7 +193,7 @@ class _StoryBarState extends State<StoryBar> {
         children: [
           GestureDetector(
               onTap: () => Navigator.pop(ctx),
-              child: Container(color: Colors.black.withOpacity(0.95))),
+              child: Container(color: Colors.black.withValues(alpha: 0.95))),
           Container(
             constraints: const BoxConstraints(maxWidth: 450, maxHeight: 800),
             child: CachedNetworkImage(
