@@ -42,10 +42,10 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.22), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22), width: 1),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF291521).withOpacity(0.14),
+            color: const Color(0xFF291521).withValues(alpha: 0.14),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -67,8 +67,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        const Color(0xFFFFB7D1).withOpacity(0.28),
-                        const Color(0xFFFFB7D1).withOpacity(0.02),
+                        const Color(0xFFFFB7D1).withValues(alpha: 0.28),
+                        const Color(0xFFFFB7D1).withValues(alpha: 0.02),
                       ],
                     ),
                   ),
@@ -86,8 +86,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        const Color(0xFF8FD8FF).withOpacity(0.22),
-                        const Color(0xFF8FD8FF).withOpacity(0.02),
+                        const Color(0xFF8FD8FF).withValues(alpha: 0.22),
+                        const Color(0xFF8FD8FF).withValues(alpha: 0.02),
                       ],
                     ),
                   ),
@@ -317,9 +317,9 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.72),
+                    color: Colors.white.withValues(alpha: 0.72),
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: Colors.white.withOpacity(0.8)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
                   ),
                   child: Text(
                     weatherText,
@@ -365,12 +365,12 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: baseColor.withOpacity(0.4),
+            color: baseColor.withValues(alpha: 0.4),
             blurRadius: 8,
             spreadRadius: 1,
           ),
         ],
-        border: Border.all(color: baseColor.withOpacity(0.5), width: 1.5),
+        border: Border.all(color: baseColor.withValues(alpha: 0.5), width: 1.5),
       ),
       child: Text(
         emoji,
@@ -392,7 +392,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: gradient.last.withOpacity(0.3),
+            color: gradient.last.withValues(alpha: 0.3),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
