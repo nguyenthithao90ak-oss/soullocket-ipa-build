@@ -453,7 +453,8 @@ class _SingleMatchAvatarVisual extends StatelessWidget {
               : CachedNetworkImage(
                   imageUrl: avatarUrl,
                   fit: BoxFit.cover,
-                  memCacheWidth: 420,
+                  memCacheWidth: 720,
+                  filterQuality: FilterQuality.high,
                   errorWidget: (_, __, ___) => Container(
                     color: Colors.white,
                     alignment: Alignment.center,
