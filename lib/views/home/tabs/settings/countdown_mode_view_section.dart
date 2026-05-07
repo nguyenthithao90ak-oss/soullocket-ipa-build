@@ -151,7 +151,7 @@ extension _CountdownModeIndependentScreenViewPart
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  _singleMode ? 'TỔNG QUAN CỦA BẠN' : 'TỔNG QUAN HÔM NAY',
+                  _singleMode ? 'TỔNG QUAN HÔM NAY' : 'HÀNH TRÌNH ĐÃ ĐI QUA',
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
