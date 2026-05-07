@@ -152,6 +152,8 @@ extension _MapCheckinSheetExt on _MapScreenState {
             ),
           ),
         );
+      },
+    );
   }
 
   Widget _buildCheckinTextField({
