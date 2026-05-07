@@ -789,7 +789,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       {
         'icon': Icons.cloud_sync_rounded,
         'title': 'Lưu trữ rộng hơn',
-        'desc': 'Thoải mái lưu ảnh kỷ niệm, Nhật ký và dữ liệu quan trọng.',
+        'desc': 'Thoải mái lưu ảnh kỷ niệm, Nhật ký và dữ liệu quan trọng; PRO giữ ảnh nét hơn với nén nhẹ hơn.',
       },
       {
         'icon': Icons.auto_awesome_rounded,
