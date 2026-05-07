@@ -218,7 +218,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                       top: 160,
                       child: _GlowOrb(
                         size: 260,
-                        color: palette.accent.withOpacity(0.22),
+                        color: palette.accent.withValues(alpha: 0.22),
                       ),
                     ),
                     Positioned(
@@ -467,7 +467,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.white.withOpacity(0.55),
+                        Colors.white.withValues(alpha: 0.55),
                         Colors.transparent,
                         palette.envelopeLight.withValues(alpha: 0.32),
                       ],
