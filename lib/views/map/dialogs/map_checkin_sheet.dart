@@ -21,10 +21,16 @@ extension _MapCheckinSheetExt on _MapScreenState {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+      builder: (ctx) {
+        final mediaQuery = MediaQuery.of(ctx);
+        final bottomPadding = mediaQuery.viewInsets.bottom +
+            (mediaQuery.viewPadding.bottom > 0
+                ? mediaQuery.viewPadding.bottom + 12
+                : 12);
+        return Padding(
+          padding: EdgeInsets.only(bottom: bottomPadding),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
           decoration: const BoxDecoration(
             color: Color(0xFF242526),
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
