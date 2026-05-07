@@ -977,9 +977,6 @@ class StartupErrorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kIsWeb) {
-      FlutterNativeSplash.remove();
-    }
     return MaterialApp(
       scrollBehavior: const SoulLocketScrollBehavior(),
       debugShowCheckedModeBanner: false,
