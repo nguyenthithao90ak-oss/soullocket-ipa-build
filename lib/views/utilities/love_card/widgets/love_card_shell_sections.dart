@@ -167,7 +167,7 @@ class _LoveCardHeaderSection extends StatelessWidget {
                   'Tạo đẹp hơn, chia sẻ bằng link riêng ngay sau khi gửi',
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
-                    color: Colors.white.withOpacity(0.74),
+                    color: Colors.white.withValues(alpha: 0.74),
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
                   ),
@@ -183,13 +183,13 @@ class _LoveCardHeaderSection extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.34),
-                  Colors.white.withOpacity(0.14),
+                  Colors.white.withValues(alpha: 0.34),
+                  Colors.white.withValues(alpha: 0.14),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border: Border.all(color: Colors.white.withOpacity(0.24)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
             ),
             child: Icon(theme.icon, color: colors.first, size: 20),
           ),
@@ -216,9 +216,9 @@ class _LoveCardTabSwitcher extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 10),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
+        color: Colors.white.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.14)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Row(
         children: [
@@ -340,7 +340,7 @@ class _LoveCardBackgroundOrb extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(opacity),
+        color: Colors.white.withValues(alpha: opacity),
       ),
     );
   }
@@ -369,23 +369,23 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
               right: 26,
               child: _LoveCardBackdropBalloonPair(
                 leftColor: Colors.white.withOpacity(0.18),
-                rightColor: colors.first.withOpacity(0.22),
+                rightColor: colors.first.withValues(alpha: 0.22),
               ),
             ),
             Positioned(
               top: 244,
               left: 18,
               child: _LoveCardBackdropConfettiCluster(
-                color: Colors.white.withOpacity(0.16),
-                accent: colors.first.withOpacity(0.22),
+                color: Colors.white.withValues(alpha: 0.16),
+                accent: colors.first.withValues(alpha: 0.22),
               ),
             ),
             Positioned(
               bottom: 184,
               right: 28,
               child: _LoveCardBackdropConfettiCluster(
-                color: Colors.white.withOpacity(0.10),
-                accent: colors.last.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.10),
+                accent: colors.last.withValues(alpha: 0.18),
                 mirrored: true,
               ),
             ),
@@ -399,8 +399,8 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
               right: 24,
               child: _LoveCardBackdropRingHalo(
                 size: 112,
-                color: Colors.white.withOpacity(0.18),
-                accent: const Color(0xFFFFD98B).withOpacity(0.34),
+                color: Colors.white.withValues(alpha: 0.18),
+                accent: const Color(0xFFFFD98B).withValues(alpha: 0.34),
               ),
             ),
             Positioned(
@@ -410,7 +410,7 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
                 icon: Icons.workspace_premium_rounded,
                 size: 28,
                 rotation: -0.24,
-                color: Colors.white.withOpacity(0.16),
+                color: Colors.white.withValues(alpha: 0.16),
               ),
             ),
             Positioned(
@@ -420,7 +420,7 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
                 icon: Icons.auto_awesome_rounded,
                 size: 22,
                 rotation: 0.22,
-                color: const Color(0xFFFFE3A2).withOpacity(0.32),
+                color: const Color(0xFFFFE3A2).withValues(alpha: 0.32),
               ),
             ),
           ],
@@ -433,7 +433,7 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
               right: 20,
               child: _LoveCardBackdropMoon(
                 size: 88,
-                color: Colors.white.withOpacity(0.20),
+                color: Colors.white.withValues(alpha: 0.20),
                 cutoutColor: cutoutColor,
               ),
             ),
@@ -444,7 +444,7 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
                 icon: Icons.star_rounded,
                 size: 20,
                 rotation: -0.12,
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
               ),
             ),
             Positioned(
@@ -454,7 +454,7 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
                 icon: Icons.nights_stay_rounded,
                 size: 26,
                 rotation: 0.16,
-                color: Colors.white.withOpacity(0.14),
+                color: Colors.white.withValues(alpha: 0.14),
               ),
             ),
           ],
@@ -469,7 +469,7 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
                 icon: Icons.favorite_rounded,
                 size: 28,
                 rotation: -0.18,
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
               ),
             ),
             Positioned(
@@ -479,7 +479,7 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
                 icon: Icons.auto_awesome_rounded,
                 size: 24,
                 rotation: 0.18,
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
               ),
             ),
             Positioned(
@@ -489,7 +489,7 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
                 icon: Icons.favorite_border_rounded,
                 size: 24,
                 rotation: 0.14,
-                color: colors.first.withOpacity(0.24),
+                color: colors.first.withValues(alpha: 0.24),
               ),
             ),
           ],
@@ -596,7 +596,7 @@ class _LoveCardBackdropBalloon extends StatelessWidget {
         Container(
           width: 1.6,
           height: tailHeight,
-          color: color.withOpacity(0.72),
+          color: color.withValues(alpha: 0.72),
         ),
       ],
     );
@@ -819,7 +819,7 @@ class _LoveCardBackdropMoon extends StatelessWidget {
             child: Icon(
               Icons.star_rounded,
               size: size * 0.16,
-              color: Colors.white.withOpacity(0.42),
+              color: Colors.white.withValues(alpha: 0.42),
             ),
           ),
         ],
@@ -849,8 +849,8 @@ class _LoveCardRoundButton extends StatelessWidget {
           height: 38,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.14),
-            border: Border.all(color: Colors.white.withOpacity(0.16)),
+            color: Colors.white.withValues(alpha: 0.14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
           ),
           child: Icon(icon, color: Colors.white, size: 18),
         ),
@@ -875,8 +875,8 @@ class _LoveCardGlassIcon extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(0.14),
-        border: Border.all(color: Colors.white.withOpacity(0.18)),
+        color: Colors.white.withValues(alpha: 0.14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
       child: Icon(icon, color: Colors.white, size: size * 0.48),
     );
@@ -899,7 +899,7 @@ class _LoveCardHeroChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.10),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -965,7 +965,7 @@ class _LoveCardHistoryMetric extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.10),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -973,7 +973,7 @@ class _LoveCardHistoryMetric extends StatelessWidget {
           Text(
             label,
             style: SLTheme.quicksand(
-              color: Colors.white.withOpacity(0.66),
+              color: Colors.white.withValues(alpha: 0.66),
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
