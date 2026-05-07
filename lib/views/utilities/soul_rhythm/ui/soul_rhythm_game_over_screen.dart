@@ -60,17 +60,17 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                     borderRadius: BorderRadius.circular(28), // Bo góc mềm mại
                     gradient: LinearGradient(
                       colors: [
-                        const Color(0xFF1E1E2E).withOpacity(0.9),
-                        const Color(0xFF141420).withOpacity(0.9),
+                        const Color(0xFF1E1E2E).withValues(alpha: 0.9),
+                        const Color(0xFF141420).withValues(alpha: 0.9),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     border: Border.all(
-                        color: Colors.white.withOpacity(0.15), width: 1),
+                        color: Colors.white.withValues(alpha: 0.15), width: 1),
                     boxShadow: [
                       BoxShadow(
-                        color: gradeColor.withOpacity(0.2),
+                        color: gradeColor.withValues(alpha: 0.2),
                         blurRadius: 30,
                         offset: const Offset(0, 8),
                       ),
@@ -88,10 +88,10 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFEB3B).withOpacity(0.15),
+                            color: const Color(0xFFFFEB3B).withValues(alpha: 0.15),
                             borderRadius: SLRadius.pillAll,
                             border: Border.all(
-                              color: const Color(0xFFFFEB3B).withOpacity(0.5),
+                              color: const Color(0xFFFFEB3B).withValues(alpha: 0.5),
                             ),
                           ),
                           child: Text(
@@ -117,9 +117,9 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                         width: double.infinity,
                         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: Colors.white.withOpacity(0.08)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                         ),
                         child: Column(
                           children: [
@@ -149,7 +149,7 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                                           height: 1,
                                           shadows: [
                                             Shadow(
-                                              color: Colors.white.withOpacity(0.42),
+                                              color: Colors.white.withValues(alpha: 0.42),
                                               blurRadius: 18,
                                             ),
                                           ],
@@ -165,13 +165,13 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                                     shape: BoxShape.circle,
                                     gradient: RadialGradient(
                                       colors: [
-                                        gradeColor.withOpacity(0.30),
-                                        gradeColor.withOpacity(0.08),
+                                        gradeColor.withValues(alpha: 0.30),
+                                        gradeColor.withValues(alpha: 0.08),
                                         Colors.transparent,
                                       ],
                                     ),
                                     border: Border.all(
-                                      color: gradeColor.withOpacity(0.52),
+                                      color: gradeColor.withValues(alpha: 0.52),
                                       width: 1.4,
                                     ),
                                   ),
@@ -244,9 +244,9 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.04),
+                            color: Colors.white.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: Colors.white.withOpacity(0.06)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
                           ),
                           child: Row(
                             children: [
@@ -299,9 +299,9 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.22)),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,17 +336,17 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF0C2336).withOpacity(0.96),
-            const Color(0xFF152544).withOpacity(0.94),
+            const Color(0xFF0C2336).withValues(alpha: 0.96),
+            const Color(0xFF152544).withValues(alpha: 0.94),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFF00E5FF).withOpacity(0.28)),
+        border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.28)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF00E5FF).withOpacity(0.14),
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.14),
             blurRadius: 22,
             offset: const Offset(0, 8),
           ),
@@ -361,7 +361,7 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00E5FF).withOpacity(0.16),
+                  color: const Color(0xFF00E5FF).withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -441,8 +441,8 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                   )
                 : LinearGradient(
                     colors: [
-                      actionColor.withOpacity(0.22),
-                      Colors.white.withOpacity(0.06),
+                      actionColor.withValues(alpha: 0.22),
+                      Colors.white.withValues(alpha: 0.06),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -450,13 +450,13 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: primary
-                  ? Colors.white.withOpacity(0.08)
-                  : actionColor.withOpacity(0.34),
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : actionColor.withValues(alpha: 0.34),
             ),
             boxShadow: primary
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFFF0055).withOpacity(0.28),
+                      color: const Color(0xFFFF0055).withValues(alpha: 0.28),
                       blurRadius: 16,
                       offset: const Offset(0, 8),
                     ),
