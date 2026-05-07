@@ -1327,106 +1327,139 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final hasSecondaryAvatar =
         marker.secondaryAvatarUrl != null && marker.secondaryAvatarUrl!.isNotEmpty;
     final isPaired = hasSecondaryAvatar;
+    final markerWidth = marker.compact ? 88.0 : 120.0;
+    final markerHeight = marker.compact ? 78.0 : 108.0;
+    final pinHeadHeight = bubbleSize + 16;
+    const pinTipSizeCompact = 10.0;
+    const pinTipSizeRegular = 12.0;
+    final pinTipSize = marker.compact ? pinTipSizeCompact : pinTipSizeRegular;
+    const pinTipLift = 4.0;
+    final fixedAnchorHeight = pinHeadHeight + pinTipSize - pinTipLift;
 
     return fm.Marker(
       key: ValueKey(marker.id),
       point: marker.point,
-      width: marker.compact ? 88 : 120,
-      height: marker.compact ? 78 : 108,
+      width: markerWidth,
+      height: markerHeight,
       alignment: Alignment.bottomCenter,
       child: GestureDetector(
         onTap: marker.onTap,
         behavior: HitTestBehavior.opaque,
         child: Align(
           alignment: Alignment.bottomCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (!marker.compact)
-                Container(
-                  constraints: BoxConstraints(maxWidth: badgeWidth),
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF18191A).withOpacity(0.94),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: marker.color.withOpacity(0.22)),
-                  ),
-                  child: Text(
-                    marker.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
+          child: SizedBox(
+            width: markerWidth,
+            height: markerHeight,
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  bottom: 0,
+                  child: Transform.rotate(
+                    angle: math.pi / 4,
+                    child: Container(
+                      width: pinTipSize,
+                      height: pinTipSize,
+                      decoration: BoxDecoration(
+                        color: marker.color,
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.9),
+                          width: 1,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              SizedBox(
-                width: isPaired ? bubbleSize + 30 : bubbleSize + 16,
-                height: bubbleSize + 16,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (marker.pulse)
-                      Container(
-                        width: bubbleSize + 16,
-                        height: bubbleSize + 16,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: marker.color.withOpacity(0.20),
-                          border: Border.all(
-                            color: marker.color.withOpacity(0.24),
-                            width: 1.4,
+                Positioned(
+                  bottom: pinTipSize - pinTipLift,
+                  child: SizedBox(
+                    width: isPaired ? bubbleSize + 30 : bubbleSize + 16,
+                    height: fixedAnchorHeight,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (!marker.compact)
+                          Container(
+                            constraints: BoxConstraints(maxWidth: badgeWidth),
+                            margin: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF18191A).withOpacity(0.94),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: marker.color.withOpacity(0.22),
+                              ),
+                            ),
+                            child: Text(
+                              marker.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        SizedBox(
+                          width: isPaired ? bubbleSize + 30 : bubbleSize + 16,
+                          height: pinHeadHeight,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              if (marker.pulse)
+                                Container(
+                                  width: bubbleSize + 16,
+                                  height: bubbleSize + 16,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: marker.color.withOpacity(0.20),
+                                    border: Border.all(
+                                      color: marker.color.withOpacity(0.24),
+                                      width: 1.4,
+                                    ),
+                                  ),
+                                ),
+                              _buildMapMarkerBubble(
+                                marker: marker,
+                                size: bubbleSize,
+                                avatarUrl: marker.avatarUrl,
+                                icon: marker.icon,
+                                color: marker.color,
+                                compact: marker.compact,
+                                pulse: marker.pulse,
+                              ),
+                              if (isPaired)
+                                Transform.translate(
+                                  offset: Offset(bubbleSize * 0.46, 0),
+                                  child: _buildMapMarkerBubble(
+                                    marker: marker,
+                                    size: bubbleSize,
+                                    avatarUrl: marker.secondaryAvatarUrl,
+                                    icon: marker.secondaryIcon ??
+                                        Icons.favorite_rounded,
+                                    color:
+                                        marker.secondaryColor ?? _kMapPinkDeep,
+                                    compact: marker.compact,
+                                    pulse: marker.pulse,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
-                      ),
-                    _buildMapMarkerBubble(
-                      marker: marker,
-                      size: bubbleSize,
-                      avatarUrl: marker.avatarUrl,
-                      icon: marker.icon,
-                      color: marker.color,
-                      compact: marker.compact,
-                      pulse: marker.pulse,
-                    ),
-                    if (isPaired)
-                      Transform.translate(
-                        offset: Offset(bubbleSize * 0.46, 0),
-                        child: _buildMapMarkerBubble(
-                          marker: marker,
-                          size: bubbleSize,
-                          avatarUrl: marker.secondaryAvatarUrl,
-                          icon: marker.secondaryIcon ?? Icons.favorite_rounded,
-                          color: marker.secondaryColor ?? _kMapPinkDeep,
-                          compact: marker.compact,
-                          pulse: marker.pulse,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Transform.translate(
-                offset: const Offset(0, -4),
-                child: Transform.rotate(
-                  angle: math.pi / 4,
-                  child: Container(
-                    width: marker.compact ? 10 : 12,
-                    height: marker.compact ? 10 : 12,
-                    decoration: BoxDecoration(
-                      color: marker.color,
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(
-                          color: Colors.white.withOpacity(0.9), width: 1),
+                      ],
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
