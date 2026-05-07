@@ -218,18 +218,6 @@ class _LoveCardHistoryHero extends StatelessWidget {
   }
 }
 
-              color: Colors.white.withValues(alpha: 0.72),
-              fontSize: 14,
-              height: 1.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _LoveCardHistoryHero extends StatelessWidget {
   final _LoveCardScreenState state;
   final List<Map<dynamic, dynamic>> cards;
