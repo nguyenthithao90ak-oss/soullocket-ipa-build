@@ -437,7 +437,7 @@ class _LoveCardHistoryItem extends StatelessWidget {
             },
           );
           if (shouldDelete == true) {
-            state._showSnackBar('Đang xóa liên kết thiệp...');
+            await state._deleteLoveCardLink(card);
           }
         },
         borderRadius: BorderRadius.circular(28),
