@@ -235,7 +235,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
   Widget _buildSafetyHeader() {
     return SLTheme.softPanel(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      borderColor: SLColors.danger.withOpacity(0.16),
+      borderColor: SLColors.danger.withValues(alpha: 0.16),
       child: Row(
         children: <Widget>[
           Container(
@@ -245,13 +245,13 @@ class _BlockListScreenState extends State<BlockListScreen> {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: <Color>[
-                  SLColors.danger.withOpacity(0.16),
-                  Colors.white.withOpacity(0.92),
+                  SLColors.danger.withValues(alpha: 0.16),
+                  Colors.white.withValues(alpha: 0.92),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border: Border.all(color: SLColors.danger.withOpacity(0.22)),
+              border: Border.all(color: SLColors.danger.withValues(alpha: 0.22)),
             ),
             child: const Icon(Icons.verified_user_rounded,
                 color: SLColors.danger, size: 28),
@@ -297,12 +297,12 @@ class _BlockListScreenState extends State<BlockListScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(13, 12, 12, 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.94),
+        color: Colors.white.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: SLColors.danger.withOpacity(0.10)),
+        border: Border.all(color: SLColors.danger.withValues(alpha: 0.10)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: const Color(0xFF4A1F2A).withOpacity(0.07),
+            color: const Color(0xFF4A1F2A).withValues(alpha: 0.07),
             blurRadius: 18,
             spreadRadius: -10,
             offset: const Offset(0, 12),
@@ -317,8 +317,8 @@ class _BlockListScreenState extends State<BlockListScreen> {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: <Color>[
-                  SLColors.danger.withOpacity(0.72),
-                  SLColors.primary.withOpacity(0.46),
+                  SLColors.danger.withValues(alpha: 0.72),
+                  SLColors.primary.withValues(alpha: 0.46),
                 ],
               ),
             ),
