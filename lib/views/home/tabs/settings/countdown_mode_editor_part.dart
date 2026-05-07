@@ -1113,40 +1113,52 @@ class _CountdownModeEditorScreenState
                                 ),
                                 const SizedBox(height: 10),
                                 ClipRRect(
-                                  borderRadius: BorderRadius.circular(18),
-                                  child: AspectRatio(
-                                    aspectRatio: 9 / 16,
-                                    child: Stack(
-                                      fit: StackFit.expand,
-                                      children: [
-                                        DecoratedBox(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: themeData.background,
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
+                                  borderRadius: BorderRadius.circular(22),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(22),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.72),
+                                      ),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: AspectRatio(
+                                        aspectRatio: 9 / 16,
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            DecoratedBox(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: themeData.background,
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                        if (_customBackgroundUrl
-                                            .trim()
-                                            .isNotEmpty)
-                                          Image.network(
-                                            _customBackgroundUrl,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
-                                                const SizedBox.shrink(),
-                                          ),
-                                        DecoratedBox(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: themeData.overlay,
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
+                                            if (_customBackgroundUrl
+                                                .trim()
+                                                .isNotEmpty)
+                                              Image.network(
+                                                _customBackgroundUrl,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    const SizedBox.shrink(),
+                                              ),
+                                            DecoratedBox(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: themeData.overlay,
+                                                  begin: Alignment.topCenter,
+                                                  end: Alignment.bottomCenter,
+                                                ),
+                                              ),
                                             ),
-                                          ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ),
