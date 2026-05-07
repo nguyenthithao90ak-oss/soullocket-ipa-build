@@ -117,9 +117,10 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
                   child: ClipOval(
                     child: widget.callerAvatar.isNotEmpty
                         ? CachedNetworkImage(
-                            memCacheWidth: 300,
+                            memCacheWidth: 720,
                             imageUrl: widget.callerAvatar,
                             fit: BoxFit.cover,
+                            filterQuality: FilterQuality.high,
                             placeholder: (context, url) => const Center(
                                 child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) =>
@@ -469,9 +470,10 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
             child: ClipOval(
               child: widget.partnerAvatar.isNotEmpty
                   ? CachedNetworkImage(
-                      memCacheWidth: 300,
+                      memCacheWidth: 720,
                       imageUrl: widget.partnerAvatar,
                       fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
                       placeholder: (context, url) =>
                           const Center(child: CircularProgressIndicator()),
                       errorWidget: (context, url, error) => _defaultAvatar(),
