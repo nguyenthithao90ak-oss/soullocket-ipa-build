@@ -718,6 +718,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return Image.network(
         item.remoteUrl!,
         fit: fit,
+        filterQuality: FilterQuality.high,
         gaplessPlayback: true,
         errorBuilder: (_, __, ___) => _buildLocalFallbackImage(item, fit),
       );
@@ -730,6 +731,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return Image.memory(
         base64Decode(item.inlineBase64!),
         fit: fit,
+        filterQuality: FilterQuality.high,
         gaplessPlayback: true,
       );
     }
@@ -738,6 +740,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return Image.file(
         File(item.path),
         fit: fit,
+        filterQuality: FilterQuality.high,
         gaplessPlayback: true,
         errorBuilder: (_, __, ___) => _brokenImagePlaceholder(),
       );
