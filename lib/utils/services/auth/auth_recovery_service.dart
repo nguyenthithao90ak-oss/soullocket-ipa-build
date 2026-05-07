@@ -359,27 +359,24 @@ class AuthRecoveryService {
       if (error is FirebaseFunctionsException) {
         throw _messageFromFunctionsError(
           error,
-          fallbackMessage:
-              'Không gửi được mã xác nhận: hãy kiểm tra email, giới hạn gửi mã và kết nối mạng.',
-          permissionDeniedMessage:
-              'Yêu cầu gửi mã đang bị từ chối. Hãy chờ một chút rồi thử lại.',
+          fallbackMessage: 'Không gửi được mã xác nhận.',
+          permissionDeniedMessage: 'Yêu cầu bị từ chối. Thử lại sau.',
           failedPreconditionMessage:
-              'Máy chủ gửi mã OTP chưa được cấu hình đầy đủ. Hãy kiểm tra OTP_SECRET và Gmail App Password trên Firebase Functions.',
+              'Máy chủ OTP chưa được cấu hình xong.',
           resourceExhaustedMessage:
-              'Bạn đã yêu cầu mã quá nhiều lần. Hãy chờ hết giới hạn chống spam rồi gửi lại.',
+              'Bạn yêu cầu mã quá nhiều lần. Hãy chờ rồi thử lại.',
           unauthenticatedMessage:
-              'Phiên bảo mật của ứng dụng chưa sẵn sàng để gửi mã. Vui lòng mở lại ứng dụng rồi thử lại.',
-          invalidArgumentMessage: 'Thiếu email để gửi mã xác nhận.',
+              'Phiên bảo mật chưa sẵn sàng. Mở lại app rồi thử lại.',
+          invalidArgumentMessage: 'Email không hợp lệ hoặc thiếu email.',
           appCheckMessage: kDebugMode
-              ? 'Phiên App Check chưa sẵn sàng. Vui lòng chờ vài giây rồi thử gửi mã lại.'
-              : 'Phiên bảo mật chưa sẵn sàng. Hãy chờ vài giây rồi gửi mã lại.',
+              ? 'App Check chưa sẵn sàng. Chờ vài giây rồi thử lại.'
+              : 'Phiên bảo mật chưa sẵn sàng. Chờ vài giây rồi thử lại.',
           allowUnauthenticatedWithoutMarkers: true,
         );
       }
       throw AppErrorMapper.resolve(
         error,
-        fallbackMessage:
-            'Không gửi được mã xác nhận: hãy kiểm tra email, giới hạn gửi mã và kết nối mạng.',
+        fallbackMessage: 'Không gửi được mã xác nhận.',
       ).message;
     }
   }
