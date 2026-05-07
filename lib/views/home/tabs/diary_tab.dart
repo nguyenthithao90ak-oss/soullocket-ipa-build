@@ -514,7 +514,7 @@ class _DiaryTabState extends State<DiaryTab> {
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(
-        child: CuteLoadingIndicator(color: Colors.white),
+        child: CircularProgressIndicator(),
       ),
     );
 
