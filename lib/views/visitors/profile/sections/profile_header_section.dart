@@ -331,7 +331,7 @@ class _VisitorProfileSmallHouseAvatarBadge extends StatelessWidget {
       child: ClipOval(
         child: avatarUrl.isNotEmpty
             ? CachedNetworkImage(
-                memCacheWidth: 360,
+                memCacheWidth: 720,
                 imageUrl: avatarUrl,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.high,
