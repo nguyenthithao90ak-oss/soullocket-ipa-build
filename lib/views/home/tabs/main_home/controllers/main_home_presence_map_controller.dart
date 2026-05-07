@@ -800,22 +800,10 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
       return;
     }
 
-    final hasBackgroundPermission =
-        await _locationService.hasBackgroundPermission();
-    if (hasBackgroundPermission || !mounted) {
-      return;
-    }
-
     await _locationService.requestBackgroundPermission(context: context);
     if (!mounted) {
       return;
     }
-    await _locationService.startTracking(
-      normalizedHouseId,
-      normalizedRole,
-      context: context,
-      forcePrompt: false,
-    );
   }
 
   void _bindHomeMapPreview(String houseId) {
