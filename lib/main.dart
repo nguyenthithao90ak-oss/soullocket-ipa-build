@@ -169,8 +169,6 @@ void main() {
     _configureRenderingDefaults();
     await _configureSystemUiForEdgeToEdge();
     GoogleFonts.config.allowRuntimeFetching = !kIsWeb;
-    if (!kIsWeb) {
-    }
 
     // Giữ dọc trên mobile; riêng macOS không khóa để cho phép xoay/ngang.
     if (!kIsWeb && defaultTargetPlatform != TargetPlatform.macOS) {
