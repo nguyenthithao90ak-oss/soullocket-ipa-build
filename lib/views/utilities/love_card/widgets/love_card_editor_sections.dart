@@ -362,14 +362,16 @@ class _LoveCardThemePicker extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
+                child: Stack(
+                  children: [
                     Positioned(
                       right: -6,
                       bottom: -10,
                       child: Icon(
                         data.accentIcon,
                         size: 44,
-                        color: Colors.white.withValues(alpha:
-                          isSelected ? 0.18 : 0.12),
+                        color: Colors.white.withValues(
+                          alpha: isSelected ? 0.18 : 0.12,
                         ),
                       ),
                     ),
