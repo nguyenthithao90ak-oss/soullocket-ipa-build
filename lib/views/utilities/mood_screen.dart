@@ -231,7 +231,7 @@ class _MoodScreenState extends State<MoodScreen> {
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? const Color(0xFFFFF5F7)
-                                      : Colors.white.withOpacity(0.6),
+                                      : Colors.white.withValues(alpha: 0.6),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: isSelected
@@ -345,7 +345,7 @@ class _MoodScreenState extends State<MoodScreen> {
       child: Container(
         padding: SLSpacing.all16,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE8D5DF), width: 1.5),
         ),
