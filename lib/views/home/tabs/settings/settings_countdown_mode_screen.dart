@@ -319,10 +319,24 @@ class _CountdownModeIndependentScreenState
                 Positioned.fill(
                   child: Opacity(
                     opacity: themeData.imageOpacity,
-                    child: Image.network(
-                      _customBackgroundUrl,
+                    child: CachedNetworkImage(
+                      imageUrl: _customBackgroundUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      fadeInDuration: const Duration(milliseconds: 180),
+                      memCacheWidth: 1080,
+                      placeholder: (_, __) => DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              themeData.orbA.withOpacity(0.12),
+                              themeData.orbB.withOpacity(0.16),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
