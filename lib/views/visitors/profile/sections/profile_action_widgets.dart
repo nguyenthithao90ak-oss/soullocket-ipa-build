@@ -99,13 +99,13 @@ class VisitorProfileHeartButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: isHeartDroppedToday
-                ? Colors.white.withOpacity(0.15)
-                : Colors.white.withOpacity(0.22),
+                ? Colors.white.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.22),
             borderRadius: BorderRadius.circular(SLRadius.pill),
             border: Border.all(
               color: isHeartDroppedToday
                   ? Colors.white24
-                  : Colors.white.withOpacity(0.5),
+                  : Colors.white.withValues(alpha: 0.5),
             ),
           ),
           child: Row(
@@ -147,7 +147,7 @@ class _ActionCircle extends StatelessWidget {
     return Container(
       padding: SLSpacing.all8,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.18),
+        color: Colors.white.withValues(alpha: 0.18),
         shape: BoxShape.circle,
       ),
       child: child,
