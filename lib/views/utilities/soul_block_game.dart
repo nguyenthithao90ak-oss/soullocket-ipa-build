@@ -580,7 +580,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     final List<_SoulPieceOption> curated = <_SoulPieceOption>[];
     for (final template in curatedTemplates) {
-      final _SoulPieceOption? option = tray.firstWhere(
+      final _SoulPieceOption option = tray.firstWhere(
         (_SoulPieceOption item) => item.template.id == template.id,
         orElse: () => _spawnPieceFromTemplate(template),
       );
