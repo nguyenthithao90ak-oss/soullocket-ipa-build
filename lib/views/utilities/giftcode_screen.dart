@@ -90,7 +90,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
             ),
           ),
         ),
@@ -136,16 +136,16 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
         child: Container(
           padding: const EdgeInsets.all(30),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withOpacity(0.3)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
           ),
           child: Column(
             children: [
               Container(
                 padding: SLSpacing.all20,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -176,10 +176,10 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
               SLSpacing.gapH(30),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.94),
+                  color: Colors.white.withValues(alpha: 0.94),
                   borderRadius: SLRadius.lgAll,
                   border: Border.all(
-                    color: const Color(0xFFFF8AA0).withOpacity(0.55),
+                    color: const Color(0xFFFF8AA0).withValues(alpha: 0.55),
                   ),
                 ),
                 child: TextField(
