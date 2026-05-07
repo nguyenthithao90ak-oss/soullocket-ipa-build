@@ -17,10 +17,10 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
           decoration: BoxDecoration(
             color: const Color(0xE6242526),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withOpacity(0.08)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             boxShadow: [
               BoxShadow(
-                color: _kMapPinkDeep.withOpacity(0.14),
+                color: _kMapPinkDeep.withValues(alpha: 0.14),
                 blurRadius: 34,
                 offset: const Offset(0, 18),
               ),
@@ -66,10 +66,10 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color(0xFF0F172A).withOpacity(0.30),
+              const Color(0xFF0F172A).withValues(alpha: 0.30),
               Colors.transparent,
               Colors.transparent,
-              const Color(0xFF111827).withOpacity(0.46),
+              const Color(0xFF111827).withValues(alpha: 0.46),
             ],
             stops: const [0, 0.22, 0.62, 1],
             begin: Alignment.topCenter,
@@ -88,7 +88,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      _kMapPinkDeep.withOpacity(0.16),
+                      _kMapPinkDeep.withValues(alpha: 0.16),
                       Colors.transparent,
                     ],
                   ),
@@ -105,7 +105,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      _kMapBlue.withOpacity(0.13),
+                      _kMapBlue.withValues(alpha: 0.13),
                       Colors.transparent,
                     ],
                   ),
@@ -202,10 +202,10 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
           decoration: BoxDecoration(
             color: const Color(0xD918191A),
             borderRadius: SLRadius.pillAll,
-            border: Border.all(color: accent.withOpacity(0.24)),
+            border: Border.all(color: accent.withValues(alpha: 0.24)),
             boxShadow: [
               BoxShadow(
-                color: accent.withOpacity(0.12),
+                color: accent.withValues(alpha: 0.12),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
@@ -252,10 +252,10 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               decoration: BoxDecoration(
                 color: const Color(0xD918191A),
                 borderRadius: SLRadius.pillAll,
-                border: Border.all(color: _kMapPinkDeep.withOpacity(0.20)),
+                border: Border.all(color: _kMapPinkDeep.withValues(alpha: 0.20)),
                 boxShadow: [
                   BoxShadow(
-                    color: _kMapPinkDeep.withOpacity(0.12),
+                    color: _kMapPinkDeep.withValues(alpha: 0.12),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -325,7 +325,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                   end: Alignment.bottomCenter,
                 ),
                 border: Border(
-                  top: BorderSide(color: Colors.white.withOpacity(0.08)),
+                  top: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
                 ),
                 boxShadow: const [
                   BoxShadow(
@@ -344,7 +344,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                       width: 54,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.22),
+                        color: Colors.white.withValues(alpha: 0.22),
                         borderRadius: SLRadius.pillAll,
                       ),
                     ),
@@ -482,12 +482,12 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF242526).withOpacity(0.96),
+                    color: const Color(0xFF242526).withValues(alpha: 0.96),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(color: const Color(0xFFFFD3E1)),
                     boxShadow: [
                       BoxShadow(
-                        color: _kMapPinkDeep.withOpacity(0.08),
+                        color: _kMapPinkDeep.withValues(alpha: 0.08),
                         blurRadius: 28,
                         offset: const Offset(0, 14),
                       ),
