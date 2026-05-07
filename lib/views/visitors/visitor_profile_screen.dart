@@ -1034,7 +1034,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
                     icon: Container(
                       padding: SLSpacing.all8,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
+                        color: Colors.white.withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(

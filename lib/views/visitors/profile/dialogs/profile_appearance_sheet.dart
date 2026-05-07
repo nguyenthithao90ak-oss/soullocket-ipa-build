@@ -172,7 +172,7 @@ Future<void> showVisitorProfileAppearanceSheet({
                                   alignment: Alignment.center,
                                   child: Icon(
                                     theme.icon,
-                                    color: Colors.white.withOpacity(0.92),
+                                    color: Colors.white.withValues(alpha: 0.92),
                                     size: 20,
                                   ),
                                 ),
