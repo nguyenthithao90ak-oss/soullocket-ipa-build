@@ -482,6 +482,8 @@ class PresenceService {
         preferredDevice: _activeDeviceType,
       );
       debugPrint('Presence online for $_activeRole in $_activeHouseId');
+    } on TimeoutException {
+      return;
     } catch (e) {
       debugPrint('Presence write failed: $e');
     }
