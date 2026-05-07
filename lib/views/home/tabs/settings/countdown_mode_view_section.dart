@@ -28,55 +28,55 @@ extension _CountdownModeIndependentScreenViewPart
 
   Color _subtitleColor(_CountdownModeThemeData themeData) {
     return themeData.isDark
-        ? Colors.white.withOpacity(0.68)
+        ? Colors.white.withValues(alpha: 0.68)
         : const Color(0xFF8A94A6);
   }
 
   Color _surfaceFillColor(_CountdownModeThemeData themeData) {
     if (themeData.isDark) {
-      return Colors.white.withOpacity(0.12);
+      return Colors.white.withValues(alpha: 0.12);
     }
     switch (UiPrefs.notifier.value.homeBlockToneKey) {
       case 'mist':
-        return const Color(0xFFF7FBFF).withOpacity(0.78);
+        return const Color(0xFFF7FBFF).withValues(alpha: 0.78);
       case 'rose':
-        return const Color(0xFFFFF2F7).withOpacity(0.80);
+        return const Color(0xFFFFF2F7).withValues(alpha: 0.80);
       case 'glass':
-        return Colors.white.withOpacity(0.66);
+        return Colors.white.withValues(alpha: 0.66);
       default:
-        return Colors.white.withOpacity(0.78);
+        return Colors.white.withValues(alpha: 0.78);
     }
   }
 
   Color _surfaceBorderColor(_CountdownModeThemeData themeData) {
     if (themeData.isDark) {
-      return Colors.white.withOpacity(0.18);
+      return Colors.white.withValues(alpha: 0.18);
     }
     switch (UiPrefs.notifier.value.homeBlockToneKey) {
       case 'mist':
-        return const Color(0xFFE3F2FD).withOpacity(0.86);
+        return const Color(0xFFE3F2FD).withValues(alpha: 0.86);
       case 'rose':
-        return const Color(0xFFF8D7E4).withOpacity(0.86);
+        return const Color(0xFFF8D7E4).withValues(alpha: 0.86);
       case 'glass':
-        return Colors.white.withOpacity(0.72);
+        return Colors.white.withValues(alpha: 0.72);
       default:
-        return Colors.white.withOpacity(0.72);
+        return Colors.white.withValues(alpha: 0.72);
     }
   }
 
   Color _surfaceShadowColor(_CountdownModeThemeData themeData) {
     if (themeData.isDark) {
-      return Colors.black.withOpacity(0.22);
+      return Colors.black.withValues(alpha: 0.22);
     }
     switch (UiPrefs.notifier.value.homeBlockToneKey) {
       case 'mist':
-        return const Color(0xFF64B5F6).withOpacity(0.08);
+        return const Color(0xFF64B5F6).withValues(alpha: 0.08);
       case 'rose':
-        return const Color(0xFFD94C86).withOpacity(0.08);
+        return const Color(0xFFD94C86).withValues(alpha: 0.08);
       case 'glass':
-        return Colors.white.withOpacity(0.06);
+        return Colors.white.withValues(alpha: 0.06);
       default:
-        return const Color(0xFFD94C86).withOpacity(0.08);
+        return const Color(0xFFD94C86).withValues(alpha: 0.08);
     }
   }
 
@@ -194,11 +194,11 @@ extension _CountdownModeIndependentScreenViewPart
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white
-                            .withOpacity(themeData.isDark ? 0.08 : 0.60),
+                            .withValues(alpha: themeData.isDark ? 0.08 : 0.60),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
                           color: Colors.white
-                              .withOpacity(themeData.isDark ? 0.12 : 0.82),
+                              .withValues(alpha: themeData.isDark ? 0.12 : 0.82),
                         ),
                       ),
                       child: Column(
@@ -209,7 +209,7 @@ extension _CountdownModeIndependentScreenViewPart
                             height: 42,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: metric.color.withOpacity(0.12),
+                              color: metric.color.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Text(
@@ -274,14 +274,14 @@ extension _CountdownModeIndependentScreenViewPart
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(isDark ? 0.14 : 0.82),
+            color: Colors.white.withValues(alpha: isDark ? 0.14 : 0.82),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withOpacity(isDark ? 0.22 : 0.94),
+              color: Colors.white.withValues(alpha: isDark ? 0.22 : 0.94),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.18 : 0.08),
+                color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.08),
                 blurRadius: 18,
                 offset: const Offset(0, 10),
               ),
@@ -339,9 +339,9 @@ extension _CountdownModeIndependentScreenViewPart
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.14),
+              color: statusColor.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: statusColor.withOpacity(0.22)),
+              border: Border.all(color: statusColor.withValues(alpha: 0.22)),
             ),
             child: Text(
               isAccepted ? 'Đã ghép nối' : 'Chờ ghép nối',
@@ -360,16 +360,16 @@ extension _CountdownModeIndependentScreenViewPart
             vertical: viewportConstraints.maxHeight < 720 ? 16 : 20,
           ),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(themeData.isDark ? 0.10 : 0.62),
+            color: Colors.white.withValues(alpha: themeData.isDark ? 0.10 : 0.62),
             borderRadius: BorderRadius.circular(34),
             border: Border.all(
-              color: Colors.white.withOpacity(themeData.isDark ? 0.16 : 0.78),
+              color: Colors.white.withValues(alpha: themeData.isDark ? 0.16 : 0.78),
             ),
             boxShadow: themeData.isDark
                 ? const []
                 : [
                     BoxShadow(
-                      color: const Color(0xFFD94C86).withOpacity(0.08),
+                      color: const Color(0xFFD94C86).withValues(alpha: 0.08),
                       blurRadius: 28,
                       offset: const Offset(0, 16),
                     ),
@@ -421,10 +421,10 @@ extension _CountdownModeIndependentScreenViewPart
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(themeData.isDark ? 0.08 : 0.56),
+              color: Colors.white.withValues(alpha: themeData.isDark ? 0.08 : 0.56),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withOpacity(themeData.isDark ? 0.10 : 0.86),
+                color: Colors.white.withValues(alpha: themeData.isDark ? 0.10 : 0.86),
               ),
             ),
             child: Row(
@@ -505,25 +505,25 @@ extension _CountdownModeIndependentScreenViewPart
       height: 72,
       decoration: BoxDecoration(
         color: _transparentMode
-            ? Colors.white.withOpacity(0.80)
-            : Colors.white.withOpacity(0.95),
+            ? Colors.white.withValues(alpha: 0.80)
+            : Colors.white.withValues(alpha: 0.95),
         gradient: _transparentMode
             ? null
             : LinearGradient(
                 colors: alternate
                     ? [
-                        const Color(0xFFFFFAFC).withOpacity(0.70),
-                        const Color(0xFFFFECF6).withOpacity(0.70),
+                        const Color(0xFFFFFAFC).withValues(alpha: 0.70),
+                        const Color(0xFFFFECF6).withValues(alpha: 0.70),
                       ]
                     : [
-                        Colors.white.withOpacity(0.70),
-                        const Color(0xFFEEF5FF).withOpacity(0.70),
+                        Colors.white.withValues(alpha: 0.70),
+                        const Color(0xFFEEF5FF).withValues(alpha: 0.70),
                       ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.40), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.40), width: 1),
         boxShadow: _transparentMode
             ? const []
             : [
@@ -531,7 +531,7 @@ extension _CountdownModeIndependentScreenViewPart
                   color: (alternate
                           ? const Color(0xFFD81B60)
                           : const Color(0xFF2563EB))
-                      .withOpacity(0.10),
+                      .withValues(alpha: 0.10),
                   blurRadius: 15,
                   offset: const Offset(0, 6),
                 ),
@@ -712,7 +712,7 @@ extension _CountdownModeIndependentScreenViewPart
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F1A2D),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.10)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: SingleChildScrollView(
                     padding: EdgeInsets.fromLTRB(
@@ -1105,15 +1105,15 @@ extension _CountdownModeIndependentScreenViewPart
           borderRadius: BorderRadius.circular(28),
           gradient: LinearGradient(
             colors: [
-              Colors.white.withOpacity(themeData.isDark ? 0.12 : 0.80),
-              accent.withOpacity(themeData.isDark ? 0.18 : 0.20),
-              themeData.orbB.withOpacity(themeData.isDark ? 0.12 : 0.16),
+              Colors.white.withValues(alpha: themeData.isDark ? 0.12 : 0.80),
+              accent.withValues(alpha: themeData.isDark ? 0.18 : 0.20),
+              themeData.orbB.withValues(alpha: themeData.isDark ? 0.12 : 0.16),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           border: Border.all(
-            color: accent.withOpacity(0.34),
+            color: accent.withValues(alpha: 0.34),
             width: 1.3,
           ),
           boxShadow: [
@@ -1123,7 +1123,7 @@ extension _CountdownModeIndependentScreenViewPart
               offset: const Offset(0, 12),
             ),
             BoxShadow(
-              color: accent.withOpacity(themeData.isDark ? 0.14 : 0.12),
+              color: accent.withValues(alpha: themeData.isDark ? 0.14 : 0.12),
               blurRadius: 26,
               offset: const Offset(0, 12),
             ),
@@ -1139,7 +1139,7 @@ extension _CountdownModeIndependentScreenViewPart
                 height: 88,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: accent.withOpacity(0.10),
+                  color: accent.withValues(alpha: 0.10),
                 ),
               ),
             ),
@@ -1151,7 +1151,7 @@ extension _CountdownModeIndependentScreenViewPart
                 height: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: themeData.orbB.withOpacity(0.10),
+                  color: themeData.orbB.withValues(alpha: 0.10),
                 ),
               ),
             ),
@@ -1168,12 +1168,12 @@ extension _CountdownModeIndependentScreenViewPart
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(
+                        color: Colors.white.withValues(alpha: 
                           themeData.isDark ? 0.10 : 0.60,
                         ),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: Colors.white.withOpacity(
+                          color: Colors.white.withValues(alpha: 
                             themeData.isDark ? 0.14 : 0.72,
                           ),
                         ),
@@ -1204,11 +1204,11 @@ extension _CountdownModeIndependentScreenViewPart
                                 height: 64,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(
+                                  color: Colors.white.withValues(alpha: 
                                     themeData.isDark ? 0.10 : 0.58,
                                   ),
                                   border: Border.all(
-                                    color: accent.withOpacity(0.30),
+                                    color: accent.withValues(alpha: 0.30),
                                   ),
                                 ),
                                 child: Icon(
@@ -1287,15 +1287,15 @@ extension _CountdownModeIndependentScreenViewPart
           borderRadius: BorderRadius.circular(24),
           gradient: LinearGradient(
             colors: [
-              Colors.white.withOpacity(themeData.isDark ? 0.12 : 0.82),
-              accent.withOpacity(themeData.isDark ? 0.14 : 0.14),
-              themeData.orbB.withOpacity(themeData.isDark ? 0.08 : 0.10),
+              Colors.white.withValues(alpha: themeData.isDark ? 0.12 : 0.82),
+              accent.withValues(alpha: themeData.isDark ? 0.14 : 0.14),
+              themeData.orbB.withValues(alpha: themeData.isDark ? 0.08 : 0.10),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           border: Border.all(
-            color: accent.withOpacity(0.28),
+            color: accent.withValues(alpha: 0.28),
             width: 1.2,
           ),
           boxShadow: [
@@ -1305,7 +1305,7 @@ extension _CountdownModeIndependentScreenViewPart
               offset: const Offset(0, 12),
             ),
             BoxShadow(
-              color: accent.withOpacity(themeData.isDark ? 0.14 : 0.10),
+              color: accent.withValues(alpha: themeData.isDark ? 0.14 : 0.10),
               blurRadius: 28,
               offset: const Offset(0, 12),
             ),
@@ -1340,9 +1340,9 @@ extension _CountdownModeIndependentScreenViewPart
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: accent.withOpacity(0.14),
+                          color: accent.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: accent.withOpacity(0.18)),
+                          border: Border.all(color: accent.withValues(alpha: 0.18)),
                         ),
                         child: Row(
                           children: [
@@ -1375,12 +1375,12 @@ extension _CountdownModeIndependentScreenViewPart
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(
+                    color: Colors.white.withValues(alpha: 
                       themeData.isDark ? 0.08 : 0.62,
                     ),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withOpacity(
+                      color: Colors.white.withValues(alpha: 
                         themeData.isDark ? 0.12 : 0.74,
                       ),
                     ),
@@ -1430,14 +1430,14 @@ extension _CountdownModeIndependentScreenViewPart
                       borderRadius: BorderRadius.circular(20),
                       gradient: LinearGradient(
                         colors: [
-                          accent.withOpacity(0.18),
+                          accent.withValues(alpha: 0.18),
                           Colors.white
-                              .withOpacity(themeData.isDark ? 0.08 : 0.46),
+                              .withValues(alpha: themeData.isDark ? 0.08 : 0.46),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      border: Border.all(color: accent.withOpacity(0.24)),
+                      border: Border.all(color: accent.withValues(alpha: 0.24)),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(18),
@@ -1455,8 +1455,8 @@ extension _CountdownModeIndependentScreenViewPart
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        accent.withOpacity(0.16),
-                                        Colors.white.withOpacity(
+                                        accent.withValues(alpha: 0.16),
+                                        Colors.white.withValues(alpha: 
                                           themeData.isDark ? 0.06 : 0.34,
                                         ),
                                       ],
@@ -1480,8 +1480,8 @@ extension _CountdownModeIndependentScreenViewPart
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        accent.withOpacity(0.14),
-                                        Colors.white.withOpacity(
+                                        accent.withValues(alpha: 0.14),
+                                        Colors.white.withValues(alpha: 
                                           themeData.isDark ? 0.06 : 0.24,
                                         ),
                                       ],
@@ -1492,7 +1492,7 @@ extension _CountdownModeIndependentScreenViewPart
                                   child: Center(
                                     child: Icon(
                                       Icons.image_outlined,
-                                      color: accent.withOpacity(0.76),
+                                      color: accent.withValues(alpha: 0.76),
                                       size: 24,
                                     ),
                                   ),
@@ -1504,12 +1504,12 @@ extension _CountdownModeIndependentScreenViewPart
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    Colors.white.withOpacity(
+                                    Colors.white.withValues(alpha: 
                                       bgUrl.isEmpty
                                           ? 0.00
                                           : (themeData.isDark ? 0.10 : 0.32),
                                     ),
-                                    accent.withOpacity(
+                                    accent.withValues(alpha: 
                                       themeData.isDark ? 0.08 : 0.14,
                                     ),
                                   ],
@@ -1646,7 +1646,7 @@ extension _CountdownModeIndependentScreenViewPart
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    themeData.orbB.withOpacity(themeData.isDark ? 0.18 : 0.24),
+                    themeData.orbB.withValues(alpha: themeData.isDark ? 0.18 : 0.24),
                     Colors.transparent,
                   ],
                 ),
@@ -1665,7 +1665,7 @@ extension _CountdownModeIndependentScreenViewPart
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    themeData.orbA.withOpacity(themeData.isDark ? 0.14 : 0.20),
+                    themeData.orbA.withValues(alpha: themeData.isDark ? 0.14 : 0.20),
                     Colors.transparent,
                   ],
                 ),
@@ -1689,12 +1689,12 @@ extension _CountdownModeIndependentScreenViewPart
                         height: 38,
                         margin: const EdgeInsets.only(right: 10, top: 1),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(
+                          color: Colors.white.withValues(alpha: 
                             themeData.isDark ? 0.10 : 0.58,
                           ),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withOpacity(
+                            color: Colors.white.withValues(alpha: 
                               themeData.isDark ? 0.14 : 0.72,
                             ),
                           ),
