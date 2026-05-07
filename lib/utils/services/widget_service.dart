@@ -272,6 +272,8 @@ class WidgetService {
     await _saveIfMissing<String>('seasonModeKey', 'auto');
     await _saveIfMissing<String>('seasonResolvedKey', 'none');
     await _saveIfMissing<String>('loveDateText', '');
+    await _saveIfMissing<String>('startDateRaw', '');
+    await _saveIfMissing<String>('dayUnitText', 'ngày');
     await _saveIfMissing<String>('diaryImagePaths', '[]');
     await _saveIfMissing<String>('diaryImageUrlSignature', '');
     await _saveIfMissing<int>('diaryImageCount', 0);
@@ -513,6 +515,11 @@ class WidgetService {
         'loveDateText',
         _normalizeLoveDateText(loveDate),
       );
+      await _saveWidgetDataIfChanged<String>('startDateRaw', loveDate.trim());
+      await _saveWidgetDataIfChanged<String>('dayUnitText',
+          daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim().isEmpty
+              ? 'ngày'
+              : daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim());
 
       final normalizedAvatarUrl1 = avatarUrl1?.trim() ?? '';
       if (normalizedAvatarUrl1.isNotEmpty) {
