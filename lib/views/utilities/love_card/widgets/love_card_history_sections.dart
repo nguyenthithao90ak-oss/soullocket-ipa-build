@@ -202,32 +202,22 @@ class _LoveCardHistoryHero extends StatelessWidget {
                         remaining <= const Duration(days: 7).inMilliseconds;
                   }).length}',
                 ),
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.14),
-        ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _LoveCardHistoryMetric(
+                  label: 'Bạn tạo',
+                  value: '$mine',
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-      child: Column(
-        children: [
-          const _LoveCardGlassIcon(
-            icon: Icons.history_toggle_off_rounded,
-            size: 52,
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'Chưa tải được lịch sử',
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Dữ liệu thiệp đang lỗi hoặc phản hồi chậm. Kéo xuống để thử lại hoặc gửi một thiệp mới rồi mở lại tab này.',
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
+    );
+  }
+}
+
               color: Colors.white.withValues(alpha: 0.72),
               fontSize: 14,
               height: 1.5,
