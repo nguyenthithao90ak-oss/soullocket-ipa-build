@@ -800,10 +800,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
       return;
     }
 
-    await _locationService.requestBackgroundPermission(context: context);
-    if (!mounted) {
-      return;
-    }
+    // Do not auto-open background permission settings during startup.
+    // Keep this for explicit user-triggered actions only.
   }
 
   void _bindHomeMapPreview(String houseId) {
