@@ -389,6 +389,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
           height: cellExtent,
           tone: renderCache.tone,
           isPreview: true,
+          isFloating: true,
           connectTop: _templateKeyContains(
               renderCache.templateCells, localX, localY - 1),
           connectRight: _templateKeyContains(
