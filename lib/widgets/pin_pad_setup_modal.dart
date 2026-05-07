@@ -599,7 +599,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                 fontWeight: FontWeight.w800,
                                 color: _canUseForgotPin
                                     ? SLColors.primary
-                                    : SLColors.primary.withOpacity(0.45),
+                                    : SLColors.primary.withValues(alpha: 0.45),
                               ),
                             ),
                           ),
@@ -633,7 +633,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                       vertical: 16,
                                     ),
                                     side: BorderSide(
-                                      color: SLColors.primary.withOpacity(0.18),
+                                      color: SLColors.primary.withValues(alpha: 0.18),
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(18),
@@ -709,9 +709,9 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
             height: 88,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.92),
+              color: Colors.white.withValues(alpha: 0.92),
               border: Border.all(
-                color: SLColors.primary.withOpacity(0.12),
+                color: SLColors.primary.withValues(alpha: 0.12),
               ),
             ),
             child: Icon(
@@ -776,10 +776,10 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
               vertical: 10,
             ),
             decoration: BoxDecoration(
-              color: SLColors.danger.withOpacity(0.08),
+              color: SLColors.danger.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: SLColors.danger.withOpacity(0.16),
+                color: SLColors.danger.withValues(alpha: 0.16),
               ),
             ),
             child: Text(
@@ -801,7 +801,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.7)),
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.7)),
         ),
       ),
       child: Padding(
@@ -872,9 +872,9 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          SLColors.bgElevated.withOpacity(0.96),
-                          SLColors.surfaceWarm.withOpacity(0.94),
-                          SLColors.secondarySoft.withOpacity(0.90),
+                          SLColors.bgElevated.withValues(alpha: 0.96),
+                          SLColors.surfaceWarm.withValues(alpha: 0.94),
+                          SLColors.secondarySoft.withValues(alpha: 0.90),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -883,12 +883,12 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                       border: Border.all(color: SLColors.borderLight),
                       boxShadow: [
                         BoxShadow(
-                          color: SLColors.primary.withOpacity(0.10),
+                          color: SLColors.primary.withValues(alpha: 0.10),
                           blurRadius: 28,
                           offset: const Offset(0, 14),
                         ),
                         BoxShadow(
-                          color: SLColors.secondary.withOpacity(0.08),
+                          color: SLColors.secondary.withValues(alpha: 0.08),
                           blurRadius: 36,
                           offset: const Offset(0, 20),
                         ),
@@ -906,7 +906,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                             color: SLColors.bgElevated,
                             boxShadow: [
                               BoxShadow(
-                                color: SLColors.primary.withOpacity(0.14),
+                                color: SLColors.primary.withValues(alpha: 0.14),
                                 blurRadius: 20,
                                 spreadRadius: 2,
                               ),
@@ -974,10 +974,10 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: SLColors.danger.withOpacity(0.10),
+                              color: SLColors.danger.withValues(alpha: 0.10),
                               borderRadius: SLRadius.mdAll,
                               border: Border.all(
-                                color: SLColors.danger.withOpacity(0.20),
+                                color: SLColors.danger.withValues(alpha: 0.20),
                               ),
                             ),
                             child: Text(
@@ -1009,7 +1009,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                 fontWeight: FontWeight.w800,
                                 color: _canUseForgotPin
                                     ? SLColors.primary
-                                    : SLColors.primary.withOpacity(0.45),
+                                    : SLColors.primary.withValues(alpha: 0.45),
                               ),
                             ),
                           ),
@@ -1061,7 +1061,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                     boxShadow: [
                                       BoxShadow(
                                         color:
-                                            SLColors.primary.withOpacity(0.24),
+                                            SLColors.primary.withValues(alpha: 0.24),
                                         blurRadius: 15,
                                         offset: const Offset(0, 6),
                                       ),
@@ -1124,12 +1124,12 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
             color: isActive
                 ? SLColors.primary
                 : (isRequiredSlot
-                    ? SLColors.bgElevated.withOpacity(0.72)
-                    : SLColors.bgElevated.withOpacity(0.34)),
+                    ? SLColors.bgElevated.withValues(alpha: 0.72)
+                    : SLColors.bgElevated.withValues(alpha: 0.34)),
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: SLColors.primary.withOpacity(0.36),
+                      color: SLColors.primary.withValues(alpha: 0.36),
                       blurRadius: 10,
                       spreadRadius: 2,
                     )
@@ -1208,8 +1208,8 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        splashColor: SLColors.primary.withOpacity(0.15),
-        highlightColor: SLColors.primary.withOpacity(0.1),
+        splashColor: SLColors.primary.withValues(alpha: 0.15),
+        highlightColor: SLColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
@@ -1219,18 +1219,18 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
             shape: BoxShape.circle,
             color: isDelete
                 ? Colors.transparent
-                : SLColors.bgElevated.withOpacity(0.78),
+                : SLColors.bgElevated.withValues(alpha: 0.78),
             border: Border.all(
               color: isDelete
                   ? Colors.transparent
-                  : SLColors.bgElevated.withOpacity(0.86),
+                  : SLColors.bgElevated.withValues(alpha: 0.86),
               width: 1.5,
             ),
             boxShadow: isDelete
                 ? null
                 : [
                     BoxShadow(
-                      color: SLColors.primary.withOpacity(0.08),
+                      color: SLColors.primary.withValues(alpha: 0.08),
                       blurRadius: 10,
                       spreadRadius: 1,
                     )
@@ -1241,7 +1241,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
               ? Icon(
                   icon,
                   color: _isInputLocked
-                      ? SLColors.primary.withOpacity(0.4)
+                      ? SLColors.primary.withValues(alpha: 0.4)
                       : SLColors.primary,
                   size: size * 0.42,
                 )
@@ -1251,7 +1251,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                     fontSize: size * 0.42,
                     fontWeight: FontWeight.w800,
                     color: _isInputLocked
-                        ? SLColors.primary.withOpacity(0.4)
+                        ? SLColors.primary.withValues(alpha: 0.4)
                         : SLColors.primary,
                   ),
                 ),
@@ -1402,9 +1402,9 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            SLColors.bgElevated.withOpacity(0.96),
-                            SLColors.surfaceWarm.withOpacity(0.94),
-                            SLColors.secondarySoft.withOpacity(0.90),
+                            SLColors.bgElevated.withValues(alpha: 0.96),
+                            SLColors.surfaceWarm.withValues(alpha: 0.94),
+                            SLColors.secondarySoft.withValues(alpha: 0.90),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -1413,12 +1413,12 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                         border: Border.all(color: SLColors.borderLight),
                         boxShadow: [
                           BoxShadow(
-                            color: SLColors.primary.withOpacity(0.10),
+                            color: SLColors.primary.withValues(alpha: 0.10),
                             blurRadius: 28,
                             offset: const Offset(0, 14),
                           ),
                           BoxShadow(
-                            color: SLColors.secondary.withOpacity(0.08),
+                            color: SLColors.secondary.withValues(alpha: 0.08),
                             blurRadius: 36,
                             offset: const Offset(0, 20),
                           ),
@@ -1436,7 +1436,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                               color: Colors.white,
                               boxShadow: [
                                 BoxShadow(
-                                  color: SLColors.primary.withOpacity(0.14),
+                                  color: SLColors.primary.withValues(alpha: 0.14),
                                   blurRadius: 20,
                                   spreadRadius: 2,
                                 ),
@@ -1500,10 +1500,10 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
-                                color: SLColors.danger.withOpacity(0.1),
+                                color: SLColors.danger.withValues(alpha: 0.1),
                                 borderRadius: SLRadius.mdAll,
                                 border: Border.all(
-                                    color: SLColors.danger.withOpacity(0.2)),
+                                    color: SLColors.danger.withValues(alpha: 0.2)),
                               ),
                               child: Text(
                                 displayedError,
@@ -1536,7 +1536,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                   color: _canUseForgotPin
                                       ? const Color(0xFFD81B60)
                                       : const Color(0xFFD81B60)
-                                          .withOpacity(0.45),
+                                          .withValues(alpha: 0.45),
                                 ),
                               ),
                             ),
@@ -1584,7 +1584,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                       boxShadow: [
                                         BoxShadow(
                                           color: const Color(0xFFD81B60)
-                                              .withOpacity(0.3),
+                                              .withValues(alpha: 0.3),
                                           blurRadius: 15,
                                           offset: const Offset(0, 6),
                                         ),
