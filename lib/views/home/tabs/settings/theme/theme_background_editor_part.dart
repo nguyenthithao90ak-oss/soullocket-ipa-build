@@ -286,7 +286,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
       fit: BoxFit.cover,
       fadeInDuration: const Duration(milliseconds: 180),
       memCacheWidth: 1080,
-      placeholder: (_, __) => DecoratedBox(
+      placeholder: (_, __) => const DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -298,10 +298,10 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Center(
-          child: CircularProgressIndicator(
+        child: const Center(
+          child: const CircularProgressIndicator(
             strokeWidth: 2.2,
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+            valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFFD81B60)),
           ),
         ),
       ),
