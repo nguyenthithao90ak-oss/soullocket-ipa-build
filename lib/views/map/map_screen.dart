@@ -1287,33 +1287,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         foregroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _mapScreenTitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: SLTheme.quicksand(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              _mapScreenSubtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: SLTheme.quicksand(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                color: Colors.white.withOpacity(0.68),
-              ),
-            ),
-          ],
-        ),
+        title: const SizedBox.shrink(),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
