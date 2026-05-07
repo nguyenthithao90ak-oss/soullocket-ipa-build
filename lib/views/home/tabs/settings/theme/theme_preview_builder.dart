@@ -75,7 +75,7 @@ class ThemePreviewBuilder extends StatelessWidget {
         border: Border.all(color: const Color(0xFFF2D7E3)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1E1B2A).withOpacity(0.08),
+            color: const Color(0xFF1E1B2A).withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -130,8 +130,8 @@ class ThemePreviewBuilder extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white.withOpacity(data.isDark ? 0.02 : 0.1),
-                            Colors.black.withOpacity(data.isDark ? 0.28 : 0.08),
+                            Colors.white.withValues(alpha: data.isDark ? 0.02 : 0.1),
+                            Colors.black.withValues(alpha: data.isDark ? 0.28 : 0.08),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -178,10 +178,10 @@ class ThemePreviewBuilder extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white
-                                .withOpacity(data.isDark ? 0.12 : 0.3),
+                                .withValues(alpha: data.isDark ? 0.12 : 0.3),
                             borderRadius: BorderRadius.circular(28),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.42),
+                              color: Colors.white.withValues(alpha: 0.42),
                             ),
                           ),
                           child: Column(
@@ -202,7 +202,7 @@ class ThemePreviewBuilder extends StatelessWidget {
                                 shaderCallback: (bounds) {
                                   return LinearGradient(
                                     colors: [
-                                      data.accentColor.withOpacity(0.82),
+                                      data.accentColor.withValues(alpha: 0.82),
                                       Colors.white,
                                     ],
                                   ).createShader(bounds);
@@ -263,10 +263,10 @@ class ThemePreviewBuilder extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white
-                                .withOpacity(data.isDark ? 0.1 : 0.26),
+                                .withValues(alpha: data.isDark ? 0.1 : 0.26),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.34),
+                              color: Colors.white.withValues(alpha: 0.34),
                             ),
                           ),
                           child: Row(
@@ -379,9 +379,9 @@ class _PreviewPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withOpacity(0.34)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
       ),
       child: Row(
         children: [
@@ -423,9 +423,9 @@ class _PreviewProfileCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.22),
+        color: Colors.white.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.35)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -493,8 +493,8 @@ class _PreviewAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            accentColor.withOpacity(0.9),
-            accentColor.withOpacity(0.45),
+            accentColor.withValues(alpha: 0.9),
+            accentColor.withValues(alpha: 0.45),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -570,7 +570,7 @@ class _PreviewEffectLayer extends StatelessWidget {
             width: size,
             height: size,
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.14 + (index % 3) * 0.04),
+              color: accentColor.withValues(alpha: 0.14 + (index % 3) * 0.04),
               shape: BoxShape.circle,
             ),
           ),
