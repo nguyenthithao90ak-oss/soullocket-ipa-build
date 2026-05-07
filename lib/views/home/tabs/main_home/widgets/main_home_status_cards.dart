@@ -58,6 +58,27 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     );
   }
 
+  String _formatInsightUpdatedAtText(int updatedAt) {
+    if (updatedAt <= 0) {
+      return 'Cập nhật gần nhất không rõ thời điểm';
+    }
+
+    final now = DateTime.now();
+    final updated = DateTime.fromMillisecondsSinceEpoch(updatedAt);
+    final diff = now.difference(updated);
+
+    if (diff.inMinutes < 1) {
+      return 'Cập nhật gần nhất vừa xong';
+    }
+    if (diff.inHours < 1) {
+      return 'Cập nhật gần nhất ${diff.inMinutes} phút trước';
+    }
+    if (diff.inDays < 1) {
+      return 'Cập nhật gần nhất ${diff.inHours} giờ trước';
+    }
+    return 'Cập nhật gần nhất ${diff.inDays} ngày trước';
+  }
+
   Widget _buildModernHighlightCard(
       {required String? startDate, required bool isSingle}) {
     final title = _buildCountdownText(isSingle: isSingle, startDate: startDate);
@@ -361,6 +382,15 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.5,
                         color: SLColors.accent.withOpacity(0.76),
+                      ),
+                    ),
+                    SLSpacing.h4,
+                    Text(
+                      _formatInsightUpdatedAtText(insight.updatedAt),
+                      style: SLTheme.quicksand(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: SLColors.textTertiary,
                       ),
                     ),
                     SLSpacing.h8,
