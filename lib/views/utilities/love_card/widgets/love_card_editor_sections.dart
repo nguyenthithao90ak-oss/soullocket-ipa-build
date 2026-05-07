@@ -362,8 +362,6 @@ class _LoveCardThemePicker extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
-                child: Stack(
-                  children: [
                     Positioned(
                       right: -6,
                       bottom: -10,
