@@ -67,7 +67,7 @@ class _LoveCardCreateView extends StatelessWidget {
                     'Sau khi gửi, app sẽ tự tạo link mới để bạn chia sẻ ngay.',
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
-                      color: Colors.white.withOpacity(0.68),
+                      color: Colors.white.withValues(alpha: 0.68),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -112,8 +112,8 @@ class _LoveCardCreateStickyFooter extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             const Color(0x00FFFFFF),
-            colors.last.withOpacity(0.82),
-            Color.lerp(colors.last, colors.first, 0.18)!.withOpacity(0.98),
+            colors.last.withValues(alpha: 0.82),
+            Color.lerp(colors.last, colors.first, 0.18)!.withValues(alpha: 0.98),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -123,7 +123,7 @@ class _LoveCardCreateStickyFooter extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(16, 14, 16, bottomInset + 10),
         decoration: BoxDecoration(
           border: Border(
-            top: BorderSide(color: Colors.white.withOpacity(0.12)),
+            top: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
           ),
         ),
         child: _LoveCardSendAction(
@@ -150,19 +150,19 @@ class _LoveCardCreateHero extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.white.withOpacity(0.18),
-            Colors.white.withOpacity(0.08),
+            Colors.white.withValues(alpha: 0.18),
+            Colors.white.withValues(alpha: 0.08),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.16)),
-          bottom: BorderSide(color: Colors.white.withOpacity(0.16)),
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 14),
           ),
@@ -186,7 +186,7 @@ class _LoveCardCreateHero extends StatelessWidget {
             child: Icon(
               Icons.link_rounded,
               size: 82,
-              color: Colors.white.withOpacity(0.07),
+              color: Colors.white.withValues(alpha: 0.07),
             ),
           ),
           Column(
@@ -215,7 +215,7 @@ class _LoveCardCreateHero extends StatelessWidget {
                         Text(
                           theme.title,
                           style: SLTheme.quicksand(
-                            color: Colors.white.withOpacity(0.72),
+                            color: Colors.white.withValues(alpha: 0.72),
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
@@ -229,7 +229,7 @@ class _LoveCardCreateHero extends StatelessWidget {
               Text(
                 'Người nhận chỉ cần mở liên kết là thấy ngay thiệp của bạn, không cần vào lại màn hình này.',
                 style: SLTheme.quicksand(
-                  color: Colors.white.withOpacity(0.82),
+                  color: Colors.white.withValues(alpha: 0.82),
                   fontSize: 13,
                   height: 1.4,
                   fontWeight: FontWeight.w600,
@@ -258,9 +258,9 @@ class _LoveCardCreateHero extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.10),
+                  color: Colors.white.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: Colors.white.withOpacity(0.12)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                 ),
                 child: Row(
                   children: [
@@ -268,7 +268,7 @@ class _LoveCardCreateHero extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.13),
+                        color: Colors.white.withValues(alpha: 0.13),
                         borderRadius: BorderRadius.circular(13),
                       ),
                       child: const Icon(
@@ -282,7 +282,7 @@ class _LoveCardCreateHero extends StatelessWidget {
                       child: Text(
                         'Gửi xong app tự tạo link công khai và copy sẵn để bạn chia sẻ.',
                         style: SLTheme.quicksand(
-                          color: Colors.white.withOpacity(0.78),
+                          color: Colors.white.withValues(alpha: 0.78),
                           fontSize: 12.5,
                           height: 1.35,
                           fontWeight: FontWeight.w700,
@@ -337,8 +337,8 @@ class _LoveCardThemePicker extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      themeColors.first.withOpacity(isSelected ? 0.92 : 0.58),
-                      themeColors.last.withOpacity(isSelected ? 0.88 : 0.46),
+                      themeColors.first.withValues(alpha: isSelected ? 0.92 : 0.58),
+                      themeColors.last.withValues(alpha: isSelected ? 0.88 : 0.46),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -346,14 +346,14 @@ class _LoveCardThemePicker extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: isSelected
-                        ? Colors.white.withOpacity(0.56)
-                        : Colors.white.withOpacity(0.18),
+                        ? Colors.white.withValues(alpha: 0.56)
+                        : Colors.white.withValues(alpha: 0.18),
                     width: isSelected ? 1.4 : 1,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: themeColors.first.withOpacity(0.28),
+                            color: themeColors.first.withValues(alpha: 0.28),
                             blurRadius: 22,
                             offset: const Offset(0, 14),
                           ),
@@ -368,8 +368,8 @@ class _LoveCardThemePicker extends StatelessWidget {
                       child: Icon(
                         data.accentIcon,
                         size: 44,
-                        color: Colors.white.withOpacity(
-                          isSelected ? 0.18 : 0.12,
+                        color: Colors.white.withValues(alpha:
+                          isSelected ? 0.18 : 0.12),
                         ),
                       ),
                     ),
@@ -403,7 +403,7 @@ class _LoveCardThemePicker extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: SLTheme.quicksand(
-                            color: Colors.white.withOpacity(0.90),
+                            color: Colors.white.withValues(alpha: 0.90),
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                           ),
@@ -414,7 +414,7 @@ class _LoveCardThemePicker extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: SLTheme.quicksand(
-                            color: Colors.white.withOpacity(0.78),
+                            color: Colors.white.withValues(alpha: 0.78),
                             fontSize: 11,
                             height: 1.35,
                             fontWeight: FontWeight.w600,
@@ -479,12 +479,12 @@ class _LoveCardPreviewPanel extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(outerRadius),
               border: Border.all(
-                color: Colors.white.withOpacity(0.30),
+                color: Colors.white.withValues(alpha: 0.30),
                 width: 1.3,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: colors.first.withOpacity(0.26),
+                  color: colors.first.withValues(alpha: 0.26),
                   blurRadius: fullBleed ? 42 : 34,
                   offset: Offset(0, fullBleed ? 26 : 22),
                 ),
@@ -510,9 +510,9 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white.withOpacity(0),
-                            Colors.white.withOpacity(0.55),
-                            Colors.white.withOpacity(0),
+                            Colors.white.withValues(alpha: 0),
+                            Colors.white.withValues(alpha: 0.55),
+                            Colors.white.withValues(alpha: 0),
                           ],
                         ),
                       ),
@@ -527,7 +527,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                     height: 96,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.13),
+                      color: Colors.white.withValues(alpha: 0.13),
                     ),
                   ),
                 ),
@@ -539,7 +539,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                     height: 132,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.08),
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
                   ),
                 ),
@@ -557,7 +557,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                             color: Colors.white.withOpacity(0.14),
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.18),
+                              color: Colors.white.withValues(alpha: 0.18),
                             ),
                           ),
                           child: Row(
@@ -579,7 +579,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                         const Spacer(),
                         Icon(
                           theme.accentIcon,
-                          color: Colors.white.withOpacity(0.74),
+                          color: Colors.white.withValues(alpha: 0.74),
                           size: 20,
                         ),
                       ],
@@ -601,7 +601,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                     Text(
                       'Xem trước thiệp',
                       style: SLTheme.quicksand(
-                        color: Colors.white.withOpacity(0.76),
+                        color: Colors.white.withValues(alpha: 0.76),
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
@@ -619,7 +619,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withOpacity(0.18),
+                              color: Colors.black.withValues(alpha: 0.18),
                               blurRadius: 10,
                               offset: const Offset(0, 3),
                             ),
@@ -633,15 +633,15 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white.withOpacity(0.16),
-                            Colors.white.withOpacity(0.08),
+                            Colors.white.withValues(alpha: 0.16),
+                            Colors.white.withValues(alpha: 0.08),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.18),
+                          color: Colors.white.withValues(alpha: 0.18),
                         ),
                       ),
                       child: Row(
@@ -651,13 +651,13 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.12),
+                              color: Colors.white.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             alignment: Alignment.center,
                             child: Icon(
                               Icons.draw_rounded,
-                              color: Colors.white.withOpacity(0.86),
+                              color: Colors.white.withValues(alpha: 0.86),
                               size: 16,
                             ),
                           ),
@@ -678,7 +678,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                                 Text(
                                   state._resolveSignature(theme.key),
                                   style: SLTheme.quicksand(
-                                    color: Colors.white.withOpacity(0.74),
+                                    color: Colors.white.withValues(alpha: 0.74),
                                     fontSize: 12,
                                     height: 1.4,
                                     fontWeight: FontWeight.w700,
@@ -713,9 +713,9 @@ class _LoveCardEffectPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
+        color: Colors.white.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withOpacity(0.14)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -753,8 +753,8 @@ class _LoveCardPreviewThemeDecor extends StatelessWidget {
           top: 64,
           right: 18,
           child: _LoveCardPreviewConfetti(
-            baseColor: Colors.white.withOpacity(0.80),
-            accentColor: colors.first.withOpacity(0.78),
+            baseColor: Colors.white.withValues(alpha: 0.80),
+            accentColor: colors.first.withValues(alpha: 0.78),
           ),
         );
       case 'anniversary':
@@ -763,8 +763,8 @@ class _LoveCardPreviewThemeDecor extends StatelessWidget {
           right: 16,
           child: _LoveCardPreviewHalo(
             size: 84,
-            color: Colors.white.withOpacity(0.24),
-            accent: const Color(0xFFFFD98B).withOpacity(0.70),
+            color: Colors.white.withValues(alpha: 0.24),
+            accent: const Color(0xFFFFD98B).withValues(alpha: 0.70),
           ),
         );
       case 'miss':
@@ -773,8 +773,8 @@ class _LoveCardPreviewThemeDecor extends StatelessWidget {
           right: 14,
           child: _LoveCardPreviewMoon(
             size: 70,
-            color: Colors.white.withOpacity(0.22),
-            cutoutColor: colors.last.withOpacity(0.94),
+            color: Colors.white.withValues(alpha: 0.22),
+            cutoutColor: colors.last.withValues(alpha: 0.94),
           ),
         );
       default:
@@ -782,8 +782,8 @@ class _LoveCardPreviewThemeDecor extends StatelessWidget {
           top: 58,
           right: 16,
           child: _LoveCardPreviewHeartCluster(
-            color: Colors.white.withOpacity(0.72),
-            accent: colors.first.withOpacity(0.82),
+            color: Colors.white.withValues(alpha: 0.72),
+            accent: colors.first.withValues(alpha: 0.82),
           ),
         );
     }
