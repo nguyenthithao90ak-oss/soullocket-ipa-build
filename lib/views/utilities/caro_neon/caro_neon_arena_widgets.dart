@@ -30,7 +30,7 @@ class _ArenaStageBanner extends StatelessWidget {
           bottomLeft: Radius.circular(18),
           bottomRight: Radius.circular(30),
         ),
-        border: Border.all(color: accent.withOpacity(0.36)),
+        border: Border.all(color: accent.withValues(alpha: 0.36)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,9 +39,9 @@ class _ArenaStageBanner extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.14),
+              color: accent.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: accent.withOpacity(0.42)),
+              border: Border.all(color: accent.withValues(alpha: 0.42)),
             ),
             child: Icon(Icons.sports_esports_rounded, color: accent, size: 24),
           ),
@@ -159,7 +159,7 @@ class _TargetChip extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? color.withOpacity(0.18) : const Color(0x1A1A2030),
+            color: selected ? color.withValues(alpha: 0.18) : const Color(0x1A1A2030),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(16),
               topRight: Radius.circular(20),
@@ -349,11 +349,11 @@ class _ModeTabButton extends StatelessWidget {
               bottomRight: Radius.circular(10),
             ),
             border: Border.all(
-                color: glow.withOpacity(enabled ? 0.92 : 0.25), width: 1.4),
+                color: glow.withValues(alpha: enabled ? 0.92 : 0.25), width: 1.4),
             boxShadow: [
               if (selected)
                 BoxShadow(
-                  color: glow.withOpacity(0.24),
+                  color: glow.withValues(alpha: 0.24),
                   blurRadius: 18,
                   spreadRadius: 1,
                 ),
@@ -510,14 +510,14 @@ class _PlayerPlate extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.08),
+        color: accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(isAccentBlue ? 20 : 12),
           topRight: Radius.circular(isAccentBlue ? 12 : 20),
           bottomLeft: Radius.circular(isAccentBlue ? 12 : 20),
           bottomRight: Radius.circular(isAccentBlue ? 22 : 10),
         ),
-        border: Border.all(color: accent.withOpacity(0.42)),
+        border: Border.all(color: accent.withValues(alpha: 0.42)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
