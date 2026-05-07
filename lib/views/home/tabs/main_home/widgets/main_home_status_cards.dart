@@ -19,9 +19,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               child: IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF94A3B8).withOpacity(0.18),
+                    color: const Color(0xFF94A3B8).withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(radius),
-                    border: Border.all(color: Colors.white.withOpacity(0.7)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
                   ),
                   child: Center(
                     child: Container(
@@ -30,11 +30,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.94),
+                        color: Colors.white.withValues(alpha: 0.94),
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF94A3B8).withOpacity(0.2),
+                            color: const Color(0xFF94A3B8).withValues(alpha: 0.2),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -225,7 +225,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: SLColors.secondary.withOpacity(0.5),
+                  color: SLColors.secondary.withValues(alpha: 0.5),
                 ),
               ],
             ),
@@ -234,9 +234,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.72),
+                color: Colors.white.withValues(alpha: 0.72),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withOpacity(0.82)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
               ),
               child: Row(
                 children: [
@@ -335,7 +335,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 Icon(
                   Icons.insights_rounded,
                   size: 16,
-                  color: SLColors.accent.withOpacity(0.5),
+                  color: SLColors.accent.withValues(alpha: 0.5),
                 ),
               ],
             ),
@@ -356,17 +356,17 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.white.withOpacity(0.86),
-                      const Color(0xFFFFF4F8).withOpacity(0.92),
+                      Colors.white.withValues(alpha: 0.86),
+                      const Color(0xFFFFF4F8).withValues(alpha: 0.92),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: SLRadius.lgAll,
-                  border: Border.all(color: Colors.white.withOpacity(0.72)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFF9BBC).withOpacity(0.08),
+                      color: const Color(0xFFFF9BBC).withValues(alpha: 0.08),
                       blurRadius: 18,
                       offset: const Offset(0, 10),
                     ),
@@ -381,7 +381,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.5,
-                        color: SLColors.accent.withOpacity(0.76),
+                        color: SLColors.accent.withValues(alpha: 0.76),
                       ),
                     ),
                     SLSpacing.h4,
@@ -543,8 +543,8 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withOpacity(0.98),
-                                widget.color.withOpacity(
+                                Colors.white.withValues(alpha: 0.98),
+                                widget.color.withValues(alpha: 
                                   widget.emphasize ? 0.18 : 0.11,
                                 ),
                               ],
@@ -552,18 +552,18 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                               end: Alignment.bottomRight,
                             ),
                             border: Border.all(
-                              color: widget.color.withOpacity(0.16),
+                              color: widget.color.withValues(alpha: 0.16),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: widget.color.withOpacity(
+                                color: widget.color.withValues(alpha: 
                                   widget.emphasize ? 0.16 : 0.1,
                                 ),
                                 blurRadius: widget.emphasize ? 16 : 12,
                                 offset: const Offset(0, 7),
                               ),
                               BoxShadow(
-                                color: Colors.white.withOpacity(0.82),
+                                color: Colors.white.withValues(alpha: 0.82),
                                 blurRadius: 8,
                                 offset: const Offset(-2, -2),
                               ),
@@ -581,8 +581,8 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                             borderRadius: BorderRadius.circular(999),
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withOpacity(0.85),
-                                Colors.white.withOpacity(0),
+                                Colors.white.withValues(alpha: 0.85),
+                                Colors.white.withValues(alpha: 0),
                               ],
                             ),
                           ),
@@ -594,7 +594,7 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                         child: CircularProgressIndicator(
                           value: progress,
                           strokeWidth: widget.compact ? 4.2 : 4.6,
-                          backgroundColor: widget.color.withOpacity(0.09),
+                          backgroundColor: widget.color.withValues(alpha: 0.09),
                           valueColor:
                               AlwaysStoppedAnimation<Color>(widget.color),
                         ),
@@ -607,11 +607,11 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                           gradient: RadialGradient(
                             colors: [
                               Colors.white,
-                              widget.color.withOpacity(0.05),
+                              widget.color.withValues(alpha: 0.05),
                             ],
                           ),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.92),
+                            color: Colors.white.withValues(alpha: 0.92),
                           ),
                         ),
                       ),
@@ -669,21 +669,21 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
               borderRadius: radius,
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.98),
-                  widget.color.withOpacity(0.12),
+                  Colors.white.withValues(alpha: 0.98),
+                  widget.color.withValues(alpha: 0.12),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border: Border.all(color: widget.color.withOpacity(0.18)),
+              border: Border.all(color: widget.color.withValues(alpha: 0.18)),
               boxShadow: [
                 BoxShadow(
-                  color: widget.color.withOpacity(0.16),
+                  color: widget.color.withValues(alpha: 0.16),
                   blurRadius: 18,
                   offset: const Offset(0, 10),
                 ),
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.84),
+                  color: Colors.white.withValues(alpha: 0.84),
                   blurRadius: 10,
                   offset: const Offset(-2, -2),
                 ),
@@ -702,8 +702,8 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              widget.color.withOpacity(0.14),
-                              widget.color.withOpacity(0.30),
+                              widget.color.withValues(alpha: 0.14),
+                              widget.color.withValues(alpha: 0.30),
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
@@ -718,7 +718,7 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                     child: Icon(
                       Icons.favorite_rounded,
                       size: widget.compact ? 13 : 15,
-                      color: widget.color.withOpacity(0.45),
+                      color: widget.color.withValues(alpha: 0.45),
                     ),
                   ),
                   Positioned.fill(
@@ -738,7 +738,7 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                               fontSize: widget.compact ? 9 : 10,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 0.6,
-                              color: widget.color.withOpacity(0.82),
+                              color: widget.color.withValues(alpha: 0.82),
                             ),
                           ),
                           SizedBox(height: widget.compact ? 2 : 3),
