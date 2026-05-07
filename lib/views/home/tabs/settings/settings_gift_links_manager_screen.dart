@@ -37,9 +37,9 @@ class _SettingsGiftLinksManagerScreenState extends State<SettingsGiftLinksManage
       await _giftMakerService.deleteGiftLink(houseId: widget.houseId, giftId: gift.giftId);
       if (!mounted) return;
       SLNotice.showInfo(context, 'Đã gỡ liên kết thành công');
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      SLNotice.showError(context, 'Lỗi khi xóa: $e');
+      SLNotice.showError(context, 'Không thể gỡ liên kết lúc này. Hãy thử lại sau.');
     }
   }
 
