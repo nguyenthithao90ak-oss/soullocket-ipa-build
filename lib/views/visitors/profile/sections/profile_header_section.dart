@@ -75,9 +75,10 @@ class VisitorProfileHeaderSection extends StatelessWidget {
         ),
         if (headerImageUrl.isNotEmpty)
           CachedNetworkImage(
-            memCacheWidth: 1440,
+            memCacheWidth: 2160,
             imageUrl: headerImageUrl,
             fit: BoxFit.cover,
+            filterQuality: FilterQuality.high,
             fadeInDuration: const Duration(milliseconds: 180),
             errorWidget: (_, __, ___) => const SizedBox.shrink(),
           ),
@@ -178,9 +179,10 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                               height: avatarSize,
                               child: trimmedAvatar.isNotEmpty
                                   ? CachedNetworkImage(
-                                      memCacheWidth: 420,
+                                      memCacheWidth: 720,
                                       imageUrl: trimmedAvatar,
                                       fit: BoxFit.cover,
+                                      filterQuality: FilterQuality.high,
                                       errorWidget: (_, __, ___) =>
                                           SLTheme.avatarPlaceholder(
                                         name,
@@ -329,9 +331,10 @@ class _VisitorProfileSmallHouseAvatarBadge extends StatelessWidget {
       child: ClipOval(
         child: avatarUrl.isNotEmpty
             ? CachedNetworkImage(
-                memCacheWidth: 240,
+                memCacheWidth: 360,
                 imageUrl: avatarUrl,
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
                 errorWidget: (_, __, ___) =>
                     SLTheme.avatarPlaceholder(fallbackLabel, size: 32),
               )
