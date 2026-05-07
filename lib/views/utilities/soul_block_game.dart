@@ -1418,38 +1418,35 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     _isBusy = true;
 
+    final remainingTray = List<_SoulPieceOption>.from(_tray)
+      ..removeWhere((item) => item.id == piece.id);
+    final placement = _placeTemplate(_board, piece, row, col);
     final placedBoard = List<List<_SoulTile?>>.generate(
       _boardSize,
-      (boardRow) => List<_SoulTile?>.from(_board[boardRow]),
+      (boardRow) => List<_SoulTile?>.generate(
+        _boardSize,
+        (boardCol) {
+          final _SoulTile? tile = placement.board[boardRow][boardCol];
+          if (tile == null || tile.pieceId != piece.id) {
+            return tile;
+          }
+          return _SoulTile(
+            toneIndex: tile.toneIndex,
+            pieceId: tile.pieceId,
+            placedTurn: _turn + 1,
+          );
+        },
+        growable: false,
+      ),
+      growable: false,
     );
-    for (final cell in piece.template.cells) {
-      placedBoard[row + cell.y][col + cell.x] = _SoulTile(
-        toneIndex: piece.toneIndex,
-        pieceId: piece.id,
-        placedTurn: _turn + 1,
-      );
-    }
-
-    final clearedRows = <int>[];
-    final clearedCols = <int>[];
-    for (var boardRow = 0; boardRow < _boardSize; boardRow++) {
-      if (placedBoard[boardRow].every((cell) => cell != null)) {
-        clearedRows.add(boardRow);
-      }
-    }
-    for (var boardCol = 0; boardCol < _boardSize; boardCol++) {
-      var full = true;
-      for (var boardRow = 0; boardRow < _boardSize; boardRow++) {
-        if (placedBoard[boardRow][boardCol] == null) {
-          full = false;
-          break;
-        }
-      }
-      if (full) {
-        clearedCols.add(boardCol);
-      }
-    }
-
+    final clearResolution = _clearAffectedLines(
+      placedBoard,
+      placement.rowsToClear,
+      placement.colsToClear,
+    );
+    final clearedRows = clearResolution.clearedRows.toList(growable: false);
+    final clearedCols = clearResolution.clearedCols.toList(growable: false);
     final clearedNow = clearedRows.length + clearedCols.length;
     final gainedScore = _scoreGainFor(piece.template, clearedNow, _combo);
     final nextScore = _score + gainedScore;
@@ -1457,8 +1454,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final nextStreak = clearedNow > 0 ? _streak + 1 : 0;
     final bool beatBestThisMove =
         _score <= _bestScore && nextScore > _bestScore;
-    final remainingTray = List<_SoulPieceOption>.from(_tray)
-      ..removeWhere((item) => item.id == piece.id);
 
     _emitPlaceFeedback();
     if (clearedNow > 0) {
@@ -1492,36 +1487,23 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _combo = nextCombo;
       _streak = nextStreak;
       _scorePulseTick += 1;
-      _clearingRows = clearedRows.toSet();
-      _clearingCols = clearedCols.toSet();
+      _clearingRows = clearResolution.clearedRows;
+      _clearingCols = clearResolution.clearedCols;
     });
 
     if (clearedNow > 0) {
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+      await Future<void>.delayed(const Duration(milliseconds: 300));
       if (!mounted) {
         return;
       }
     }
 
-    final resolvedBoard = List<List<_SoulTile?>>.generate(
-      _boardSize,
-      (boardRow) => List<_SoulTile?>.from(placedBoard[boardRow]),
-    );
-    for (final boardRow in clearedRows) {
-      for (var boardCol = 0; boardCol < _boardSize; boardCol++) {
-        resolvedBoard[boardRow][boardCol] = null;
-      }
-    }
-    for (final boardCol in clearedCols) {
-      for (var boardRow = 0; boardRow < _boardSize; boardRow++) {
-        resolvedBoard[boardRow][boardCol] = null;
-      }
-    }
-
+    final resolvedBoard = clearResolution.board;
     final replenishedTray =
         remainingTray.isEmpty ? _buildFastTray(resolvedBoard) : remainingTray;
     final nextRecommended = _recommendMoveFor(resolvedBoard, replenishedTray);
-    final noMovesLeft = replenishedTray.isEmpty || nextRecommended == null;
+    final noMovesLeft =
+        replenishedTray.isEmpty || !_hasAnyPlayableMove(resolvedBoard, replenishedTray);
 
     setState(() {
       _board = resolvedBoard;
