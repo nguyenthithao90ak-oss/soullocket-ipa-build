@@ -120,10 +120,14 @@ class PresenceService {
         nowMs: now,
         ignoreUid: ignoreUid,
       );
-      return freshSessionCount > 0;
+      if (freshSessionCount > 0) {
+        return true;
+      }
     }
-    if (data.containsKey('activeSessionCount')) {
-      return false;
+
+    final activeSessionCount = _readEpochMs(data['activeSessionCount']);
+    if (activeSessionCount != null && activeSessionCount > 0) {
+      return true;
     }
 
     final status = data['status']?.toString().trim().toLowerCase();
@@ -132,8 +136,10 @@ class PresenceService {
     }
 
     final lastSeen = _readEpochMs(data['lastSeen']);
-    return lastSeen != null &&
-        now - lastSeen >= 0 &&
+    if (lastSeen == null) {
+      return true;
+    }
+    return now - lastSeen >= 0 &&
         now - lastSeen <= onlineFreshness.inMilliseconds;
   }
 
