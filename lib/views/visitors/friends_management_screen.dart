@@ -302,7 +302,7 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen>
                                 },
                                 style: TextButton.styleFrom(
                                   backgroundColor:
-                                      const Color(0xFFD81B60).withOpacity(0.1),
+                                      const Color(0xFFD81B60).withValues(alpha: 0.1),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20),
                                   ),
@@ -376,7 +376,7 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -498,7 +498,7 @@ class _FriendItemTileState extends State<_FriendItemTile> {
             borderRadius: SLRadius.lgAll,
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withValues(alpha: 0.02),
                   blurRadius: 4,
                   offset: const Offset(0, 2))
             ],
@@ -605,7 +605,7 @@ class _RequestItemTileState extends State<_RequestItemTile> {
             borderRadius: SLRadius.lgAll,
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withValues(alpha: 0.02),
                   blurRadius: 4,
                   offset: const Offset(0, 2))
             ],
@@ -700,10 +700,10 @@ class _SearchItemTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF3D9E6).withOpacity(0.5)),
+        border: Border.all(color: const Color(0xFFF3D9E6).withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withOpacity(0.04),
+            color: const Color(0xFFD81B60).withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -731,7 +731,7 @@ class _SearchItemTile extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFD81B60).withOpacity(0.15),
+                        color: const Color(0xFFD81B60).withValues(alpha: 0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -826,7 +826,7 @@ class _SearchItemTile extends StatelessWidget {
                         icon: Container(
                           padding: SLSpacing.all8,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFD81B60).withOpacity(0.1),
+                            color: const Color(0xFFD81B60).withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
