@@ -129,12 +129,33 @@ class LocationService {
       if (context == null || !context.mounted) {
         return false;
       }
-      return await PermissionHelper.requestBackgroundLocationWithDisclosure(
-        context,
-        title: 'Cho phép vị trí khi chạy nền',
-        disclosure:
-            'Nếu bạn bật quyền này, SoulLocket sẽ tiếp tục thu thập vị trí khi ứng dụng chạy nền hoặc đã rời màn hình để cập nhật bản đồ chung và khoảng cách giữa hai bạn. Quyền này chỉ dùng cho tính năng bản đồ trong SoulLocket.',
-      );
+
+      final shouldOpenSettings = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Bật vị trí khi chạy nền'),
+              content: const Text(
+                'SoulLocket không tự bật quyền chạy nền trong app. Nếu bạn muốn bản đồ tự cập nhật khi đã rời app, hãy bấm Đồng ý để mở Cài đặt và tự bật quyền "Luôn cho phép" hoặc quyền vị trí khi chạy nền cho SoulLocket.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Để sau'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Đồng ý'),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+      if (!shouldOpenSettings) {
+        return false;
+      }
+
+      await Geolocator.openAppSettings();
+      return false;
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint('LocationService.requestBackgroundPermission error: $e');
