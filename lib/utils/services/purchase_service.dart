@@ -239,6 +239,7 @@ class PurchaseService {
 
     final available = await _iap.isAvailable();
     if (!available) {
+      await syncVipEntitlements();
       return;
     }
 
@@ -249,12 +250,51 @@ class PurchaseService {
       );
 
       await _iap.restorePurchases();
+      await syncVipEntitlements();
       _initialized = true;
     } catch (error, stackTrace) {
       debugPrint('PurchaseService initialize error: $error');
       debugPrintStack(stackTrace: stackTrace);
       _statusController.add(VipPurchaseState.error);
     }
+  }
+
+  Future<void> syncVipEntitlements() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return;
+    }
+
+    try {
+      final idToken = await user.getIdToken() ?? '';
+      if (idToken.isEmpty) {
+        return;
+      }
+
+      final headers = await AppCheckHttpHeaders.withRequiredToken(
+        {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        forceRefresh: true,
+      );
+
+      final response = await http.post(
+        Uri.parse(AppConfig.vipSyncUrl),
+        headers: headers,
+        body: jsonEncode({'uid': user.uid}),
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint('VIP sync failed: ${response.statusCode} ${response.body}');
+      }
+    } catch (error) {
+      debugPrint('VIP sync error: $error');
+    }
+  }
+
+  Future<void> refreshVipEntitlements() async {
+    await syncVipEntitlements();
   }
 
   Future<bool> restorePurchases() async {
