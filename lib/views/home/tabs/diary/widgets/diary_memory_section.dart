@@ -1349,7 +1349,7 @@ class _DiaryMemoryAddButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFD81B60).withOpacity(0.22),
+                color: const Color(0xFFD81B60).withValues(alpha: 0.22),
                 blurRadius: 12,
                 offset: const Offset(0, 5),
               ),
