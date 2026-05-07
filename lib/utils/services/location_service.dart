@@ -26,13 +26,14 @@ class LocationService {
   static const double _kMaxPlausibleSpeedMps = 70;
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
-  StreamSubscription<Position>? _positionStream;
-  String? _activeHouseId;
-  String? _activeRole;
-  Position? _lastAcceptedPosition;
-  int _lastAcceptedTs = 0;
-  Map<String, dynamic>? _lastGpsPayload;
-  final Map<String, int> _historyCleanupTsByScope = <String, int>{};
+  static StreamSubscription<Position>? _positionStream;
+  static String? _activeHouseId;
+  static String? _activeRole;
+  static Position? _lastAcceptedPosition;
+  static int _lastAcceptedTs = 0;
+  static Map<String, dynamic>? _lastGpsPayload;
+  static final Map<String, int> _historyCleanupTsByScope =
+      <String, int>{};
 
   Future<bool> requestPermission(
       {BuildContext? context, bool forcePrompt = false}) async {
@@ -45,7 +46,9 @@ class LocationService {
       );
 
       // Nếu forcePrompt = true, chúng ta sẽ cố gắng hỏi lại nếu chưa có quyền
-      if (forcePrompt && (permission == LocationPermission.denied || permission == LocationPermission.deniedForever)) {
+      if (forcePrompt &&
+          (permission == LocationPermission.denied ||
+              permission == LocationPermission.deniedForever)) {
         if (context != null && context.mounted) {
           if (permission == LocationPermission.deniedForever) {
             // Nếu bị từ chối vĩnh viễn, hiển thị hướng dẫn vào cài đặt
@@ -74,11 +77,11 @@ class LocationService {
             context,
             title: 'Quyền truy cập vị trí',
             disclosure:
-                'SoulLocket thu thập và cập nhật vị trí khi bạn mở app hoặc bật bản đồ chung để hiển thị khoảng cách, vị trí trực tiếp và các kỷ niệm/check-in trong ngôi nhà của bạn. App không xin quyền vị trí nền; khi bạn rời app hoặc tắt chia sẻ, việc cập nhật vị trí sẽ dừng. Dữ liệu vị trí chỉ được chia sẻ trong ngôi nhà của bạn cho tính năng bản đồ/kỷ niệm.',
+                'SoulLocket thu thập và cập nhật vị trí khi bạn mở app để hiển thị bản đồ đôi, khoảng cách, vị trí trực tiếp và các kỷ niệm/check-in trong ngôi nhà của bạn. Nếu bạn cho phép quyền nền, app có thể tiếp tục cập nhật khi bạn rời app để dữ liệu vị trí luôn mới trong bản đồ chung. Dữ liệu vị trí chỉ được chia sẻ trong ngôi nhà của bạn cho tính năng bản đồ/kỷ niệm.',
           );
           await prefs.setBool('il_gps_prompted', true);
           if (!granted) return false;
-          
+
           permission = await Geolocator.checkPermission().timeout(
             const Duration(seconds: 6),
             onTimeout: () => LocationPermission.denied,
@@ -86,7 +89,8 @@ class LocationService {
         }
       }
 
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         return false;
       }
 
@@ -113,17 +117,65 @@ class LocationService {
     }
   }
 
+  Future<bool> requestBackgroundPermission({BuildContext? context}) async {
+    try {
+      final status = await Geolocator.checkPermission().timeout(
+        const Duration(seconds: 6),
+        onTimeout: () => LocationPermission.denied,
+      );
+      if (status == LocationPermission.always) {
+        return true;
+      }
+      if (context == null || !context.mounted) {
+        return false;
+      }
+      return await PermissionHelper.requestBackgroundLocationWithDisclosure(
+        context,
+        title: 'Cho phép cập nhật vị trí khi chạy nền',
+        disclosure:
+            'SoulLocket cần quyền vị trí luôn luôn để tiếp tục cập nhật vị trí cho bản đồ chung ngay cả khi bạn rời ứng dụng. Quyền này chỉ phục vụ tính năng bản đồ của ngôi nhà và giúp khoảng cách, vị trí hai bạn luôn đúng thời gian thực.',
+      );
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('LocationService.requestBackgroundPermission error: $e');
+        debugPrintStack(stackTrace: st);
+      }
+      return false;
+    }
+  }
+
+  Future<bool> hasBackgroundPermission() async {
+    final status = await Geolocator.checkPermission().timeout(
+      const Duration(seconds: 6),
+      onTimeout: () => LocationPermission.denied,
+    );
+    return status == LocationPermission.always;
+  }
+
   Future<bool> startTracking(String houseId, String role,
       {BuildContext? context, bool forcePrompt = false}) async {
-    await stopTracking();
-    if (context != null && !context.mounted) return false;
+    final normalizedHouseId = houseId.trim();
+    final normalizedRole = role.trim();
+    if (normalizedHouseId.isEmpty || normalizedRole.isEmpty) {
+      return false;
+    }
 
     final hasPermission =
         await requestPermission(context: context, forcePrompt: forcePrompt);
     if (!hasPermission) return false;
 
-    _activeHouseId = houseId;
-    _activeRole = role;
+    final sameTarget = _activeHouseId == normalizedHouseId &&
+        _activeRole == normalizedRole &&
+        _positionStream != null;
+    if (sameTarget) {
+      return true;
+    }
+
+    await stopTracking();
+    if (context != null && !context.mounted) return false;
+
+    _activeHouseId = normalizedHouseId;
+    _activeRole = normalizedRole;
     _lastGpsPayload = null;
     _lastAcceptedPosition = null;
     _lastAcceptedTs = 0;
@@ -133,7 +185,7 @@ class LocationService {
       final initialPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: _bestForegroundAccuracy,
       ).timeout(_kInitialPositionTimeout);
-      await _handlePositionUpdate(houseId, role, initialPosition,
+      await _handlePositionUpdate(normalizedHouseId, normalizedRole, initialPosition,
           forceWrite: true);
     } catch (e, st) {
       if (kDebugMode) {
@@ -143,7 +195,7 @@ class LocationService {
       try {
         final lastKnown = await Geolocator.getLastKnownPosition();
         if (lastKnown != null && _isFreshEnoughLastKnown(lastKnown)) {
-          await _handlePositionUpdate(houseId, role, lastKnown,
+          await _handlePositionUpdate(normalizedHouseId, normalizedRole, lastKnown,
               forceWrite: true);
         }
       } catch (e, st) {
@@ -154,10 +206,14 @@ class LocationService {
       }
     }
 
+    final useBackgroundSettings = await hasBackgroundPermission();
     _positionStream = Geolocator.getPositionStream(
-      locationSettings: _foregroundLocationSettings,
+      locationSettings: useBackgroundSettings
+          ? _backgroundCapableLocationSettings
+          : _foregroundLocationSettings,
     ).listen(
-      (Position position) => _handlePositionUpdate(houseId, role, position),
+      (Position position) =>
+          _handlePositionUpdate(normalizedHouseId, normalizedRole, position),
       onError: (e, st) {
         if (kDebugMode) {
           debugPrint('LocationService.positionStream error: $e');
@@ -200,7 +256,7 @@ class LocationService {
     await _dbRef.update(updates);
   }
 
-  int _lastFirebaseUpdateTs = 0;
+  static int _lastFirebaseUpdateTs = 0;
 
   LocationAccuracy get _bestForegroundAccuracy =>
       kIsWeb ? LocationAccuracy.high : LocationAccuracy.best;
@@ -213,7 +269,7 @@ class LocationService {
         intervalDuration: const Duration(seconds: 10),
         foregroundNotificationConfig: const ForegroundNotificationConfig(
           notificationTitle: 'SoulLocket đang cập nhật vị trí',
-          notificationText: 'Chỉ cập nhật khi bạn đang mở bản đồ.',
+          notificationText: 'Ứng dụng đang cập nhật vị trí cho bản đồ của hai bạn.',
           enableWakeLock: false,
         ),
       );
@@ -224,14 +280,40 @@ class LocationService {
       return AppleSettings(
         accuracy: LocationAccuracy.best,
         distanceFilter: _kStreamDistanceFilterMeters,
-        pauseLocationUpdatesAutomatically: true,
-        showBackgroundLocationIndicator: false,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
       );
     }
     return const LocationSettings(
       accuracy: LocationAccuracy.high,
       distanceFilter: _kStreamDistanceFilterMeters,
     );
+  }
+
+  LocationSettings get _backgroundCapableLocationSettings {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return AndroidSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: _kStreamDistanceFilterMeters,
+        intervalDuration: const Duration(seconds: 10),
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
+          notificationTitle: 'SoulLocket đang chia sẻ vị trí nền',
+          notificationText: 'Vị trí của bạn đang được cập nhật cho bản đồ chung.',
+          enableWakeLock: true,
+        ),
+      );
+    }
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS)) {
+      return AppleSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: _kStreamDistanceFilterMeters,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
+      );
+    }
+    return _foregroundLocationSettings;
   }
 
   Future<void> _handlePositionUpdate(

@@ -780,6 +780,44 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     };
   }
 
+  Future<void> _ensureAppWideLocationTracking(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    final normalizedRole = _currentRole.trim();
+    if (!_isTabActive ||
+        normalizedHouseId.isEmpty ||
+        normalizedRole.isEmpty ||
+        !mounted) {
+      return;
+    }
+
+    final started = await _locationService.startTracking(
+      normalizedHouseId,
+      normalizedRole,
+      context: context,
+      forcePrompt: true,
+    );
+    if (!started || !mounted) {
+      return;
+    }
+
+    final hasBackgroundPermission =
+        await _locationService.hasBackgroundPermission();
+    if (hasBackgroundPermission || !mounted) {
+      return;
+    }
+
+    await _locationService.requestBackgroundPermission(context: context);
+    if (!mounted) {
+      return;
+    }
+    await _locationService.startTracking(
+      normalizedHouseId,
+      normalizedRole,
+      context: context,
+      forcePrompt: false,
+    );
+  }
+
   void _bindHomeMapPreview(String houseId) {
     _gpsSubscription?.cancel();
     _gpsSubscription = _dbRef.child('gps/$houseId').onValue.listen(
