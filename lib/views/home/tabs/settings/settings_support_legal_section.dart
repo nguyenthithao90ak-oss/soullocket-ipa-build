@@ -230,7 +230,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Xóa tài khoản vĩnh viễn',
+                'Gửi yêu cầu xóa tài khoản',
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w900,
                   color: Colors.red.shade700,
@@ -244,7 +244,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản và toàn bộ dữ liệu cá nhân của mình không?',
+              'Bạn có chắc chắn muốn gửi yêu cầu xóa tài khoản và dữ liệu cá nhân của mình không?',
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w800,
                 fontSize: 15,
@@ -260,7 +260,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                 border: Border.all(color: Colors.red.shade200),
               ),
               child: Text(
-                '⚠️ Hành động này KHÔNG THỂ hoàn tác. Toàn bộ dữ liệu cá nhân của bạn sẽ bị xóa sạch khỏi hệ thống. Dữ liệu nhà chung nếu có người kia vẫn còn sẽ không bị ảnh hưởng trực tiếp, nhưng tài khoản của bạn sẽ biến mất hoàn toàn.',
+                '⚠️ Sau khi gửi yêu cầu, hệ thống sẽ lên lịch xóa tài khoản của bạn. Trong thời gian chờ, bạn có thể vẫn còn cơ hội hoàn tác tùy trạng thái xử lý. Khi lệnh xóa được thực thi, dữ liệu cá nhân của bạn sẽ bị xóa khỏi hệ thống. Dữ liệu nhà chung nếu có người kia vẫn còn sẽ không bị ảnh hưởng trực tiếp, nhưng tài khoản của bạn sẽ biến mất hoàn toàn.',
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
@@ -291,7 +291,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
               ),
             ),
             child: Text(
-              'Đồng ý xóa',
+              'Gửi yêu cầu xóa',
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -328,7 +328,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             ],
           ),
           content: Text(
-            'Xóa tài khoản sẽ không thể khôi phục. Tiếp tục?',
+            'Sau khi xác nhận, tài khoản của bạn sẽ được đưa vào hàng chờ xóa theo chính sách hiện tại. Tiếp tục?',
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w800,
               fontSize: 15,
@@ -355,7 +355,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                 ),
               ),
               child: Text(
-                'Xóa vĩnh viễn',
+                'Xác nhận gửi yêu cầu',
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
