@@ -297,6 +297,7 @@ class _WheelScreenState extends State<WheelScreen>
       setState(() {
         _isSpinning = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Không thể quay lúc này. Hãy thử lại sau.'),
           backgroundColor: Colors.redAccent,
