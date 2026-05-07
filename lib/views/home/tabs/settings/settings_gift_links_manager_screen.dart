@@ -212,43 +212,21 @@ class _SettingsGiftLinksManagerScreenState extends State<SettingsGiftLinksManage
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
+                child: IconButton(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: 'https://soullocket.app/gift/${gift.giftId}'));
                     SLNotice.showInfo(context, 'Đã copy link quà');
                   },
-                  icon: const Icon(Icons.copy_rounded, size: 16, color: Color(0xFF1565C0)),
-                  label: Text(
-                    'Copy Link',
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF1565C0),
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF90CAF9)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
+                  icon: const Icon(Icons.copy_rounded, size: 24, color: Color(0xFF1565C0)),
+                  tooltip: 'Copy Link',
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: OutlinedButton.icon(
+                child: IconButton(
                   onPressed: () => _deleteGiftLink(gift),
-                  icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFD32F2F)),
-                  label: Text(
-                    'Gỡ liên kết',
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFFD32F2F),
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFFFCDD2)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
+                  icon: const Icon(Icons.delete_outline_rounded, size: 24, color: Color(0xFFD32F2F)),
+                  tooltip: 'Gỡ liên kết',
                 ),
               ),
             ],
