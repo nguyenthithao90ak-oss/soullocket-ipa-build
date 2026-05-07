@@ -1045,6 +1045,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         <Point<int>>[
           const Point<int>(2, 2),
           const Point<int>(3, 2),
+          const Point<int>(4, 2),
         ],
         <Point<int>>[
           const Point<int>(5, 2),
@@ -1053,6 +1054,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         <Point<int>>[
           const Point<int>(2, 5),
           const Point<int>(3, 5),
+          const Point<int>(4, 5),
         ],
       ],
       <List<Point<int>>>[
