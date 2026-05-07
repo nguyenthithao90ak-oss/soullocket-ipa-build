@@ -530,7 +530,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   ),
                 ),
               ],
-            ],
+            ),
           ),
         );
       },
