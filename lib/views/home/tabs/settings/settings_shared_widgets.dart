@@ -56,7 +56,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFC62828).withOpacity(0.12),
+              color: const Color(0xFFC62828).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -238,7 +238,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
           border: Border.all(color: _kSettingsHeaderBorder),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -281,10 +281,10 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: border.withOpacity(0.45), width: 1.5),
+              border: Border.all(color: border.withValues(alpha: 0.45), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: textColor.withOpacity(0.15),
+                  color: textColor.withValues(alpha: 0.15),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -299,7 +299,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                     child: Icon(
                       accentIcons.isNotEmpty ? accentIcons.first : icon,
                       size: isNarrow ? 62 : 72,
-                      color: textColor.withOpacity(0.08),
+                      color: textColor.withValues(alpha: 0.08),
                     ),
                   ),
                 ),
@@ -323,18 +323,18 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                               shape: BoxShape.circle,
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.white.withOpacity(0.96),
-                                  Colors.white.withOpacity(0.74),
+                                  Colors.white.withValues(alpha: 0.96),
+                                  Colors.white.withValues(alpha: 0.74),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               border: Border.all(
-                                color: textColor.withOpacity(0.14),
+                                color: textColor.withValues(alpha: 0.14),
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: textColor.withOpacity(0.20),
+                                  color: textColor.withValues(alpha: 0.20),
                                   blurRadius: 12,
                                   offset: const Offset(0, 5),
                                 ),
@@ -352,15 +352,15 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                                   width: isNarrow ? 26 : 30,
                                   height: isNarrow ? 26 : 30,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.56),
+                                    color: Colors.white.withValues(alpha: 0.56),
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                      color: textColor.withOpacity(0.12),
+                                      color: textColor.withValues(alpha: 0.12),
                                     ),
                                   ),
                                   child: Icon(
                                     item,
-                                    color: textColor.withOpacity(0.92),
+                                    color: textColor.withValues(alpha: 0.92),
                                     size: miniIconSize,
                                   ),
                                 );
@@ -389,7 +389,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                         maxLines: descMaxLines,
                         overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
-                          color: textColor.withOpacity(0.72),
+                          color: textColor.withValues(alpha: 0.72),
                           fontSize: descFontSize,
                           fontWeight: FontWeight.w700,
                           height: 1.18,
@@ -479,9 +479,9 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: borderColor.withOpacity(0.10),
+                        color: borderColor.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: borderColor.withOpacity(0.2)),
+                        border: Border.all(color: borderColor.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -530,7 +530,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.08),
+                        color: Colors.grey.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.close_rounded,
@@ -543,7 +543,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Divider(
-              color: borderColor.withOpacity(0.18),
+              color: borderColor.withValues(alpha: 0.18),
               height: 1,
               thickness: 1,
             ),
@@ -603,7 +603,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: gradient.last.withOpacity(0.25),
+            color: gradient.last.withValues(alpha: 0.25),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
@@ -651,17 +651,17 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color.alphaBlend(gradient.first.withOpacity(0.12), baseSurface),
-              Color.alphaBlend(gradient.last.withOpacity(0.18), baseSurface),
+              Color.alphaBlend(gradient.first.withValues(alpha: 0.12), baseSurface),
+              Color.alphaBlend(gradient.last.withValues(alpha: 0.18), baseSurface),
             ],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: textColor.withOpacity(0.32), width: 1.1),
+          border: Border.all(color: textColor.withValues(alpha: 0.32), width: 1.1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.18),
+              color: Colors.black.withValues(alpha: 0.18),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -694,7 +694,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: gradient.last.withOpacity(0.22),
+                    color: gradient.last.withValues(alpha: 0.22),
                     blurRadius: 5,
                     offset: const Offset(0, 2),
                   ),
@@ -711,13 +711,13 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                 style: SLTheme.quicksand(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white.withOpacity(0.96),
+                  color: Colors.white.withValues(alpha: 0.96),
                 ),
               ),
             ),
             Icon(
               Icons.arrow_forward_ios_rounded,
-              color: textColor.withOpacity(0.9),
+              color: textColor.withValues(alpha: 0.9),
               size: 13,
             ),
           ],
