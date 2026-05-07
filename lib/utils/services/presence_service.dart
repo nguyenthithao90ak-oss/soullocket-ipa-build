@@ -220,8 +220,12 @@ class PresenceService {
       return _statusFormatter.onlineLabel();
     }
 
-    final lastSeen = lastSeenMs(data);
+    final lastSeen = lastSeenMs(data) ?? latestSessionTimestamp(data);
     if (lastSeen == null) {
+      final activeSessionCount = data?['activeSessionCount'];
+      if (activeSessionCount is num && activeSessionCount.toInt() > 0) {
+        return _statusFormatter.justDisconnectedLabel();
+      }
       return _statusFormatter.neverConnectedLabel();
     }
     if (now - lastSeen >= 0 &&
