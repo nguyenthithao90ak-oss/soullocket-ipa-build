@@ -108,42 +108,37 @@ class AuthPanelShell extends StatelessWidget {
                 onSelectRegister: onSelectRegister,
               ),
               SLSpacing.h16,
-              AnimatedSize(
-                duration: const Duration(milliseconds: 320),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.topCenter,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 280),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  layoutBuilder: (currentChild, previousChildren) {
-                    return Stack(
-                      alignment: Alignment.topCenter,
-                      children: [
-                        ...previousChildren,
-                        if (currentChild != null) currentChild,
-                      ],
-                    );
-                  },
-                  transitionBuilder: (child, animation) {
-                    final fade = CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    );
-                    final slide = Tween<Offset>(
-                      begin: const Offset(0.0, 0.04),
-                      end: Offset.zero,
-                    ).animate(fade);
-                    return FadeTransition(
-                      opacity: fade,
-                      child: SlideTransition(
-                        position: slide,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: RepaintBoundary(child: authSection),
-                ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 280),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                layoutBuilder: (currentChild, previousChildren) {
+                  return Stack(
+                    alignment: Alignment.topCenter,
+                    children: [
+                      ...previousChildren,
+                      if (currentChild != null) currentChild,
+                    ],
+                  );
+                },
+                transitionBuilder: (child, animation) {
+                  final fade = CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  );
+                  final slide = Tween<Offset>(
+                    begin: const Offset(0.0, 0.04),
+                    end: Offset.zero,
+                  ).animate(fade);
+                  return FadeTransition(
+                    opacity: fade,
+                    child: SlideTransition(
+                      position: slide,
+                      child: child,
+                    ),
+                  );
+                },
+                child: RepaintBoundary(child: authSection),
               ),
               Container(
                 margin: const EdgeInsets.only(top: 18),
