@@ -1244,24 +1244,64 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF18191A),
+      extendBodyBehindAppBar: true,
+      backgroundColor: const Color(0xFF0B1020),
       appBar: AppBar(
-        toolbarHeight: 52,
+        toolbarHeight: 62,
         elevation: 0,
-        backgroundColor: const Color(0xFF18191A),
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         titleSpacing: 0,
-        title: Text(
-          _mapScreenTitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: SLTheme.quicksand(fontSize: 17, fontWeight: FontWeight.w900),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _mapScreenTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SLTheme.quicksand(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              _mapScreenSubtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SLTheme.quicksand(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: Colors.white.withOpacity(0.68),
+              ),
+            ),
+          ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'Về vị trí của bạn',
-            onPressed: _focusCameraNearMe,
-            icon: const Icon(Icons.my_location_rounded),
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: FastBackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xB3121A2B),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.white.withOpacity(0.10)),
+                  ),
+                  child: IconButton(
+                    tooltip: 'Về vị trí của bạn',
+                    onPressed: _focusCameraNearMe,
+                    icon: const Icon(Icons.my_location_rounded),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
