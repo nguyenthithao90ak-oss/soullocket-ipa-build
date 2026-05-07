@@ -51,6 +51,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _interactionRotationTimer = null;
     _pendingWidgetSettings = null;
     _pendingWidgetSyncIncludeDiaryMedia = false;
+    _widgetSyncInFlight = false;
     _interactionDragOverlayEntry?.remove();
     _interactionDragOverlayEntry = null;
     _interactionDragHoveredType = null;
