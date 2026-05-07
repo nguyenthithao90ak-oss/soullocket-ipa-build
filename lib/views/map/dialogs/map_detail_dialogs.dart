@@ -308,6 +308,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                   child: Image.network(
                     checkin.imageUrl,
                     fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
                     errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),
@@ -394,6 +395,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                   child: Image.network(
                     memory.imageUrl,
                     fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
                     errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),
