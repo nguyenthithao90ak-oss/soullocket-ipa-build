@@ -185,7 +185,7 @@ class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: Colors.deepPurple.withOpacity(0.1),
+              color: Colors.deepPurple.withValues(alpha: 0.1),
               blurRadius: 15,
               offset: const Offset(0, 5)),
         ],
@@ -240,7 +240,7 @@ class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: Colors.deepPurple.withOpacity(0.05),
+              color: Colors.deepPurple.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4)),
         ],
