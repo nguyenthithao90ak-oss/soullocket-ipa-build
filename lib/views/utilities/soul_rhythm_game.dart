@@ -1337,7 +1337,8 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
       _spawnTouchBurst(
         resolvedPlayArea.width / 2,
         resolvedPlayArea.height * 0.54,
-        const Color(0xFFFF0055).withOpacity(_isLowGraphics ? 0.34 : 0.46),
+        const Color(0xFFFF0055)
+            .withValues(alpha: _isLowGraphics ? 0.34 : 0.46),
       );
 
       if (_lives <= 0) {
@@ -1638,7 +1639,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
                     gradient: RadialGradient(
                       colors: [
                         const Color(0xFFFF0055)
-                            .withOpacity(0.4 + (bgPulse * 0.3)),
+                            .withValues(alpha: 0.4 + (bgPulse * 0.3)),
                         Colors.transparent,
                       ],
                     ),
