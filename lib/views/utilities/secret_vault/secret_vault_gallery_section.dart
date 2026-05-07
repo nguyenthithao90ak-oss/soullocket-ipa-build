@@ -53,7 +53,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
               onPressed: _isCancelingReset ? null : _cancelVaultResetRequest,
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
-                side: BorderSide(color: Colors.orangeAccent.withOpacity(0.6)),
+                side: BorderSide(color: Colors.orangeAccent.withValues(alpha: 0.6)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
