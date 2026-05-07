@@ -364,6 +364,31 @@ jobs:
             exit 1
           fi
 
+      - name: Upload Crashlytics dSYMs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          XCARCHIVE_PATH="$(find build/ios/archive -name '*.xcarchive' -print -quit)"
+          if [[ -z "${XCARCHIVE_PATH:-}" ]]; then
+            echo "No xcarchive found under build/ios/archive." >&2
+            exit 1
+          fi
+
+          UPLOAD_SYMBOLS="ios/Pods/FirebaseCrashlytics/upload-symbols"
+          if [[ ! -x "$UPLOAD_SYMBOLS" ]]; then
+            echo "Crashlytics upload-symbols helper not found at $UPLOAD_SYMBOLS" >&2
+            exit 1
+          fi
+
+          GOOGLE_SERVICE_INFO_PLIST="ios/Runner/GoogleService-Info.plist"
+          if [[ ! -f "$GOOGLE_SERVICE_INFO_PLIST" ]]; then
+            echo "GoogleService-Info.plist not found at $GOOGLE_SERVICE_INFO_PLIST" >&2
+            exit 1
+          fi
+
+          "$UPLOAD_SYMBOLS" -gsp "$GOOGLE_SERVICE_INFO_PLIST" -p ios "$XCARCHIVE_PATH"
+
       - name: Upload IPA artifacts
         uses: actions/upload-artifact@v4
         with:
