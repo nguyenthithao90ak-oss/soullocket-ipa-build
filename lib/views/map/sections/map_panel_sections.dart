@@ -239,30 +239,33 @@ extension _MapPanelSectionsExt on _MapScreenState {
       valueListenable: _liveUiVN,
       builder: (context, uiSnap, child) {
         final showGpsAction = !uiSnap.myIsLive && !_isBootstrappingLocation;
-        return Container(
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xEE1A2436), Color(0xDD291B2C)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          clipBehavior: Clip.antiAlias,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xEE1A2436), Color(0xDD291B2C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: Colors.white.withOpacity(0.10)),
+              boxShadow: [
+                BoxShadow(
+                  color: _kMapPinkDeep.withOpacity(0.14),
+                  blurRadius: 30,
+                  offset: const Offset(0, 14),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.24),
+                  blurRadius: 26,
+                  offset: const Offset(0, 12),
+                ),
+              ],
             ),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withOpacity(0.10)),
-            boxShadow: [
-              BoxShadow(
-                color: _kMapPinkDeep.withOpacity(0.14),
-                blurRadius: 30,
-                offset: const Offset(0, 14),
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.24),
-                blurRadius: 26,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Column(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
