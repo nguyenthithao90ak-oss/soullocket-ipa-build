@@ -538,7 +538,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     _spawnTouchBurst(
       x,
       y,
-      color.withOpacity(_isHighGraphics ? 0.62 : 0.46),
+      color.withValues(alpha: _isHighGraphics ? 0.62 : 0.46),
       strong: isPhraseBeat,
     );
   }
@@ -1179,7 +1179,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
           y: y,
           radius: _isHighGraphics ? 18 : 16,
           life: _isHighGraphics ? 22 : 19,
-          color: Colors.white.withOpacity(_isHighGraphics ? 0.55 : 0.42),
+          color: Colors.white.withValues(alpha: _isHighGraphics ? 0.55 : 0.42),
           strong: false,
         ),
       );
@@ -1190,7 +1190,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
             y: y,
             radius: 11,
             life: 14,
-            color: const Color(0xFF00E5FF).withOpacity(0.42),
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.42),
             strong: false,
           ),
         );
@@ -1658,7 +1658,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
                     gradient: RadialGradient(
                       colors: [
                         const Color(0xFF00E5FF)
-                            .withOpacity(0.3 + (bgPulse * 0.3)),
+                            .withValues(alpha: 0.3 + (bgPulse * 0.3)),
                         Colors.transparent,
                       ],
                     ),
@@ -1678,7 +1678,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
                     gradient: RadialGradient(
                       colors: [
                         const Color(0xFFE040FB)
-                            .withOpacity(0.3 + (bgPulse * 0.2)),
+                            .withValues(alpha: 0.3 + (bgPulse * 0.2)),
                         Colors.transparent,
                       ],
                     ),
@@ -1698,7 +1698,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
                     gradient: RadialGradient(
                       colors: [
                         const Color(0xFFFFEB3B)
-                            .withOpacity(0.15 + (bgPulse * 0.2)),
+                            .withValues(alpha: 0.15 + (bgPulse * 0.2)),
                         Colors.transparent,
                       ],
                     ),
