@@ -845,7 +845,7 @@ class _WheelScreenState extends State<WheelScreen>
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: SLTheme.primary.withOpacity(index == 0 ? 0.18 : 0.1),
+                  color: SLTheme.primary.withValues(alpha: index == 0 ? 0.18 : 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -1048,13 +1048,13 @@ class _WheelPainter extends CustomPainter {
     final rect = Rect.fromCircle(center: center, radius: radius);
 
     final bgPaint = Paint()
-      ..color = Colors.white.withOpacity(0.06)
+      ..color = Colors.white.withValues(alpha: 0.06)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius, bgPaint);
 
     if (items.isEmpty) {
       final borderPaint = Paint()
-        ..color = Colors.white.withOpacity(0.18)
+        ..color = Colors.white.withValues(alpha: 0.18)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3;
       canvas.drawCircle(center, radius, borderPaint);
@@ -1084,20 +1084,20 @@ class _WheelPainter extends CustomPainter {
               .toColor();
 
       final paint = Paint()
-        ..color = baseColor.withOpacity(0.9)
+        ..color = baseColor.withValues(alpha: 0.9)
         ..style = PaintingStyle.fill;
 
       canvas.drawArc(rect, startAngle + i * sweep, sweep, true, paint);
 
       final dividerPaint = Paint()
-        ..color = Colors.white.withOpacity(0.85)
+        ..color = Colors.white.withValues(alpha: 0.85)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3;
       canvas.drawArc(rect, startAngle + i * sweep, sweep, true, dividerPaint);
 
       if (selectedIndex != null && selectedIndex == i) {
         final highlightPaint = Paint()
-          ..color = Colors.white.withOpacity(0.85)
+          ..color = Colors.white.withValues(alpha: 0.85)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 6;
         canvas.drawArc(rect, startAngle + i * sweep + 0.02, sweep - 0.04, true,
@@ -1118,7 +1118,7 @@ class _WheelPainter extends CustomPainter {
             fontWeight: FontWeight.w900,
             color: Colors.white,
             shadows: [
-              Shadow(color: Colors.black.withOpacity(0.35), blurRadius: 10),
+              Shadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 10),
             ],
           ),
         ),
@@ -1136,8 +1136,8 @@ class _WheelPainter extends CustomPainter {
         center,
         radius,
         [
-          Colors.white.withOpacity(0.0),
-          Colors.white.withOpacity(0.4),
+          Colors.white.withValues(alpha: 0.0),
+          Colors.white.withValues(alpha: 0.4),
         ],
         [0.6, 1.0],
       )
@@ -1146,7 +1146,7 @@ class _WheelPainter extends CustomPainter {
     canvas.drawCircle(center, radius - 5, ringPaint);
 
     final outerBorderPaint = Paint()
-      ..color = Colors.white.withOpacity(0.9)
+      ..color = Colors.white.withValues(alpha: 0.9)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6;
     canvas.drawCircle(center, radius - 3, outerBorderPaint);
@@ -1170,10 +1170,10 @@ class _Pointer extends StatelessWidget {
           height: 34,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.92),
+            color: Colors.white.withValues(alpha: 0.92),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
+                color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 14,
                 offset: const Offset(0, 8),
               ),
@@ -1199,7 +1199,7 @@ class _TrianglePainter extends CustomPainter {
       ..lineTo(0, 0)
       ..lineTo(size.width, 0)
       ..close();
-    final paint = Paint()..color = Colors.white.withOpacity(0.92);
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.92);
     canvas.drawPath(path, paint);
   }
 
