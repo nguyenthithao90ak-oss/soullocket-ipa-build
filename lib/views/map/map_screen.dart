@@ -122,6 +122,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   bool _isMapReady = false;
   bool _isBootstrappingLocation = false;
   bool _didQueueMapIntroNotice = false;
+  bool _isSelectingCheckinLocation = false;
   String? _mapInitError;
   String? _locationStatusMessage;
 
@@ -1238,7 +1239,43 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _showCheckinSheet() async {
-    await _showCheckinSheetDialog();
+    await _startCheckinPlacementFlow();
+  }
+
+  Future<void> _startCheckinPlacementFlow() async {
+    if (_isSelectingCheckinLocation) return;
+    final prefs = await SharedPreferences.getInstance();
+    final shownCount = prefs.getInt('il_map_pin_hint_shown_count') ?? 0;
+    if (shownCount < 3) {
+      await prefs.setInt('il_map_pin_hint_shown_count', shownCount + 1);
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Bạn có thể ghim vị trí. Hãy ấn vào bản đồ ở chỗ muốn ghim nhé.',
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 3),
+          ),
+        );
+    }
+    if (!mounted) return;
+    setState(() {
+      _isSelectingCheckinLocation = true;
+    });
+  }
+
+  Future<void> _handleMapTapForCheckin(ll.LatLng point) async {
+    if (!_isSelectingCheckinLocation) return;
+    if (mounted) {
+      setState(() {
+        _isSelectingCheckinLocation = false;
+      });
+    }
+    await _showCheckinSheetDialog(selectedPoint: point);
   }
 
   @override
