@@ -239,8 +239,8 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
 
     _currentProvider = CachedNetworkImageProvider(
       normalizedUrl,
-      maxWidth: 300,
-      maxHeight: 300,
+      maxWidth: 720,
+      maxHeight: 720,
     );
     final startupFile = HomeStartupMediaCache.getFile(normalizedUrl);
     _diskCachedProvider = startupFile != null ? FileImage(startupFile) : null;
@@ -300,7 +300,7 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
             image: placeholderProvider,
             fit: widget.fit,
             gaplessPlayback: true,
-            filterQuality: kIsWeb ? FilterQuality.low : FilterQuality.medium,
+            filterQuality: FilterQuality.high,
           )
         : Image.asset(
             widget.fallbackAsset,
@@ -320,7 +320,7 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
           image: _currentProvider!,
           fit: widget.fit,
           gaplessPlayback: true,
-          filterQuality: kIsWeb ? FilterQuality.low : FilterQuality.medium,
+          filterQuality: FilterQuality.high,
           frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
             if (wasSynchronouslyLoaded || frame != null) {
               _markCurrentImageReady();
