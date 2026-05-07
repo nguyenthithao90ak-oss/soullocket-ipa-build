@@ -1407,7 +1407,6 @@ extension _MapLocationLogicExt on _MapScreenState {
       _notifyLiveUiIfNeeded();
       _refreshLiveDataSmart();
       _rebuildMapObjects(fitToData: false);
-      unawaited(_fitToVisibleData(includeHistory: false));
     });
   }
 
