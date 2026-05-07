@@ -199,7 +199,7 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFF8FB1).withOpacity(0.10),
+                        color: const Color(0xFFFF8FB1).withValues(alpha: 0.10),
                         blurRadius: 18,
                         offset: const Offset(0, 10),
                       ),
@@ -234,7 +234,7 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
                                     strokeWidth: 2,
                                     valueColor:
                                         AlwaysStoppedAnimation<Color>(
-                                      const Color(0xFFD81B60).withOpacity(0.75),
+                                      const Color(0xFFD81B60).withValues(alpha: 0.75),
                                     ),
                                   ),
                                 ),
@@ -252,7 +252,7 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
                               gradient: LinearGradient(
                                 colors: [
                                   Colors.transparent,
-                                  Colors.black.withOpacity(0.18),
+                                  Colors.black.withValues(alpha: 0.18),
                                 ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
