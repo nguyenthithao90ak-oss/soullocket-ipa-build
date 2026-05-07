@@ -324,7 +324,7 @@ class _BoardStateCallout extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xED151022),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: accent.withOpacity(0.46)),
+          border: Border.all(color: accent.withValues(alpha: 0.46)),
           boxShadow: const [
             BoxShadow(
               color: Color(0x33000000),
@@ -340,9 +340,9 @@ class _BoardStateCallout extends StatelessWidget {
               width: 54,
               height: 54,
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.18),
+                color: accent.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
-                border: Border.all(color: accent.withOpacity(0.55)),
+                border: Border.all(color: accent.withValues(alpha: 0.55)),
               ),
               child: Icon(icon, color: accent, size: 28),
             ),
@@ -378,7 +378,7 @@ class _BoardStateCallout extends StatelessWidget {
                         onPressed: onSecondaryTap,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          side: BorderSide(color: accent.withOpacity(0.4)),
+                          side: BorderSide(color: accent.withValues(alpha: 0.4)),
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -599,7 +599,7 @@ class _BoardCell extends StatelessWidget {
           border: Border.all(color: borderColor, width: isWinning ? 1.8 : 1.2),
           boxShadow: [
             BoxShadow(
-              color: borderColor.withOpacity(isWinning ? 0.34 : 0.16),
+              color: borderColor.withValues(alpha: isWinning ? 0.34 : 0.16),
               blurRadius: isWinning ? 18 : 12,
               spreadRadius: isWinning ? 1 : 0,
             ),
@@ -612,7 +612,7 @@ class _BoardCell extends StatelessWidget {
                   height: size * 0.16,
                   decoration: BoxDecoration(
                     color: isEnabled
-                        ? const Color(0xFF4EDBFF).withOpacity(0.7)
+                        ? const Color(0xFF4EDBFF).withValues(alpha: 0.7)
                         : const Color(0x20FFFFFF),
                     shape: BoxShape.circle,
                   ),
