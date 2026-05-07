@@ -112,10 +112,9 @@ extension _MapCheckinSheetExt on _MapScreenState {
                       final name = nameCtrl.text.trim().isEmpty
                           ? 'Check-in của ${widget.myName}'
                           : nameCtrl.text.trim();
-                      await _dbRef
-                          .child('checkins/${widget.houseId}')
-                          .push()
-                          .set({
+                      final checkinRef =
+                          _dbRef.child('checkins/${widget.houseId}').push();
+                      await checkinRef.set({
                         'lat': activePoint.latitude,
                         'lng': activePoint.longitude,
                         'name': name,
@@ -126,6 +125,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
                         'ts': DateTime.now().millisecondsSinceEpoch,
                       });
 
+                      _listenCheckins();
                       DailyQuestService().recordProgress('map_checkin');
 
                       if (ctx.mounted) Navigator.pop(ctx);
