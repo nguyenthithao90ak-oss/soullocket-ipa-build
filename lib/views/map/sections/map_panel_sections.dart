@@ -266,269 +266,270 @@ extension _MapPanelSectionsExt on _MapScreenState {
               ],
             ),
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [_kMapPinkSoft, _kMapPinkDeep],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _kMapPinkDeep.withOpacity(0.30),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.explore_rounded, color: Colors.white),
+                    ),
+                    SLSpacing.w12,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _isSingleRelationship
+                                      ? 'Tổng quan vị trí'
+                                      : 'Tổng quan di chuyển',
+                                  style: SLTheme.quicksand(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              _buildLiveStateBadge(uiSnap),
+                            ],
+                          ),
+                          SLSpacing.h4,
+                          Text(
+                            uiSnap.isFetchingRoute && !_isSingleRelationship
+                                ? 'Đang cập nhật quãng đường từ dữ liệu mới nhất...'
+                                : uiSnap.mapInsightText,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: SLTheme.quicksand(
+                              fontSize: 11.1,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withOpacity(0.66),
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SLSpacing.h12,
+                Row(
+                  children: _isSingleRelationship
+                      ? [
+                          Expanded(
+                            child: _buildMetricTile(
+                              label: 'Trạng thái',
+                              value: uiSnap.distanceText,
+                              accent: _kMapPinkDeep,
+                            ),
+                          ),
+                        ]
+                      : [
+                          Expanded(
+                            child: _buildMetricTile(
+                              label: 'Khoảng cách',
+                              value: uiSnap.distanceText,
+                              accent: _kMapPinkDeep,
+                            ),
+                          ),
+                          SLSpacing.w8,
+                          Expanded(
+                            child: _buildMetricTile(
+                              label: 'Quãng đường',
+                              value: uiSnap.routeDistanceText,
+                              accent: _kMapBlue,
+                            ),
+                          ),
+                          SLSpacing.w8,
+                          Expanded(
+                            child: _buildMetricTile(
+                              label: 'Thời gian',
+                              value: uiSnap.etaText,
+                              accent: const Color(0xFF8B5CF6),
+                            ),
+                          ),
+                        ],
+                ),
+                if (uiSnap.mapAlert != null &&
+                    uiSnap.mapAlert!.trim().isNotEmpty) ...[
+                  SLSpacing.h12,
                   Container(
-                    width: 42,
-                    height: 42,
+                    width: double.infinity,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [_kMapPinkSoft, _kMapPinkDeep],
+                        colors: [Color(0xFFFFF8E1), Color(0xFFFFF1C7)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _kMapPinkDeep.withOpacity(0.30),
-                          blurRadius: 18,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
+                      borderRadius: SLRadius.lgAll,
+                      border: Border.all(color: const Color(0xFFFCD34D)),
                     ),
-                    child: const Icon(Icons.explore_rounded, color: Colors.white),
-                  ),
-                  SLSpacing.w12,
-                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            const Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 18,
+                              color: Color(0xFFD97706),
+                            ),
+                            SLSpacing.w8,
                             Expanded(
-                              child: Text(
-                                _isSingleRelationship
-                                    ? 'Tổng quan vị trí'
-                                    : 'Tổng quan di chuyển',
-                                style: SLTheme.quicksand(
-                                  fontSize: 15.5,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    showGpsAction
+                                        ? 'GPS của bạn đang tắt'
+                                        : 'Lưu ý bản đồ',
+                                    style: SLTheme.quicksand(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF92400E),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    uiSnap.mapAlert!,
+                                    style: SLTheme.quicksand(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF92400E),
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            _buildLiveStateBadge(uiSnap),
                           ],
                         ),
-                        SLSpacing.h4,
-                        Text(
-                          uiSnap.isFetchingRoute && !_isSingleRelationship
-                              ? 'Đang cập nhật quãng đường từ dữ liệu mới nhất...'
-                              : uiSnap.mapInsightText,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: 11.1,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white.withOpacity(0.66),
-                            height: 1.35,
+                        if (showGpsAction) ...[
+                          SLSpacing.h10,
+                          OutlinedButton.icon(
+                            onPressed: () =>
+                                _bootstrapLocationTracking(forcePrompt: true),
+                            icon: const Icon(Icons.my_location_rounded, size: 16),
+                            label: const Text('Bật GPS của bạn'),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
                 ],
-              ),
-              SLSpacing.h12,
-              Row(
-                children: _isSingleRelationship
-                    ? [
-                        Expanded(
-                          child: _buildMetricTile(
-                            label: 'Trạng thái',
-                            value: uiSnap.distanceText,
-                            accent: _kMapPinkDeep,
-                          ),
-                        ),
-                      ]
-                    : [
-                        Expanded(
-                          child: _buildMetricTile(
-                            label: 'Khoảng cách',
-                            value: uiSnap.distanceText,
-                            accent: _kMapPinkDeep,
-                          ),
-                        ),
-                        SLSpacing.w8,
-                        Expanded(
-                          child: _buildMetricTile(
-                            label: 'Quãng đường',
-                            value: uiSnap.routeDistanceText,
-                            accent: _kMapBlue,
-                          ),
-                        ),
-                        SLSpacing.w8,
-                        Expanded(
-                          child: _buildMetricTile(
-                            label: 'Thời gian',
-                            value: uiSnap.etaText,
-                            accent: const Color(0xFF8B5CF6),
-                          ),
-                        ),
-                      ],
-              ),
-              if (uiSnap.mapAlert != null &&
-                  uiSnap.mapAlert!.trim().isNotEmpty) ...[
-                SLSpacing.h12,
-                Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFF8E1), Color(0xFFFFF1C7)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: SLRadius.lgAll,
-                    border: Border.all(color: const Color(0xFFFCD34D)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 18,
-                            color: Color(0xFFD97706),
-                          ),
-                          SLSpacing.w8,
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  showGpsAction
-                                      ? 'GPS của bạn đang tắt'
-                                      : 'Lưu ý bản đồ',
-                                  style: SLTheme.quicksand(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF92400E),
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  uiSnap.mapAlert!,
-                                  style: SLTheme.quicksand(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF92400E),
-                                    height: 1.35,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                if (_locationStatusMessage != null) ...[
+                  SLSpacing.h12,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF10B981).withOpacity(0.16),
+                          const Color(0xFF0F172A).withOpacity(0.30),
                         ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      if (showGpsAction) ...[
-                        SLSpacing.h10,
-                        OutlinedButton.icon(
-                          onPressed: () =>
-                              _bootstrapLocationTracking(forcePrompt: true),
-                          icon: const Icon(Icons.my_location_rounded, size: 16),
-                          label: const Text('Bật GPS của bạn'),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-              if (_locationStatusMessage != null) ...[
-                SLSpacing.h12,
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF10B981).withOpacity(0.16),
-                        const Color(0xFF0F172A).withOpacity(0.30),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                      borderRadius: SLRadius.lgAll,
+                      border: Border.all(color: const Color(0xFF34D399).withOpacity(0.34)),
                     ),
-                    borderRadius: SLRadius.lgAll,
-                    border: Border.all(color: const Color(0xFF34D399).withOpacity(0.34)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (_isBootstrappingLocation)
-                            const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_isBootstrappingLocation)
+                              const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Color(0xFF34D399),
+                                ),
+                              )
+                            else
+                              const Icon(
+                                Icons.sensors_rounded,
+                                size: 18,
                                 color: Color(0xFF34D399),
                               ),
-                            )
-                          else
-                            const Icon(
-                              Icons.sensors_rounded,
-                              size: 18,
-                              color: Color(0xFF34D399),
+                            SLSpacing.w10,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Cấu hình GPS',
+                                    style: SLTheme.quicksand(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF86EFAC),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _locationStatusMessage!,
+                                    style: SLTheme.quicksand(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white.withOpacity(0.84),
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          SLSpacing.w10,
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Cấu hình GPS',
-                                  style: SLTheme.quicksand(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF86EFAC),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _locationStatusMessage!,
-                                  style: SLTheme.quicksand(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white.withOpacity(0.84),
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
+                          ],
+                        ),
+                        if (!_isBootstrappingLocation) ...[
+                          SLSpacing.h12,
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF10B981),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
+                              ),
+                              onPressed: () => _bootstrapLocationTracking(forcePrompt: true),
+                              icon: const Icon(Icons.gps_fixed_rounded, size: 18),
+                              label: Text(
+                                'BẬT CẬP NHẬT GPS NGAY',
+                                style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
+                              ),
                             ),
                           ),
                         ],
-                      ),
-                      if (!_isBootstrappingLocation) ...[
-                        SLSpacing.h12,
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF10B981),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
-                            ),
-                            onPressed: () => _bootstrapLocationTracking(forcePrompt: true),
-                            icon: const Icon(Icons.gps_fixed_rounded, size: 18),
-                            label: Text(
-                              'BẬT CẬP NHẬT GPS NGAY',
-                              style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
-                            ),
-                          ),
-                        ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
