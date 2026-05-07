@@ -346,14 +346,17 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
           );
         }
 
-        if (snapshot.hasError) {
           return Padding(
             padding: SLSpacing.all16,
             child: Center(
+              child: SLTheme.emptyStatePanel(
+                icon: Icons.error_outline_rounded,
+                title: 'Không tải được ghi chú',
                 subtitle: 'Không tải được ghi chú lúc này. Hãy thử lại sau.',
+                accentColor: SLColors.danger,
+              ),
             ),
           );
-        }
 
         if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
           return Padding(

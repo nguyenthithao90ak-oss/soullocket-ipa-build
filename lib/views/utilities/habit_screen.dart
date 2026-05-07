@@ -305,11 +305,7 @@ class _HabitScreenState extends State<HabitScreen> {
     return StreamBuilder(
       stream: _habitsStream,
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-              child: CircularProgressIndicator(color: Colors.white));
-        }
-
+        if (snapshot.hasError) {
           return Center(
             child: Text(
               'Không tải được thói quen lúc này. Hãy thử lại sau.',
@@ -318,6 +314,7 @@ class _HabitScreenState extends State<HabitScreen> {
               textAlign: TextAlign.center,
             ),
           );
+        }
 
         if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
           return Center(
