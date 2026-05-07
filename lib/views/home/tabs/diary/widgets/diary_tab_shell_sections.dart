@@ -152,12 +152,12 @@ class DiaryExportMenuButton extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF6A9F).withOpacity(0.24),
+            color: const Color(0xFFFF6A9F).withValues(alpha: 0.24),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: Colors.white.withOpacity(0.82), width: 1.2),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.82), width: 1.2),
       ),
       child: IconButton(
         tooltip: 'Xuất HTML',
@@ -298,19 +298,19 @@ class DiaryHouseSetupCard extends StatelessWidget {
     bool strongShadow = false,
   }) {
     return BoxDecoration(
-      color: color.withOpacity(0.94),
+      color: color.withValues(alpha: 0.94),
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(color: borderColor, width: 1.4),
       boxShadow: [
         BoxShadow(
           color:
-              const Color(0xFFFF73A6).withOpacity(strongShadow ? 0.18 : 0.11),
+              const Color(0xFFFF73A6).withValues(alpha: strongShadow ? 0.18 : 0.11),
           blurRadius: strongShadow ? 28 : 18,
           offset: const Offset(0, 10),
         ),
         BoxShadow(
           color:
-              const Color(0xFF6BC6FF).withOpacity(strongShadow ? 0.12 : 0.08),
+              const Color(0xFF6BC6FF).withValues(alpha: strongShadow ? 0.12 : 0.08),
           blurRadius: strongShadow ? 22 : 16,
           offset: const Offset(0, 6),
         ),
@@ -325,7 +325,7 @@ class DiaryHouseSetupCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
       decoration: _softDiaryCard(
-        color: Colors.white.withOpacity(0.96),
+        color: Colors.white.withValues(alpha: 0.96),
         strongShadow: true,
         radius: 20,
       ),
@@ -389,19 +389,19 @@ class DiaryPostsEmptyStateCard extends StatelessWidget {
     bool strongShadow = false,
   }) {
     return BoxDecoration(
-      color: color.withOpacity(0.94),
+      color: color.withValues(alpha: 0.94),
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(color: borderColor, width: 1.4),
       boxShadow: [
         BoxShadow(
-          color:
-              const Color(0xFFFF73A6).withOpacity(strongShadow ? 0.18 : 0.11),
+          color: const Color(0xFFFF73A6)
+              .withValues(alpha: strongShadow ? 0.18 : 0.11),
           blurRadius: strongShadow ? 28 : 18,
           offset: const Offset(0, 10),
         ),
         BoxShadow(
-          color:
-              const Color(0xFF6BC6FF).withOpacity(strongShadow ? 0.12 : 0.08),
+          color: const Color(0xFF6BC6FF)
+              .withValues(alpha: strongShadow ? 0.12 : 0.08),
           blurRadius: strongShadow ? 22 : 16,
           offset: const Offset(0, 6),
         ),
@@ -416,7 +416,7 @@ class DiaryPostsEmptyStateCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 34),
       decoration: _softDiaryCard(
-        color: Colors.white.withOpacity(0.92),
+        color: Colors.white.withValues(alpha: 0.92),
         strongShadow: true,
         radius: 20,
       ),
@@ -465,7 +465,7 @@ class DiaryMemoryEmptyStateCard extends StatelessWidget {
             Icon(
               Icons.image_not_supported_outlined,
               size: 64,
-              color: SLColors.textTertiary.withOpacity(0.3),
+              color: SLColors.textTertiary.withValues(alpha: 0.3),
             ),
             SLSpacing.h24,
             Text(
@@ -514,15 +514,15 @@ class DiarySelectionBottomBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.97),
+        color: Colors.white.withValues(alpha: 0.97),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(0.92),
+          color: Colors.white.withValues(alpha: 0.92),
           width: 1.1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 18,
             spreadRadius: -8,
             offset: const Offset(0, 10),
