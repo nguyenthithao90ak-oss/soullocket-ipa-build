@@ -678,7 +678,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                 boxShadow: [
                                   BoxShadow(
                                     color: const Color(0xFFD81B60)
-                                        .withOpacity(0.24),
+                                        .withValues(alpha: 0.24),
                                     blurRadius: 14,
                                     offset: const Offset(0, 8),
                                   ),
