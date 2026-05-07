@@ -658,6 +658,7 @@ class AdMobService {
       listener: BannerAdListener(
         onAdLoaded: onAdLoaded,
         onAdFailedToLoad: (ad, error) {
+          debugPrint('AdMobService: banner failed to load: $error');
           ad.dispose();
         },
       ),
