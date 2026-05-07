@@ -60,7 +60,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
                   fontWeight: FontWeight.w700,
                   color: Colors.grey[400],
                 ),
-              ),,
+              ),
               SLSpacing.h16,
               _buildCheckinTextField(
                 controller: nameCtrl,
