@@ -238,8 +238,8 @@ class _WheelScreenState extends State<WheelScreen>
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: const Text(
             'Không tìm được quán ăn phù hợp lúc này. Hãy thử lại sau.',
           ),
           backgroundColor: Colors.red,
@@ -298,8 +298,8 @@ class _WheelScreenState extends State<WheelScreen>
         _isSpinning = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không thể quay lúc này. Hãy thử lại sau.'),
+        const SnackBar(
+          content: const Text('Không thể quay lúc này. Hãy thử lại sau.'),
           backgroundColor: Colors.redAccent,
         ),
       );
