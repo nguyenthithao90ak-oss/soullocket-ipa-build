@@ -199,7 +199,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                           color: Colors.white.withValues(alpha: 0.055),
                           borderRadius: BorderRadius.circular(22),
                           border:
-                              Border.all(color: Colors.white.withValues(alpha: 0.09)),,
+                              Border.all(color: Colors.white.withValues(alpha: 0.09)),
                         ),
                         child: Column(
                           children: [
