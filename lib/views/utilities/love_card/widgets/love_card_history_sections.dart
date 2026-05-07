@@ -571,9 +571,14 @@ class _LoveCardHistoryItem extends StatelessWidget {
                     style: SLTheme.quicksand(
                       color: Colors.white.withValues(alpha: 0.66),
                       fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
