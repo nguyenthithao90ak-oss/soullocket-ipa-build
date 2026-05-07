@@ -733,12 +733,12 @@ class _CountdownModeEditorScreenState
                                     width: 48,
                                     height: 48,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(
+                                      color: Colors.white.withValues(alpha: 
                                         themeData.isDark ? 0.14 : 0.82,
                                       ),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: Colors.white.withOpacity(
+                                        color: Colors.white.withValues(alpha: 
                                           themeData.isDark ? 0.22 : 0.94,
                                         ),
                                       ),
@@ -770,7 +770,7 @@ class _CountdownModeEditorScreenState
                                       style: SLTheme.quicksand(
                                         fontSize: 12.2,
                                         fontWeight: FontWeight.w700,
-                                        color: themeData.foreground.withOpacity(
+                                        color: themeData.foreground.withValues(alpha: 
                                           themeData.isDark ? 0.78 : 0.72,
                                         ),
                                         height: 1.42,
@@ -808,11 +808,11 @@ class _CountdownModeEditorScreenState
                                         vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: statusColor.withOpacity(0.14),
+                                        color: statusColor.withValues(alpha: 0.14),
                                         borderRadius:
                                             BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: statusColor.withOpacity(0.22),
+                                          color: statusColor.withValues(alpha: 0.22),
                                         ),
                                       ),
                                       child: Text(
@@ -836,15 +836,15 @@ class _CountdownModeEditorScreenState
                                     vertical: 18,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.72),
+                                    color: Colors.white.withValues(alpha: 0.72),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.92),
+                                      color: Colors.white.withValues(alpha: 0.92),
                                     ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: const Color(0xFFD94C86)
-                                            .withOpacity(0.08),
+                                            .withValues(alpha: 0.08),
                                         blurRadius: 24,
                                         offset: const Offset(0, 14),
                                       ),
@@ -1056,16 +1056,16 @@ class _CountdownModeEditorScreenState
                                         padding: const EdgeInsets.all(5),
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: Colors.white.withOpacity(0.94),
+                                          color: Colors.white.withValues(alpha: 0.94),
                                           border: Border.all(
                                             color: isSelected
                                                 ? preset.accent
-                                                : Colors.white.withOpacity(0.78),
+                                                : Colors.white.withValues(alpha: 0.78),
                                             width: isSelected ? 2.2 : 1.2,
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: preset.accent.withOpacity(
+                                              color: preset.accent.withValues(alpha: 
                                                 isSelected ? 0.22 : 0.10,
                                               ),
                                               blurRadius: isSelected ? 18 : 11,
@@ -1082,7 +1082,7 @@ class _CountdownModeEditorScreenState
                                               end: Alignment.bottomRight,
                                             ),
                                             border: Border.all(
-                                              color: Colors.white.withOpacity(0.84),
+                                              color: Colors.white.withValues(alpha: 0.84),
                                               width: 2,
                                             ),
                                           ),
@@ -1119,7 +1119,7 @@ class _CountdownModeEditorScreenState
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(22),
                                       border: Border.all(
-                                        color: Colors.white.withOpacity(0.72),
+                                        color: Colors.white.withValues(alpha: 0.72),
                                       ),
                                     ),
                                     child: ClipRRect(
