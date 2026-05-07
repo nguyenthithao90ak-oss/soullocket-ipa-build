@@ -125,7 +125,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                         border: Border.all(color: const Color(0xFFF7D3E1)),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFD81B60).withOpacity(0.08),
+                            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
                             blurRadius: 24,
                             offset: const Offset(0, 12),
                           ),
@@ -239,14 +239,14 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                colors.first.withOpacity(0.10),
-                colors.last.withOpacity(0.18),
+                colors.first.withValues(alpha: 0.10),
+                colors.last.withValues(alpha: 0.18),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: SLRadius.xlAll,
-            border: Border.all(color: colors.last.withOpacity(0.20)),
+            border: Border.all(color: colors.last.withValues(alpha: 0.20)),
           ),
           child: Row(
             children: [
