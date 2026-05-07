@@ -927,7 +927,7 @@ class _CountdownModeEditorScreenState
                                   controller: _leftCtrl,
                                   decoration: _fieldDecoration(
                                     label: 'Tên bên trái',
-                                    hint: 'ngày',
+                                    hint: 'Bạn',
                                   ),
                                   onChanged: (_) => setState(() {}),
                                 ),
