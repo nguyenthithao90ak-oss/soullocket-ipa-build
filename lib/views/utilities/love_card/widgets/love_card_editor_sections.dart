@@ -593,6 +593,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                           child: Image.memory(
                             state._selectedImageBytes!,
                             fit: BoxFit.cover,
+                            filterQuality: FilterQuality.high,
                           ),
                         ),
                       ),
@@ -1370,6 +1371,7 @@ class _LoveCardImageAttachmentPanel extends StatelessWidget {
                         child: Image.memory(
                           state._selectedImageBytes!,
                           fit: BoxFit.cover,
+                          filterQuality: FilterQuality.high,
                         ),
                       ),
                     ),
