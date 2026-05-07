@@ -1471,7 +1471,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         flexibleSpace: ClipRect(
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(color: Colors.black.withOpacity(0.2)),
+            child: Container(color: Colors.black.withValues(alpha: 0.2)),
           ),
         ),
         leading: IconButton(
