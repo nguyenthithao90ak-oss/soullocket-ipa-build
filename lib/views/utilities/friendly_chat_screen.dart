@@ -652,7 +652,7 @@ class _FriendlyChatBubble extends StatelessWidget {
             border: isUser ? null : Border.all(color: const Color(0xFFFFD7E3)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -869,7 +869,7 @@ class _BotLoveAvatar extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFD81B60).withOpacity(0.22),
+                  color: const Color(0xFFD81B60).withValues(alpha: 0.22),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
