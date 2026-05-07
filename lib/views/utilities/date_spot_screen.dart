@@ -206,7 +206,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                   hintText: 'Tên địa điểm...',
                   hintStyle: const TextStyle(color: Color(0xFFB55A73)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.94),
+                  fillColor: Colors.white.withValues(alpha: 0.94),
                   border: OutlineInputBorder(
                       borderRadius: SLRadius.mdAll,
                       borderSide: BorderSide.none),
@@ -222,7 +222,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                   hintText: 'Kỷ niệm gì ở đây...',
                   hintStyle: const TextStyle(color: Color(0xFFB55A73)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.94),
+                  fillColor: Colors.white.withValues(alpha: 0.94),
                   border: OutlineInputBorder(
                       borderRadius: SLRadius.mdAll,
                       borderSide: BorderSide.none),
@@ -426,7 +426,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
+        color: Colors.white.withValues(alpha: 0.07),
         borderRadius: SLRadius.lgAll,
         border: Border.all(color: Colors.white12),
       ),
@@ -436,7 +436,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: Colors.pinkAccent.withOpacity(0.2),
+              color: Colors.pinkAccent.withValues(alpha: 0.2),
               borderRadius: SLRadius.mdAll,
             ),
             child: Center(
