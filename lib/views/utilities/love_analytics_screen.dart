@@ -95,7 +95,7 @@ class _LoveAnalyticsScreenState extends State<LoveAnalyticsScreen> {
           child: CircularProgressIndicator(
             value: score / 100,
             strokeWidth: 20,
-            backgroundColor: Colors.grey.withOpacity(0.2),
+            backgroundColor: Colors.grey.withValues(alpha: 0.2),
             valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
             strokeCap: StrokeCap.round,
           ),
@@ -128,7 +128,7 @@ class _LoveAnalyticsScreenState extends State<LoveAnalyticsScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 5))
         ],
