@@ -291,7 +291,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                 width: compact ? 48 : 54,
                 height: compact ? 48 : 54,
                 fit: BoxFit.cover,
-                filterQuality: FilterQuality.medium,
+                filterQuality: FilterQuality.high,
               ),
             ),
           ),
