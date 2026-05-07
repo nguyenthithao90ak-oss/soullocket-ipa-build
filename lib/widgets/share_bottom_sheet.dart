@@ -838,14 +838,14 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                accentColor.withOpacity(0.14),
+                accentColor.withValues(alpha: 0.14),
                 Colors.white,
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
             borderRadius: BorderRadius.circular(SLResponsive.dp(22, screenWidth)),
-            border: Border.all(color: accentColor.withOpacity(0.16)),
+            border: Border.all(color: accentColor.withValues(alpha: 0.16)),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x100F172A),
@@ -874,7 +874,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                     child: Container(
                       width: avatarSize,
                       height: avatarSize,
-                      color: accentColor.withOpacity(0.12),
+                      color: accentColor.withValues(alpha: 0.12),
                       child: avatarUrl.trim().isNotEmpty
                           ? CachedNetworkImage(
                               imageUrl: avatarUrl,
