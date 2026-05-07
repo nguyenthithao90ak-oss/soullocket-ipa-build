@@ -1750,9 +1750,10 @@ class _MainHomeTabState extends State<MainHomeTab> {
       fallingEffectKey: normalizedFallingEffectKey,
     );
 
+    await UiPrefs.saveState(nextState);
+
     final houseId = (_houseId ?? '').trim();
     if (houseId.isEmpty) {
-      await UiPrefs.saveState(nextState);
       return;
     }
 
@@ -1770,7 +1771,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
     } catch (e) {
       if (mounted) {
         _showLatestSnackBar(
-            'Chưa thể tải thông tin mới lúc này. Vui lòng thử lại.');
+            'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.');
       }
     }
   }
@@ -2132,6 +2133,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                     ),
                     const SizedBox(height: 14),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
                           width: 46,
@@ -2179,6 +2181,30 @@ class _MainHomeTabState extends State<MainHomeTab> {
                             ],
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () => Navigator.of(sheetContext).pop(),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: const Color(0xFFF0DDE4),
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                color: Color(0xFFD81B60),
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -2217,13 +2243,24 @@ class _MainHomeTabState extends State<MainHomeTab> {
                                 option: selectedStyle,
                                 selected: true,
                                 locked: currentStyleIsLocked,
-                                onTap: () {},
+                                onTap: currentStyleIsLocked
+                                    ? () {
+                                        _showLatestSnackBar(
+                                          'Kiểu này đang khóa. Mở trong Cài đặt giao diện để dùng các kiểu nâng cao.',
+                                        );
+                                      }
+                                    : () => _saveCountdownQuickUiPrefs(
+                                          countdownStyleKey:
+                                              selectedStyle.value,
+                                        ),
                               ),
                               buildOptionChip(
                                 option: selectedEffect,
                                 selected: true,
                                 locked: false,
-                                onTap: () {},
+                                onTap: () => _saveCountdownQuickUiPrefs(
+                                  fallingEffectKey: selectedEffect.value,
+                                ),
                               ),
                             ],
                           ),
