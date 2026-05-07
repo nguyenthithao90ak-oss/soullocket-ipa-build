@@ -807,23 +807,25 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     final Color shellTop = Color.lerp(
       tone,
       Colors.white,
-      isPreview ? 0.32 : 0.22,
+      isPreview ? 0.36 : 0.22,
     )!;
     final Color shellBottom = Color.lerp(
       tone,
       const Color(0xFF0B1934),
-      isPreview ? 0.14 : 0.28,
+      isPreview ? 0.10 : 0.28,
     )!;
     final Color faceTop = Color.lerp(
       tone,
       Colors.white,
-      isPreview ? 0.42 : 0.30,
+      isPreview ? 0.50 : 0.30,
     )!;
     final Color faceBottom = Color.lerp(
       tone,
       const Color(0xFF050B16),
-      isPreview ? 0.18 : 0.40,
+      isPreview ? 0.12 : 0.40,
     )!;
+    final double previewGlow = isPreview ? 0.28 : 0;
+    final double clearingGlow = isClearing ? 0.22 : 0;
     final BorderRadius shellRadius = BorderRadius.only(
       topLeft: Radius.circular(
         _blockCornerRadius(connectTop, connectLeft, outerRadius, joinedRadius),
