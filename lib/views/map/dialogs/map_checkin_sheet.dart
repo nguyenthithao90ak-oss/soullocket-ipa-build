@@ -1,8 +1,9 @@
 part of '../map_screen.dart';
 
 extension _MapCheckinSheetExt on _MapScreenState {
-  Future<void> _showCheckinSheetDialog() async {
-    if (_myLiveLocation == null) {
+  Future<void> _showCheckinSheetDialog({ll.LatLng? selectedPoint}) async {
+    final activePoint = selectedPoint ?? _myLiveLocation;
+    if (activePoint == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content:
