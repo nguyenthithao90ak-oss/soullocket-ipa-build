@@ -75,9 +75,9 @@ class LocationService {
           // Hiển thị disclosure giải thích quyền lợi
           final granted = await PermissionHelper.requestLocationWithDisclosure(
             context,
-            title: 'Quyền truy cập vị trí',
+            title: 'Cho phép truy cập vị trí',
             disclosure:
-                'SoulLocket thu thập và cập nhật vị trí khi bạn mở app để hiển thị bản đồ đôi, khoảng cách, vị trí trực tiếp và các kỷ niệm/check-in trong ngôi nhà của bạn. Nếu bạn cho phép quyền nền, app có thể tiếp tục cập nhật khi bạn rời app để dữ liệu vị trí luôn mới trong bản đồ chung. Dữ liệu vị trí chỉ được chia sẻ trong ngôi nhà của bạn cho tính năng bản đồ/kỷ niệm.',
+                'SoulLocket thu thập vị trí của bạn để hiển thị bản đồ chung, khoảng cách giữa hai bạn, vị trí hiện tại và các kỷ niệm/check-in gắn địa điểm trong ngôi nhà của bạn. Dữ liệu vị trí chỉ dùng cho các tính năng bản đồ của SoulLocket.',
           );
           await prefs.setBool('il_gps_prompted', true);
           if (!granted) return false;
@@ -131,9 +131,9 @@ class LocationService {
       }
       return await PermissionHelper.requestBackgroundLocationWithDisclosure(
         context,
-        title: 'Cho phép cập nhật vị trí khi chạy nền',
+        title: 'Cho phép vị trí khi chạy nền',
         disclosure:
-            'SoulLocket cần quyền vị trí luôn luôn để tiếp tục cập nhật vị trí cho bản đồ chung ngay cả khi bạn rời ứng dụng. Quyền này chỉ phục vụ tính năng bản đồ của ngôi nhà và giúp khoảng cách, vị trí hai bạn luôn đúng thời gian thực.',
+            'Nếu bạn bật quyền này, SoulLocket sẽ tiếp tục thu thập vị trí khi ứng dụng chạy nền hoặc đã rời màn hình để cập nhật bản đồ chung và khoảng cách giữa hai bạn. Quyền này chỉ dùng cho tính năng bản đồ trong SoulLocket.',
       );
     } catch (e, st) {
       if (kDebugMode) {
