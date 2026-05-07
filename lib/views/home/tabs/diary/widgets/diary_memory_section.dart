@@ -601,11 +601,11 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
   String _stableFallbackPhotoUrl(Map<String, dynamic> photo) {
     final resolvedUrl = photo['resolvedUrl']?.toString().trim() ?? '';
     if (resolvedUrl.isNotEmpty) return resolvedUrl;
-    final thumbUrl = photo['thumbUrl']?.toString().trim() ?? '';
-    if (thumbUrl.isNotEmpty) return thumbUrl;
+    final downloadUrl = photo['downloadUrl']?.toString().trim() ?? '';
+    if (downloadUrl.isNotEmpty) return downloadUrl;
     final previewUrl = photo['previewUrl']?.toString().trim() ?? '';
     if (previewUrl.isNotEmpty) return previewUrl;
-    return photo['downloadUrl']?.toString().trim() ?? '';
+    return photo['thumbUrl']?.toString().trim() ?? '';
   }
 
   String _resolvePhotoUrl(Map<String, dynamic> photo) {
