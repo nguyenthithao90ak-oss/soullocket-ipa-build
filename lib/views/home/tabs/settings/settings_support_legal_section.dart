@@ -260,7 +260,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                 border: Border.all(color: Colors.red.shade200),
               ),
               child: Text(
-                '⚠️ Sau khi gửi yêu cầu, hệ thống sẽ lên lịch xóa tài khoản của bạn. Trong thời gian chờ, bạn có thể vẫn còn cơ hội hoàn tác tùy trạng thái xử lý. Khi lệnh xóa được thực thi, dữ liệu cá nhân của bạn sẽ bị xóa khỏi hệ thống và khi đã xóa thì không thể khôi phục. Dữ liệu nhà chung nếu có người kia vẫn còn sẽ không bị ảnh hưởng trực tiếp, nhưng tài khoản của bạn sẽ biến mất hoàn toàn.',
+                '⚠️ Sau khi gửi yêu cầu, hệ thống sẽ lên lịch xóa tài khoản của bạn. Trong thời gian chờ, bạn có thể vẫn còn cơ hội hoàn tác tùy trạng thái xử lý. Khi đã xóa thì không thể khôi phục, dữ liệu sẽ bị xóa khỏi hệ thống. Dữ liệu nhà chung nếu có người kia vẫn còn sẽ không bị ảnh hưởng trực tiếp, nhưng tài khoản của bạn sẽ biến mất hoàn toàn.',
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
