@@ -741,7 +741,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
             ],
           ),
         ) ??
-        false;
+    if (!mounted || !context.mounted) return;
 
     final canContinue = await _securityFlowGuard.guard(
       context,
