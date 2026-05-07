@@ -1262,7 +1262,11 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               child: _selectedImage != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(14),
-                      child: Image.file(_selectedImage!, fit: BoxFit.cover),
+                      child: Image.file(
+                        _selectedImage!,
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.high,
+                      ),
                     )
                   : const Icon(Icons.image_outlined, color: Color(0xFF6B7280)),
             ),
