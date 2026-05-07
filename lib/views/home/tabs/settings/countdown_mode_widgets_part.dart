@@ -154,7 +154,7 @@ Widget _buildCountdownModeCenterIconVisual({
       color: Colors.white,
       shadows: [
         Shadow(
-          color: preset.accent.withOpacity(0.30),
+          color: preset.accent.withValues(alpha: 0.30),
           blurRadius: iconSize * 0.34,
           offset: Offset(0, iconSize * 0.08),
         ),
@@ -180,7 +180,7 @@ Future<String?> _showCountdownModeCenterIconPicker(
             decoration: BoxDecoration(
               color: const Color(0xFF101A2B),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
             child: Column(
@@ -228,17 +228,17 @@ Future<String?> _showCountdownModeCenterIconPicker(
                           vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.92),
+                          color: Colors.white.withValues(alpha: 0.92),
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(
                             color: isSelected
                                 ? preset.accent
-                                : Colors.white.withOpacity(0.52),
+                                : Colors.white.withValues(alpha: 0.52),
                             width: isSelected ? 2.2 : 1.2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: preset.accent.withOpacity(
+                              color: preset.accent.withValues(alpha: 
                                 isSelected ? 0.22 : 0.10,
                               ),
                               blurRadius: isSelected ? 20 : 12,
@@ -260,7 +260,7 @@ Future<String?> _showCountdownModeCenterIconPicker(
                                   end: Alignment.bottomRight,
                                 ),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.80),
+                                  color: Colors.white.withValues(alpha: 0.80),
                                   width: 2,
                                 ),
                               ),
@@ -334,9 +334,9 @@ class _CountdownModeFriendTile extends StatelessWidget {
       child: Ink(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.06),
+          color: Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Row(
           children: [
@@ -414,18 +414,18 @@ class _CountdownModeSheetDropdown extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.06),
+        fillColor: Colors.white.withValues(alpha: 0.06),
         labelStyle: SLTheme.quicksand(
           color: Colors.white70,
           fontWeight: FontWeight.w800,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.12)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.12)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(14)),
@@ -495,12 +495,12 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surfaceStart = isDark
-        ? Colors.white.withOpacity(0.12)
-        : Colors.white.withOpacity(0.78);
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.78);
     final surfaceEnd = isDark
-        ? Colors.white.withOpacity(0.09)
-        : Colors.white.withOpacity(0.70);
-    final borderColor = Colors.white.withOpacity(isDark ? 0.18 : 0.76);
+        ? Colors.white.withValues(alpha: 0.09)
+        : Colors.white.withValues(alpha: 0.70);
+    final borderColor = Colors.white.withValues(alpha: isDark ? 0.18 : 0.76);
     final centerPreset = _countdownModeCenterIconPresetFor(centerIconType);
 
     return Container(
@@ -516,7 +516,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
         border: Border.all(color: borderColor, width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.22 : 0.08),
+            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -582,14 +582,14 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
                 height: 58,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(isDark ? 0.14 : 0.94),
+                  color: Colors.white.withValues(alpha: isDark ? 0.14 : 0.94),
                   border: Border.all(
-                    color: Colors.white.withOpacity(isDark ? 0.28 : 0.84),
+                    color: Colors.white.withValues(alpha: isDark ? 0.28 : 0.84),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: centerPreset.accent.withOpacity(0.22),
+                      color: centerPreset.accent.withValues(alpha: 0.22),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -606,7 +606,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
                         end: Alignment.bottomRight,
                       ),
                       border: Border.all(
-                        color: Colors.white.withOpacity(isDark ? 0.22 : 0.88),
+                        color: Colors.white.withValues(alpha: isDark ? 0.22 : 0.88),
                         width: 2,
                       ),
                     ),
@@ -701,9 +701,9 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: accent.withOpacity(isDark ? 0.18 : 0.12),
+            color: accent.withValues(alpha: isDark ? 0.18 : 0.12),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: accent.withOpacity(isDark ? 0.30 : 0.18)),
+            border: Border.all(color: accent.withValues(alpha: isDark ? 0.30 : 0.18)),
           ),
           child: Text(
             roleLabel,
@@ -780,7 +780,7 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
   Widget _buildAvatarContent() {
     if (placeholder) {
       return Container(
-        color: accent.withOpacity(0.12),
+        color: accent.withValues(alpha: 0.12),
         alignment: Alignment.center,
         child: Icon(
           Icons.favorite_border_rounded,
@@ -805,7 +805,7 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
     final trimmed = fallbackName.trim();
     final letter = trimmed.isEmpty ? '?' : trimmed[0].toUpperCase();
     return Container(
-      color: accent.withOpacity(0.14),
+      color: accent.withValues(alpha: 0.14),
       alignment: Alignment.center,
       child: Text(
         letter,
@@ -1044,8 +1044,8 @@ class _CountdownModeGlowOrb extends StatelessWidget {
           shape: BoxShape.circle,
           gradient: RadialGradient(
             colors: [
-              color.withOpacity(0.70),
-              color.withOpacity(0.20),
+              color.withValues(alpha: 0.70),
+              color.withValues(alpha: 0.20),
               Colors.transparent,
             ],
           ),
