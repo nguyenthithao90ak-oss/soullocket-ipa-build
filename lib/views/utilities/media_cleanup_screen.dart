@@ -354,9 +354,9 @@ class _MediaCleanupScreenState extends State<MediaCleanupScreen>
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       padding: SLSpacing.all20,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: Colors.white.withOpacity(0.15)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
       ),
       child: Column(
         children: [
@@ -465,7 +465,7 @@ class _MediaCleanupScreenState extends State<MediaCleanupScreen>
                   height: 90,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF7c4dff).withOpacity(0.2),
+                    color: const Color(0xFF7c4dff).withValues(alpha: 0.2),
                     border:
                         Border.all(color: const Color(0xFF7c4dff), width: 2),
                   ),
