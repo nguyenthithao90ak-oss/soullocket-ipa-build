@@ -1536,6 +1536,37 @@ class AuthSignInService {
     }
   }
 
+  Future<void> undoScheduledDeletion() async {
+    final user = _auth.currentUser;
+    if (user == null) throw 'Bạn chưa đăng nhập.';
+    final idToken = await user.getIdToken(true) ?? '';
+    final undoEndpoint = AppConfig.deleteAccountUrl
+        .trim()
+        .replaceAll('deleteUserDataHttp', 'undoAccountDeletionHttp');
+    final response = await _httpPost(
+      Uri.parse(undoEndpoint),
+      headers: await AppCheckHttpHeaders.withOptionalToken({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
+      }),
+    );
+    if (response.statusCode != 200) {
+      unawaited(
+        RevenueSecurityTelemetryService.instance.logEvent(
+          type: 'undo_delete_failed',
+          reason: 'server_rejected',
+          severity: response.statusCode == 401 || response.statusCode == 403
+              ? 'high'
+              : 'medium',
+          extra: <String, Object?>{
+            'statusCode': response.statusCode,
+          },
+        ),
+      );
+      throw 'Không hoàn tác được: trạng thái tài khoản chưa khôi phục được, hãy kiểm tra mạng rồi thử lại.';
+    }
+  }
+
   Future<void> revokeOtherSessionsAfterPasswordChange() async {
     final user = _auth.currentUser;
     if (user == null) {
