@@ -167,7 +167,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: Colors.black.withOpacity(0.55),
+              color: Colors.black.withValues(alpha: 0.55),
             ),
           ),
         ),
@@ -223,7 +223,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF111827).withOpacity(0.86),
+              color: const Color(0xFF111827).withValues(alpha: 0.86),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: const Color(0xFF2D3748)),
             ),
@@ -303,7 +303,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFF151B2A).withOpacity(0.94),
+            color: const Color(0xFF151B2A).withValues(alpha: 0.94),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFF2B3448)),
           ),
@@ -315,8 +315,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 height: 38,
                 decoration: BoxDecoration(
                   color: isUser2
-                      ? const Color(0xFF7C2D64).withOpacity(0.42)
-                      : const Color(0xFF075985).withOpacity(0.42),
+                      ? const Color(0xFF7C2D64).withValues(alpha: 0.42)
+                      : const Color(0xFF075985).withValues(alpha: 0.42),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
@@ -377,7 +377,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
-                          color: Colors.white.withOpacity(0.82),
+                          color: Colors.white.withValues(alpha: 0.82),
                           fontWeight: FontWeight.w600,
                           fontSize: 11,
                         ),
