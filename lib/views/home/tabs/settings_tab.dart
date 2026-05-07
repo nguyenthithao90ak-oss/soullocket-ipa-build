@@ -17,7 +17,8 @@ import '../../login_screen.dart';
 import 'package:image_cropper/image_cropper.dart';
 
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show kDebugMode, kIsWeb, defaultTargetPlatform, TargetPlatform;
 import '../../../services/notification_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
