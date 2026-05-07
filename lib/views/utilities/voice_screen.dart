@@ -300,7 +300,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
             : 'Đã gửi bản ghi âm lên nhà chung.',
       );
     } catch (e) {
-      _showMessage('Không thể gửi bản ghi âm: $e');
+      _showMessage('Không thể gửi bản ghi âm lúc này. Hãy thử lại sau.');
     } finally {
       _recordStartedAt = null;
       if (recordPath != null && recordPath.isNotEmpty) {
