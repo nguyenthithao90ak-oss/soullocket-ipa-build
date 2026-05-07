@@ -738,9 +738,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
                 onPressed: () => Navigator.of(ctx).pop(true),
                 child: const Text('Có, đăng xuất tất cả thiết bị khác'),
               ),
-            ],
-          ),
         ) ??
+        false;
+
     if (!mounted || !context.mounted) return;
 
     final canContinue = await _securityFlowGuard.guard(
