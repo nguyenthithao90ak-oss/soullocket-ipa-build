@@ -28,7 +28,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: background ?? color.withOpacity(0.12),
+        color: background ?? color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -60,9 +60,9 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.05),
+        color: accent.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: accent.withOpacity(0.14)),
+        border: Border.all(color: accent.withValues(alpha: 0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +73,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.14),
+                  color: accent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
@@ -133,7 +133,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withOpacity(0.14)),
+        border: Border.all(color: accent.withValues(alpha: 0.14)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +142,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.12),
+              color: accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
