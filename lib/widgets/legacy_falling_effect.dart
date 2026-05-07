@@ -429,14 +429,14 @@ class _LegacyFallingPainter extends CustomPainter {
     if (!useLiteRendering) {
       final glowPaint = Paint()
         ..color = (isDark ? const Color(0xFFFFE8A3) : const Color(0xFFFFF3BF))
-            .withOpacity(alpha * 0.52)
+            .withValues(alpha: alpha * 0.52)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
       canvas.drawCircle(Offset.zero, particle.size * 0.24, glowPaint);
     }
 
     paint
       ..color =
-          (isDark ? const Color(0xFFFFF4C1) : Colors.white).withOpacity(alpha)
+          (isDark ? const Color(0xFFFFF4C1) : Colors.white).withValues(alpha: alpha)
       ..style = PaintingStyle.fill;
     _drawSparkle(canvas, paint, particle.size);
   }
@@ -449,13 +449,13 @@ class _LegacyFallingPainter extends CustomPainter {
   ) {
     if (!useLiteRendering) {
       final glowPaint = Paint()
-        ..color = const Color(0xFFFFD965).withOpacity(alpha * 0.48)
+        ..color = const Color(0xFFFFD965).withValues(alpha: alpha * 0.48)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
       canvas.drawCircle(Offset.zero, particle.size * 0.28, glowPaint);
     }
 
     paint
-      ..color = const Color(0xFFFFD54F).withOpacity(alpha)
+      ..color = const Color(0xFFFFD54F).withValues(alpha: alpha)
       ..style = PaintingStyle.fill;
     _drawStar(canvas, paint, particle.size);
   }
@@ -470,7 +470,7 @@ class _LegacyFallingPainter extends CustomPainter {
       paint
         ..shader = null
         ..color =
-            (isDark ? const Color(0xFFA7EEFF) : Colors.white).withOpacity(alpha)
+            (isDark ? const Color(0xFFA7EEFF) : Colors.white).withValues(alpha: alpha)
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
         ..strokeWidth = (particle.size * 0.09).clamp(1.0, 2.4);
@@ -484,7 +484,7 @@ class _LegacyFallingPainter extends CustomPainter {
         (particle.size * 0.12).clamp(1.4, 3.8),
         Paint()
           ..color = (isDark ? const Color(0xFFA7EEFF) : Colors.white)
-              .withOpacity(alpha)
+              .withValues(alpha: alpha)
           ..style = PaintingStyle.fill,
       );
       return;
@@ -493,9 +493,9 @@ class _LegacyFallingPainter extends CustomPainter {
     final trailPaint = Paint()
       ..shader = LinearGradient(
         colors: [
-          Colors.white.withOpacity(0),
+          Colors.white.withValues(alpha: 0),
           (isDark ? const Color(0xFF6FE3FF) : const Color(0xFFFFFBFF))
-              .withOpacity((alpha * 1.05).clamp(0.0, 1.0)),
+              .withValues(alpha: (alpha * 1.05).clamp(0.0, 1.0)),
         ],
       ).createShader(Rect.fromLTWH(
         -particle.size,
@@ -508,7 +508,7 @@ class _LegacyFallingPainter extends CustomPainter {
       ..strokeWidth = (particle.size * 0.11).clamp(1.1, 3.2);
     final meteorGlowPaint = Paint()
       ..color = (isDark ? const Color(0xFF89EAFF) : Colors.white)
-          .withOpacity(alpha * 0.22)
+          .withValues(alpha: alpha * 0.22)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
     canvas.drawCircle(Offset.zero, particle.size * 0.32, meteorGlowPaint);
     canvas.drawLine(
@@ -519,7 +519,7 @@ class _LegacyFallingPainter extends CustomPainter {
 
     paint
       ..color =
-          (isDark ? const Color(0xFF7FE8FF) : Colors.white).withOpacity(alpha)
+          (isDark ? const Color(0xFF7FE8FF) : Colors.white).withValues(alpha: alpha)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(
       Offset(particle.size * 0.78, particle.size * 0.2),
@@ -536,19 +536,19 @@ class _LegacyFallingPainter extends CustomPainter {
   ) {
     paint
       ..color = (isDark ? const Color(0xFFB9F3FF) : Colors.white)
-          .withOpacity(alpha * 0.64)
+          .withValues(alpha: alpha * 0.64)
       ..style = PaintingStyle.stroke
       ..strokeWidth = (particle.size * 0.075).clamp(1.0, 2.4);
     canvas.drawCircle(Offset.zero, particle.size * 0.34, paint);
 
     paint
       ..color = (isDark ? const Color(0xFFDFFBFF) : Colors.white)
-          .withOpacity(alpha * 0.24)
+          .withValues(alpha: alpha * 0.24)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset.zero, particle.size * 0.34, paint);
 
     paint
-      ..color = Colors.white.withOpacity(alpha * 0.42)
+      ..color = Colors.white.withValues(alpha: alpha * 0.42)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(
       Offset(-particle.size * 0.11, -particle.size * 0.12),
@@ -564,10 +564,10 @@ class _LegacyFallingPainter extends CustomPainter {
     double alpha,
   ) {
     final frostColor =
-        (isDark ? const Color(0xFFE8FAFF) : Colors.white).withOpacity(alpha);
+        (isDark ? const Color(0xFFE8FAFF) : Colors.white).withValues(alpha: alpha);
     final glowColor =
         (isDark ? const Color(0xFFBFE8FF) : const Color(0xFFD9F3FF))
-            .withOpacity(alpha * 0.38);
+            .withValues(alpha: alpha * 0.38);
 
     if (!useLiteRendering) {
       final glowPaint = Paint()
@@ -587,7 +587,7 @@ class _LegacyFallingPainter extends CustomPainter {
       canvas.drawCircle(Offset.zero, particle.size * 0.16, paint);
 
       paint
-        ..color = glowColor.withOpacity(alpha * 0.92)
+        ..color = glowColor.withValues(alpha: alpha * 0.92)
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
         ..strokeWidth = (particle.size * 0.06).clamp(1.0, 2.0);
@@ -632,7 +632,7 @@ class _LegacyFallingPainter extends CustomPainter {
       Offset.zero,
       particle.size * 0.13,
       Paint()
-        ..color = frostColor.withOpacity(alpha * 0.14)
+        ..color = frostColor.withValues(alpha: alpha * 0.14)
         ..style = PaintingStyle.fill,
     );
   }
@@ -713,14 +713,14 @@ class _LegacyFallingPainter extends CustomPainter {
     if (useLiteRendering) {
       paint
         ..shader = null
-        ..color = palette.first.withOpacity(alpha)
+        ..color = palette.first.withValues(alpha: alpha)
         ..style = PaintingStyle.fill;
     } else {
       paint
         ..shader = LinearGradient(
           colors: [
-            palette.first.withOpacity(alpha),
-            palette.last.withOpacity(alpha),
+            palette.first.withValues(alpha: alpha),
+            palette.last.withValues(alpha: alpha),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -733,7 +733,7 @@ class _LegacyFallingPainter extends CustomPainter {
 
     paint
       ..shader = null
-      ..color = const Color(0xFF8D4F25).withOpacity(alpha * 0.6)
+      ..color = const Color(0xFF8D4F25).withValues(alpha: alpha * 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = (particle.size * 0.03).clamp(0.8, 1.4);
     canvas.drawLine(
@@ -756,7 +756,7 @@ class _LegacyFallingPainter extends CustomPainter {
     };
 
     paint
-      ..color = color.withOpacity(alpha)
+      ..color = color.withValues(alpha: alpha)
       ..style = PaintingStyle.fill;
 
     final s = particle.size;
