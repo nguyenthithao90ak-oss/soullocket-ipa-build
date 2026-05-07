@@ -95,16 +95,16 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
             shape: BoxShape.circle,
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.92),
-                const Color(0xFFE6F7FF).withOpacity(0.64),
+                Colors.white.withValues(alpha: 0.92),
+                const Color(0xFFE6F7FF).withValues(alpha: 0.64),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.82), width: 3),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.82), width: 3),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF8EC5FC).withOpacity(0.34),
+                color: const Color(0xFF8EC5FC).withValues(alpha: 0.34),
                 blurRadius: 42,
                 offset: const Offset(0, 18),
               ),
@@ -112,15 +112,15 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
           ),
           innerDecoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.16),
+            color: Colors.white.withValues(alpha: 0.16),
             border:
-                Border.all(color: Colors.white.withOpacity(0.42), width: 1.2),
+                Border.all(color: Colors.white.withValues(alpha: 0.42), width: 1.2),
           ),
           numberGradient: const [Color(0xFF27B4FF), Color(0xFFD81B60)],
           topLabelColor: const Color(0xFF2378A8),
           bottomLabelColor: const Color(0xFF51606D),
           labelShadows: [
-            Shadow(color: Colors.white.withOpacity(0.85), blurRadius: 8),
+            Shadow(color: Colors.white.withValues(alpha: 0.85), blurRadius: 8),
           ],
           numberShadows: const [
             Shadow(
@@ -141,10 +141,10 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.82), width: 4),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.82), width: 4),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFF5E92).withOpacity(0.34),
+                color: const Color(0xFFFF5E92).withValues(alpha: 0.34),
                 blurRadius: 40,
                 offset: const Offset(0, 16),
               ),
@@ -154,8 +154,8 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
             shape: BoxShape.circle,
             gradient: LinearGradient(
               colors: [
-                const Color(0xFFFFC6DA).withOpacity(0.34),
-                Colors.white.withOpacity(0.12),
+                const Color(0xFFFFC6DA).withValues(alpha: 0.34),
+                Colors.white.withValues(alpha: 0.12),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -165,11 +165,11 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
           topLabelColor: const Color(0xFFC2185B),
           bottomLabelColor: const Color(0xFF7A2C58),
           labelShadows: [
-            Shadow(color: Colors.white.withOpacity(0.82), blurRadius: 8),
+            Shadow(color: Colors.white.withValues(alpha: 0.82), blurRadius: 8),
           ],
           numberShadows: [
             Shadow(
-              color: const Color(0xFFFF2F7A).withOpacity(0.32),
+              color: const Color(0xFFFF2F7A).withValues(alpha: 0.32),
               blurRadius: 20,
               offset: const Offset(0, 7),
             ),
@@ -186,10 +186,10 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.88), width: 4),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.88), width: 4),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFF77C8).withOpacity(0.24),
+                color: const Color(0xFFFF77C8).withValues(alpha: 0.24),
                 blurRadius: 36,
                 offset: const Offset(0, 14),
               ),
@@ -197,18 +197,18 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
           ),
           innerDecoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.20),
-            border: Border.all(color: Colors.white.withOpacity(0.58), width: 1),
+            color: Colors.white.withValues(alpha: 0.20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.58), width: 1),
           ),
           numberGradient: const [Color(0xFFFF3D9A), Color(0xFF36C9FF)],
           topLabelColor: const Color(0xFFE6378D),
           bottomLabelColor: const Color(0xFF4C6178),
           labelShadows: [
-            Shadow(color: Colors.white.withOpacity(0.85), blurRadius: 8),
+            Shadow(color: Colors.white.withValues(alpha: 0.85), blurRadius: 8),
           ],
           numberShadows: [
             Shadow(
-              color: const Color(0xFFFF3D9A).withOpacity(0.24),
+              color: const Color(0xFFFF3D9A).withValues(alpha: 0.24),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -229,10 +229,10 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                 Color(0xFFFF005D),
               ],
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.88), width: 4),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.88), width: 4),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFF00A8).withOpacity(0.42),
+                color: const Color(0xFFFF00A8).withValues(alpha: 0.42),
                 blurRadius: 48,
                 offset: const Offset(0, 16),
               ),
@@ -240,9 +240,9 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
           ),
           innerDecoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.black.withOpacity(0.16),
+            color: Colors.black.withValues(alpha: 0.16),
             border:
-                Border.all(color: Colors.white.withOpacity(0.38), width: 1.4),
+                Border.all(color: Colors.white.withValues(alpha: 0.38), width: 1.4),
           ),
           numberGradient: const [
             Colors.white,
@@ -252,16 +252,16 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
           topLabelColor: Colors.white,
           bottomLabelColor: const Color(0xFFFFF59D),
           labelShadows: [
-            Shadow(color: Colors.black.withOpacity(0.35), blurRadius: 10),
+            Shadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 10),
           ],
           numberShadows: [
             Shadow(
-              color: const Color(0xFFFF00A8).withOpacity(0.55),
+              color: const Color(0xFFFF00A8).withValues(alpha: 0.55),
               blurRadius: 24,
               offset: const Offset(0, 7),
             ),
             Shadow(
-              color: const Color(0xFF00F5FF).withOpacity(0.42),
+              color: const Color(0xFF00F5FF).withValues(alpha: 0.42),
               blurRadius: 18,
             ),
           ],
@@ -286,7 +286,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.22), width: 3),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.22), width: 3),
             boxShadow: [
               BoxShadow(
                 color: (isLava
@@ -294,7 +294,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                         : isAurora
                             ? const Color(0xFF00FFC8)
                             : const Color(0xFF8A2BFF))
-                    .withOpacity(0.42),
+                    .withValues(alpha: 0.42),
                 blurRadius: 54,
                 offset: const Offset(0, 16),
               ),
@@ -302,8 +302,8 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
           ),
           innerDecoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.black.withOpacity(0.12),
-            border: Border.all(color: Colors.white.withOpacity(0.18), width: 1),
+            color: Colors.black.withValues(alpha: 0.12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1),
           ),
           numberGradient: isLava
               ? const [Color(0xFFFFF176), Color(0xFFFF5A00), Color(0xFFFF1744)]
@@ -322,13 +322,13 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
           bottomLabelColor:
               isLava ? const Color(0xFFFFD180) : const Color(0xFFBDEBFF),
           labelShadows: [
-            Shadow(color: Colors.black.withOpacity(0.48), blurRadius: 10),
+            Shadow(color: Colors.black.withValues(alpha: 0.48), blurRadius: 10),
           ],
           numberShadows: [
             Shadow(
               color:
                   (isLava ? const Color(0xFFFF5A00) : const Color(0xFF00E5FF))
-                      .withOpacity(0.45),
+                      .withValues(alpha: 0.45),
               blurRadius: 22,
               offset: const Offset(0, 7),
             ),
@@ -343,7 +343,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
             border: Border.all(color: const Color(0xFFF2EAF0), width: 2.2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 16,
                 offset: const Offset(0, 8),
               ),
@@ -478,7 +478,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF8A2BFF).withOpacity(0.75),
+                    const Color(0xFF8A2BFF).withValues(alpha: 0.75),
                     Colors.transparent,
                   ],
                 ),
@@ -495,7 +495,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF00E5FF).withOpacity(0.82),
+                    const Color(0xFF00E5FF).withValues(alpha: 0.82),
                     Colors.transparent,
                   ],
                 ),
@@ -517,7 +517,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                 width: item.$3,
                 height: item.$3,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.82),
+                  color: Colors.white.withValues(alpha: 0.82),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -540,7 +540,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFFFA1C2).withOpacity(0.42),
+                    const Color(0xFFFFA1C2).withValues(alpha: 0.42),
                     Colors.transparent,
                   ],
                 ),
@@ -728,9 +728,9 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.78),
+              color: Colors.white.withValues(alpha: 0.78),
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: Colors.white.withOpacity(0.88)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
             ),
             child: Text(
               weather,
@@ -767,7 +767,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     final trimmed = name.trim();
     final letter = trimmed.isEmpty ? 'S' : trimmed[0];
     return Container(
-      color: accent.withOpacity(0.16),
+      color: accent.withValues(alpha: 0.16),
       alignment: Alignment.center,
       child: Text(
         letter.toUpperCase(),
@@ -786,7 +786,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     bool isDark,
   ) {
     final effectColor = isDark ? Colors.white : accent;
-    final faintColor = effectColor.withOpacity(isDark ? 0.24 : 0.16);
+    final faintColor = effectColor.withValues(alpha: isDark ? 0.24 : 0.16);
 
     switch (effectKey) {
       case 'hearts':
@@ -862,9 +862,9 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(isDark ? 0.80 : 0.88),
+        color: Colors.white.withValues(alpha: isDark ? 0.80 : 0.88),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.88)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -878,7 +878,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                   height: 22,
                   decoration: BoxDecoration(
                     color: item.$4
-                        ? item.$3.withOpacity(0.16)
+                        ? item.$3.withValues(alpha: 0.16)
                         : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(8),
                   ),
