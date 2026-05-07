@@ -154,7 +154,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     return SLTheme.softPanel(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-      borderColor: const Color(0xFFF4B5C8).withOpacity(0.52),
+      borderColor: const Color(0xFFF4B5C8).withValues(alpha: 0.52),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -168,7 +168,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                   gradient: const LinearGradient(colors: SLTheme.btnGradient),
                   boxShadow: <BoxShadow>[
                     BoxShadow(
-                      color: SLColors.primary.withOpacity(0.18),
+                      color: SLColors.primary.withValues(alpha: 0.18),
                       blurRadius: 14,
                       offset: const Offset(0, 7),
                     ),
@@ -250,7 +250,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                     gradient: const LinearGradient(colors: SLTheme.btnGradient),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
-                        color: SLColors.primary.withOpacity(0.24),
+                        color: SLColors.primary.withValues(alpha: 0.24),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),
@@ -281,12 +281,12 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                           border: Border.all(
                             color: _selectedColor == e.key
                                 ? SLColors.primary
-                                : Colors.white.withOpacity(0.92),
+                                : Colors.white.withValues(alpha: 0.92),
                             width: _selectedColor == e.key ? 3 : 2,
                           ),
                           boxShadow: <BoxShadow>[
                             BoxShadow(
-                              color: e.value.withOpacity(0.42),
+                              color: e.value.withValues(alpha: 0.42),
                               blurRadius: _selectedColor == e.key ? 12 : 6,
                               offset: const Offset(0, 4),
                             ),
@@ -431,7 +431,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   }) {
     return SLTheme.softPanel(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      borderColor: const Color(0xFFF4B5C8).withOpacity(0.46),
+      borderColor: const Color(0xFFF4B5C8).withValues(alpha: 0.46),
       child: Row(
         children: <Widget>[
           Container(
@@ -441,14 +441,14 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: <Color>[
-                  const Color(0xFFF59EBA).withOpacity(0.22),
-                  Colors.white.withOpacity(0.94),
+                  const Color(0xFFF59EBA).withValues(alpha: 0.22),
+                  Colors.white.withValues(alpha: 0.94),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               border:
-                  Border.all(color: const Color(0xFFF4B5C8).withOpacity(0.44)),
+                  Border.all(color: const Color(0xFFF4B5C8).withValues(alpha: 0.44)),
             ),
             child: const Icon(Icons.auto_stories_rounded,
                 color: Color(0xFFD95C8A), size: 28),
@@ -492,7 +492,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     required bool isPinned,
   }) {
     final Color resolvedColor = isDone
-        ? Colors.white.withOpacity(0.96)
+        ? Colors.white.withValues(alpha: 0.96)
         : Color.lerp(bgColor, Colors.white, 0.18)!;
 
     return Container(
@@ -507,7 +507,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: const Color(0xFF5F4765).withOpacity(0.06),
+            color: const Color(0xFF5F4765).withValues(alpha: 0.06),
             blurRadius: 16,
             spreadRadius: -8,
             offset: const Offset(0, 10),
@@ -530,10 +530,10 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 11, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.64),
+                        color: Colors.white.withValues(alpha: 0.64),
                         borderRadius: BorderRadius.circular(999),
                         border:
-                            Border.all(color: Colors.white.withOpacity(0.75)),
+                            Border.all(color: Colors.white.withValues(alpha: 0.75)),
                       ),
                       child: Text(
                         item['tag'] ?? 'Chung',
@@ -552,7 +552,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                           color: const Color(0xFFFFEDF4),
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                              color: const Color(0xFFF2B9CC).withOpacity(0.75)),
+                              color: const Color(0xFFF2B9CC).withValues(alpha: 0.75)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -626,7 +626,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                 color: isDone ? const Color(0xFF15803D) : SLTheme.textMuted,
                 backgroundColor: isDone
                     ? const Color(0xFFEAF7EF)
-                    : Colors.white.withOpacity(0.58),
+                    : Colors.white.withValues(alpha: 0.58),
                 onTap: () => _toggleDone(item['key'], isDone),
               ),
               _buildActionButton(
@@ -635,13 +635,13 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                 color: isPinned ? const Color(0xFFD95C8A) : SLTheme.textMuted,
                 backgroundColor: isPinned
                     ? const Color(0xFFFFEDF4)
-                    : Colors.white.withOpacity(0.58),
+                    : Colors.white.withValues(alpha: 0.58),
                 onTap: () => _togglePinned(item['key'], isPinned),
               ),
               _buildActionButton(
                 icon: Icons.delete_outline_rounded,
                 color: SLTheme.textMuted,
-                backgroundColor: Colors.white.withOpacity(0.58),
+                backgroundColor: Colors.white.withValues(alpha: 0.58),
                 onTap: () => _deleteNote(item['key']),
               ),
             ],
@@ -665,7 +665,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         decoration: BoxDecoration(
           color: backgroundColor,
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withOpacity(0.72)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
         ),
         child: Icon(icon, color: color, size: 18),
       ),
