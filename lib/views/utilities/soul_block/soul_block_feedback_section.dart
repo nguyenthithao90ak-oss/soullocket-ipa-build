@@ -519,12 +519,12 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
             _SoulBlockPerformanceTier.low ||
         (profile.tier == _SoulBlockPerformanceTier.mid && clearedCount >= 3);
     final int particleCount = subtle
-        ? min((2 + clearedCount).clamp(4, 6), profile.subtleParticleCap)
-        : min((3 + clearedCount).clamp(6, 8), profile.strongParticleCap);
+        ? min((4 + (clearedCount * 2)).clamp(6, 10), profile.subtleParticleCap)
+        : min((6 + (clearedCount * 3)).clamp(10, 18), profile.strongParticleCap);
     final double maxDistance = subtle
-        ? ((28 + (clearedCount * 5)).clamp(32, 56).toDouble() *
+        ? ((34 + (clearedCount * 7)).clamp(36, 72).toDouble() *
             profile.subtleDistanceScale)
-        : ((38 + (clearedCount * 6)).clamp(44, 76).toDouble() *
+        : ((48 + (clearedCount * 9)).clamp(52, 112).toDouble() *
             profile.strongDistanceScale);
     final List<_ExplosionParticle> particles = <_ExplosionParticle>[];
 
