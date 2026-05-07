@@ -593,16 +593,24 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     setState(() => _isLoading = true);
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
+      final email = (user?.email ?? '').trim();
+      if (user == null || email.isEmpty) {
         throw Exception('Phiên đăng nhập đang đồng bộ. Vui lòng thử lại sau vài giây.');
       }
-      await user.sendEmailVerification();
+
+      final maskedEmail = _authService.maskEmail(email);
+      final otp = await _promptHouseCreationOtp(
+        HouseCreationOtpRequiredException(
+          maskedEmail: maskedEmail,
+          createdCount: 3,
+        ),
+      );
       if (!mounted) return;
-      setState(() {
-        _autoCreateFailureMessage =
-            'Đã gửi email xác minh tới ${user.email ?? 'Gmail của bạn'}. Xác minh xong hãy quay lại bấm Thử lại để tiếp tục tạo nhà.';
-        _autoCreateFailureDetail = null;
-      });
+      if (otp == null || otp.trim().isEmpty) {
+        return;
+      }
+
+      await _createHouse(houseCreationOtp: otp.trim());
     } catch (error) {
       if (!mounted) return;
       _setAutoCreateFailureMessage(
