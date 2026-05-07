@@ -373,6 +373,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isSelected
+                    ? preset.accent.withValues(alpha: 0.14)
                     : Colors.white.withValues(alpha: 0.88),
                 shape: BoxShape.circle,
                 border: Border.all(
