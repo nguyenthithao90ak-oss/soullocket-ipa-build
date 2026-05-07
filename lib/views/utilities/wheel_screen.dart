@@ -236,10 +236,11 @@ class _WheelScreenState extends State<WheelScreen>
       } else {
         throw Exception('Không tìm thấy quán ăn nào xung quanh.');
       }
-    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text(
+            'Không tìm được quán ăn phù hợp lúc này. Hãy thử lại sau.',
+          ),
           backgroundColor: Colors.red,
         ));
       }
