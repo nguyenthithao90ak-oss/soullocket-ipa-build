@@ -66,10 +66,11 @@ class _SettingsGiftLinksManagerScreenState extends State<SettingsGiftLinksManage
       body: StreamBuilder<List<GiftData>>(
         stream: _giftMakerService.streamSentGifts(widget.houseId),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text('Không tải được danh sách liên kết lúc này.'),
+            );
           }
-            return const Center(child: Text('Không tải được danh sách liên kết lúc này.'));
 
           final gifts = snapshot.data ?? [];
           if (gifts.isEmpty) {
