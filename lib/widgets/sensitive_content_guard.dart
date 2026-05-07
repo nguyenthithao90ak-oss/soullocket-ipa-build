@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../utils/services/sensitive_content_service.dart';
@@ -22,9 +23,14 @@ class _SensitiveContentGuardState extends State<SensitiveContentGuard>
     with WidgetsBindingObserver {
   bool _isRegistered = false;
 
+  bool get _shouldProtect => !kDebugMode;
+
   @override
   void initState() {
     super.initState();
+    if (!_shouldProtect) {
+      return;
+    }
     WidgetsBinding.instance.addObserver(this);
     _isRegistered = true;
     unawaited(
@@ -37,7 +43,9 @@ class _SensitiveContentGuardState extends State<SensitiveContentGuard>
   @override
   void didUpdateWidget(covariant SensitiveContentGuard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_isRegistered || oldWidget.hideOverlays == widget.hideOverlays) {
+    if (!_shouldProtect ||
+        !_isRegistered ||
+        oldWidget.hideOverlays == widget.hideOverlays) {
       return;
     }
     unawaited(_swapProtection(oldWidget.hideOverlays, widget.hideOverlays));
@@ -55,21 +63,23 @@ class _SensitiveContentGuardState extends State<SensitiveContentGuard>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_isRegistered && state == AppLifecycleState.resumed) {
+    if (_shouldProtect && _isRegistered && state == AppLifecycleState.resumed) {
       unawaited(SensitiveContentService.instance.refresh());
     }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    if (_isRegistered) {
-      unawaited(
-        SensitiveContentService.instance.popScope(
-          hideOverlays: widget.hideOverlays,
-        ),
-      );
-      _isRegistered = false;
+    if (_shouldProtect) {
+      WidgetsBinding.instance.removeObserver(this);
+      if (_isRegistered) {
+        unawaited(
+          SensitiveContentService.instance.popScope(
+            hideOverlays: widget.hideOverlays,
+          ),
+        );
+        _isRegistered = false;
+      }
     }
     super.dispose();
   }
