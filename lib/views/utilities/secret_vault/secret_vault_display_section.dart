@@ -55,7 +55,7 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
                                   const EdgeInsets.symmetric(horizontal: 20),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.6),
+                                color: Colors.black.withValues(alpha: 0.6),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
@@ -109,13 +109,13 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: _encryptionReady
-            ? Colors.green.withOpacity(0.15)
-            : Colors.orange.withOpacity(0.15),
+            ? Colors.green.withValues(alpha: 0.15)
+            : Colors.orange.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
             color: _encryptionReady
-                ? Colors.greenAccent.withOpacity(0.4)
-                : Colors.orange.withOpacity(0.4)),
+                ? Colors.greenAccent.withValues(alpha: 0.4)
+                : Colors.orange.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
