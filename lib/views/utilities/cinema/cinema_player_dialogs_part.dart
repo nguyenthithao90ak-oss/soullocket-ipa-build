@@ -36,7 +36,7 @@ extension _CinemaReelPlayerDialogsPart on _CinemaReelPlayerScreenState {
                   'Ví dụ: Kỷ niệm album ảnh 1000 ngày',
                   style: SLTheme.quicksand(
                     fontSize: 13.5,
-                    color: Colors.white.withOpacity(0.68),
+                    color: Colors.white.withValues(alpha: 0.68),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -54,19 +54,19 @@ extension _CinemaReelPlayerDialogsPart on _CinemaReelPlayerScreenState {
                     hintText: 'Nhập tiêu đề muốn hiển thị',
                     hintStyle: SLTheme.quicksand(
                       fontSize: 15,
-                      color: Colors.white.withOpacity(0.38),
+                      color: Colors.white.withValues(alpha: 0.38),
                     ),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.06),
+                    fillColor: Colors.white.withValues(alpha: 0.06),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
                       borderSide:
-                          BorderSide(color: Colors.white.withOpacity(0.12)),
+                          BorderSide(color: Colors.white.withValues(alpha: 0.12)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
                       borderSide:
-                          BorderSide(color: Colors.white.withOpacity(0.12)),
+                          BorderSide(color: Colors.white.withValues(alpha: 0.12)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
