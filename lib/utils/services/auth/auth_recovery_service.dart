@@ -346,11 +346,11 @@ class AuthRecoveryService {
   Future<void> sendOtpEmail(String email) async {
     try {
       final callable = _functions.httpsCallable('requestEmailOTP');
-      final deviceId = await auth_support.getDeviceIdOrEmpty();
+      final deviceId = await SecurityService().getDeviceId();
       await _callOtpFunction(
         () => callable.call({
           'email': email.trim(),
-          if (deviceId.isNotEmpty) 'deviceId': deviceId,
+          if (deviceId.trim().isNotEmpty) 'deviceId': deviceId.trim(),
         }),
         allowUnauthenticatedWithoutMarkers: true,
       );
