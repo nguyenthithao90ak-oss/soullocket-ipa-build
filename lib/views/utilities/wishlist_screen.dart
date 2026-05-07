@@ -112,7 +112,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     return SLTheme.softPanel(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-      borderColor: const Color(0xFFF6C16A).withOpacity(0.50),
+      borderColor: const Color(0xFFF6C16A).withValues(alpha: 0.50),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
