@@ -274,7 +274,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                       CachedNetworkImage(
                         imageUrl: photo['url'],
                         fit: BoxFit.cover,
-                        memCacheWidth: 450,
+                        memCacheWidth: 720,
+                        filterQuality: FilterQuality.high,
                         placeholder: (context, url) =>
                             Container(color: Colors.grey[200]),
                         errorWidget: (context, url, error) =>
