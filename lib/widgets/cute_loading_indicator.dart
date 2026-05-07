@@ -56,7 +56,7 @@ class _CuteLoadingIndicatorState extends State<CuteLoadingIndicator>
                     angle: angle + pi / 2,
                     child: Icon(
                       Icons.favorite_rounded,
-                      color: widget.color.withOpacity(1.0 - (index * 0.12)),
+                      color: widget.color.withValues(alpha: 1.0 - (index * 0.12)),
                       size: widget.size * 0.35,
                     ),
                   ),
