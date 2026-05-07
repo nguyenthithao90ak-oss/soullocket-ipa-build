@@ -343,6 +343,33 @@ class _SoulExplosionPainter extends CustomPainter {
       canvas.drawCircle(center, ringRadius, _ringPaint);
     }
 
+    final double streakOpacity =
+        (1 - Curves.easeIn.transform(easedProgress)) * 0.42;
+    if (streakOpacity > 0.01) {
+      for (int index = 0; index < _streakAngles.length; index++) {
+        final double angle = _streakAngles[index];
+        final double offsetX = _streakOffsets[index];
+        final double length = _streakLengths[index] * (0.45 + (easedProgress * 0.9));
+        final double tailDrop = 16 + (easedProgress * 92);
+        final Offset start = Offset(
+          center.dx + offsetX,
+          center.dy + (easedProgress * 8),
+        );
+        final Offset end = Offset(
+          start.dx + (sin(angle) * length * 0.22),
+          start.dy + tailDrop + (cos(angle) * length),
+        );
+        _glowPaint
+          ..strokeWidth = _streakWidths[index] * 2.4
+          ..color = _streakColors[index].withValues(alpha: streakOpacity * 0.24);
+        _streakPaint
+          ..strokeWidth = _streakWidths[index]
+          ..color = _streakColors[index].withValues(alpha: streakOpacity);
+        canvas.drawLine(start, end, _glowPaint);
+        canvas.drawLine(start, end, _streakPaint);
+      }
+    }
+
     for (final _ExplosionParticle particle in _particles) {
       final double remainingFraction = 1.0 - particle.delayFraction;
       if (remainingFraction <= 0) {
