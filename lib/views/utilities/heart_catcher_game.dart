@@ -170,9 +170,9 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: Colors.white.withOpacity(0.5)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
                     ),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
@@ -193,7 +193,7 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                                     vertical: 8,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.82),
+                                    color: Colors.white.withValues(alpha: 0.82),
                                     borderRadius: SLRadius.pillAll,
                                   ),
                                   child: Text(
@@ -216,7 +216,7 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                                   top: heart.y * height,
                                   child: Icon(
                                     Icons.favorite_rounded,
-                                    color: heart.color.withOpacity(0.92),
+                                    color: heart.color.withValues(alpha: 0.92),
                                     size: heart.size,
                                   ),
                                 ),
@@ -228,12 +228,12 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                                   width: 124,
                                   height: 50,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.92),
+                                    color: Colors.white.withValues(alpha: 0.92),
                                     borderRadius: SLRadius.xlAll,
                                     boxShadow: [
                                       BoxShadow(
                                         color:
-                                            SLColors.primary.withOpacity(0.15),
+                                            SLColors.primary.withValues(alpha: 0.15),
                                         blurRadius: 14,
                                         offset: const Offset(0, 6),
                                       ),
@@ -255,7 +255,7 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                                 Positioned.fill(
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.16),
+                                      color: Colors.black.withValues(alpha: 0.16),
                                       borderRadius: BorderRadius.circular(30),
                                     ),
                                     child: Center(
@@ -265,7 +265,7 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                                         ),
                                         padding: SLSpacing.all20,
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.94),
+                                          color: Colors.white.withValues(alpha: 0.94),
                                           borderRadius:
                                               BorderRadius.circular(28),
                                         ),
@@ -336,9 +336,9 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                   width: double.infinity,
                   padding: SLSpacing.all16,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     borderRadius: SLRadius.xlAll,
-                    border: Border.all(color: Colors.white.withOpacity(0.7)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
                   ),
                   child: Row(
                     children: [
@@ -402,7 +402,7 @@ class _GameStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: SLRadius.xlAll,
       ),
       child: Column(
