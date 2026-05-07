@@ -629,6 +629,14 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     final resolvedHouseId =
         (_houseId ?? await _houseService.getCurrentHouseId())?.trim();
     if (resolvedHouseId != null && resolvedHouseId.isNotEmpty) {
+      try {
+        await PresenceService().goOffline(
+          houseId: resolvedHouseId,
+          role: previousRole,
+        );
+      } catch (e) {
+        debugPrint('swap role presence cleanup failed: $e');
+      }
       await PushNotificationHelper.systemEvent(
         toHouseId: resolvedHouseId,
         type: 'role_change',
