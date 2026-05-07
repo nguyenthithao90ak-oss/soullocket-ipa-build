@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../../core/sl_theme.dart';
 
@@ -118,10 +119,10 @@ class ThemePreviewBuilder extends StatelessWidget {
                 children: [
                   if ((data.backgroundImageUrl ?? '').trim().isNotEmpty)
                     Positioned.fill(
-                      child: Image.network(
-                        data.backgroundImageUrl!.trim(),
+                      child: CachedNetworkImage(
+                        imageUrl: data.backgroundImageUrl!.trim(),
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                        errorWidget: (_, __, ___) => const SizedBox.shrink(),
                       ),
                     ),
                   Positioned.fill(
@@ -516,10 +517,10 @@ class _PreviewAvatar extends StatelessWidget {
                   ),
                 ),
               )
-            : Image.network(
-                safeUrl,
+            : CachedNetworkImage(
+                imageUrl: safeUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => ColoredBox(
+                errorWidget: (_, __, ___) => ColoredBox(
                   color: Colors.white,
                   child: Center(
                     child: Text(
