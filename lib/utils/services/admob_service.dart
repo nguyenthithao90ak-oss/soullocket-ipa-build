@@ -181,13 +181,196 @@ class AdMobService {
     final lastShownMs = _lastFullscreenAdShownMs;
     if (lastShownMs <= 0) return false;
     return DateTime.now().millisecondsSinceEpoch - lastShownMs <
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+import 'dart:async';
+import 'dart:io';
+import 'dart:convert';
+import 'dart:math';
+import 'package:flutter/foundation.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../core/constants/app_config.dart';
+import 'app_check_http_headers.dart';
+import 'app_lifecycle_presence_guard.dart';
+import 'consent_service.dart';
+import 'house_service.dart';
+import 'purchase_service.dart';
+import 'revenue_security_telemetry_service.dart';
+
+/// ============================================================
+///  AdMobService — GRA (Phase Production)
+///  Quản lý toàn bộ quảng cáo Google AdMob
+///
+///  Đơn vị quảng cáo thật (ca-app-pub-6165771694697009):
+///  - Rewarded chính (Xen_Ke_Thuong):   /3441513253
+///  - Rewarded điểm danh (Diem_Danh):   /9710840883
+///  - Banner chính (Banner_Chinh):       /5949757521
+///  - Interstitial (trung_gian):         /6283299015
+///  - App Open (mo_ung_dung):            /3305781889
+/// ============================================================
+
+class RewardClaimResult {
+  const RewardClaimResult({
+    required this.ok,
+    this.error,
+    this.statusCode,
+    this.granted = 0,
+    this.points = 0,
+  });
+
+  final bool ok;
+  final String? error;
+  final int? statusCode;
+  final int granted;
+  final int points;
+
+  factory RewardClaimResult.fromResponse(Map<String, dynamic>? response) {
+    if (response == null) {
+      return const RewardClaimResult(
+        ok: false,
+        error: 'reward_server_unavailable',
+      );
+    }
+
+    return RewardClaimResult(
+      ok: response['ok'] == true,
+      error: response['error']?.toString(),
+      statusCode: (response['statusCode'] as num?)?.toInt(),
+      granted: (response['granted'] as num?)?.toInt() ?? 0,
+      points: (response['points'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  bool get alreadyClaimed => error == 'already_claimed';
+
+  bool get endpointMissing =>
+      statusCode == 404 || error == 'endpoint_not_found';
+
+  bool get unauthenticated => statusCode == 401 || error == 'unauthenticated';
+
+  bool get rateLimited => statusCode == 429 || error == 'rate_limited';
+
+  bool get appCheckIssue =>
+      error == 'missing_app_check' || error == 'invalid_app_check';
+
+  bool get networkIssue =>
+      error == 'network_error' ||
+      error == 'network_timeout' ||
+      error == 'invalid_auth_header';
+}
+
+class AdMobService {
+  static final AdMobService _instance = AdMobService._internal();
+  factory AdMobService() => _instance;
+  AdMobService._internal();
+  static const int rewardedMainPoints = 50;
+  static const int dailyRewardedAdLimit = 10; // Giới hạn 10 quảng cáo/ngày
+  static const String _autoInterstitialNextAtPrefsKey =
+      'il_auto_interstitial_next_at_ms_v1';
+  static const String _appOpenLastShownDatePrefsKey =
+      'il_app_open_last_shown_date_v1';
+  static const String _appOpenShownCountPrefsKey = 'il_app_open_shown_count_v1';
+  static const String _appOpenShownDatePrefsKey = 'il_app_open_shown_date_v1';
+  static const String _dailyRewardedAdCountPrefsKey =
+      'il_daily_rewarded_ad_count_v1'; // Theo dõi số lần xem ads hôm nay
+  static const String _dailyRewardedAdDatePrefsKey =
+      'il_daily_rewarded_ad_date_v1'; // Ngày hiện tại (yyyy-MM-dd)
+  static const int _autoInterstitialMinMinutes = 45;
+  static const int _autoInterstitialMaxMinutes = 90;
+  static const int _autoInterstitialRetryMinutes = 15;
+  static const int _autoMandatoryRewardedChancePercent = 40;
+  static const int _appOpenMaxPerDay = 3;
+  final HouseService _houseService = HouseService();
+  final ConsentService _consentService = ConsentService();
+  final Random _random = Random();
+
+  // ─── AD UNIT IDs ─────────────────────────────────────────────
+  // Debug mode  → Google Test IDs (không tốn tiền khi test)
+  // Release mode → ID thật từ AdMob Console của bạn
+
+  // ANDROID
+  static String _androidRewardedMainId = 'ca-app-pub-6165771694697009/3441513253';
+  static String _androidRewardedCheckinId = 'ca-app-pub-6165771694697009/9710840883';
+  static String _androidRewardedSoulGameId = 'ca-app-pub-6165771694697009/5113438527';
+  static String _androidBannerId = 'ca-app-pub-6165771694697009/5949757521';
+  static String _androidInterstitialId = 'ca-app-pub-6165771694697009/6283299015';
+  static String _androidAppOpenId = 'ca-app-pub-6165771694697009/3305781889';
+
+  // IOS
+  static String _iosRewardedMainId = 'ca-app-pub-6165771694697009/8781411712';
+  static String _iosRewardedCheckinId = 'ca-app-pub-6165771694697009/8342428018';
+  static String _iosRewardedSoulGameId = 'ca-app-pub-6165771694697009/5716264675';
+  static String _iosBannerId = 'ca-app-pub-6165771694697009/6458500706';
+  static String _iosInterstitialId = 'ca-app-pub-6165771694697009/1798124404';
+  static String _iosAppOpenId = 'ca-app-pub-6165771694697009/7141026983';
+
+  static String get rewardedMainId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    return Platform.isIOS ? _iosRewardedMainId : _androidRewardedMainId;
+  }
+
+  static String get rewardedCheckinId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    return Platform.isIOS ? _iosRewardedCheckinId : _androidRewardedCheckinId;
+  }
+
+  static String get rewardedSoulGameId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    return Platform.isIOS ? _iosRewardedSoulGameId : _androidRewardedSoulGameId;
+  }
+
+  static String get bannerId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/2934735716' : 'ca-app-pub-3940256099942544/6300978111';
+    return Platform.isIOS ? _iosBannerId : _androidBannerId;
+  }
+
+  static String get interstitialId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/4411468910' : 'ca-app-pub-3940256099942544/1033173712';
+    return Platform.isIOS ? _iosInterstitialId : _androidInterstitialId;
+  }
+
+  static String get appOpenId {
+    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/5575463023' : 'ca-app-pub-3940256099942544/9257395921';
+    return Platform.isIOS ? _iosAppOpenId : _androidAppOpenId;
+  }
+
+
+  // ─── REWARDED AD (CHÍNH) ─────────────────────────────────────
+  RewardedAd? _rewardedAd;
+  bool _isRewardedAdLoading = false;
+  RewardedAd? _soulGameRewardedAd;
+  bool _isSoulGameRewardedAdLoading = false;
+  AppOpenAd? _appOpenAd;
+  bool _isAppOpenLoading = false;
+  bool _isShowingAppOpenAd = false;
+  int _lastFullscreenAdShownMs = 0;
+  static const int _fullscreenAdCooldownMs = 2 * 60 * 1000;
+  Completer<void>? _initializeCompleter;
+  Completer<bool>? _appOpenLoadCompleter;
+  bool _sdkInitialized = false;
+
+  DatabaseReference? get _currentUserRef {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+    return FirebaseDatabase.instance.ref('users/${user.uid}');
+  }
+
+  bool hasRecentFullscreenAd({
+    Duration cooldown = const Duration(milliseconds: _fullscreenAdCooldownMs),
+  }) {
+    final lastShownMs = _lastFullscreenAdShownMs;
+    if (lastShownMs <= 0) return false;
+    return DateTime.now().millisecondsSinceEpoch - lastShownMs <
         cooldown.inMilliseconds;
   }
 
   Future<void> initialize() async {
     if (_sdkInitialized) return;
     if (!await _consentService.hasValidConsent()) {
-      debugPrint('AdMobService: consent not yet valid; continuing init flow.');
+      debugPrint('AdMobService: consent not yet valid; continuing init flow with non-personalized ads.');
     }
     if (_initializeCompleter != null) {
       return _initializeCompleter!.future;
@@ -242,10 +425,6 @@ class AdMobService {
     }
 
     try {
-      if (!await ConsentInformation.instance.canRequestAds()) {
-        return;
-      }
-
       // Đồng bộ ID Quảng cáo từ Firebase nhằm loại bỏ HardCode Source
       try {
         final snap = await FirebaseDatabase.instance
@@ -291,23 +470,10 @@ class AdMobService {
           ),
         );
       }
-    } finally {
-      if (!completer.isCompleted) {
-        completer.complete();
-      }
-      _initializeCompleter = null;
-    }
-  }
-
-  void _loadRewardedAd() {
-    if (kIsWeb) return;
-    if (!_sdkInitialized) return;
-    if (_isRewardedAdLoading) return;
-    _isRewardedAdLoading = true;
 
     RewardedAd.load(
       adUnitId: rewardedMainId,
-      request: const AdRequest(),
+      request: _buildAdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
           _rewardedAd = ad;
@@ -329,7 +495,7 @@ class AdMobService {
 
     RewardedAd.load(
       adUnitId: rewardedSoulGameId,
-      request: const AdRequest(),
+      request: _buildAdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
           _soulGameRewardedAd = ad;
@@ -360,7 +526,7 @@ class AdMobService {
     _appOpenLoadCompleter = completer;
     await AppOpenAd.load(
       adUnitId: appOpenId,
-      request: const AdRequest(),
+      request: _buildAdRequest(),
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {
           _appOpenAd = ad;
@@ -654,7 +820,7 @@ class AdMobService {
     final banner = BannerAd(
       adUnitId: bannerId,
       size: AdSize.banner,
-      request: const AdRequest(),
+      request: _buildAdRequest(),
       listener: BannerAdListener(
         onAdLoaded: onAdLoaded,
         onAdFailedToLoad: (ad, error) {
@@ -679,7 +845,7 @@ class AdMobService {
     if (_interstitialAd != null) return;
     await InterstitialAd.load(
       adUnitId: interstitialId,
-      request: const AdRequest(),
+      request: _buildAdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) => _interstitialAd = ad,
         onAdFailedToLoad: (_) => _interstitialAd = null,
