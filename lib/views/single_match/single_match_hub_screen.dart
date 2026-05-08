@@ -345,15 +345,19 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
 
     setState(() => _isSaving = true);
     try {
-      await _service.savePreferences(
-        houseId: widget.houseId,
-        preferences: preferences,
-      );
+      await _service
+          .savePreferences(
+            houseId: widget.houseId,
+            preferences: preferences,
+          )
+          .timeout(const Duration(seconds: 10));
       if (_myDob != _savedDob) {
-        await _service.updateOwnDob(
-          houseId: widget.houseId,
-          isoDob: _myDob,
-        );
+        await _service
+            .updateOwnDob(
+              houseId: widget.houseId,
+              isoDob: _myDob,
+            )
+            .timeout(const Duration(seconds: 10));
       }
       if (!mounted) {
         return;
@@ -617,19 +621,25 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       }
     });
 
-    await _service.logHistory(
-      houseId: widget.houseId,
-      action: 'skipped',
-      peerHouseId: scored.candidate.houseId,
-      peerName: scored.candidate.displayName,
-      peerAvatarUrl: scored.candidate.avatarUrl,
-      goal: scored.candidate.goal,
-      startedAt: DateTime.now().millisecondsSinceEpoch,
-      endedAt: DateTime.now().millisecondsSinceEpoch,
-      durationSeconds: 0,
-      compatibilityScore: scored.score,
-      note: 'Đã lướt qua từ danh sách ghép nối',
-    );
+    try {
+      await _service
+          .logHistory(
+            houseId: widget.houseId,
+            action: 'skipped',
+            peerHouseId: scored.candidate.houseId,
+            peerName: scored.candidate.displayName,
+            peerAvatarUrl: scored.candidate.avatarUrl,
+            goal: scored.candidate.goal,
+            startedAt: DateTime.now().millisecondsSinceEpoch,
+            endedAt: DateTime.now().millisecondsSinceEpoch,
+            durationSeconds: 0,
+            compatibilityScore: scored.score,
+            note: 'Đã lướt qua từ danh sách ghép nối',
+          )
+          .timeout(const Duration(seconds: 8));
+    } catch (error) {
+      debugPrint('[SingleMatch] log skip history failed: $error');
+    }
     _showSnack('Đã ẩn hồ sơ này trong phiên hiện tại.');
   }
 
@@ -673,19 +683,25 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       );
     } finally {
       final endedAt = DateTime.now().millisecondsSinceEpoch;
-      await _service.logHistory(
-        houseId: widget.houseId,
-        action: isVideo ? 'video_call' : 'audio_call',
-        peerHouseId: candidate.houseId,
-        peerName: candidate.displayName,
-        peerAvatarUrl: candidate.avatarUrl,
-        goal: candidate.goal,
-        startedAt: startedAt,
-        endedAt: endedAt,
-        durationSeconds: ((endedAt - startedAt) / 1000).round(),
-        compatibilityScore: scored.score,
-        note: 'Khởi tạo từ tab ghép nối ngẫu nhiên',
-      );
+      try {
+        await _service
+            .logHistory(
+              houseId: widget.houseId,
+              action: isVideo ? 'video_call' : 'audio_call',
+              peerHouseId: candidate.houseId,
+              peerName: candidate.displayName,
+              peerAvatarUrl: candidate.avatarUrl,
+              goal: candidate.goal,
+              startedAt: startedAt,
+              endedAt: endedAt,
+              durationSeconds: ((endedAt - startedAt) / 1000).round(),
+              compatibilityScore: scored.score,
+              note: 'Khởi tạo từ tab ghép nối ngẫu nhiên',
+            )
+            .timeout(const Duration(seconds: 8));
+      } catch (error) {
+        debugPrint('[SingleMatch] log call history failed: $error');
+      }
       if (mounted) {
         setState(() => _callingHouseId = null);
       }
@@ -877,9 +893,12 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   }
 
   Widget _buildDiscoveryTab() {
-    return StreamBuilder<_SingleMatchDiscoverySnapshot>(
-      stream: _discoveryStream,
-      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _SingleMatchLoadErrorCard(
+            loadError: snapshot.error.toString(),
+            onRetry: _loadBootstrap,
+          );
+        }
         if (!snapshot.hasData) {
           return ListView(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
@@ -1078,10 +1097,14 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       stream: _historyStream,
       builder: (context, snapshot) {
         final history = snapshot.data ?? const <SingleMatchHistoryEntry>[];
-        if (!snapshot.hasData) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF4F87)),
+        if (snapshot.hasError) {
+          return _SingleMatchLoadErrorCard(
+            loadError: snapshot.error.toString(),
+            onRetry: _loadBootstrap,
           );
+        }
+        if (!snapshot.hasData) {
+          return _buildEmptyHistoryList();
         }
 
         final callEntries = history.where((entry) => entry.isCall).toList();
