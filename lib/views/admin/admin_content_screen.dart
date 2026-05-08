@@ -467,6 +467,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                   child: Image.network(
                     url,
                     fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
                     errorBuilder: (context, error, stackTrace) => Container(
                       height: 100,
                       color: Colors.grey[800],
