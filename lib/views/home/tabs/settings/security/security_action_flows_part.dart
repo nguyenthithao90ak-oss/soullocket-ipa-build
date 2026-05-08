@@ -391,11 +391,11 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Text(
-          'Cấp quyền quan trọng',
+          'Thiết lập quyền cần thiết',
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
-          'Ứng dụng sẽ lần lượt xin quyền GPS, Camera, Mic và Thông báo để các tính năng định vị, gọi video, quét mã và nhắc nhở hoạt động ổn định.',
+          'Ứng dụng sẽ lần lượt hỏi quyền GPS, Camera, Mic và Thông báo. Bạn có thể cho phép hoặc từ chối từng quyền; các quyền này chỉ dùng cho định vị, gọi video, quét mã và nhắc nhở khi bạn dùng tính năng tương ứng.',
           style: SLTheme.quicksand(
             fontSize: 13,
             fontWeight: FontWeight.w700,
