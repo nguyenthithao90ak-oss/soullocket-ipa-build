@@ -172,13 +172,37 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       _loadError = null;
     });
 
+    Future<T> guarded<T>(
+      Future<T> future,
+      T fallback,
+      String label,
+    ) async {
+      try {
+        return await future.timeout(const Duration(seconds: 8));
+      } catch (error) {
+        debugPrint('[SingleMatch] $label failed: $error');
+        return fallback;
+      }
+    }
+
     try {
-      // ⚡ Chạy 3 API calls song song thay vì tuần tự
-      final results = await Future.wait([
-        _service.fetchHouseSettings(widget.houseId),
-        _service.loadPreferences(widget.houseId),
-        _service.fetchBlockedHouseIds(widget.houseId),
-      ]);
+      final results = await Future.wait<dynamic>([
+        guarded<Map<String, dynamic>>(
+          _service.fetchHouseSettings(widget.houseId),
+          <String, dynamic>{},
+          'fetch house settings',
+        ),
+        guarded<SingleMatchPreferences>(
+          _service.loadPreferences(widget.houseId),
+          const SingleMatchPreferences(),
+          'load preferences',
+        ),
+        guarded<Set<String>>(
+          _service.fetchBlockedHouseIds(widget.houseId),
+          <String>{},
+          'fetch blocked houses',
+        ),
+      ]).timeout(const Duration(seconds: 10));
 
       final settings = results[0] as Map<String, dynamic>;
       final preferences = results[1] as SingleMatchPreferences;
