@@ -322,6 +322,7 @@ class _CountdownModeIndependentScreenState
                     child: CachedNetworkImage(
                       imageUrl: _customBackgroundUrl,
                       fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
                       fadeInDuration: const Duration(milliseconds: 180),
                       memCacheWidth: 1080,
                       placeholder: (_, __) => DecoratedBox(
