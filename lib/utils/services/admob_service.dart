@@ -475,44 +475,27 @@ class AdMobService {
         );
       }
 
-    RewardedAd.load(
-      adUnitId: rewardedMainId,
-      request: _buildAdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: (ad) {
-          _rewardedAd = ad;
-          _isRewardedAdLoading = false;
-        },
-        onAdFailedToLoad: (error) {
-          _rewardedAd = null;
-          _isRewardedAdLoading = false;
-        },
-      ),
-    );
-  }
-
-  void _loadSoulGameRewardedAd() {
-    if (kIsWeb) return;
-    if (!_sdkInitialized) return;
-    if (_isSoulGameRewardedAdLoading) return;
-    _isSoulGameRewardedAdLoading = true;
-
-    RewardedAd.load(
-      adUnitId: rewardedSoulGameId,
-      request: _buildAdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: (ad) {
-          _soulGameRewardedAd = ad;
-          _isSoulGameRewardedAdLoading = false;
-        },
-        onAdFailedToLoad: (error) {
-          _soulGameRewardedAd = null;
-          _isSoulGameRewardedAdLoading = false;
-        },
-      ),
-    );
-  }
-
+      try {
+        await MobileAds.instance.initialize();
+        _sdkInitialized = true;
+        _loadRewardedAd();
+        _loadSoulGameRewardedAd();
+        unawaited(loadInterstitialAd());
+      } catch (error, stackTrace) {
+        debugPrint('AdMob initialization error: $error');
+        debugPrintStack(stackTrace: stackTrace);
+        unawaited(
+          RevenueSecurityTelemetryService.instance.logSystemEvent(
+            type: 'admob_initialize_error',
+            reason: error.toString(),
+            extra: {
+              'stack': stackTrace.toString().split('\n').take(8).join('\n'),
+            },
+          ),
+        );
+      }
+      return completer.future;
+    }
   void preloadSoulGameRewardedAd() {
     _loadSoulGameRewardedAd();
   }
