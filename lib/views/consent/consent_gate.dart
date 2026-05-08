@@ -21,6 +21,8 @@ class ConsentGate extends StatefulWidget {
 }
 
 class _ConsentGateState extends State<ConsentGate> {
+  static const bool _appReviewConsentBypass =
+      bool.fromEnvironment('APP_REVIEW_BYPASS_CONSENT', defaultValue: false);
   static const Color _accentRose = Color(0xFFD81B60);
   static const Color _accentLavender = Color(0xFF7C4DFF);
   static const Color _accentBlue = Color(0xFF2563EB);
@@ -41,10 +43,21 @@ class _ConsentGateState extends State<ConsentGate> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(Duration.zero);
-      if (mounted) {
-        _ensureConsent();
+      if (!mounted) return;
+      if (_appReviewConsentBypass) {
+        await _seedAppReviewConsent();
+        if (!mounted) return;
+        setState(() => _ready = true);
+        return;
       }
+      _ensureConsent();
     });
+  }
+
+  Future<void> _seedAppReviewConsent() async {
+    await _consentService.setTosAccepted(true);
+    await _consentService.setPrivacyAccepted(true);
+    await _consentService.setCookieConsentLevel('essential');
   }
 
   Future<void> _ensureConsent() async {

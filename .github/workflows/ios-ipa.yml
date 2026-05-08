@@ -57,7 +57,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -397,7 +397,7 @@ jobs:
           "$UPLOAD_SYMBOLS" -gsp "$GOOGLE_SERVICE_INFO_PLIST" -p ios "$DSYM_PATH"
 
       - name: Upload IPA artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ios-ipa-${{ inputs.export_method }}-${{ github.run_number }}
           path: |

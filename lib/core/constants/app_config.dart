@@ -3,7 +3,7 @@ class AppConfig {
       'soullockket.firebaseapp.com';
   static const String webBaseUrl = String.fromEnvironment(
     'WEB_BASE_URL',
-    defaultValue: 'https://soullockket.web.app',
+    defaultValue: 'https://soullocket.app',
   );
   static const String authActionBaseUrl = String.fromEnvironment(
     'AUTH_ACTION_BASE_URL',
@@ -79,7 +79,7 @@ class AppConfig {
   );
   static const String iOSAssociatedDomainWeb = String.fromEnvironment(
     'IOS_ASSOCIATED_DOMAIN_WEB',
-    defaultValue: 'applinks:soullockket.web.app',
+    defaultValue: 'applinks:soullocket.app',
   );
   static const String iOSAssociatedDomainAuth = String.fromEnvironment(
     'IOS_ASSOCIATED_DOMAIN_AUTH',
