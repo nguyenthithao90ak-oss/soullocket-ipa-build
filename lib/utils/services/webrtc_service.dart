@@ -332,43 +332,47 @@ class WebRTCService {
   }
 
   /// Lắng nghe cuộc gọi đến (Global Listener)
-  void listenForIncomingCalls(String myHouseId,
-      Function(String roomId, String callerId, Map data) onIncomingCall) {
-    try {
-      _db
-          .ref('calls')
-          .orderByChild('calleeId')
-          .equalTo(myHouseId)
-          .onChildAdded
-          .listen((event) {
-        final val = event.snapshot.value as Map<dynamic, dynamic>?;
-        if (val != null && val['status'] == 'ringing') {
-          final roomId = event.snapshot.key;
-          final callerId = val['callerId']?.toString() ?? 'Người lạ';
-          if (roomId != null) {
-            onIncomingCall(roomId, callerId, Map<String, dynamic>.from(val));
-          }
-        }
-      }, onError: (error) {
-        debugPrint('Error listening for incoming calls (childAdded): $error');
-      });
+  StreamSubscription<DatabaseEvent> listenForIncomingCalls(
+    String myHouseId,
+    Function(String roomId, String callerId, Map data) onIncomingCall,
+  ) {
+    final callsRef = _db
+        .ref('calls')
+        .orderByChild('calleeId')
+        .equalTo(myHouseId);
 
-      // Lắng nghe thay đổi trạng thái cuộc gọi (VD: người gọi đã cúp máy)
-      _db
-          .ref('calls')
-          .orderByChild('calleeId')
-          .equalTo(myHouseId)
-          .onChildChanged
-          .listen((event) {
-        final val = event.snapshot.value as Map<dynamic, dynamic>?;
-        if (val != null && val['status'] == 'ended') {
-          // Có thể trigger thư viện tắt chuông hoặc ẩn Incoming Call Screen
-        }
-      }, onError: (error) {
-        debugPrint('Error listening for incoming calls (childChanged): $error');
-      });
-    } catch (e) {
-      debugPrint('Failed to attach global incoming call listener: $e');
-    }
+    callsRef.onChildChanged.listen((event) {
+      final raw = event.snapshot.value;
+      if (raw is! Map) {
+        return;
+      }
+      final val = Map<String, dynamic>.from(raw);
+      if (val['status'] == 'ended') {
+        // Có thể trigger thư viện tắt chuông hoặc ẩn Incoming Call Screen
+      }
+    }, onError: (error) {
+      debugPrint('Error listening for incoming calls (childChanged): $error');
+    });
+
+    return callsRef.onChildAdded.listen((event) {
+      final raw = event.snapshot.value;
+      if (raw is! Map) {
+        return;
+      }
+      final val = Map<String, dynamic>.from(raw);
+      if (val['status'] != 'ringing') {
+        return;
+      }
+      final roomId = event.snapshot.key?.trim() ?? '';
+      if (roomId.isEmpty) {
+        return;
+      }
+      final callerId = val['houseId']?.toString().trim().isNotEmpty == true
+          ? val['houseId'].toString().trim()
+          : val['callerId']?.toString().trim() ?? 'Người lạ';
+      onIncomingCall(roomId, callerId, val);
+    }, onError: (error) {
+      debugPrint('Error listening for incoming calls (childAdded): $error');
+    });
   }
 }
