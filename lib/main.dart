@@ -162,8 +162,29 @@ Future<void> _clearStaleIosAuthAfterFreshInstall() async {
   final hasLocalAppState = prefs.getKeys().any(
         (key) => key.startsWith('il_') || key.startsWith('email_verify_'),
       );
-  final hasStaleAuth = FirebaseAuth.instance.currentUser != null;
-  if (!hasLocalAppState && hasStaleAuth) {
+  final staleUser = FirebaseAuth.instance.currentUser;
+  final hasStaleAuth = staleUser != null;
+  final shouldSignOut = !hasLocalAppState && hasStaleAuth;
+
+  if (hasStaleAuth) {
+    try {
+      await FirebaseDatabase.instance
+          .ref('debugFreshInstallCleanup/${staleUser.uid}')
+          .push()
+          .set({
+        'platform': defaultTargetPlatform.name,
+        'hasLocalAppState': hasLocalAppState,
+        'hasStaleAuth': hasStaleAuth,
+        'didSignOut': shouldSignOut,
+        'localKeyCount': prefs.getKeys().length,
+        'createdAtMs': DateTime.now().millisecondsSinceEpoch,
+      });
+    } catch (e) {
+      debugPrint('Fresh install cleanup log skipped: $e');
+    }
+  }
+
+  if (shouldSignOut) {
     await FirebaseAuth.instance.signOut();
     try {
       const secureStorage = FlutterSecureStorage();
