@@ -808,6 +808,7 @@ class SLTheme {
                 memCacheWidth: 1440,
                 imageUrl: customBackgroundUrl,
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
                 errorWidget: (context, url, error) => const SizedBox.shrink(),
               ),
             ),
