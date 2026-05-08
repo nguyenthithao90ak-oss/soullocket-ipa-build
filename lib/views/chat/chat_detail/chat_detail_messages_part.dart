@@ -264,6 +264,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                                 width: effectiveImageSize,
                                 height: effectiveImageSize,
                                 fit: BoxFit.cover,
+                                filterQuality: FilterQuality.high,
                                 placeholder: (context, url) => SizedBox(
                                   width: effectiveImageSize,
                                   height: effectiveImageSize,
