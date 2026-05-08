@@ -79,6 +79,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                             CachedNetworkImage(
                               imageUrl: currentBackgroundUrl,
                               fit: BoxFit.cover,
+                              filterQuality: FilterQuality.high,
                             ),
                             DecoratedBox(
                               decoration: BoxDecoration(
