@@ -698,6 +698,7 @@ class CommunitySettingsAvatarPreview extends StatelessWidget {
               ? Image.network(
                   avatarUrl,
                   fit: BoxFit.cover,
+                  filterQuality: FilterQuality.high,
                   errorBuilder: (_, __, ___) =>
                       _CommunitySettingsAvatarFallback(text: fallbackText),
                 )
