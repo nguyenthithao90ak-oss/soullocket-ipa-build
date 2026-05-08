@@ -774,7 +774,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 ),
                 Switch(
                   value: panelState.homeShowHouseName,
-                  activeColor: const Color(0xFFD81B60),
+                  activeThumbColor: const Color(0xFFD81B60),
                   onChanged: panelActions.onToggleShowHouseName,
                 ),
               ],
@@ -800,7 +800,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 ),
                 Switch(
                   value: panelState.homeShowTimer,
-                  activeColor: const Color(0xFFD81B60),
+                  activeThumbColor: const Color(0xFFD81B60),
                   onChanged: panelActions.onToggleShowTimer,
                 ),
               ],
