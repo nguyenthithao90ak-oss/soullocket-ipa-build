@@ -321,7 +321,10 @@ class PurchaseService {
       return [];
     }
 
-    final response = await _iap.queryProductDetails(VipProduct.allIds);
+    final productIds = defaultTargetPlatform == TargetPlatform.iOS
+        ? VipProduct.displayOrder.toSet()
+        : VipProduct.allIds;
+    final response = await _iap.queryProductDetails(productIds);
     if (response.error != null) {
       return [];
     }
