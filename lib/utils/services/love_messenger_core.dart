@@ -613,7 +613,10 @@ class SuperLoveMessengerViewState extends State<SuperLoveMessengerView>
                           if (msg.imageUrl != null)
                             ClipRRect(
                                 borderRadius: SLRadius.smAll,
-                                child: Image.network(msg.imageUrl!)),
+                                child: Image.network(
+                                  msg.imageUrl!,
+                                  filterQuality: FilterQuality.high,
+                                )),
                           if (msg.text.isNotEmpty)
                             Padding(
                               padding: EdgeInsets.only(
