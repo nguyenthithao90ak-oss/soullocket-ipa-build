@@ -512,6 +512,7 @@ extension _CommunityTabLocket on _CommunityTabState {
                   height: MediaQuery.sizeOf(context).height * 0.45,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  filterQuality: FilterQuality.high,
                 ),
               ),
               Padding(
