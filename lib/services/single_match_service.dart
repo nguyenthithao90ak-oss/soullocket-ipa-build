@@ -234,10 +234,8 @@ class SingleMatchService {
     controller = StreamController<List<SingleMatchHistoryEntry>>(
       onListen: () {
         controller.add(const <SingleMatchHistoryEntry>[]);
-        historySub = _db
-            .child('houses/$houseId/singleMatch/history')
-            .onValue
-            .listen(
+        historySub =
+            _db.child('houses/$houseId/singleMatch/history').onValue.listen(
           (event) {
             if (!event.snapshot.exists || event.snapshot.value is! Map) {
               controller.add(const <SingleMatchHistoryEntry>[]);
@@ -257,7 +255,8 @@ class SingleMatchService {
                 ),
               );
             });
-            entries.sort((left, right) => right.startedAt.compareTo(left.startedAt));
+            entries.sort(
+                (left, right) => right.startedAt.compareTo(left.startedAt));
             controller.add(entries);
           },
           onError: (Object error) {
