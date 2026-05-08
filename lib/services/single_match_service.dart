@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/single_match_models.dart';
 import 'house_service.dart';
@@ -127,9 +128,8 @@ class SingleMatchService {
         fallbackProfiles = _readProfileMap(snapshot.value);
         emitMergedCandidates();
       } catch (error) {
-        if (!controller.isClosed) {
-          controller.addError(error);
-        }
+        debugPrint('[SingleMatch] load fallback profiles failed: $error');
+        emitMergedCandidates();
       }
     }
 
@@ -141,7 +141,10 @@ class SingleMatchService {
             indexedProfiles = _readProfileMap(event.snapshot.value);
             emitMergedCandidates();
           },
-          onError: controller.addError,
+          onError: (Object error) {
+            debugPrint('[SingleMatch] profile index stream failed: $error');
+            emitMergedCandidates();
+          },
         );
         unawaited(loadFallbackProfiles());
       },
@@ -225,30 +228,52 @@ class SingleMatchService {
   }
 
   Stream<List<SingleMatchHistoryEntry>> streamHistory(String houseId) {
-    return _db
-        .child('houses/$houseId/singleMatch/history')
-        .onValue
-        .map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map) {
-        return const <SingleMatchHistoryEntry>[];
-      }
+    late final StreamController<List<SingleMatchHistoryEntry>> controller;
+    StreamSubscription<DatabaseEvent>? historySub;
 
-      final raw = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-      final entries = <SingleMatchHistoryEntry>[];
-      raw.forEach((key, value) {
-        if (value is! Map) {
-          return;
-        }
-        entries.add(
-          SingleMatchHistoryEntry.fromMap(
-            key.toString(),
-            Map<dynamic, dynamic>.from(value),
-          ),
+    controller = StreamController<List<SingleMatchHistoryEntry>>(
+      onListen: () {
+        controller.add(const <SingleMatchHistoryEntry>[]);
+        historySub = _db
+            .child('houses/$houseId/singleMatch/history')
+            .onValue
+            .listen(
+          (event) {
+            if (!event.snapshot.exists || event.snapshot.value is! Map) {
+              controller.add(const <SingleMatchHistoryEntry>[]);
+              return;
+            }
+
+            final raw = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
+            final entries = <SingleMatchHistoryEntry>[];
+            raw.forEach((key, value) {
+              if (value is! Map) {
+                return;
+              }
+              entries.add(
+                SingleMatchHistoryEntry.fromMap(
+                  key.toString(),
+                  Map<dynamic, dynamic>.from(value),
+                ),
+              );
+            });
+            entries.sort((left, right) => right.startedAt.compareTo(left.startedAt));
+            controller.add(entries);
+          },
+          onError: (Object error) {
+            debugPrint('[SingleMatch] history stream failed: $error');
+            if (!controller.isClosed) {
+              controller.add(const <SingleMatchHistoryEntry>[]);
+            }
+          },
         );
-      });
-      entries.sort((left, right) => right.startedAt.compareTo(left.startedAt));
-      return entries;
-    });
+      },
+      onCancel: () async {
+        await historySub?.cancel();
+      },
+    );
+
+    return controller.stream;
   }
 
   Future<void> logHistory({
