@@ -19,6 +19,16 @@ class PermissionHelper {
     if (status.isGranted || status.isLimited) {
       return true;
     }
+    if (status.isPermanentlyDenied || status.isRestricted) {
+      return false;
+    }
+
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS)) {
+      final result = await _withLifecyclePresenceGuard(permission.request);
+      return result.isGranted || result.isLimited;
+    }
 
     if (!context.mounted) return false;
     final shouldRequest =
@@ -53,6 +63,19 @@ class PermissionHelper {
     }
 
     if (pending.isEmpty) return true;
+
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS)) {
+      for (final permission in pending) {
+        final result = await _withLifecyclePresenceGuard(permission.request);
+        if (!result.isGranted && !result.isLimited) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     if (!context.mounted) return false;
 
     final shouldRequest =
