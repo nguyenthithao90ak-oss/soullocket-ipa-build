@@ -161,6 +161,7 @@ class DiaryItem extends StatelessWidget {
                   imageUrl: post.imageUrl,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  filterQuality: FilterQuality.high,
                   memCacheWidth: postImageCacheWidth,
                   fadeInDuration: Duration.zero,
                   fadeOutDuration: Duration.zero,
