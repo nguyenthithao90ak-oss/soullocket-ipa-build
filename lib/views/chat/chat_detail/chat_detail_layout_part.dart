@@ -16,6 +16,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           key: ValueKey<String>(normalizedUrl),
           imageUrl: normalizedUrl,
           fit: BoxFit.cover,
+          filterQuality: FilterQuality.high,
           placeholder: (context, url) =>
               const ColoredBox(color: Color(0xFFF8FAFC)),
           errorWidget: (context, url, error) =>
