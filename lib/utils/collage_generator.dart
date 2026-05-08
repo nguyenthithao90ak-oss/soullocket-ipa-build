@@ -298,17 +298,17 @@ class CollageGenerator {
     canvas.drawCircle(
       Offset(width * 0.12, height * 0.14),
       min(width, height) * 0.15,
-      Paint()..color = decor.secondary.withOpacity(0.18),
+      Paint()..color = decor.secondary.withValues(alpha: 0.18),
     );
     canvas.drawCircle(
       Offset(width * 0.88, height * 0.18),
       min(width, height) * 0.18,
-      Paint()..color = decor.primary.withOpacity(0.10),
+      Paint()..color = decor.primary.withValues(alpha: 0.10),
     );
     canvas.drawCircle(
       Offset(width * 0.76, height * 0.86),
       min(width, height) * 0.12,
-      Paint()..color = const Color(0xFFC7D4C8).withOpacity(0.18),
+      Paint()..color = const Color(0xFFC7D4C8).withValues(alpha: 0.18),
     );
 
     _drawRobotCatMascot(
@@ -350,9 +350,9 @@ class CollageGenerator {
           rotation: (random.nextDouble() - 0.5) * 0.5,
         );
       } else if (i % 3 == 0) {
-        _drawHeart(canvas, Offset(x, y), size, color.withOpacity(0.18));
+        _drawHeart(canvas, Offset(x, y), size, color.withValues(alpha: 0.18));
       } else {
-        _drawSparkle(canvas, Offset(x, y), size, color.withOpacity(0.20));
+        _drawSparkle(canvas, Offset(x, y), size, color.withValues(alpha: 0.20));
       }
     }
   }
@@ -468,12 +468,12 @@ class CollageGenerator {
     canvas.drawCircle(
       Offset(width * 0.18, height * 0.18),
       min(width, height) * 0.20,
-      Paint()..color = top.withOpacity(0.20),
+      Paint()..color = top.withValues(alpha: 0.20),
     );
     canvas.drawCircle(
       Offset(width * 0.82, height * 0.80),
       min(width, height) * 0.18,
-      Paint()..color = bottom.withOpacity(0.18),
+      Paint()..color = bottom.withValues(alpha: 0.18),
     );
   }
 
@@ -499,9 +499,9 @@ class CollageGenerator {
               : (0.08 + random.nextDouble() * 0.24));
       final size = min(width, height) * (0.055 + random.nextDouble() * 0.05);
       final tint = i.isEven
-          ? Colors.white.withOpacity(cloudTint == null ? 0.22 : 0.34)
+          ? Colors.white.withValues(alpha: cloudTint == null ? 0.22 : 0.34)
           : (cloudTint ?? decor.secondary)
-              .withOpacity(cloudTint == null ? 0.14 : 0.24);
+              .withValues(alpha: cloudTint == null ? 0.14 : 0.24);
       _drawCloudPuff(canvas, Offset(x, y), size, tint);
     }
 
@@ -515,7 +515,7 @@ class CollageGenerator {
         Offset(x, y),
         size,
         (sparkleTint ?? Colors.white)
-            .withOpacity(sparkleTint == null ? 0.16 : 0.22),
+            .withValues(alpha: sparkleTint == null ? 0.16 : 0.22),
       );
     }
   }
@@ -540,9 +540,9 @@ class CollageGenerator {
         height * (0.08 + random.nextDouble() * 0.84),
       );
       final fill = i / bubbleCount < bubbleBias
-          ? (bubbleTint ?? decor.secondary).withOpacity(
+          ? (bubbleTint ?? decor.secondary).withValues(alpha: 
               (bubbleTint == null ? 0.10 : 0.18) + random.nextDouble() * 0.10)
-          : (accentTint ?? decor.primary).withOpacity(
+          : (accentTint ?? decor.primary).withValues(alpha: 
               (accentTint == null ? 0.07 : 0.14) + random.nextDouble() * 0.08);
       canvas.drawCircle(center, radius, Paint()..color = fill);
       canvas.drawCircle(
@@ -551,12 +551,12 @@ class CollageGenerator {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = max(1.0, radius * 0.08)
-          ..color = Colors.white.withOpacity(0.20),
+          ..color = Colors.white.withValues(alpha: 0.20),
       );
       canvas.drawCircle(
         Offset(center.dx - radius * 0.28, center.dy - radius * 0.24),
         radius * 0.24,
-        Paint()..color = Colors.white.withOpacity(0.18),
+        Paint()..color = Colors.white.withValues(alpha: 0.18),
       );
     }
 
@@ -573,7 +573,7 @@ class CollageGenerator {
           center,
           size,
           (accentTint ?? decor.primary)
-              .withOpacity(accentTint == null ? 0.12 : 0.18),
+              .withValues(alpha: accentTint == null ? 0.12 : 0.18),
         );
       } else {
         _drawCloudPuff(
@@ -581,7 +581,7 @@ class CollageGenerator {
           center,
           size * 1.1,
           (bubbleTint ?? Colors.white)
-              .withOpacity(bubbleTint == null ? 0.12 : 0.16),
+              .withValues(alpha: bubbleTint == null ? 0.12 : 0.16),
         );
       }
     }
@@ -599,7 +599,7 @@ class CollageGenerator {
     final random = _layoutRandom(options, 0x0FACE);
     final bandPaint = Paint()
       ..color = (bandTint ?? Colors.white)
-          .withOpacity(bandTint == null ? 0.08 : 0.16);
+          .withValues(alpha: bandTint == null ? 0.08 : 0.16);
     final bandCount = options.isPreviewQuality ? 2 : 3;
     for (int i = 0; i < bandCount; i++) {
       final top = height * (0.12 + i * 0.22);
@@ -627,7 +627,7 @@ class CollageGenerator {
         ),
         min(width, height) * (0.036 + random.nextDouble() * 0.03),
         (i.isEven ? Colors.white : (cloudTint ?? decor.secondary))
-            .withOpacity(cloudTint == null ? 0.14 : 0.22),
+            .withValues(alpha: cloudTint == null ? 0.14 : 0.22),
       );
     }
   }
@@ -733,10 +733,10 @@ class CollageGenerator {
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotation);
 
-    final blue = const Color(0xFF38BDF8).withOpacity(opacity);
-    final white = Colors.white.withOpacity(opacity * 0.92);
-    final red = const Color(0xFFFF4B6E).withOpacity(opacity);
-    final line = const Color(0xFF2563EB).withOpacity(opacity * 0.55);
+    final blue = const Color(0xFF38BDF8).withValues(alpha: opacity);
+    final white = Colors.white.withValues(alpha: opacity * 0.92);
+    final red = const Color(0xFFFF4B6E).withValues(alpha: opacity);
+    final line = const Color(0xFF2563EB).withValues(alpha: opacity * 0.55);
 
     canvas.drawCircle(Offset.zero, size, Paint()..color = blue);
     canvas.drawCircle(
@@ -752,12 +752,12 @@ class CollageGenerator {
     canvas.drawCircle(
       Offset(-size * 0.25, -size * 0.18),
       size * 0.11,
-      Paint()..color = Colors.white.withOpacity(opacity),
+      Paint()..color = Colors.white.withValues(alpha: opacity),
     );
     canvas.drawCircle(
       Offset(size * 0.25, -size * 0.18),
       size * 0.11,
-      Paint()..color = Colors.white.withOpacity(opacity),
+      Paint()..color = Colors.white.withValues(alpha: opacity),
     );
     canvas.drawCircle(
       Offset(-size * 0.25, -size * 0.17),
@@ -805,7 +805,7 @@ class CollageGenerator {
     canvas.drawCircle(
       Offset(0, size * 0.9),
       size * 0.12,
-      Paint()..color = const Color(0xFFFFD166).withOpacity(opacity),
+      Paint()..color = const Color(0xFFFFD166).withValues(alpha: opacity),
     );
     canvas.restore();
   }
@@ -821,10 +821,10 @@ class CollageGenerator {
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotation);
 
-    final skin = const Color(0xFFFFD7B5).withOpacity(opacity);
-    final hair = const Color(0xFF2F2A37).withOpacity(opacity);
-    final shirt = const Color(0xFFFFD166).withOpacity(opacity);
-    final line = const Color(0xFF7C2D12).withOpacity(opacity * 0.55);
+    final skin = const Color(0xFFFFD7B5).withValues(alpha: opacity);
+    final hair = const Color(0xFF2F2A37).withValues(alpha: opacity);
+    final shirt = const Color(0xFFFFD166).withValues(alpha: opacity);
+    final line = const Color(0xFF7C2D12).withValues(alpha: opacity * 0.55);
 
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -913,9 +913,9 @@ class CollageGenerator {
           headerRect.outerRect.topLeft,
           headerRect.outerRect.bottomRight,
           [
-            Colors.white.withOpacity(0.96),
-            decor.secondary.withOpacity(0.26),
-            const Color(0xFFF5E8DA).withOpacity(0.92),
+            Colors.white.withValues(alpha: 0.96),
+            decor.secondary.withValues(alpha: 0.26),
+            const Color(0xFFF5E8DA).withValues(alpha: 0.92),
           ],
           [0.0, 0.48, 1.0],
         ),
@@ -929,8 +929,8 @@ class CollageGenerator {
           headerRect.outerRect.topLeft,
           headerRect.outerRect.topRight,
           [
-            decor.primary.withOpacity(0.42),
-            const Color(0xFFD7C4B8).withOpacity(0.40),
+            decor.primary.withValues(alpha: 0.42),
+            const Color(0xFFD7C4B8).withValues(alpha: 0.40),
           ],
         ),
     );
@@ -940,14 +940,14 @@ class CollageGenerator {
         const Rect.fromLTWH(62, 48, 30, 42),
         const Radius.circular(12),
       ),
-      Paint()..color = decor.secondary.withOpacity(0.58),
+      Paint()..color = decor.secondary.withValues(alpha: 0.58),
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(width - 92, 48, 30, 42),
         const Radius.circular(12),
       ),
-      Paint()..color = decor.primary.withOpacity(0.20),
+      Paint()..color = decor.primary.withValues(alpha: 0.20),
     );
 
     final double ribbonWidth = min(390, max(220, width - 84)).toDouble();
@@ -989,7 +989,7 @@ class CollageGenerator {
     );
     canvas.drawRRect(
       badgeRect,
-      Paint()..color = Colors.white.withOpacity(0.78),
+      Paint()..color = Colors.white.withValues(alpha: 0.78),
     );
     _drawText(
       canvas,
@@ -1012,7 +1012,7 @@ class CollageGenerator {
       title,
       headerCenterX + 3,
       titleY + 4,
-      decor.primary.withOpacity(0.18),
+      decor.primary.withValues(alpha: 0.18),
       titleSize,
       maxWidth: titleMaxWidth,
       centerWidth: titleMaxWidth,
@@ -1078,9 +1078,9 @@ class CollageGenerator {
             messageRect.outerRect.centerLeft,
             messageRect.outerRect.centerRight,
             [
-              decor.secondary.withOpacity(0.24),
-              Colors.white.withOpacity(0.70),
-              const Color(0xFFC7D4C8).withOpacity(0.18),
+              decor.secondary.withValues(alpha: 0.24),
+              Colors.white.withValues(alpha: 0.70),
+              const Color(0xFFC7D4C8).withValues(alpha: 0.18),
             ],
             [0.0, 0.54, 1.0],
           ),
@@ -1090,7 +1090,7 @@ class CollageGenerator {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.4
-          ..color = decor.primary.withOpacity(0.16),
+          ..color = decor.primary.withValues(alpha: 0.16),
       );
 
       canvas.drawParagraph(paragraph, Offset(messageBoxX + 20, messageY + 14));
@@ -1113,7 +1113,7 @@ class CollageGenerator {
     canvas.drawRRect(
       footerRect,
       Paint()
-        ..color = Colors.white.withOpacity(0.52)
+        ..color = Colors.white.withValues(alpha: 0.52)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
     );
     canvas.drawRRect(
@@ -1121,7 +1121,7 @@ class CollageGenerator {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0
-        ..color = decor.primary.withOpacity(0.16),
+        ..color = decor.primary.withValues(alpha: 0.16),
     );
     _drawText(
       canvas,
@@ -1188,7 +1188,7 @@ class CollageGenerator {
       canvas.drawCircle(
         Offset.zero,
         size * 0.58,
-        Paint()..color = Colors.white.withOpacity(0.34),
+        Paint()..color = Colors.white.withValues(alpha: 0.34),
       );
       canvas.drawCircle(
         Offset.zero,
@@ -1196,7 +1196,7 @@ class CollageGenerator {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.4
-          ..color = decor.primary.withOpacity(0.10),
+          ..color = decor.primary.withValues(alpha: 0.10),
       );
       final stickerImage = _loadedStickerImages[stickers[i]];
       if (stickerImage != null) {
@@ -1351,7 +1351,7 @@ class CollageGenerator {
     _drawImageWithTransform(canvas, img, imageRect, transform);
     canvas.drawRect(
       imageRect,
-      Paint()..color = Colors.white.withOpacity(0.18),
+      Paint()..color = Colors.white.withValues(alpha: 0.18),
     );
     canvas.drawRect(
       imageRect,
@@ -1360,9 +1360,9 @@ class CollageGenerator {
           imageRect.topCenter,
           imageRect.bottomCenter,
           [
-            Colors.white.withOpacity(0.14),
+            Colors.white.withValues(alpha: 0.14),
             Colors.transparent,
-            Colors.black.withOpacity(0.08),
+            Colors.black.withValues(alpha: 0.08),
           ],
           [0.0, 0.58, 1.0],
         ),
@@ -1375,7 +1375,7 @@ class CollageGenerator {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.25
-        ..color = Colors.white.withOpacity(0.52),
+        ..color = Colors.white.withValues(alpha: 0.52),
     );
   }
 
@@ -1391,7 +1391,7 @@ class CollageGenerator {
     _drawImageWithTransform(canvas, img, bounds, transform);
     canvas.drawOval(
       bounds,
-      Paint()..color = Colors.white.withOpacity(0.15),
+      Paint()..color = Colors.white.withValues(alpha: 0.15),
     );
     canvas.restore();
 
@@ -1401,7 +1401,7 @@ class CollageGenerator {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = max(2.0, size * 0.02)
-        ..color = Colors.white.withOpacity(0.62),
+        ..color = Colors.white.withValues(alpha: 0.62),
     );
   }
 
@@ -1415,7 +1415,7 @@ class CollageGenerator {
   }) {
     final outerRect = imageRect.inflate(2);
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.12)
+      ..color = Colors.black.withValues(alpha: 0.12)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -1629,7 +1629,7 @@ class CollageGenerator {
       final double pW = 350 * photoScale;
       final double pH = 420 * photoScale;
       final shadowPaint = Paint()
-        ..color = Colors.black.withOpacity(0.14)
+        ..color = Colors.black.withValues(alpha: 0.14)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
       canvas.drawRect(
         Rect.fromLTWH(-pW / 2 + 5, -pH / 2 + 12, pW, pH),
@@ -1644,7 +1644,7 @@ class CollageGenerator {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.2
-          ..color = Colors.black.withOpacity(0.06),
+          ..color = Colors.black.withValues(alpha: 0.06),
       );
 
       final double imgPadding = 20 * photoScale;
@@ -1665,7 +1665,7 @@ class CollageGenerator {
         decor.footerText,
         0,
         pH / 2 - 48 * photoScale,
-        decor.primary.withOpacity(0.66),
+        decor.primary.withValues(alpha: 0.66),
         15 * photoScale,
         maxWidth: pW - 40,
         isBold: false,
@@ -1735,7 +1735,7 @@ class CollageGenerator {
         dw = size * ratio;
       }
       final shadowPaint = Paint()
-        ..color = Colors.black.withOpacity(0.14)
+        ..color = Colors.black.withValues(alpha: 0.14)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
       final imageRect = Rect.fromLTWH(-dw / 2, -dh / 2, dw, dh);
       canvas.drawRRect(
@@ -2044,7 +2044,7 @@ class CollageGenerator {
         Offset.zero,
         size / 2 + 10,
         Paint()
-          ..color = Colors.black.withOpacity(0.12)
+          ..color = Colors.black.withValues(alpha: 0.12)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
       );
       canvas.drawCircle(
@@ -2053,7 +2053,7 @@ class CollageGenerator {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
-          ..color = Colors.white.withOpacity(0.65),
+          ..color = Colors.white.withValues(alpha: 0.65),
       );
 
       final ui.Image img = images[i];

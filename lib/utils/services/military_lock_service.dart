@@ -600,7 +600,7 @@ class MilitaryLockService {
 
             return SensitiveContentGuard(
               child: Dialog(
-                backgroundColor: Colors.white.withOpacity(0.9),
+                backgroundColor: Colors.white.withValues(alpha: 0.9),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28)),
                 child: FastBackdropFilter(

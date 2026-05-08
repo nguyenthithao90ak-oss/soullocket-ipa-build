@@ -148,7 +148,7 @@ class SLNotice {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: accent.withOpacity(0.24),
+                    color: accent.withValues(alpha: 0.24),
                     blurRadius: 14,
                     offset: const Offset(0, 6),
                   ),

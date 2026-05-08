@@ -375,7 +375,7 @@ class SLTypography {
 class SLShadow {
   static List<BoxShadow> sm = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.05),
+      color: Colors.black.withValues(alpha: 0.05),
       blurRadius: 2,
       offset: const Offset(0, 1),
     ),
@@ -383,12 +383,12 @@ class SLShadow {
 
   static List<BoxShadow> md = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.10),
+      color: Colors.black.withValues(alpha: 0.10),
       blurRadius: 6,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: Colors.black.withOpacity(0.06),
+      color: Colors.black.withValues(alpha: 0.06),
       blurRadius: 4,
       offset: const Offset(0, 2),
     ),
@@ -396,12 +396,12 @@ class SLShadow {
 
   static List<BoxShadow> lg = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.10),
+      color: Colors.black.withValues(alpha: 0.10),
       blurRadius: 15,
       offset: const Offset(0, 10),
     ),
     BoxShadow(
-      color: Colors.black.withOpacity(0.05),
+      color: Colors.black.withValues(alpha: 0.05),
       blurRadius: 6,
       offset: const Offset(0, 4),
     ),
@@ -409,7 +409,7 @@ class SLShadow {
 
   static List<BoxShadow> glass = [
     BoxShadow(
-      color: const Color(0xFF1F2687).withOpacity(0.08),
+      color: const Color(0xFF1F2687).withValues(alpha: 0.08),
       blurRadius: 32,
       offset: const Offset(0, 8),
     ),
@@ -417,7 +417,7 @@ class SLShadow {
 
   static List<BoxShadow> primary = [
     BoxShadow(
-      color: SLColors.primary.withOpacity(0.30),
+      color: SLColors.primary.withValues(alpha: 0.30),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
@@ -425,7 +425,7 @@ class SLShadow {
 
   static List<BoxShadow> subtle = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.04),
+      color: Colors.black.withValues(alpha: 0.04),
       blurRadius: 8,
       offset: const Offset(0, 2),
     ),
@@ -433,7 +433,7 @@ class SLShadow {
 
   static List<BoxShadow> gold = [
     BoxShadow(
-      color: SLColors.warningGold.withOpacity(0.35),
+      color: SLColors.warningGold.withValues(alpha: 0.35),
       blurRadius: 24,
       spreadRadius: 2,
       offset: const Offset(0, 4),
@@ -719,7 +719,7 @@ class SLTheme {
   static Widget meshPattern() {
     return Container(
       decoration: BoxDecoration(
-        color: SLColors.bgElevated.withOpacity(0.02),
+        color: SLColors.bgElevated.withValues(alpha: 0.02),
       ),
     );
   }
@@ -743,7 +743,7 @@ class SLTheme {
       backgroundColor: Colors.transparent,
       elevation: 0,
       flexibleSpace: Container(
-        color: SLColors.bgElevated.withOpacity(0.94),
+        color: SLColors.bgElevated.withValues(alpha: 0.94),
       ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new,
@@ -885,13 +885,13 @@ class SLTheme {
         border: Border.all(color: borderColor, width: 1),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: const Color(0xFF3F2430).withOpacity(0.06),
+            color: const Color(0xFF3F2430).withValues(alpha: 0.06),
             blurRadius: 24,
             spreadRadius: -12,
             offset: const Offset(0, 16),
           ),
           BoxShadow(
-            color: Colors.white.withOpacity(0.78),
+            color: Colors.white.withValues(alpha: 0.78),
             blurRadius: 0,
             offset: const Offset(0, 1),
           ),
@@ -913,7 +913,7 @@ class SLTheme {
       border: Border.all(color: borderColor, width: 1.25),
       boxShadow: <BoxShadow>[
         BoxShadow(
-          color: Colors.white.withOpacity(0.72),
+          color: Colors.white.withValues(alpha: 0.72),
           blurRadius: 0,
           offset: const Offset(0, 1),
         ),
@@ -943,7 +943,7 @@ class SLTheme {
       helperText: helperText,
       hintStyle: SLTheme.quicksand(
         fontSize: 15.5,
-        color: SLColors.textSecond.withOpacity(0.70),
+        color: SLColors.textSecond.withValues(alpha: 0.70),
         fontWeight: FontWeight.w600,
       ),
       helperStyle: SLTheme.quicksand(
@@ -985,12 +985,12 @@ class SLTheme {
           ),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: Colors.white.withOpacity(0.38),
+            color: Colors.white.withValues(alpha: 0.38),
             width: 1.4,
           ),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: colors.last.withOpacity(0.20),
+              color: colors.last.withValues(alpha: 0.20),
               blurRadius: 24,
               offset: const Offset(0, 12),
             ),
@@ -1037,7 +1037,7 @@ class SLTheme {
       padding:
           padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7F2).withOpacity(0.96),
+        color: const Color(0xFFFFF7F2).withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE8DDD6), width: 1),
       ),
@@ -1107,12 +1107,12 @@ class SLTheme {
     return Container(
       decoration: BoxDecoration(
         color: selected
-            ? const Color(0xFFF7EFEA).withOpacity(0.98)
-            : const Color(0xFFF9F4EE).withOpacity(0.94),
+            ? const Color(0xFFF7EFEA).withValues(alpha: 0.98)
+            : const Color(0xFFF9F4EE).withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: selected
-              ? SLColors.primary.withOpacity(0.42)
+              ? SLColors.primary.withValues(alpha: 0.42)
               : const Color(0xFFE2D4C7),
           width: 1.3,
         ),
@@ -1160,13 +1160,13 @@ class SLTheme {
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
                   colors: <Color>[
-                    accentColor.withOpacity(0.18),
-                    Colors.white.withOpacity(0.78),
+                    accentColor.withValues(alpha: 0.18),
+                    Colors.white.withValues(alpha: 0.78),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                border: Border.all(color: accentColor.withOpacity(0.24)),
+                border: Border.all(color: accentColor.withValues(alpha: 0.24)),
               ),
               child: Icon(icon, color: accentColor, size: 32),
             ),
@@ -1229,16 +1229,16 @@ class SLTheme {
     final useLiteGlass = !effectProfile.premiumEffects;
     Color baseColor = color ?? glassCardColor;
     if (ui.transparentMode) {
-      baseColor = baseColor.withOpacity(0.8);
+      baseColor = baseColor.withValues(alpha: 0.8);
     }
     final effectiveColor = useLiteGlass
         ? Color.alphaBlend(
-            Colors.white.withOpacity(kIsWeb ? 0.20 : 0.12),
-            baseColor.withOpacity(0.92),
+            Colors.white.withValues(alpha: kIsWeb ? 0.20 : 0.12),
+            baseColor.withValues(alpha: 0.92),
           )
         : baseColor;
     final effectiveBorder =
-        useLiteGlass ? glassBorder.withOpacity(0.72) : glassBorder;
+        useLiteGlass ? glassBorder.withValues(alpha: 0.72) : glassBorder;
     final effectiveShadow = useLiteGlass ? SLShadow.sm : SLShadow.glass;
 
     final decoratedChild = Container(
@@ -1378,7 +1378,7 @@ class SLTheme {
           fontWeight: FontWeight.w600,
         ),
         prefixIcon: icon != null
-            ? Icon(icon, color: SLColors.primary.withOpacity(0.6), size: 20)
+            ? Icon(icon, color: SLColors.primary.withValues(alpha: 0.6), size: 20)
             : null,
         filled: true,
         fillColor: SLColors.bgElevated,
@@ -1402,16 +1402,16 @@ class SLTheme {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
       decoration: BoxDecoration(
-        color: isGold ? const Color(0xFFFFFAF0) : color.withOpacity(0.12),
+        color: isGold ? const Color(0xFFFFFAF0) : color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(SLRadius.md),
         border: Border.all(
-          color: isGold ? SLColors.warningGold : color.withOpacity(0.24),
+          color: isGold ? SLColors.warningGold : color.withValues(alpha: 0.24),
           width: isGold ? 1.2 : 0.8,
         ),
         boxShadow: isGold
             ? [
                 BoxShadow(
-                    color: SLColors.warningGold.withOpacity(0.2), blurRadius: 8)
+                    color: SLColors.warningGold.withValues(alpha: 0.2), blurRadius: 8)
               ]
             : null,
       ),
@@ -1461,7 +1461,7 @@ class SLTheme {
         ),
         borderRadius: BorderRadius.circular(SLRadius.pill),
         boxShadow: [
-          BoxShadow(color: SLColors.primary.withOpacity(0.12), blurRadius: 8),
+          BoxShadow(color: SLColors.primary.withValues(alpha: 0.12), blurRadius: 8),
         ],
       ),
       child: Text(
@@ -1531,16 +1531,16 @@ class _SLSoftCanvasBackdropPainter extends CustomPainter {
       canvas.drawRect(rect, paint);
     }
 
-    radial(const Alignment(-0.95, -0.82), 0.72, accentColor.withOpacity(0.18));
+    radial(const Alignment(-0.95, -0.82), 0.72, accentColor.withValues(alpha: 0.18));
     radial(
-        const Alignment(0.88, -0.36), 0.68, secondaryAccent.withOpacity(0.14));
-    radial(const Alignment(0.16, 1.08), 0.82, Colors.white.withOpacity(0.42));
+        const Alignment(0.88, -0.36), 0.68, secondaryAccent.withValues(alpha: 0.14));
+    radial(const Alignment(0.16, 1.08), 0.82, Colors.white.withValues(alpha: 0.42));
 
     final Paint linePaint = Paint()
-      ..color = accentColor.withOpacity(0.08)
+      ..color = accentColor.withValues(alpha: 0.08)
       ..strokeWidth = 1.1
       ..style = PaintingStyle.stroke;
-    final Paint dotPaint = Paint()..color = secondaryAccent.withOpacity(0.13);
+    final Paint dotPaint = Paint()..color = secondaryAccent.withValues(alpha: 0.13);
 
     switch (motif) {
       case SLCanvasBackdropMotif.notes:
@@ -1555,7 +1555,7 @@ class _SLSoftCanvasBackdropPainter extends CustomPainter {
               Rect.fromLTWH(x, y, 42, 30),
               const Radius.circular(8),
             ),
-            Paint()..color = accentColor.withOpacity(0.055),
+            Paint()..color = accentColor.withValues(alpha: 0.055),
           );
         }
         break;
@@ -1574,7 +1574,7 @@ class _SLSoftCanvasBackdropPainter extends CustomPainter {
           ..quadraticBezierTo(size.width - 66, 184, size.width - 96, 210)
           ..quadraticBezierTo(size.width - 126, 184, size.width - 132, 144)
           ..quadraticBezierTo(size.width - 138, 96, size.width - 96, 78);
-        canvas.drawPath(shield, Paint()..color = accentColor.withOpacity(0.06));
+        canvas.drawPath(shield, Paint()..color = accentColor.withValues(alpha: 0.06));
         break;
       case SLCanvasBackdropMotif.sparkles:
         for (int i = 0; i < 16; i++) {
@@ -1606,7 +1606,7 @@ class _SLBgPainter extends CustomPainter {
         center: const Alignment(0.0, -1.2),
         radius: 0.65,
         colors: [
-          SLColors.primary.withOpacity(0.18),
+          SLColors.primary.withValues(alpha: 0.18),
           Colors.transparent,
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
@@ -1617,7 +1617,7 @@ class _SLBgPainter extends CustomPainter {
         center: const Alignment(-0.8, -0.6),
         radius: 0.7,
         colors: [
-          const Color(0xFFF1D1C5).withOpacity(0.20),
+          const Color(0xFFF1D1C5).withValues(alpha: 0.20),
           Colors.transparent,
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
@@ -1628,7 +1628,7 @@ class _SLBgPainter extends CustomPainter {
         center: const Alignment(0.8, -0.6),
         radius: 0.7,
         colors: [
-          SLColors.secondary.withOpacity(0.14),
+          SLColors.secondary.withValues(alpha: 0.14),
           Colors.transparent,
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));

@@ -792,7 +792,7 @@ class MyApp extends StatelessWidget {
                           color: Colors.white,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 30,
                               offset: const Offset(0, 0),
                             ),
@@ -827,15 +827,15 @@ class MyApp extends StatelessWidget {
             canvasColor: SLColors.bgMain,
             cardColor: SLColors.bgCard,
             dividerColor: SLColors.border,
-            shadowColor: Colors.black.withOpacity(0.08),
+            shadowColor: Colors.black.withValues(alpha: 0.08),
             splashFactory: InkRipple.splashFactory,
-            splashColor: SLColors.primary.withOpacity(0.05),
-            highlightColor: SLColors.primary.withOpacity(0.02),
-            hoverColor: SLColors.primary.withOpacity(0.02),
-            focusColor: SLColors.primary.withOpacity(0.03),
+            splashColor: SLColors.primary.withValues(alpha: 0.05),
+            highlightColor: SLColors.primary.withValues(alpha: 0.02),
+            hoverColor: SLColors.primary.withValues(alpha: 0.02),
+            focusColor: SLColors.primary.withValues(alpha: 0.03),
             textTheme: SLTypography.textTheme(baseTextTheme),
             appBarTheme: AppBarTheme(
-              backgroundColor: SLColors.bgElevated.withOpacity(0.92),
+              backgroundColor: SLColors.bgElevated.withValues(alpha: 0.92),
               foregroundColor: SLColors.textPrimary,
               elevation: 0,
               scrolledUnderElevation: 0,
@@ -938,8 +938,8 @@ class MyApp extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 foregroundColor: SLColors.textInverse,
                 backgroundColor: SLColors.primary,
-                disabledForegroundColor: SLColors.textInverse.withOpacity(0.7),
-                disabledBackgroundColor: SLColors.primary.withOpacity(0.45),
+                disabledForegroundColor: SLColors.textInverse.withValues(alpha: 0.7),
+                disabledBackgroundColor: SLColors.primary.withValues(alpha: 0.45),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18,
@@ -981,7 +981,7 @@ class MyApp extends StatelessWidget {
               ),
             ),
             navigationBarTheme: NavigationBarThemeData(
-              backgroundColor: SLColors.bgElevated.withOpacity(0.96),
+              backgroundColor: SLColors.bgElevated.withValues(alpha: 0.96),
               surfaceTintColor: Colors.transparent,
               indicatorColor: SLColors.primarySoft,
               labelTextStyle: WidgetStateProperty.resolveWith((states) {
@@ -1043,7 +1043,7 @@ class StartupErrorApp extends StatelessWidget {
                   border: Border.all(color: const Color(0xFFFFD6E7)),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFB83280).withOpacity(0.08),
+                      color: const Color(0xFFB83280).withValues(alpha: 0.08),
                       blurRadius: 24,
                       offset: const Offset(0, 12),
                     ),

@@ -542,7 +542,7 @@ class SecurityService {
             Container(
               padding: SLSpacing.all8,
               decoration: BoxDecoration(
-                color: SLColors.danger.withOpacity(0.1),
+                color: SLColors.danger.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.security_rounded,
