@@ -425,6 +425,7 @@ class _LegacyMediaFeedReferencePostCardState
           memCacheWidth: 1800,
           imageUrl: _mediaUrl,
           fit: BoxFit.cover,
+          filterQuality: FilterQuality.high,
           fadeInDuration: Duration.zero,
           placeholder: (_, __) => Container(color: const Color(0xFF120716)),
           errorWidget: (_, __, ___) =>
@@ -442,6 +443,7 @@ class _LegacyMediaFeedReferencePostCardState
                     memCacheWidth: 1800,
                     imageUrl: _mediaUrl,
                     fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
                     fadeInDuration: Duration.zero,
                     placeholder: (_, __) =>
                         Container(color: const Color(0xFF120716)),
@@ -583,6 +585,7 @@ class _LegacyMediaFeedReferencePostCardState
                                           imageUrl: _mediaUrl,
                                           fit: BoxFit.contain,
                                           alignment: Alignment.center,
+                                          filterQuality: FilterQuality.high,
                                           placeholder: (_, __) => const Center(
                                             child: CircularProgressIndicator(
                                               color: Color(0xFFFF7EA8),
