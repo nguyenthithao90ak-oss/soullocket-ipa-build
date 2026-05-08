@@ -68,6 +68,7 @@ class CommunitySettingsHeroSection extends StatelessWidget {
                   child: Image.network(
                     headerImageUrl,
                     fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
                     errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),
