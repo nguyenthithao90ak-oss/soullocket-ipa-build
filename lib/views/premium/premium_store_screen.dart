@@ -288,7 +288,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   }
 
   Future<void> _restorePurchases() async {
-    if (_isLoading || _isPurchasing || !_canPurchase) return;
+    if (_isLoading || _isPurchasing) return;
     setState(() => _isLoading = true);
     await _purchaseService.restorePurchases();
     await _loadData();
@@ -895,6 +895,10 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   }
 
   Widget _buildProductSection() {
+    if (!_storeConfigured) {
+      return _buildStoreNotConfiguredCard();
+    }
+
     if (_sortedProducts.isEmpty) {
       return _buildStoreUnavailableCard();
     }
