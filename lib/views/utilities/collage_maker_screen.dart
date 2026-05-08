@@ -742,6 +742,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     final codec = await ui.instantiateImageCodec(
       bytes,
       targetWidth: maxDimension,
+      targetHeight: maxDimension,
       allowUpscaling: false,
     );
     final frame = await codec.getNextFrame();
