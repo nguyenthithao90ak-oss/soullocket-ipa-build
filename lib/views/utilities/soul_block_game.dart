@@ -323,6 +323,14 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       return;
     }
 
+    if (Platform.isIOS) {
+      _showFloatingMessage(
+        'Tính năng PRO tạm ẩn trên iOS',
+        color: const Color(0xFFFFD166),
+      );
+      return;
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PremiumStoreScreen(
