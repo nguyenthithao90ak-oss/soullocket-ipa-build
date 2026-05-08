@@ -497,7 +497,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
 
   String _accountMemoryLimitLabel() {
     if (_isVipActive) {
-      return _isLifetimeVip ? '1500 ảnh Kỷ niệm' : '1000 ảnh Kỷ niệm';
+      return _isLifetimeVip ? '1000 ảnh Kỷ niệm' : '500 ảnh Kỷ niệm';
     }
     return '365 ảnh Kỷ niệm';
   }
