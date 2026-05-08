@@ -575,6 +575,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     );
   }
 
+  // ignore: unused_element
   Future<void> _openCandidateProfile(SingleMatchCandidate candidate) async {
     await Navigator.push(
       context,
