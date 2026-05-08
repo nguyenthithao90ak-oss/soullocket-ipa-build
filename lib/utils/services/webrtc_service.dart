@@ -38,17 +38,34 @@ class WebRTCService {
   };
 
   Future<Map<String, dynamic>> _loadRtcConfiguration() async {
+    final iceServers = <Map<String, dynamic>>[
+      ...(_fallbackConfiguration['iceServers'] as List).cast<Map<String, dynamic>>(),
+    ];
+    final turnUrl = const String.fromEnvironment('WEBRTC_TURN_URL').trim();
+    final turnUsername = const String.fromEnvironment('WEBRTC_TURN_USERNAME').trim();
+    final turnCredential =
+        const String.fromEnvironment('WEBRTC_TURN_CREDENTIAL').trim();
+    if (turnUrl.isNotEmpty) {
+      final turnServer = <String, dynamic>{'urls': turnUrl};
+      if (turnUsername.isNotEmpty) {
+        turnServer['username'] = turnUsername;
+      }
+      if (turnCredential.isNotEmpty) {
+        turnServer['credential'] = turnCredential;
+      }
+      iceServers.add(turnServer);
+    }
     try {
       final snap = await _db.ref('appConfig/webrtc/iceServers').get();
       final raw = snap.value;
       final servers = _parseIceServers(raw);
       if (servers.isNotEmpty) {
-        return {'iceServers': servers};
+        return {'iceServers': [...servers, ...iceServers]};
       }
     } catch (e) {
       debugPrint('Failed to load WebRTC ICE servers: $e');
     }
-    return _fallbackConfiguration;
+    return {'iceServers': iceServers};
   }
 
   List<Map<String, dynamic>> _parseIceServers(dynamic raw) {
@@ -143,26 +160,28 @@ class WebRTCService {
     _roomId = roomRef.key;
 
     final callerCandidatesRef = roomRef.child('callerCandidates');
-    // Gửi ICE Candidate của A lên Firebase
     _peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
       callerCandidatesRef.push().set(candidate.toMap());
     };
 
-    // Tạo Offer cho B
-    final offer = await _peerConnection?.createOffer();
-    await _peerConnection?.setLocalDescription(offer!);
+    final offer = await _peerConnection!
+        .createOffer()
+        .timeout(const Duration(seconds: 12));
+    await _peerConnection!
+        .setLocalDescription(offer)
+        .timeout(const Duration(seconds: 12));
 
     await roomRef.set({
       'offer': {
-        'sdp': offer?.sdp,
-        'type': offer?.type,
+        'sdp': offer.sdp,
+        'type': offer.type,
       },
       'callerId': user.uid,
       'calleeId': resolvedTargetHouseId,
       'houseId': resolvedCallerHouseId,
       'status': 'ringing',
       'timestamp': ServerValue.timestamp,
-    });
+    }).timeout(const Duration(seconds: 12));
 
     // Lắng nghe Answer từ B
     roomRef.child('answer').onValue.listen((event) async {
@@ -240,32 +259,38 @@ class WebRTCService {
       remoteRenderer.srcObject = stream;
     };
 
-    final calleeCandidatesRef = roomRef.child('calleeCandidates');
     _peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
       calleeCandidatesRef.push().set(candidate.toMap());
     };
 
-    // Lấy Offer từ A và tạo Answer
     final data = Map<String, dynamic>.from(roomSnap.value as Map);
     final offerData = Map<String, dynamic>.from(data['offer']);
 
     final offer = RTCSessionDescription(offerData['sdp'], offerData['type']);
-    await _peerConnection?.setRemoteDescription(offer);
+    await _peerConnection?.setRemoteDescription(offer).timeout(const Duration(seconds: 12));
 
-    final answer = await _peerConnection?.createAnswer();
-    await _peerConnection?.setLocalDescription(answer!);
+    final answer = await _peerConnection!
+        .createAnswer()
+        .timeout(const Duration(seconds: 12));
+    await _peerConnection!
+        .setLocalDescription(answer)
+        .timeout(const Duration(seconds: 12));
 
     await roomRef.child('answer').set({
-      'type': answer?.type,
-      'sdp': answer?.sdp,
-    });
-    await roomRef.update({'status': 'connected'});
+      'type': answer.type,
+      'sdp': answer.sdp,
+    }).timeout(const Duration(seconds: 12));
+    await roomRef.update({'status': 'connected'}).timeout(const Duration(seconds: 8));
 
-    // Lắng nghe ICE Candidate của A
     roomRef.child('callerCandidates').onChildAdded.listen((event) {
-      final val = Map<String, dynamic>.from(event.snapshot.value as Map);
+      final raw = event.snapshot.value;
+      if (raw is! Map) return;
+      final val = Map<String, dynamic>.from(raw);
       final candidate = RTCIceCandidate(
-          val['candidate'], val['sdpMid'], val['sdpMLineIndex']);
+        val['candidate']?.toString(),
+        val['sdpMid']?.toString(),
+        val['sdpMLineIndex'] as int?,
+      );
       _peerConnection?.addCandidate(candidate);
     });
   }
