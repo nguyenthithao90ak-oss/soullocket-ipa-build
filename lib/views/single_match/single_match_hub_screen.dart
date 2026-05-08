@@ -1107,7 +1107,48 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
           );
         }
         if (!snapshot.hasData) {
-          return _buildEmptyHistoryList();
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
+            children: <Widget>[
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: Colors.white),
+                ),
+                child: Column(
+                  children: <Widget>[
+                    const Icon(
+                      Icons.history_toggle_off_rounded,
+                      size: 52,
+                      color: Color(0xFF7C61FF),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Chưa có lịch sử',
+                      style: SLTheme.quicksand(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF32203B),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Khi bạn gọi hoặc lướt qua hồ sơ trong Single Match, mọi thứ sẽ hiện ở đây để gọi lại nhanh hơn.',
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        height: 1.45,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8B7A90),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
         }
 
         final callEntries = history.where((entry) => entry.isCall).toList();
