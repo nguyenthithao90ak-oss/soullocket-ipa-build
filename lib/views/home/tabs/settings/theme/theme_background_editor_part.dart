@@ -284,6 +284,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
     return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: BoxFit.cover,
+      filterQuality: FilterQuality.high,
       fadeInDuration: const Duration(milliseconds: 180),
       memCacheWidth: 1080,
       placeholder: (_, __) => const DecoratedBox(
