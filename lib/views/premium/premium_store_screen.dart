@@ -394,6 +394,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 380;
+    const showPurchaseUi = AppConfig.showPurchaseUi;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -453,38 +454,83 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               ),
             ),
             SafeArea(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFF9C15A),
-                      ),
-                    )
-                  : SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: EdgeInsets.fromLTRB(
-                        compact ? 14 : 20,
-                        12,
-                        compact ? 14 : 20,
-                        compact ? 20 : 28,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildHeroSection(),
-                          const SizedBox(height: 22),
-                          _buildBenefitsSection(),
-                          const SizedBox(height: 24),
-                          if (_isVip)
-                            _buildVipActiveStatus()
-                          else
-                            _buildProductSection(),
-                          const SizedBox(height: 20),
-                          _buildFooter(),
-                        ],
+              child: showPurchaseUi
+                  ? (_isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFFF9C15A),
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.fromLTRB(
+                            compact ? 14 : 20,
+                            12,
+                            compact ? 14 : 20,
+                            compact ? 20 : 28,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildHeroSection(),
+                              const SizedBox(height: 22),
+                              _buildBenefitsSection(),
+                              const SizedBox(height: 24),
+                              if (_isVip)
+                                _buildVipActiveStatus()
+                              else
+                                _buildProductSection(),
+                              const SizedBox(height: 20),
+                              _buildFooter(),
+                            ],
+                          ),
+                        ))
+                  : Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.workspace_premium_outlined,
+                                color: Color(0xFFF9C15A),
+                                size: 40,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Mục PRO đang tạm ẩn',
+                                style: SLTheme.quicksand(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Bản review hiện không hiển thị nút mua hay giao diện PRO.',
+                                textAlign: TextAlign.center,
+                                style: SLTheme.quicksand(
+                                  color: const Color(0xFFD8DDF0),
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
             ),
-            if (_isPurchasing)
+            if (_isPurchasing && showPurchaseUi)
               Positioned.fill(
                 child: ColoredBox(
                   color: Colors.black.withValues(alpha: 0.35),
@@ -529,6 +575,8 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       ),
     );
   }
+
+
 
   Widget _buildStoreNotConfiguredCard() {
     return Container(

@@ -117,6 +117,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
   }
 
   Future<void> _openPremiumStoreFromThemePanel() async {
+    if (!AppConfig.showPurchaseUi) {
+      _showToast('Gói PRO đang tạm ẩn trong bản review.', success: false);
+      return;
+    }
+
     final houseId = _houseId?.trim();
     if (houseId == null || houseId.isEmpty) {
       _showToast('Hãy vào nhà trước khi mở gói PRO.', success: false);
@@ -135,6 +140,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
     if (!mounted) return;
     await _loadVipStatus();
   }
+
 
   Future<void> _handleThemeSelection(String themeKey) async {
     final customBackgroundUrl = (_draftCustomBackgroundUrl ??
@@ -336,82 +342,15 @@ extension _SettingsTabThemeSection on _SettingsTabState {
 
   Widget _buildThemePanel({bool hideBackButton = false}) {
     final config = _buildThemePanelConfig();
-    final themes = [
-      (context.tr('theme_auto_season'), 'theme-auto'),
-      ('Sóng Hồng (Mặc định)', 'theme-pink-glow'),
-      ('Đơn giản', 'theme-default'),
-      (context.tr('theme_sunset'), 'theme-sunset'),
-      (context.tr('theme_ocean'), 'theme-ocean'),
-      (context.tr('theme_night'), 'theme-night'),
-      (context.tr('theme_dark'), 'theme-dark'),
-      (context.tr('theme_mystic_dark'), 'theme-mystic-dark'),
-      ('Tắt Chủ Đề', 'off'),
-    ];
-    final effects = [
-      (context.tr('effect_auto_season'), 'auto'),
-      (context.tr('effect_sparkles'), 'sparkles'),
-      (context.tr('effect_stars'), 'stars'),
-      (context.tr('effect_hearts'), 'hearts'),
-      (context.tr('effect_meteors'), 'meteors'),
-      (context.tr('effect_bubbles'), 'bubbles'),
-      (context.tr('effect_snow'), 'snow'),
-      (context.tr('effect_leaves'), 'leaves'),
-      (context.tr('effect_off'), 'off'),
-    ];
-    final avatarFrames = [
-      ('Tắt (Không có khung)', 'off'),
-      (context.tr('frame_circle'), 'circle'),
-      (context.tr('frame_rounded'), 'rounded'),
-      ('Squircle', 'squircle'),
-      (context.tr('frame_pearl'), 'pearl'),
-      (context.tr('frame_glass'), 'glass'),
-      (
-        _isVipActive
-            ? context.tr('frame_vip')
-            : '${context.tr('frame_vip')} 🔒',
-        'vip'
-      ),
-    ];
-    final countdownStyles = [
-      (context.tr('countdown_default'), 'default', false),
-      (context.tr('countdown_rose_wave'), 'rose_wave', false),
-      (context.tr('countdown_glass'), 'glass', false),
-      (context.tr('countdown_glow'), 'glow', false),
-      (context.tr('countdown_plain'), 'plain', false),
-      (context.tr('countdown_candy'), 'candy', false),
-      (context.tr('countdown_galaxy'), 'galaxy', true),
-      (context.tr('countdown_aurora'), 'aurora', true),
-      (context.tr('countdown_crystal'), 'crystal', true),
-      (context.tr('countdown_fireworks'), 'fireworks', true),
-      (context.tr('countdown_lava'), 'lava', true),
-    ];
-    const fonts = SLTheme.cleanFontOptions;
-    final languages = [
-      (context.tr('lang_vi'), 'vi'),
-      (context.tr('lang_en'), 'en'),
-    ];
-    final homeTones = [
-      (context.tr('tone_theme'), 'theme'),
-      (context.tr('tone_mist'), 'mist'),
-      (context.tr('tone_rose'), 'rose'),
-      (context.tr('tone_glass'), 'glass'),
-    ];
-    final graphicsOptions = [
-      ('Siêu nhẹ', 'low'),
-      ('Đồ họa thường', 'balanced'),
-      ('Đồ họa cao', 'high'),
-    ];
-    final widgetThemes = [
-      (context.tr('widget_pink'), 'pink'),
-      (context.tr('theme_dark'), 'dark'),
-      (context.tr('widget_white'), 'white'),
-      (context.tr('widget_blue'), 'blue'),
-      (context.tr('widget_orange'), 'orange'),
-      (context.tr('widget_purple'), 'purple'),
-      (context.tr('theme_ocean'), 'green'),
-      (context.tr('widget_red'), 'red'),
-      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
-    ];
+    final themes = config.themes;
+    final effects = config.effects;
+    final avatarFrames = config.avatarFrames;
+    final countdownStyles = config.countdownStyles;
+    final fonts = config.fonts;
+    final languages = config.languages;
+    final homeTones = config.homeTones;
+    final graphicsOptions = config.graphicsOptions;
+    final widgetThemes = config.widgetThemes;
 
     return ValueListenableBuilder<UiPrefsState>(
       valueListenable: UiPrefs.notifier,

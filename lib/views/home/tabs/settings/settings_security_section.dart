@@ -336,7 +336,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               ),
               SLSpacing.h8,
               DropdownButtonFormField<String>(
-                value: questionItems.contains(selectedQuestion)
+                initialValue: questionItems.contains(selectedQuestion)
                     ? selectedQuestion
                     : questionItems.first,
                 isExpanded: true,
@@ -537,7 +537,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   border: Border.all(color: const Color(0xFFCE93D8)),
                 ),
                 child: DropdownButtonFormField<int>(
-                  value: UiPrefs.notifier.value.vaultTimeoutMins,
+                  initialValue: UiPrefs.notifier.value.vaultTimeoutMins,
                   isExpanded: true,
                   style: SLTextStyles.quicksand(
                     color: const Color(0xFF4A148C),
@@ -606,7 +606,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   border: Border.all(color: const Color(0xFFCE93D8)),
                 ),
                 child: DropdownButtonFormField<String>(
-                  value: UiPrefs.notifier.value.vaultHomeStyle,
+                  initialValue: UiPrefs.notifier.value.vaultHomeStyle,
                   isExpanded: true,
                   style: SLTextStyles.quicksand(
                     color: const Color(0xFF4A148C),
@@ -746,7 +746,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 ),
                 Switch.adaptive(
                   value: _isAppLockEnabled,
-                  activeColor: const Color(0xFFD81B60),
+                  activeThumbColor: const Color(0xFFD81B60),
                   onChanged: (v) async {
                     if (!await _ensureCanModifySecurityInfo()) return;
                     if (v) {
@@ -808,7 +808,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               label: context.tr('use_biometrics'),
               trailing: Switch.adaptive(
                 value: _useBiometrics,
-                activeColor: const Color(0xFFD81B60),
+                activeThumbColor: const Color(0xFFD81B60),
                 onChanged: (v) async {
                   final requiresExistingLock =
                       _isAppLockEnabled && _storedLockSecret.trim().isNotEmpty;
@@ -870,7 +870,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               },
               trailing: Switch.adaptive(
                 value: _isMilitaryMode,
-                activeColor: const Color(0xFFD81B60),
+                activeThumbColor: const Color(0xFFD81B60),
                 onChanged: (v) async {
                   final authSuccess = await _authenticateLockSettingsChange();
                   if (!authSuccess) {
@@ -1018,7 +1018,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                       scale: 0.8,
                       child: Switch.adaptive(
                         value: e.value,
-                        activeColor: const Color(0xFFD81B60),
+                        activeThumbColor: const Color(0xFFD81B60),
                         onChanged: (v) async {
                           final authSuccess = await _authenticateLockSettingsChange();
                           if (!authSuccess) {

@@ -432,7 +432,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                           Switch(
                                                             value:
                                                                 _isMaintenanceMode,
-                                                            activeColor:
+                                                            activeThumbColor:
                                                                 const Color(
                                                                     0xFFFF4B91),
                                                             onChanged:
@@ -490,7 +490,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                           Switch(
                                                             value:
                                                                 _isCommunityMaintenanceMode,
-                                                            activeColor:
+                                                            activeThumbColor:
                                                                 const Color(
                                                                     0xFFFF4B91),
                                                             onChanged:

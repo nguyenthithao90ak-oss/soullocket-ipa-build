@@ -50,6 +50,11 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   }
 
   Future<void> _openPremiumStoreFromWidgetPanel() async {
+    if (!AppConfig.showPurchaseUi) {
+      _showToast('Gói PRO đang tạm ẩn trong bản review.', success: false);
+      return;
+    }
+
     final houseId = _houseId?.trim();
     if (houseId == null || houseId.isEmpty) {
       _showToast('Hãy vào nhà trước khi mở gói PRO.', success: false);

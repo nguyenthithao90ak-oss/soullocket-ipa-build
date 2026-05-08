@@ -98,7 +98,7 @@ extension _MapLocationLogicExt on _MapScreenState {
       buf.write(
         '${marker.id}_${marker.point.latitude.toStringAsFixed(5)}_'
         '${marker.point.longitude.toStringAsFixed(5)}_'
-        '${marker.icon.codePoint}_${marker.color.value}_${marker.title}_'
+        '${marker.icon.codePoint}_${marker.color.toARGB32()}_${marker.title}_'
         '${marker.subtitle}_${marker.pulse ? 1 : 0}|',
       );
     }
@@ -111,10 +111,10 @@ extension _MapLocationLogicExt on _MapScreenState {
     for (final polyline in polylines) {
       final gradientKey = polyline.gradientColors == null
           ? 'none'
-          : polyline.gradientColors!.map((color) => color.value).join('-');
+          : polyline.gradientColors!.map((color) => color.toARGB32()).join('-');
       buf.write(
-        '${polyline.color.value}_${polyline.strokeWidth.toStringAsFixed(1)}_'
-        '${polyline.borderColor.value}_${polyline.borderStrokeWidth.toStringAsFixed(1)}_'
+        '${polyline.color.toARGB32()}_${polyline.strokeWidth.toStringAsFixed(1)}_'
+        '${polyline.borderColor.toARGB32()}_${polyline.borderStrokeWidth.toStringAsFixed(1)}_'
         '${gradientKey}_${polyline.points.length}_',
       );
       if (polyline.points.isNotEmpty) {

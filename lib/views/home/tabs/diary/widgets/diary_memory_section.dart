@@ -13,6 +13,8 @@ import '../../../../../widgets/skeleton_container.dart';
 import '../controllers/diary_memory_controller.dart';
 import 'diary_tab_shell_sections.dart';
 
+const Color _diaryMemoryAccentColor = Color(0xFFD81B60);
+
 typedef DiaryPrepareMemoryFeedCallback = PreparedDiaryMemoryFeed Function({
   required Object? liveSource,
   required Object? cacheSource,
@@ -480,7 +482,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
                   title,
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFFD81B60),
+                    color: _diaryMemoryAccentColor,
                     fontSize: 13,
                   ),
                 ),
@@ -507,7 +509,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFFD81B60),
+                color: _diaryMemoryAccentColor,
               ),
             ),
           ),

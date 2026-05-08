@@ -1,5 +1,8 @@
 part of '../settings_tab.dart';
 
+const Color _settingsAccountAccentColor = Color(0xFFD81B60);
+const Color _settingsAccountPurpleTextColor = Color(0xFF7A6A86);
+
 extension _SettingsTabAccountSection on _SettingsTabState {
   String _displayFlexibleDate(String raw) {
     if (raw.trim().isEmpty) return '';
@@ -57,7 +60,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 builder: (ctx, child) => Theme(
                   data: Theme.of(ctx).copyWith(
                     colorScheme: const ColorScheme.light(
-                      primary: Color(0xFFD81B60),
+                      primary: _settingsAccountAccentColor,
                       onPrimary: Colors.white,
                     ),
                   ),
@@ -109,7 +112,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 title,
                 style: SLTextStyles.quicksand(
                   fontWeight: FontWeight.w900,
-                  color: const Color(0xFFD81B60),
+                  color: _settingsAccountAccentColor,
                 ),
               ),
               content: Column(
@@ -143,7 +146,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       errorText: errorText,
                       prefixIcon: const Icon(
                         Icons.calendar_month_rounded,
-                        color: Color(0xFFD81B60),
+                        color: _settingsAccountAccentColor,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: SLRadius.mdAll,
@@ -166,7 +169,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 ElevatedButton(
                   onPressed: submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD81B60),
+                    backgroundColor: _settingsAccountAccentColor,
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Lưu'),
@@ -660,48 +663,50 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             ),
           ),
           SLSpacing.h8,
-          Row(
-            children: [
-              Expanded(
-                child: _buildGradientBtn(
-                  label: 'Mua / Xem gói PRO',
-                  gradient: const [Color(0xFFffc107), Color(0xFFff9800)],
-                  textColor: Colors.black87,
-                  onTap: () {
-                    if (_houseId == null) {
-                      _showToast('Chưa có mã nhà', success: false);
-                      return;
-                    }
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PremiumStoreScreen(
-                            houseId: _houseId!, myName: _nameU1),
-                      ),
-                    );
-                  },
+          if (AppConfig.showPurchaseUi)
+            Row(
+              children: [
+                Expanded(
+                  child: _buildGradientBtn(
+                    label: 'Mua / Xem gói PRO',
+                    gradient: const [Color(0xFFffc107), Color(0xFFff9800)],
+                    textColor: Colors.black87,
+                    onTap: () {
+                      if (_houseId == null) {
+                        _showToast('Chưa có mã nhà', success: false);
+                        return;
+                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PremiumStoreScreen(
+                              houseId: _houseId!, myName: _nameU1),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              SLSpacing.w8,
-              Expanded(
-                child: _buildGradientBtn(
-                  label: _isRestoringVip ? 'ĐANG KHÔI PHỤC...' : 'Khôi phục',
-                  gradient: const [Color(0xFF424242), Color(0xFF212121)],
-                  onTap: _isRestoringVip ? () {} : _restoreVipPurchases,
+                SLSpacing.w8,
+                Expanded(
+                  child: _buildGradientBtn(
+                    label: _isRestoringVip ? 'ĐANG KHÔI PHỤC...' : 'Khôi phục',
+                    gradient: const [Color(0xFF424242), Color(0xFF212121)],
+                    onTap: _isRestoringVip ? () {} : _restoreVipPurchases,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          SLSpacing.h8,
-          Text(
-            context.tr('restore_vip_desc'),
-            style: SLTextStyles.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[700],
-              height: 1.4,
+              ],
             ),
-          ),
+          if (AppConfig.showPurchaseUi) SLSpacing.h8,
+          if (AppConfig.showPurchaseUi)
+            Text(
+              context.tr('restore_vip_desc'),
+              style: SLTextStyles.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey[700],
+                height: 1.4,
+              ),
+            ),
         ],
       ),
     );
@@ -919,7 +924,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             style: SLTheme.quicksand(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF7A6A86),
+              color: _settingsAccountPurpleTextColor,
             ),
           ),
           const SizedBox(height: 14),

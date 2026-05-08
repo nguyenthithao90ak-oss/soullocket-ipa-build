@@ -1,6 +1,38 @@
 part of '../military_lock_service.dart';
 
 abstract final class _MilitaryLockRuleEngine {
+  static const Map<LockScope, String> _scopeTitles = {
+    LockScope.security: 'Khu bảo mật',
+    LockScope.diary: 'Nhật ký tình yêu',
+    LockScope.chat: 'Lời nhắn yêu thương',
+    LockScope.privateArea: 'Kho bí mật',
+    LockScope.app: 'Cánh cửa trái tim',
+  };
+
+  static const Map<LockScope, String> _scopeReasons = {
+    LockScope.security: 'Xác thực để vào khu vực bảo mật của hai bạn.',
+    LockScope.diary: 'Xác thực để xem nhật ký riêng tư.',
+    LockScope.chat: 'Xác thực để mở phần tin nhắn riêng.',
+    LockScope.privateArea: 'Xác thực để mở kho bí mật.',
+    LockScope.app: 'Xác thực để mở khóa SoulLocket.',
+  };
+
+  static const Map<LockScope, String> _scopeKeys = {
+    LockScope.security: 'security',
+    LockScope.diary: 'diary',
+    LockScope.chat: 'chat',
+    LockScope.privateArea: 'private',
+    LockScope.app: 'app',
+  };
+
+  static const Map<LockScope, String> _scopePrefKeys = {
+    LockScope.security: 'il_lock_scope_security',
+    LockScope.diary: 'il_lock_scope_diary',
+    LockScope.chat: 'il_lock_scope_chat',
+    LockScope.privateArea: 'il_lock_scope_private',
+    LockScope.app: 'il_lock_scope_app',
+  };
+
   static Map<String, bool> normalizeScopeStorageConfig(
     Map<String, bool> scopeMap, {
     required bool enabled,
@@ -95,67 +127,19 @@ abstract final class _MilitaryLockRuleEngine {
   }
 
   static String scopeKey(LockScope scope) {
-    switch (scope) {
-      case LockScope.security:
-        return 'security';
-      case LockScope.diary:
-        return 'diary';
-      case LockScope.chat:
-        return 'chat';
-      case LockScope.privateArea:
-        return 'private';
-      case LockScope.app:
-      default:
-        return 'app';
-    }
+    return _scopeKeys[scope] ?? _scopeKeys[LockScope.app]!;
   }
 
   static String getScopeTitle(LockScope scope) {
-    switch (scope) {
-      case LockScope.security:
-        return 'Khu bảo mật';
-      case LockScope.diary:
-        return 'Nhật ký tình yêu';
-      case LockScope.chat:
-        return 'Lời nhắn yêu thương';
-      case LockScope.privateArea:
-        return 'Kho bí mật';
-      case LockScope.app:
-      default:
-        return 'Cánh cửa trái tim';
-    }
+    return _scopeTitles[scope] ?? _scopeTitles[LockScope.app]!;
   }
 
   static String scopeReason(LockScope scope) {
-    switch (scope) {
-      case LockScope.security:
-        return 'Xác thực để vào khu vực bảo mật của hai bạn.';
-      case LockScope.diary:
-        return 'Xác thực để xem nhật ký riêng tư.';
-      case LockScope.chat:
-        return 'Xác thực để mở phần tin nhắn riêng.';
-      case LockScope.privateArea:
-        return 'Xác thực để mở kho bí mật.';
-      case LockScope.app:
-      default:
-        return 'Xác thực để mở khóa SoulLocket.';
-    }
+    return _scopeReasons[scope] ?? _scopeReasons[LockScope.app]!;
   }
 
   static String scopePrefKey(LockScope scope) {
-    switch (scope) {
-      case LockScope.security:
-        return 'il_lock_scope_security';
-      case LockScope.diary:
-        return 'il_lock_scope_diary';
-      case LockScope.chat:
-        return 'il_lock_scope_chat';
-      case LockScope.privateArea:
-        return 'il_lock_scope_private';
-      case LockScope.app:
-      default:
-        return 'il_lock_scope_app';
-    }
+    return _scopePrefKeys[scope] ?? _scopePrefKeys[LockScope.app]!;
   }
 
   static bool defaultScopeValue(LockScope scope) {

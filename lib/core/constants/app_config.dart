@@ -134,6 +134,12 @@ class AppConfig {
   static const int presenceIdleMs = 5 * 60 * 1000; // 5 phút
 
   // ── VIP CONFIG ────────────────────────────────────────────────────────
+  /// Tạm ẩn toàn bộ entry mua PRO/IAP trong bản review iOS.
+  static const bool showPurchaseUi = bool.fromEnvironment(
+    'SHOW_PURCHASE_UI',
+    defaultValue: false,
+  );
+
   /// Số ngày dùng thử VIP khi tạo nhà mới
   static const int newHouseTrialDays = 3;
 
@@ -197,6 +203,7 @@ class AppConfig {
         'https://us-central1-soullockket.cloudfunctions.net/verifyPlayIntegrityHttp',
   );
   static const String deleteAccountPageUrl = '$webBaseUrl/delete-account.html';
+  static const String supportPageUrl = '$webBaseUrl/support.html';
   static const String privacyPolicyUrl = '$webBaseUrl/privacy.html';
   static const String termsOfUseUrl = '$webBaseUrl/terms.html';
 

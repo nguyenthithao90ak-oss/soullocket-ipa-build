@@ -17,6 +17,8 @@ class AdminConfigScreen extends StatefulWidget {
 }
 
 class _AdminConfigScreenState extends State<AdminConfigScreen> {
+  static const Color _maintenanceAccentColor = Color(0xFFFF4B91);
+
   final _db = FirebaseDatabase.instance.ref();
   final _authService = AuthService();
   bool _isLoading = true;
@@ -334,8 +336,8 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                           color: Colors.grey)),
                                                   value: _isMaintenanceMode,
                                                   onChanged: _toggleMaintenance,
-                                                  activeColor:
-                                                      const Color(0xFFFF4B91),
+                                                  activeThumbColor:
+                                                      _maintenanceAccentColor,
                                                 ),
                                                 SwitchListTile(
                                                   contentPadding:
@@ -352,8 +354,8 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                       _isCommunityMaintenanceMode,
                                                   onChanged:
                                                       _toggleCommunityMaintenance,
-                                                  activeColor:
-                                                      const Color(0xFFFF4B91),
+                                                  activeThumbColor:
+                                                      _maintenanceAccentColor,
                                                 ),
                                                 SLSpacing.h16,
                                                 TextField(

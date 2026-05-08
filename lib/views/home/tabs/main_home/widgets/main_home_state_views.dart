@@ -2,16 +2,18 @@
 
 part of '../../main_home_tab.dart';
 
+const Color _mainHomeAccentColor = Color(0xFFD81B60);
+const Color _mainHomeOverlayColor = Color(0x52FFF7FA);
+const Color _mainHomeErrorTextColor = Color(0xFF6B7280);
+
 class _MainHomeStateView extends StatelessWidget {
   final bool isLoading;
   final bool hasVisibleContent;
-  final String? errorMessage;
   final Widget? child;
 
   const _MainHomeStateView({
     required this.isLoading,
     required this.hasVisibleContent,
-    this.errorMessage,
     this.child,
   });
 
@@ -19,9 +21,6 @@ class _MainHomeStateView extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!hasVisibleContent && isLoading) {
       return const _MainHomeLoadingView();
-    }
-    if (!hasVisibleContent && errorMessage != null) {
-      return _MainHomeErrorView(message: errorMessage!);
     }
     if (child == null) {
       return const _MainHomeEmptyView();
@@ -48,7 +47,7 @@ class _MainHomeLoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: CircularProgressIndicator(color: Color(0xFFD81B60)),
+      child: CircularProgressIndicator(color: _mainHomeAccentColor),
     );
   }
 }
@@ -60,9 +59,9 @@ class _MainHomeLoadingOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return const IgnorePointer(
       child: ColoredBox(
-        color: Color(0x52FFF7FA),
+        color: _mainHomeOverlayColor,
         child: Center(
-          child: CircularProgressIndicator(color: Color(0xFFD81B60)),
+          child: CircularProgressIndicator(color: _mainHomeAccentColor),
         ),
       ),
     );
@@ -94,7 +93,7 @@ class _MainHomeErrorView extends StatelessWidget {
         style: SLTheme.quicksand(
           fontSize: 14,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF6B7280),
+          color: _mainHomeErrorTextColor,
         ),
       ),
     );

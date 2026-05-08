@@ -1,16 +1,15 @@
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
-// ignore: avoid_web_libraries_in_flutter
+import 'dart:js_interop';
 import 'dart:ui_web' as ui_web;
 
+import 'package:web/web.dart' as web;
+
 String? createWebIframeImpl(String viewId, String htmlContent) {
-  // ignore: undefined_prefixed_name
   ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
-    final iframe = html.IFrameElement()
+    final iframe = web.HTMLIFrameElement()
       ..style.border = 'none'
       ..style.width = '100%'
       ..style.height = '100%'
-      ..srcdoc = htmlContent;
+      ..srcdoc = htmlContent.toJS;
     return iframe;
   });
   return viewId;

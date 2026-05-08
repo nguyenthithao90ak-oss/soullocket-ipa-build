@@ -3,6 +3,21 @@ import 'package:flutter/material.dart';
 import '../../../../../core/sl_theme.dart';
 
 class MusicPanel extends StatelessWidget {
+  static const Color _accentColor = Color(0xFFD81B60);
+  static const Color _primaryTextColor = Color(0xFF3F3340);
+  static const Color _secondaryTextColor = Color(0xFF7D6C79);
+  static const Color _panelBorderColor = Color(0xFFF5D4E1);
+  static const Color _summarySurfaceColor = Color(0xFFFFF4F8);
+  static const Color _summaryBorderColor = Color(0xFFF3C9DA);
+  static const Color _summaryTitleColor = Color(0xFF6A1B4D);
+  static const Color _summaryBodyColor = Color(0xFF7A4564);
+  static const Color _inputFillColor = Color(0xFFFFFBFD);
+  static const Color _inputBorderColor = Color(0xFFF3DDE7);
+  static const Color _saveButtonColor = Color(0xFF2196F3);
+  static const Color _guideButtonColor = Color(0xFFFFE0B2);
+  static const Color _guideTextColor = Color(0xFF6A4100);
+  static const Color _removeBorderColor = Color(0xFFF3B5C8);
+
   const MusicPanel({
     super.key,
     required this.autoplay,
@@ -39,7 +54,7 @@ class MusicPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF5D4E1)),
+        border: Border.all(color: _panelBorderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,7 +64,7 @@ class MusicPanel extends StatelessWidget {
             style: SLTheme.quicksand(
               fontSize: 14.5,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFFD81B60),
+              color: _accentColor,
             ),
           ),
           const SizedBox(height: 4),
@@ -58,7 +73,7 @@ class MusicPanel extends StatelessWidget {
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF7D6C79),
+              color: _secondaryTextColor,
               height: 1.45,
             ),
           ),
@@ -66,13 +81,13 @@ class MusicPanel extends StatelessWidget {
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             value: autoplay,
-            activeColor: const Color(0xFFD81B60),
+            activeThumbColor: _accentColor,
             title: Text(
               'Tự phát khi vào màn hình chính',
               style: SLTheme.quicksand(
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
-                color: const Color(0xFF3F3340),
+                color: _primaryTextColor,
               ),
             ),
             subtitle: Text(
@@ -80,7 +95,7 @@ class MusicPanel extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 11.4,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF7D6C79),
+                color: _secondaryTextColor,
               ),
             ),
             onChanged: onAutoplayChanged,
@@ -90,9 +105,9 @@ class MusicPanel extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF4F8),
+              color: _summarySurfaceColor,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFF3C9DA)),
+              border: Border.all(color: _summaryBorderColor),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +119,8 @@ class MusicPanel extends StatelessWidget {
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF6A1B4D),
+                    color: _summaryTitleColor,
+
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -113,7 +129,8 @@ class MusicPanel extends StatelessWidget {
                   style: SLTheme.quicksand(
                     fontSize: 11.6,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF7A4564),
+                    color: _summaryBodyColor,
+
                     height: 1.45,
                   ),
                 ),
@@ -127,21 +144,21 @@ class MusicPanel extends StatelessWidget {
               hintText: 'Dán link MP3 / MP4',
               prefixIcon: const Icon(
                 Icons.music_note_rounded,
-                color: Color(0xFFD81B60),
+                color: _accentColor,
               ),
               filled: true,
-              fillColor: const Color(0xFFFFFBFD),
+              fillColor: _inputFillColor,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
-                borderSide: const BorderSide(color: Color(0xFFF3DDE7)),
+                borderSide: const BorderSide(color: _inputBorderColor),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
-                borderSide: const BorderSide(color: Color(0xFFF3DDE7)),
+                borderSide: const BorderSide(color: _inputBorderColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
-                borderSide: const BorderSide(color: Color(0xFFD81B60)),
+                borderSide: const BorderSide(color: _accentColor),
               ),
             ),
             style: SLTheme.quicksand(
@@ -157,7 +174,7 @@ class MusicPanel extends StatelessWidget {
                 child: FilledButton(
                   onPressed: isBusy ? null : onSaveLink,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF2196F3),
+                    backgroundColor: _saveButtonColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
@@ -178,8 +195,8 @@ class MusicPanel extends StatelessWidget {
                 child: FilledButton.tonal(
                   onPressed: onShowGuide,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFE0B2),
-                    foregroundColor: const Color(0xFF6A4100),
+                    backgroundColor: _guideButtonColor,
+                    foregroundColor: _guideTextColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -201,8 +218,8 @@ class MusicPanel extends StatelessWidget {
             onPressed: isBusy ? null : onRemove,
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
-              foregroundColor: const Color(0xFFD81B60),
-              side: const BorderSide(color: Color(0xFFF3B5C8)),
+              foregroundColor: _accentColor,
+              side: const BorderSide(color: _removeBorderColor),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
               ),

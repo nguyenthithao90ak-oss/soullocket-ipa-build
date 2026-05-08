@@ -1,5 +1,16 @@
 part of '../caro_neon_screen.dart';
 
+const Color _caroNeonBackdropTop = Color(0xFF05000E);
+const Color _caroNeonBackdropMiddle = Color(0xFF12031D);
+const Color _caroNeonBackdropBottom = Color(0xFF060112);
+const Color _caroNeonOrbBlue = Color(0xFF4EDBFF);
+const Color _caroNeonOrbPink = Color(0xFFFF5E9E);
+const Color _caroNeonOrbPurple = Color(0xFF8358FF);
+const Color _caroNeonGridColor = Color(0x19D6DFFF);
+const Color _caroNeonFrameColor = Color(0x1FF8E9FF);
+const Color _caroNeonGold = Color(0xFFFFD76F);
+const Color _caroNeonWhite = Colors.white;
+
 class _CaroBackdropPainter extends CustomPainter {
   const _CaroBackdropPainter();
 
@@ -10,7 +21,11 @@ class _CaroBackdropPainter extends CustomPainter {
       rect,
       Paint()
         ..shader = const LinearGradient(
-          colors: [Color(0xFF05000E), Color(0xFF12031D), Color(0xFF060112)],
+          colors: [
+            _caroNeonBackdropTop,
+            _caroNeonBackdropMiddle,
+            _caroNeonBackdropBottom,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ).createShader(rect),
@@ -27,16 +42,16 @@ class _CaroBackdropPainter extends CustomPainter {
     }
 
     glowOrb(Offset(size.width * 0.16, size.height * 0.2), 110,
-        const Color(0xFF4EDBFF));
+        _caroNeonOrbBlue);
     glowOrb(Offset(size.width * 0.82, size.height * 0.18), 130,
-        const Color(0xFFFF5E9E));
+        _caroNeonOrbPink);
     glowOrb(Offset(size.width * 0.72, size.height * 0.84), 150,
-        const Color(0xFF8358FF));
+        _caroNeonOrbPurple);
 
     final linePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..color = const Color(0x19D6DFFF);
+      ..color = _caroNeonGridColor;
 
     const spacing = 46.0;
     for (double x = -spacing; x <= size.width + spacing; x += spacing) {
@@ -72,7 +87,7 @@ class _CaroBackdropPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2
-        ..color = const Color(0x1FF8E9FF),
+        ..color = _caroNeonFrameColor,
     );
   }
 
@@ -92,10 +107,10 @@ class _NeonMarkPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final color = highlight
-        ? const Color(0xFFFFD76F)
+        ? _caroNeonGold
         : symbol == 'X'
-            ? const Color(0xFF4EDBFF)
-            : const Color(0xFFFF5E9E);
+            ? _caroNeonOrbBlue
+            : _caroNeonOrbPink;
 
     final strokeWidth = size.shortestSide * 0.11;
     final glowPaint = Paint()
@@ -110,7 +125,7 @@ class _NeonMarkPainter extends CustomPainter {
       ..strokeWidth = strokeWidth * 0.72
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..color = Colors.white;
+      ..color = _caroNeonWhite;
 
     final accentPaint = Paint()
       ..style = PaintingStyle.stroke
