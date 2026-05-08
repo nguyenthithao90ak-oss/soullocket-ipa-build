@@ -691,9 +691,13 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
                 behavior: SnackBarBehavior.floating,
                 action: SnackBarAction(
                   label: 'Bật ngay',
-                  onPressed: _isBootstrappingLocation
-                      ? () {}
-                      : () => _bootstrapLocationTracking(),
+                  onPressed: () async {
+                    final granted = await _locationService.requestPermission(
+                      context: context,
+                    );
+                    if (!granted || !mounted) return;
+                    await _refreshCurrentRoleWeather();
+                  },
                 ),
                 duration: const Duration(seconds: 4),
               ),

@@ -14,15 +14,6 @@ Future<XFile?> _cropCountdownModeAvatarFile(XFile file) async {
       maxWidth: 1080,
       maxHeight: 1080,
       uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Chỉnh avatar',
-          toolbarColor: const Color(0xFFD81B60),
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.square,
-          aspectRatioPresets: const [CropAspectRatioPreset.square],
-          lockAspectRatio: true,
-          hideBottomControls: false,
-        ),
         IOSUiSettings(
           title: 'Chỉnh avatar',
           aspectRatioPresets: const [CropAspectRatioPreset.square],
@@ -54,18 +45,6 @@ Future<XFile?> _cropCountdownModeBackgroundFile(XFile file) async {
       maxWidth: 1080,
       maxHeight: 2560,
       uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Chỉnh nền không gian',
-          toolbarColor: const Color(0xFFD81B60),
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: _themeBackgroundAspectRatioPreset,
-          aspectRatioPresets: const [_themeBackgroundAspectRatioPreset],
-          lockAspectRatio: true,
-          hideBottomControls: true,
-          showCropGrid: true,
-          cropGridRowCount: 4,
-          cropGridColumnCount: 3,
-        ),
         IOSUiSettings(
           title: 'Chỉnh nền không gian',
           aspectRatioPresets: const [_themeBackgroundAspectRatioPreset],

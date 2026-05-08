@@ -393,24 +393,10 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
             sourcePath: file.path,
             aspectRatio: _themeBackgroundAspectRatio,
             compressFormat: ImageCompressFormat.jpg,
-            compressQuality:
-                85, // Giữ độ nét (Sharpness) nhưng giảm nhẹ dung lượng
-            maxWidth:
-                1080, // Thêm maxWidth/maxHeight để tránh crop ảnh quá to gây OOM
+            compressQuality: 85,
+            maxWidth: 1080,
             maxHeight: 2560,
             uiSettings: [
-              AndroidUiSettings(
-                toolbarTitle: 'Chỉnh sửa ảnh nền',
-                toolbarColor: const Color(0xFFD81B60),
-                toolbarWidgetColor: Colors.white,
-                initAspectRatio: _themeBackgroundAspectRatioPreset,
-                aspectRatioPresets: const [_themeBackgroundAspectRatioPreset],
-                lockAspectRatio: true,
-                hideBottomControls: true,
-                showCropGrid: true,
-                cropGridRowCount: 4,
-                cropGridColumnCount: 3,
-              ),
               IOSUiSettings(
                 title: 'Chỉnh sửa ảnh nền',
                 aspectRatioPresets: const [_themeBackgroundAspectRatioPreset],

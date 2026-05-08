@@ -74,16 +74,6 @@ class _HealthScreenState extends State<HealthScreen>
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Từ chối',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFE91E63),
@@ -93,7 +83,7 @@ class _HealthScreenState extends State<HealthScreen>
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Đồng ý',
+              'Tiếp tục',
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,

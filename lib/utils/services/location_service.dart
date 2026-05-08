@@ -40,60 +40,38 @@ class LocationService {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      var permission = await Geolocator.checkPermission().timeout(
+      final permission = await Geolocator.checkPermission().timeout(
         const Duration(seconds: 6),
         onTimeout: () => LocationPermission.denied,
       );
 
-      // Nếu forcePrompt = true, chúng ta sẽ cố gắng hỏi lại nếu chưa có quyền
-      if (forcePrompt &&
-          (permission == LocationPermission.denied ||
-              permission == LocationPermission.deniedForever)) {
-        if (context != null && context.mounted) {
-          if (permission == LocationPermission.deniedForever) {
-            // Nếu bị từ chối vĩnh viễn, hiển thị hướng dẫn vào cài đặt
-            await showDialog(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Quyền vị trí bị chặn'),
-                content: const Text('Bạn đã từ chối quyền vị trí vĩnh viễn. Vui lòng vào Cài đặt của điện thoại để cho phép SoulLocket truy cập vị trí thì mới sử dụng được bản đồ nhé.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Đã hiểu'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    Geolocator.openAppSettings();
-                  },
-                  child: const Text('Mở Cài đặt'),
-                ),
-              ],
-              ),
-            );
-            return false;
-          }
+      if (permission == LocationPermission.deniedForever) {
+        await prefs.setBool('il_gps_prompted', true);
+        return false;
+      }
 
-          // Hiển thị disclosure giải thích quyền lợi
-          final granted = await PermissionHelper.requestLocationWithDisclosure(
-            context,
-            title: 'Cho phép truy cập vị trí',
-            disclosure:
-                'SoulLocket thu thập vị trí của bạn để hiển thị bản đồ chung, khoảng cách giữa hai bạn, vị trí hiện tại và các kỷ niệm/check-in gắn địa điểm trong ngôi nhà của bạn. Dữ liệu vị trí chỉ dùng cho các tính năng bản đồ của SoulLocket.',
-          );
-          await prefs.setBool('il_gps_prompted', true);
-          if (!granted) return false;
-
-          permission = await Geolocator.checkPermission().timeout(
-            const Duration(seconds: 6),
-            onTimeout: () => LocationPermission.denied,
-          );
+      if (permission == LocationPermission.denied) {
+        if (context == null || !context.mounted) {
+          return false;
+        }
+        final granted = await PermissionHelper.requestLocationWithDisclosure(
+          context,
+          title: 'Cho phép truy cập vị trí',
+          disclosure:
+              'SoulLocket thu thập vị trí của bạn để hiển thị bản đồ chung, khoảng cách giữa hai bạn, vị trí hiện tại và các kỷ niệm/check-in gắn địa điểm trong ngôi nhà của bạn. Dữ liệu vị trí chỉ dùng cho các tính năng bản đồ của SoulLocket.',
+        );
+        await prefs.setBool('il_gps_prompted', true);
+        if (!granted) {
+          return false;
         }
       }
 
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+      final refreshedPermission = await Geolocator.checkPermission().timeout(
+        const Duration(seconds: 6),
+        onTimeout: () => LocationPermission.denied,
+      );
+      if (refreshedPermission == LocationPermission.denied ||
+          refreshedPermission == LocationPermission.deniedForever) {
         return false;
       }
 
@@ -121,51 +99,7 @@ class LocationService {
   }
 
   Future<bool> requestBackgroundPermission({BuildContext? context}) async {
-    try {
-      final status = await Geolocator.checkPermission().timeout(
-        const Duration(seconds: 6),
-        onTimeout: () => LocationPermission.denied,
-      );
-      if (status == LocationPermission.always) {
-        return true;
-      }
-      if (context == null || !context.mounted) {
-        return false;
-      }
-
-      final shouldOpenSettings = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Bật vị trí khi chạy nền'),
-              content: const Text(
-                'SoulLocket không tự bật quyền chạy nền trong app. Nếu bạn muốn bản đồ tự cập nhật khi đã rời app, hãy bấm Đồng ý để mở Cài đặt và tự bật quyền "Luôn cho phép" hoặc quyền vị trí khi chạy nền cho SoulLocket.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Để sau'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Tiếp tục'),
-                ),
-              ],
-            ),
-          ) ??
-          false;
-      if (!shouldOpenSettings) {
-        return false;
-      }
-
-      await Geolocator.openAppSettings();
-      return false;
-    } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('LocationService.requestBackgroundPermission error: $e');
-        debugPrintStack(stackTrace: st);
-      }
-      return false;
-    }
+    return hasBackgroundPermission();
   }
 
   Future<bool> hasBackgroundPermission() async {

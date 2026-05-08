@@ -906,7 +906,7 @@ extension _SettingsTabShell on _SettingsTabState {
             ? _buildUnavailablePanel(
                 title: context.tr('home_screen_widget'),
                 message:
-                    'Tiện ích màn hình chỉ hỗ trợ trên Android và iOS. Phần cấu hình này nên thao tác trên thiết bị thật.',
+                    'Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.',
               )
             : _buildSectionStack([
                 _buildWidgetPanel(hideBackButton: false),
@@ -1017,8 +1017,8 @@ extension _SettingsTabShell on _SettingsTabState {
             Text(
               message
                   .replaceAll(
-                    'Tiện ích màn hình chỉ hỗ trợ trên Android và iOS. Phần cấu hình này nên thao tác trên thiết bị thật.',
-                    'Tiện ích màn hình chỉ hỗ trợ trên Android và iOS. Phần cấu hình này nên thao tác trên thiết bị thật.',
+                    'Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.',
+                    'Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.',
                   )
                   .replaceAll(
                     'Tính năng này đang được cập nhật trong phiên bản mới.',

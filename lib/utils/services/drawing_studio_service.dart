@@ -398,7 +398,6 @@ class DrawingStudioService {
       bytes,
       quality: 100,
       name: name,
-      androidRelativePath: 'Pictures/SoulLocket/DrawingStudio',
     );
 
     final filePath = result['filePath']?.toString();

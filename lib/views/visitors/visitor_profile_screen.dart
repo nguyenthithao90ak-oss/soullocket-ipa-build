@@ -293,16 +293,6 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       maxWidth: 1600,
       maxHeight: 1280,
       uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Cắt ảnh nền hồ sơ',
-          toolbarColor: const Color(0xFFD81B60),
-          toolbarWidgetColor: Colors.white,
-          lockAspectRatio: true,
-          hideBottomControls: true,
-          showCropGrid: true,
-          cropGridRowCount: 3,
-          cropGridColumnCount: 3,
-        ),
         IOSUiSettings(
           title: 'Cắt ảnh nền hồ sơ',
           aspectRatioLockEnabled: true,
@@ -330,13 +320,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         maxWidth: 1080,
         maxHeight: 1080,
         uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Cắt avatar hồ sơ',
-            toolbarColor: const Color(0xFFD81B60),
-            toolbarWidgetColor: Colors.white,
-            lockAspectRatio: true,
-            hideBottomControls: true,
-          ),
+
           IOSUiSettings(
             title: 'Cắt avatar hồ sơ',
             aspectRatioLockEnabled: true,

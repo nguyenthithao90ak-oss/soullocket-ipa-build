@@ -927,7 +927,6 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
         _generatedCollageBytes!,
         quality: 100,
         name: name,
-        androidRelativePath: 'Pictures/SoulLocket/Collage',
       );
 
       final isSuccess = result['isSuccess'] == true ||

@@ -426,13 +426,6 @@ extension _CommunityTabComposer on _CommunityTabState {
             compressFormat: ImageCompressFormat.jpg,
             compressQuality: 70,
             uiSettings: [
-              AndroidUiSettings(
-                toolbarTitle: _ct('Chỉnh sửa ảnh', 'Edit photo'),
-                toolbarColor: const Color(0xFFD81B60),
-                toolbarWidgetColor: Colors.white,
-                initAspectRatio: CropAspectRatioPreset.original,
-                lockAspectRatio: false,
-              ),
               IOSUiSettings(
                 title: _ct('Chỉnh sửa ảnh', 'Edit photo'),
               ),
@@ -500,13 +493,6 @@ extension _CommunityTabComposer on _CommunityTabState {
             compressFormat: ImageCompressFormat.jpg,
             compressQuality: 70,
             uiSettings: [
-              AndroidUiSettings(
-                toolbarTitle: _ct('Chỉnh sửa ảnh', 'Edit photo'),
-                toolbarColor: const Color(0xFFD81B60),
-                toolbarWidgetColor: Colors.white,
-                initAspectRatio: CropAspectRatioPreset.original,
-                lockAspectRatio: false,
-              ),
               IOSUiSettings(
                 title: _ct('Chỉnh sửa ảnh', 'Edit photo'),
               ),

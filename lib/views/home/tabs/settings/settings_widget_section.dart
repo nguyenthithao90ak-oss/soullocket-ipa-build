@@ -220,7 +220,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
     Future<void> handlePinWidget() async {
       if (kIsWeb) {
-        _showToast('Widget Android không hỗ trợ trên Web');
+        _showToast('Tiện ích này không hỗ trợ trên Web');
         return;
       }
       try {
@@ -248,7 +248,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
     Future<void> handleRefreshWidget() async {
       if (kIsWeb) {
-        _showToast('Widget Android không hỗ trợ trên Web');
+        _showToast('Tiện ích này không hỗ trợ trên Web');
         return;
       }
       try {

@@ -514,7 +514,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     return 'Bật Vị trí chính xác hoặc ra nơi thoáng hơn để GPS sát hơn.';
   }
 
-  Future<void> _bootstrapLocationTracking({bool forcePrompt = false}) async {
+  Future<void> _bootstrapLocationTracking() async {
     if (_isBootstrappingLocation) return;
     if (mounted) {
       setState(() {
@@ -524,7 +524,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     }
 
     final hasPerm = await _locationService
-        .requestPermission(context: context, forcePrompt: forcePrompt)
+        .requestPermission(context: context)
         .timeout(const Duration(seconds: 15), onTimeout: () => false);
     if (!mounted) return;
     if (!hasPerm) {
@@ -546,7 +546,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           widget.houseId,
           widget.myRole,
           context: context,
-          forcePrompt: forcePrompt,
         )
         .timeout(const Duration(seconds: 12), onTimeout: () => false);
 

@@ -118,7 +118,6 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
       final result = await VisionGallerySaver.saveFile(
         exportPath,
         name: _buildVideoFileName(),
-        androidRelativePath: 'Movies/SoulLocket/RapKyNiem',
       );
       final isSuccess = result['isSuccess'] == true ||
           (result['filePath']?.toString().isNotEmpty ?? false);

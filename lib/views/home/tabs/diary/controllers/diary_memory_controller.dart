@@ -1633,7 +1633,6 @@ class DiaryMemoryController extends ChangeNotifier {
         bytes,
         quality: 100,
         name: 'soullocket_$safeBaseName',
-        androidRelativePath: 'Pictures/SoulLocket/KyNiem',
       );
 
       final isSuccess = result['isSuccess'] == true ||

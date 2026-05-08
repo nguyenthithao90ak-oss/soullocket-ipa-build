@@ -203,7 +203,6 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       quality: 100,
       name:
           'soullocket_diary_${batchStamp}_${(index + 1).toString().padLeft(2, '0')}',
-      androidRelativePath: 'Pictures/SoulLocket/SoTayKyNiem',
     );
 
     final isSuccess = result['isSuccess'] == true ||

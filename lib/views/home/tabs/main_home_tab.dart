@@ -8,7 +8,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, defaultTargetPlatform, TargetPlatform;
+    show kDebugMode, kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
@@ -1203,17 +1203,6 @@ class _MainHomeTabState extends State<MainHomeTab> {
         maxWidth: 1080,
         maxHeight: 1080,
         uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
-            toolbarColor: const Color(0xFFD81B60),
-            toolbarWidgetColor: Colors.white,
-            lockAspectRatio: true,
-            hideBottomControls: true,
-            cropFrameColor: const Color(0xFFD81B60),
-            cropGridColor: const Color(0x33D81B60),
-            cropGridRowCount: 3,
-            cropGridColumnCount: 3,
-          ),
           IOSUiSettings(
             title: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
             aspectRatioLockEnabled: true,

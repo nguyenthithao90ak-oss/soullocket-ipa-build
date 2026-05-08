@@ -1,7 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:html' as html;
-import 'dart:js_util' as js_util;
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:ui_web' as ui_web;
 
@@ -17,10 +16,13 @@ final Map<String, html.IFrameElement> _iframeRegistry =
 final Set<String> _registeredIframeViews = <String>{};
 
 bool _isGoogleMapsReady() {
-  if (!js_util.hasProperty(html.window, 'google')) return false;
-  final google = js_util.getProperty<Object?>(html.window, 'google');
+  final google = (html.window as dynamic).google;
   if (google == null) return false;
-  return js_util.hasProperty(google, 'maps');
+  try {
+    return google.maps != null;
+  } catch (_) {
+    return false;
+  }
 }
 
 void registerWebViewImpl(

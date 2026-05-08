@@ -53,9 +53,12 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     final storeUrl = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
         ? AppConfig.iOSStoreUrl
         : AppConfig.androidStoreUrl;
-    Share.share(
-      'SoulLocket - Ngôi nhà chung cho các cặp đôi. Cùng xây dựng không gian yêu thương, lưu giữ kỷ niệm và chơi game cùng nhau nhé! Tải ngay tại: $storeUrl',
-      subject: 'Tham gia SoulLocket cùng mình nhé!',
+    SharePlus.instance.share(
+      ShareParams(
+        text:
+            'SoulLocket - Ngôi nhà chung cho các cặp đôi. Cùng xây dựng không gian yêu thương, lưu giữ kỷ niệm và chơi game cùng nhau nhé! Tải ngay tại: $storeUrl',
+        subject: 'Tham gia SoulLocket cùng mình nhé!',
+      ),
     );
   }
 

@@ -195,11 +195,19 @@ class _LegacyMediaFeedReferenceScreenState
               final viewerId = widget.houseId;
               final isMe = viewerId == widget.targetHouseId;
               final mediaPosts = _posts.where((p) {
-                if (p.imageUrl.isEmpty && p.videoUrl.isEmpty) return false;
+                if (p.imageUrl.isEmpty && p.videoUrl.isEmpty) {
+                  return false;
+                }
                 if (_blockedUsers.containsKey(p.houseId) &&
-                    _blockedUsers[p.houseId] == true) return false;
-                if (isMe) return true;
-                if (p.privacy == 'private') return false;
+                    _blockedUsers[p.houseId] == true) {
+                  return false;
+                }
+                if (isMe) {
+                  return true;
+                }
+                if (p.privacy == 'private') {
+                  return false;
+                }
                 return true;
               }).toList();
 
