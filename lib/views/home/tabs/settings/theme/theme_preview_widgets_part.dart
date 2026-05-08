@@ -756,6 +756,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
       return Image.network(
         avatarUrl.trim(),
         fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
         errorBuilder: (_, __, ___) =>
             _buildThemePreviewAvatarFallback(accent, name),
       );
