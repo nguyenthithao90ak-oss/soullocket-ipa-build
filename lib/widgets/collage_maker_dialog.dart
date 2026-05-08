@@ -475,6 +475,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
     final codec = await ui.instantiateImageCodec(
       bytes,
       targetWidth: _collageDecodeMaxDimension,
+      targetHeight: _collageDecodeMaxDimension,
       allowUpscaling: false,
     );
     final frame = await codec.getNextFrame();
