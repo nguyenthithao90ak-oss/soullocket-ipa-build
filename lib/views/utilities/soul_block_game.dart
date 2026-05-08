@@ -62,7 +62,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   static const double _boardLayoutSafetyInset = 12.0;
   static const double _bannerDockBaseHeight = 54.0;
   static const double _memoryBurstCardAspectRatio = 0.9;
-  static const double _dragLiftOffset = 12;
+  static const double _dragLiftOffset = 0;
   static const int _trayPreviewGridSize = 5;
   static const double _dragUpdateEpsilon = 0.5;
   static const double _dragOverlayUpdateEpsilon = 1.6;
