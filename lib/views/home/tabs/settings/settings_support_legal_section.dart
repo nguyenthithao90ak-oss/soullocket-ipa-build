@@ -50,8 +50,11 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _shareApp() {
+    final storeUrl = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+        ? AppConfig.iOSStoreUrl
+        : AppConfig.androidStoreUrl;
     Share.share(
-      'SoulLocket - Ngôi nhà chung cho các cặp đôi. Cùng xây dựng không gian yêu thương, lưu giữ kỷ niệm và chơi game cùng nhau nhé! Tải ngay tại: https://soullocket.app',
+      'SoulLocket - Ngôi nhà chung cho các cặp đôi. Cùng xây dựng không gian yêu thương, lưu giữ kỷ niệm và chơi game cùng nhau nhé! Tải ngay tại: $storeUrl',
       subject: 'Tham gia SoulLocket cùng mình nhé!',
     );
   }
@@ -62,7 +65,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       final InAppReview inAppReview = InAppReview.instance;
       // Trong m?i tr??ng Debug, dialog th??ng kh?ng hi?n ra. Ta g?i m? th?ng Store.
       await inAppReview.openStoreListing(
-        appStoreId: '6740344445', 
+        appStoreId: AppConfig.appStoreId,
       );
     } catch (e) {
       debugPrint('L?i khi m? ??nh gi?: ');
