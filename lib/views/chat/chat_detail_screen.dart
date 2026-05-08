@@ -487,7 +487,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF1F4).withOpacity(
+                        color: const Color(0xFFFFF1F4).withValues(alpha: 
                           hasChatBackground ? 0.88 : 1,
                         ),
                         borderRadius: BorderRadius.circular(16),

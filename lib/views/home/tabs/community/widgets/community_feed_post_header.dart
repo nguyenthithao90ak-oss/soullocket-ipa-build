@@ -194,7 +194,7 @@ class _FeedPostHeader extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.62),
+                color: Colors.white.withValues(alpha: 0.62),
                 borderRadius: SLRadius.mdAll,
               ),
               child: const Icon(

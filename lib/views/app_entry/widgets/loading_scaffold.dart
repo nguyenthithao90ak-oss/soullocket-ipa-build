@@ -212,7 +212,7 @@ class _LoadingDots extends StatelessWidget {
               height: 7,
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFD81B60).withOpacity(opacity),
+                color: const Color(0xFFD81B60).withValues(alpha: opacity),
                 borderRadius: BorderRadius.circular(999),
               ),
             );

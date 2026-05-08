@@ -100,7 +100,7 @@ class _FeedComposer extends StatelessWidget {
                   borderRadius: SLRadius.lgAll,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFD81B60).withOpacity(0.16),
+                      color: const Color(0xFFD81B60).withValues(alpha: 0.16),
                       blurRadius: 14,
                       offset: const Offset(0, 6),
                     ),

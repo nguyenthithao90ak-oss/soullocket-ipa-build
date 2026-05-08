@@ -107,9 +107,9 @@ class DiaryItem extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.15),
+                    color: accentColor.withValues(alpha: 0.15),
                     borderRadius: SLRadius.mdAll,
-                    border: Border.all(color: accentColor.withOpacity(0.3)),
+                    border: Border.all(color: accentColor.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     '$displayName ${post.mood}',
@@ -137,7 +137,7 @@ class DiaryItem extends StatelessWidget {
                     child: Icon(
                       Icons.delete_rounded,
                       size: 18,
-                      color: Colors.red.withOpacity(0.6),
+                      color: Colors.red.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -168,11 +168,11 @@ class DiaryItem extends StatelessWidget {
                   placeholderFadeInDuration: Duration.zero,
                   placeholder: (context, url) => Container(
                     height: 120,
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                   ),
                   errorWidget: (_, __, ___) => Container(
                     height: 120,
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     child: const Icon(Icons.broken_image, color: Colors.grey),
                   ),
                 ),

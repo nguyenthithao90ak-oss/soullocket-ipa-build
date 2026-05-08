@@ -64,7 +64,7 @@ class CommunitySettingsSectionCard extends StatelessWidget {
         boxShadow: floating
             ? [
                 BoxShadow(
-                  color: const Color(0xFF0F172A).withOpacity(0.05),
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.05),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
@@ -81,7 +81,7 @@ class CommunitySettingsSectionCard extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.12),
+                  color: accent.withValues(alpha: 0.12),
                   borderRadius:
                       BorderRadius.circular(kCommunitySettingsIconRadius),
                 ),
@@ -251,7 +251,7 @@ class CommunitySettingsDropdownCard extends StatelessWidget {
       title: title,
       subtitle: subtitle,
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         isExpanded: true,
         items: items,
         onChanged: onChanged,
@@ -325,7 +325,7 @@ class CommunitySettingsToggleCard extends StatelessWidget {
               const SizedBox(width: 12),
               Switch.adaptive(
                 value: value,
-                activeColor: SLColors.primary,
+                activeThumbColor: SLColors.primary,
                 onChanged: onChanged,
               ),
             ],
@@ -355,9 +355,9 @@ class CommunitySettingsInfoBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(kCommunitySettingsItemRadius),
-        border: Border.all(color: color.withOpacity(0.18)),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,7 +366,7 @@ class CommunitySettingsInfoBanner extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.14),
+              color: color.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(kCommunitySettingsIconRadius),
             ),
             child: Icon(icon, color: color, size: 20),
@@ -529,7 +529,7 @@ class CommunitySettingsActionTile extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   borderRadius:
                       BorderRadius.circular(kCommunitySettingsIconRadius),
                 ),
@@ -540,7 +540,7 @@ class CommunitySettingsActionTile extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.08),
+                  color: color.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -596,9 +596,9 @@ class CommunitySettingsHeroChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.18),
+        color: Colors.white.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withOpacity(0.18)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -634,9 +634,9 @@ class CommunitySettingsHeroMetricChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
+        color: Colors.white.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.10)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -682,7 +682,7 @@ class CommunitySettingsAvatarPreview extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.20),
+            color: Colors.black.withValues(alpha: 0.20),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),

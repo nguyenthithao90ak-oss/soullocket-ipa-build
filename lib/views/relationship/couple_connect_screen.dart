@@ -569,9 +569,9 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
     return Container(
       padding: SLSpacing.all12,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
+        color: Colors.black.withValues(alpha: 0.55),
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: Colors.white.withOpacity(0.25)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

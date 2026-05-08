@@ -108,7 +108,7 @@ class _CinemaDailyReel {
     final title = data['title']?.toString().trim() ?? '';
     final subtitle = data['subtitle']?.toString().trim() ?? '';
     final accentValue =
-        (data['accentValue'] as num?)?.toInt() ?? const Color(0xFFFF6FA5).value;
+        (data['accentValue'] as num?)?.toInt() ?? const Color(0xFFFF6FA5).toARGB32();
     final createdAtMs = (data['createdAtMs'] as num?)?.toInt() ?? 0;
     final expiresAtMs = (data['expiresAtMs'] as num?)?.toInt() ?? 0;
     final items = _itemsFromRaw(data['items']);

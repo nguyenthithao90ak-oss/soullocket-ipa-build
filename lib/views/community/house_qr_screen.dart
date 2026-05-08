@@ -569,7 +569,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       border: Border.all(color: const Color(0xFFF3D8E4)),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           blurRadius: 18,
           offset: const Offset(0, 10),
         ),
@@ -771,7 +771,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
               borderRadius: SLRadius.xlAll,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 18,
                   offset: const Offset(0, 10),
                 ),
@@ -838,9 +838,9 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Colors.black.withOpacity(0.28),
+                              Colors.black.withValues(alpha: 0.28),
                               Colors.transparent,
-                              Colors.black.withOpacity(0.34),
+                              Colors.black.withValues(alpha: 0.34),
                             ],
                           ),
                         ),

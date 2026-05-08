@@ -95,7 +95,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.14),
+              color: Colors.black.withValues(alpha: 0.14),
               blurRadius: 30,
               offset: const Offset(0, 16),
             ),
@@ -124,7 +124,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.12),
+                    color: accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -181,7 +181,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: accent.withOpacity(0.16)),
+                    border: Border.all(color: accent.withValues(alpha: 0.16)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,7 +208,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                                 height: 24,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: accent.withOpacity(0.12),
+                                  color: accent.withValues(alpha: 0.12),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Text(
@@ -250,7 +250,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: accent,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: BorderSide(color: accent.withOpacity(0.28)),
+                          side: BorderSide(color: accent.withValues(alpha: 0.28)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
@@ -336,7 +336,7 @@ class _MetaChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withOpacity(0.18)),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
       ),
       child: Text(
         label,

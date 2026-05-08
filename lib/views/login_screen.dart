@@ -796,7 +796,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: IgnorePointer(
                         child: Icon(
                           Icons.cloud_rounded,
-                          color: Colors.white.withOpacity(
+                          color: Colors.white.withValues(alpha: 
                             _isLoginTab ? 0.38 : 0.26,
                           ),
                           size: _isLoginTab ? 196 : 154,
@@ -835,7 +835,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: (_isLoginTab
                                   ? SLColors.primaryActive
                                   : SLColors.accentPurpleDark)
-                              .withOpacity(0.18),
+                              .withValues(alpha: 0.18),
                           size: _isLoginTab ? 88 : 96,
                         ),
                       ),
@@ -1036,9 +1036,9 @@ class _AuthGlowOrb extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: RadialGradient(
           colors: [
-            colors.first.withOpacity(opacity),
-            colors.last.withOpacity(opacity * 0.58),
-            colors.last.withOpacity(0),
+            colors.first.withValues(alpha: opacity),
+            colors.last.withValues(alpha: opacity * 0.58),
+            colors.last.withValues(alpha: 0),
           ],
         ),
       ),

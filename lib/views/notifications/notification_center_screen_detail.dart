@@ -48,7 +48,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          tone.surface.withOpacity(0.98),
+                          tone.surface.withValues(alpha: 0.98),
                           SLColors.bgCard,
                         ],
                         begin: Alignment.topLeft,
@@ -158,7 +158,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                     width: double.infinity,
                     padding: SLSpacing.all16,
                     decoration: BoxDecoration(
-                      color: tone.surface.withOpacity(0.9),
+                      color: tone.surface.withValues(alpha: 0.9),
                       borderRadius: SLRadius.lgAll,
                       border: Border.all(color: tone.border),
                     ),
@@ -255,7 +255,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                         color: SLColors.warningLight,
                         borderRadius: SLRadius.lgAll,
                         border: Border.all(
-                          color: SLColors.warning.withOpacity(0.2),
+                          color: SLColors.warning.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Text(
@@ -370,12 +370,12 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
           color: highlighted
-              ? resolvedAccent.withOpacity(0.12)
+              ? resolvedAccent.withValues(alpha: 0.12)
               : SLColors.bgSubtle,
           borderRadius: SLRadius.pillAll,
           border: Border.all(
             color: highlighted
-                ? resolvedAccent.withOpacity(0.18)
+                ? resolvedAccent.withValues(alpha: 0.18)
                 : SLColors.border,
           ),
         ),
@@ -413,7 +413,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
       decoration: BoxDecoration(
         color: SLColors.bgSubtle,
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: accent.withOpacity(0.14)),
+        border: Border.all(color: accent.withValues(alpha: 0.14)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,7 +422,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.12),
+              color: accent.withValues(alpha: 0.12),
               borderRadius: SLRadius.mdAll,
             ),
             child: Icon(icon, size: 18, color: accent),

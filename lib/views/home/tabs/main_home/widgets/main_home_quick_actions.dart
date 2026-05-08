@@ -37,8 +37,8 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white.withOpacity(0.9),
-                            const Color(0xFFF1F5F9).withOpacity(0.9),
+                            Colors.white.withValues(alpha: 0.9),
+                            const Color(0xFFF1F5F9).withValues(alpha: 0.9),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -46,7 +46,7 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
                         borderRadius: SLRadius.lgAll,
                         boxShadow: SLShadow.subtle,
                         border:
-                            Border.all(color: Colors.white.withOpacity(0.5)),
+                            Border.all(color: Colors.white.withValues(alpha: 0.5)),
                       ),
                       child: Center(
                         child: Icon(

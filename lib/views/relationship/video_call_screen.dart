@@ -233,7 +233,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           blurRadius: 10,
                         ),
                       ],
@@ -423,7 +423,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-                color: color.withOpacity(0.4),
+                color: color.withValues(alpha: 0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 8))
           ],

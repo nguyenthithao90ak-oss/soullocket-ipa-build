@@ -238,11 +238,11 @@ class _TopHotScreenState extends State<TopHotScreen>
         gradient: LinearGradient(colors: colors),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isTop ? textColor.withOpacity(0.22) : const Color(0xFFEDE1DA),
+          color: isTop ? textColor.withValues(alpha: 0.22) : const Color(0xFFEDE1DA),
         ),
         boxShadow: [
           BoxShadow(
-            color: textColor.withOpacity(isTop ? 0.12 : 0.06),
+            color: textColor.withValues(alpha: isTop ? 0.12 : 0.06),
             blurRadius: isTop ? 18 : 12,
             offset: const Offset(0, 8),
           ),
@@ -294,7 +294,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                   borderRadius: BorderRadius.circular(999),
                   boxShadow: [
                     BoxShadow(
-                      color: hotColor.withOpacity(0.22),
+                      color: hotColor.withValues(alpha: 0.22),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -365,9 +365,9 @@ class _TopHotScreenState extends State<TopHotScreen>
             Container(
               padding: SLSpacing.all8,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.16)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
               ),
               child: const Icon(
                 Icons.local_fire_department_rounded,
@@ -392,9 +392,9 @@ class _TopHotScreenState extends State<TopHotScreen>
             icon: Container(
               padding: SLSpacing.all8,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.14)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
               ),
               child: const Icon(Icons.refresh_rounded, size: 18),
             ),
@@ -404,9 +404,9 @@ class _TopHotScreenState extends State<TopHotScreen>
             icon: Container(
               padding: SLSpacing.all8,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.14)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
               ),
               child: const Icon(Icons.info_outline_rounded, size: 18),
             ),
@@ -418,9 +418,9 @@ class _TopHotScreenState extends State<TopHotScreen>
             padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.14),
+                color: Colors.white.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: Colors.white.withOpacity(0.16)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
               ),
               child: TabBar(
                 controller: _tabController,
@@ -437,7 +437,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -447,7 +447,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                 unselectedLabelStyle:
                     SLTheme.quicksand(fontWeight: FontWeight.w700),
                 labelColor: const Color(0xFFF0677D),
-                unselectedLabelColor: Colors.white.withOpacity(0.86),
+                unselectedLabelColor: Colors.white.withValues(alpha: 0.86),
                 dividerColor: Colors.transparent,
                 tabs: _periodLabels.map((l) => Tab(text: l)).toList(),
               ),
@@ -562,12 +562,12 @@ class _TopHotScreenState extends State<TopHotScreen>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: borderColor.withOpacity(rank <= 3 ? 0.18 : 0.1),
+                  color: borderColor.withValues(alpha: rank <= 3 ? 0.18 : 0.1),
                   blurRadius: rank <= 3 ? 24 : 16,
                   offset: const Offset(0, 10),
                 ),
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.72),
+                  color: Colors.white.withValues(alpha: 0.72),
                   blurRadius: 12,
                   offset: const Offset(-2, -2),
                 ),
@@ -642,11 +642,11 @@ class _TopHotScreenState extends State<TopHotScreen>
                           ),
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(
-                            color: hotColor.withOpacity(0.2),
+                            color: hotColor.withValues(alpha: 0.2),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: hotColor.withOpacity(0.08),
+                              color: hotColor.withValues(alpha: 0.08),
                               blurRadius: 14,
                               offset: const Offset(0, 6),
                             ),
@@ -725,7 +725,7 @@ class _TopHotScreenState extends State<TopHotScreen>
           height: 42,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.72),
+            color: Colors.white.withValues(alpha: 0.72),
             borderRadius: SLRadius.mdAll,
           ),
           child: Text(
@@ -776,19 +776,19 @@ class _TopHotScreenState extends State<TopHotScreen>
                 ? const Color(0xFF86EFAC)
                 : (index == 0
                     ? const Color(0xFFFFD166)
-                    : Colors.white.withOpacity(0.9)),
+                    : Colors.white.withValues(alpha: 0.9)),
             width: isSelf ? 2.0 : (index == 0 ? 2.0 : 1),
           ),
           boxShadow: [
             if (index == 0)
               BoxShadow(
-                color: const Color(0xFFFFD166).withOpacity(0.35),
+                color: const Color(0xFFFFD166).withValues(alpha: 0.35),
                 blurRadius: 24,
                 spreadRadius: 2,
                 offset: const Offset(0, 4),
               ),
             BoxShadow(
-              color: hotColor.withOpacity(index < 3 ? 0.22 : 0.1),
+              color: hotColor.withValues(alpha: index < 3 ? 0.22 : 0.1),
               blurRadius: index < 3 ? 20 : 16,
               offset: const Offset(0, 8),
             ),
@@ -904,7 +904,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                 ),
                 borderRadius: SLRadius.pillAll,
                 border: Border.all(
-                  color: const Color(0xFFFF9E7A).withOpacity(0.45),
+                  color: const Color(0xFFFF9E7A).withValues(alpha: 0.45),
                 ),
               ),
               child: Column(
@@ -952,7 +952,7 @@ class _TopHotScreenState extends State<TopHotScreen>
         ),
         boxShadow: [
           BoxShadow(
-            color: borderColor.withOpacity(0.2),
+            color: borderColor.withValues(alpha: 0.2),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -1017,16 +1017,16 @@ class _TopHotScreenState extends State<TopHotScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5.5),
       decoration: BoxDecoration(
-        color: isGold ? const Color(0xFFFFFAF0) : color.withOpacity(0.1),
+        color: isGold ? const Color(0xFFFFFAF0) : color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: isGold ? const Color(0xFFFFD166) : color.withOpacity(0.18),
+          color: isGold ? const Color(0xFFFFD166) : color.withValues(alpha: 0.18),
           width: isGold ? 1.2 : 0.8,
         ),
         boxShadow: isGold
             ? [
                 BoxShadow(
-                  color: const Color(0xFFFFD166).withOpacity(0.2),
+                  color: const Color(0xFFFFD166).withValues(alpha: 0.2),
                   blurRadius: 8,
                 )
               ]
@@ -1060,7 +1060,7 @@ class _TopHotScreenState extends State<TopHotScreen>
         border: Border.all(color: const Color(0xFFF4DED6)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF5CFC5).withOpacity(0.18),
+            color: const Color(0xFFF5CFC5).withValues(alpha: 0.18),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -1117,7 +1117,7 @@ class _TopHotScreenState extends State<TopHotScreen>
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.18),
+                color: Colors.black.withValues(alpha: 0.18),
                 blurRadius: 28,
                 offset: const Offset(0, 14),
               ),

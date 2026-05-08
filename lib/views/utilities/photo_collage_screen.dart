@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:share_plus/share_plus.dart';
@@ -212,23 +211,14 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       }
 
       final fileName = 'collage_${DateTime.now().millisecondsSinceEpoch}.png';
-      final url = await _storageService.uploadBytesToPath(
-        'houses/$houseId/collages/$fileName',
-        bytes,
-        contentType: 'image/png',
-        originalFileName: fileName,
+      await _storageService.uploadCollageBytes(
+        houseId: houseId,
+        bytes: bytes,
+        fileName: fileName,
+        template: 'layout_$_selectedLayout',
+        style: _activeTemplate.name,
+        caption: _captionController.text.trim(),
       );
-      await FirebaseDatabase.instance
-          .ref('houses/$houseId/collages')
-          .push()
-          .set({
-        'url': url,
-        'template': 'layout_$_selectedLayout',
-        'style': _activeTemplate.name,
-        'caption': _captionController.text.trim(),
-        'ts': ServerValue.timestamp,
-        'source': 'photo_collage_screen',
-      });
       await CollageLimitService().consumeLimit();
       if (pendingKey != null) {
         await PendingUploadService.instance.clear(pendingKey);

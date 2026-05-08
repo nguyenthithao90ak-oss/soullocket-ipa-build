@@ -563,7 +563,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
                 : Text(
                     subtitle,
                     style: SLTheme.quicksand(
-                      color: resolvedTextColor.withOpacity(0.72),
+                      color: resolvedTextColor.withValues(alpha: 0.72),
                       fontWeight: FontWeight.w600,
                       height: 1.25,
                     ),
@@ -587,7 +587,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.12),
+                    color: Colors.black.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),

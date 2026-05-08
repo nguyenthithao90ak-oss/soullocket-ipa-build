@@ -721,12 +721,12 @@ extension _CommunityTabComposer on _CommunityTabState {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? color.withOpacity(0.12)
+                        ? color.withValues(alpha: 0.12)
                         : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
                       color: isSelected
-                          ? color.withOpacity(0.42)
+                          ? color.withValues(alpha: 0.42)
                           : const Color(0xFFE2E8F0),
                     ),
                   ),
@@ -1355,7 +1355,7 @@ extension _CommunityTabComposer on _CommunityTabState {
                                                       vertical: 8),
                                                   decoration: BoxDecoration(
                                                     color: Colors.black
-                                                        .withOpacity(0.6),
+                                                        .withValues(alpha: 0.6),
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                             20),
@@ -1398,7 +1398,7 @@ extension _CommunityTabComposer on _CommunityTabState {
                                                   height: 36,
                                                   decoration: BoxDecoration(
                                                     color: Colors.black
-                                                        .withOpacity(0.58),
+                                                        .withValues(alpha: 0.58),
                                                     shape: BoxShape.circle,
                                                   ),
                                                   child: const Icon(
@@ -1421,7 +1421,7 @@ extension _CommunityTabComposer on _CommunityTabState {
                                                 ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.black
-                                                      .withOpacity(0.55),
+                                                      .withValues(alpha: 0.55),
                                                   borderRadius: SLRadius.lgAll,
                                                 ),
                                                 child: Row(
@@ -1531,14 +1531,22 @@ extension _CommunityTabComposer on _CommunityTabState {
       },
     );
 
-    if (result != true) return;
+    if (result != true) {
+      return;
+    }
 
     final content = controller.text.trim();
-    if (!mounted || !context.mounted) return;
+    if (!mounted || !context.mounted) {
+      return;
+    }
     if (!await SecurityService()
-        .guardAction(context, 'community_post', content: content)) return;
+        .guardAction(context, 'community_post', content: content)) {
+      return;
+    }
     if (content.isEmpty && selectedImage == null) {
-      if (!mounted || !context.mounted) return;
+      if (!mounted || !context.mounted) {
+        return;
+      }
       LegacyWebUi.showNotice(
         context,
         message: _ct(
@@ -1642,17 +1650,17 @@ extension _CommunityTabComposer on _CommunityTabState {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.white.withOpacity(0.96),
+              Colors.white.withValues(alpha: 0.96),
               bg,
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: SLRadius.lgAll,
-          border: Border.all(color: color.withOpacity(0.14)),
+          border: Border.all(color: color.withValues(alpha: 0.14)),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.08),
+              color: color.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -1690,9 +1698,9 @@ extension _CommunityTabComposer on _CommunityTabState {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.10),
+          color: color.withValues(alpha: 0.10),
           borderRadius: SLRadius.pillAll,
-          border: Border.all(color: color.withOpacity(0.14)),
+          border: Border.all(color: color.withValues(alpha: 0.14)),
         ),
         child: Text(
           label,

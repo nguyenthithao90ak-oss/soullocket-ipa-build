@@ -40,7 +40,7 @@ class DiaryComposer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -64,7 +64,7 @@ class DiaryComposer extends StatelessWidget {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: active
-                                  ? (mood['color'] as Color).withOpacity(0.15)
+                                  ? (mood['color'] as Color).withValues(alpha: 0.15)
                                   : const Color(0xFFF5F7FA),
                               border: Border.all(
                                 color: active
@@ -123,11 +123,11 @@ class DiaryComposer extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.4),
+                fillColor: Colors.white.withValues(alpha: 0.4),
                 contentPadding: SLSpacing.all16,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: SLRadius.lgAll,
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.5)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: SLRadius.lgAll,
@@ -149,7 +149,7 @@ class DiaryComposer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: _diarySoftPink.withOpacity(0.18),
+                    color: _diarySoftPink.withValues(alpha: 0.18),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),

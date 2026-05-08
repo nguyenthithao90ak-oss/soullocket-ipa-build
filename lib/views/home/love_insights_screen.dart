@@ -120,7 +120,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
                 gradient: LinearGradient(
                   colors: [
                     const Color(0xFFFFF7FB),
-                    const Color(0xFFFFEEF5).withOpacity(0.95),
+                    const Color(0xFFFFEEF5).withValues(alpha: 0.95),
                     const Color(0xFFF9F1FF),
                   ],
                   begin: Alignment.topCenter,
@@ -172,7 +172,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
               Icon(
                 Icons.favorite_rounded,
                 size: 42,
-                color: const Color(0xFFD81B60).withOpacity(0.8),
+                color: const Color(0xFFD81B60).withValues(alpha: 0.8),
               ),
               SLSpacing.h12,
               Text(
@@ -266,8 +266,8 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
     return BoxDecoration(
       gradient: LinearGradient(
         colors: [
-          Colors.white.withOpacity(0.96),
-          const Color(0xFFFFF2F7).withOpacity(0.96),
+          Colors.white.withValues(alpha: 0.96),
+          const Color(0xFFFFF2F7).withValues(alpha: 0.96),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -286,12 +286,12 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
 
   BoxDecoration _softCardDecoration({Color? borderColor}) {
     return BoxDecoration(
-      color: Colors.white.withOpacity(0.96),
+      color: Colors.white.withValues(alpha: 0.96),
       borderRadius: SLRadius.xlAll,
       border: Border.all(color: borderColor ?? const Color(0xFFF2E7EE)),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFFCEBCD0).withOpacity(0.12),
+          color: const Color(0xFFCEBCD0).withValues(alpha: 0.12),
           blurRadius: 18,
           offset: const Offset(0, 10),
         ),
@@ -438,7 +438,7 @@ class _FloatingOrbState extends State<_FloatingOrb>
             shape: BoxShape.circle,
             gradient: LinearGradient(
               colors: widget.colors
-                  .map((color) => color.withOpacity(0.38))
+                  .map((color) => color.withValues(alpha: 0.38))
                   .toList(),
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

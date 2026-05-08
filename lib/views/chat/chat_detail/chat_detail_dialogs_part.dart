@@ -22,7 +22,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.16),
+                  color: Colors.black.withValues(alpha: 0.16),
                   blurRadius: 24,
                   offset: const Offset(0, 12),
                 ),
@@ -85,8 +85,8 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    Colors.white.withOpacity(0.2),
-                                    Colors.white.withOpacity(0.55),
+                                    Colors.white.withValues(alpha: 0.2),
+                                    Colors.white.withValues(alpha: 0.55),
                                   ],
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
@@ -285,9 +285,9 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.88),
+                  color: Colors.white.withValues(alpha: 0.88),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: color.withOpacity(0.14)),
+                  border: Border.all(color: color.withValues(alpha: 0.14)),
                 ),
                 child: Row(
                   children: [
@@ -295,7 +295,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.12),
+                        color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(icon, size: 18, color: color),
@@ -343,7 +343,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Row(
@@ -388,7 +388,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: shortcut.color.withOpacity(0.12),
+                            color: shortcut.color.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -465,7 +465,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.14),
+                        color: Colors.black.withValues(alpha: 0.14),
                         blurRadius: 24,
                         offset: const Offset(0, 12),
                       ),
@@ -851,7 +851,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                               ? [
                                   BoxShadow(
                                     color: const Color(0xFF0A7CFF)
-                                        .withOpacity(0.12),
+                                        .withValues(alpha: 0.12),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -1192,7 +1192,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: selected,
+                    initialValue: selected,
                     items: const [
                       DropdownMenuItem(value: 'spam', child: Text('Spam')),
                       DropdownMenuItem(
@@ -1318,7 +1318,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.16),
+                  color: Colors.black.withValues(alpha: 0.16),
                   blurRadius: 22,
                   offset: const Offset(0, 12),
                 ),
@@ -1424,7 +1424,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
               )
             ],

@@ -58,11 +58,11 @@ class _FeedPostCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.82),
+        color: Colors.white.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.05),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
             blurRadius: 18,
             spreadRadius: -8,
             offset: const Offset(0, 12),

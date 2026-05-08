@@ -52,7 +52,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.14),
+                  color: Colors.white.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -70,7 +70,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                 style: SLTheme.quicksand(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white.withOpacity(0.75),
+                  color: Colors.white.withValues(alpha: 0.75),
                 ),
               ),
             ],
@@ -110,7 +110,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                             vertical: 7,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.14),
+                            color: Colors.white.withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(18),
                           ),
                           child: Text(
@@ -134,7 +134,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white.withOpacity(0.78),
+                        color: Colors.white.withValues(alpha: 0.78),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -148,7 +148,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                         fontSize: 13,
                         height: 1.45,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white.withOpacity(0.92),
+                        color: Colors.white.withValues(alpha: 0.92),
                       ),
                     ),
                   ],
@@ -165,7 +165,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                   .map(
                     (reason) => _SingleMatchAdaptiveTagPill(
                       label: reason,
-                      background: Colors.white.withOpacity(0.12),
+                      background: Colors.white.withValues(alpha: 0.12),
                       foreground: Colors.white,
                       maxLines: 2,
                     ),
@@ -181,7 +181,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                   onPressed: callingThisCard ? null : onSpin,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withOpacity(0.22)),
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.22)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   icon: const Icon(Icons.shuffle_rounded),

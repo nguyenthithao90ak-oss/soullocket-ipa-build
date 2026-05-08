@@ -37,14 +37,14 @@ class CalendarEventInputPanel extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.9),
-                  Colors.white.withOpacity(0.74),
+                  Colors.white.withValues(alpha: 0.9),
+                  Colors.white.withValues(alpha: 0.74),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.34)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,7 +55,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                       width: compact ? 40 : 44,
                       height: compact ? 40 : 44,
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.12),
+                        color: accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(compact ? 14 : 15),
                       ),
                       child: Icon(
@@ -95,9 +95,9 @@ class CalendarEventInputPanel extends StatelessWidget {
                 SizedBox(height: compact ? 12 : 14),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.72),
+                    color: Colors.white.withValues(alpha: 0.72),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.black.withOpacity(0.05)),
+                    border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
                   ),
                   padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 16),
                   child: TextField(

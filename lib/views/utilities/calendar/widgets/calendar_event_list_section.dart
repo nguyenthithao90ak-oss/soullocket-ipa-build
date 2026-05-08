@@ -50,14 +50,14 @@ class CalendarEventListSection extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.92),
-                  Colors.white.withOpacity(0.74),
+                  Colors.white.withValues(alpha: 0.92),
+                  Colors.white.withValues(alpha: 0.74),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: Colors.white.withOpacity(0.34)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,7 +68,7 @@ class CalendarEventListSection extends StatelessWidget {
                       width: compact ? 40 : 44,
                       height: compact ? 40 : 44,
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.12),
+                        color: accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(compact ? 14 : 15),
                       ),
                       child: Icon(
@@ -109,7 +109,7 @@ class CalendarEventListSection extends StatelessWidget {
                         vertical: compact ? 7 : 8,
                       ),
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.1),
+                        color: accent.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(

@@ -236,23 +236,23 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
   }) {
     return Stack(
       children: [
-        Positioned.fill(
+        const Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF14091F),
-                  const Color(0xFF1C1031),
-                  const Color(0xFF091427),
-                  const Color(0xFF050914),
+                  Color(0xFF14091F),
+                  Color(0xFF1C1031),
+                  Color(0xFF091427),
+                  Color(0xFF050914),
                 ],
-                stops: const [0.0, 0.28, 0.7, 1.0],
+                stops: [0.0, 0.28, 0.7, 1.0],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.all(Radius.circular(28)),
+              border: Border.fromBorderSide(
+                BorderSide(color: Color(0x14FFFFFF)),
               ),
             ),
           ),

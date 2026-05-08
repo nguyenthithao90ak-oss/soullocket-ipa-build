@@ -1315,7 +1315,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   decoration: BoxDecoration(
                     color: const Color(0xB3121A2B),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.white.withOpacity(0.10)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: IconButton(
                     tooltip: 'Về vị trí của bạn',
@@ -1372,7 +1372,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       height: markerSize,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: marker.color.withOpacity(0.18),
+                        color: marker.color.withValues(alpha: 0.18),
                       ),
                     ),
                   ),
@@ -1416,10 +1416,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF18191A).withOpacity(0.94),
+                        color: const Color(0xFF18191A).withValues(alpha: 0.94),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: marker.color.withOpacity(0.22),
+                          color: marker.color.withValues(alpha: 0.22),
                         ),
                       ),
                       child: Text(
@@ -1456,7 +1456,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: color,
-        border: Border.all(color: Colors.white.withOpacity(0.92), width: 1.4),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 1.4),
         image: hasAvatar
             ? DecorationImage(
                 image: CachedNetworkImageProvider(avatarUrl),
@@ -1513,15 +1513,15 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             ? const []
             : [
                 BoxShadow(
-                  color: color.withOpacity(0.28),
+                  color: color.withValues(alpha: 0.28),
                   blurRadius: 16,
                   offset: const Offset(0, 8),
                 ),
               ],
         border: Border.all(
           color: pulse
-              ? color.withOpacity(0.92)
-              : Colors.white.withOpacity(compact ? 0.78 : 0.88),
+              ? color.withValues(alpha: 0.92)
+              : Colors.white.withValues(alpha: compact ? 0.78 : 0.88),
           width: pulse ? 2.2 : (compact ? 1.2 : 1.6),
         ),
         image: hasAvatar
@@ -1820,7 +1820,7 @@ class _MapPinPainter extends CustomPainter {
     final tip = Offset(centerX, size.height);
 
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.24)
+      ..color = Colors.black.withValues(alpha: 0.24)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     final shadowPath = _pinPath(circleCenter, circleRadius, tip)
       ..shift(const Offset(0, 3));
@@ -1833,7 +1833,7 @@ class _MapPinPainter extends CustomPainter {
     canvas.drawPath(pinPath, pinPaint);
 
     final strokePaint = Paint()
-      ..color = Colors.white.withOpacity(0.94)
+      ..color = Colors.white.withValues(alpha: 0.94)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.4;
     canvas.drawPath(pinPath, strokePaint);

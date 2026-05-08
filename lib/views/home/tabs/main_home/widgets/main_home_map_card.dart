@@ -70,7 +70,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFD81B60).withOpacity(0.28),
+                        color: const Color(0xFFD81B60).withValues(alpha: 0.28),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -97,7 +97,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                   end: Alignment.bottomCenter,
                 ),
                 borderRadius: SLRadius.lgAll,
-                border: Border.all(color: Colors.black.withOpacity(0.07)),
+                border: Border.all(color: Colors.black.withValues(alpha: 0.07)),
               ),
               child: Stack(
                 children: isSingle
@@ -110,7 +110,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color:
-                                    const Color(0xFFD81B60).withOpacity(0.12),
+                                    const Color(0xFFD81B60).withValues(alpha: 0.12),
                               ),
                             ),
                           ),
@@ -132,7 +132,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                               vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
@@ -170,7 +170,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                           child: Container(
                             height: 2,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFD81B60).withOpacity(0.35),
+                              color: const Color(0xFFD81B60).withValues(alpha: 0.35),
                               borderRadius: SLRadius.pillAll,
                             ),
                           ),
@@ -260,7 +260,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
             border: Border.all(color: color, width: 2.5),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.28),
+                color: color.withValues(alpha: 0.28),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),

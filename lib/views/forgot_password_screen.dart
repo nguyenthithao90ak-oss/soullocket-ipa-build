@@ -476,10 +476,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: accent.withOpacity(0.14)),
+        border: Border.all(color: accent.withValues(alpha: 0.14)),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.08),
+            color: accent.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -492,7 +492,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.10),
+              color: accent.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: accent, size: 22),
@@ -507,7 +507,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   style: SLTheme.quicksand(
                     fontSize: 10.5,
                     fontWeight: FontWeight.bold,
-                    color: accent.withOpacity(0.88),
+                    color: accent.withValues(alpha: 0.88),
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -607,7 +607,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         boxShadow: isEnabled
             ? [
                 BoxShadow(
-                  color: _recoveryButtonColor.withOpacity(0.2),
+                  color: _recoveryButtonColor.withValues(alpha: 0.2),
                   blurRadius: 14,
                   offset: const Offset(0, 6),
                 )
@@ -663,10 +663,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.36)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.36)),
         boxShadow: [
           BoxShadow(
-            color: _recoveryButtonColor.withOpacity(0.22),
+            color: _recoveryButtonColor.withValues(alpha: 0.22),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -681,7 +681,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
+                  color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
@@ -700,7 +700,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       style: SLTheme.quicksand(
                         fontSize: 11.5,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white.withOpacity(0.82),
+                        color: Colors.white.withValues(alpha: 0.82),
                         letterSpacing: 0.4,
                       ),
                     ),
@@ -721,7 +721,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 style: SLTheme.quicksand(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white.withOpacity(0.88),
+                  color: Colors.white.withValues(alpha: 0.88),
                 ),
               ),
             ],
@@ -732,7 +732,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: LinearProgressIndicator(
               value: currentStep / 4,
               minHeight: 8,
-              backgroundColor: Colors.white.withOpacity(0.24),
+              backgroundColor: Colors.white.withValues(alpha: 0.24),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
@@ -758,7 +758,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               colors: [_recoveryButtonColor, _recoveryAccentDark],
             ),
             borderRadius: SLRadius.lgAll,
-            border: Border.all(color: Colors.white.withOpacity(0.36)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.36)),
           ),
           child: Column(
             children: [
@@ -767,7 +767,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 height: 64,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.18),
+                  color: Colors.white.withValues(alpha: 0.18),
                 ),
                 child: const Icon(
                   Icons.mark_email_read_rounded,
@@ -793,7 +793,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 13,
-                  color: Colors.white.withOpacity(0.86),
+                  color: Colors.white.withValues(alpha: 0.86),
                 ),
               ),
             ],
@@ -810,7 +810,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               border: Border.all(color: Colors.pink.shade100),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.pink.withOpacity(0.07),
+                  color: Colors.pink.withValues(alpha: 0.07),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -862,7 +862,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           decoration: BoxDecoration(
             color: _recoveryAccentSoft,
             borderRadius: SLRadius.lgAll,
-            border: Border.all(color: _recoveryButtonColor.withOpacity(0.24)),
+            border: Border.all(color: _recoveryButtonColor.withValues(alpha: 0.24)),
           ),
           child: Row(
             children: [
@@ -895,7 +895,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           decoration: BoxDecoration(
             color: _recoveryAccentSoft,
             borderRadius: SLRadius.lgAll,
-            border: Border.all(color: _recoveryButtonColor.withOpacity(0.24)),
+            border: Border.all(color: _recoveryButtonColor.withValues(alpha: 0.24)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -964,9 +964,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1303,10 +1303,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                        color: _recoveryButtonColor.withOpacity(0.14)),
+                        color: _recoveryButtonColor.withValues(alpha: 0.14)),
                     boxShadow: [
                       BoxShadow(
-                        color: _recoveryButtonColor.withOpacity(0.06),
+                        color: _recoveryButtonColor.withValues(alpha: 0.06),
                         blurRadius: 22,
                         offset: const Offset(0, 8),
                       ),

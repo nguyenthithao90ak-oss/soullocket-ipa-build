@@ -95,7 +95,7 @@ class _UtilitiesHubDragFeedback extends StatelessWidget {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.18),
+                        color: Colors.black.withValues(alpha: 0.18),
                         blurRadius: 22,
                         offset: const Offset(0, 10),
                       ),
@@ -181,19 +181,19 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                     borderRadius: BorderRadius.circular(26),
                     gradient: LinearGradient(
                       colors: [
-                        shellStart.withOpacity(isTarget ? 0.98 : 0.94),
-                        shellEnd.withOpacity(isTarget ? 0.98 : 0.88),
+                        shellStart.withValues(alpha: isTarget ? 0.98 : 0.94),
+                        shellEnd.withValues(alpha: isTarget ? 0.98 : 0.88),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     border: Border.all(
-                      color: shellBorder.withOpacity(isTarget ? 0.96 : 0.88),
+                      color: shellBorder.withValues(alpha: isTarget ? 0.96 : 0.88),
                       width: isTarget ? 1.5 : 1.15,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: shellGlow.withOpacity(isTarget ? 0.34 : 0.22),
+                        color: shellGlow.withValues(alpha: isTarget ? 0.34 : 0.22),
                         blurRadius: isTarget ? 18 : 12,
                         offset: const Offset(0, 6),
                       ),
@@ -212,8 +212,8 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                             borderRadius: BorderRadius.circular(18),
                             gradient: LinearGradient(
                               colors: [
-                                shellOverlayStart.withOpacity(0.34),
-                                shellOverlayEnd.withOpacity(0.08),
+                                shellOverlayStart.withValues(alpha: 0.34),
+                                shellOverlayEnd.withValues(alpha: 0.08),
                               ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -232,7 +232,7 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                             end: Alignment.bottomRight,
                           ),
                           border: Border.all(
-                            color: innerBorder.withOpacity(0.58),
+                            color: innerBorder.withValues(alpha: 0.58),
                           ),
                         ),
                         child: Stack(
@@ -244,8 +244,8 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(20),
                                   gradient: LinearGradient(
                                     colors: [
-                                      innerOverlayStart.withOpacity(0.22),
-                                      innerOverlayEnd.withOpacity(0.06),
+                                      innerOverlayStart.withValues(alpha: 0.22),
+                                      innerOverlayEnd.withValues(alpha: 0.06),
                                       Colors.transparent,
                                     ],
                                     stops: const [0.0, 0.28, 1.0],
@@ -265,7 +265,7 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(12),
                                   gradient: LinearGradient(
                                     colors: [
-                                      Colors.black.withOpacity(0.14),
+                                      Colors.black.withValues(alpha: 0.14),
                                       Colors.transparent,
                                     ],
                                     begin: Alignment.bottomCenter,

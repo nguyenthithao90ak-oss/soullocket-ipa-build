@@ -523,7 +523,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: selected,
+                    initialValue: selected,
                     items: const [
                       DropdownMenuItem(value: 'spam', child: Text('Spam')),
                       DropdownMenuItem(
@@ -1090,7 +1090,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                         fontWeight: FontWeight.w700,
                         fontSize: 10,
                         color: isMe
-                            ? Colors.white.withOpacity(0.78)
+                            ? Colors.white.withValues(alpha: 0.78)
                             : const Color(0xFF94A3B8),
                       ),
                     ),
@@ -1175,7 +1175,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD81B60).withOpacity(0.1),
+                        color: const Color(0xFFD81B60).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Row(
@@ -1216,7 +1216,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.72),
+                          color: Colors.white.withValues(alpha: 0.72),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: const Color(0xFFF1F5F9)),
                         ),

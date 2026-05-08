@@ -472,10 +472,10 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.18),
-                  Colors.black.withOpacity(0.08),
-                  Colors.black.withOpacity(0.32),
-                  Colors.black.withOpacity(0.88),
+                  Colors.black.withValues(alpha: 0.18),
+                  Colors.black.withValues(alpha: 0.08),
+                  Colors.black.withValues(alpha: 0.32),
+                  Colors.black.withValues(alpha: 0.88),
                 ],
                 stops: const [0.0, 0.22, 0.62, 1.0],
               ),
@@ -519,21 +519,21 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            const Color(0xFFFF9AC2).withOpacity(0.52),
-                            const Color(0xFF7BE0FF).withOpacity(0.26),
-                            const Color(0xFFFFD58C).withOpacity(0.24),
+                            const Color(0xFFFF9AC2).withValues(alpha: 0.52),
+                            const Color(0xFF7BE0FF).withValues(alpha: 0.26),
+                            const Color(0xFFFFD58C).withValues(alpha: 0.24),
                           ],
                         ),
                         border:
-                            Border.all(color: Colors.white.withOpacity(0.14)),
+                            Border.all(color: Colors.white.withValues(alpha: 0.14)),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFF6F9F).withOpacity(0.22),
+                            color: const Color(0xFFFF6F9F).withValues(alpha: 0.22),
                             blurRadius: 28,
                             offset: const Offset(0, 18),
                           ),
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.24),
+                            color: Colors.black.withValues(alpha: 0.24),
                             blurRadius: 34,
                             offset: const Offset(0, 22),
                           ),
@@ -546,7 +546,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 color:
-                                    const Color(0xFF09060A).withOpacity(0.96),
+                                    const Color(0xFF09060A).withValues(alpha: 0.96),
                                 borderRadius: BorderRadius.circular(26),
                               ),
                             ),
@@ -628,8 +628,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFFFF8AB2).withOpacity(0.95),
-                    const Color(0xFF7BE0FF).withOpacity(0.75),
+                    const Color(0xFFFF8AB2).withValues(alpha: 0.95),
+                    const Color(0xFF7BE0FF).withValues(alpha: 0.75),
                   ],
                 ),
               ),
@@ -701,12 +701,12 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.22),
+        color: Colors.black.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.24),
+            color: Colors.black.withValues(alpha: 0.24),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -756,12 +756,12 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.16),
+        color: Colors.black.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.20),
+            color: Colors.black.withValues(alpha: 0.20),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -845,17 +845,17 @@ class _SideAction extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [
                   color == Colors.white
-                      ? Colors.white.withOpacity(0.20)
-                      : color.withOpacity(0.92),
+                      ? Colors.white.withValues(alpha: 0.20)
+                      : color.withValues(alpha: 0.92),
                   color == Colors.white
-                      ? Colors.white.withOpacity(0.06)
-                      : color.withOpacity(0.56),
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : color.withValues(alpha: 0.56),
                 ],
               ),
-              border: Border.all(color: Colors.white.withOpacity(0.16)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.18),
+                  color: Colors.black.withValues(alpha: 0.18),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),

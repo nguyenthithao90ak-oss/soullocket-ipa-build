@@ -237,7 +237,7 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _statusColor(status).withOpacity(0.12),
+                          color: _statusColor(status).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
@@ -596,7 +596,7 @@ class _AdminSupportChatDetailScreenState
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: _statusColor(status).withOpacity(0.12),
+                  color: _statusColor(status).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(

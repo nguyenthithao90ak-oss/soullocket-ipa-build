@@ -110,9 +110,9 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
     return Container(
       padding: SLSpacing.all12,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.07),
+        color: color.withValues(alpha: 0.07),
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: color.withOpacity(0.12)),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,9 +150,9 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
     return Container(
       padding: SLSpacing.all12,
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.07),
+        color: accent.withValues(alpha: 0.07),
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: accent.withOpacity(0.12)),
+        border: Border.all(color: accent.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

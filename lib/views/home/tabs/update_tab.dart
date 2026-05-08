@@ -260,7 +260,7 @@ class UpdateTab extends StatelessWidget {
                 vertical: SLSpacing.xxs,
               ),
               decoration: BoxDecoration(
-                color: const Color(0xFFD81B60).withOpacity(0.1),
+                color: const Color(0xFFD81B60).withValues(alpha: 0.1),
                 borderRadius: SLRadius.smAll,
               ),
               child: Text(
@@ -890,7 +890,7 @@ class UpdateTab extends StatelessWidget {
     return Column(
       children: [
         Icon(Icons.favorite_border_rounded,
-            size: 18, color: Colors.grey.withOpacity(0.75)),
+            size: 18, color: Colors.grey.withValues(alpha: 0.75)),
         SLSpacing.h4,
         Text(
           'SoulLocket $_version',
@@ -924,12 +924,12 @@ class UpdateTab extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.97),
+        color: Colors.white.withValues(alpha: 0.97),
         borderRadius: SLRadius.xlAll,
         border: Border.all(color: Colors.white),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 18,
             offset: const Offset(0, 10),
           ),
@@ -1059,7 +1059,7 @@ class UpdateTab extends StatelessWidget {
             borderRadius: SLRadius.lgAll,
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.28),
+                color: color.withValues(alpha: 0.28),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -1100,7 +1100,7 @@ class UpdateTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.14)),
+        border: Border.all(color: color.withValues(alpha: 0.14)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1109,7 +1109,7 @@ class UpdateTab extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: SLRadius.mdAll,
             ),
             child: Icon(icon, color: color, size: 20),
@@ -1203,10 +1203,10 @@ class UpdateTab extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.055),
+            color: color.withValues(alpha: 0.055),
             borderRadius: SLRadius.mdAll,
             border: Border(
-              bottom: BorderSide(color: color.withOpacity(0.22)),
+              bottom: BorderSide(color: color.withValues(alpha: 0.22)),
             ),
           ),
           child: Row(
@@ -1216,9 +1216,9 @@ class UpdateTab extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.14),
+                  color: color.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: color.withOpacity(0.16)),
+                  border: Border.all(color: color.withValues(alpha: 0.16)),
                 ),
                 child: Icon(icon, color: color, size: 18),
               ),
@@ -1267,7 +1267,7 @@ class UpdateTab extends StatelessWidget {
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
         foregroundColor: color,
-        side: BorderSide(color: color.withOpacity(0.35)),
+        side: BorderSide(color: color.withValues(alpha: 0.35)),
         backgroundColor: Colors.white,
         padding: SLSpacing.symmetric(vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),

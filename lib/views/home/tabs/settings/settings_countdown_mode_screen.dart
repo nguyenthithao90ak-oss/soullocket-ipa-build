@@ -329,8 +329,8 @@ class _CountdownModeIndependentScreenState
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              themeData.orbA.withOpacity(0.12),
-                              themeData.orbB.withOpacity(0.16),
+                              themeData.orbA.withValues(alpha: 0.12),
+                              themeData.orbB.withValues(alpha: 0.16),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,

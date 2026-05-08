@@ -136,13 +136,13 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
     final cardColor = isCurrent
         ? const Color(0xFFFFF6F0)
         : isUpcoming
-            ? Colors.white.withOpacity(0.55)
-            : Colors.white.withOpacity(0.88);
+            ? Colors.white.withValues(alpha: 0.55)
+            : Colors.white.withValues(alpha: 0.88);
     final borderColor = isCurrent
         ? const Color(0xFFFFD7C5)
         : isUpcoming
             ? const Color(0xFFE6E1EB)
-            : baseAccent.withOpacity(0.14);
+            : baseAccent.withValues(alpha: 0.14);
     final titleColor =
         isUpcoming ? const Color(0xFF8F8998) : const Color(0xFF233041);
     final subtitleColor =
@@ -189,7 +189,7 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
                 boxShadow: isCurrent
                     ? [
                         BoxShadow(
-                          color: const Color(0xFFF26A3D).withOpacity(0.10),
+                          color: const Color(0xFFF26A3D).withValues(alpha: 0.10),
                           blurRadius: 14,
                           offset: const Offset(0, 6),
                         ),
@@ -216,7 +216,7 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
                             : null,
                         boxShadow: [
                           BoxShadow(
-                            color: accent.withOpacity(0.25),
+                            color: accent.withValues(alpha: 0.25),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
@@ -239,7 +239,7 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
                                   ? const Color(0xFFFFE8DC)
                                   : isUpcoming
                                       ? const Color(0xFFF3F0F6)
-                                      : accent.withOpacity(0.10),
+                                      : accent.withValues(alpha: 0.10),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
@@ -266,7 +266,7 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
                             Icon(
                               Icons.verified_rounded,
                               size: 18,
-                              color: accent.withOpacity(0.8),
+                              color: accent.withValues(alpha: 0.8),
                             ),
                         ],
                       ),
@@ -347,7 +347,7 @@ class _TimelineFlameBadgeState extends State<_TimelineFlameBadge>
               borderRadius: BorderRadius.circular(999),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF5B6E).withOpacity(glow),
+                  color: const Color(0xFFFF5B6E).withValues(alpha: glow),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

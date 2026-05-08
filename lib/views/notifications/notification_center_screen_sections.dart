@@ -137,7 +137,7 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
         color: SLColors.bgCard,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -248,7 +248,7 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
                   boxShadow: isActive
                       ? [
                           BoxShadow(
-                            color: tone.accent.withOpacity(0.18),
+                            color: tone.accent.withValues(alpha: 0.18),
                             blurRadius: 4,
                             offset: const Offset(0, 1),
                           ),
@@ -378,7 +378,7 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isRead ? 0.03 : 0.06),
+              color: Colors.black.withValues(alpha: isRead ? 0.03 : 0.06),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -492,7 +492,7 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
                 decoration: BoxDecoration(
                   color: isRead
                       ? SLColors.bgSubtle
-                      : tone.surface.withOpacity(0.9),
+                      : tone.surface.withValues(alpha: 0.9),
                   borderRadius: SLRadius.mdAll,
                   border: Border.all(color: tone.border),
                 ),
@@ -777,22 +777,22 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
       _NotifCategory.warning => (
           accent: SLColors.warning,
           surface: SLColors.warningLight,
-          border: SLColors.warning.withOpacity(0.22),
+          border: SLColors.warning.withValues(alpha: 0.22),
         ),
       _NotifCategory.friend => (
           accent: SLColors.primaryActive,
           surface: SLColors.primaryLight,
-          border: SLColors.primary.withOpacity(0.18),
+          border: SLColors.primary.withValues(alpha: 0.18),
         ),
       _NotifCategory.social => (
           accent: SLColors.accentPurpleDark,
-          surface: SLColors.accentPurple.withOpacity(0.16),
-          border: SLColors.accentPurpleDark.withOpacity(0.18),
+          surface: SLColors.accentPurple.withValues(alpha: 0.16),
+          border: SLColors.accentPurpleDark.withValues(alpha: 0.18),
         ),
       _NotifCategory.all => (
           accent: SLColors.info,
           surface: SLColors.infoLight,
-          border: SLColors.info.withOpacity(0.16),
+          border: SLColors.info.withValues(alpha: 0.16),
         ),
     };
   }

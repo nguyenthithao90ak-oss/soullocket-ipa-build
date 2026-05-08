@@ -274,8 +274,8 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      result.colors.first.withOpacity(0.18),
-                      result.colors.last.withOpacity(0.24),
+                      result.colors.first.withValues(alpha: 0.18),
+                      result.colors.last.withValues(alpha: 0.24),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -359,7 +359,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: result.colors.last.withOpacity(0.10),
+                      color: result.colors.last.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -485,7 +485,7 @@ class _RecentSearchEntry {
       iconFontFamily: result.icon.fontFamily,
       iconFontPackage: result.icon.fontPackage,
       colorValues:
-          result.colors.map((color) => color.value).toList(growable: false),
+          result.colors.map((color) => color.toARGB32()).toList(growable: false),
     );
   }
 

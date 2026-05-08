@@ -286,7 +286,7 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
       return const SizedBox.shrink();
     }
 
-    final shouldAnimateNow = _shouldAnimate && TickerMode.of(context);
+    final shouldAnimateNow = _shouldAnimate && TickerMode.valuesOf(context).enabled;
     final useLiteRendering =
         kIsWeb || widget.density == 'low' || widget.density == 'balanced';
 

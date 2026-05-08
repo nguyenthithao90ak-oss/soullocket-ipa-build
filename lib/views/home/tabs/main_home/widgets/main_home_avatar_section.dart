@@ -33,15 +33,15 @@ part of '../../main_home_tab.dart';
 //     return Container(
 //       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
 //       decoration: BoxDecoration(
-//         color: Colors.white.withOpacity(0.7),
+//         color: Colors.white.withValues(alpha: 0.7),
 //         borderRadius: BorderRadius.circular(35),
 //         boxShadow: [
 //           BoxShadow(
-//               color: const Color(0xFFD81B60).withOpacity(0.14),
+//               color: const Color(0xFFD81B60).withValues(alpha: 0.14),
 //               blurRadius: 32,
 //               offset: const Offset(0, 8)),
 //         ],
-//         border: Border.all(color: Colors.white.withOpacity(0.7), width: 2.5),
+//         border: Border.all(color: Colors.white.withValues(alpha: 0.7), width: 2.5),
 //       ),
 //       child: isSingle
 //           ? Column(
@@ -55,7 +55,7 @@ part of '../../main_home_tab.dart';
 //                         Border.all(color: const Color(0xFFFF80AB), width: 3),
 //                     boxShadow: [
 //                       BoxShadow(
-//                           color: const Color(0xFFFF80AB).withOpacity(0.4),
+//                           color: const Color(0xFFFF80AB).withValues(alpha: 0.4),
 //                           blurRadius: 20,
 //                           offset: const Offset(0, 4))
 //                     ],
@@ -348,31 +348,31 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
       height: 72,
       decoration: BoxDecoration(
         color: UiPrefs.notifier.value.transparentMode
-            ? Colors.white.withOpacity(0.8)
-            : Colors.white.withOpacity(0.95),
+            ? Colors.white.withValues(alpha: 0.8)
+            : Colors.white.withValues(alpha: 0.95),
         // Web: .love-time-cell:nth-child(2n) — alternating gradient
         gradient: UiPrefs.notifier.value.transparentMode
             ? null
             : (isAlt
                 ? LinearGradient(
                     colors: [
-                      const Color(0xFFFFFAFC).withOpacity(0.7),
-                      const Color(0xFFFFECF6).withOpacity(0.7)
+                      const Color(0xFFFFFAFC).withValues(alpha: 0.7),
+                      const Color(0xFFFFECF6).withValues(alpha: 0.7)
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                 : LinearGradient(
                     colors: [
-                      Colors.white.withOpacity(0.7),
-                      const Color(0xFFEEF5FF).withOpacity(0.7)
+                      Colors.white.withValues(alpha: 0.7),
+                      const Color(0xFFEEF5FF).withValues(alpha: 0.7)
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )),
         borderRadius: SLRadius.lgAll,
         // Web: border:1px solid rgba(255,255,255,0.58)
-        border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1),
         boxShadow: UiPrefs.notifier.value.transparentMode
             ? []
             : [
@@ -381,7 +381,7 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                   color: (isAlt
                           ? const Color(0xFFD81B60)
                           : const Color(0xFF2563EB))
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   blurRadius: 15,
                   offset: const Offset(0, 6),
                 ),
@@ -489,7 +489,7 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                           border: Border.all(color: Colors.white, width: 2),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.12),
+                              color: Colors.black.withValues(alpha: 0.12),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -541,7 +541,7 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                       shape:
                           frameIsCircle ? BoxShape.circle : BoxShape.rectangle,
                       borderRadius: frameIsCircle ? null : frameRadius,
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                     ),
                     child: Center(
                       child: SizedBox(
@@ -550,7 +550,7 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white.withOpacity(0.9)),
+                              Colors.white.withValues(alpha: 0.9)),
                         ),
                       ),
                     ),

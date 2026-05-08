@@ -971,7 +971,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
               border: Border.all(color: const Color(0xFFF2B6CC)),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF0F172A).withOpacity(0.03),
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.03),
                   blurRadius: 16,
                   offset: const Offset(0, 8),
                 ),
@@ -1037,10 +1037,10 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withOpacity(0.18)),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.03),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
             blurRadius: 14,
             offset: const Offset(0, 8),
           ),
@@ -1053,7 +1053,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.1),
+              color: accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
@@ -1266,7 +1266,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.1),
+                    color: accent.withValues(alpha: 0.1),
                     borderRadius: SLRadius.lgAll,
                   ),
                   child: Icon(
@@ -1511,7 +1511,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
             border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0F172A).withOpacity(0.03),
+                color: const Color(0xFF0F172A).withValues(alpha: 0.03),
                 blurRadius: 14,
                 offset: const Offset(0, 8),
               ),
@@ -1648,9 +1648,9 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: soft ? color.withOpacity(0.08) : color.withOpacity(0.12),
+          color: soft ? color.withValues(alpha: 0.08) : color.withValues(alpha: 0.12),
           borderRadius: SLRadius.pillAll,
-          border: Border.all(color: color.withOpacity(0.22)),
+          border: Border.all(color: color.withValues(alpha: 0.22)),
         ),
         child: Text(
           label,

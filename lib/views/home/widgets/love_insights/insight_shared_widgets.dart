@@ -40,7 +40,7 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
       decoration: BoxDecoration(
         color: background,
         borderRadius: SLRadius.pillAll,
-        border: Border.all(color: color.withOpacity(0.10)),
+        border: Border.all(color: color.withValues(alpha: 0.10)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -73,7 +73,7 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: accent.withOpacity(0.10),
+            color: accent.withValues(alpha: 0.10),
             borderRadius: SLRadius.mdAll,
           ),
           child: Icon(icon, size: 20, color: accent),

@@ -26,9 +26,9 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.64),
-                Colors.white.withOpacity(0.78),
-                Colors.white.withOpacity(0.92),
+                Colors.white.withValues(alpha: 0.64),
+                Colors.white.withValues(alpha: 0.78),
+                Colors.white.withValues(alpha: 0.92),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -56,11 +56,11 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
           decoration: BoxDecoration(
             color: hasChatBackground
-                ? Colors.white.withOpacity(0.72)
+                ? Colors.white.withValues(alpha: 0.72)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(24),
             border: hasChatBackground
-                ? Border.all(color: Colors.white.withOpacity(0.38))
+                ? Border.all(color: Colors.white.withValues(alpha: 0.38))
                 : null,
           ),
           child: Column(
@@ -171,7 +171,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
         color:
-            hasChatBackground ? Colors.white.withOpacity(0.92) : Colors.white,
+            hasChatBackground ? Colors.white.withValues(alpha: 0.92) : Colors.white,
         child: Text(
           'Tài khoản này không còn khả dụng nên cuộc chat hiện đã bị khóa.',
           textAlign: TextAlign.center,
@@ -185,10 +185,10 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
 
     return Container(
       decoration: BoxDecoration(
-        color: hasChatBackground ? Colors.white.withOpacity(0.9) : Colors.white,
+        color: hasChatBackground ? Colors.white.withValues(alpha: 0.9) : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, -2),
           ),
@@ -220,11 +220,11 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
                     color: hasChatBackground
-                        ? const Color(0xFFFFFFFF).withOpacity(0.82)
+                        ? const Color(0xFFFFFFFF).withValues(alpha: 0.82)
                         : const Color(0xFFF0F2F5),
                     borderRadius: BorderRadius.circular(24),
                     border: hasChatBackground
-                        ? Border.all(color: Colors.white.withOpacity(0.35))
+                        ? Border.all(color: Colors.white.withValues(alpha: 0.35))
                         : null,
                   ),
                   child: Row(

@@ -23,12 +23,12 @@ class CommunityIconButton extends StatelessWidget {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: bgColor ?? Colors.white.withOpacity(0.72),
+          color: bgColor ?? Colors.white.withValues(alpha: 0.72),
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withOpacity(0.88), width: 1.1),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.88), width: 1.1),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFD81B60).withOpacity(0.08),
+              color: const Color(0xFFD81B60).withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -71,17 +71,17 @@ class CommunityHeaderActionTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 6.5),
           decoration: BoxDecoration(
             color: Color.alphaBlend(
-              tintColor.withOpacity(isEnabled ? 0.24 : 0.1),
-              Colors.white.withOpacity(isEnabled ? 0.93 : 0.84),
+              tintColor.withValues(alpha: isEnabled ? 0.24 : 0.1),
+              Colors.white.withValues(alpha: isEnabled ? 0.93 : 0.84),
             ),
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: tintColor.withOpacity(isEnabled ? 0.22 : 0.1),
+              color: tintColor.withValues(alpha: isEnabled ? 0.22 : 0.1),
               width: 1.1,
             ),
             boxShadow: [
               BoxShadow(
-                color: tintColor.withOpacity(isEnabled ? 0.11 : 0.04),
+                color: tintColor.withValues(alpha: isEnabled ? 0.11 : 0.04),
                 blurRadius: 9,
                 offset: const Offset(0, 3),
               ),
@@ -93,10 +93,10 @@ class CommunityHeaderActionTile extends StatelessWidget {
                 width: 27,
                 height: 27,
                 decoration: BoxDecoration(
-                  color: tintColor.withOpacity(isEnabled ? 0.26 : 0.11),
+                  color: tintColor.withValues(alpha: isEnabled ? 0.26 : 0.11),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: tintColor.withOpacity(0.16),
+                    color: tintColor.withValues(alpha: 0.16),
                     width: 0.9,
                   ),
                 ),
@@ -249,7 +249,7 @@ class _CommunityHeaderActionStrip extends StatelessWidget {
                                 color: const Color(0xFFE91E63),
                                 borderRadius: BorderRadius.circular(999),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.92),
+                                  color: Colors.white.withValues(alpha: 0.92),
                                 ),
                               ),
                               child: Text(

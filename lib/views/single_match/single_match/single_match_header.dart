@@ -90,10 +90,10 @@ class _SingleMatchHeaderCard extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: Colors.white.withOpacity(0.22)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: const Color(0xFF9F68FF).withOpacity(0.24),
+              color: const Color(0xFF9F68FF).withValues(alpha: 0.24),
               blurRadius: 30,
               offset: const Offset(0, 14),
             ),
@@ -127,7 +127,7 @@ class _SingleMatchHeaderCard extends StatelessWidget {
                     style: SLTheme.quicksand(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white.withOpacity(0.88),
+                      color: Colors.white.withValues(alpha: 0.88),
                       height: 1.3,
                     ),
                   ),
@@ -137,9 +137,9 @@ class _SingleMatchHeaderCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.16),
+                color: Colors.white.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.24)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
               ),
               child: Column(
                 children: <Widget>[
@@ -156,7 +156,7 @@ class _SingleMatchHeaderCard extends StatelessWidget {
                     style: SLTheme.quicksand(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white.withOpacity(0.82),
+                      color: Colors.white.withValues(alpha: 0.82),
                     ),
                   ),
                 ],
@@ -198,7 +198,7 @@ class _SingleMatchLoadErrorCard extends StatelessWidget {
             border: Border.all(color: const Color(0xFFFFD8E6)),
             boxShadow: <BoxShadow>[
               BoxShadow(
-                color: const Color(0xFFFF4F87).withOpacity(0.10),
+                color: const Color(0xFFFF4F87).withValues(alpha: 0.10),
                 blurRadius: 24,
                 offset: const Offset(0, 14),
               ),
@@ -222,7 +222,7 @@ class _SingleMatchLoadErrorCard extends StatelessWidget {
                   ),
                   boxShadow: <BoxShadow>[
                     BoxShadow(
-                      color: const Color(0xFFFF4F87).withOpacity(0.22),
+                      color: const Color(0xFFFF4F87).withValues(alpha: 0.22),
                       blurRadius: 18,
                       offset: const Offset(0, 10),
                     ),
@@ -288,7 +288,7 @@ class _SingleMatchTopBarButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withOpacity(0.86),
+      color: Colors.white.withValues(alpha: 0.86),
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -298,10 +298,10 @@ class _SingleMatchTopBarButton extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.96)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.96)),
             boxShadow: <BoxShadow>[
               BoxShadow(
-                color: const Color(0xFF8D7BA8).withOpacity(0.10),
+                color: const Color(0xFF8D7BA8).withValues(alpha: 0.10),
                 blurRadius: 14,
                 offset: const Offset(0, 8),
               ),

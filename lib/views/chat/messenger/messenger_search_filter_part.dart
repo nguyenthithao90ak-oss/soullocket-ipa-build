@@ -11,7 +11,7 @@ extension _MessengerSearchFilterPart on _MessengerScreenState {
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border(
-            bottom: BorderSide(color: Colors.black.withOpacity(0.05)),
+            bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
           ),
         ),
         child: Row(

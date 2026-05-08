@@ -7,7 +7,7 @@ extension _NotificationScreenSections on _NotificationScreenState {
         color: SLColors.bgCard,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -145,7 +145,7 @@ extension _NotificationScreenSections on _NotificationScreenState {
               icon: Icons.lock_outline_rounded,
               label: 'Hệ thống khóa',
               color: SLColors.accentPurpleDark,
-              background: SLColors.accentPurple.withOpacity(0.16),
+              background: SLColors.accentPurple.withValues(alpha: 0.16),
               onTap: null,
             ),
           ],
@@ -168,24 +168,24 @@ extension _NotificationScreenSections on _NotificationScreenState {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: disabled ? background.withOpacity(0.6) : background,
+          color: disabled ? background.withValues(alpha: 0.6) : background,
           borderRadius: SLRadius.pillAll,
           border: Border.all(
-            color: disabled ? color.withOpacity(0.2) : color.withOpacity(0.3),
+            color: disabled ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon,
-                size: 16, color: disabled ? color.withOpacity(0.5) : color),
+                size: 16, color: disabled ? color.withValues(alpha: 0.5) : color),
             SLSpacing.w8,
             Text(
               label,
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: disabled ? color.withOpacity(0.55) : color,
+                color: disabled ? color.withValues(alpha: 0.55) : color,
               ),
             ),
           ],
@@ -239,7 +239,7 @@ extension _NotificationScreenSections on _NotificationScreenState {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               )
@@ -482,7 +482,7 @@ extension _NotificationScreenSections on _NotificationScreenState {
         borderRadius: SLRadius.pillAll,
         border: Border.all(
           color: highlighted
-              ? SLColors.primary.withOpacity(0.18)
+              ? SLColors.primary.withValues(alpha: 0.18)
               : SLColors.border,
         ),
       ),
@@ -636,7 +636,7 @@ extension _NotificationScreenSections on _NotificationScreenState {
                     color: SLColors.warningLight,
                     borderRadius: SLRadius.lgAll,
                     border: Border.all(
-                      color: SLColors.warning.withOpacity(0.2),
+                      color: SLColors.warning.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Text(
@@ -840,33 +840,33 @@ extension _NotificationScreenSections on _NotificationScreenState {
       'friend' => (
           accent: SLColors.info,
           surface: SLColors.infoLight,
-          border: SLColors.info.withOpacity(0.16),
+          border: SLColors.info.withValues(alpha: 0.16),
         ),
       'like' => (
           accent: SLColors.primaryActive,
           surface: SLColors.primaryLight,
-          border: SLColors.primary.withOpacity(0.18),
+          border: SLColors.primary.withValues(alpha: 0.18),
         ),
       'comment' => (
           accent: SLColors.success,
           surface: SLColors.successLight,
-          border: SLColors.success.withOpacity(0.18),
+          border: SLColors.success.withValues(alpha: 0.18),
         ),
       'system' => switch (item.type) {
           'new_device' => (
               accent: SLColors.danger,
               surface: SLColors.dangerLight,
-              border: SLColors.danger.withOpacity(0.18),
+              border: SLColors.danger.withValues(alpha: 0.18),
             ),
           'role_change' => (
               accent: SLColors.warning,
               surface: SLColors.warningLight,
-              border: SLColors.warning.withOpacity(0.2),
+              border: SLColors.warning.withValues(alpha: 0.2),
             ),
           _ => (
               accent: SLColors.accentPurpleDark,
-              surface: SLColors.accentPurple.withOpacity(0.16),
-              border: SLColors.accentPurpleDark.withOpacity(0.18),
+              surface: SLColors.accentPurple.withValues(alpha: 0.16),
+              border: SLColors.accentPurpleDark.withValues(alpha: 0.18),
             ),
         },
       _ => (

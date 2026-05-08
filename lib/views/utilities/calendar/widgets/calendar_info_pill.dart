@@ -23,7 +23,7 @@ class CalendarInfoPill extends StatelessWidget {
         vertical: compact ? 8 : 9,
       ),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.08),
+        color: accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(

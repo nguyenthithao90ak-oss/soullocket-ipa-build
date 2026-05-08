@@ -175,7 +175,7 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
                                         leading: CircleAvatar(
                                           backgroundColor:
                                               _getActionColor(actionStr)
-                                                  .withOpacity(0.2),
+                                                  .withValues(alpha: 0.2),
                                           child: Icon(Icons.history,
                                               color:
                                                   _getActionColor(actionStr)),

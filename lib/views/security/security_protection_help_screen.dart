@@ -84,17 +84,17 @@ class _SecurityProtectionHelpScreenState
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  accent.withOpacity(0.14),
+                  accent.withValues(alpha: 0.14),
                   Colors.white,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: accent.withOpacity(0.22)),
+              border: Border.all(color: accent.withValues(alpha: 0.22)),
               boxShadow: [
                 BoxShadow(
-                  color: accent.withOpacity(0.12),
+                  color: accent.withValues(alpha: 0.12),
                   blurRadius: 24,
                   offset: const Offset(0, 14),
                 ),
@@ -107,7 +107,7 @@ class _SecurityProtectionHelpScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.12),
+                    color: accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -179,7 +179,7 @@ class _SecurityProtectionHelpScreenState
                         height: 26,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: accent.withOpacity(0.12),
+                          color: accent.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: Text(
@@ -291,7 +291,7 @@ class _SecurityProtectionHelpScreenState
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
-            side: BorderSide(color: accent.withOpacity(0.28)),
+            side: BorderSide(color: accent.withValues(alpha: 0.28)),
           ),
           child: Text(
             isBlocked ? 'Tôi sẽ xử lý rồi thử lại sau' : 'Đã hiểu, tiếp tục',
@@ -314,7 +314,7 @@ class _SecurityProtectionHelpScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withOpacity(0.18)),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
       ),
       child: Text(
         label,

@@ -329,7 +329,7 @@ class _MainHomeHeroCountdownMotionShellState
   }
 
   bool _shouldAnimate() {
-    if (!TickerMode.of(context)) return false;
+    if (!TickerMode.valuesOf(context).enabled) return false;
     return widget.enableMotion;
   }
 

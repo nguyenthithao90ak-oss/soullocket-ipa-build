@@ -24,12 +24,12 @@ class AuthLanguageToggle extends StatelessWidget {
           borderRadius: BorderRadius.circular(17),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFD9C9BD).withOpacity(0.16),
+              color: const Color(0xFFD9C9BD).withValues(alpha: 0.16),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: const Color(0xFFE5DACD).withOpacity(0.96)),
+          border: Border.all(color: const Color(0xFFE5DACD).withValues(alpha: 0.96)),
         ),
         child: Stack(
           children: [

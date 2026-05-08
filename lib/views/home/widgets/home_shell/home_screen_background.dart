@@ -78,7 +78,7 @@ extension _HomeScreenShellBackground on _HomeScreenState {
             right: safeQuality == 'low' ? -28 : (safeQuality == 'high' ? -56 : -40),
             child: RepaintBoundary(
               child: _buildGlowOrb(
-                primaryOrbColor.withOpacity(
+                primaryOrbColor.withValues(alpha: 
                   safeQuality == 'low'
                       ? (baseOpacity - 0.05).clamp(0.03, 0.10).toDouble()
                       : (safeQuality == 'high'
@@ -99,7 +99,7 @@ extension _HomeScreenShellBackground on _HomeScreenState {
             left: safeQuality == 'high' ? -82 : -60,
             child: RepaintBoundary(
               child: _buildGlowOrb(
-                secondaryOrbColor.withOpacity(
+                secondaryOrbColor.withValues(alpha: 
                   (baseOpacity - (safeQuality == 'high' ? -0.005 : 0.04))
                       .clamp(0.05, 0.22)
                       .toDouble(),
@@ -115,7 +115,7 @@ extension _HomeScreenShellBackground on _HomeScreenState {
             right: -16,
             child: RepaintBoundary(
               child: _buildGlowOrb(
-                tertiaryOrbColor.withOpacity(
+                tertiaryOrbColor.withValues(alpha: 
                   (baseOpacity + 0.01).clamp(0.08, 0.20).toDouble(),
                 ),
                 266 * orbScale,
@@ -130,9 +130,9 @@ extension _HomeScreenShellBackground on _HomeScreenState {
             child: RepaintBoundary(
               child: _buildGlowOrb(
                 Color.alphaBlend(
-                  Colors.white.withOpacity(0.14),
+                  Colors.white.withValues(alpha: 0.14),
                   primaryOrbColor,
-                ).withOpacity(0.10),
+                ).withValues(alpha: 0.10),
                 144,
                 animate: false,
               ),
@@ -145,9 +145,9 @@ extension _HomeScreenShellBackground on _HomeScreenState {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.white.withOpacity(0.045),
+                      Colors.white.withValues(alpha: 0.045),
                       Colors.transparent,
-                      Colors.white.withOpacity(0.03),
+                      Colors.white.withValues(alpha: 0.03),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -168,14 +168,14 @@ extension _HomeScreenShellBackground on _HomeScreenState {
   }) {
     final overlayColors = isDark
         ? [
-            Colors.black.withOpacity(0.30),
-            Colors.black.withOpacity(0.18),
-            Colors.black.withOpacity(0.40),
+            Colors.black.withValues(alpha: 0.30),
+            Colors.black.withValues(alpha: 0.18),
+            Colors.black.withValues(alpha: 0.40),
           ]
         : [
-            Colors.white.withOpacity(0.14),
-            Colors.white.withOpacity(0.08),
-            Colors.black.withOpacity(0.30),
+            Colors.white.withValues(alpha: 0.14),
+            Colors.white.withValues(alpha: 0.08),
+            Colors.black.withValues(alpha: 0.30),
           ];
 
     return Stack(

@@ -279,7 +279,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withOpacity(0.22),
+            color: const Color(0xFFD81B60).withValues(alpha: 0.22),
             blurRadius: 22,
             offset: const Offset(0, 12),
           ),
@@ -292,7 +292,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withValues(alpha: 0.18),
               borderRadius: SLRadius.lgAll,
             ),
             child: const Icon(
@@ -317,7 +317,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
             style: SLTheme.quicksand(
               fontSize: 14,
               height: 1.55,
-              color: Colors.white.withOpacity(0.92),
+              color: Colors.white.withValues(alpha: 0.92),
             ),
           ),
           SLSpacing.h12,
@@ -339,9 +339,9 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
+        color: Colors.white.withValues(alpha: 0.14),
         borderRadius: SLRadius.pillAll,
-        border: Border.all(color: Colors.white.withOpacity(0.16)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -590,7 +590,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: _statusColor(status).withOpacity(0.12),
+                  color: _statusColor(status).withValues(alpha: 0.12),
                   borderRadius: SLRadius.pillAll,
                 ),
                 child: Text(
@@ -697,12 +697,12 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
     return Container(
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.92),
+        color: Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: const Color(0xFFF3D7E3)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withOpacity(0.07),
+            color: const Color(0xFFD81B60).withValues(alpha: 0.07),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),

@@ -89,10 +89,10 @@ class UtilitiesHubGrid extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.72),
+                        color: Colors.white.withValues(alpha: 0.72),
                         borderRadius: SLRadius.lgAll,
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.45),
+                          color: Colors.white.withValues(alpha: 0.45),
                         ),
                         boxShadow: SLShadow.subtle,
                       ),

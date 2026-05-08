@@ -126,9 +126,9 @@ class CommunityRulesCard extends StatelessWidget {
         accent: accent,
         radius: radius,
         colors: <Color>[
-          Colors.white.withOpacity(0.98),
+          Colors.white.withValues(alpha: 0.98),
           Color.lerp(accent, Colors.white, 0.93) ?? Colors.white,
-          Colors.white.withOpacity(0.98),
+          Colors.white.withValues(alpha: 0.98),
         ],
       ),
       child: Column(
@@ -143,14 +143,14 @@ class CommunityRulesCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: <Color>[
-                        accent.withOpacity(0.18),
+                        accent.withValues(alpha: 0.18),
                         Colors.white,
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: SLRadius.mdAll,
-                    border: Border.all(color: accent.withOpacity(0.16)),
+                    border: Border.all(color: accent.withValues(alpha: 0.16)),
                   ),
                   child: Icon(icon, color: accent, size: compact ? 18 : 20),
                 ),
@@ -192,7 +192,7 @@ class CommunityRulesCard extends StatelessWidget {
                     child: Icon(
                       Icons.circle,
                       size: 7,
-                      color: accent.withOpacity(0.75),
+                      color: accent.withValues(alpha: 0.75),
                     ),
                   ),
                   SLSpacing.w8,
@@ -822,17 +822,17 @@ class _CommunityTabState extends State<CommunityTab>
                           ),
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.26),
+                            color: Colors.white.withValues(alpha: 0.26),
                             width: 1.1,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFD81B60).withOpacity(0.22),
+                              color: const Color(0xFFD81B60).withValues(alpha: 0.22),
                               blurRadius: 18,
                               offset: const Offset(0, 10),
                             ),
                             BoxShadow(
-                              color: const Color(0xFFFFC1D8).withOpacity(0.18),
+                              color: const Color(0xFFFFC1D8).withValues(alpha: 0.18),
                               blurRadius: 10,
                               offset: const Offset(0, 2),
                             ),
@@ -851,10 +851,10 @@ class _CommunityTabState extends State<CommunityTab>
                                     width: 34,
                                     height: 34,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.18),
+                                      color: Colors.white.withValues(alpha: 0.18),
                                       borderRadius: BorderRadius.circular(13),
                                       border: Border.all(
-                                        color: Colors.white.withOpacity(0.20),
+                                        color: Colors.white.withValues(alpha: 0.20),
                                       ),
                                     ),
                                     child: const Icon(
@@ -911,7 +911,7 @@ class _CommunityTabState extends State<CommunityTab>
                                           boxShadow: [
                                             BoxShadow(
                                               color: Colors.black
-                                                  .withOpacity(0.08),
+                                                  .withValues(alpha: 0.08),
                                               blurRadius: 4,
                                               offset: const Offset(0, 2),
                                             ),
@@ -947,7 +947,7 @@ class _CommunityTabState extends State<CommunityTab>
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: SLTheme.quicksand(
-                                      color: Colors.white.withOpacity(0.88),
+                                      color: Colors.white.withValues(alpha: 0.88),
                                       fontSize: 8.1,
                                       height: 1.12,
                                       fontWeight: FontWeight.w700,

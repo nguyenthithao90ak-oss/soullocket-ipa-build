@@ -19,7 +19,7 @@ extension _MainHomeAdminBadgeExt on _MainHomeTabState {
           borderRadius: SLRadius.pillAll,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFB300).withOpacity(0.28),
+              color: const Color(0xFFFFB300).withValues(alpha: 0.28),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

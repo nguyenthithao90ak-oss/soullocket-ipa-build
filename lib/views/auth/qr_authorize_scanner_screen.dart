@@ -438,9 +438,9 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.68),
+                    Colors.black.withValues(alpha: 0.68),
                     Colors.transparent,
-                    Colors.black.withOpacity(0.82),
+                    Colors.black.withValues(alpha: 0.82),
                   ],
                   stops: const [0.0, 0.38, 1.0],
                 ),
@@ -521,10 +521,10 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                           width: double.infinity,
                           padding: EdgeInsets.all(infoPadding),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
+                            color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: SLRadius.xlAll,
                             border: Border.all(
-                                color: Colors.white.withOpacity(0.18)),
+                                color: Colors.white.withValues(alpha: 0.18)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,7 +568,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                             width: double.infinity,
                             padding: EdgeInsets.all(infoPadding),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF401722).withOpacity(0.86),
+                              color: const Color(0xFF401722).withValues(alpha: 0.86),
                               borderRadius: SLRadius.xlAll,
                               border: Border.all(
                                 color: const Color(0x66FF8DB4),
@@ -594,13 +594,13 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(28),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 width: 3,
                               ),
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      SLColors.primaryActive.withOpacity(0.22),
+                                      SLColors.primaryActive.withValues(alpha: 0.22),
                                   blurRadius: 28,
                                   spreadRadius: 4,
                                 ),
@@ -648,10 +648,10 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                           width: double.infinity,
                           padding: EdgeInsets.all(infoPadding),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
+                            color: Colors.black.withValues(alpha: 0.5),
                             borderRadius: SLRadius.xlAll,
                             border: Border.all(
-                                color: Colors.white.withOpacity(0.14)),
+                                color: Colors.white.withValues(alpha: 0.14)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -696,7 +696,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
             ),
             if (_isProcessing)
               Container(
-                color: Colors.black.withOpacity(0.65),
+                color: Colors.black.withValues(alpha: 0.65),
                 child: Center(
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 28),
@@ -704,7 +704,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFF1F1A1D),
                       borderRadius: SLRadius.xlAll,
-                      border: Border.all(color: Colors.white.withOpacity(0.08)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -736,7 +736,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: Colors.white.withOpacity(0.16),
+      color: Colors.white.withValues(alpha: 0.16),
       shape: const CircleBorder(),
       child: InkWell(
         onTap: onTap,
@@ -754,7 +754,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
+        color: Colors.white.withValues(alpha: 0.14),
         borderRadius: SLRadius.pillAll,
       ),
       child: Row(

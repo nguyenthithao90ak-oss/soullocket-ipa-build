@@ -30,15 +30,15 @@ class AuthTabSwitcher extends StatelessWidget {
           height: compact ? 56 : 60,
           padding: SLSpacing.all4,
           decoration: BoxDecoration(
-            color: SLTheme.authSurfaceTint.withOpacity(0.96),
+            color: SLTheme.authSurfaceTint.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: SLTheme.authFieldBorder.withOpacity(0.98),
+              color: SLTheme.authFieldBorder.withValues(alpha: 0.98),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFD9C9BD).withOpacity(0.16),
+                color: const Color(0xFFD9C9BD).withValues(alpha: 0.16),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
@@ -69,7 +69,7 @@ class AuthTabSwitcher extends StatelessWidget {
                         borderRadius: BorderRadius.circular(compact ? 16 : 18),
                         boxShadow: [
                           BoxShadow(
-                            color: SLColors.primary.withOpacity(0.24),
+                            color: SLColors.primary.withValues(alpha: 0.24),
                             blurRadius: 18,
                             offset: const Offset(0, 8),
                           ),
@@ -154,7 +154,7 @@ class _AuthTabButton extends StatelessWidget {
                   style: SLTheme.quicksand(
                     color: active
                         ? Colors.white
-                        : SLTheme.authChipText.withOpacity(0.92),
+                        : SLTheme.authChipText.withValues(alpha: 0.92),
                     fontWeight: FontWeight.w900,
                     fontSize: fontSize,
                     letterSpacing: letterSpacing,

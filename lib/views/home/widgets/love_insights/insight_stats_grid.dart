@@ -58,7 +58,7 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
     return Container(
       padding: SLSpacing.all16,
       decoration:
-          _softCardDecoration(borderColor: card.accent.withOpacity(0.14)),
+          _softCardDecoration(borderColor: card.accent.withValues(alpha: 0.14)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -68,7 +68,7 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: card.accent.withOpacity(0.10),
+                  color: card.accent.withValues(alpha: 0.10),
                   borderRadius: SLRadius.mdAll,
                 ),
                 child: Icon(card.icon, size: 18, color: card.accent),

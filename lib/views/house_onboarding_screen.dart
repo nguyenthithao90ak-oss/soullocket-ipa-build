@@ -70,6 +70,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   bool _dismissedScrollHint = false;
   bool _didQueueAutoCreate = false;
   bool _isPromptingCreationSetup = false;
+  // ignore: unused_field
   final bool _showLegacyIntro = false;
   Timer? _scrollHintTimer;
   String? _autoCreateFailureMessage;
@@ -283,6 +284,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return DateInputUtils.looksLikeBirthQuestion(question);
   }
 
+  // ignore: unused_element
   void _normalizeRecoveryBirthAnswer() {
     final normalized = DateInputUtils.normalizeForDisplay(
       _recoveryACtrl.text,
@@ -776,6 +778,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     });
   }
 
+  // ignore: unused_element
   Future<void> _signOutToLogin() async {
     if (_isLoading) return;
 
@@ -1117,7 +1120,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 28,
                         offset: const Offset(0, 16),
                       ),
@@ -1233,17 +1236,18 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return const LoadingScaffold();
   }
 
+  // ignore: unused_element
   Widget _buildScrollHint() {
     return Center(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           borderRadius: SLRadius.pillAll,
-          border: Border.all(color: Colors.white.withOpacity(0.92)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.92)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -1272,6 +1276,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildBackdropBubble({
     required double size,
     required Color color,
@@ -1286,11 +1291,12 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildHeroChip(IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.82),
+        color: Colors.white.withValues(alpha: 0.82),
         borderRadius: SLRadius.pillAll,
         border: Border.all(color: const Color(0x18D81B60)),
       ),
@@ -1312,6 +1318,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildInfoCallout({
     required IconData icon,
     required String title,
@@ -1369,6 +1376,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildSectionCard({
     required String title,
     required String subtitle,
@@ -1378,7 +1386,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return Container(
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: SLRadius.xlAll,
         border: Border.all(color: const Color(0x14D81B60)),
       ),
@@ -1449,13 +1457,13 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
           color: selected ? color : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? color : color.withOpacity(0.35),
+            color: selected ? color : color.withValues(alpha: 0.35),
             width: 1.6,
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: color.withOpacity(0.24),
+                    color: color.withValues(alpha: 0.24),
                     blurRadius: 18,
                     offset: const Offset(0, 10),
                   ),
@@ -1470,8 +1478,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
               height: 42,
               decoration: BoxDecoration(
                 color: selected
-                    ? Colors.white.withOpacity(0.18)
-                    : color.withOpacity(0.12),
+                    ? Colors.white.withValues(alpha: 0.18)
+                    : color.withValues(alpha: 0.12),
                 borderRadius: SLRadius.mdAll,
               ),
               child: Icon(
@@ -1496,7 +1504,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: selected
-                    ? Colors.white.withOpacity(0.92)
+                    ? Colors.white.withValues(alpha: 0.92)
                     : const Color(0xFF6E6067),
               ),
             ),
@@ -1506,6 +1514,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildField({
     required String label,
     required TextEditingController controller,

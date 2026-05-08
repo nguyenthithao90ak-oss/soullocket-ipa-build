@@ -29,7 +29,7 @@ class _FeedPostStats extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.favorite_rounded,
-                    color: const Color(0xFFE91E63).withOpacity(0.82),
+                    color: const Color(0xFFE91E63).withValues(alpha: 0.82),
                     size: 16,
                   ),
                   SLSpacing.w8,
@@ -274,13 +274,13 @@ class _FeedActionButton extends StatelessWidget {
             Icon(
               icon,
               size: 19,
-              color: color.withOpacity(foregroundOpacity),
+              color: color.withValues(alpha: foregroundOpacity),
             ),
             SLSpacing.w8,
             Text(
               label,
               style: SLTheme.quicksand(
-                color: color.withOpacity(foregroundOpacity),
+                color: color.withValues(alpha: foregroundOpacity),
                 fontSize: 12.6,
                 fontWeight: FontWeight.w900,
               ),

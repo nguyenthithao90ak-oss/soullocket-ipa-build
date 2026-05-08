@@ -23,7 +23,7 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
       title: 'Video ${badge.label}',
       subtitle:
           'Dựng tự động từ ${selected.length} ảnh ngẫu nhiên trong kho kỷ niệm của hai bạn cho mốc ${badge.label}.',
-      accentValue: badge.accent.value,
+      accentValue: badge.accent.toARGB32(),
       createdAt: now,
       expiresAt: DateTime(now.year, now.month, now.day, 23, 59, 59, 999),
       items: selected,

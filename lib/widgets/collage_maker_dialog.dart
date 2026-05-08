@@ -587,22 +587,13 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
       if (collageBytes != null && mounted && requestId == _generationTicket) {
         // Upload and save
         final fileName = 'collage_${DateTime.now().millisecondsSinceEpoch}.png';
-        final url = await StorageService().uploadBytesToPath(
-          'houses/${widget.houseId}/collages/$fileName',
-          collageBytes,
-          contentType: 'image/png',
-          originalFileName: fileName,
+        await StorageService().uploadCollageBytes(
+          houseId: widget.houseId,
+          bytes: collageBytes,
+          fileName: fileName,
+          template: _selectedStyle,
+          style: _selectedStyle,
         );
-
-        await FirebaseDatabase.instance
-            .ref('houses/${widget.houseId}/collages')
-            .push()
-            .set({
-          'url': url,
-          'template': _selectedStyle,
-          'ts': ServerValue.timestamp,
-          'source': 'collage_maker_dialog',
-        });
 
         await CollageLimitService().consumeLimit();
         await PendingUploadService.instance.clear(_pendingUploadKey);

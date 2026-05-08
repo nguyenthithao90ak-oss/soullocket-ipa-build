@@ -337,7 +337,7 @@ class _HomeToolActionButton extends StatelessWidget {
             decoration: BoxDecoration(
               color: background,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.9)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
             ),
             child: Icon(icon, color: iconColor),
           ),
@@ -484,12 +484,12 @@ class _HomeToolPickerTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? const Color(0xFFFFF0F6)
-                : Colors.white.withOpacity(0.9),
+                : Colors.white.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: isSelected
                   ? const Color(0xFFFFC5D8)
-                  : Colors.white.withOpacity(0.92),
+                  : Colors.white.withValues(alpha: 0.92),
             ),
           ),
           child: Row(
@@ -579,9 +579,9 @@ class _HomeVaultChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.16)),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -695,12 +695,12 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
               compactStyle ? 18 : 22,
             ),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.88),
+              color: Colors.white.withValues(alpha: 0.88),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white.withOpacity(0.92)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.92)),
               boxShadow: [
                 BoxShadow(
-                  color: accent.withOpacity(0.18),
+                  color: accent.withValues(alpha: 0.18),
                   blurRadius: 28,
                   offset: const Offset(0, 16),
                 ),

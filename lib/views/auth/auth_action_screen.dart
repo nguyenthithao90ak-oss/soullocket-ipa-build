@@ -211,7 +211,7 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
                     color: (_isSuccess
                             ? const Color(0xFF86EFAC)
                             : const Color(0xFFFBCFE8))
-                        .withOpacity(0.9),
+                        .withValues(alpha: 0.9),
                   ),
                 ),
                 child: Padding(

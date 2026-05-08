@@ -92,7 +92,7 @@ class _HeartAnimationState extends State<_HeartAnimation>
                   angle: widget.heart.angle * 0.3,
                   child: Icon(
                     Icons.favorite_rounded,
-                    color: const Color(0xFFE91E63).withOpacity(0.9),
+                    color: const Color(0xFFE91E63).withValues(alpha: 0.9),
                     size: widget.heart.size,
                   ),
                 ),

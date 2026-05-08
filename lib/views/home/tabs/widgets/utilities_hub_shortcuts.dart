@@ -154,7 +154,7 @@ class _ShortcutIconButton extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: colors.first.withOpacity(0.16),
+                  color: colors.first.withValues(alpha: 0.16),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -198,15 +198,15 @@ class _ShortcutChip extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                colors.first.withOpacity(0.16),
-                colors.last.withOpacity(0.10),
+                colors.first.withValues(alpha: 0.16),
+                colors.last.withValues(alpha: 0.10),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: colors.last.withOpacity(0.18),
+              color: colors.last.withValues(alpha: 0.18),
             ),
           ),
           child: Row(
@@ -220,7 +220,7 @@ class _ShortcutChip extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: colors.first.withOpacity(0.18),
+                      color: colors.first.withValues(alpha: 0.18),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),

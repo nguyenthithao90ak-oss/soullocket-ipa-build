@@ -70,11 +70,11 @@ class ChatMessageList extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
           decoration: BoxDecoration(
             color: hasChatBackground
-                ? Colors.white.withOpacity(0.72)
+                ? Colors.white.withValues(alpha: 0.72)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(24),
             border: hasChatBackground
-                ? Border.all(color: Colors.white.withOpacity(0.38))
+                ? Border.all(color: Colors.white.withValues(alpha: 0.38))
                 : null,
           ),
           child: Column(

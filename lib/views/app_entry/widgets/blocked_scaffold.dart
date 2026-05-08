@@ -42,14 +42,14 @@ class BlockedScaffold extends StatelessWidget {
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
                           colors: [
-                            SLColors.primary.withOpacity(0.16),
+                            SLColors.primary.withValues(alpha: 0.16),
                             Colors.white,
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         border: Border.all(
-                          color: SLColors.primary.withOpacity(0.18),
+                          color: SLColors.primary.withValues(alpha: 0.18),
                         ),
                       ),
                       child: const Icon(

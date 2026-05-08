@@ -684,7 +684,7 @@ class _HealthScreenState extends State<HealthScreen>
                     ),
                     Switch(
                       value: _shareWithPartner,
-                      activeColor: const Color(0xFFE91E63),
+                      activeThumbColor: const Color(0xFFE91E63),
                       onChanged: (value) {
                         setState(() => _shareWithPartner = value);
                         _saveHealthData();

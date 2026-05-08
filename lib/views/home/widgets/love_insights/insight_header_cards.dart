@@ -13,7 +13,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
       padding: SLSpacing.all20,
       decoration: _glassCardDecoration(
         borderColor: const Color(0xFFF6CDD8),
-        shadowColor: const Color(0xFFD81B60).withOpacity(0.14),
+        shadowColor: const Color(0xFFD81B60).withValues(alpha: 0.14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +67,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: scoreColor.withOpacity(0.10),
+                        color: scoreColor.withValues(alpha: 0.10),
                         borderRadius: SLRadius.pillAll,
                       ),
                       child: Row(
@@ -103,7 +103,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                   vertical: 14,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.96),
+                  color: Colors.white.withValues(alpha: 0.96),
                   borderRadius: SLRadius.xlAll,
                   border: Border.all(color: const Color(0xFFF4D3DE)),
                 ),

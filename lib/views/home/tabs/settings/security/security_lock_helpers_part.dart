@@ -325,7 +325,7 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
 //         decoration: BoxDecoration(
 //           color: isSelected ? const Color(0xFF6a1b9a) : const Color(0xFFf3e5f5),
 //           borderRadius: BorderRadius.circular(20),
-//           border: Border.all(color: const Color(0xFF9c27b0).withOpacity(0.3)),
+//           border: Border.all(color: const Color(0xFF9c27b0).withValues(alpha: 0.3)),
 //         ),
 //         child: Row(
 //           mainAxisSize: MainAxisSize.min,

@@ -141,7 +141,7 @@ class LoginForm extends StatelessWidget {
                         rememberMeLabel,
                         style: SLTheme.quicksand(
                           fontSize: 12,
-                          color: SLColors.textSecond.withOpacity(0.92),
+                          color: SLColors.textSecond.withValues(alpha: 0.92),
                           fontWeight: FontWeight.w800,
                           height: 1.35,
                         ),

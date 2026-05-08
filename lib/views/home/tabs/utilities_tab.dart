@@ -465,7 +465,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
             child: Container(
               padding: SLSpacing.all4,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.55),
+                color: Colors.white.withValues(alpha: 0.55),
                 borderRadius: SLRadius.mdAll,
               ),
               child: Row(
@@ -545,11 +545,11 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: active ? SLColors.primary : Colors.white.withOpacity(0.9),
+          color: active ? SLColors.primary : Colors.white.withValues(alpha: 0.9),
           shape: BoxShape.circle,
           boxShadow: SLShadow.subtle,
           border: Border.all(
-              color: active ? SLColors.primary : Colors.white.withOpacity(0.5)),
+              color: active ? SLColors.primary : Colors.white.withValues(alpha: 0.5)),
         ),
         child: Icon(
           icon,
@@ -572,7 +572,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: SLColors.secondary.withOpacity(0.1),
+                  color: SLColors.secondary.withValues(alpha: 0.1),
                   borderRadius: SLRadius.mdAll,
                 ),
                 child: const Icon(Icons.auto_awesome_rounded,
@@ -641,9 +641,9 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.4),
+        color: Colors.white.withValues(alpha: 0.4),
         borderRadius: SLRadius.mdAll,
-        border: Border.all(color: Colors.white.withOpacity(0.5)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [
@@ -675,8 +675,8 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
       padding: EdgeInsets.fromLTRB(
           12, MediaQuery.of(context).padding.top + 14, 12, 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.2))),
+        color: Colors.white.withValues(alpha: 0.95),
+        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -746,10 +746,10 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFD81B60).withOpacity(0.18)),
+        border: Border.all(color: const Color(0xFFD81B60).withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withOpacity(0.12),
+            color: const Color(0xFFD81B60).withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -1004,13 +1004,13 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: isReset
-              ? Colors.white.withOpacity(0.5)
-              : const Color(0xFFD81B60).withOpacity(0.1),
+              ? Colors.white.withValues(alpha: 0.5)
+              : const Color(0xFFD81B60).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isReset
                 ? Colors.white
-                : const Color(0xFFD81B60).withOpacity(0.3),
+                : const Color(0xFFD81B60).withValues(alpha: 0.3),
           ),
         ),
         child: Text(

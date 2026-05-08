@@ -58,18 +58,18 @@ class AuthPanelShell extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(compact ? 30 : 38),
         border: Border.all(
-          color: SLTheme.authFieldBorder.withOpacity(0.98),
+          color: SLTheme.authFieldBorder.withValues(alpha: 0.98),
           width: 1.3,
         ),
         boxShadow: [
           BoxShadow(
-            color: SLColors.primary.withOpacity(isLoginTab ? 0.12 : 0.08),
+            color: SLColors.primary.withValues(alpha: isLoginTab ? 0.12 : 0.08),
             blurRadius: 34,
             spreadRadius: -6,
             offset: const Offset(0, 20),
           ),
           BoxShadow(
-            color: Colors.white.withOpacity(0.82),
+            color: Colors.white.withValues(alpha: 0.82),
             blurRadius: 0,
             offset: const Offset(0, 1),
           ),
@@ -89,8 +89,8 @@ class AuthPanelShell extends StatelessWidget {
                   gradient: RadialGradient(
                     colors: [
                       isLoginTab
-                          ? SLTheme.authHeroGlow.withOpacity(0.34)
-                          : SLColors.accentPurple.withOpacity(0.16),
+                          ? SLTheme.authHeroGlow.withValues(alpha: 0.34)
+                          : SLColors.accentPurple.withValues(alpha: 0.16),
                       Colors.transparent,
                     ],
                   ),
@@ -149,10 +149,10 @@ class AuthPanelShell extends StatelessWidget {
                   compact ? 12 : 14,
                 ),
                 decoration: BoxDecoration(
-                  color: SLTheme.authHelpBackground.withOpacity(0.92),
+                  color: SLTheme.authHelpBackground.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: SLTheme.authFieldBorder.withOpacity(0.96),
+                    color: SLTheme.authFieldBorder.withValues(alpha: 0.96),
                   ),
                 ),
                 child: Column(
@@ -259,14 +259,14 @@ class _AuthHelpButton extends StatelessWidget {
         borderRadius: SLRadius.xlAll,
         border: Border.all(
           color: isGuide
-              ? Colors.white.withOpacity(0.2)
-              : Colors.white.withOpacity(0.86),
+              ? Colors.white.withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.86),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
             color: (isGuide ? const Color(0xFFA89BDD) : SLColors.secondary)
-                .withOpacity(0.14),
+                .withValues(alpha: 0.14),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),

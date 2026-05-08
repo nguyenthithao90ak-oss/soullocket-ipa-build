@@ -103,8 +103,8 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.white.withOpacity(0.92),
-                      const Color(0xFFFFF3F8).withOpacity(0.95),
+                      Colors.white.withValues(alpha: 0.92),
+                      const Color(0xFFFFF3F8).withValues(alpha: 0.95),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,

@@ -151,7 +151,7 @@ class _NotificationScreenState extends State<NotificationScreen>
         lifecycleState == null || lifecycleState == AppLifecycleState.resumed;
     final route = ModalRoute.of(context);
     final isCurrentRoute = route == null || route.isCurrent;
-    return isAppResumed && isCurrentRoute && TickerMode.of(context);
+    return isAppResumed && isCurrentRoute && TickerMode.valuesOf(context).enabled;
   }
 
   void _handleNotificationsEvent(DatabaseEvent event) {

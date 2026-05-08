@@ -56,9 +56,9 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
     return Container(
       padding: SLSpacing.all12,
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.06),
+        color: accent.withValues(alpha: 0.06),
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: accent.withOpacity(0.11)),
+        border: Border.all(color: accent.withValues(alpha: 0.11)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

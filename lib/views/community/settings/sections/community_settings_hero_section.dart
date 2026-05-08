@@ -41,7 +41,7 @@ class CommunitySettingsHeroSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(kCommunitySettingsHeroRadius),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1F2A37).withOpacity(0.08),
+            color: const Color(0xFF1F2A37).withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -77,10 +77,10 @@ class CommunitySettingsHeroSection extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withOpacity(
+                        Colors.black.withValues(alpha: 
                           headerImageUrl.isNotEmpty ? 0.12 : 0.02,
                         ),
-                        Colors.black.withOpacity(
+                        Colors.black.withValues(alpha: 
                           headerImageUrl.isNotEmpty ? 0.28 : 0.12,
                         ),
                       ],
@@ -150,7 +150,7 @@ class CommunitySettingsHeroSection extends StatelessWidget {
                               Text(
                                 previewHandle,
                                 style: SLTheme.quicksand(
-                                  color: Colors.white.withOpacity(0.88),
+                                  color: Colors.white.withValues(alpha: 0.88),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -161,7 +161,7 @@ class CommunitySettingsHeroSection extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: SLTheme.quicksand(
-                                  color: Colors.white.withOpacity(0.92),
+                                  color: Colors.white.withValues(alpha: 0.92),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   height: 1.42,

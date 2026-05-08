@@ -775,9 +775,9 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
 //       child: Container(
 //         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
 //         decoration: BoxDecoration(
-//           color: color.withOpacity(0.10),
+//           color: color.withValues(alpha: 0.10),
 //           borderRadius: BorderRadius.circular(14),
-//           border: Border.all(color: color.withOpacity(0.18)),
+//           border: Border.all(color: color.withValues(alpha: 0.18)),
 //         ),
 //         child: Row(
 //           mainAxisSize: MainAxisSize.min,
@@ -874,7 +874,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     final switchWidget = Switch(
       value: value,
       onChanged: onChanged,
-      activeColor: const Color(0xFFD81B60),
+      activeThumbColor: const Color(0xFFD81B60),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
 

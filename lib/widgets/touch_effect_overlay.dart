@@ -228,7 +228,7 @@ class _TouchEffectPainter extends CustomPainter {
     canvas.drawPath(path, paint);
 
     paint.maskFilter = null;
-    paint.color = Colors.white.withValues(alpha: paint.color.opacity);
+    paint.color = Colors.white.withValues(alpha: paint.color.a);
     final corePath = Path();
     final coreRadius = radius * 0.4;
     corePath.moveTo(0, -coreRadius);
@@ -252,7 +252,7 @@ class _TouchEffectPainter extends CustomPainter {
     canvas.drawPath(path, paint);
 
     paint.maskFilter = null;
-    paint.color = Colors.white.withValues(alpha: paint.color.opacity * 0.8);
+    paint.color = Colors.white.withValues(alpha: paint.color.a * 0.8);
     canvas.drawPath(path, paint);
   }
 

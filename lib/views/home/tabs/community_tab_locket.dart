@@ -54,7 +54,7 @@ extension _CommunityTabLocket on _CommunityTabState {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFFB300).withOpacity(0.3),
+                    color: const Color(0xFFFFB300).withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -226,7 +226,7 @@ extension _CommunityTabLocket on _CommunityTabState {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withOpacity(0.8),
+                        Colors.black.withValues(alpha: 0.8),
                         Colors.transparent
                       ],
                       begin: Alignment.topCenter,
@@ -245,7 +245,7 @@ extension _CommunityTabLocket on _CommunityTabState {
                     gradient: LinearGradient(
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.9),
+                        Colors.black.withValues(alpha: 0.9),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -319,7 +319,7 @@ extension _CommunityTabLocket on _CommunityTabState {
                               Text(
                                 timeAgo,
                                 style: SLTheme.quicksand(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   shadows: [
@@ -345,7 +345,7 @@ extension _CommunityTabLocket on _CommunityTabState {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       borderRadius: SLRadius.pillAll,
                     ),
                     child: Row(

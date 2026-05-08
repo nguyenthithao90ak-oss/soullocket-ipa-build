@@ -26,12 +26,12 @@ class CalendarEventTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withOpacity(0.16)),
+        border: Border.all(color: accent.withValues(alpha: 0.16)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -45,7 +45,7 @@ class CalendarEventTile extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [accent.withOpacity(0.9), accent],
+                colors: [accent.withValues(alpha: 0.9), accent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -87,7 +87,7 @@ class CalendarEventTile extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.1),
+                        color: accent.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(

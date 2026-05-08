@@ -347,7 +347,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                               color: const Color(0xFF10182A),
                               borderRadius: SLRadius.mdAll,
                               border: Border.all(
-                                  color: Colors.redAccent.withOpacity(0.5)),
+                                  color: Colors.redAccent.withValues(alpha: 0.5)),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

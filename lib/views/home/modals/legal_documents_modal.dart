@@ -59,12 +59,12 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             ),
             boxShadow: [
               BoxShadow(
-                color: _accentLavender.withOpacity(0.12),
+                color: _accentLavender.withValues(alpha: 0.12),
                 blurRadius: 28,
                 offset: const Offset(0, 14),
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
@@ -181,10 +181,10 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? accent.withOpacity(0.15) : _cardBackground,
+          color: isActive ? accent.withValues(alpha: 0.15) : _cardBackground,
           borderRadius: SLRadius.mdAll,
           border: Border.all(
-            color: isActive ? accent.withOpacity(0.34) : _panelBorder,
+            color: isActive ? accent.withValues(alpha: 0.34) : _panelBorder,
             width: isActive ? 1.5 : 1,
           ),
         ),
@@ -231,9 +231,9 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: _accentRose.withOpacity(0.08),
+            color: _accentRose.withValues(alpha: 0.08),
             borderRadius: SLRadius.lgAll,
-            border: Border.all(color: _accentRose.withOpacity(0.16)),
+            border: Border.all(color: _accentRose.withValues(alpha: 0.16)),
           ),
           child: Text(
             'Trước khi vào app, bạn cần xác nhận đã đọc bộ điều khoản sử dụng để hiểu rõ quyền lợi, trách nhiệm và quy tắc sử dụng SoulLocket.',
@@ -303,9 +303,9 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: _accentLavender.withOpacity(0.08),
+            color: _accentLavender.withValues(alpha: 0.08),
             borderRadius: SLRadius.lgAll,
-            border: Border.all(color: _accentLavender.withOpacity(0.16)),
+            border: Border.all(color: _accentLavender.withValues(alpha: 0.16)),
           ),
           child: Text(
             'Bảng này tóm tắt dữ liệu nào được dùng, vì sao được dùng và cách bạn kiểm soát dữ liệu của mình trước khi tiếp tục.',
@@ -375,9 +375,9 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: _accentGreen.withOpacity(0.08),
+            color: _accentGreen.withValues(alpha: 0.08),
             borderRadius: SLRadius.lgAll,
-            border: Border.all(color: _accentGreen.withOpacity(0.16)),
+            border: Border.all(color: _accentGreen.withValues(alpha: 0.16)),
           ),
           child: Text(
             'SoulLocket có thể lưu mẫu thiết bị, địa chỉ IP công khai và vị trí gần đúng suy ra từ IP để phát hiện đăng nhập lạ, duyệt thiết bị và gửi cảnh báo bảo mật. Dữ liệu này không dùng cho quảng cáo.',
@@ -431,16 +431,16 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: _accentGreen.withOpacity(0.08),
+            color: _accentGreen.withValues(alpha: 0.08),
             borderRadius: SLRadius.lgAll,
-            border: Border.all(color: _accentGreen.withOpacity(0.16)),
+            border: Border.all(color: _accentGreen.withValues(alpha: 0.16)),
           ),
           child: Text(
             'Nếu bạn không bật mục này, app vẫn dùng được nhưng nhật ký thiết bị và một số cảnh báo bảo mật sẽ không đầy đủ.',
             style: SLTheme.quicksand(
               fontSize: 11.8,
               fontWeight: FontWeight.w800,
-              color: _ink.withOpacity(0.9),
+              color: _ink.withValues(alpha: 0.9),
               height: 1.35,
             ),
           ),
@@ -458,9 +458,9 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: _accentBlue.withOpacity(0.08),
+            color: _accentBlue.withValues(alpha: 0.08),
             borderRadius: SLRadius.lgAll,
-            border: Border.all(color: _accentBlue.withOpacity(0.16)),
+            border: Border.all(color: _accentBlue.withValues(alpha: 0.16)),
           ),
           child: Text(
             'Chúng tôi sử dụng cookies để giúp bạn truy cập SoulLocket, cách người dùng tương tác với ứng dụng của chúng tôi, bảo vệ chống gian lận và cải thiện hiệu suất của chúng tôi.',
@@ -534,9 +534,9 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.06),
+        color: accent.withValues(alpha: 0.06),
         borderRadius: SLRadius.mdAll,
-        border: Border.all(color: accent.withOpacity(0.14)),
+        border: Border.all(color: accent.withValues(alpha: 0.14)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,9 +545,9 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               borderRadius: SLRadius.smAll,
-              border: Border.all(color: accent.withOpacity(0.14)),
+              border: Border.all(color: accent.withValues(alpha: 0.14)),
             ),
             alignment: Alignment.center,
             child: Icon(icon, color: accent, size: 16),
@@ -598,10 +598,10 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
           colors: [accent, endColor],
         ),
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: Colors.white.withOpacity(0.22)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.24),
+            color: accent.withValues(alpha: 0.24),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),

@@ -66,8 +66,8 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.black.withOpacity(0.92),
-              const Color(0xFF1a0033).withOpacity(0.98),
+              Colors.black.withValues(alpha: 0.92),
+              const Color(0xFF1a0033).withValues(alpha: 0.98),
             ],
           ),
         ),
@@ -103,12 +103,12 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFFE91E8C).withOpacity(0.8),
+                      color: const Color(0xFFE91E8C).withValues(alpha: 0.8),
                       width: 4,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFE91E8C).withOpacity(0.4),
+                        color: const Color(0xFFE91E8C).withValues(alpha: 0.4),
                         blurRadius: 30,
                         spreadRadius: 10,
                       ),
@@ -458,10 +458,10 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                  color: const Color(0xFFE91E8C).withOpacity(0.6), width: 3),
+                  color: const Color(0xFFE91E8C).withValues(alpha: 0.6), width: 3),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFE91E8C).withOpacity(0.3),
+                  color: const Color(0xFFE91E8C).withValues(alpha: 0.3),
                   blurRadius: 30,
                   spreadRadius: 8,
                 ),
@@ -541,7 +541,7 @@ class _CallButton extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.4),
+                  color: color.withValues(alpha: 0.4),
                   blurRadius: 16,
                   spreadRadius: 4,
                 ),

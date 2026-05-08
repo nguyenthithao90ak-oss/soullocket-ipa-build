@@ -384,12 +384,12 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
                 ),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.92),
+                  color: Colors.white.withValues(alpha: 0.92),
                   width: 1.35,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF111827).withOpacity(0.16),
+                    color: const Color(0xFF111827).withValues(alpha: 0.16),
                     blurRadius: 34,
                     spreadRadius: -12,
                     offset: const Offset(0, 20),
@@ -449,7 +449,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
                       color: const Color(0xFFF4F6FB),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.95),
+                        color: Colors.white.withValues(alpha: 0.95),
                         width: 1.2,
                       ),
                     ),
@@ -1500,7 +1500,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
         return Container(
           padding: SLSpacing.all20,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.96),
+            color: Colors.white.withValues(alpha: 0.96),
             borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(30), topRight: Radius.circular(30)),
           ),
@@ -1560,7 +1560,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
         padding: SLSpacing.all8,
         decoration: BoxDecoration(
             color: active
-                ? const Color(0xFFD81B60).withOpacity(0.1)
+                ? const Color(0xFFD81B60).withValues(alpha: 0.1)
                 : Colors.grey[100],
             shape: BoxShape.circle),
         child: Icon(icon,

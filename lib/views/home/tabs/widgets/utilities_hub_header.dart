@@ -82,7 +82,7 @@ class UtilitiesHubHeader extends StatelessWidget {
             child: Container(
               padding: SLSpacing.all4,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.55),
+                color: Colors.white.withValues(alpha: 0.55),
                 borderRadius: SLRadius.mdAll,
               ),
               child: Row(
@@ -132,11 +132,11 @@ class _UtilitiesHubHeaderAction extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             shape: BoxShape.circle,
             boxShadow: SLShadow.subtle,
             border: Border.all(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
           child: Icon(

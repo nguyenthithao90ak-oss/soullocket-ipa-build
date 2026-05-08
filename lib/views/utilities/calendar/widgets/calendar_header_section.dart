@@ -50,17 +50,17 @@ class CalendarHeaderSection extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.28),
-                  Colors.white.withOpacity(0.14),
+                  Colors.white.withValues(alpha: 0.28),
+                  Colors.white.withValues(alpha: 0.14),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withOpacity(0.32)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.32)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 18,
                   offset: const Offset(0, 10),
                 ),
@@ -75,10 +75,10 @@ class CalendarHeaderSection extends StatelessWidget {
                       width: compact ? 42 : 46,
                       height: compact ? 42 : 46,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
+                        color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(compact ? 14 : 16),
                         border:
-                            Border.all(color: Colors.white.withOpacity(0.22)),
+                            Border.all(color: Colors.white.withValues(alpha: 0.22)),
                       ),
                       child: Icon(
                         Icons.calendar_month_rounded,
@@ -103,7 +103,7 @@ class CalendarHeaderSection extends StatelessWidget {
                           Text(
                             'Chạm vào ngày bất kỳ để xem chi tiết, thêm kế hoạch và theo dõi các mốc quan trọng.',
                             style: SLTheme.quicksand(
-                              color: Colors.white.withOpacity(0.82),
+                              color: Colors.white.withValues(alpha: 0.82),
                               fontWeight: FontWeight.w600,
                               fontSize: compact ? 11.5 : 12,
                               height: 1.35,
@@ -145,9 +145,9 @@ class CalendarHeaderSection extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
                     formatButtonDecoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.white.withOpacity(0.24)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
                     ),
                     leftChevronIcon:
                         const Icon(Icons.chevron_left, color: Colors.white),
@@ -156,7 +156,7 @@ class CalendarHeaderSection extends StatelessWidget {
                   ),
                   daysOfWeekStyle: DaysOfWeekStyle(
                     weekdayStyle: SLTheme.quicksand(
-                      color: Colors.white.withOpacity(0.84),
+                      color: Colors.white.withValues(alpha: 0.84),
                       fontWeight: FontWeight.w800,
                     ),
                     weekendStyle: SLTheme.quicksand(
@@ -182,15 +182,15 @@ class CalendarHeaderSection extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     todayDecoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.24),
+                      color: Colors.white.withValues(alpha: 0.24),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         width: 1.4,
                       ),
                     ),
                     outsideTextStyle: SLTheme.quicksand(
-                      color: Colors.white.withOpacity(0.34),
+                      color: Colors.white.withValues(alpha: 0.34),
                     ),
                     markersMaxCount: 1,
                     markerDecoration: const BoxDecoration(

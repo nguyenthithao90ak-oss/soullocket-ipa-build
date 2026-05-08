@@ -37,17 +37,17 @@ class CalendarSelectedDaySummary extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.white.withOpacity(0.94),
-              Colors.white.withOpacity(0.8),
+              Colors.white.withValues(alpha: 0.94),
+              Colors.white.withValues(alpha: 0.8),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.36)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.36)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -62,7 +62,7 @@ class CalendarSelectedDaySummary extends StatelessWidget {
                   width: compact ? 44 : 48,
                   height: compact ? 44 : 48,
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.12),
+                    color: accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(compact ? 14 : 16),
                   ),
                   child: Icon(
@@ -103,7 +103,7 @@ class CalendarSelectedDaySummary extends StatelessWidget {
                     vertical: compact ? 7 : 8,
                   ),
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.12),
+                    color: accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(

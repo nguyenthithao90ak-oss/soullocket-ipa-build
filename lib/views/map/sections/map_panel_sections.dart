@@ -17,9 +17,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.14),
+        color: accent.withValues(alpha: 0.14),
         borderRadius: SLRadius.pillAll,
-        border: Border.all(color: accent.withOpacity(0.24)),
+        border: Border.all(color: accent.withValues(alpha: 0.24)),
       ),
       child: Text(
         label,
@@ -43,7 +43,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
           width: 34,
           height: 34,
           decoration: BoxDecoration(
-            color: accent.withOpacity(0.14),
+            color: accent.withValues(alpha: 0.14),
             borderRadius: SLRadius.lgAll,
           ),
           child: Icon(icon, color: accent, size: 18),
@@ -85,7 +85,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
           height: 42,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: roleColor.withOpacity(0.34), width: 1.5),
+            border: Border.all(color: roleColor.withValues(alpha: 0.34), width: 1.5),
             image: avatarUrl.trim().isEmpty
                 ? null
                 : DecorationImage(
@@ -95,8 +95,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
             gradient: avatarUrl.trim().isEmpty
                 ? LinearGradient(
                     colors: [
-                      roleColor.withOpacity(0.9),
-                      roleColor.withOpacity(0.45)
+                      roleColor.withValues(alpha: 0.9),
+                      roleColor.withValues(alpha: 0.45)
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -146,7 +146,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         color: _kMapTileSurface,
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: accent.withOpacity(0.18)),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,7 +155,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.14),
+              color: accent.withValues(alpha: 0.14),
               borderRadius: SLRadius.lgAll,
             ),
             child: Icon(icon, color: accent, size: 20),
@@ -214,10 +214,10 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: color.withOpacity(0.24)),
+        border: Border.all(color: color.withValues(alpha: 0.24)),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.18),
+            color: color.withValues(alpha: 0.18),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -251,15 +251,15 @@ extension _MapPanelSectionsExt on _MapScreenState {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withOpacity(0.10)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
               boxShadow: [
                 BoxShadow(
-                  color: _kMapPinkDeep.withOpacity(0.14),
+                  color: _kMapPinkDeep.withValues(alpha: 0.14),
                   blurRadius: 30,
                   offset: const Offset(0, 14),
                 ),
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.24),
+                  color: Colors.black.withValues(alpha: 0.24),
                   blurRadius: 26,
                   offset: const Offset(0, 12),
                 ),
@@ -282,7 +282,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: _kMapPinkDeep.withOpacity(0.30),
+                            color: _kMapPinkDeep.withValues(alpha: 0.30),
                             blurRadius: 18,
                             offset: const Offset(0, 8),
                           ),
@@ -322,7 +322,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                             style: SLTheme.quicksand(
                               fontSize: 11.1,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white.withOpacity(0.66),
+                              color: Colors.white.withValues(alpha: 0.66),
                               height: 1.35,
                             ),
                           ),
@@ -447,14 +447,14 @@ extension _MapPanelSectionsExt on _MapScreenState {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF10B981).withOpacity(0.16),
-                          const Color(0xFF0F172A).withOpacity(0.30),
+                          const Color(0xFF10B981).withValues(alpha: 0.16),
+                          const Color(0xFF0F172A).withValues(alpha: 0.30),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: SLRadius.lgAll,
-                      border: Border.all(color: const Color(0xFF34D399).withOpacity(0.34)),
+                      border: Border.all(color: const Color(0xFF34D399).withValues(alpha: 0.34)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -496,7 +496,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                     style: SLTheme.quicksand(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.white.withOpacity(0.84),
+                                      color: Colors.white.withValues(alpha: 0.84),
                                       height: 1.4,
                                     ),
                                   ),
@@ -548,14 +548,14 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF111827).withOpacity(0.86),
-            accent.withOpacity(0.10),
+            const Color(0xFF111827).withValues(alpha: 0.86),
+            accent.withValues(alpha: 0.10),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withOpacity(0.24)),
+        border: Border.all(color: accent.withValues(alpha: 0.24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,7 +567,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 10.5,
               fontWeight: FontWeight.w800,
-              color: accent.withOpacity(0.96),
+              color: accent.withValues(alpha: 0.96),
             ),
           ),
           SLSpacing.h6,
@@ -666,16 +666,16 @@ extension _MapPanelSectionsExt on _MapScreenState {
         gradient: LinearGradient(
           colors: [
             const Color(0xFF151D2B),
-            roleColor.withOpacity(0.12),
+            roleColor.withValues(alpha: 0.12),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: roleColor.withOpacity(0.22)),
+        border: Border.all(color: roleColor.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
-            color: roleColor.withOpacity(0.08),
+            color: roleColor.withValues(alpha: 0.08),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -733,7 +733,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
-              color: Colors.white.withOpacity(0.70),
+              color: Colors.white.withValues(alpha: 0.70),
               height: 1.35,
             ),
           ),
@@ -766,9 +766,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: accuracyUi.color.withOpacity(0.12),
+                color: accuracyUi.color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: accuracyUi.color.withOpacity(0.20)),
+                border: Border.all(color: accuracyUi.color.withValues(alpha: 0.20)),
               ),
               child: Row(
                 children: [
@@ -1017,9 +1017,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.12),
+        color: accent.withValues(alpha: 0.12),
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: accent.withOpacity(0.18)),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
       ),
       child: Row(
         children: [
@@ -1054,7 +1054,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         color: _kMapTileSurface,
         borderRadius: SLRadius.lgAll,
-        border: Border.all(color: _kMapPanelBorder.withOpacity(0.72)),
+        border: Border.all(color: _kMapPanelBorder.withValues(alpha: 0.72)),
       ),
       child: Row(
         children: [
@@ -1062,7 +1062,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.12),
+              color: accent.withValues(alpha: 0.12),
               borderRadius: SLRadius.mdAll,
             ),
             child: Icon(icon, color: accent, size: 18),

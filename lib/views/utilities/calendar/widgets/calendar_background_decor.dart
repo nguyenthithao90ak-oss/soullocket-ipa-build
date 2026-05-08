@@ -31,8 +31,8 @@ class CalendarBackgroundDecor extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    Colors.white.withOpacity(0.28),
-                    Colors.white.withOpacity(0.02),
+                    Colors.white.withValues(alpha: 0.28),
+                    Colors.white.withValues(alpha: 0.02),
                   ],
                 ),
               ),
@@ -48,7 +48,7 @@ class CalendarBackgroundDecor extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFFFF2E8).withOpacity(0.24),
+                    const Color(0xFFFFF2E8).withValues(alpha: 0.24),
                     Colors.transparent,
                   ],
                 ),
@@ -65,7 +65,7 @@ class CalendarBackgroundDecor extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFB8F2E6).withOpacity(0.18),
+                    const Color(0xFFB8F2E6).withValues(alpha: 0.18),
                     Colors.transparent,
                   ],
                 ),

@@ -8,7 +8,6 @@ import 'package:path/path.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'storage_service.dart';
 import '../core/sl_theme.dart';
 
 /// ============================================================================
@@ -33,7 +32,6 @@ class LoveMessengerCore {
 
   final FirebaseDatabase _db = FirebaseDatabase.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final StorageService _storageService = StorageService();
 
   Database? _localDb;
   StreamSubscription<DatabaseEvent>? _messagesSubscription;
@@ -176,31 +174,9 @@ class LoveMessengerCore {
   }
 
   Future<void> sendImageMessage(XFile imageFile, {String? caption}) async {
-    final originalFileName =
-        imageFile.name.isNotEmpty ? imageFile.name : imageFile.path;
-    final fileExtension = extension(originalFileName).isNotEmpty
-        ? extension(originalFileName)
-        : '.webp';
-    final storagePath =
-        'houses/$_currentHouseId/chat_media/${DateTime.now().millisecondsSinceEpoch}$fileExtension';
-
-    // Ném tệp lên Mây
-    final downloadUrl =
-        await _storageService.uploadFileToPath(storagePath, imageFile);
-
-    final msgRef = _db.ref('houses/$_currentHouseId/messages').push();
-    final msg = MessageCoreModel(
-      id: msgRef.key ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      senderId: _currentUserUid!,
-      text: caption ?? '',
-      imageUrl: downloadUrl,
-      timestamp: DateTime.now().millisecondsSinceEpoch,
-      isRead: false,
-      isEncrypted: false,
-      messageType: 'image',
+    throw Exception(
+      'Ảnh chat phải gửi qua phiên upload bảo mật của máy chủ.',
     );
-
-    await msgRef.set(msg.toMap());
   }
 
   // ==========================================
@@ -563,7 +539,7 @@ class SuperLoveMessengerViewState extends State<SuperLoveMessengerView>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: Colors.red.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20)),
                         child: const Text(
                             "⚡ \${isMe ? 'Bạn' : 'Người ấy'} vừa gửi một chấn động trái tim!",
@@ -601,8 +577,8 @@ class SuperLoveMessengerViewState extends State<SuperLoveMessengerView>
                         boxShadow: [
                           BoxShadow(
                               color: isMe
-                                  ? const Color(0xFFE94057).withOpacity(0.3)
-                                  : Colors.black.withOpacity(0.05),
+                                  ? const Color(0xFFE94057).withValues(alpha: 0.3)
+                                  : Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4))
                         ],

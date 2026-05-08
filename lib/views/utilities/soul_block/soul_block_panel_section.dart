@@ -313,11 +313,11 @@ class _SoulExplosionPainter extends CustomPainter {
     1.2,
   ];
   final List<Color> _streakColors = <Color>[
-    Color(0xFFFFF7D6),
-    Color(0xFFFFD36F),
-    Color(0xFFFF9F43),
-    Color(0xFFFF6B4A),
-    Color(0xFFFFE8A1),
+    const Color(0xFFFFF7D6),
+    const Color(0xFFFFD36F),
+    const Color(0xFFFF9F43),
+    const Color(0xFFFF6B4A),
+    const Color(0xFFFFE8A1),
   ];
 
   @override
@@ -493,7 +493,7 @@ class _SettingsSwitchTile extends StatelessWidget {
                 child: Switch.adaptive(
                   value: value,
                   onChanged: onChanged,
-                  activeColor: const Color(0xFF00C3FF),
+                  activeThumbColor: const Color(0xFF00C3FF),
                 ),
               ),
             ],

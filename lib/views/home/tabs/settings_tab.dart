@@ -815,16 +815,16 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   BoxDecoration _previewHomeCardDecoration(String toneKey, bool isDark) {
     final color = switch (toneKey) {
-      'mist' => const Color(0xFFF7FBFF).withOpacity(isDark ? 0.64 : 0.86),
-      'rose' => const Color(0xFFFFF2F7).withOpacity(isDark ? 0.62 : 0.9),
-      'glass' => Colors.white.withOpacity(isDark ? 0.18 : 0.74),
-      _ => Colors.white.withOpacity(isDark ? 0.22 : 0.82),
+      'mist' => const Color(0xFFF7FBFF).withValues(alpha: isDark ? 0.64 : 0.86),
+      'rose' => const Color(0xFFFFF2F7).withValues(alpha: isDark ? 0.62 : 0.9),
+      'glass' => Colors.white.withValues(alpha: isDark ? 0.18 : 0.74),
+      _ => Colors.white.withValues(alpha: isDark ? 0.22 : 0.82),
     };
     final border = switch (toneKey) {
       'mist' => const Color(0xFFDBF0FF),
       'rose' => const Color(0xFFF8D7E4),
-      'glass' => Colors.white.withOpacity(0.42),
-      _ => Colors.white.withOpacity(0.54),
+      'glass' => Colors.white.withValues(alpha: 0.42),
+      _ => Colors.white.withValues(alpha: 0.54),
     };
 
     return BoxDecoration(
@@ -833,7 +833,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       border: Border.all(color: border),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(isDark ? 0.16 : 0.04),
+          color: Colors.black.withValues(alpha: isDark ? 0.16 : 0.04),
           blurRadius: 16,
           offset: const Offset(0, 8),
         ),
@@ -877,12 +877,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.96),
+          color: Colors.white.withValues(alpha: 0.96),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: const Color(0xFFF8BBD0)),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFD81B60).withOpacity(0.12),
+              color: const Color(0xFFD81B60).withValues(alpha: 0.12),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),

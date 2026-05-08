@@ -143,7 +143,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       uid: uid,
       name: widget.myName,
       isDrawing: isDrawing,
-      colorValue: _currentColor.value,
+      colorValue: _currentColor.toARGB32(),
     );
   }
 
@@ -304,7 +304,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           id: stroke.id,
           authorUid: uid,
           authorName: widget.myName,
-          colorValue: stroke.color.value,
+          colorValue: stroke.color.toARGB32(),
           width: stroke.width,
           points: normalizedPoints,
           createdAt: DateTime.now().millisecondsSinceEpoch,

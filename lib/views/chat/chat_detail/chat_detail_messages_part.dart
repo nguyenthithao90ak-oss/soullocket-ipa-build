@@ -243,8 +243,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                       : [
                           BoxShadow(
                             color: isMe
-                                ? const Color(0xFF0A7CFF).withOpacity(0.24)
-                                : Colors.black.withOpacity(0.06),
+                                ? const Color(0xFF0A7CFF).withValues(alpha: 0.24)
+                                : Colors.black.withValues(alpha: 0.06),
                             blurRadius: isMe ? 8 : 4,
                             offset: const Offset(0, 2),
                           ),
@@ -287,12 +287,12 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
                                 color: isMe
-                                    ? Colors.white.withOpacity(0.14)
+                                    ? Colors.white.withValues(alpha: 0.14)
                                     : const Color(0xFFF8FAFC),
                                 borderRadius: SLRadius.mdAll,
                                 border: Border.all(
                                   color: isMe
-                                      ? Colors.white.withOpacity(0.18)
+                                      ? Colors.white.withValues(alpha: 0.18)
                                       : const Color(0xFFD8E1EC),
                                 ),
                               ),
@@ -369,7 +369,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                       borderRadius: SLRadius.mdAll,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 3,
                           offset: const Offset(0, 1),
                         ),
@@ -410,7 +410,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
           border: Border.all(color: const Color(0xFFD6E4FF)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -489,7 +489,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
           border: Border.all(color: const Color(0xFFD6E4FF)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -604,7 +604,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFFD81B60).withOpacity(0.1),
+                color: const Color(0xFFD81B60).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Row(
@@ -645,7 +645,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.72),
+                  color: Colors.white.withValues(alpha: 0.72),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFF1F5F9)),
                 ),

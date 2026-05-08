@@ -146,12 +146,12 @@ class _ConsentGateState extends State<ConsentGate> {
                           ? null
                           : [
                               BoxShadow(
-                                color: _accentLavender.withOpacity(0.10),
+                                color: _accentLavender.withValues(alpha: 0.10),
                                 blurRadius: 26,
                                 offset: const Offset(0, 12),
                               ),
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.06),
+                                color: Colors.black.withValues(alpha: 0.06),
                                 blurRadius: 16,
                                 offset: const Offset(0, 8),
                               ),
@@ -311,7 +311,7 @@ class _ConsentGateState extends State<ConsentGate> {
         border: Border.all(color: const Color(0xFFE4EAF6)),
         boxShadow: [
           BoxShadow(
-            color: _accentBlue.withOpacity(0.06),
+            color: _accentBlue.withValues(alpha: 0.06),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -326,14 +326,14 @@ class _ConsentGateState extends State<ConsentGate> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  _accentBlue.withOpacity(0.16),
-                  _accentLavender.withOpacity(0.11),
+                  _accentBlue.withValues(alpha: 0.16),
+                  _accentLavender.withValues(alpha: 0.11),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.white.withOpacity(0.86)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.86)),
             ),
             child: const Icon(
               Icons.verified_user_rounded,
@@ -430,10 +430,10 @@ class _ConsentGateState extends State<ConsentGate> {
       decoration: BoxDecoration(
         color: Color.lerp(Colors.white, accent, 0.045),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withOpacity(0.18)),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.045),
+            color: accent.withValues(alpha: 0.045),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -449,9 +449,9 @@ class _ConsentGateState extends State<ConsentGate> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.76),
+                  color: Colors.white.withValues(alpha: 0.76),
                   borderRadius: BorderRadius.circular(13),
-                  border: Border.all(color: accent.withOpacity(0.16)),
+                  border: Border.all(color: accent.withValues(alpha: 0.16)),
                 ),
                 child: Icon(icon, color: accent, size: 20),
               ),
@@ -506,7 +506,7 @@ class _ConsentGateState extends State<ConsentGate> {
                       style: SLTheme.quicksand(
                         fontSize: 12.55,
                         fontWeight: FontWeight.w700,
-                        color: _ink.withOpacity(0.86),
+                        color: _ink.withValues(alpha: 0.86),
                         height: 1.26,
                       ),
                     ),
@@ -526,10 +526,10 @@ class _ConsentGateState extends State<ConsentGate> {
     return Container(
       padding: const EdgeInsets.fromLTRB(13, 12, 13, 12),
       decoration: BoxDecoration(
-        color: _accentLavender.withOpacity(0.08),
+        color: _accentLavender.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(18),
         border:
-            Border.all(color: _accentLavender.withOpacity(0.24), width: 1.3),
+            Border.all(color: _accentLavender.withValues(alpha: 0.24), width: 1.3),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -543,7 +543,7 @@ class _ConsentGateState extends State<ConsentGate> {
               style: SLTheme.quicksand(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w800,
-                color: _ink.withOpacity(0.9),
+                color: _ink.withValues(alpha: 0.9),
                 height: 1.30,
               ),
             ),
@@ -563,7 +563,7 @@ class _ConsentGateState extends State<ConsentGate> {
       decoration: BoxDecoration(
         color: Color.lerp(Colors.white, _accentGreen, 0.035),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _accentGreen.withOpacity(0.14)),
+        border: Border.all(color: _accentGreen.withValues(alpha: 0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -575,9 +575,9 @@ class _ConsentGateState extends State<ConsentGate> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.76),
+                  color: Colors.white.withValues(alpha: 0.76),
                   borderRadius: BorderRadius.circular(13),
-                  border: Border.all(color: _accentGreen.withOpacity(0.16)),
+                  border: Border.all(color: _accentGreen.withValues(alpha: 0.16)),
                 ),
                 child: const Icon(Icons.cookie_rounded,
                     color: _accentGreen, size: 20),
@@ -657,12 +657,12 @@ class _ConsentGateState extends State<ConsentGate> {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.86),
+          color: Colors.white.withValues(alpha: 0.86),
           shape: BoxShape.circle,
-          border: Border.all(color: _panelBorder.withOpacity(0.82)),
+          border: Border.all(color: _panelBorder.withValues(alpha: 0.82)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 16,
               offset: const Offset(0, 7),
             ),
@@ -670,7 +670,7 @@ class _ConsentGateState extends State<ConsentGate> {
         ),
         child: Icon(
           Icons.keyboard_arrow_down_rounded,
-          color: _accentLavender.withOpacity(0.82),
+          color: _accentLavender.withValues(alpha: 0.82),
           size: 26,
         ),
       ),
@@ -705,7 +705,7 @@ class _ConsentGateState extends State<ConsentGate> {
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: _accentGreen.withOpacity(0.10),
+                  color: _accentGreen.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(11),
                 ),
                 child: const Icon(
@@ -765,10 +765,10 @@ class _ConsentGateState extends State<ConsentGate> {
       decoration: BoxDecoration(
         color: _cardBackground,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _accentBlue.withOpacity(0.14)),
+        border: Border.all(color: _accentBlue.withValues(alpha: 0.14)),
         boxShadow: [
           BoxShadow(
-            color: _accentBlue.withOpacity(0.04),
+            color: _accentBlue.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -784,9 +784,9 @@ class _ConsentGateState extends State<ConsentGate> {
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.07),
+                  color: accent.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(9),
-                  border: Border.all(color: accent.withOpacity(0.14)),
+                  border: Border.all(color: accent.withValues(alpha: 0.14)),
                 ),
                 alignment: Alignment.center,
                 child: Icon(icon, color: accent, size: 15.5),
@@ -842,7 +842,7 @@ class _ConsentGateState extends State<ConsentGate> {
                       style: SLTheme.quicksand(
                         fontSize: 11.15,
                         fontWeight: FontWeight.w700,
-                        color: _ink.withOpacity(0.84),
+                        color: _ink.withValues(alpha: 0.84),
                         height: 1.24,
                       ),
                     ),
@@ -954,12 +954,12 @@ class _ConsentGateState extends State<ConsentGate> {
               border: Border.all(color: _panelBorder, width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: _accentGreen.withOpacity(0.12),
+                  color: _accentGreen.withValues(alpha: 0.12),
                   blurRadius: 28,
                   offset: const Offset(0, 14),
                 ),
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
@@ -1036,10 +1036,10 @@ class _ConsentGateState extends State<ConsentGate> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: _accentGreen.withOpacity(0.08),
+                        color: _accentGreen.withValues(alpha: 0.08),
                         borderRadius: SLRadius.lgAll,
                         border: Border.all(
-                          color: _accentGreen.withOpacity(0.16),
+                          color: _accentGreen.withValues(alpha: 0.16),
                         ),
                       ),
                       child: Text(
@@ -1047,7 +1047,7 @@ class _ConsentGateState extends State<ConsentGate> {
                         style: SLTheme.quicksand(
                           fontSize: 11.8,
                           fontWeight: FontWeight.w800,
-                          color: _ink.withOpacity(0.9),
+                          color: _ink.withValues(alpha: 0.9),
                           height: 1.35,
                         ),
                       ),
@@ -1148,12 +1148,12 @@ class _ConsentGateState extends State<ConsentGate> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: accent.withOpacity(0.12),
+                      color: accent.withValues(alpha: 0.12),
                       blurRadius: 28,
                       offset: const Offset(0, 14),
                     ),
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 18,
                       offset: const Offset(0, 8),
                     ),
@@ -1212,20 +1212,20 @@ class _ConsentGateState extends State<ConsentGate> {
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
                             color: checked
-                                ? accent.withOpacity(0.08)
+                                ? accent.withValues(alpha: 0.08)
                                 : _cardBackground,
                             borderRadius: SLRadius.lgAll,
                             border: Border.all(
                               color: checked
-                                  ? accent.withOpacity(0.24)
+                                  ? accent.withValues(alpha: 0.24)
                                   : _panelBorder,
                               width: checked ? 1.3 : 1.1,
                             ),
                             boxShadow: [
                               BoxShadow(
                                 color: checked
-                                    ? accent.withOpacity(0.10)
-                                    : Colors.black.withOpacity(0.03),
+                                    ? accent.withValues(alpha: 0.10)
+                                    : Colors.black.withValues(alpha: 0.03),
                                 blurRadius: checked ? 16 : 10,
                                 offset: const Offset(0, 6),
                               ),
@@ -1260,7 +1260,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                       style: SLTheme.quicksand(
                                         fontSize: 12.2,
                                         fontWeight: FontWeight.w800,
-                                        color: _ink.withOpacity(0.9),
+                                        color: _ink.withValues(alpha: 0.9),
                                         height: 1.35,
                                       ),
                                     ),
@@ -1354,12 +1354,12 @@ class _ConsentGateState extends State<ConsentGate> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: _accentBlue.withOpacity(0.12),
+                        color: _accentBlue.withValues(alpha: 0.12),
                         blurRadius: 28,
                         offset: const Offset(0, 14),
                       ),
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 18,
                         offset: const Offset(0, 8),
                       ),
@@ -1376,7 +1376,7 @@ class _ConsentGateState extends State<ConsentGate> {
                             width: 54,
                             height: 5,
                             decoration: BoxDecoration(
-                              color: _panelBorder.withOpacity(0.8),
+                              color: _panelBorder.withValues(alpha: 0.8),
                               borderRadius: SLRadius.pillAll,
                             ),
                           ),
@@ -1532,15 +1532,15 @@ class _ConsentGateState extends State<ConsentGate> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            accent.withOpacity(0.18),
-            accent.withOpacity(0.08),
+            accent.withValues(alpha: 0.18),
+            accent.withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accent.withOpacity(0.22)),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.10),
+            color: accent.withValues(alpha: 0.10),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -1576,9 +1576,9 @@ class _ConsentGateState extends State<ConsentGate> {
             margin: EdgeInsets.only(bottom: isLast ? 0 : 10),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.06),
+              color: accent.withValues(alpha: 0.06),
               borderRadius: SLRadius.mdAll,
-              border: Border.all(color: accent.withOpacity(0.14)),
+              border: Border.all(color: accent.withValues(alpha: 0.14)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1587,9 +1587,9 @@ class _ConsentGateState extends State<ConsentGate> {
                   width: containerSize,
                   height: containerSize,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.82),
+                    color: Colors.white.withValues(alpha: 0.82),
                     borderRadius: SLRadius.smAll,
-                    border: Border.all(color: accent.withOpacity(0.14)),
+                    border: Border.all(color: accent.withValues(alpha: 0.14)),
                   ),
                   alignment: Alignment.center,
                   child: Icon(item.icon, color: accent, size: iconSize),
@@ -1654,14 +1654,14 @@ class _ConsentGateState extends State<ConsentGate> {
               : _cardBackground,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? accent.withOpacity(0.28) : _panelBorder,
+            color: selected ? accent.withValues(alpha: 0.28) : _panelBorder,
             width: selected ? 1.35 : 1.0,
           ),
           boxShadow: [
             BoxShadow(
               color: selected
-                  ? accent.withOpacity(0.08)
-                  : Colors.black.withOpacity(0.02),
+                  ? accent.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.02),
               blurRadius: selected ? 14 : 6,
               offset: const Offset(0, 5),
             ),
@@ -1671,16 +1671,17 @@ class _ConsentGateState extends State<ConsentGate> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Transform.translate(
-              offset: const Offset(-6, 0),
-              child: Radio<String>(
-                value: value,
-                groupValue: groupValue,
-                onChanged: (_) => onTap(),
-                activeColor: accent,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: const VisualDensity(
-                  horizontal: -4,
-                  vertical: -4,
+              offset: const Offset(-2, 0),
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected ? accent : Colors.transparent,
+                  border: Border.all(
+                    color: selected ? accent : _panelBorder,
+                    width: selected ? 7 : 2,
+                  ),
                 ),
               ),
             ),
@@ -1706,9 +1707,9 @@ class _ConsentGateState extends State<ConsentGate> {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: accent.withOpacity(0.10),
+                          color: accent.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: accent.withOpacity(0.18)),
+                          border: Border.all(color: accent.withValues(alpha: 0.18)),
                         ),
                         child: Text(
                           badge,
@@ -1753,7 +1754,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                 style: SLTheme.quicksand(
                                   fontSize: large ? 13.5 : 11.55,
                                   fontWeight: FontWeight.w700,
-                                  color: _ink.withOpacity(0.84),
+                                  color: _ink.withValues(alpha: 0.84),
                                   height: 1.28,
                                 ),
                               ),
@@ -1830,10 +1831,10 @@ class _ConsentGateState extends State<ConsentGate> {
               colors: [accent, endColor],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.22)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
             boxShadow: [
               BoxShadow(
-                color: accent.withOpacity(0.18),
+                color: accent.withValues(alpha: 0.18),
                 blurRadius: 12,
                 offset: const Offset(0, 5),
               ),
@@ -1892,9 +1893,9 @@ class _ConsentGateState extends State<ConsentGate> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.08),
+        color: accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accent.withOpacity(0.16)),
+        border: Border.all(color: accent.withValues(alpha: 0.16)),
       ),
       child: Row(
         children: [
@@ -1910,7 +1911,7 @@ class _ConsentGateState extends State<ConsentGate> {
               style: SLTheme.quicksand(
                 fontSize: 11.6,
                 fontWeight: FontWeight.w800,
-                color: _ink.withOpacity(0.92),
+                color: _ink.withValues(alpha: 0.92),
                 height: 1.26,
               ),
             ),

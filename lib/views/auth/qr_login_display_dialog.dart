@@ -224,7 +224,7 @@ class _QRLoginDisplayDialogState extends State<QRLoginDisplayDialog> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 24,
                   offset: const Offset(0, 16),
                 ),
@@ -282,9 +282,9 @@ class _QRLoginDisplayDialogState extends State<QRLoginDisplayDialog> {
                       vertical: compact ? 10 : 12,
                     ),
                     decoration: BoxDecoration(
-                      color: _statusColor.withOpacity(0.12),
+                      color: _statusColor.withValues(alpha: 0.12),
                       borderRadius: SLRadius.lgAll,
-                      border: Border.all(color: _statusColor.withOpacity(0.28)),
+                      border: Border.all(color: _statusColor.withValues(alpha: 0.28)),
                     ),
                     child: Column(
                       children: [
@@ -320,7 +320,7 @@ class _QRLoginDisplayDialogState extends State<QRLoginDisplayDialog> {
                       border: Border.all(color: const Color(0x22D81B60)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: Colors.black.withValues(alpha: 0.08),
                           blurRadius: 16,
                           offset: const Offset(0, 8),
                         ),
@@ -341,7 +341,7 @@ class _QRLoginDisplayDialogState extends State<QRLoginDisplayDialog> {
                                     size: compact ? 40 : 48,
                                     color: const Color(
                                       0xFFD81B60,
-                                    ).withOpacity(0.9),
+                                    ).withValues(alpha: 0.9),
                                   ),
                                   SLSpacing.h12,
                                   Text(
@@ -382,7 +382,7 @@ class _QRLoginDisplayDialogState extends State<QRLoginDisplayDialog> {
                     width: double.infinity,
                     padding: EdgeInsets.all(compact ? 10 : 12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.78),
+                      color: Colors.white.withValues(alpha: 0.78),
                       borderRadius: SLRadius.lgAll,
                       border: Border.all(color: const Color(0x1FD81B60)),
                     ),

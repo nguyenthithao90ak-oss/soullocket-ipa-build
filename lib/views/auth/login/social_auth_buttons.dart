@@ -98,10 +98,10 @@ class _SocialAuthTile extends StatelessWidget {
                     child: Center(
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEEF0F5).withOpacity(0.72),
+                          color: const Color(0xFFEEF0F5).withValues(alpha: 0.72),
                           borderRadius: BorderRadius.circular(surfaceRadius),
                           border: Border.all(
-                            color: const Color(0xFFFFFFFF).withOpacity(0.65),
+                            color: const Color(0xFFFFFFFF).withValues(alpha: 0.65),
                             width: 1,
                           ),
                         ),

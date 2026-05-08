@@ -480,6 +480,35 @@ class StorageService {
     }
   }
 
+  Future<Map<String, dynamic>> _createCollageUploadSession({
+    required String houseId,
+    required String contentType,
+    required String fileName,
+  }) async {
+    try {
+      return _uploadSessionHelper.createUploadSession(
+        invokeCallable: (name, payload) => _callWithAppCheckRetry(
+          () => _functions.httpsCallable(name).call(payload),
+          allowUnauthenticatedWithoutMarkers: true,
+        ),
+        functionName: 'createCollageUploadSession',
+        payload: <String, dynamic>{
+          'houseId': houseId.trim(),
+          'contentType': contentType.trim(),
+          'fileName': fileName.trim(),
+        },
+        label: 'Collage upload session',
+        requireSessionId: true,
+      );
+    } on FirebaseFunctionsException catch (error) {
+      throw Exception(
+        (error.message ?? '').trim().isNotEmpty
+            ? error.message!.trim()
+            : 'Không thể tạo phiên tải ảnh ghép.',
+      );
+    }
+  }
+
   Future<Map<String, dynamic>> _createGiftImageUploadSession({
     required String houseId,
     required String contentType,
@@ -973,6 +1002,30 @@ class StorageService {
     }
   }
 
+  Future<Map<String, dynamic>> finalizeCollageUpload({
+    required String houseId,
+    required String sessionId,
+    String template = '',
+    String style = '',
+    String caption = '',
+  }) {
+    return _finalizeHelper.finalizeUpload(
+      invokeCallable: (name, payload) => _callWithAppCheckRetry(
+        () => _functions.httpsCallable(name).call(payload),
+        allowUnauthenticatedWithoutMarkers: true,
+      ),
+      functionName: 'finalizeCollageUpload',
+      payload: <String, dynamic>{
+        'houseId': houseId.trim(),
+        'sessionId': sessionId.trim(),
+        if (template.trim().isNotEmpty) 'template': template.trim(),
+        if (style.trim().isNotEmpty) 'style': style.trim(),
+        if (caption.trim().isNotEmpty) 'caption': caption.trim(),
+      },
+      label: 'Collage finalize response',
+    );
+  }
+
   bool _shouldRetrySignedUploadStatus(int statusCode) {
     return statusCode == 408 ||
         statusCode == 429 ||
@@ -1100,6 +1153,41 @@ class StorageService {
       rejectVideoUpload: _rejectVideoUpload,
       purgeLegacyCache: _purgeLegacyImgBBKeyCache,
       buildStorageRef: (path) => _storage.ref().child(path),
+    );
+  }
+
+  Future<Map<String, dynamic>> uploadCollageBytes({
+    required String houseId,
+    required Uint8List bytes,
+    required String fileName,
+    String template = '',
+    String style = '',
+    String caption = '',
+  }) async {
+    _requireCurrentUid();
+    final session = await _createCollageUploadSession(
+      houseId: houseId,
+      contentType: 'image/png',
+      fileName: fileName,
+    );
+    final uploadUrl = session['uploadUrl']?.toString().trim() ?? '';
+    final sessionId = session['sessionId']?.toString().trim() ?? '';
+    if (uploadUrl.isEmpty || sessionId.isEmpty) {
+      throw Exception('Thiếu phiên tải ảnh ghép.');
+    }
+    final headers = _stringMapFromDynamicMap(session['headers']);
+    headers.putIfAbsent('Content-Type', () => 'image/png');
+    await _uploadBytesToSignedUrl(
+      uploadUrl: uploadUrl,
+      bytes: bytes,
+      headers: headers,
+    );
+    return finalizeCollageUpload(
+      houseId: houseId,
+      sessionId: sessionId,
+      template: template,
+      style: style,
+      caption: caption,
     );
   }
 

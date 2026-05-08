@@ -41,9 +41,9 @@ class _BlinkingAvatarHintState extends State<_BlinkingAvatarHint>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.18),
+            color: Colors.black.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: Colors.white.withOpacity(0.42)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.42)),
           ),
           child: Text(
             'Chọn ảnh',
@@ -191,7 +191,7 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                                 height: 1,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.pinkAccent.withOpacity(0.5),
+                                    color: Colors.pinkAccent.withValues(alpha: 0.5),
                                     blurRadius: 10,
                                   ),
                                 ],
@@ -205,7 +205,7 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                               height: 1,
                               shadows: [
                                 Shadow(
-                                  color: Colors.pinkAccent.withOpacity(0.5),
+                                  color: Colors.pinkAccent.withValues(alpha: 0.5),
                                   blurRadius: 10,
                                 ),
                               ],
@@ -224,14 +224,11 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
 
 // Painter cho viền nét đứt linh hoạt
 class _DashedBorderPainter extends CustomPainter {
-  final Color color;
-  final double radius;
+  final Color color = Colors.grey;
+  final double radius = 24.0;
   static const double strokeWidth = 1.6;
 
-  _DashedBorderPainter({
-    this.color = Colors.grey,
-    this.radius = 24.0,
-  });
+  _DashedBorderPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -246,7 +243,7 @@ class _DashedBorderPainter extends CustomPainter {
 
     // Fallback: Vẽ viền solid nhạt thay vì dashed để tránh lag trên Web
     // Vì computeMetrics rất tốn tài nguyên trên Web CanvasKit.
-    paint.color = color.withOpacity(0.5);
+    paint.color = color.withValues(alpha: 0.5);
     canvas.drawRRect(rrect, paint);
   }
 
@@ -463,14 +460,14 @@ class _FallingPainter extends CustomPainter {
         case 'sparkles':
           paint
             ..color = (isDark ? const Color(0xFFFFF1B8) : Colors.white)
-                .withOpacity(item.opacity)
+                .withValues(alpha: item.opacity)
             ..style = PaintingStyle.fill;
           _drawSparkle(canvas, paint, s);
           break;
         case 'meteors':
           paint
             ..color = (isDark ? const Color(0xFF9EE7FF) : Colors.white)
-                .withOpacity(item.opacity)
+                .withValues(alpha: item.opacity)
             ..style = PaintingStyle.stroke
             ..strokeWidth = (s * 0.12).clamp(1.0, 3.0);
           canvas.drawLine(
@@ -485,20 +482,20 @@ class _FallingPainter extends CustomPainter {
           paint
             ..color =
                 (isDark ? const Color(0xFFB3E5FC) : const Color(0xFFFFFFFF))
-                    .withOpacity(item.opacity * 0.55)
+                    .withValues(alpha: item.opacity * 0.55)
             ..style = PaintingStyle.stroke
             ..strokeWidth = (s * 0.08).clamp(1.0, 2.5);
           canvas.drawCircle(Offset.zero, s * 0.35, paint);
           paint
             ..color =
                 (isDark ? const Color(0xFFE1F5FE) : const Color(0xFFFFFFFF))
-                    .withOpacity(item.opacity * 0.35)
+                    .withValues(alpha: item.opacity * 0.35)
             ..style = PaintingStyle.fill;
           canvas.drawCircle(Offset(-s * 0.12, -s * 0.12), s * 0.12, paint);
           break;
         case 'leaves':
           paint
-            ..color = const Color(0xFFE65100).withOpacity(item.opacity)
+            ..color = const Color(0xFFE65100).withValues(alpha: item.opacity)
             ..style = PaintingStyle.fill;
           final path = Path()
             ..moveTo(0, -s * 0.5)
@@ -510,13 +507,13 @@ class _FallingPainter extends CustomPainter {
           break;
         case 'stars':
           paint
-            ..color = const Color(0xFFFFD54F).withOpacity(item.opacity)
+            ..color = const Color(0xFFFFD54F).withValues(alpha: item.opacity)
             ..style = PaintingStyle.fill;
           _drawStar(canvas, paint, s);
           break;
         case 'snow':
           paint
-            ..color = Colors.white.withOpacity(item.opacity)
+            ..color = Colors.white.withValues(alpha: item.opacity)
             ..style = PaintingStyle.fill;
           canvas.drawCircle(Offset.zero, s * 0.2, paint);
           break;
@@ -525,7 +522,7 @@ class _FallingPainter extends CustomPainter {
           paint
             ..color =
                 (isDark ? const Color(0xFFFF7AA2) : const Color(0xFFFF4D73))
-                    .withOpacity(item.opacity)
+                    .withValues(alpha: item.opacity)
             ..style = PaintingStyle.fill;
           final path = Path()
             ..moveTo(0, s * 0.35)
@@ -635,11 +632,11 @@ class _InteractionSuccessDialog extends StatelessWidget {
             child: GestureDetector(
               onTap: () => Navigator.of(context).maybePop(),
               child: lightweightEffects
-                  ? Container(color: Colors.black.withOpacity(0.34))
+                  ? Container(color: Colors.black.withValues(alpha: 0.34))
                   : BackdropFilter(
                       filter: ui.ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
                       child: Container(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                       ),
                     ),
             ),
@@ -657,10 +654,10 @@ class _InteractionSuccessDialog extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
-                    color: Colors.white.withOpacity(0.85), width: 1.4),
+                    color: Colors.white.withValues(alpha: 0.85), width: 1.4),
                 boxShadow: [
                   BoxShadow(
-                    color: accent.withOpacity(0.22),
+                    color: accent.withValues(alpha: 0.22),
                     blurRadius: 28,
                     spreadRadius: 4,
                     offset: const Offset(0, 16),
@@ -676,13 +673,13 @@ class _InteractionSuccessDialog extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [accent.withOpacity(0.88), accent],
+                        colors: [accent.withValues(alpha: 0.88), accent],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: accent.withOpacity(0.24),
+                          color: accent.withValues(alpha: 0.24),
                           blurRadius: 22,
                           offset: const Offset(0, 12),
                         ),
@@ -702,7 +699,7 @@ class _InteractionSuccessDialog extends StatelessWidget {
                                 height: 1,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -738,9 +735,9 @@ class _InteractionSuccessDialog extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 13),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.82),
+                      color: Colors.white.withValues(alpha: 0.82),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: accent.withOpacity(0.15)),
+                      border: Border.all(color: accent.withValues(alpha: 0.15)),
                     ),
                     child: Text(
                       partnerOnline
@@ -887,8 +884,8 @@ class __MissYouScreenState extends State<_MissYouScreen>
       'hot' => (
           widget.payload.emoji,
           <Color>[
-            const Color(0xFFFFA63D).withOpacity(0.92),
-            const Color(0xFFE86C00).withOpacity(0.96),
+            const Color(0xFFFFA63D).withValues(alpha: 0.92),
+            const Color(0xFFE86C00).withValues(alpha: 0.96),
           ],
           const Color(0xFFFFD18A),
           '${widget.payload.fromName} nhắc bạn uống nước!',
@@ -898,8 +895,8 @@ class __MissYouScreenState extends State<_MissYouScreen>
       'warmth' => (
           widget.payload.emoji,
           <Color>[
-            const Color(0xFF49C5F6).withOpacity(0.9),
-            const Color(0xFF0E8FC3).withOpacity(0.95),
+            const Color(0xFF49C5F6).withValues(alpha: 0.9),
+            const Color(0xFF0E8FC3).withValues(alpha: 0.95),
           ],
           const Color(0xFFC8F1FF),
           '${widget.payload.fromName} nhắc bạn giữ ấm!',
@@ -910,7 +907,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
           widget.payload.emoji,
           _presetForInteractionType('kiss')
               .gradient
-              .map((color) => color.withOpacity(0.92))
+              .map((color) => color.withValues(alpha: 0.92))
               .toList(),
           Colors.white,
           '${widget.payload.fromName} gửi bạn một nụ hôn!',
@@ -921,7 +918,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
           widget.payload.emoji,
           _presetForInteractionType('hug')
               .gradient
-              .map((color) => color.withOpacity(0.92))
+              .map((color) => color.withValues(alpha: 0.92))
               .toList(),
           Colors.white,
           '${widget.payload.fromName} ôm bạn một cái!',
@@ -932,7 +929,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
           widget.payload.emoji,
           _presetForInteractionType('angry')
               .gradient
-              .map((color) => color.withOpacity(0.92))
+              .map((color) => color.withValues(alpha: 0.92))
               .toList(),
           Colors.white,
           '${widget.payload.fromName} đang dỗi kìa!',
@@ -943,7 +940,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
           widget.payload.emoji,
           _presetForInteractionType('furious')
               .gradient
-              .map((color) => color.withOpacity(0.94))
+              .map((color) => color.withValues(alpha: 0.94))
               .toList(),
           Colors.white,
           '${widget.payload.fromName} đang tức lắm đó!',
@@ -954,7 +951,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
           widget.payload.emoji,
           _presetForInteractionType('tease')
               .gradient
-              .map((color) => color.withOpacity(0.92))
+              .map((color) => color.withValues(alpha: 0.92))
               .toList(),
           Colors.white,
           '${widget.payload.fromName} vừa trêu bạn đó!',
@@ -965,7 +962,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
           widget.payload.emoji,
           _presetForInteractionType('cry')
               .gradient
-              .map((color) => color.withOpacity(0.94))
+              .map((color) => color.withValues(alpha: 0.94))
               .toList(),
           Colors.white,
           '${widget.payload.fromName} đang cần bạn dỗ dành!',
@@ -976,7 +973,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
           widget.payload.emoji,
           _presetForInteractionType('poop')
               .gradient
-              .map((color) => color.withOpacity(0.92))
+              .map((color) => color.withValues(alpha: 0.92))
               .toList(),
           Colors.white,
           '${widget.payload.fromName} ném 💩 vào bạn!',
@@ -987,7 +984,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
           widget.payload.emoji,
           _presetForInteractionType(widget.payload.type)
               .gradient
-              .map((color) => color.withOpacity(0.92))
+              .map((color) => color.withValues(alpha: 0.92))
               .toList(),
           Colors.white,
           '${widget.payload.fromName} đang nhớ bạn!',
@@ -1095,7 +1092,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
                                         emojiShadows: [
                                           Shadow(
                                             color:
-                                                Colors.black.withOpacity(0.14),
+                                                Colors.black.withValues(alpha: 0.14),
                                             blurRadius: 16,
                                             offset: const Offset(0, 6),
                                           ),
@@ -1114,7 +1111,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
                                       iconColor: accent,
                                       emojiShadows: [
                                         Shadow(
-                                          color: Colors.black.withOpacity(0.14),
+                                          color: Colors.black.withValues(alpha: 0.14),
                                           blurRadius: 16,
                                           offset: const Offset(0, 6),
                                         ),

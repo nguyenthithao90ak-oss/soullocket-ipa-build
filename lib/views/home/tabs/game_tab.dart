@@ -31,8 +31,6 @@ class _GameTabState extends State<GameTab> {
     'caro_neon': false,
   };
 
-  final Map<String, double> _downloadProgress = {};
-  
   BannerAd? _bannerAd;
   bool _isBannerReady = false;
 
@@ -77,13 +75,6 @@ class _GameTabState extends State<GameTab> {
     });
   }
 
-  Future<void> _saveDownloadStatus(String gameId, bool status) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('game_downloaded_$gameId', status);
-    setState(() {
-      _downloadedGames[gameId] = status;
-    });
-  }
 
   Future<bool> _handleRealDownload(String gameId) async {
     final service = GameDownloadService();
@@ -116,6 +107,7 @@ class _GameTabState extends State<GameTab> {
   }
 
   Future<void> _confirmDeleteGame(BuildContext context, String gameId, String name) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -136,7 +128,7 @@ class _GameTabState extends State<GameTab> {
       await GameDownloadService().deleteGameData(gameId);
       if (mounted) {
         await _loadDownloadStatus();
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger?.showSnackBar(
           SnackBar(content: Text('Đã xóa dữ liệu game $name.')),
         );
       }
@@ -293,12 +285,12 @@ class _GameTabState extends State<GameTab> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withOpacity(0.4)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -451,7 +443,7 @@ class _GameLauncherTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(radius),
                       boxShadow: [
                         BoxShadow(
-                          color: shadowColor.withOpacity(0.2),
+                          color: shadowColor.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -474,10 +466,10 @@ class _GameLauncherTile extends StatelessWidget {
                                   width: 24,
                                   height: 24,
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.58),
+                                    color: Colors.black.withValues(alpha: 0.58),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.8),
+                                      color: Colors.white.withValues(alpha: 0.8),
                                     ),
                                   ),
                                   child: const Icon(
@@ -513,12 +505,12 @@ class _GameLauncherTile extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: isDownloaded
                             ? [const Color(0xFFE91E63), const Color(0xFFF48FB1)]
-                            : [borderColor, borderColor.withOpacity(0.7)],
+                            : [borderColor, borderColor.withValues(alpha: 0.7)],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: (isDownloaded ? const Color(0xFFE91E63) : borderColor).withOpacity(0.3),
+                          color: (isDownloaded ? const Color(0xFFE91E63) : borderColor).withValues(alpha: 0.3),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -532,7 +524,7 @@ class _GameLauncherTile extends StatelessWidget {
                               borderRadius: BorderRadius.circular(5),
                               child: LinearProgressIndicator(
                                 value: downloadProgress,
-                                backgroundColor: Colors.white.withOpacity(0.2),
+                                backgroundColor: Colors.white.withValues(alpha: 0.2),
                                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             ),
@@ -743,11 +735,11 @@ class _SoulBlockCardPainter extends CustomPainter {
       Color color,
     ) {
       final glow = Paint()
-        ..color = color.withOpacity(0.28)
+        ..color = color.withValues(alpha: 0.28)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
       final fill = Paint()
         ..shader = LinearGradient(
-          colors: [color.withOpacity(0.95), color.withOpacity(0.58)],
+          colors: [color.withValues(alpha: 0.95), color.withValues(alpha: 0.58)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ).createShader(
@@ -829,7 +821,7 @@ class _GenericGameCard extends StatelessWidget {
       preview: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withOpacity(0.3), color.withOpacity(0.1)],
+            colors: [color.withValues(alpha: 0.3), color.withValues(alpha: 0.1)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

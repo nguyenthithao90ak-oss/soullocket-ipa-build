@@ -32,7 +32,7 @@ class _FeedTabSelector extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: active
-                      ? const Color(0xFFD81B60).withOpacity(0.12)
+                      ? const Color(0xFFD81B60).withValues(alpha: 0.12)
                       : Colors.white,
                   shape: BoxShape.circle,
                 ),

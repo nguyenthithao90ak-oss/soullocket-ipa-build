@@ -35,12 +35,12 @@ class RelationshipModeDialog extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF080614).withOpacity(0.92),
+            color: const Color(0xFF080614).withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: Colors.white.withOpacity(0.15)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 blurRadius: 40,
               ),
             ],
@@ -95,7 +95,7 @@ class RelationshipModeDialog extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 13,
-                        color: Colors.white.withOpacity(0.58),
+                        color: Colors.white.withValues(alpha: 0.58),
                         height: 1.4,
                       ),
                     ),
@@ -152,9 +152,9 @@ class RelationshipModeDialog extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.06),
+          color: Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withOpacity(0.4), width: 2),
+          border: Border.all(color: color.withValues(alpha: 0.4), width: 2),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -180,7 +180,7 @@ class RelationshipModeDialog extends StatelessWidget {
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 11.5,
-                color: Colors.white.withOpacity(0.58),
+                color: Colors.white.withValues(alpha: 0.58),
                 height: 1.35,
               ),
             ),

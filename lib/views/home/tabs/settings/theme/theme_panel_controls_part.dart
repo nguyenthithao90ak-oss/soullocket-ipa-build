@@ -83,7 +83,7 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //             ),
 //             boxShadow: [
 //               BoxShadow(
-//                 color: accent.withOpacity(0.22),
+//                 color: accent.withValues(alpha: 0.22),
 //                 blurRadius: 28,
 //                 offset: const Offset(0, 14),
 //               ),
@@ -110,7 +110,7 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //                   height: 130,
 //                   decoration: BoxDecoration(
 //                     shape: BoxShape.circle,
-//                     color: Colors.white.withOpacity(isDark ? 0.08 : 0.18),
+//                     color: Colors.white.withValues(alpha: isDark ? 0.08 : 0.18),
 //                   ),
 //                 ),
 //               ),
@@ -122,7 +122,7 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //                   height: 110,
 //                   decoration: BoxDecoration(
 //                     shape: BoxShape.circle,
-//                     color: accent.withOpacity(isDark ? 0.16 : 0.12),
+//                     color: accent.withValues(alpha: isDark ? 0.16 : 0.12),
 //                   ),
 //                 ),
 //               ),
@@ -146,9 +146,9 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //                   decoration: BoxDecoration(
 //                     gradient: LinearGradient(
 //                       colors: [
-//                         Colors.white.withOpacity(isDark ? 0.05 : 0.16),
-//                         Colors.white.withOpacity(isDark ? 0.01 : 0.06),
-//                         Colors.black.withOpacity(isDark ? 0.16 : 0.05),
+//                         Colors.white.withValues(alpha: isDark ? 0.05 : 0.16),
+//                         Colors.white.withValues(alpha: isDark ? 0.01 : 0.06),
+//                         Colors.black.withValues(alpha: isDark ? 0.16 : 0.05),
 //                       ],
 //                       begin: Alignment.topCenter,
 //                       end: Alignment.bottomCenter,
@@ -169,11 +169,11 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //                           ),
 //                           decoration: BoxDecoration(
 //                             color:
-//                                 Colors.white.withOpacity(isDark ? 0.14 : 0.22),
+//                                 Colors.white.withValues(alpha: isDark ? 0.14 : 0.22),
 //                             borderRadius: BorderRadius.circular(999),
 //                             border: Border.all(
 //                               color:
-//                                   Colors.white.withOpacity(isDark ? 0.2 : 0.34),
+//                                   Colors.white.withValues(alpha: isDark ? 0.2 : 0.34),
 //                             ),
 //                           ),
 //                           child: Text(
@@ -194,7 +194,7 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //                           ),
 //                           decoration: BoxDecoration(
 //                             color:
-//                                 Colors.white.withOpacity(isDark ? 0.14 : 0.2),
+//                                 Colors.white.withValues(alpha: isDark ? 0.14 : 0.2),
 //                             borderRadius: BorderRadius.circular(999),
 //                           ),
 //                           child: Text(
@@ -305,7 +305,7 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //                                 style: SLTheme.quicksand(
 //                                   fontSize: 10,
 //                                   fontWeight: FontWeight.w700,
-//                                   color: Colors.white.withOpacity(0.92),
+//                                   color: Colors.white.withValues(alpha: 0.92),
 //                                   height: 1.35,
 //                                 ),
 //                               ),
@@ -567,11 +567,11 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //       case 'glass':
 //         return BoxDecoration(
 //           shape: BoxShape.circle,
-//           color: Colors.white.withOpacity(0.7),
-//           border: Border.all(color: Colors.white.withOpacity(0.92), width: 4),
+//           color: Colors.white.withValues(alpha: 0.7),
+//           border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 4),
 //           boxShadow: [
 //             BoxShadow(
-//               color: const Color(0xFF8EC5FC).withOpacity(0.24),
+//               color: const Color(0xFF8EC5FC).withValues(alpha: 0.24),
 //               blurRadius: 30,
 //               offset: const Offset(0, 14),
 //             ),
@@ -585,10 +585,10 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //             begin: Alignment.topLeft,
 //             end: Alignment.bottomRight,
 //           ),
-//           border: Border.all(color: Colors.white.withOpacity(0.92), width: 5),
+//           border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 5),
 //           boxShadow: [
 //             BoxShadow(
-//               color: const Color(0xFFFF5E92).withOpacity(0.34),
+//               color: const Color(0xFFFF5E92).withValues(alpha: 0.34),
 //               blurRadius: 34,
 //             ),
 //           ],
@@ -596,11 +596,11 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //       default:
 //         return BoxDecoration(
 //           shape: BoxShape.circle,
-//           color: Colors.white.withOpacity(0.9),
-//           border: Border.all(color: Colors.white.withOpacity(0.94), width: 6),
+//           color: Colors.white.withValues(alpha: 0.9),
+//           border: Border.all(color: Colors.white.withValues(alpha: 0.94), width: 6),
 //           boxShadow: [
 //             BoxShadow(
-//               color: const Color(0xFFFF69B4).withOpacity(0.34),
+//               color: const Color(0xFFFF69B4).withValues(alpha: 0.34),
 //               blurRadius: 34,
 //             ),
 //           ],

@@ -246,11 +246,11 @@ class _DiaryTabState extends State<DiaryTab> {
           margin: const EdgeInsets.symmetric(horizontal: 36),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.96),
+            color: Colors.white.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.14),
+                color: Colors.black.withValues(alpha: 0.14),
                 blurRadius: 24,
                 offset: const Offset(0, 10),
               ),
@@ -1014,7 +1014,7 @@ class _DiaryTabState extends State<DiaryTab> {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(dialogContext),
-                  child: Container(color: Colors.black.withOpacity(0.92)),
+                  child: Container(color: Colors.black.withValues(alpha: 0.92)),
                 ),
                 Positioned.fill(
                   child: IgnorePointer(
@@ -1024,9 +1024,9 @@ class _DiaryTabState extends State<DiaryTab> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withOpacity(0.42),
+                            Colors.black.withValues(alpha: 0.42),
                             Colors.transparent,
-                            Colors.black.withOpacity(0.28),
+                            Colors.black.withValues(alpha: 0.28),
                           ],
                           stops: const [0.0, 0.22, 1.0],
                         ),
@@ -1066,14 +1066,14 @@ class _DiaryTabState extends State<DiaryTab> {
                   right: 18,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.42),
+                      color: Colors.black.withValues(alpha: 0.42),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.12),
+                        color: Colors.white.withValues(alpha: 0.12),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.22),
+                          color: Colors.black.withValues(alpha: 0.22),
                           blurRadius: 18,
                           offset: const Offset(0, 8),
                         ),
@@ -1255,12 +1255,12 @@ class _DiaryTabState extends State<DiaryTab> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF15181F).withOpacity(0.98),
+                color: const Color(0xFF15181F).withValues(alpha: 0.98),
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.28),
+                    color: Colors.black.withValues(alpha: 0.28),
                     blurRadius: 22,
                     offset: const Offset(0, 10),
                   ),
@@ -1276,7 +1276,7 @@ class _DiaryTabState extends State<DiaryTab> {
                       width: 42,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.16),
+                        color: Colors.white.withValues(alpha: 0.16),
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),

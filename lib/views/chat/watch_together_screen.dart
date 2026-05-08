@@ -564,7 +564,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                 border: Border.all(color: const Color(0x18D81B60)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -645,10 +645,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
+                              color: Colors.green.withValues(alpha: 0.1),
                               borderRadius: SLRadius.lgAll,
                               border: Border.all(
-                                  color: Colors.green.withOpacity(0.3)),
+                                  color: Colors.green.withValues(alpha: 0.3)),
                             ),
                             child: Row(
                               children: [
@@ -752,7 +752,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                       borderRadius: SLRadius.lgAll,
                       border: Border.all(color: const Color(0x14D81B60)),
                     ),
@@ -797,7 +797,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                   borderRadius: SLRadius.xlAll,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -913,7 +913,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                         );
                       },
                       child: Container(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         child: Center(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -925,7 +925,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                                 borderRadius: SLRadius.lgAll,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
+                                    color: Colors.black.withValues(alpha: 0.05),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   )
@@ -995,7 +995,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.86),
+        color: Colors.white.withValues(alpha: 0.86),
         borderRadius: SLRadius.pillAll,
         border: Border.all(color: const Color(0x18D81B60)),
       ),

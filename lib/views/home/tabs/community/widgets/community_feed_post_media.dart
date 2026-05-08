@@ -106,20 +106,20 @@ class _FeedImagePreviewState extends State<_FeedImagePreview> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.white.withOpacity(0.98),
-                      const Color(0xFFF7F9FE).withOpacity(0.96),
+                      Colors.white.withValues(alpha: 0.98),
+                      const Color(0xFFF7F9FE).withValues(alpha: 0.96),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(26),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.96),
+                    color: Colors.white.withValues(alpha: 0.96),
                     width: 1.4,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF0F172A).withOpacity(0.05),
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.05),
                       blurRadius: 24,
                       spreadRadius: -12,
                       offset: const Offset(0, 14),
@@ -143,9 +143,9 @@ class _FeedImagePreviewState extends State<_FeedImagePreview> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.white.withOpacity(0.02),
+                                  Colors.white.withValues(alpha: 0.02),
                                   Colors.transparent,
-                                  const Color(0xFF0F172A).withOpacity(0.08),
+                                  const Color(0xFF0F172A).withValues(alpha: 0.08),
                                 ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,

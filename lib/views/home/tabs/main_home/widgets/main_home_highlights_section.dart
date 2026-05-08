@@ -7,15 +7,15 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
 //       width: double.infinity,
 //       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
 //       decoration: BoxDecoration(
-//         color: Colors.white.withOpacity(0.85),
+//         color: Colors.white.withValues(alpha: 0.85),
 //         borderRadius: BorderRadius.circular(35),
 //         boxShadow: [
 //           BoxShadow(
-//               color: const Color(0xFFD81B60).withOpacity(0.14),
+//               color: const Color(0xFFD81B60).withValues(alpha: 0.14),
 //               blurRadius: 32,
 //               offset: const Offset(0, 8)),
 //         ],
-//         border: Border.all(color: Colors.white.withOpacity(0.85), width: 2.5),
+//         border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
 //       ),
 //       child: Column(
 //         crossAxisAlignment: CrossAxisAlignment.center,
@@ -219,9 +219,9 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
                             imageUrl: item.imageUrl!,
                             fit: BoxFit.cover,
                             filterQuality: FilterQuality.high,
-                            placeholder: (_, __) => DecoratedBox(
+                            placeholder: (_, __) => const DecoratedBox(
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
+                                gradient: LinearGradient(
                                   colors: [
                                     Color(0xFFFFF8FB),
                                     Color(0xFFFFEEF5),
@@ -236,9 +236,8 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
                                   height: 18,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor:
-                                        AlwaysStoppedAnimation<Color>(
-                                      Color(0xFFD81B60).withValues(alpha: 0.75),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Color(0xBFD81B60),
                                     ),
                                   ),
                                 ),

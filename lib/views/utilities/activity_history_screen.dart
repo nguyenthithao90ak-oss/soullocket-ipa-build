@@ -246,7 +246,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                               border: Border.all(color: const Color(0xFFEEEEEE)),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color: Colors.black.withValues(alpha: 0.03),
                                   blurRadius: 6,
                                 ),
                               ],

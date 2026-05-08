@@ -31,11 +31,11 @@ class GenderSelectionDialog extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF080614).withOpacity(0.92),
+            color: const Color(0xFF080614).withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: Colors.white.withOpacity(0.15)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 40),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 40),
             ],
           ),
           child: SingleChildScrollView(
@@ -87,7 +87,7 @@ class GenderSelectionDialog extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 13,
-                        color: Colors.white.withOpacity(0.55),
+                        color: Colors.white.withValues(alpha: 0.55),
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -146,9 +146,9 @@ class GenderSelectionDialog extends StatelessWidget {
           horizontal: 12,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.06),
+          color: Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withOpacity(0.4), width: 2),
+          border: Border.all(color: color.withValues(alpha: 0.4), width: 2),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -174,7 +174,7 @@ class GenderSelectionDialog extends StatelessWidget {
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 11,
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
               ),
             ),
           ],

@@ -29,7 +29,7 @@ class _CommunityFeedErrorState extends StatelessWidget {
               padding: SLSpacing.all24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: accentColor.withOpacity(0.1),
+                color: accentColor.withValues(alpha: 0.1),
               ),
               child: Icon(icon, size: 72, color: accentColor),
             ),

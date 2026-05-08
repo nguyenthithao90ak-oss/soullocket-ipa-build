@@ -91,14 +91,14 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                       height: 116,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: SLTheme.primary.withOpacity(0.08),
+                        color: SLTheme.primary.withValues(alpha: 0.08),
                         border: Border.all(
-                          color: SLTheme.primary.withOpacity(0.35),
+                          color: SLTheme.primary.withValues(alpha: 0.35),
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: SLTheme.primary.withOpacity(0.12),
+                            color: SLTheme.primary.withValues(alpha: 0.12),
                             blurRadius: 24,
                             spreadRadius: 4,
                           ),
@@ -144,7 +144,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                             borderRadius: BorderRadius.circular(999),
                             color: index == stepIndex
                                 ? SLTheme.primary
-                                : SLTheme.primary.withOpacity(0.22),
+                                : SLTheme.primary.withValues(alpha: 0.22),
                           ),
                         ),
                     ],
@@ -349,7 +349,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                 Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.14),
+                      color: Colors.black.withValues(alpha: 0.14),
                     ),
                   ),
                 ),
@@ -375,14 +375,14 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                                 20,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFFBFC).withOpacity(
+                                color: const Color(0xFFFFFBFC).withValues(alpha: 
                                   0.98,
                                 ),
                                 borderRadius: BorderRadius.circular(30),
                                 boxShadow: [
                                   BoxShadow(
                                     color: const Color(0xFF1F2937)
-                                        .withOpacity(0.08),
+                                        .withValues(alpha: 0.08),
                                     blurRadius: 18,
                                     offset: const Offset(0, 10),
                                   ),
@@ -538,13 +538,13 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                     ),
                     border: Border.all(
                       color: highlighted
-                          ? preset.accent.withOpacity(0.78)
+                          ? preset.accent.withValues(alpha: 0.78)
                           : const Color(0xFFF3E6EC),
                       width: highlighted ? 2.1 : 1.4,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: preset.accent.withOpacity(
+                        color: preset.accent.withValues(alpha: 
                           highlighted ? 0.18 : 0.08,
                         ),
                         blurRadius: highlighted ? 16 : 10,
@@ -604,7 +604,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               gradient: LinearGradient(
                 colors: [
                   Colors.white,
-                  preset.gradient.last.withOpacity(0.18),
+                  preset.gradient.last.withValues(alpha: 0.18),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -612,7 +612,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: preset.accent.withOpacity(0.18),
+                  color: preset.accent.withValues(alpha: 0.18),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -624,7 +624,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: preset.accent.withOpacity(0.12),
+                    color: preset.accent.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,

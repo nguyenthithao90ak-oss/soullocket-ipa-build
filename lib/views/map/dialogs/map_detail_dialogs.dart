@@ -139,7 +139,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFFFFF).withOpacity(0.7),
+                    color: const Color(0xFFFFFFFF).withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: const Color(0xFFFFDEC9)),
                   ),
@@ -442,9 +442,9 @@ extension _MapDetailDialogsExt on _MapScreenState {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.72),
+        color: Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.16)),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,7 +453,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 17),

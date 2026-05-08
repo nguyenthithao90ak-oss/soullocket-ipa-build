@@ -455,7 +455,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.14),
+                color: Colors.black.withValues(alpha: 0.14),
                 blurRadius: 30,
                 offset: const Offset(0, -8),
               ),
@@ -1014,7 +1014,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                   borderRadius: SLRadius.lgAll,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFD81B60).withOpacity(0.22),
+                      color: const Color(0xFFD81B60).withValues(alpha: 0.22),
                       blurRadius: 16,
                       offset: const Offset(0, 8),
                     ),

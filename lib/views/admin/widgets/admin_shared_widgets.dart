@@ -30,7 +30,7 @@ class AdminScaffold extends StatelessWidget {
               left: -40,
               child: _blurCircle(
                 size: 260,
-                color: const Color(0xFFFF4B91).withOpacity(0.26),
+                color: const Color(0xFFFF4B91).withValues(alpha: 0.26),
               ),
             ),
             Positioned(
@@ -38,7 +38,7 @@ class AdminScaffold extends StatelessWidget {
               top: 120,
               child: _blurCircle(
                 size: 280,
-                color: const Color(0xFF7C4DFF).withOpacity(0.24),
+                color: const Color(0xFF7C4DFF).withValues(alpha: 0.24),
               ),
             ),
             Positioned(
@@ -46,7 +46,7 @@ class AdminScaffold extends StatelessWidget {
               left: 220,
               child: _blurCircle(
                 size: 320,
-                color: const Color(0xFF00C896).withOpacity(0.12),
+                color: const Color(0xFF00C896).withValues(alpha: 0.12),
               ),
             ),
             Positioned.fill(child: child),
@@ -330,7 +330,7 @@ class AdminStatCard extends StatelessWidget {
               height: 44,
               width: 44,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.16),
+                color: color.withValues(alpha: 0.16),
                 borderRadius: SLRadius.mdAll,
               ),
               child: Icon(icon, color: color),

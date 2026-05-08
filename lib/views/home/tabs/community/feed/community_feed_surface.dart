@@ -72,7 +72,7 @@ extension _CommunityFeedSurface on _CommunityTabState {
                 border: Border.all(color: _borderColor),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: Colors.black.withOpacity(_isLight ? 0.06 : 0.18),
+                    color: Colors.black.withValues(alpha: _isLight ? 0.06 : 0.18),
                     blurRadius: 20,
                     spreadRadius: -14,
                     offset: const Offset(0, 12),
@@ -87,7 +87,7 @@ extension _CommunityFeedSurface on _CommunityTabState {
                     height: 82,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFFD81B60).withOpacity(0.10),
+                      color: const Color(0xFFD81B60).withValues(alpha: 0.10),
                     ),
                     child: const Icon(
                       Icons.rocket_launch_rounded,
@@ -208,7 +208,7 @@ extension _CommunityFeedSurface on _CommunityTabState {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 22,
                     spreadRadius: -14,
                     offset: const Offset(0, 12),

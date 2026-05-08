@@ -60,17 +60,17 @@ Future<bool> showCalendarQuickAddSheet({
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.white.withOpacity(0.96),
-                      Colors.white.withOpacity(0.86),
+                      Colors.white.withValues(alpha: 0.96),
+                      Colors.white.withValues(alpha: 0.86),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: Colors.white.withOpacity(0.42)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.42)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -87,7 +87,7 @@ Future<bool> showCalendarQuickAddSheet({
                           width: compact ? 42 : 46,
                           height: compact ? 42 : 46,
                           decoration: BoxDecoration(
-                            color: accent.withOpacity(0.12),
+                            color: accent.withValues(alpha: 0.12),
                             borderRadius:
                                 BorderRadius.circular(compact ? 14 : 16),
                           ),
@@ -135,10 +135,10 @@ Future<bool> showCalendarQuickAddSheet({
                     SizedBox(height: compact ? 12 : 14),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.84),
+                        color: Colors.white.withValues(alpha: 0.84),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                         ),
                       ),
                       padding: EdgeInsets.symmetric(

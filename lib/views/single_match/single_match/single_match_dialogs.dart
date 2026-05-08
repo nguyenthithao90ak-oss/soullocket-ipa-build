@@ -91,7 +91,7 @@ class _MatchReadySheet extends StatelessWidget {
                 fontSize: 13,
                 height: 1.5,
                 fontWeight: FontWeight.w700,
-                color: Colors.white.withOpacity(0.88),
+                color: Colors.white.withValues(alpha: 0.88),
               ),
             ),
             const SizedBox(height: 18),
@@ -102,7 +102,7 @@ class _MatchReadySheet extends StatelessWidget {
                     onPressed: onOpenProfile,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: BorderSide(color: Colors.white.withOpacity(0.24)),
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.24)),
                     ),
                     icon: const Icon(Icons.person_search_rounded),
                     label: const Text(

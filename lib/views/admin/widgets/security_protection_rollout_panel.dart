@@ -735,7 +735,7 @@ class _StageOptionCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color:
-              isSelected ? accent.withOpacity(0.12) : const Color(0xFF0F172A),
+              isSelected ? accent.withValues(alpha: 0.12) : const Color(0xFF0F172A),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected ? accent : const Color(0xFF23304B),
@@ -841,7 +841,7 @@ class _ReasonToggleTile extends StatelessWidget {
           Switch(
             value: enabled,
             onChanged: onChanged,
-            activeColor: const Color(0xFFFF4B91),
+            activeThumbColor: const Color(0xFFFF4B91),
           ),
         ],
       ),
@@ -863,9 +863,9 @@ class _TrendChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.14),
+        color: color.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.24)),
+        border: Border.all(color: color.withValues(alpha: 0.24)),
       ),
       child: Text(
         label,
