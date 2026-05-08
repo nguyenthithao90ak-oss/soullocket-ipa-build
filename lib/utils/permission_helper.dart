@@ -184,16 +184,6 @@ class PermissionHelper {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Từ chối',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5E35B1),
@@ -203,7 +193,7 @@ class PermissionHelper {
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Đồng ý',
+              'Tiếp tục',
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,

@@ -685,11 +685,17 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
           }
           if (shouldShow && mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
+              SnackBar(
+                content: const Text(
                     'Vị trí đã tắt, nhiệt độ mặc định tại TP.HCM. Bật GPS để cập nhật chính xác nhé!'),
                 behavior: SnackBarBehavior.floating,
-                duration: Duration(seconds: 4),
+                action: SnackBarAction(
+                  label: 'Bật ngay',
+                  onPressed: _isBootstrappingLocation
+                      ? () {}
+                      : () => _bootstrapLocationTracking(),
+                ),
+                duration: const Duration(seconds: 4),
               ),
             );
             await prefs.setString(
@@ -791,7 +797,6 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
       normalizedHouseId,
       normalizedRole,
       context: context,
-      forcePrompt: true,
     );
     if (!started || !mounted) {
       return;
@@ -873,8 +878,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   Future<void> _openMapScreen() async {
     if (!mounted) return;
 
-    final hasPermission = await _locationService.requestPermission(
-        context: context, forcePrompt: true);
+    final hasPermission = await _locationService.requestPermission(context: context);
     if (!hasPermission) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

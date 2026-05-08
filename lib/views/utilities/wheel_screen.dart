@@ -163,7 +163,7 @@ class _WheelScreenState extends State<WheelScreen>
 
       if (!mounted) return;
       final hasPerm = await LocationService()
-          .requestPermission(context: context, forcePrompt: true);
+          .requestPermission(context: context);
       if (!hasPerm) {
         throw Exception('Quyền truy cập vị trí bị từ chối.');
       }

@@ -429,8 +429,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
                         if (showGpsAction) ...[
                           SLSpacing.h10,
                           OutlinedButton.icon(
-                            onPressed: () =>
-                                _bootstrapLocationTracking(forcePrompt: true),
+                            onPressed: _isBootstrappingLocation
+                                ? null
+                                : () => _bootstrapLocationTracking(),
                             icon: const Icon(Icons.my_location_rounded, size: 16),
                             label: const Text('Bật GPS của bạn'),
                           ),
@@ -517,7 +518,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
                               ),
-                              onPressed: () => _bootstrapLocationTracking(forcePrompt: true),
+                              onPressed: () => _bootstrapLocationTracking(),
                               icon: const Icon(Icons.gps_fixed_rounded, size: 18),
                               label: Text(
                                 'BẬT CẬP NHẬT GPS NGAY',

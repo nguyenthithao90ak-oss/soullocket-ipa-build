@@ -415,7 +415,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _setRealtimePipelinesActive(true);
 
     // Automatically bootstrap location when entering the map screen
-    _bootstrapLocationTracking(forcePrompt: true);
+    _bootstrapLocationTracking();
 
     try {
       await Future.wait([

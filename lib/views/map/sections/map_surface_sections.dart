@@ -620,8 +620,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                           OutlinedButton.icon(
                             onPressed: _isBootstrappingLocation
                                 ? null
-                                : () => _bootstrapLocationTracking(
-                                    forcePrompt: true),
+                                : () => _bootstrapLocationTracking(),
                             icon: const Icon(Icons.my_location_rounded),
                             label: Text(
                               _isBootstrappingLocation

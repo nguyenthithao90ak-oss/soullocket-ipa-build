@@ -486,7 +486,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       final settingsLockedPermissions = <String>[];
 
       statuses['GPS'] = await LocationService()
-          .requestPermission(context: context, forcePrompt: true);
+          .requestPermission(context: context);
 
       if (!kIsWeb) {
         final camera =

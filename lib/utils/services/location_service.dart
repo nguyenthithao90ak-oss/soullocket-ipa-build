@@ -57,16 +57,19 @@ class LocationService {
               builder: (ctx) => AlertDialog(
                 title: const Text('Quyền vị trí bị chặn'),
                 content: const Text('Bạn đã từ chối quyền vị trí vĩnh viễn. Vui lòng vào Cài đặt của điện thoại để cho phép SoulLocket truy cập vị trí thì mới sử dụng được bản đồ nhé.'),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đã hiểu')),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      Geolocator.openAppSettings();
-                    },
-                    child: const Text('Mở Cài đặt'),
-                  ),
-                ],
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Đã hiểu'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Geolocator.openAppSettings();
+                  },
+                  child: const Text('Mở Cài đặt'),
+                ),
+              ],
               ),
             );
             return false;
@@ -144,7 +147,7 @@ class LocationService {
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Đồng ý'),
+                  child: const Text('Tiếp tục'),
                 ),
               ],
             ),
