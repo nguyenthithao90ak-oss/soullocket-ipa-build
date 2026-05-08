@@ -1350,13 +1350,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       point: marker.point,
       width: markerWidth,
       height: markerHeight,
-      alignment: Alignment.bottomCenter,
+      alignment: Alignment.center,
       rotate: false,
       child: GestureDetector(
         onTap: marker.onTap,
         behavior: HitTestBehavior.opaque,
-        child: Align(
-          alignment: Alignment.bottomCenter,
+        child: Transform.translate(
+          offset: Offset(0, -markerHeight / 2),
           child: SizedBox(
             width: markerWidth,
             height: markerHeight,
