@@ -350,6 +350,10 @@ class AdMobService {
   static const int _fullscreenAdCooldownMs = 2 * 60 * 1000;
   Completer<void>? _initializeCompleter;
   Completer<bool>? _appOpenLoadCompleter;
+  Timer? _rewardedLoadWatchdog;
+  Timer? _soulGameRewardedLoadWatchdog;
+  Timer? _interstitialLoadWatchdog;
+  Timer? _appOpenLoadWatchdog;
   bool _sdkInitialized = false;
 
   DatabaseReference? get _currentUserRef {
