@@ -795,6 +795,7 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
       return CachedNetworkImage(
         imageUrl: avatarUrl.trim(),
         fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
         errorWidget: (_, __, ___) => _buildFallback(),
       );
     }
