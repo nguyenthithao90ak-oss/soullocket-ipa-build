@@ -893,6 +893,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   }
 
   Widget _buildDiscoveryTab() {
+    return StreamBuilder<_SingleMatchDiscoverySnapshot>(
+      stream: _discoveryStream,
+      builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _SingleMatchLoadErrorCard(
             loadError: snapshot.error.toString(),
