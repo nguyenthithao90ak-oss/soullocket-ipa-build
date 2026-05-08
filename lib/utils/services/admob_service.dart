@@ -437,19 +437,43 @@ class AdMobService {
             .timeout(const Duration(seconds: 4));
         if (snap.exists && snap.value is Map) {
           final map = Map<dynamic, dynamic>.from(snap.value as Map);
-            if (map['rewardedMainId'] != null) _androidRewardedMainId = map['rewardedMainId'].toString();
-            if (map['rewardedCheckinId'] != null) _androidRewardedCheckinId = map['rewardedCheckinId'].toString();
-            if (map['rewardedSoulGameId'] != null) _androidRewardedSoulGameId = map['rewardedSoulGameId'].toString();
-            if (map['bannerId'] != null) _androidBannerId = map['bannerId'].toString();
-            if (map['interstitialId'] != null) _androidInterstitialId = map['interstitialId'].toString();
-            if (map['appOpenId'] != null) _androidAppOpenId = map['appOpenId'].toString();
+          if (map['rewardedMainId'] != null) {
+            _androidRewardedMainId = map['rewardedMainId'].toString();
+          }
+          if (map['rewardedCheckinId'] != null) {
+            _androidRewardedCheckinId = map['rewardedCheckinId'].toString();
+          }
+          if (map['rewardedSoulGameId'] != null) {
+            _androidRewardedSoulGameId = map['rewardedSoulGameId'].toString();
+          }
+          if (map['bannerId'] != null) {
+            _androidBannerId = map['bannerId'].toString();
+          }
+          if (map['interstitialId'] != null) {
+            _androidInterstitialId = map['interstitialId'].toString();
+          }
+          if (map['appOpenId'] != null) {
+            _androidAppOpenId = map['appOpenId'].toString();
+          }
 
-            if (map['ios_rewardedMainId'] != null) _iosRewardedMainId = map['ios_rewardedMainId'].toString();
-            if (map['ios_rewardedCheckinId'] != null) _iosRewardedCheckinId = map['ios_rewardedCheckinId'].toString();
-            if (map['ios_rewardedSoulGameId'] != null) _iosRewardedSoulGameId = map['ios_rewardedSoulGameId'].toString();
-            if (map['ios_bannerId'] != null) _iosBannerId = map['ios_bannerId'].toString();
-            if (map['ios_interstitialId'] != null) _iosInterstitialId = map['ios_interstitialId'].toString();
-            if (map['ios_appOpenId'] != null) _iosAppOpenId = map['ios_appOpenId'].toString();
+          if (map['ios_rewardedMainId'] != null) {
+            _iosRewardedMainId = map['ios_rewardedMainId'].toString();
+          }
+          if (map['ios_rewardedCheckinId'] != null) {
+            _iosRewardedCheckinId = map['ios_rewardedCheckinId'].toString();
+          }
+          if (map['ios_rewardedSoulGameId'] != null) {
+            _iosRewardedSoulGameId = map['ios_rewardedSoulGameId'].toString();
+          }
+          if (map['ios_bannerId'] != null) {
+            _iosBannerId = map['ios_bannerId'].toString();
+          }
+          if (map['ios_interstitialId'] != null) {
+            _iosInterstitialId = map['ios_interstitialId'].toString();
+          }
+          if (map['ios_appOpenId'] != null) {
+            _iosAppOpenId = map['ios_appOpenId'].toString();
+          }
         }
       } catch (e) {
         debugPrint('Failed to sync AdMob IDs: $e');
@@ -474,28 +498,80 @@ class AdMobService {
           ),
         );
       }
-
-      try {
-        await MobileAds.instance.initialize();
-        _sdkInitialized = true;
-        _loadRewardedAd();
-        _loadSoulGameRewardedAd();
-        unawaited(loadInterstitialAd());
-      } catch (error, stackTrace) {
-        debugPrint('AdMob initialization error: $error');
-        debugPrintStack(stackTrace: stackTrace);
-        unawaited(
-          RevenueSecurityTelemetryService.instance.logSystemEvent(
-            type: 'admob_initialize_error',
-            reason: error.toString(),
-            extra: {
-              'stack': stackTrace.toString().split('\n').take(8).join('\n'),
-            },
-          ),
-        );
+    } finally {
+      if (!completer.isCompleted) {
+        completer.complete();
       }
-      return completer.future;
+      _initializeCompleter = null;
     }
+
+    return completer.future;
+  }
+
+  void _loadRewardedAd() {
+    if (kIsWeb) return;
+    if (!_sdkInitialized) return;
+    if (_isRewardedAdLoading) return;
+    _isRewardedAdLoading = true;
+    _rewardedLoadWatchdog?.cancel();
+    _rewardedLoadWatchdog = Timer(const Duration(seconds: 12), () {
+      if (!_isRewardedAdLoading) return;
+      _rewardedAd = null;
+      _isRewardedAdLoading = false;
+      debugPrint('AdMobService: rewarded load timed out');
+    });
+
+    RewardedAd.load(
+      adUnitId: rewardedMainId,
+      request: _buildAdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedLoadWatchdog?.cancel();
+          _rewardedAd = ad;
+          _isRewardedAdLoading = false;
+        },
+        onAdFailedToLoad: (error) {
+          _rewardedLoadWatchdog?.cancel();
+          _rewardedAd = null;
+          _isRewardedAdLoading = false;
+          debugPrint('AdMobService: rewarded failed to load: $error');
+        },
+      ),
+    );
+  }
+
+  void _loadSoulGameRewardedAd() {
+    if (kIsWeb) return;
+    if (!_sdkInitialized) return;
+    if (_isSoulGameRewardedAdLoading) return;
+    _isSoulGameRewardedAdLoading = true;
+    _soulGameRewardedLoadWatchdog?.cancel();
+    _soulGameRewardedLoadWatchdog = Timer(const Duration(seconds: 12), () {
+      if (!_isSoulGameRewardedAdLoading) return;
+      _soulGameRewardedAd = null;
+      _isSoulGameRewardedAdLoading = false;
+      debugPrint('AdMobService: soul game rewarded load timed out');
+    });
+
+    RewardedAd.load(
+      adUnitId: rewardedSoulGameId,
+      request: _buildAdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          _soulGameRewardedLoadWatchdog?.cancel();
+          _soulGameRewardedAd = ad;
+          _isSoulGameRewardedAdLoading = false;
+        },
+        onAdFailedToLoad: (error) {
+          _soulGameRewardedLoadWatchdog?.cancel();
+          _soulGameRewardedAd = null;
+          _isSoulGameRewardedAdLoading = false;
+          debugPrint('AdMobService: soul game rewarded failed to load: $error');
+        },
+      ),
+    );
+  }
+
   void preloadSoulGameRewardedAd() {
     _loadSoulGameRewardedAd();
   }
