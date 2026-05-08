@@ -123,6 +123,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       return;
     }
 
+    if (Platform.isIOS) {
+      _showToast('Tính năng PRO tạm ẩn trên iOS.', success: false);
+      return;
+    }
+
     await Navigator.push(
       context,
       MaterialPageRoute(
