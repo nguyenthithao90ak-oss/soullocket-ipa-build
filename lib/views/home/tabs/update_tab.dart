@@ -589,8 +589,12 @@ class UpdateTab extends StatelessWidget {
             _tr('Nhật ký, tiện ích và quyền lợi',
                 'Diary, utilities, and access'),
             _tr(
-              'Các khu nhật ký, game, quà tặng, tarot, tài chính, Secret Vault, Time Capsule, AI hỗ trợ, PRO/mua gói và quảng cáo được hiển thị theo phạm vi màn hình và quyền truy cập hiện có.',
-              'Diary, games, gift flows, tarot, finance, Secret Vault, Time Capsule, AI support, PRO purchases, and ads are available according to the screens and access level in this build.',
+              Platform.isIOS
+                  ? 'Các khu nhật ký, game, quà tặng, tarot, tài chính, Secret Vault, Time Capsule, AI hỗ trợ và quảng cáo được hiển thị theo phạm vi màn hình và quyền truy cập hiện có.'
+                  : 'Các khu nhật ký, game, quà tặng, tarot, tài chính, Secret Vault, Time Capsule, AI hỗ trợ, PRO/mua gói và quảng cáo được hiển thị theo phạm vi màn hình và quyền truy cập hiện có.',
+              Platform.isIOS
+                  ? 'Diary, games, gift flows, tarot, finance, Secret Vault, Time Capsule, AI support, and ads are available according to the screens and access level in this build.'
+                  : 'Diary, games, gift flows, tarot, finance, Secret Vault, Time Capsule, AI support, PRO purchases, and ads are available according to the screens and access level in this build.',
             ),
             const Color(0xFFE8F5E9),
             const Color(0xFF388E3C),
