@@ -84,6 +84,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     }
 
     if (products.isEmpty) {
+      if (_isAppleStorePlatform) {
+        return 'App Store chưa trả về gói PRO. Vui lòng kiểm tra Product ID, metadata/screenshot IAP và gắn IAP vào phiên bản app đang gửi duyệt.';
+      }
       return 'Hiện chưa tải được danh sách gói PRO. Vui lòng thử lại sau ít phút.';
     }
 
