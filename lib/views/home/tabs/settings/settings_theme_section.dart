@@ -1042,6 +1042,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     ),
                     const SizedBox(height: 10),
                     _buildGradientBtn(
+                      label: _isGrantingPermissions
+                          ? 'ĐANG XIN QUYỀN...'
                           : Platform.isIOS
                               ? 'THIẾT LẬP QUYỀN CẦN THIẾT'
                               : context.tr('theme_grant_all_perms'),
