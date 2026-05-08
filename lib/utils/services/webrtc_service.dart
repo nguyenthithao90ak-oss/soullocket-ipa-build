@@ -254,19 +254,6 @@ class WebRTCService {
 
     _peerConnection?.onTrack = (RTCTrackEvent event) {
       final stream = event.streams.isNotEmpty ? event.streams.first : null;
-      if (stream == null) return;
-      _remoteStream = stream;
-      remoteRenderer.srcObject = stream;
-    };
-
-    _peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
-      calleeCandidatesRef.push().set(candidate.toMap());
-    };
-
-    final data = Map<String, dynamic>.from(roomSnap.value as Map);
-    final offerData = Map<String, dynamic>.from(data['offer']);
-
-    final offer = RTCSessionDescription(offerData['sdp'], offerData['type']);
     await _peerConnection?.setRemoteDescription(offer).timeout(const Duration(seconds: 12));
 
     final answer = await _peerConnection!
