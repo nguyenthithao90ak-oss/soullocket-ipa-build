@@ -1042,9 +1042,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     ),
                     const SizedBox(height: 10),
                     _buildGradientBtn(
-                      label: _isGrantingPermissions
-                          ? 'ĐANG XIN QUYỀN...'
-                          : context.tr('theme_grant_all_perms'),
+                          : Platform.isIOS
+                              ? 'THIẾT LẬP QUYỀN CẦN THIẾT'
+                              : context.tr('theme_grant_all_perms'),
                       gradient: const [Color(0xFF57C96C), Color(0xFF78D884)],
                       onTap: _isGrantingPermissions
                           ? () {}
