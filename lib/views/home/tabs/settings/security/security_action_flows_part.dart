@@ -386,6 +386,12 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   }
 
   Future<bool> _confirmPermissionGrant() async {
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS)) {
+      return true;
+    }
+
     final approved = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
