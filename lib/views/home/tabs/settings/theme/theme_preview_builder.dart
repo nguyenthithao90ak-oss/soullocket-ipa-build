@@ -122,6 +122,7 @@ class ThemePreviewBuilder extends StatelessWidget {
                       child: CachedNetworkImage(
                         imageUrl: data.backgroundImageUrl!.trim(),
                         fit: BoxFit.cover,
+                        filterQuality: FilterQuality.high,
                         errorWidget: (_, __, ___) => const SizedBox.shrink(),
                       ),
                     ),
@@ -520,6 +521,7 @@ class _PreviewAvatar extends StatelessWidget {
             : CachedNetworkImage(
                 imageUrl: safeUrl,
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
                 errorWidget: (_, __, ___) => ColoredBox(
                   color: Colors.white,
                   child: Center(
