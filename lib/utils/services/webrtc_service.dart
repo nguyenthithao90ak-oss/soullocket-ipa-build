@@ -38,34 +38,17 @@ class WebRTCService {
   };
 
   Future<Map<String, dynamic>> _loadRtcConfiguration() async {
-    final iceServers = <Map<String, dynamic>>[
-      ...(_fallbackConfiguration['iceServers'] as List).cast<Map<String, dynamic>>(),
-    ];
-    final turnUrl = const String.fromEnvironment('WEBRTC_TURN_URL').trim();
-    final turnUsername = const String.fromEnvironment('WEBRTC_TURN_USERNAME').trim();
-    final turnCredential =
-        const String.fromEnvironment('WEBRTC_TURN_CREDENTIAL').trim();
-    if (turnUrl.isNotEmpty) {
-      final turnServer = <String, dynamic>{'urls': turnUrl};
-      if (turnUsername.isNotEmpty) {
-        turnServer['username'] = turnUsername;
-      }
-      if (turnCredential.isNotEmpty) {
-        turnServer['credential'] = turnCredential;
-      }
-      iceServers.add(turnServer);
-    }
     try {
       final snap = await _db.ref('appConfig/webrtc/iceServers').get();
       final raw = snap.value;
       final servers = _parseIceServers(raw);
       if (servers.isNotEmpty) {
-        return {'iceServers': [...servers, ...iceServers]};
+        return {'iceServers': servers};
       }
     } catch (e) {
       debugPrint('Failed to load WebRTC ICE servers: $e');
     }
-    return {'iceServers': iceServers};
+    return _fallbackConfiguration;
   }
 
   List<Map<String, dynamic>> _parseIceServers(dynamic raw) {
@@ -160,28 +143,26 @@ class WebRTCService {
     _roomId = roomRef.key;
 
     final callerCandidatesRef = roomRef.child('callerCandidates');
+    // Gửi ICE Candidate của A lên Firebase
     _peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
       callerCandidatesRef.push().set(candidate.toMap());
     };
 
-    final offer = await _peerConnection!
-        .createOffer()
-        .timeout(const Duration(seconds: 12));
-    await _peerConnection!
-        .setLocalDescription(offer)
-        .timeout(const Duration(seconds: 12));
+    // Tạo Offer cho B
+    final offer = await _peerConnection?.createOffer();
+    await _peerConnection?.setLocalDescription(offer!);
 
     await roomRef.set({
       'offer': {
-        'sdp': offer.sdp,
-        'type': offer.type,
+        'sdp': offer?.sdp,
+        'type': offer?.type,
       },
       'callerId': user.uid,
       'calleeId': resolvedTargetHouseId,
       'houseId': resolvedCallerHouseId,
       'status': 'ringing',
       'timestamp': ServerValue.timestamp,
-    }).timeout(const Duration(seconds: 12));
+    });
 
     // Lắng nghe Answer từ B
     roomRef.child('answer').onValue.listen((event) async {
@@ -234,6 +215,65 @@ class WebRTCService {
       }
     } catch (e) {
       debugPrint('Failed to resolve caller house id for call room: $e');
+    }
+
+    return null;
+  }
+
+  /// Người B: Tham gia phòng (Bắt máy người A)
+  Future<void> joinRoom(String roomId, RTCVideoRenderer remoteRenderer) async {
+    _roomId = roomId;
+    final roomRef = _db.ref('calls/$roomId');
+    final roomSnap = await roomRef.get();
+    if (!roomSnap.exists) throw Exception("Phòng gọi không tồn tại");
+
+    _peerConnection = await createPeerConnection(await _loadRtcConfiguration());
+
+    _localStream?.getTracks().forEach((track) {
+      _peerConnection?.addTrack(track, _localStream!);
+    });
+
+    _peerConnection?.onTrack = (RTCTrackEvent event) {
+      final stream = event.streams.isNotEmpty ? event.streams.first : null;
+      if (stream == null) return;
+      _remoteStream = stream;
+      remoteRenderer.srcObject = stream;
+    };
+
+    final calleeCandidatesRef = roomRef.child('calleeCandidates');
+    _peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
+      calleeCandidatesRef.push().set(candidate.toMap());
+    };
+
+    // Lấy Offer từ A và tạo Answer
+    final data = Map<String, dynamic>.from(roomSnap.value as Map);
+    final offerData = Map<String, dynamic>.from(data['offer']);
+
+    final offer = RTCSessionDescription(offerData['sdp'], offerData['type']);
+    await _peerConnection?.setRemoteDescription(offer);
+
+    final answer = await _peerConnection?.createAnswer();
+    await _peerConnection?.setLocalDescription(answer!);
+
+    await roomRef.child('answer').set({
+      'type': answer?.type,
+      'sdp': answer?.sdp,
+    });
+    await roomRef.update({'status': 'connected'});
+
+    // Lắng nghe ICE Candidate của A
+    roomRef.child('callerCandidates').onChildAdded.listen((event) {
+      final val = Map<String, dynamic>.from(event.snapshot.value as Map);
+      final candidate = RTCIceCandidate(
+          val['candidate'], val['sdpMid'], val['sdpMLineIndex']);
+      _peerConnection?.addCandidate(candidate);
+    });
+  }
+
+  /// Cúp máy và dọn dẹp
+  Future<void> hangUp() async {
+    if (_roomId != null) {
+      final endedRoomId = _roomId!;
       await _db.ref('calls/$endedRoomId').update({
         'status': 'ended',
         'endedAt': ServerValue.timestamp,
@@ -291,34 +331,44 @@ class WebRTCService {
     Helper.setSpeakerphoneOn(isSpeakerOn);
   }
 
-  StreamSubscription<DatabaseEvent> listenForIncomingCalls(
-    String myHouseId,
-    Function(String roomId, String callerId, Map data) onIncomingCall,
-  ) {
-    return _db
-        .ref('calls')
-        .orderByChild('calleeId')
-        .equalTo(myHouseId)
-        .onChildAdded
-        .listen((event) {
-      final rawValue = event.snapshot.value;
-      if (rawValue is! Map) {
-        return;
-      }
-      final val = Map<String, dynamic>.from(rawValue);
-      if (val['status'] != 'ringing') {
-        return;
-      }
-      final roomId = event.snapshot.key?.trim() ?? '';
-      if (roomId.isEmpty) {
-        return;
-      }
-      final callerId = val['houseId']?.toString().trim().isNotEmpty == true
-          ? val['houseId'].toString().trim()
-          : val['callerId']?.toString().trim() ?? 'Người lạ';
-      onIncomingCall(roomId, callerId, val);
-    }, onError: (error) {
-      debugPrint('Error listening for incoming calls: $error');
-    });
+  /// Lắng nghe cuộc gọi đến (Global Listener)
+  void listenForIncomingCalls(String myHouseId,
+      Function(String roomId, String callerId, Map data) onIncomingCall) {
+    try {
+      _db
+          .ref('calls')
+          .orderByChild('calleeId')
+          .equalTo(myHouseId)
+          .onChildAdded
+          .listen((event) {
+        final val = event.snapshot.value as Map<dynamic, dynamic>?;
+        if (val != null && val['status'] == 'ringing') {
+          final roomId = event.snapshot.key;
+          final callerId = val['callerId']?.toString() ?? 'Người lạ';
+          if (roomId != null) {
+            onIncomingCall(roomId, callerId, Map<String, dynamic>.from(val));
+          }
+        }
+      }, onError: (error) {
+        debugPrint('Error listening for incoming calls (childAdded): $error');
+      });
+
+      // Lắng nghe thay đổi trạng thái cuộc gọi (VD: người gọi đã cúp máy)
+      _db
+          .ref('calls')
+          .orderByChild('calleeId')
+          .equalTo(myHouseId)
+          .onChildChanged
+          .listen((event) {
+        final val = event.snapshot.value as Map<dynamic, dynamic>?;
+        if (val != null && val['status'] == 'ended') {
+          // Có thể trigger thư viện tắt chuông hoặc ẩn Incoming Call Screen
+        }
+      }, onError: (error) {
+        debugPrint('Error listening for incoming calls (childChanged): $error');
+      });
+    } catch (e) {
+      debugPrint('Failed to attach global incoming call listener: $e');
+    }
   }
 }
