@@ -55,11 +55,6 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
       _showToast('Hãy vào nhà trước khi mở gói PRO.', success: false);
       return;
     }
-    if (Platform.isIOS) {
-      _showToast('Tính năng PRO tạm ẩn trên iOS.', success: false);
-      return;
-    }
-
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => PremiumStoreScreen(
