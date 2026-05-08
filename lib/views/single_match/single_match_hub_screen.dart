@@ -881,10 +881,15 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       stream: _discoveryStream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Center(
-            child: CircularProgressIndicator(
-              color: Color(0xFFFF4F87),
-            ),
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
+            children: <Widget>[
+              _buildWarningCard(),
+              const SizedBox(height: 14),
+              _buildActiveFiltersCard(),
+              const SizedBox(height: 14),
+              _buildEmptyPoolCard(),
+            ],
           );
         }
 
