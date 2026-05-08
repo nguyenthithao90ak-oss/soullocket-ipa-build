@@ -392,9 +392,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   _LocationNodeState _parseLocationNodeState(dynamic raw) {
     final map = _toStringDynamicMap(raw);
     final parsedCurrent = _parseGpsPoint(map);
-    final current =
-        _isGpsPointAccurateEnough(parsedCurrent) ? parsedCurrent : null;
     final lastKnown = _parseGpsPoint(map['lastKnown']);
+    final current = _isStableLiveGpsPoint(parsedCurrent, lastKnown)
+        ? parsedCurrent
+        : null;
     final isLive = (map['isLive'] == true || map['sharingEnabled'] == true) &&
         current != null &&
         _isGpsFresh(_readInt(map['ts']) ?? current.ts);
