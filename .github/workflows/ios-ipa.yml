@@ -387,7 +387,14 @@ jobs:
             exit 1
           fi
 
-          "$UPLOAD_SYMBOLS" -gsp "$GOOGLE_SERVICE_INFO_PLIST" -p ios "$XCARCHIVE_PATH"
+          DSYM_PATH="$XCARCHIVE_PATH/dSYMs"
+          if [[ ! -d "$DSYM_PATH" ]] || [[ -z "$(find "$DSYM_PATH" -name '*.dSYM' -print -quit)" ]]; then
+            echo "No dSYM files found at $DSYM_PATH" >&2
+            find "$XCARCHIVE_PATH" -maxdepth 3 -print >&2
+            exit 1
+          fi
+
+          "$UPLOAD_SYMBOLS" -gsp "$GOOGLE_SERVICE_INFO_PLIST" -p ios "$DSYM_PATH"
 
       - name: Upload IPA artifacts
         uses: actions/upload-artifact@v4
