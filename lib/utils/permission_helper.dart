@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
@@ -68,7 +69,6 @@ class PermissionHelper {
     return true;
   }
 
-  /// Request location permission (Geolocator) with a Prominent Disclosure dialog.
   static Future<bool> requestLocationWithDisclosure(
     BuildContext context, {
     required String title,
@@ -80,26 +80,30 @@ class PermissionHelper {
       return true;
     }
 
+    if (status == LocationPermission.deniedForever) {
+      return false;
+    }
+
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS)) {
+      final result = await _withLifecyclePresenceGuard(
+        Geolocator.requestPermission,
+      );
+      return result == LocationPermission.always ||
+          result == LocationPermission.whileInUse;
+    }
+
     if (!context.mounted) return false;
 
-    // Prominent disclosure required by Google Play Policies
+    // Prominent disclosure required by Google Play Policies.
     final shouldRequest =
         await _showDisclosureDialog(context, title, disclosure);
 
     if (shouldRequest == true) {
-      LocationPermission result = status;
-
-      if (status == LocationPermission.denied ||
-          status == LocationPermission.deniedForever) {
-        result = await _withLifecyclePresenceGuard(
-          Geolocator.requestPermission,
-        );
-      }
-
-      if (result == LocationPermission.denied ||
-          result == LocationPermission.deniedForever) {
-        return false;
-      }
+      final result = await _withLifecyclePresenceGuard(
+        Geolocator.requestPermission,
+      );
 
       return result == LocationPermission.always ||
           result == LocationPermission.whileInUse;
