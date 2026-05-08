@@ -338,6 +338,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   child: Image.network(
                     entry.previewUrl,
                     fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
                     errorBuilder: (_, __, ___) => const Icon(
                       Icons.image_not_supported_outlined,
                       color: Colors.white70,
