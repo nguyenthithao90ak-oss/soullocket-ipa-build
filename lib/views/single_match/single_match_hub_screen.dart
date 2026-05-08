@@ -555,8 +555,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         goalLabel: _choiceLabel(_goalOptions, picked.candidate.goal),
         voiceLabel: _choiceLabel(_voiceOptions, picked.candidate.voiceStyle),
         onOpenProfile: () {
-          Navigator.pop(context);
-          _openCandidateProfile(picked.candidate);
+          // Tạm tắt mở hồ sơ từ Single Match; giữ code để nâng cấp lại sau.
+          // Navigator.pop(context);
+          // _openCandidateProfile(picked.candidate);
         },
         onAudioCall: picked.canAudioCall
             ? () {
@@ -990,7 +991,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       goalLabel: goalLabel,
       voiceLabel: voiceLabel,
       onSpin: onSpin,
-      onOpenProfile: () => _openCandidateProfile(candidate),
+      onOpenProfile: () {
+        // Tạm tắt mở hồ sơ từ Single Match; giữ code để nâng cấp lại sau.
+        // _openCandidateProfile(candidate);
+      },
       onAudioCall: (!candidate.allowAudioCalls || callingThisCard)
           ? null
           : () => _launchCall(scored, isVideo: false),
@@ -1029,7 +1033,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       goalLabel: _choiceLabel(_goalOptions, candidate.goal),
       voiceLabel: _choiceLabel(_voiceOptions, candidate.voiceStyle),
       onSkip: () => _skipCandidate(scored),
-      onOpenProfile: () => _openCandidateProfile(candidate),
+      onOpenProfile: () {
+        // Tạm tắt mở hồ sơ từ Single Match; giữ code để nâng cấp lại sau.
+        // _openCandidateProfile(candidate);
+      },
       onAudioCall: candidate.allowAudioCalls && !callingThisCard
           ? () => _launchCall(scored, isVideo: false)
           : null,
