@@ -64,6 +64,11 @@ class AppConfig {
     defaultValue: 'https://nominatim.openstreetmap.org/reverse',
   );
   static const String androidPackageName = 'com.soullocket.app';
+  static const String appStoreId = '6740344445';
+  static const String androidStoreUrl =
+      'https://play.google.com/store/apps/details?id=$androidPackageName';
+  static const String iOSStoreUrl =
+      'https://apps.apple.com/app/id$appStoreId';
   static const String iOSBundleId = String.fromEnvironment(
     'IOS_BUNDLE_ID',
     defaultValue: 'com.soullocket.app',
