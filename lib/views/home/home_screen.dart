@@ -17,6 +17,25 @@ import '../../core/sl_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/device_manager_service.dart';
 import '../../services/friends_service.dart';
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+import 'dart:async';
+import 'dart:ui' as ui;
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../core/sl_theme.dart';
+import '../../services/auth_service.dart';
+import '../../services/device_manager_service.dart';
+import '../../services/friends_service.dart';
 import '../../services/house_service.dart';
 import '../../services/home_startup_media_cache.dart';
 import '../../services/house_settings_service.dart';
@@ -25,11 +44,13 @@ import '../../services/breakup_service.dart';
 import '../../services/military_lock_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/schedule_notif_service.dart';
+import '../../services/webrtc_service.dart';
 import '../../services/widget_action_service.dart';
 import '../../widgets/legacy_falling_effect.dart';
 import '../../widgets/touch_effect_overlay.dart';
 import '../notifications/notification_center_screen.dart';
 import '../relationship/couple_connect_screen.dart';
+import '../relationship/video_call_screen.dart';
 import '../utilities/calendar_screen.dart';
 import 'love_insights_screen.dart';
 import 'screens/document_viewer_screen.dart';
@@ -551,7 +572,6 @@ class _HomeScreenState extends State<HomeScreen>
     _widgetActionSub = WidgetActionService().actions.listen((action) {
       unawaited(_handleWidgetLaunchAction(action));
     });
-    // Incoming calls listener disabled for couple accounts - video calls only on single matching
   }
 
   Future<void> _prewarmShellMedia() async {
@@ -606,6 +626,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     final houseId = await HouseService().getCurrentHouseId();
     if (!mounted || houseId == null) return;
+    unawaited(_syncIncomingCallListener(houseId));
     final houseData =
         await FirebaseDatabase.instance.ref('houses/$houseId').get();
     if (!mounted || !houseData.exists || houseData.value is! Map) return;
@@ -654,134 +675,6 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _handleMusicPlaybackChanged() {
-    _syncMusicAnimationState();
-  }
-
-  void _handleMusicVisibilityChanged() {
-    _syncMusicAnimationState();
-  }
-
-  void _handleUiPrefsChanged() {
-    _syncVipThemeRotateTimer();
-    unawaited(_prewarmShellMedia());
-  }
-
-  UiEffectProfile _resolveHomeEffectProfile(
-    UiPrefsState uiState, {
-    bool pauseAnimations = false,
-  }) {
-    return UiPrefs.resolveEffectProfile(
-      state: uiState,
-      isWeb: kIsWeb,
-      pauseAnimations: pauseAnimations,
-    );
-  }
-
-  bool _hasSwipeReactiveUi() {
-    final uiState = UiPrefs.notifier.value;
-    final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
-    final effectProfile = _resolveHomeEffectProfile(uiState);
-    final resolvedEffectKey = uiState.liteMode
-        ? 'off'
-        : _resolveEffectKey(uiState.fallingEffectKey, resolvedThemeKey);
-    final musicService = MusicService();
-
-    final hasAnimatedMusicButton = !kIsWeb &&
-        musicService.isVisibleNotifier.value &&
-        musicService.isPlayingNotifier.value;
-    final hasFallingEffect = resolvedEffectKey != 'off';
-    final hasTouchEffects =
-        effectProfile.premiumEffects && resolvedEffectKey == 'off';
-
-    return hasAnimatedMusicButton || hasFallingEffect || hasTouchEffects;
-  }
-
-  void _syncMusicAnimationState() {
-    final musicService = MusicService();
-    final shouldAnimate = mounted &&
-        _allowStartupAnimations &&
-        !kIsWeb &&
-        !_isUserTabSwiping &&
-        musicService.isVisibleNotifier.value &&
-        musicService.isPlayingNotifier.value;
-    if (shouldAnimate) {
-      if (!_musicController.isAnimating) {
-        _musicController.repeat(reverse: true);
-      }
-      return;
-    }
-    if (_musicController.isAnimating) {
-      _musicController.stop();
-    }
-    if (_musicController.value != 0) {
-      _musicController.value = 0;
-    }
-  }
-
-  void _syncVipThemeRotateTimer() {
-    final shouldRotate =
-        UiPrefs.notifier.value.themeKey.trim() == 'theme-vip-rotate';
-    if (!shouldRotate) {
-      _vipThemeRotateTimer?.cancel();
-      _vipThemeRotateTimer = null;
-      return;
-    }
-    if (_vipThemeRotateTimer != null) {
-      return;
-    }
-    _vipThemeRotateTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (!mounted) return;
-      _vipThemeRotationTickNotifier.value++;
-    });
-  }
-
-  Future<void> _syncNotificationBadgeListener({
-    bool forceRestart = false,
-  }) async {
-    final houseId = await _houseService.getCurrentHouseId();
-    final normalizedHouseId = houseId?.trim() ?? '';
-    if (normalizedHouseId.isEmpty) {
-      _detachNotificationBadgeListener(resetCounter: true);
-      return;
-    }
-    if (!mounted) {
-      return;
-    }
-    if (!forceRestart &&
-        _notificationBadgeSub != null &&
-        _notificationBadgeHouseId == normalizedHouseId) {
-      return;
-    }
-
-    _detachNotificationBadgeListener(resetCounter: false);
-    _notificationBadgeHouseId = normalizedHouseId;
-    _notificationBadgeSub = FirebaseDatabase.instance
-        .ref('notifications/$normalizedHouseId')
-        .limitToLast(_notificationBadgeLimit)
-        .onValue
-        .listen((event) {
-      NotificationBadgeCounter.instance.update(
-        _countUnreadNotifications(event.snapshot.value),
-      );
-    }, onError: (_) {
-      NotificationBadgeCounter.instance.update(0);
-    });
-  }
-
-  void _detachNotificationBadgeListener({required bool resetCounter}) {
-    _notificationBadgeSub?.cancel();
-    _notificationBadgeSub = null;
-    _notificationBadgeHouseId = null;
-    if (resetCounter) {
-      NotificationBadgeCounter.instance.update(0);
-    }
-  }
-
-  int _countUnreadNotifications(Object? rawValue) {
-    if (rawValue is! Map) {
-      return 0;
-    }
-    var unread = 0;
     for (final entry in rawValue.entries) {
       final value = entry.value;
       if (value is! Map) {
