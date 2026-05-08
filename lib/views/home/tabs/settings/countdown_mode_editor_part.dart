@@ -1144,6 +1144,7 @@ class _CountdownModeEditorScreenState
                                               Image.network(
                                                 _customBackgroundUrl,
                                                 fit: BoxFit.cover,
+                                                filterQuality: FilterQuality.high,
                                                 errorBuilder: (_, __, ___) =>
                                                     const SizedBox.shrink(),
                                               ),
