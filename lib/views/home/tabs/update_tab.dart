@@ -724,16 +724,15 @@ class UpdateTab extends StatelessWidget {
               'Các tính năng thú vị cho cặp đôi',
               'Fun features for couples',
             ),
-            if (Platform.isIOS)
-              _tr(
-                'Khám phá thêm các tính năng thú vị dành cho cặp đôi trong ứng dụng.',
-                'Explore more fun features for couples in the app.',
-              )
-            else
-              _tr(
-                'Khám phá thêm các tính năng thú vị dành cho cặp đôi, ấn vào đây để chuyển hướng sang trang tổng hợp tính năng.',
-                'Explore more fun features for couples, tap here to open the feature page.',
-              ),
+            Platform.isIOS
+                ? _tr(
+                    'Khám phá thêm các tính năng thú vị dành cho cặp đôi trong ứng dụng.',
+                    'Explore more fun features for couples in the app.',
+                  )
+                : _tr(
+                    'Khám phá thêm các tính năng thú vị dành cho cặp đôi, ấn vào đây để chuyển hướng sang trang tổng hợp tính năng.',
+                    'Explore more fun features for couples, tap here to open the feature page.',
+                  ),
             const Color(0xFFFFF9F2),
             const Color(0xFFFB8C00),
             linkText: Platform.isIOS ? null : _tr('ấn vào đây', 'tap here'),
