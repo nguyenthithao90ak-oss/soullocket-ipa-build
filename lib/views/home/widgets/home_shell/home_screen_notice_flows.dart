@@ -150,7 +150,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFD81B60).withOpacity(0.16),
+                  color: const Color(0xFFD81B60).withValues(alpha: 0.16),
                   blurRadius: 28,
                   offset: const Offset(0, 16),
                 ),
@@ -288,7 +288,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
                           color: const Color(0xFFF7C6DA),
@@ -408,9 +408,9 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.88),
+        color: Colors.white.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.18)),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,7 +419,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             alignment: Alignment.center,
@@ -483,9 +483,9 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.10),
+          color: color.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: color.withOpacity(0.18)),
+          border: Border.all(color: color.withValues(alpha: 0.18)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -541,7 +541,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                 Container(
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF4B91).withOpacity(0.12),
+                    color: const Color(0xFFFF4B91).withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -645,7 +645,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
               Container(
                 padding: SLSpacing.all8,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF4B91).withOpacity(0.12),
+                  color: const Color(0xFFFF4B91).withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
