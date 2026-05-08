@@ -252,7 +252,6 @@ class DeviceManagerService {
 
     if (await _registerCurrentDeviceWithFunction()) {
       startRealtimeTracking();
-      return;
     }
 
     final uid = _auth.currentUser?.uid;
