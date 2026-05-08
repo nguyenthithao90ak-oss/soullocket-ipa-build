@@ -173,6 +173,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                     child: CachedNetworkImage(
                       imageUrl: uiState.customBackgroundUrl,
                       fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
                       errorWidget: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),
