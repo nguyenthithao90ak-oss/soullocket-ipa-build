@@ -1010,6 +1010,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
               child: CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
                 memCacheWidth: tileWidth.ceil(),
                 memCacheHeight: tileHeight.ceil(),
                 errorWidget: (_, __, ___) {
