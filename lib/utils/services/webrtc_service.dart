@@ -273,22 +273,34 @@ class WebRTCService {
     final offerData = Map<String, dynamic>.from(data['offer']);
 
     final offer = RTCSessionDescription(offerData['sdp'], offerData['type']);
-    await _peerConnection?.setRemoteDescription(offer);
+    await _peerConnection
+        ?.setRemoteDescription(offer)
+        .timeout(const Duration(seconds: 12));
 
-    final answer = await _peerConnection?.createAnswer();
-    await _peerConnection?.setLocalDescription(answer!);
+    final answer = await _peerConnection!
+        .createAnswer()
+        .timeout(const Duration(seconds: 12));
+    await _peerConnection!
+        .setLocalDescription(answer)
+        .timeout(const Duration(seconds: 12));
 
     await roomRef.child('answer').set({
-      'type': answer?.type,
-      'sdp': answer?.sdp,
-    });
-    await roomRef.update({'status': 'connected'});
+      'type': answer.type,
+      'sdp': answer.sdp,
+    }).timeout(const Duration(seconds: 12));
+    await roomRef
+        .update({'status': 'connected'}).timeout(const Duration(seconds: 8));
 
     // Lắng nghe ICE Candidate của A
     roomRef.child('callerCandidates').onChildAdded.listen((event) {
-      final val = Map<String, dynamic>.from(event.snapshot.value as Map);
+      final raw = event.snapshot.value;
+      if (raw is! Map) return;
+      final val = Map<String, dynamic>.from(raw);
       final candidate = RTCIceCandidate(
-          val['candidate'], val['sdpMid'], val['sdpMLineIndex']);
+        val['candidate']?.toString(),
+        val['sdpMid']?.toString(),
+        val['sdpMLineIndex'] as int?,
+      );
       _peerConnection?.addCandidate(candidate);
     });
   }
