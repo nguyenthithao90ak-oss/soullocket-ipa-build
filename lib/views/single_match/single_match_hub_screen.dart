@@ -786,13 +786,14 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                       ),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.72),
+                          color: Colors.white.withValues(alpha: 0.72),
                           borderRadius: BorderRadius.circular(24),
-                          border:
-                              Border.all(color: Colors.white.withOpacity(0.94)),
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.94)),
                           boxShadow: <BoxShadow>[
                             BoxShadow(
-                              color: const Color(0xFF7C61FF).withOpacity(0.10),
+                              color: const Color(0xFF7C61FF)
+                                  .withValues(alpha: 0.10),
                               blurRadius: 20,
                               offset: const Offset(0, 12),
                             ),
@@ -813,8 +814,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                             ),
                             boxShadow: <BoxShadow>[
                               BoxShadow(
-                                color:
-                                    const Color(0xFFAA68FF).withOpacity(0.24),
+                                color: const Color(0xFFAA68FF)
+                                    .withValues(alpha: 0.24),
                                 blurRadius: 16,
                                 offset: const Offset(0, 8),
                               ),
@@ -1291,7 +1292,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: accent.withOpacity(0.12),
+                          color: accent.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
@@ -1496,7 +1497,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 value: current.enabled,
-                activeColor: const Color(0xFFFF4F87),
+                activeThumbColor: const Color(0xFFFF4F87),
                 title: Text(
                   'Xuất hiện trong ghép nối ngẫu nhiên',
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800),
@@ -1517,7 +1518,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 value: current.allowAudioCalls,
-                activeColor: const Color(0xFFFF4F87),
+                activeThumbColor: const Color(0xFFFF4F87),
                 title: Text(
                   'Cho phép gọi thoại',
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800),
@@ -1538,7 +1539,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 value: current.allowVideoCalls,
-                activeColor: const Color(0xFFFF4F87),
+                activeThumbColor: const Color(0xFFFF4F87),
                 title: Text(
                   'Cho phép gọi video',
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800),
@@ -1612,7 +1613,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                   (option) => ChoiceChip(
                     label: Text(option.label),
                     selected: current.goal == option.value,
-                    selectedColor: option.color.withOpacity(0.18),
+                    selectedColor: option.color.withValues(alpha: 0.18),
                     labelStyle: SLTheme.quicksand(
                       fontWeight: FontWeight.w800,
                       color: current.goal == option.value
@@ -1650,7 +1651,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                   (option) => ChoiceChip(
                     label: Text(option.label),
                     selected: current.voiceStyle == option.value,
-                    selectedColor: option.color.withOpacity(0.18),
+                    selectedColor: option.color.withValues(alpha: 0.18),
                     labelStyle: SLTheme.quicksand(
                       fontWeight: FontWeight.w800,
                       color: current.voiceStyle == option.value
