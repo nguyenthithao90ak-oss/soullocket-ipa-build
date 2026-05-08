@@ -186,7 +186,9 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
         );
 
       if (controller.platform is AndroidWebViewController) {
-        AndroidWebViewController.enableDebugging(true);
+        if (kDebugMode) {
+          AndroidWebViewController.enableDebugging(true);
+        }
         (controller.platform as AndroidWebViewController)
             .setOnShowFileSelector(_androidFilePicker);
       }
