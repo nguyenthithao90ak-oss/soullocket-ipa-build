@@ -1332,10 +1332,12 @@ extension _CommunityTabComposer on _CommunityTabState {
                                                   ? Image.network(
                                                       selectedImage!.path,
                                                       fit: BoxFit.cover,
+                                                      filterQuality: FilterQuality.high,
                                                     )
                                                   : Image.file(
                                                       File(selectedImage!.path),
                                                       fit: BoxFit.cover,
+                                                      filterQuality: FilterQuality.high,
                                                     ),
                                             ),
                                             Positioned(
