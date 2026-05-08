@@ -458,8 +458,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   bool _isGpsPointAccurateEnough(_GpsPoint? point) {
     if (point == null) return false;
     final accuracy = point.accuracy;
-    return accuracy == null ||
-        !accuracy.isFinite ||
+    return accuracy != null &&
+        accuracy.isFinite &&
         accuracy <= _kMapMaxLiveAccuracyMeters;
   }
 
