@@ -615,13 +615,6 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   }
 
   String _displayPrice(ProductDetails product, VipPlanInfo? info) {
-    final planId = _planIdForProduct(product);
-    if (!kIsWeb && Platform.isIOS && planId == VipProduct.monthly) {
-      return product.price;
-    }
-    if (info != null) {
-      return _formatVnd(info.priceVnd);
-    }
     return product.price;
   }
 
