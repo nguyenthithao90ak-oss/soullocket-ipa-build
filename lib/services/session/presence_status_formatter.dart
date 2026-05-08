@@ -3,11 +3,11 @@ class PresenceStatusFormatter {
 
   String onlineLabel() => 'Đang hoạt động';
 
-  String neverConnectedLabel() => 'Chưa từng mở app';
+  String neverConnectedLabel() => 'Chưa mở app';
 
   String disconnectedLabel() => 'Mất kết nối';
 
-  String justDisconnectedLabel() => 'Vừa mới thoát';
+  String justDisconnectedLabel() => 'Vừa thoát';
 
   String formatLastSeen(int? lastSeenMs) {
     if (lastSeenMs == null) return neverConnectedLabel();
