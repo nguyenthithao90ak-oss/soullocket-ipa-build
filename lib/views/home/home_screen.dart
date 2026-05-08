@@ -25,11 +25,13 @@ import '../../services/breakup_service.dart';
 import '../../services/military_lock_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/schedule_notif_service.dart';
+import '../../services/webrtc_service.dart';
 import '../../services/widget_action_service.dart';
 import '../../widgets/legacy_falling_effect.dart';
 import '../../widgets/touch_effect_overlay.dart';
 import '../notifications/notification_center_screen.dart';
 import '../relationship/couple_connect_screen.dart';
+import '../relationship/video_call_screen.dart';
 import '../utilities/calendar_screen.dart';
 import 'love_insights_screen.dart';
 import 'screens/document_viewer_screen.dart';
@@ -484,7 +486,6 @@ class _HomeScreenState extends State<HomeScreen>
     _widgetActionSub = WidgetActionService().actions.listen((action) {
       unawaited(_handleWidgetLaunchAction(action));
     });
-    // Incoming calls listener disabled for couple accounts - video calls only on single matching
   }
 
   Future<void> _prewarmShellMedia() async {
@@ -539,6 +540,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     final houseId = await HouseService().getCurrentHouseId();
     if (!mounted || houseId == null) return;
+    unawaited(_syncIncomingCallListener(houseId));
     final houseData =
         await FirebaseDatabase.instance.ref('houses/$houseId').get();
     if (!mounted || !houseData.exists || houseData.value is! Map) return;
@@ -690,6 +692,104 @@ class _HomeScreenState extends State<HomeScreen>
     if (resetCounter) {
       NotificationBadgeCounter.instance.update(0);
     }
+  }
+
+  Future<void> _syncIncomingCallListener(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty || _callSub != null) {
+      return;
+    }
+    _callSub = WebRTCService().listenForIncomingCalls(
+      normalizedHouseId,
+      (roomId, callerId, data) {
+        if (!mounted || _incomingCall != null) {
+          return;
+        }
+        _incomingCall = <String, dynamic>{
+          ...Map<String, dynamic>.from(data),
+          'roomId': roomId,
+          'callerId': callerId,
+        };
+        unawaited(_showIncomingCallDialog());
+      },
+    );
+  }
+
+  Future<void> _showIncomingCallDialog() async {
+    final incoming = _incomingCall;
+    if (!mounted || incoming == null) {
+      return;
+    }
+    final callerName =
+        (incoming['callerName'] ?? incoming['callerId'] ?? 'Người gọi')
+            .toString()
+            .trim();
+    final accepted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Cuộc gọi đến'),
+        content: Text(
+          '${callerName.isEmpty ? 'Người gọi' : callerName} đang gọi cho bạn.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Từ chối'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Nghe máy'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+    if (accepted == true) {
+      await _acceptIncomingCall(incoming);
+    } else {
+      await _declineIncomingCall(incoming);
+    }
+    _incomingCall = null;
+  }
+
+  Future<void> _acceptIncomingCall(Map<String, dynamic> incoming) async {
+    final roomId = (incoming['roomId'] ?? '').toString().trim();
+    final callerHouseId =
+        (incoming['houseId'] ?? incoming['callerId'] ?? '').toString().trim();
+    final callerName = (incoming['callerName'] ?? 'Người gọi').toString().trim();
+    if (roomId.isEmpty || callerHouseId.isEmpty) {
+      return;
+    }
+    final myHouseId = (await _houseService.getCurrentHouseId() ?? '').trim();
+    if (!mounted || myHouseId.isEmpty) {
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => VideoCallScreen(
+          houseId: myHouseId,
+          targetHouseId: callerHouseId,
+          targetName: callerName.isEmpty ? 'Người gọi' : callerName,
+          targetAvatarUrl: incoming['callerAvatar']?.toString(),
+          isVideo: incoming['isVideo'] == true,
+          roomId: roomId,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _declineIncomingCall(Map<String, dynamic> incoming) async {
+    final roomId = (incoming['roomId'] ?? '').toString().trim();
+    if (roomId.isEmpty) {
+      return;
+    }
+    await FirebaseDatabase.instance.ref('calls/$roomId').update({
+      'status': 'declined',
+      'endedAt': ServerValue.timestamp,
+    });
   }
 
   int _countUnreadNotifications(Object? rawValue) {
