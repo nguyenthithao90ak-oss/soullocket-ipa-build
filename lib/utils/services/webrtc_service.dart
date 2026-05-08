@@ -168,20 +168,24 @@ class WebRTCService {
     };
 
     // Tạo Offer cho B
-    final offer = await _peerConnection?.createOffer();
-    await _peerConnection?.setLocalDescription(offer!);
+    final offer = await _peerConnection!
+        .createOffer()
+        .timeout(const Duration(seconds: 12));
+    await _peerConnection!
+        .setLocalDescription(offer)
+        .timeout(const Duration(seconds: 12));
 
     await roomRef.set({
       'offer': {
-        'sdp': offer?.sdp,
-        'type': offer?.type,
+        'sdp': offer.sdp,
+        'type': offer.type,
       },
       'callerId': user.uid,
       'calleeId': resolvedTargetHouseId,
       'houseId': resolvedCallerHouseId,
       'status': 'ringing',
       'timestamp': ServerValue.timestamp,
-    });
+    }).timeout(const Duration(seconds: 12));
 
     // Lắng nghe Answer từ B
     roomRef.child('answer').onValue.listen((event) async {
