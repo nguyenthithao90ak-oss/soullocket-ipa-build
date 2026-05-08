@@ -464,6 +464,17 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         accuracy <= _kMapMaxLiveAccuracyMeters;
   }
 
+  bool _isStableLiveGpsPoint(_GpsPoint? current, _GpsPoint? lastKnown) {
+    if (!_isGpsPointAccurateEnough(current)) return false;
+    if (lastKnown == null) return true;
+    final distanceMeters = _distance.as(
+      ll.LengthUnit.Meter,
+      current!.latLng,
+      lastKnown.latLng,
+    );
+    return distanceMeters <= 1500;
+  }
+
   ({String label, Color color, bool isLow}) _gpsAccuracyPresentation(
       double? accuracy) {
     if (accuracy == null || !accuracy.isFinite) {
