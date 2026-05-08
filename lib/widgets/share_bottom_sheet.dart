@@ -879,6 +879,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           ? CachedNetworkImage(
                               imageUrl: avatarUrl,
                               fit: BoxFit.cover,
+                              filterQuality: FilterQuality.high,
                               errorWidget: (_, __, ___) => Icon(
                                 icon,
                                 color: accentColor,
