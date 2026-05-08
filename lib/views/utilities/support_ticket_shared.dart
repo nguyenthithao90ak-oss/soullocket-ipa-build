@@ -114,7 +114,7 @@ const List<SupportTopicDefinition> supportTopicCatalog = [
       'Bạn mua gói nào hoặc cần khôi phục quyền lợi nào:',
       'Thời điểm thanh toán gần nhất:',
       'Mã đơn hàng / hóa đơn (nếu có):',
-      'Store đang dùng là Google Play hay App Store:',
+      'Bạn thanh toán qua cửa hàng trong ứng dụng nào trên thiết bị:',
     ],
     keywords: [
       'vip',

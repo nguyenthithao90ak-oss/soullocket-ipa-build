@@ -119,7 +119,7 @@ class PermissionHelper {
 
     if (!context.mounted) return false;
 
-    // Prominent disclosure required by Google Play Policies.
+    // Show app disclosure before handing off to the native location permission prompt.
     final shouldRequest =
         await _showDisclosureDialog(context, title, disclosure);
 

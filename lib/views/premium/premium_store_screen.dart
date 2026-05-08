@@ -46,20 +46,20 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
 
   String get _storeDisplayName {
     if (_isAppleStorePlatform) {
-      return 'App Store';
+      return 'cửa hàng trong ứng dụng';
     }
     if (_isAndroidStorePlatform) {
-      return 'Google Play';
+      return 'cửa hàng trong ứng dụng';
     }
     return 'cửa hàng trên thiết bị';
   }
 
   String get _checkoutLabel {
     if (_isAppleStorePlatform) {
-      return 'Thanh toán qua App Store';
+      return 'Thanh toán trong ứng dụng';
     }
     if (_isAndroidStorePlatform) {
-      return 'Thanh toán qua Google Play';
+      return 'Thanh toán trong ứng dụng';
     }
     return 'Thanh toán trong ứng dụng';
   }
@@ -85,7 +85,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
 
     if (products.isEmpty) {
       if (_isAppleStorePlatform) {
-        return 'App Store chưa trả về gói PRO. Vui lòng kiểm tra Product ID, metadata/screenshot IAP và gắn IAP vào phiên bản app đang gửi duyệt.';
+        return 'Cửa hàng trên thiết bị chưa trả về gói PRO. Vui lòng kiểm tra cấu hình IAP và gắn gói mua vào bản phát hành đang gửi duyệt.';
       }
       return 'Hiện chưa tải được danh sách gói PRO. Vui lòng thử lại sau ít phút.';
     }
@@ -557,7 +557,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Phần thanh toán đang được tạm ẩn vì cửa hàng chưa thiết lập sản phẩm IAP đầy đủ. Khi cấu hình xong App Store Connect, phần mua sẽ tự mở lại.',
+            'Phần thanh toán đang được tạm ẩn vì cửa hàng chưa thiết lập sản phẩm IAP đầy đủ. Khi cấu hình xong phần mua trong hệ thống phát hành, mục này sẽ tự mở lại.',
             style: SLTheme.quicksand(
               color: const Color(0xFFD8DDF0),
               fontWeight: FontWeight.w600,

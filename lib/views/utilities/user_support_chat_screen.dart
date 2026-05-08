@@ -697,7 +697,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           'Bước 1: Mở mục "Tiện Ích" ở thanh dưới cùng.\n'
           'Bước 2: Chọn "Cửa Hàng".\n'
           'Bước 3: Cuộn xuống mục "Khôi Phục Mua Hàng", nhấn vào đó và chờ vài giây.\n\n'
-          '👉 Nếu vẫn chưa khôi phục được, hãy chụp lại hóa đơn trên App Store hoặc Google Play rồi gửi vào đây để tụi mình kiểm tra.';
+          '👉 Nếu vẫn chưa khôi phục được, hãy chụp lại hóa đơn từ cửa hàng trong ứng dụng rồi gửi vào đây để tụi mình kiểm tra.';
     }
 
     if (text == '5') {

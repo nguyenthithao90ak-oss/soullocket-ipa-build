@@ -553,11 +553,11 @@ Future<void> _requestIosTrackingAuthorization() async {
     return;
   }
 
-  // Temporary App Store submission guard for the current iPhone-only release.
+  // Temporary iOS submission guard for the current phone-only release.
   // This function is intentionally disabled so the submitted iOS build does not
   // request ATT permission while NSUserTrackingUsageDescription is removed.
   //
-  // To restore the previous ATT + iPad-enabled behavior in a future release:
+  // To restore the previous ATT + tablet-enabled behavior in a future release:
   // 1) In this file, remove the `return;` below and restore the ATT request
   //    block that uses AppTrackingTransparency.
   // 2) In ios/Runner/Info.plist, add NSUserTrackingUsageDescription back.
@@ -565,7 +565,7 @@ Future<void> _requestIosTrackingAuthorization() async {
   //    TARGETED_DEVICE_FAMILY = 1;
   //    back to:
   //    TARGETED_DEVICE_FAMILY = "1,2";
-  // 4) Build and upload a new iOS binary, then update App Store Connect
+  // 4) Build and upload a new iOS binary, then update the release
   //    privacy answers/screenshots to match that restored behavior.
   return;
 

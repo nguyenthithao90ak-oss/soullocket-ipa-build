@@ -30,8 +30,8 @@ class AntiSpamRateLimitService {
       _deviceId = prefs.getString('il_antispam_device_id');
 
       if (_deviceId == null) {
-        // Tạo một ID ngẫu nhiên thay vì dùng ANDROID_ID (deviceInfo.androidInfo.id)
-        // Việc này giúp tránh bị Google Play bắt khai báo thu thập "Device or other IDs"
+        // Tạo một ID ngẫu nhiên thay vì dùng mã định danh thiết bị có thể bị xem là nhạy cảm
+        // Việc này giúp giảm phạm vi dữ liệu định danh cần khai báo
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final randomVal = Random().nextInt(999999);
         _deviceId = 'dev_${timestamp}_$randomVal';
