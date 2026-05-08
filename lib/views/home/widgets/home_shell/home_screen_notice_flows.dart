@@ -108,6 +108,22 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     );
   }
 
+  Future<void> _replayFirstSetupGuideFromSettings() async {
+    final houseId = await _houseService.getCurrentHouseId();
+    if (houseId == null || houseId.isEmpty || !mounted) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final settings = await _houseSettingsService.fetchSettings(houseId);
+    final isSingle =
+        settings?.isSingle ?? (prefs.getString('il_rel_mode') == 'single');
+
+    if (!mounted) return;
+    await _showFirstSetupGuideDialog(
+      houseId: houseId,
+      isSingle: isSingle,
+    );
+  }
+
   Future<void> _showFirstSetupGuideDialog({
     required String houseId,
     required bool isSingle,
