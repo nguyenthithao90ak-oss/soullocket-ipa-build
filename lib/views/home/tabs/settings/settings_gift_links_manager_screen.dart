@@ -214,7 +214,7 @@ class _SettingsGiftLinksManagerScreenState extends State<SettingsGiftLinksManage
               Expanded(
                 child: IconButton(
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: 'https://soullocket.app/gift/${gift.giftId}'));
+                    Clipboard.setData(ClipboardData(text: 'https://soullockket.web.app/gift/${gift.giftId}'));
                     SLNotice.showInfo(context, 'Đã copy link quà');
                   },
                   icon: const Icon(Icons.copy_rounded, size: 24, color: Color(0xFF1565C0)),

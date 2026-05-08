@@ -309,6 +309,9 @@ jobs:
           build_args+=(--dart-define=IOS_APP_GROUP_ID="$APP_GROUP_ID")
           build_args+=(--dart-define=IOS_ASSOCIATED_DOMAIN_WEB="$DOMAIN_WEB")
           build_args+=(--dart-define=IOS_ASSOCIATED_DOMAIN_AUTH="$DOMAIN_AUTH")
+          if [[ "$EXPORT_METHOD" == "app-store" ]]; then
+            build_args+=(--dart-define=APP_REVIEW_BYPASS_CONSENT=true)
+          fi
           if [[ -n "${BUILD_NAME:-}" ]]; then
             build_args+=(--build-name="$BUILD_NAME")
           fi
