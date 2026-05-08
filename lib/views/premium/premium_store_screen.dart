@@ -45,8 +45,6 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   bool get _isAndroidStorePlatform =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
-  bool get _canPurchase => _products.isNotEmpty;
-
   String get _storeDisplayName {
     if (_isAppleStorePlatform) {
       return 'App Store';
