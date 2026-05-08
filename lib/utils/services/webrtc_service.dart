@@ -38,17 +38,36 @@ class WebRTCService {
   };
 
   Future<Map<String, dynamic>> _loadRtcConfiguration() async {
+    final iceServers = <Map<String, dynamic>>[
+      ...(_fallbackConfiguration['iceServers'] as List)
+          .cast<Map<String, dynamic>>(),
+    ];
+    final turnUrl = const String.fromEnvironment('WEBRTC_TURN_URL').trim();
+    final turnUsername =
+        const String.fromEnvironment('WEBRTC_TURN_USERNAME').trim();
+    final turnCredential =
+        const String.fromEnvironment('WEBRTC_TURN_CREDENTIAL').trim();
+    if (turnUrl.isNotEmpty) {
+      final turnServer = <String, dynamic>{'urls': turnUrl};
+      if (turnUsername.isNotEmpty) {
+        turnServer['username'] = turnUsername;
+      }
+      if (turnCredential.isNotEmpty) {
+        turnServer['credential'] = turnCredential;
+      }
+      iceServers.add(turnServer);
+    }
     try {
       final snap = await _db.ref('appConfig/webrtc/iceServers').get();
       final raw = snap.value;
       final servers = _parseIceServers(raw);
       if (servers.isNotEmpty) {
-        return {'iceServers': servers};
+        return {'iceServers': [...servers, ...iceServers]};
       }
     } catch (e) {
       debugPrint('Failed to load WebRTC ICE servers: $e');
     }
-    return _fallbackConfiguration;
+    return {'iceServers': iceServers};
   }
 
   List<Map<String, dynamic>> _parseIceServers(dynamic raw) {
