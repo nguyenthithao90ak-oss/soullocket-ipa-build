@@ -357,11 +357,15 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   _GpsPoint? _effectiveGpsForRole(String role) {
     if (role == widget.myRole) {
-      if (_myIsLive && _myCurrentGps != null) return _myCurrentGps;
+      if (_myIsLive && _isGpsPointAccurateEnough(_myCurrentGps)) {
+        return _myCurrentGps;
+      }
       if (_myHasLocationHistory) return _myLastKnownGps ?? _myCurrentGps;
       return null;
     }
-    if (_partnerIsLive && _partnerCurrentGps != null) return _partnerCurrentGps;
+    if (_partnerIsLive && _isGpsPointAccurateEnough(_partnerCurrentGps)) {
+      return _partnerCurrentGps;
+    }
     if (_partnerHasLocationHistory) {
       return _partnerLastKnownGps ?? _partnerCurrentGps;
     }
