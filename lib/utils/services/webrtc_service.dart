@@ -234,58 +234,6 @@ class WebRTCService {
       }
     } catch (e) {
       debugPrint('Failed to resolve caller house id for call room: $e');
-    }
-
-    return null;
-  }
-
-  /// Người B: Tham gia phòng (Bắt máy người A)
-  Future<void> joinRoom(String roomId, RTCVideoRenderer remoteRenderer) async {
-    _roomId = roomId;
-    final roomRef = _db.ref('calls/$roomId');
-    final roomSnap = await roomRef.get();
-    if (!roomSnap.exists) throw Exception("Phòng gọi không tồn tại");
-
-    _peerConnection = await createPeerConnection(await _loadRtcConfiguration());
-
-    _localStream?.getTracks().forEach((track) {
-      _peerConnection?.addTrack(track, _localStream!);
-    });
-
-    _peerConnection?.onTrack = (RTCTrackEvent event) {
-      final stream = event.streams.isNotEmpty ? event.streams.first : null;
-    await _peerConnection?.setRemoteDescription(offer).timeout(const Duration(seconds: 12));
-
-    final answer = await _peerConnection!
-        .createAnswer()
-        .timeout(const Duration(seconds: 12));
-    await _peerConnection!
-        .setLocalDescription(answer)
-        .timeout(const Duration(seconds: 12));
-
-    await roomRef.child('answer').set({
-      'type': answer.type,
-      'sdp': answer.sdp,
-    }).timeout(const Duration(seconds: 12));
-    await roomRef.update({'status': 'connected'}).timeout(const Duration(seconds: 8));
-
-    roomRef.child('callerCandidates').onChildAdded.listen((event) {
-      final raw = event.snapshot.value;
-      if (raw is! Map) return;
-      final val = Map<String, dynamic>.from(raw);
-      final candidate = RTCIceCandidate(
-        val['candidate']?.toString(),
-        val['sdpMid']?.toString(),
-        val['sdpMLineIndex'] as int?,
-      );
-      _peerConnection?.addCandidate(candidate);
-    });
-  }
-
-  /// Cúp máy và dọn dẹp
-  Future<void> hangUp() async {
-    if (_roomId != null) {
-      final endedRoomId = _roomId!;
       await _db.ref('calls/$endedRoomId').update({
         'status': 'ended',
         'endedAt': ServerValue.timestamp,
