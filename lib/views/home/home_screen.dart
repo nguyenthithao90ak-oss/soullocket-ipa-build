@@ -759,7 +759,8 @@ class _HomeScreenState extends State<HomeScreen>
     final roomId = (incoming['roomId'] ?? '').toString().trim();
     final callerHouseId =
         (incoming['houseId'] ?? incoming['callerId'] ?? '').toString().trim();
-    final callerName = (incoming['callerName'] ?? 'Người gọi').toString().trim();
+    final callerName =
+        (incoming['callerName'] ?? 'Người gọi').toString().trim();
     if (roomId.isEmpty || callerHouseId.isEmpty) {
       return;
     }
