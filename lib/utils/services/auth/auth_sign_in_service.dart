@@ -1065,24 +1065,20 @@ class AuthSignInService {
       }
 
       if (error.code == AuthorizationErrorCode.invalidResponse) {
-        throw kDebugMode
-            ? 'Apple trả về phản hồi không hợp lệ. Hãy kiểm tra Sign in with Apple capability, provisioning profile và cấu hình Apple trên Firebase.'
-            : 'Đăng nhập Apple chưa sẵn sàng trên thiết bị này. Hãy thử lại sau.';
+        throw 'Apple trả về phản hồi không hợp lệ (invalidResponse). '
+            'Hãy kiểm tra Sign in with Apple capability, provisioning profile và Firebase Apple provider.';
       }
 
       if (_usesNativeAppleFlow) {
-        throw kDebugMode
-            ? 'Đăng nhập Apple thất bại. Hãy kiểm tra capability "Sign in with Apple" trong Xcode/Apple Developer và thử lại.'
-            : 'Đăng nhập Apple chưa dùng được trên bản app này. Hãy thử lại sau.';
+        throw 'Đăng nhập Apple thất bại (${error.code}). '
+            'Hãy kiểm tra Apple ID trên máy, capability Sign in with Apple và provisioning profile của bản iOS này.';
       }
 
-      throw kDebugMode
-          ? 'Đăng nhập Apple trả về lỗi xác thực. Hãy kiểm tra APPLE_SIGN_IN_SERVICE_ID, APPLE_SIGN_IN_REDIRECT_URL và callback server của Apple.'
-          : 'Đăng nhập Apple chưa hoàn tất được. Hãy thử lại sau.';
+      throw 'Đăng nhập Apple thất bại (${error.code}). '
+          'Hãy kiểm tra APPLE_SIGN_IN_SERVICE_ID, APPLE_SIGN_IN_REDIRECT_URL và callback server của Apple.';
     } on SignInWithAppleNotSupportedException {
-      throw kDebugMode
-          ? 'Thiết bị hoặc bản build này chưa hỗ trợ Sign in with Apple. Trên iPhone/iPad, hãy bật capability "Sign in with Apple" và dùng provisioning profile hợp lệ.'
-          : 'Thiết bị hoặc bản app này chưa hỗ trợ đăng nhập Apple.';
+      throw 'Thiết bị hoặc bản build này chưa hỗ trợ Sign in with Apple. '
+          'Trên iPhone/iPad, hãy kiểm tra capability Sign in with Apple và provisioning profile hợp lệ.';
     } on firebase_auth.FirebaseAuthException catch (error) {
       switch (error.code) {
         case 'account-exists-with-different-credential':
@@ -1096,13 +1092,13 @@ class AuthSignInService {
         case 'popup-blocked':
           throw 'Popup đăng nhập Apple đang bị chặn. Hãy cho phép popup rồi thử lại.';
         case 'operation-not-allowed':
-          throw kDebugMode
-              ? 'Firebase Authentication chưa bật nhà cung cấp Apple. Hãy vào Firebase Console > Authentication > Sign-in method > Apple và hoàn tất cấu hình Apple Developer.'
-              : 'Đăng nhập Apple chưa sẵn sàng trên bản app này. Hãy thử cách đăng nhập khác.';
+          throw 'Firebase Authentication chưa bật hoặc chưa cấu hình đúng nhà cung cấp Apple. '
+              'Vào Firebase Console > Authentication > Sign-in method > Apple để kiểm tra.';
         case 'network-request-failed':
           throw 'Mạng đang lỗi hoặc bị chặn, chưa thể đăng nhập Apple lúc này.';
         default:
-          throw handleFirebaseAuthError(error);
+          throw 'Đăng nhập Apple lỗi Firebase (${error.code}). '
+              '${handleFirebaseAuthError(error)}';
       }
     } catch (error) {
       if (error is String) rethrow;
