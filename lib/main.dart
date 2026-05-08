@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -145,6 +146,35 @@ Future<void> _purgeDeprecatedSecrets() async {
   } catch (_) {}
 }
 
+Future<void> _clearStaleIosAuthAfterFreshInstall() async {
+  if (kIsWeb ||
+      (defaultTargetPlatform != TargetPlatform.iOS &&
+          defaultTargetPlatform != TargetPlatform.macOS)) {
+    return;
+  }
+
+  await OfflineCacheService.initialize();
+  final prefs = OfflineCacheService.getPrefsSync()!;
+  const installMarkerKey = 'il_install_marker_v1';
+  if (prefs.getBool(installMarkerKey) == true) {
+    return;
+  }
+
+  final hasLocalAppState = prefs.getKeys().any(
+        (key) => key.startsWith('il_') || key.startsWith('email_verify_'),
+      );
+  final hasStaleAuth = FirebaseAuth.instance.currentUser != null;
+  if (!hasLocalAppState && hasStaleAuth) {
+    await FirebaseAuth.instance.signOut();
+    try {
+      const secureStorage = FlutterSecureStorage();
+      await secureStorage.deleteAll();
+    } catch (_) {}
+  }
+
+  await prefs.setBool(installMarkerKey, true);
+}
+
 Future<void> _configureSystemUiForEdgeToEdge() async {
   if (kIsWeb) {
     return;
@@ -221,6 +251,7 @@ void main() {
     try {
       await _verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
+      await _clearStaleIosAuthAfterFreshInstall();
       await _requestIosTrackingAuthorization();
 
       if (!kIsWeb) {
