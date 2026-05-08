@@ -163,6 +163,7 @@ class _StoryBarState extends State<StoryBar> {
                     width: 58,
                     height: 58,
                     fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
                     placeholder: (context, url) => story['blurHash'] != null
                         ? BlurHash(hash: story['blurHash'])
                         : Container(color: Colors.white24),
@@ -199,6 +200,7 @@ class _StoryBarState extends State<StoryBar> {
             child: CachedNetworkImage(
               imageUrl: story['url'],
               fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
               placeholder: (context, url) => story['blurHash'] != null
                   ? BlurHash(hash: story['blurHash'])
                   : const Center(child: CircularProgressIndicator()),
