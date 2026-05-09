@@ -469,6 +469,46 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     return 'Tháng ${parts[1]}/${parts[0]} • $count ảnh';
   }
 
+  Widget _buildMemoryInfoChip({
+    required IconData icon,
+    required String label,
+    bool highlighted = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: highlighted
+            ? _paperRoseDeep.withValues(alpha: 0.10)
+            : Colors.white.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: highlighted
+              ? _paperRoseDeep.withValues(alpha: 0.42)
+              : _paperLine,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 15,
+            color: highlighted ? _paperRoseDeep : _paperCocoa,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: SLTheme.quicksand(
+              fontSize: 12.2,
+              fontWeight: FontWeight.w800,
+              color: highlighted ? _paperRoseDeep : _paperCocoa,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   _CollageAspectPreset get _activeAspectPreset {
     return _aspectPresets.firstWhere(
       (preset) => preset.id == _selectedAspectRatio,
@@ -811,7 +851,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     urls = editablePhotos.map((item) => item.source).toList(growable: false);
     if (urls.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không có ảnh nào để ghép.')),
+        const SnackBar(content: Text('Chưa có ảnh để ghép.')),
       );
       return;
     }
@@ -889,7 +929,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     } catch (e) {
       if (mounted && requestId == _generationTicket) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text('Không tạo được collage: $e')),
+
         );
       }
     } finally {
@@ -1184,127 +1225,235 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                         SLSpacing.h24,
 
                         if (_isFromMemory) ...[
-                          Text(
-                            'Chọn mốc thời gian:',
-                            style: SLTheme.quicksand(
-                                fontWeight: FontWeight.w700,
-                                color: _paperInk,
-                                fontSize: 15),
-                          ),
-                          SLSpacing.h8,
-                          LayoutBuilder(
-                            builder: (context, dropdownConstraints) {
-                              final dropdownFontSize =
-                                  dropdownConstraints.maxWidth < 340
-                                      ? 13.6
-                                      : 15.0;
-                              final monthLabels = <String>[
-                                _allMemoryPhotosLabel(),
-                                ..._availableMonths.map((m) {
-                                  final parts = m.split('-');
-                                  final count = _memoryPhotos.where((item) {
-                                    final ts = item['ts'] as int? ?? 0;
-                                    if (ts == 0) return false;
-                                    final d =
-                                        DateTime.fromMillisecondsSinceEpoch(
-                                      ts,
-                                    );
-                                    return d.year == int.parse(parts[0]) &&
-                                        d.month == int.parse(parts[1]);
-                                  }).length;
-                                  return _monthMenuLabel(m, count);
-                                }),
-                              ];
-
-                              Text buildDropdownLabel(String label) {
-                                return Text(
-                                  label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  softWrap: false,
-                                  style: SLTheme.quicksand(
-                                    fontSize: dropdownFontSize,
-                                    fontWeight: FontWeight.w700,
-                                    color: _paperInk,
-                                  ),
-                                );
-                              }
+                          Builder(
+                            builder: (context) {
+                              final availableCount = _getFilteredMemoryItems().length;
+                              final totalCount = _memoryPhotos.length;
+                              final selectedMonthLabel = _selectedMonth == 'all'
+                                  ? 'Toàn bộ kỷ niệm'
+                                  : 'Đang lọc ${_displayMonthLabel(_selectedMonth)}';
 
                               return Container(
-                                constraints:
-                                    const BoxConstraints(minHeight: 56),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 6),
+                                width: double.infinity,
+                                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                                 decoration: _paperPanelDecoration(
                                   color: const Color(0xFFFFF8F2),
                                   borderColor: const Color(0xFFDCC9B8),
                                   flipped: true,
                                 ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    isExpanded: true,
-                                    isDense: true,
-                                    menuMaxHeight: 360,
-                                    value: _selectedMonth,
-                                    selectedItemBuilder: (_) => monthLabels
-                                        .map(
-                                          (label) => Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: buildDropdownLabel(label),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Ảnh kỷ niệm',
+                                                style: _editorialStyle(
+                                                  size: 18,
+                                                  color: _paperInk,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
+                                              SLSpacing.h6,
+                                              Text(
+                                                'Chọn mốc thời gian để gom đúng những khoảnh khắc đẹp nhất vào collage.',
+                                                style: SLTheme.quicksand(
+                                                  fontSize: 12.8,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: _paperMuted,
+                                                  height: 1.4,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        )
-                                        .toList(growable: false),
-                                    items: [
-                                      DropdownMenuItem(
-                                        value: 'all',
-                                        child: buildDropdownLabel(
-                                          _allMemoryPhotosLabel(),
                                         ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF7EADF),
+                                            borderRadius: BorderRadius.circular(16),
+                                            border: Border.all(color: _paperLine),
+                                          ),
+                                          child: Text(
+                                            '$availableCount ảnh',
+                                            style: SLTheme.quicksand(
+                                              fontWeight: FontWeight.w800,
+                                              color: _paperRoseDeep,
+                                              fontSize: 12.8,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SLSpacing.h12,
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        _buildMemoryInfoChip(
+                                          icon: Icons.photo_library_outlined,
+                                          label: '$totalCount ảnh khả dụng',
+                                        ),
+                                        _buildMemoryInfoChip(
+                                          icon: Icons.calendar_month_outlined,
+                                          label: '${_availableMonths.length} mốc tháng',
+                                        ),
+                                        _buildMemoryInfoChip(
+                                          icon: Icons.auto_awesome_outlined,
+                                          label: selectedMonthLabel,
+                                          highlighted: _selectedMonth != 'all',
+                                        ),
+                                      ],
+                                    ),
+                                    SLSpacing.h16,
+                                    Text(
+                                      'Lọc theo thời gian',
+                                      style: SLTheme.quicksand(
+                                        fontWeight: FontWeight.w800,
+                                        color: _paperInk,
+                                        fontSize: 14,
                                       ),
-                                      ..._availableMonths.map((m) {
-                                        final parts = m.split('-');
-                                        final count =
-                                            _memoryPhotos.where((item) {
-                                          final ts = item['ts'] as int? ?? 0;
-                                          if (ts == 0) return false;
-                                          final d = DateTime
-                                              .fromMillisecondsSinceEpoch(ts);
-                                          return d.year ==
-                                                  int.parse(parts[0]) &&
-                                              d.month == int.parse(parts[1]);
-                                        }).length;
-                                        return DropdownMenuItem(
-                                          value: m,
-                                          child: buildDropdownLabel(
-                                            _monthMenuLabel(m, count),
+                                    ),
+                                    SLSpacing.h8,
+                                    LayoutBuilder(
+                                      builder: (context, dropdownConstraints) {
+                                        final dropdownFontSize =
+                                            dropdownConstraints.maxWidth < 340
+                                                ? 13.4
+                                                : 14.6;
+                                        final monthLabels = <String>[
+                                          _allMemoryPhotosLabel(),
+                                          ..._availableMonths.map((m) {
+                                            final parts = m.split('-');
+                                            final count =
+                                                _memoryPhotos.where((item) {
+                                              final ts = item['ts'] as int? ?? 0;
+                                              if (ts == 0) return false;
+                                              final d =
+                                                  DateTime.fromMillisecondsSinceEpoch(
+                                                ts,
+                                              );
+                                              return d.year ==
+                                                      int.parse(parts[0]) &&
+                                                  d.month == int.parse(parts[1]);
+                                            }).length;
+                                            return _monthMenuLabel(m, count);
+                                          }),
+                                        ];
+
+                                        Text buildDropdownLabel(String label) {
+                                          return Text(
+                                            label,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: false,
+                                            style: SLTheme.quicksand(
+                                              fontSize: dropdownFontSize,
+                                              fontWeight: FontWeight.w700,
+                                              color: _paperInk,
+                                            ),
+                                          );
+                                        }
+
+                                        return Container(
+                                          constraints:
+                                              const BoxConstraints(minHeight: 56),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.74),
+                                            borderRadius: _paperRadius(flipped: true),
+                                            border: Border.all(
+                                              color: const Color(0xFFDCC9B8),
+                                              width: 1.1,
+                                            ),
+                                          ),
+                                          child: DropdownButtonHideUnderline(
+                                            child: DropdownButton<String>(
+                                              isExpanded: true,
+                                              isDense: true,
+                                              menuMaxHeight: 360,
+                                              value: _selectedMonth,
+                                              selectedItemBuilder: (_) => monthLabels
+                                                  .map(
+                                                    (label) => Align(
+                                                      alignment:
+                                                          Alignment.centerLeft,
+                                                      child:
+                                                          buildDropdownLabel(label),
+                                                    ),
+                                                  )
+                                                  .toList(growable: false),
+                                              items: [
+                                                DropdownMenuItem(
+                                                  value: 'all',
+                                                  child: buildDropdownLabel(
+                                                    _allMemoryPhotosLabel(),
+                                                  ),
+                                                ),
+                                                ..._availableMonths.map((m) {
+                                                  final parts = m.split('-');
+                                                  final count =
+                                                      _memoryPhotos.where((item) {
+                                                    final ts =
+                                                        item['ts'] as int? ?? 0;
+                                                    if (ts == 0) return false;
+                                                    final d = DateTime
+                                                        .fromMillisecondsSinceEpoch(
+                                                            ts);
+                                                    return d.year ==
+                                                            int.parse(parts[0]) &&
+                                                        d.month ==
+                                                            int.parse(parts[1]);
+                                                  }).length;
+                                                  return DropdownMenuItem(
+                                                    value: m,
+                                                    child: buildDropdownLabel(
+                                                      _monthMenuLabel(m, count),
+                                                    ),
+                                                  );
+                                                }),
+                                              ],
+                                              onChanged: (val) {
+                                                if (val != null) {
+                                                  setState(() {
+                                                    _selectedMonth = val;
+                                                    _generatedCollageBytes = null;
+                                                    _hasFullQualityRender = false;
+                                                  });
+                                                  _scheduleAutoGenerate();
+                                                }
+                                              },
+                                            ),
                                           ),
                                         );
-                                      }),
-                                    ],
-                                    onChanged: (val) {
-                                      if (val != null) {
-                                        setState(() {
-                                          _selectedMonth = val;
-                                          _generatedCollageBytes = null;
-                                          _hasFullQualityRender = false;
-                                        });
-                                        _scheduleAutoGenerate();
-                                      }
-                                    },
-                                  ),
+                                      },
+                                    ),
+                                    SLSpacing.h10,
+                                    Text(
+                                      'Khung tự thêm lời chúc; ảnh kỷ niệm đã tải sẽ được cache theo URL để lần tạo sau đỡ tốn mạng.',
+                                      style: SLTheme.quicksand(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: _paperRoseDeep,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               );
                             },
-                          ),
-                          SLSpacing.h8,
-                          Text(
-                            'Khung tự thêm lời chúc; ảnh kỷ niệm đã tải sẽ được cache theo URL để lần tạo sau đỡ tốn mạng.',
-                            style: SLTheme.quicksand(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: _paperRoseDeep,
-                              height: 1.35,
-                            ),
                           ),
                         ] else ...[
                           Text(
@@ -1356,53 +1505,75 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                         _buildSelectedImagesPreview(),
 
                         SLSpacing.h24,
-                        Text(
-                          'Chọn kiểu khung:',
-                          style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w700,
-                              color: _paperInk,
-                              fontSize: 15),
-                        ),
-                        SLSpacing.h8,
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                          decoration: _paperPanelDecoration(
+                            color: const Color(0xFFFFF8F2),
+                            borderColor: const Color(0xFFDCC9B8),
+                            flipped: true,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildStyleOption(
-                                  'grid', Icons.grid_on, 'Lưới sạch'),
-                              SLSpacing.w12,
-                              _buildStyleOption(
-                                  'masonry', Icons.view_quilt, 'So le'),
-                              SLSpacing.w12,
-                              _buildStyleOption('polaroid', Icons.photo_library,
-                                  'Album giấy'),
-                              SLSpacing.w12,
-                              _buildStyleOption('scatter',
-                                  Icons.auto_awesome_mosaic, 'Tự do'),
-                              SLSpacing.w12,
-                              _buildStyleOption(
-                                  'heart', Icons.favorite, 'Trái tim'),
-                              SLSpacing.w12,
-                              _buildStyleOption(
-                                  'story', Icons.view_agenda, 'Dọc nổi bật'),
-                              SLSpacing.w12,
-                              _buildStyleOption(
-                                  'poster', Icons.wallpaper, 'Ngang tạp chí'),
+                              Text(
+                                'Kiểu khung',
+                                style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w800,
+                                  color: _paperInk,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              SLSpacing.h8,
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    _buildStyleOption('grid', Icons.grid_on, 'Lưới sạch'),
+                                    SLSpacing.w12,
+                                    _buildStyleOption('masonry', Icons.view_quilt, 'So le'),
+                                    SLSpacing.w12,
+                                    _buildStyleOption('polaroid', Icons.photo_library, 'Album giấy'),
+                                    SLSpacing.w12,
+                                    _buildStyleOption('scatter', Icons.auto_awesome_mosaic, 'Tự do'),
+                                    SLSpacing.w12,
+                                    _buildStyleOption('heart', Icons.favorite, 'Trái tim'),
+                                    SLSpacing.w12,
+                                    _buildStyleOption('story', Icons.view_agenda, 'Dọc nổi bật'),
+                                    SLSpacing.w12,
+                                    _buildStyleOption('poster', Icons.wallpaper, 'Ngang tạp chí'),
+                                  ],
+                                ),
+                              ),
+                              SLSpacing.h16,
+                              Text(
+                                'Nền & tỉ lệ',
+                                style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w800,
+                                  color: _paperInk,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              SLSpacing.h8,
+                              _buildBackgroundThemePicker(),
+                              SLSpacing.h12,
+                              _buildAspectRatioSelector(),
+                              SLSpacing.h16,
+                              Text(
+                                'Sticker & cỡ ảnh',
+                                style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w800,
+                                  color: _paperInk,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              SLSpacing.h8,
+                              _buildStickerPicker(),
+                              SLSpacing.h12,
+                              _buildPhotoSizeControl(),
                             ],
                           ),
                         ),
-
-                        SLSpacing.h24,
-                        _buildBackgroundThemePicker(),
-
-                        SLSpacing.h24,
-                        _buildAspectRatioSelector(),
-
-                        SLSpacing.h24,
-                        _buildStickerPicker(),
-
-                        SLSpacing.h24,
-                        _buildPhotoSizeControl(),
 
                         SLSpacing.h24,
                         Text(
@@ -1471,7 +1642,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                 ),
                                 SLSpacing.h8,
                                 Text(
-                                  'Nhấn vào ảnh để xem lớn hơn trước khi lưu hoặc chia sẻ.',
+                                  'Chạm vào ảnh để xem lớn hơn trước khi lưu hoặc chia sẻ.',
                                   style: SLTheme.quicksand(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w700,
@@ -1485,7 +1656,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                     onTap: _showGeneratedCollagePreview,
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFF7EBDD),
+                                        color: const Color(0xFFFCF4EA),
                                         borderRadius: _paperRadius(),
                                         border: Border.all(color: _paperLine),
                                         boxShadow: [
@@ -1519,10 +1690,10 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                             right: 12,
                                             bottom: 12,
                                             child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 8),
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 8,
+                                              ),
                                               decoration: BoxDecoration(
                                                 color: _paperCocoa
                                                     .withValues(alpha: 0.78),
@@ -1534,9 +1705,11 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                                 mainAxisAlignment:
                                                     MainAxisAlignment.center,
                                                 children: [
-                                                  const Icon(Icons.zoom_in,
-                                                      color: Colors.white,
-                                                      size: 18),
+                                                  const Icon(
+                                                    Icons.zoom_in,
+                                                    color: Colors.white,
+                                                    size: 18,
+                                                  ),
                                                   SLSpacing.w8,
                                                   Text(
                                                     'Ấn để xem phóng to',
@@ -1673,8 +1846,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                 : const Icon(Icons.auto_awesome),
                             label: Text(
                               _isGenerating
-                                  ? 'Đang tạo Collage...'
-                                  : 'Tạo Collage',
+                                  ? 'Đang tạo...'
+                                  : 'Tạo mới',
                               style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w800, fontSize: 16),
                             ),

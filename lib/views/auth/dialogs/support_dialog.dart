@@ -186,11 +186,11 @@ class AuthSupportDialog {
                                 'uid': user.uid,
                                 'type': 'support_contact',
                                 'name': name.isEmpty
-                                    ? L10nService().translate('KhÃ¡ch')
+                                    ? L10nService().translate('Khách')
                                     : name,
                                 'email': email.isEmpty
                                     ? user.email?.trim() ??
-                                        L10nService().translate('KhÃ´ng cÃ³')
+                                        L10nService().translate('Không có')
                                     : email,
                                 'contact': email.isEmpty
                                     ? user.email?.trim() ?? ''

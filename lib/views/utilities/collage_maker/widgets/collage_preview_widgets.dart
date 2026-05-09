@@ -13,6 +13,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
         final compact = constraints.maxWidth < 360;
         final tileSize = compact ? 96.0 : 112.0;
         _previewTileSize = tileSize;
+        final hasPhotos = photos.isNotEmpty;
 
         return Container(
           width: double.infinity,
@@ -51,7 +52,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                       border: Border.all(color: _paperLine),
                     ),
                     child: Text(
-                      photos.isEmpty ? '0 ảnh' : '${photos.length} ảnh',
+                      hasPhotos ? '${photos.length} ảnh' : '0 ảnh',
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w800,
                         color: _paperRoseDeep,
@@ -62,13 +63,13 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                 ],
               ),
               SLSpacing.h12,
-              if (photos.isEmpty)
+              if (!hasPhotos)
                 Container(
                   height: compact ? 104 : 116,
                   alignment: Alignment.center,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5EDE2),
+                    color: const Color(0xFFF8EFE4),
                     borderRadius: _paperRadius(flipped: true),
                     border: Border.all(color: _paperLine),
                   ),
@@ -84,7 +85,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                 )
               else ...[
                 Text(
-                  'Chạm để chọn ảnh, dùng 2 ngón để phóng to/kéo ảnh trong khung. Nhấn giữ rồi kéo sang ảnh khác để đổi vị trí.',
+                  'Chạm để chọn ảnh, kéo để đổi vị trí và giữ để chỉnh từng khung ảnh.',
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
                     color: _paperMuted,
@@ -201,7 +202,8 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
             height: tileSize,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: hovered ? const Color(0xFFF1E0D1) : const Color(0xFFF0E2D3),
+              color:
+                  hovered ? const Color(0xFFF4E6D9) : const Color(0xFFF6EBDD),
               borderRadius: tileRadius,
               border: Border.all(
                 color: hovered || selected ? _paperRoseDeep : _paperLine,
@@ -209,9 +211,9 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _paperCocoa.withValues(alpha: selected ? 0.16 : 0.08),
-                  blurRadius: selected ? 18 : 12,
-                  offset: const Offset(0, 5),
+                  color: _paperCocoa.withValues(alpha: selected ? 0.18 : 0.10),
+                  blurRadius: selected ? 20 : 14,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
@@ -226,14 +228,17 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.36),
+                      color: _paperCocoa.withValues(alpha: 0.42),
                       borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.18),
+                      ),
                     ),
                     child: Text(
                       '${photo.scale.toStringAsFixed(1)}x',
                       style: SLTheme.quicksand(
                         color: Colors.white,
-                        fontSize: 9.5,
+                        fontSize: 9.8,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -291,12 +296,36 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
             filterQuality: FilterQuality.high,
             fadeInDuration: Duration.zero,
             fadeOutDuration: Duration.zero,
-            placeholder: (context, url) => const Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
+            placeholder: (context, url) => Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: _paperRoseDeep,
+                ),
+              ),
             ),
-            errorWidget: (context, url, error) => const Icon(
-              Icons.error,
-              color: _paperRoseDeep,
+            errorWidget: (context, url, error) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.broken_image_outlined,
+                    color: _paperRoseDeep,
+                    size: 24,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Lỗi ảnh',
+                    style: SLTheme.quicksand(
+                      color: _paperMuted,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
         : Image.file(

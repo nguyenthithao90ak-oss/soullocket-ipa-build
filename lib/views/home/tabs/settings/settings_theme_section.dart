@@ -199,10 +199,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
     return _ThemePanelConfig(
       themes: [
         (context.tr('theme_auto_season'), 'theme-auto'),
-        (
-          _isVipActive ? 'Tự đổi 30 giây 👑' : 'Tự đổi 30 giây 👑 🔒',
-          'theme-vip-rotate'
-        ),
         ('Sóng Hồng (Mặc định)', 'theme-pink-glow'),
         ('Đơn giản', 'theme-default'),
         (context.tr('theme_sunset'), 'theme-sunset'),

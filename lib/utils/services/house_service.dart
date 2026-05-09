@@ -285,7 +285,7 @@ class HouseService {
       final payload = _asStringDynamicMap(response.data);
       final createdHouseId = payload?['houseId']?.toString().trim() ?? '';
       if (createdHouseId.isEmpty) {
-        throw Exception('KhÃ´ng thá»ƒ táº¡o nhÃ  má»›i lÃºc nÃ y.');
+        throw Exception('Không thể tạo nhà mới lúc này.');
       }
       return createdHouseId;
     }

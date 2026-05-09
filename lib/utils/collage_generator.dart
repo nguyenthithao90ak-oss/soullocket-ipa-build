@@ -310,7 +310,16 @@ class CollageGenerator {
       min(width, height) * 0.12,
       Paint()..color = const Color(0xFFC7D4C8).withValues(alpha: 0.18),
     );
-
+    canvas.drawCircle(
+      Offset(width * 0.52, height * 0.10),
+      min(width, height) * 0.10,
+      Paint()..color = Colors.white.withValues(alpha: 0.12),
+    );
+    canvas.drawCircle(
+      Offset(width * 0.48, height * 0.68),
+      min(width, height) * 0.16,
+      Paint()..color = decor.primary.withValues(alpha: 0.05),
+    );
     _drawRobotCatMascot(
       canvas,
       Offset(width * 0.12, height * 0.23),
@@ -475,6 +484,16 @@ class CollageGenerator {
       min(width, height) * 0.18,
       Paint()..color = bottom.withValues(alpha: 0.18),
     );
+    canvas.drawCircle(
+      Offset(width * 0.52, height * 0.10),
+      min(width, height) * 0.10,
+      Paint()..color = Colors.white.withValues(alpha: 0.12),
+    );
+    canvas.drawCircle(
+      Offset(width * 0.46, height * 0.70),
+      min(width, height) * 0.14,
+      Paint()..color = Colors.white.withValues(alpha: 0.08),
+    );
   }
 
   static void _drawSkyCloudTheme(
@@ -630,6 +649,11 @@ class CollageGenerator {
             .withValues(alpha: cloudTint == null ? 0.14 : 0.22),
       );
     }
+    canvas.drawCircle(
+      Offset(width * 0.18, height * 0.76),
+      min(width, height) * 0.11,
+      Paint()..color = (cloudTint ?? decor.primary).withValues(alpha: 0.07),
+    );
   }
 
   static void _drawCloudPuff(
@@ -1003,16 +1027,16 @@ class CollageGenerator {
       letterSpacing: 1.4,
     );
 
-    const double titleY = 166;
-    final double titleSize = width < 420 ? 38 : 48;
+    const double titleY = 162;
+    final double titleSize = width < 420 ? 40 : 50;
     final double titleMaxWidth =
-        min(max(170, width - 150).toDouble(), headerRect.outerRect.width - 96);
+        min(max(180, width - 140).toDouble(), headerRect.outerRect.width - 88);
     _drawText(
       canvas,
       title,
       headerCenterX + 3,
-      titleY + 4,
-      decor.primary.withValues(alpha: 0.18),
+      titleY + 2,
+      decor.primary.withValues(alpha: 0.16),
       titleSize,
       maxWidth: titleMaxWidth,
       centerWidth: titleMaxWidth,
@@ -1621,13 +1645,13 @@ class CollageGenerator {
 
       final double x = marginX + random.nextDouble() * availW;
       final double y = marginY + 100 + random.nextDouble() * availH;
-      final double angle = (random.nextDouble() - 0.5) * 0.8;
+      final double angle = (random.nextDouble() - 0.5) * 0.52;
 
       canvas.translate(x, y);
       canvas.rotate(angle);
 
-      final double pW = 350 * photoScale;
-      final double pH = 420 * photoScale;
+      final double pW = 370 * photoScale;
+      final double pH = 440 * photoScale;
       final shadowPaint = Paint()
         ..color = Colors.black.withValues(alpha: 0.14)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
@@ -1635,8 +1659,11 @@ class CollageGenerator {
         Rect.fromLTWH(-pW / 2 + 5, -pH / 2 + 12, pW, pH),
         shadowPaint,
       );
-      canvas.drawRect(
-        Rect.fromLTWH(-pW / 2, -pH / 2, pW, pH),
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(-pW / 2, -pH / 2, pW, pH),
+          Radius.circular(14 * photoScale),
+        ),
         Paint()..color = Colors.white,
       );
       canvas.drawRect(
@@ -1647,7 +1674,7 @@ class CollageGenerator {
           ..color = Colors.black.withValues(alpha: 0.06),
       );
 
-      final double imgPadding = 20 * photoScale;
+      final double imgPadding = 16 * photoScale;
       final double drawW = pW - imgPadding * 2;
       final double drawH = drawW;
 
@@ -1720,12 +1747,12 @@ class CollageGenerator {
       canvas.save();
       final double x = marginX + random.nextDouble() * availW;
       final double y = marginY + 100 + random.nextDouble() * availH;
-      final double angle = (random.nextDouble() - 0.5) * 1.2;
+      final double angle = (random.nextDouble() - 0.5) * 0.52;
 
       canvas.translate(x, y);
       canvas.rotate(angle);
 
-      final double size = (250 + random.nextDouble() * 150) * photoScale;
+      final double size = (280 + random.nextDouble() * 150) * photoScale;
       final double ratio = img.width / img.height;
       double dw = size;
       double dh = size / ratio;

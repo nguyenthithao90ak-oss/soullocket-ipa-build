@@ -1,4 +1,4 @@
-﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
@@ -632,22 +632,43 @@ class AdMobService {
   Future<BannerAd?> createBannerAd({required Function(Ad) onAdLoaded}) async {
     if (kIsWeb) return null;
     await initialize();
-    if (!_sdkInitialized) return null;
+    if (!_sdkInitialized) {
+      debugPrint('AdMobService: banner skipped because SDK is not initialized.');
+      return null;
+    }
     if (await isProUser()) return null; // No banner for PRO users
 
-    final banner = BannerAd(
+    final completer = Completer<BannerAd?>();
+    late final BannerAd banner;
+    banner = BannerAd(
       adUnitId: bannerId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: onAdLoaded,
+        onAdLoaded: (ad) {
+          onAdLoaded(ad);
+          if (!completer.isCompleted) {
+            completer.complete(banner);
+          }
+        },
         onAdFailedToLoad: (ad, error) {
+          debugPrint('AdMobService: banner failed to load: $error');
           ad.dispose();
+          if (!completer.isCompleted) {
+            completer.complete(null);
+          }
         },
       ),
     );
     await banner.load();
-    return banner;
+    return completer.future.timeout(
+      const Duration(seconds: 12),
+      onTimeout: () {
+        debugPrint('AdMobService: banner load timed out.');
+        banner.dispose();
+        return null;
+      },
+    );
   }
 
   // ─── INTERSTITIAL AD ─────────────────────────────────────────

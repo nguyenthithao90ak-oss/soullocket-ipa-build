@@ -48,7 +48,7 @@ const List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Nhớ',
     emoji: '\u{1F496}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
     weight: 42,
     gradient: [Color(0xFFFFD8E6), Color(0xFFFFF3F7)],
     accent: Color(0xFFD94C86),
@@ -70,7 +70,7 @@ const List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Giận',
     emoji: '\u{1F63E}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_154.png',
     weight: 12,
     gradient: [Color(0xFFFFE6DC), Color(0xFFFFF6F2)],
     accent: Color(0xFFE26A3A),
@@ -92,7 +92,7 @@ const List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Tức',
     emoji: '\u{1F621}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_049.png',
     weight: 7,
     showInSmartSuggestion: false,
     gradient: [Color(0xFFFFD7DC), Color(0xFFFFF1F3)],
@@ -115,7 +115,7 @@ const List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Hôn',
     emoji: '\u{1F48B}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_047.png',
     weight: 18,
     gradient: [Color(0xFFFFE1EC), Color(0xFFFFF7FA)],
     accent: Color(0xFFE14A8B),
@@ -137,7 +137,7 @@ const List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Trêu',
     emoji: '\u{1F921}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_006.png',
     weight: 9,
     showInSmartSuggestion: false,
     gradient: [Color(0xFFE8E1FF), Color(0xFFF8F5FF)],
@@ -160,7 +160,7 @@ const List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Ôm',
     emoji: '\u{1F428}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_006.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_082.png',
     weight: 17,
     gradient: [Color(0xFFDDF3FF), Color(0xFFF5FBFF)],
     accent: Color(0xFF2D8FE3),
@@ -182,7 +182,7 @@ const List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Khóc',
     emoji: '\u{1F62D}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_007.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_089.png',
     weight: 8,
     showInSmartSuggestion: false,
     gradient: [Color(0xFFDDEBFF), Color(0xFFF4F8FF)],
@@ -205,7 +205,7 @@ const List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Troll',
     emoji: '\u{1F4A9}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_193.png',
     weight: 6,
     showInSmartSuggestion: false,
     gradient: [Color(0xFFFFE1B9), Color(0xFFFFF4E6)],
