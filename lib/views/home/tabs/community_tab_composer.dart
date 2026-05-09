@@ -343,10 +343,11 @@ extension _CommunityTabComposer on _CommunityTabState {
       if (!mounted) return;
       LegacyWebUi.showNoticeWithAction(
         context,
-        message: _ct(
-          'Không thể đăng bài lúc này: $e',
-          'Cannot publish the post right now: $e',
-        ),
+        message: AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              _ct('Chưa thể đăng bài lúc này. Bạn thử lại sau.', 'Cannot publish the post right now. Please try again later.'),
+        ).message,
         success: false,
         title: _ct('Đăng bài chưa thành công', 'Post not published'),
         icon: Icons.cloud_off_rounded,

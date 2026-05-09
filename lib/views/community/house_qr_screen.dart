@@ -13,6 +13,7 @@ import '../../core/sl_theme.dart';
 import '../../services/friends_service.dart';
 import '../../services/image_picker_recovery_service.dart';
 import '../../services/qr_payload_codec.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/sl_notice.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../visitors/visitor_profile_screen.dart';
@@ -110,7 +111,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
     } catch (error) {
       if (!mounted) return;
       const text =
-          'Không thể mở camera quét QR. Bạn thử upload ảnh QR hoặc nhập ID ở dưới nhé.';
+          'Không thể mở camera quét QR lúc này. Bạn có thể upload ảnh QR hoặc nhập ID bên dưới.';
       setState(() => _scannerInfoText = text);
       if (!silent && mounted) {
         SLNotice.showError(context, text);
@@ -134,15 +135,15 @@ class _HouseQRScreenState extends State<HouseQRScreen>
   String _scannerErrorText(MobileScannerException error) {
     switch (error.errorCode) {
       case MobileScannerErrorCode.permissionDenied:
-        return 'Camera đang bị từ chối quyền. Hãy cấp quyền camera hoặc dùng Upload ảnh QR / nhập ID.';
+        return 'Camera đang bị từ chối quyền. Hãy cấp quyền camera hoặc dùng Upload ảnh QR / nhập ID bên dưới.';
       case MobileScannerErrorCode.unsupported:
-        return 'Thiết bị hoặc emulator này không hỗ trợ camera quét QR. Hãy dùng Upload ảnh QR hoặc nhập ID.';
+        return 'Thiết bị hoặc emulator này không hỗ trợ camera quét QR. Hãy dùng Upload ảnh QR hoặc nhập ID bên dưới.';
       case MobileScannerErrorCode.controllerUninitialized:
         return 'Camera chưa khởi tạo xong. Bạn bấm Quét lại camera để thử lại.';
       case MobileScannerErrorCode.controllerAlreadyInitialized:
         return 'Camera đang được giữ bởi phiên khác. Bạn thử bấm Quét lại camera.';
       default:
-        return 'Camera QR đang gặp lỗi. Bạn vẫn có thể Upload ảnh QR hoặc nhập ID ở dưới.';
+        return 'Camera QR đang gặp lỗi. Bạn vẫn có thể Upload ảnh QR hoặc nhập ID bên dưới.';
     }
   }
 
@@ -194,7 +195,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
 
       if (resolvedHouseId == null) {
         final text =
-            'Không đọc ra mã nhà từ $sourceLabel. Bạn thử ảnh khác hoặc nhập ID nhà ở dưới nhé.';
+            'Không đọc ra mã nhà từ $sourceLabel. Bạn có thể thử ảnh khác hoặc nhập ID nhà bên dưới.';
         setState(() {
           _isProcessing = false;
           _scannerInfoText = text;
@@ -212,11 +213,11 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       setState(() {
         _isProcessing = false;
         _scannerInfoText =
-            'Có lỗi khi xử lý mã QR. Bạn thử lại hoặc nhập ID thủ công nhé.';
+            'Có lỗi khi xử lý mã QR. Bạn có thể thử lại hoặc nhập ID thủ công.';
       });
       SLNotice.showError(
         context,
-        'Chưa thể xử lý mã QR lúc này. Bạn thử lại hoặc nhập ID thủ công nhé.',
+        'Chưa thể xử lý mã QR lúc này. Bạn có thể thử lại hoặc nhập ID thủ công.',
       );
       await _startScanner(silent: true);
     }
@@ -253,7 +254,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       if (raw.isEmpty) {
         setState(() {
           _scannerInfoText =
-              'Ảnh này chưa đọc ra QR. Bạn thử ảnh khác hoặc nhập ID nhà ở dưới.';
+              'Ảnh này chưa đọc ra QR. Bạn có thể thử ảnh khác hoặc nhập ID nhà bên dưới.';
         });
         SLNotice.showError(
           context,
@@ -274,11 +275,11 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       if (!mounted) return;
       setState(() {
         _scannerInfoText =
-            'Không thể đọc ảnh QR lúc này. Bạn thử ảnh khác hoặc nhập ID nhà ở dưới.';
+            'Không thể đọc ảnh QR lúc này. Bạn có thể thử ảnh khác hoặc nhập ID nhà bên dưới.';
       });
       SLNotice.showError(
         context,
-        'Chưa thể đọc ảnh QR lúc này. Bạn thử ảnh khác hoặc nhập ID nhà ở dưới nhé.',
+        'Chưa thể đọc ảnh QR lúc này. Bạn có thể thử ảnh khác hoặc nhập ID nhà bên dưới nhé.',
       );
     } finally {
       if (mounted) {
@@ -316,7 +317,9 @@ class _HouseQRScreenState extends State<HouseQRScreen>
         return;
       }
 
-      final results = await _friendsService.searchHouses(query, limit: 10);
+      final results = await _friendsService
+          .searchHouses(query, limit: 10)
+          .timeout(const Duration(seconds: 10));
       if (!mounted) return;
 
       setState(() => _searchResults = results);
@@ -324,16 +327,19 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       if (results.isEmpty) {
         SLNotice.showError(
           context,
-          'Không tìm thấy nhà nào khớp. Bạn kiểm tra lại ID hoặc username nhé.',
+          'Không tìm thấy nhà nào khớp. Bạn có thể kiểm tra lại ID hoặc username.',
         );
       } else {
         SLNotice.showSuccess(context, 'Đã tìm thấy ${results.length} kết quả.');
       }
     } catch (error) {
-      if (!mounted) return;
+      final errorInfo = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Chưa thể tìm nhà lúc này. Bạn thử lại sau.',
+      );
       SLNotice.showError(
         context,
-        'Chưa thể tìm nhà lúc này. Bạn thử lại sau nhé.',
+        errorInfo.message,
       );
     } finally {
       if (mounted) {
@@ -375,10 +381,12 @@ class _HouseQRScreenState extends State<HouseQRScreen>
     final normalizedQuery = _normalizeLookupQuery(raw);
     if (normalizedQuery.isEmpty) return null;
 
-    final results = await _friendsService.searchHouses(
-      normalizedQuery,
-      limit: 8,
-    );
+    final results = await _friendsService
+        .searchHouses(
+          normalizedQuery,
+          limit: 8,
+        )
+        .timeout(const Duration(seconds: 10));
 
     for (final item in results) {
       final id = item['id']?.toString().trim() ?? '';
@@ -511,13 +519,22 @@ class _HouseQRScreenState extends State<HouseQRScreen>
     final normalized = houseId.trim();
     if (normalized.isEmpty) return false;
 
-    final profileSnap = await _dbRef.child('house_profiles/$normalized').get();
+    final profileSnap = await _dbRef
+        .child('house_profiles/$normalized')
+        .get()
+        .timeout(const Duration(seconds: 8));
     if (profileSnap.exists) return true;
 
-    final publicSnap = await _dbRef.child('houses_public/$normalized').get();
+    final publicSnap = await _dbRef
+        .child('houses_public/$normalized')
+        .get()
+        .timeout(const Duration(seconds: 8));
     if (publicSnap.exists) return true;
 
-    final houseSnap = await _dbRef.child('houses/$normalized').get();
+    final houseSnap = await _dbRef
+        .child('houses/$normalized')
+        .get()
+        .timeout(const Duration(seconds: 8));
     return houseSnap.exists;
   }
 

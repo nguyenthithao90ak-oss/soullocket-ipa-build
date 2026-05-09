@@ -646,8 +646,8 @@ class _InteractionSuccessDialog extends StatelessWidget {
           ),
           Center(
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 360),
-              margin: const EdgeInsets.symmetric(horizontal: 24),
+              constraints: const BoxConstraints(maxWidth: 380),
+              margin: const EdgeInsets.symmetric(horizontal: 22),
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -655,15 +655,22 @@ class _InteractionSuccessDialog extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(32),
                 border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.85), width: 1.4),
+                  color: Colors.white.withValues(alpha: 0.9),
+                  width: 1.2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: accent.withValues(alpha: 0.22),
-                    blurRadius: 28,
-                    spreadRadius: 4,
+                    color: accent.withValues(alpha: 0.20),
+                    blurRadius: 30,
+                    spreadRadius: 2,
                     offset: const Offset(0, 16),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -682,9 +689,9 @@ class _InteractionSuccessDialog extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: accent.withValues(alpha: 0.24),
-                          blurRadius: 22,
-                          offset: const Offset(0, 12),
+                          color: accent.withValues(alpha: 0.22),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
@@ -753,9 +760,11 @@ class _InteractionSuccessDialog extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 13),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.82),
+                      color: Colors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: accent.withValues(alpha: 0.15)),
+                      border: Border.all(
+                        color: accent.withValues(alpha: 0.12),
+                      ),
                     ),
                     child: Text(
                       partnerOnline

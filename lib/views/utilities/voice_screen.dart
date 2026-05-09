@@ -16,6 +16,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/sl_theme.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/private_media_url_service.dart';
 import '../../services/activity_history_service.dart';
@@ -83,6 +84,13 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
 
   Future<void> _pickAndUploadVoice() async {
     try {
+      if (_isUploading) return;
+
+      if (widget.houseId.trim().isEmpty) {
+        _showMessage('Chưa tìm thấy nhà chung. Bạn vào lại ứng dụng rồi thử tiếp.');
+        return;
+      }
+
       if (_isRecording) {
         _showMessage('Đang ghi âm, vui lòng dừng trước khi chọn file.');
         return;
@@ -153,7 +161,12 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       );
       _showMessage('Đã gửi lời nhắn thoại lên nhà chung.');
     } catch (e) {
-      _showMessage('Không thể tải file audio lúc này. Hãy thử lại sau.');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage:
+            'Không thể chọn file âm thanh lúc này. Bạn thử lại sau.',
+      );
+      _showMessage(errorInfo.message);
     } finally {
       if (mounted) {
         setState(() => _isUploading = false);
@@ -163,6 +176,11 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
 
   Future<void> _toggleRecordAndUpload() async {
     if (_isUploading) return;
+
+    if (widget.houseId.trim().isEmpty) {
+      _showMessage('Chưa tìm thấy nhà chung. Bạn vào lại ứng dụng rồi thử tiếp.');
+      return;
+    }
 
     if (_isRecording) {
       await _stopRecordingAndUpload();
@@ -231,7 +249,11 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
         await _stopRecordingAndUpload(reachedLimit: true);
       });
     } catch (e) {
-      _showMessage('Không thể bắt đầu ghi âm lúc này. Hãy thử lại sau.');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể bắt đầu ghi âm lúc này. Bạn thử lại sau.',
+      );
+      _showMessage(errorInfo.message);
     }
   }
 
@@ -300,7 +322,11 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
             : 'Đã gửi bản ghi âm lên nhà chung.',
       );
     } catch (e) {
-      _showMessage('Không thể gửi bản ghi âm lúc này. Hãy thử lại sau.');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể gửi bản ghi âm lúc này. Bạn thử lại sau.',
+      );
+      _showMessage(errorInfo.message);
     } finally {
       _recordStartedAt = null;
       if (recordPath != null && recordPath.isNotEmpty) {
@@ -336,15 +362,17 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       ),
     );
     if (uploadUrl.isEmpty || sessionId.isEmpty) {
-      throw Exception('Thiếu phiên tải lời nhắn thoại.');
+      throw Exception('Chưa tạo được phiên tải lời nhắn thoại.');
     }
     headers.putIfAbsent('Content-Type', () => mimeType);
 
-    final uploadResponse = await http.put(
-      Uri.parse(uploadUrl),
-      headers: headers,
-      body: bytes,
-    );
+    final uploadResponse = await http
+        .put(
+          Uri.parse(uploadUrl),
+          headers: headers,
+          body: bytes,
+        )
+        .timeout(const Duration(seconds: 20));
     if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
       throw Exception(
           'Tải audio lên máy chủ thất bại (${uploadResponse.statusCode}).');
@@ -365,11 +393,13 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   }) async {
     try {
       final callable = _functions.httpsCallable('createVoiceUploadSession');
-      final response = await callable.call(<String, dynamic>{
+      final response = await callable
+          .call(<String, dynamic>{
         'houseId': widget.houseId.trim(),
         'fileName': fileName.trim(),
         'contentType': contentType.trim(),
-      });
+      })
+          .timeout(const Duration(seconds: 15));
       final data = response.data;
       if (data is! Map) {
         throw Exception('Voice upload session is invalid.');
@@ -391,7 +421,8 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   }) async {
     try {
       final callable = _functions.httpsCallable('finalizeVoiceUpload');
-      await callable.call(<String, dynamic>{
+      await callable
+          .call(<String, dynamic>{
         'houseId': widget.houseId.trim(),
         'sessionId': sessionId.trim(),
         'authorName': widget.myName.trim(),
@@ -399,11 +430,12 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
         'mimeType': mimeType.trim(),
         'durationMs': durationMs,
         'size': size,
-      });
+      })
+          .timeout(const Duration(seconds: 15));
     } on FirebaseFunctionsException catch (error) {
       throw Exception(error.message?.trim().isNotEmpty == true
           ? error.message!.trim()
-          : 'Không thể hoàn tất lời nhắn thoại.');
+          : 'Không thể hoàn tất việc gửi lời nhắn thoại.');
     }
   }
 
@@ -693,7 +725,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       }
       _showMessage('Đã gửi lại lời nhắn thoại lên nhà chung.');
     } catch (e) {
-      _showMessage('Không thể thử lại ghi âm lúc này. Hãy thử lại sau.');
+      _showMessage('Không thể thử lại bản ghi lúc này. Hãy thử lại sau.');
     } finally {
       if (mounted) {
         setState(() {

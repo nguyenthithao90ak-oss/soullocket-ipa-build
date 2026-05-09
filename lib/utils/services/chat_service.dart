@@ -354,7 +354,7 @@ class ChatService {
       throw const SilentRapidActionBlockException();
     }
     if (cooldown >= 0) {
-      throw Exception('Thao tác quá nhanh, thử lại sau nhé.');
+      throw Exception('Bạn gửi hơi nhanh. Vui lòng chờ một lát rồi thử lại.');
     }
     throw Exception(
       cooldown > 0

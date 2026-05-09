@@ -1083,50 +1083,79 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
               ),
               if (hasPendingUploadRetry) ...[
                 const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF4D6),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: const Color(0xFFF0C36A),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.error_outline_rounded,
-                        color: Color(0xFF8E5B00),
-                        size: 18,
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 300;
+                    final message = Text(
+                      pendingUploadMessage,
+                      style: SLTheme.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF7A5200),
+                        height: 1.35,
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          pendingUploadMessage,
-                          style: SLTheme.quicksand(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF7A5200),
-                            height: 1.35,
-                          ),
+                    );
+                    final retryButton = TextButton(
+                      onPressed: isUploading ? null : () => onRetryPendingUpload(),
+                      child: Text(
+                        'Thử lại',
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF8E5B00),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      TextButton(
-                        onPressed:
-                            isUploading ? null : () => onRetryPendingUpload(),
-                        child: Text(
-                          'Thử lại',
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF8E5B00),
-                          ),
+                    );
+
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF4D6),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: const Color(0xFFF0C36A),
                         ),
                       ),
-                    ],
-                  ),
+                      child: compact
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(
+                                      Icons.error_outline_rounded,
+                                      color: Color(0xFF8E5B00),
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(child: message),
+                                  ],
+                                ),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: retryButton,
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                const Icon(
+                                  Icons.error_outline_rounded,
+                                  color: Color(0xFF8E5B00),
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(child: message),
+                                const SizedBox(width: 8),
+                                retryButton,
+                              ],
+                            ),
+                    );
+                  },
                 ),
               ],
             ],

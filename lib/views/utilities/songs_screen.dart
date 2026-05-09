@@ -138,7 +138,7 @@ class _SongsScreenState extends State<SongsScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Không thể mở link này')));
+            const SnackBar(content: Text('Chưa thể mở link này. Bạn kiểm tra lại đường dẫn nhé.')));
       }
     }
   }

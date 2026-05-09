@@ -392,7 +392,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           );
         } catch (e) {
           if (!mounted) return;
-          SLNotice.showError(context, 'Lỗi: $e');
+          SLNotice.showError(context, 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.');
         }
       }
     }

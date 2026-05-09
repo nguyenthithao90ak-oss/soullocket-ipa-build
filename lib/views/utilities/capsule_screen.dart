@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../utils/services/pending_upload_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../services/time_capsule_service.dart';
 import '../../services/storage_service.dart';
 import '../../core/sl_theme.dart';
@@ -146,12 +147,27 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   }
 
   Future<void> _addCapsule() async {
+    if (_isUploading) return;
+
     final content = _contentController.text.trim();
     final title = _titleController.text.trim();
 
+    if (widget.houseId.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Chưa tìm thấy nhà chung. Bạn vào lại ứng dụng rồi thử lại.')));
+      return;
+    }
+
     if (content.isEmpty || _unlockDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng nhập ngày và nội dung thư.')));
+          const SnackBar(content: Text('Bạn chọn ngày mở và viết nội dung thư nhé.')));
+      return;
+    }
+
+    if (_selectedImage != null &&
+        !await File(_selectedImage!.path).exists()) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Ảnh đã chọn không còn sẵn sàng. Bạn chọn lại ảnh rồi thử tiếp.')));
       return;
     }
 
@@ -199,8 +215,12 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           const SnackBar(content: Text('Đã khóa hộp thư tương lai! 🚀')));
     } catch (e) {
       if (mounted) {
+        final errorInfo = AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Chưa thể lưu khoảnh khắc lúc này. Bạn thử lại sau.',
+        );
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+            .showSnackBar(SnackBar(content: Text(errorInfo.message)));
       }
     } finally {
       if (mounted) {
@@ -388,8 +408,12 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       );
     } catch (e) {
       if (mounted) {
+        final errorInfo = AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Chưa thể mở hộp thư lúc này. Bạn thử lại sau.',
+        );
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Không thể mở: $e')));
+            .showSnackBar(SnackBar(content: Text(errorInfo.message)));
       }
     }
   }

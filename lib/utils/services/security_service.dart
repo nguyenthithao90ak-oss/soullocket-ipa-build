@@ -32,7 +32,7 @@ class SecurityService {
   static final SecurityService _instance = SecurityService._internal();
   factory SecurityService() => _instance;
   SecurityService._internal() {
-    _lastSpamReason = 'Thao tác quá nhanh, thử lại sau nhé.';
+    _lastSpamReason = 'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
   }
 
   // Throttling / Spam detection
@@ -55,7 +55,7 @@ class SecurityService {
   bool _isProxyAtLogin = false;
   DateTime? _lastProxyCheck;
   String _lastSpamReason =
-      'Bạn đang thao tác quá nhanh. Thử lại sau 1 phút nhé!';
+      'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
 
   void setProxyAtLogin(bool value) {
     _isProxyAtLogin = value;
@@ -161,7 +161,7 @@ class SecurityService {
       // 2. Kiểm tra lặp từ quá mức (Advanced word repetition)
       if (_isHighlyRepetitive(text)) {
         _lastSpamReason =
-            'Nội dung có dấu hiệu lặp từ vô nghĩa hoặc spam. Hãy viết tử tế hơn nhé!';
+            'Nội dung có dấu hiệu lặp bất thường. Vui lòng chỉnh lại trước khi gửi.';
         _logSecurityAlert('spam_repetitive_words',
             'Hành động: $actionType. Nội dung: $text', 'medium');
         return true;
@@ -181,8 +181,7 @@ class SecurityService {
 
     // Check if count exceeds max
     if (_actionHistory[actionType]!.length > _maxActionsPerMinute) {
-      _lastSpamReason = 'Bạn đang thao tác quá nhanh. Thử lại sau 1 phút nhé!';
-      _lastSpamReason = 'Thao tác quá nhanh, thử lại sau nhé.';
+      _lastSpamReason = 'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
       _logSecurityAlert(
           'spam_rate_limit',
           'Hành động: $actionType. Vượt quá $_maxActionsPerMinute lần/phút.',
@@ -420,7 +419,7 @@ class SecurityService {
         (actionType.contains('post') || actionType.contains('upload'))) {
       // Check if history for this action is already half-full
       if (_actionHistory[actionType] != null &&
-          _actionHistory[actionType]!.length > (_maxActionsPerMinute / 2)) {
+          _actionHistory[actionType]!.length > (_maxActionsPerMinute * 0.8)) {
         if (context.mounted) {
           _showProxyWarningDialog(context);
           return false;
@@ -438,8 +437,8 @@ class SecurityService {
   }) async {
     final throttle = _localActionThrottleService.registerAttempt(
       actionType,
-      minInterval: const Duration(milliseconds: 700),
-      maxAttempts: 5,
+      minInterval: const Duration(milliseconds: 500),
+      maxAttempts: 7,
       burstWindow: const Duration(seconds: 4),
     );
     if (throttle.isAllowed) {
@@ -456,7 +455,7 @@ class SecurityService {
       if (remainingMs >= 0 && context.mounted) {
         _showSpamWarningDialog(
           context,
-          message: 'Thao tác quá nhanh, thử lại sau nhé.',
+          message: 'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.',
         );
         return false;
       }
@@ -567,7 +566,7 @@ class SecurityService {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Hệ thống phát hiện bạn đang sử dụng VPN/Proxy và có các hành động gửi dữ liệu liên tục bất thường.\n\nĐể bảo vệ tài nguyên ứng dụng, vui lòng TẮT VPN/Proxy để tiếp tục sử dụng.',
+              'Hệ thống phát hiện VPN/Proxy kèm thao tác gửi dữ liệu bất thường.\n\nĐể bảo vệ tài khoản và dữ liệu chung, vui lòng tắt VPN/Proxy rồi thử lại.',
               style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -576,7 +575,7 @@ class SecurityService {
             ),
             SLSpacing.h24,
             SLTheme.primaryButton(
-              text: 'OK, TÔI SẼ TẮT',
+              text: 'ĐÃ HIỂU',
               onPressed: () => Navigator.pop(context),
             ),
           ],

@@ -60,11 +60,11 @@ const List<SupportTopicDefinition> supportTopicCatalog = [
     id: '2',
     chipLabel: '🔗 Ghép đôi',
     title: 'Ghép đôi / Mất kết nối',
-    subtitle: 'QR, tham gia nhà, lệch house, mất đồng bộ giữa 2 bên',
+    subtitle: 'QR, tham gia nhà, lệch dữ liệu nhà hoặc mất đồng bộ giữa 2 bên',
     priority: 'high',
     requiredFields: [
       'House ID hoặc thông tin QR liên quan:',
-      'Lỗi xảy ra trên máy bạn hay cả 2 máy:',
+      'Lỗi xảy ra trên máy bạn hay trên cả 2 máy:',
       'Bạn đang đứng ở bước nào thì lỗi:',
       'Nếu có, mô tả trạng thái của người còn lại:',
     ],
@@ -114,7 +114,7 @@ const List<SupportTopicDefinition> supportTopicCatalog = [
       'Bạn mua gói nào hoặc cần khôi phục quyền lợi nào:',
       'Thời điểm thanh toán gần nhất:',
       'Mã đơn hàng / hóa đơn (nếu có):',
-      'Bạn thanh toán qua cửa hàng trong ứng dụng nào trên thiết bị:',
+      'Bạn thanh toán qua App Store hay Google Play:',
     ],
     keywords: [
       'vip',
@@ -224,7 +224,7 @@ const List<SupportTopicDefinition> supportTopicCatalog = [
     chipLabel: '🧑‍💻 Admin',
     title: 'Gặp Admin hỗ trợ trực tiếp',
     subtitle:
-        'Cần kiểm tra tay, yêu cầu khẩn, case nhiều bước hoặc liên quan dữ liệu',
+        'Cần Admin kiểm tra trực tiếp, yêu cầu khẩn hoặc vấn đề liên quan dữ liệu',
     priority: 'high',
     requiredFields: [
       'Tóm tắt ngắn vấn đề cần Admin xử lý:',
@@ -283,7 +283,7 @@ String buildSupportDraft(
 
   final buffer = StringBuffer()
     ..writeln('[${topic.title.toUpperCase()}]')
-    ..writeln('Điền càng đủ thì Admin xử lý càng nhanh:')
+    ..writeln('Điền càng đủ thông tin thì Admin xử lý càng nhanh:')
     ..writeln();
 
   for (final prompt in prompts) {

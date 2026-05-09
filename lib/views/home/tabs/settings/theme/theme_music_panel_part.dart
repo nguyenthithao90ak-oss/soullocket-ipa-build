@@ -71,7 +71,14 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _showToast('Không thể lưu file nhạc cục bộ: $e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể lưu file nhạc trên thiết bị này. Hãy kiểm tra dung lượng máy hoặc chọn file khác.',
+        ).message,
+        success: false,
+      );
     }
   }
 

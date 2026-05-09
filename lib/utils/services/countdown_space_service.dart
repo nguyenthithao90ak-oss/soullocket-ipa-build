@@ -253,7 +253,7 @@ class CountdownSpaceService {
     } catch (e) {
       return CountdownSpaceRequestResult(
         success: false,
-        message: 'Lỗi: ${e.toString()}',
+        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
     }
   }
@@ -314,7 +314,7 @@ class CountdownSpaceService {
     } catch (e) {
       return CountdownSpaceRequestResult(
         success: false,
-        message: 'Lỗi: ${e.toString()}',
+        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
     }
   }
@@ -331,7 +331,7 @@ class CountdownSpaceService {
     } catch (e) {
       return CountdownSpaceRequestResult(
         success: false,
-        message: 'Lỗi: ${e.toString()}',
+        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
     }
   }
@@ -346,7 +346,7 @@ class CountdownSpaceService {
     } catch (e) {
       return CountdownSpaceRequestResult(
         success: false,
-        message: 'Lỗi: ${e.toString()}',
+        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
     }
   }
@@ -487,7 +487,7 @@ class CountdownSpaceService {
     } catch (e) {
       return CountdownSpaceRequestResult(
         success: false,
-        message: 'Lỗi: ${e.toString()}',
+        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
     }
   }
@@ -508,7 +508,7 @@ class CountdownSpaceService {
     } catch (e) {
       return CountdownSpaceRequestResult(
         success: false,
-        message: 'Lỗi: ${e.toString()}',
+        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
     }
   }

@@ -521,7 +521,7 @@ abstract final class _L10nStaticData {
         'Tài khoản Pro dùng mọi giao diện vòng đếm không cần xem quảng cáo.',
     'countdown_unlock_success':
         'Đã mở toàn bộ giao diện Quảng cáo trong 7 ngày!',
-    'countdown_unlock_fail': 'Không thể mở khóa. Vui lòng thử lại.',
+    'countdown_unlock_fail': 'Chưa thể mở khóa lúc này. Bạn thử lại sau.',
     'lang_vi': 'Tiếng Việt',
     'lang_en': 'English',
     'tone_theme': 'Theo chủ đề',
@@ -685,7 +685,7 @@ abstract final class _L10nStaticData {
     'widget_updated_success': 'Đã cập nhật widget!',
     'widget_android_only': 'Tính năng này chỉ hỗ trợ trên Android',
     'widget_err_not_supported': 'Thiết bị không hỗ trợ ghim widget tự động',
-    'widget_pin_failed': 'Lỗi: Không thể ghim widget',
+    'widget_pin_failed': 'Chưa thể ghim widget lúc này. Bạn thử lại sau.',
     'widget_pin_req_sent': 'Đã gửi yêu cầu ghim widget!',
     'home_screen_widget': 'Widget màn hình chính',
     'widget_home_desc':

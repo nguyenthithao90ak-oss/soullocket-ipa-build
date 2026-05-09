@@ -28,7 +28,7 @@ class AppErrorMapper {
   static const String authSyncMessage =
       'Phiên đăng nhập đã hết. Vui lòng đăng nhập lại.';
   static const String recentLoginMessage =
-      'Đã lâu bạn chưa ghé, đăng nhập lại để tiếp tục viết tiếp chuyện tình mình nhé! 👋';
+      'Phiên đăng nhập đã cũ. Vui lòng đăng nhập lại để tiếp tục.';
 
   static AppErrorInfo resolve(
     dynamic error, {
@@ -132,12 +132,12 @@ class AppErrorMapper {
       case 'wrong-password':
         return const AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Mã này chưa đúng rồi, nhớ lại một chút hoặc thử mã khác xem sao nhé! 🔒',
+          message: 'Mật khẩu chưa đúng. Vui lòng kiểm tra lại hoặc thử mã khác.',
         );
       case 'invalid-credential':
         return const AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Thông tin chưa đúng nè, kiểm tra kỹ lại một xíu nha! ✨',
+          message: 'Thông tin đăng nhập chưa đúng. Vui lòng kiểm tra lại.',
         );
       case 'invalid-email':
         return const AppErrorInfo(
@@ -152,7 +152,7 @@ class AppErrorMapper {
       case 'weak-password':
         return const AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Mật khẩu này hơi dễ đoán nè, nhập ít nhất 6 ký tự để an toàn hơn nha! 💪',
+          message: 'Mật khẩu hơi dễ đoán. Vui lòng nhập ít nhất 6 ký tự để an toàn hơn.',
         );
       case 'popup-closed-by-user':
         return const AppErrorInfo(
@@ -220,7 +220,7 @@ class AppErrorMapper {
       if (code == 'permission-denied' && (cleanMsg.isEmpty || cleanMsg == defaultServerMessage)) {
         return const AppErrorInfo(
           kind: AppErrorKind.server,
-          message: 'Chỗ này cần bạn cấp quyền một xíu để mình phục vụ tốt hơn nè! 🔑',
+          message: 'Bạn chưa có quyền thực hiện thao tác này. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.',
         );
       }
       return AppErrorInfo(
@@ -369,7 +369,7 @@ class AppErrorMapper {
         normalized.contains('máy chủ chưa được cấu hình để gửi email otp') ||
         normalized.contains('otp_secret') ||
         normalized.contains('gmail_app_password')) {
-      return 'Dịch vụ gửi mã OTP chưa được thiết lập đầy đủ trên máy chủ. Hãy kiểm tra OTP_SECRET và Gmail App Password trong Firebase Secrets.';
+      return 'Dịch vụ gửi mã OTP chưa sẵn sàng. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.';
     }
     if (message.isEmpty) {
       return fallbackMessage ?? defaultServerMessage;

@@ -168,7 +168,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
   }
 
   void _showReactionThrowLimitSnack() {
-    const message = 'Thao tác quá nhanh, thử lại sau nhé.';
+    const message = 'Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.';
     _showLatestSnackBar(
       message,
       duration: const Duration(seconds: 2),

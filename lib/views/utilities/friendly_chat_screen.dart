@@ -300,7 +300,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
         content: Text(
           ok
               ? 'Đã gửi báo cáo câu trả lời AI.'
-              : 'Chưa thể gửi báo cáo lúc này. Bạn thử lại sau nhé.',
+              : 'Chưa thể gửi báo cáo lúc này. Bạn thử lại sau.',
         ),
       ),
     );

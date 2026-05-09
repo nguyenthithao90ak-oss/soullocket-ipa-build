@@ -298,6 +298,7 @@ class AdMobService {
           _isRewardedAdLoading = false;
         },
         onAdFailedToLoad: (error) {
+          debugPrint('AdMobService: rewarded main failed to load: $error');
           _rewardedAd = null;
           _isRewardedAdLoading = false;
         },
@@ -320,6 +321,7 @@ class AdMobService {
           _isSoulGameRewardedAdLoading = false;
         },
         onAdFailedToLoad: (error) {
+          debugPrint('AdMobService: rewarded soul game failed to load: $error');
           _soulGameRewardedAd = null;
           _isSoulGameRewardedAdLoading = false;
         },
@@ -354,6 +356,7 @@ class AdMobService {
           }
         },
         onAdFailedToLoad: (error) {
+          debugPrint('AdMobService: app open failed to load: $error');
           _appOpenAd = null;
           _isAppOpenLoading = false;
           if (!completer.isCompleted) {
@@ -570,11 +573,19 @@ class AdMobService {
 
     _rewardedAd!.setImmersiveMode(true);
     _rewardedAd!.show(
-        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-      if (!completer.isCompleted) completer.complete(true);
-    });
+      onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+        if (!completer.isCompleted) completer.complete(true);
+      },
+    );
 
-    return completer.future;
+    return completer.future.timeout(
+      const Duration(seconds: 12),
+      onTimeout: () {
+        debugPrint('AdMobService: rewarded main show timed out.');
+        AppLifecyclePresenceGuard.settle();
+        return false;
+      },
+    );
   }
 
   Future<bool> showSoulGameRewardedAd() async {
@@ -625,7 +636,14 @@ class AdMobService {
       },
     );
 
-    return completer.future;
+    return completer.future.timeout(
+      const Duration(seconds: 12),
+      onTimeout: () {
+        debugPrint('AdMobService: rewarded soul game show timed out.');
+        AppLifecyclePresenceGuard.settle();
+        return false;
+      },
+    );
   }
 
   // ─── BANNER AD ───────────────────────────────────────────────
@@ -686,7 +704,10 @@ class AdMobService {
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) => _interstitialAd = ad,
-        onAdFailedToLoad: (_) => _interstitialAd = null,
+        onAdFailedToLoad: (error) {
+          debugPrint('AdMobService: interstitial failed to load: $error');
+          _interstitialAd = null;
+        },
       ),
     );
   }
@@ -724,7 +745,13 @@ class AdMobService {
       },
     );
     await _interstitialAd!.show();
-    return completer.future;
+    return completer.future.timeout(
+      const Duration(seconds: 12),
+      onTimeout: () {
+        debugPrint('AdMobService: interstitial show timed out.');
+        AppLifecyclePresenceGuard.settle();
+      },
+    );
   }
 
   Future<void> startAutoInterstitialScheduler() async {

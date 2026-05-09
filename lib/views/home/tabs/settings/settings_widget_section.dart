@@ -242,7 +242,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         _showToast(context.tr('widget_pin_req_sent'), success: true);
       } catch (_) {
         if (!mounted) return;
-        _showToast('Lỗi: Không thể ghim widget');
+        _showToast('Chưa thể ghim widget lúc này. Bạn thử lại sau.');
       }
     }
 
@@ -257,7 +257,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         _showToast(context.tr('widget_updated_success'), success: true);
       } catch (_) {
         if (!mounted) return;
-        _showToast('Lỗi: Không thể cập nhật widget');
+        _showToast('Chưa thể cập nhật widget lúc này. Bạn thử lại sau.');
       }
     }
 

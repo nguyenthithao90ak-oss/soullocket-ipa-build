@@ -153,7 +153,7 @@ class LoginController extends ChangeNotifier {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Thao tác quá nhanh, thử lại sau nhé.'),
+          content: Text('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
           duration: Duration(seconds: 2),
         ),
       );

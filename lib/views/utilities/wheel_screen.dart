@@ -10,6 +10,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../core/sl_theme.dart';
 import '../../services/location_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/services/love_wheel_service.dart';
 
 class WheelScreen extends StatefulWidget {
@@ -297,9 +298,13 @@ class _WheelScreenState extends State<WheelScreen>
       setState(() {
         _isSpinning = false;
       });
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể quay lúc này. Bạn thử lại sau.',
+      );
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Không thể quay lúc này. Hãy thử lại sau.'),
+        SnackBar(
+          content: Text(errorInfo.message),
           backgroundColor: Colors.redAccent,
         ),
       );

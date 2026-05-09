@@ -40,7 +40,7 @@ extension _SettingsTabShell on _SettingsTabState {
   Future<void> _togglePanel(String id) async {
     final sectionId = _sectionIdForPanel(id);
     if (_isBootstrappingSettings) {
-      _showToast('Đang tải dữ liệu cài đặt, vui lòng thử lại sau vài giây.',
+      _showToast('Cài đặt đang tải, vui lòng chờ vài giây rồi thử lại.',
           success: false);
       return;
     }

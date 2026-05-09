@@ -718,7 +718,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+            .showSnackBar(SnackBar(content: Text('Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.')));
       }
     } finally {
       if (mounted) {
@@ -1309,7 +1309,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       _encStatusMsg = '🔐 Kho mật đã mở';
                     });
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Lỗi: Mật khẩu cũ không đúng.'),
+                        content: Text('Mật khẩu cũ chưa đúng. Bạn kiểm tra lại rồi thử lại nhé.'),
                         backgroundColor: Colors.redAccent));
                   }
                 }

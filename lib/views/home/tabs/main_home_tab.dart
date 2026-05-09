@@ -353,35 +353,47 @@ class _MainHomeTabState extends State<MainHomeTab> {
   BoxDecoration _homeCardDecoration({double radius = 24}) {
     final tone = UiPrefs.notifier.value.homeBlockToneKey;
     final color = switch (tone) {
-      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.42),
-      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.38),
-      'glass' => const Color(0xFF3A2434).withValues(alpha: 0.22),
-      _ => const Color(0xFF43293A).withValues(alpha: 0.20),
+      'mist' => const Color(0xFFF2F7FF).withValues(alpha: 0.58),
+      'rose' => const Color(0xFFFFEDF4).withValues(alpha: 0.52),
+      'glass' => const Color(0xFF2D1B29).withValues(alpha: 0.26),
+      _ => const Color(0xFF412334).withValues(alpha: 0.24),
     };
     final borderColor = switch (tone) {
-      'mist' => const Color(0xFFDAE8FF).withValues(alpha: 0.62),
-      'rose' => const Color(0xFFFFC7DA).withValues(alpha: 0.60),
-      'glass' => Colors.white.withValues(alpha: 0.22),
-      _ => const Color(0xFFFFD6E4).withValues(alpha: 0.26),
+      'mist' => const Color(0xFFDCE9FF).withValues(alpha: 0.72),
+      'rose' => const Color(0xFFFFC9DB).withValues(alpha: 0.70),
+      'glass' => Colors.white.withValues(alpha: 0.20),
+      _ => const Color(0xFFFFD2E1).withValues(alpha: 0.28),
     };
     final shadowColor = switch (tone) {
-      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.10),
+      'mist' => const Color(0xFF8BBBF8).withValues(alpha: 0.11),
       'rose' => SLColors.primary.withValues(alpha: 0.12),
-      'glass' => Colors.black.withValues(alpha: 0.14),
-      _ => const Color(0xFF2C1623).withValues(alpha: 0.16),
+      'glass' => Colors.black.withValues(alpha: 0.18),
+      _ => const Color(0xFF1F1020).withValues(alpha: 0.18),
     };
 
     return BoxDecoration(
-      color: color,
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          color.withValues(alpha: color.alpha / 255.0),
+          color.withValues(alpha: (color.alpha / 255.0) * 0.88),
+        ],
+      ),
       borderRadius: BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: shadowColor,
-          blurRadius: 28,
-          offset: const Offset(0, 10),
+          color: shadowColor.withValues(alpha: 0.90),
+          blurRadius: 26,
+          offset: const Offset(0, 12),
+        ),
+        BoxShadow(
+          color: Colors.white.withValues(alpha: tone == 'glass' ? 0.05 : 0.18),
+          blurRadius: 10,
+          offset: const Offset(0, -1),
         ),
       ],
-      border: Border.all(color: borderColor, width: 1.2),
+      border: Border.all(color: borderColor, width: 1),
     );
   }
 
@@ -429,8 +441,8 @@ class _MainHomeTabState extends State<MainHomeTab> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.fromBorderSide(
-            const BorderSide(color: Color(0xBFFFFFFF), width: 6),
+          border: const Border.fromBorderSide(
+            BorderSide(color: Color(0xBFFFFFFF), width: 6),
           ),
           boxShadow: const [
             BoxShadow(

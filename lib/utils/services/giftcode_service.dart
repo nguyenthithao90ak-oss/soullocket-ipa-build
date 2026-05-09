@@ -44,7 +44,7 @@ class GiftcodeService {
     if (sanitized.isEmpty) {
       return GiftcodeResult(
         success: false,
-        message: 'Vui lòng nhập mã giftcode!',
+        message: 'Vui lòng nhập mã quà tặng!',
       );
     }
 
@@ -85,7 +85,7 @@ class GiftcodeService {
             daysAdded: days,
             message: (payload['message']?.toString().trim().isNotEmpty ?? false)
                 ? payload['message'].toString()
-                : 'Giftcode há»£p lá»‡!',
+                : 'Mã quà tặng hợp lệ!',
           );
         } catch (_) {}
       }
@@ -110,13 +110,13 @@ class GiftcodeService {
         error: mappedError,
         message: friendlyMessage.isNotEmpty
             ? friendlyMessage
-            : 'Lỗi hệ thống, vui lòng thử lại!',
+            : 'Hệ thống đang bận, vui lòng thử lại sau.',
       );
     } catch (_) {
       return GiftcodeResult(
         success: false,
         error: GiftcodeError.unknown,
-        message: 'Lỗi hệ thống, vui lòng thử lại!',
+        message: 'Hệ thống đang bận, vui lòng thử lại sau.',
       );
     }
   }
