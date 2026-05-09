@@ -10,6 +10,7 @@ import 'package:soullocket_app/utils/services/admob_service.dart';
 import 'package:soullocket_app/utils/services/daily_quest_service.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/security_service.dart';
+import '../../utils/app_error_mapper.dart';
 
 class RewardStoreScreen extends StatefulWidget {
   const RewardStoreScreen({super.key});
@@ -199,7 +200,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       try {
         result = await _adMob.claimDailyCheckinReward();
       } catch (error) {
-        debugPrint('Daily check-in failed: $error');
+        debugPrint(
+          'Daily check-in failed: ${AppErrorMapper.resolve(error).message}',
+        );
         result = const RewardClaimResult(
           ok: false,
           error: 'network_error',

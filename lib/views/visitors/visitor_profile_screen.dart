@@ -17,6 +17,7 @@ import '../../services/social_service.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/house_settings_service.dart';
 import '../../utils/services/storage_service.dart';
+import '../../utils/app_error_mapper.dart';
 import 'profile/dialogs/profile_appearance_sheet.dart';
 import 'profile/dialogs/profile_confirm_dialog.dart';
 import 'profile/dialogs/profile_reason_dialog.dart';
@@ -620,7 +621,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
               : {};
         }
       } catch (e) {
-        debugPrint('Lỗi tải house_profiles: $e');
+        debugPrint('Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}');
       }
 
       if (_targetData.isEmpty) {
@@ -728,14 +729,14 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           }
         }
       } catch (e) {
-        debugPrint('Lỗi check bạn bè: $e');
+        debugPrint('Lỗi check bạn bè: ${AppErrorMapper.resolve(e).message}');
       }
 
       try {
         await _loadPosts();
       } catch (_) {}
     } catch (e) {
-      debugPrint('Lỗi profile: $e');
+      debugPrint('Lỗi profile: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -752,7 +753,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
           .toList();
     } catch (e) {
-      debugPrint('Error loading posts: $e');
+      debugPrint('Error loading posts: ${AppErrorMapper.resolve(e).message}');
     }
   }
 
@@ -765,7 +766,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
           .toList();
     } catch (e) {
-      debugPrint('Error loading reposts: $e');
+      debugPrint('Error loading reposts: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) setState(() => _isLoadingRepost = false);
     }
@@ -780,7 +781,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
           .toList();
     } catch (e) {
-      debugPrint('Error loading private posts: $e');
+      debugPrint('Error loading private posts: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) setState(() => _isLoadingPrivate = false);
     }
@@ -806,7 +807,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         return true;
       }).toList();
     } catch (e) {
-      debugPrint('Error loading locket posts: $e');
+      debugPrint('Error loading locket posts: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) setState(() => _isLoadingLocket = false);
     }
@@ -818,7 +819,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       _likedPosts =
           await _socialService.fetchLikedFeedPage(widget.targetHouseId);
     } catch (e) {
-      debugPrint('Error loading liked posts: $e');
+      debugPrint('Error loading liked posts: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) setState(() => _isLoadingLiked = false);
     }

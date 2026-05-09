@@ -682,14 +682,16 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return;
     } catch (e, stackTrace) {
-      debugPrint('[Auth][LoginScreen] social login failed ($provider): $e');
-      debugPrintStack(stackTrace: stackTrace);
+      final resolvedMessage = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: L10nService().translate('auth_login_unavailable'),
+      ).message;
+      debugPrint('[Auth][LoginScreen] social login failed ($provider): $resolvedMessage');
       if (!mounted) return;
-      final message = e.toString().trim();
       _showErrorDialog(
-        message.isEmpty
+        resolvedMessage.isEmpty
             ? L10nService().translate('auth_login_unavailable')
-            : message,
+            : resolvedMessage,
       );
     } finally {
       if (mounted && !handedOffToAppEntry) {

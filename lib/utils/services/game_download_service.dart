@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../utils/app_error_mapper.dart';
 class GameAssetInfo {
   final String gameId;
   final List<String> relativePaths;
@@ -180,10 +181,7 @@ class GameDownloadService extends ChangeNotifier {
       _isDownloading[gameId] = false;
       notifyListeners();
     } catch (e) {
-      String errorMessage = e.toString();
-      if (errorMessage.contains('Exception:')) {
-        errorMessage = errorMessage.substring(errorMessage.indexOf(':') + 1).trim();
-      }
+      final errorMessage = AppErrorMapper.resolve(e).message;
       debugPrint('Lỗi tải game $gameId: $errorMessage');
       _isDownloading[gameId] = false;
       _downloadProgress.remove(gameId);

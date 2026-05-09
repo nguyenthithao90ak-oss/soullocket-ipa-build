@@ -15,6 +15,7 @@ import '../../visitors/visitor_profile_screen.dart';
 import 'package:soullocket_app/services/l10n_service.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/sl_notice.dart';
+import '../../../utils/app_error_mapper.dart';
 
 part 'legacy_media_feed_reference_post_card.dart';
 part 'legacy_media_feed_reference_comment_sheet.dart';

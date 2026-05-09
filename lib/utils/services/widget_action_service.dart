@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 
+import '../app_error_mapper.dart';
+
 enum WidgetLaunchAction {
   diary,
   love,
@@ -37,13 +39,13 @@ class WidgetActionService {
       final initialUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
       _handleUri(initialUri);
     } catch (e) {
-      debugPrint('WidgetActionService initial launch error: $e');
+      debugPrint('WidgetActionService initial launch error: ${AppErrorMapper.resolve(e).message}');
     }
 
     _widgetClickSub = HomeWidget.widgetClicked.listen(
       _handleUri,
       onError: (Object error) {
-        debugPrint('WidgetActionService stream error: $error');
+        debugPrint('WidgetActionService stream error: ${AppErrorMapper.resolve(error).message}');
       },
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/sl_theme.dart';
 import '../../services/auth_service.dart';
+import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 
 class AdminLoginScreen extends StatefulWidget {
@@ -85,7 +86,10 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
               'Bạn đã nhập sai quá $maxFailedAttempts lần. Tài khoản bị khóa tạm thời trong $lockoutDurationMinutes phút.';
         });
       } else {
-        debugPrint('Admin login failed: $error');
+        debugPrint('Admin login failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Chưa thể đăng nhập admin lúc này.',
+        ).message}');
         setState(() {
           _errorText =
               '${_adminLoginErrorText(error)}\n(Sai $newFailedAttempts/$maxFailedAttempts lần)';

@@ -8,6 +8,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/constants/app_config.dart';
+import '../../utils/app_error_mapper.dart';
 import 'storage_service.dart';
 import '../utils/flexible_date_input.dart';
 
@@ -71,8 +72,10 @@ class WidgetService {
         await refreshWidgetShell();
       }
     } catch (error, stackTrace) {
-      debugPrint('Widget bootstrap error: $error');
-      debugPrintStack(stackTrace: stackTrace);
+      debugPrint('Widget bootstrap error: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể khởi tạo widget lúc này.',
+      ).message}');
     }
   }
 
@@ -364,7 +367,10 @@ class WidgetService {
         }
       }
     } catch (e) {
-      debugPrint('Widget cleanup error ($prefix): $e');
+      debugPrint('Widget cleanup error ($prefix): ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể dọn dữ liệu widget lúc này.',
+      ).message}');
     }
   }
 
@@ -594,7 +600,10 @@ class WidgetService {
 
       await _dispatchWidgetUpdate();
     } catch (e) {
-      debugPrint('Error updating widget: $e');
+      debugPrint('Error updating widget: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể cập nhật widget lúc này.',
+      ).message}');
     }
   }
 
@@ -604,7 +613,10 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>('bgTheme', bgTheme);
       await _dispatchWidgetUpdate();
     } catch (e) {
-      debugPrint('Error updating widget theme: $e');
+      debugPrint('Error updating widget theme: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể cập nhật giao diện widget lúc này.',
+      ).message}');
     }
   }
 
@@ -669,7 +681,10 @@ class WidgetService {
       );
       await _dispatchWidgetUpdate();
     } catch (e) {
-      debugPrint('Error updating widget appearance: $e');
+      debugPrint('Error updating widget appearance: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể cập nhật giao diện widget lúc này.',
+      ).message}');
     }
   }
 
@@ -701,7 +716,10 @@ class WidgetService {
         return sharedPath;
       }
     } catch (e) {
-      debugPrint('Widget shared container copy error: $e');
+      debugPrint('Widget shared container copy error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể sao chép dữ liệu widget sang vùng chia sẻ.',
+      ).message}');
     }
 
     return sourcePath;
@@ -750,7 +768,10 @@ class WidgetService {
           '✅ Widget image saved: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB');
       return file.path;
     } catch (e) {
-      debugPrint('❌ Error downloading/compressing image: $e');
+      debugPrint('❌ Error downloading/compressing image: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải hoặc nén ảnh widget.',
+      ).message}');
     }
     return null;
   }
@@ -777,7 +798,10 @@ class WidgetService {
         return file.path;
       }
     } catch (e) {
-      debugPrint('Error downloading image for widget: $e');
+      debugPrint('Error downloading image for widget: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải ảnh cho widget.',
+      ).message}');
     }
     return null;
   }

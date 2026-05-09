@@ -1,6 +1,8 @@
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart';
 
+import '../app_error_mapper.dart';
+
 class AppCheckHttpHeaders {
   AppCheckHttpHeaders._();
 
@@ -67,7 +69,7 @@ class AppCheckHttpHeaders {
         } catch (_) {}
       }
       if (kDebugMode) {
-        debugPrint('App Check token unavailable for HTTP headers: $error');
+        debugPrint('App Check token unavailable for HTTP headers: ${AppErrorMapper.resolve(error).message}');
       }
       if (requiredToken) {
         rethrow;

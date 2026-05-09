@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../core/sl_theme.dart';
 import '../../models/single_match_models.dart';
 import '../../services/single_match_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../community/community_settings_screen.dart';
 import '../relationship/video_call_screen.dart';
 import '../visitors/visitor_profile_screen.dart';
@@ -180,7 +181,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       try {
         return await future.timeout(const Duration(seconds: 8));
       } catch (error) {
-        debugPrint('[SingleMatch] $label failed: $error');
+        debugPrint('[SingleMatch] $label failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể tải dữ liệu Single Match lúc này.',
+        ).message}');
         return fallback;
       }
     }
@@ -242,7 +246,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         return;
       }
       setState(() {
-        _loadError = error.toString();
+        _loadError = AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể tải Single Match lúc này.',
+        ).message;
         _isLoading = false;
       });
     }
@@ -370,7 +377,13 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       });
       _showSnack('Đã lưu cài đặt ghép nối.');
     } catch (error) {
-      _showSnack('Không thể lưu cài đặt: $error', isError: true);
+      _showSnack(
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể lưu cài đặt lúc này.',
+        ).message,
+        isError: true,
+      );
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -638,7 +651,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
           )
           .timeout(const Duration(seconds: 8));
     } catch (error) {
-      debugPrint('[SingleMatch] log skip history failed: $error');
+      debugPrint('[SingleMatch] log skip history failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể ghi lịch sử bỏ qua Single Match.',
+      ).message}');
     }
     _showSnack('Đã ẩn hồ sơ này trong phiên hiện tại.');
   }
@@ -700,7 +716,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             )
             .timeout(const Duration(seconds: 8));
       } catch (error) {
-        debugPrint('[SingleMatch] log call history failed: $error');
+        debugPrint('[SingleMatch] log call history failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể ghi lịch sử cuộc gọi Single Match.',
+        ).message}');
       }
       if (mounted) {
         setState(() => _callingHouseId = null);

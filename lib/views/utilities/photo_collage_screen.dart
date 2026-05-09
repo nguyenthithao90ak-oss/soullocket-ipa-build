@@ -10,6 +10,7 @@ import '../../services/house_service.dart';
 import '../../services/storage_service.dart';
 import '../../services/collage_limit_service.dart';
 import '../../core/sl_theme.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/services/pending_upload_service.dart';
 
 class PhotoCollageScreen extends StatefulWidget {
@@ -161,7 +162,13 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
         _selectedLayout = _smartLayoutForCount(_images.length);
       });
     } catch (e) {
-      _showToast('Không thể chọn ảnh: $e');
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể chọn ảnh lúc này. Hãy kiểm tra quyền thư viện rồi thử lại.',
+        ).message,
+      );
     } finally {
       if (mounted) setState(() => _isPicking = false);
     }
@@ -229,7 +236,13 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       if (pendingKey != null) {
         await PendingUploadService.instance.markFailed(pendingKey, e);
       }
-      _showToast('Không thể lưu ảnh ghép: $e');
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể lưu ảnh ghép lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message,
+      );
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -260,7 +273,13 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       );
       await CollageLimitService().consumeLimit();
     } catch (e) {
-      _showToast('Không thể chia sẻ ảnh ghép: $e');
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể chia sẻ ảnh ghép lúc này. Hãy thử lại sau.',
+        ).message,
+      );
     } finally {
       if (mounted) setState(() => _isSharing = false);
     }

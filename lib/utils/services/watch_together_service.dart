@@ -3,6 +3,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+import '../app_error_mapper.dart';
+
 /// ============================================================
 ///  WatchTogetherService — Gra (Logic/Data)
 ///  Rạp Chiếu Phim Đôi Realtime — Watch Together (Phase 17+)
@@ -175,7 +177,10 @@ class WatchTogetherService {
         'status': 'pending',
       });
     } catch (e) {
-      debugPrint('Failed to queue cinema invite notification: $e');
+      debugPrint('Failed to queue cinema invite notification: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xếp hàng thông báo mời xem phim.',
+      ).message}');
     }
 
     return inviteId;

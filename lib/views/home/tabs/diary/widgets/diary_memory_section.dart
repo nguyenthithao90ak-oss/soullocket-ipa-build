@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../../../../core/sl_theme.dart';
+import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../widgets/skeleton_container.dart';
 
@@ -139,7 +140,9 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                 url, widget.thumbnailCacheWidth),
             context,
             onError: (error, stackTrace) {
-              debugPrint('[DiaryMemory] thumbnail warmup failed: $error');
+              debugPrint(
+                '[DiaryMemory] thumbnail warmup failed: ${AppErrorMapper.resolve(error).message}',
+              );
             },
           ),
         );
@@ -731,7 +734,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                             if (retries < 2) {
                               _retryCount[photoId] = retries + 1;
                               debugPrint(
-                                '[DiaryMemory] image load failed id=$photoId retry=${retries + 1} error=$error',
+                                '[DiaryMemory] image load failed id=$photoId retry=${retries + 1} error=${AppErrorMapper.resolve(error).message}',
                               );
                               WidgetsBinding.instance.addPostFrameCallback((_) async {
                                 if (!mounted) return;
@@ -739,7 +742,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                                   await _refreshStalePhotoUrl(photo);
                                 } catch (refreshError) {
                                   debugPrint(
-                                    '[DiaryMemory] refresh url failed id=$photoId error=$refreshError',
+                                    '[DiaryMemory] refresh url failed id=$photoId error=${AppErrorMapper.resolve(refreshError).message}',
                                   );
                                 }
                               });

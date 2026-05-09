@@ -11,6 +11,7 @@ import '../../models/chat_message.dart';
 import '../../models/group_chat_room.dart';
 import '../../services/group_chat_service.dart';
 import '../../services/security_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/rapid_action_feedback_policy.dart';
 import 'chat_house_info_loader.dart';
 
@@ -213,8 +214,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       if (isSilentRapidActionBlock(error)) {
         return;
       }
-      _showNotice(error.toString().replaceFirst('Exception: ', ''),
-          error: true);
+      _showNotice(
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể gửi tin nhắn nhóm. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message,
+        error: true,
+      );
     }
   }
 
@@ -403,7 +410,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       if (!mounted) {
         return;
       }
-      _showNotice(error.toString().replaceFirst('Exception: ', ''), error: true);
+      _showNotice(
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể đồng bộ tin nhắn nhóm. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message,
+        error: true,
+      );
       setState(() {
         _room = null;
         _hasMoreMessages = false;

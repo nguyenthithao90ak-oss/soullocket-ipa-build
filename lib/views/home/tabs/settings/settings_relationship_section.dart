@@ -157,7 +157,14 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       _showToast(result.message, success: result.success);
     } catch (e) {
       if (!mounted) return;
-      _showToast('Không thể khởi tạo yêu cầu: $e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể khởi tạo yêu cầu lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message,
+        success: false,
+      );
     } finally {
       if (mounted) {
         setState(() => _isBreakupBusy = false);
@@ -192,7 +199,14 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       _showToast(result.message, success: result.success);
     } catch (e) {
       if (!mounted) return;
-      _showToast('Không thể rút lại yêu cầu: $e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể rút lại yêu cầu lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message,
+        success: false,
+      );
     } finally {
       if (mounted) {
         setState(() => _isBreakupBusy = false);

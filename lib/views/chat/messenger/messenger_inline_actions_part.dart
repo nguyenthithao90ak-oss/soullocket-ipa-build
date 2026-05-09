@@ -270,7 +270,11 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
         return;
       }
       _showMessengerNotice(
-        error.toString().replaceFirst('Exception: ', ''),
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể tạo nhóm chat. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message,
         error: true,
       );
     }

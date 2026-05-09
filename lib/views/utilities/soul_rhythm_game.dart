@@ -15,6 +15,7 @@ import '../ui_prefs.dart';
 import '../../core/sl_theme.dart';
 import 'soul_rhythm_music_config.dart';
 import '../../utils/services/game_download_service.dart';
+import '../../utils/app_error_mapper.dart';
 
 part 'soul_rhythm/ui/soul_rhythm_hud.dart';
 part 'soul_rhythm/ui/soul_rhythm_playfield.dart';
@@ -266,9 +267,10 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
             ),
             context,
           );
-        } catch (error, stackTrace) {
-          debugPrint('Soul Rhythm icon precache failed: $error');
-          debugPrintStack(stackTrace: stackTrace);
+        } catch (error) {
+          debugPrint(
+            'Soul Rhythm icon precache failed: ${AppErrorMapper.resolve(error).message}',
+          );
         }
       }(),
     );
@@ -645,9 +647,10 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
       }
       _handleUiPrefsChanged();
       await _syncBackgroundTrack(force: true);
-    } catch (error, stackTrace) {
-      debugPrint('Soul Rhythm audio init failed: $error');
-      debugPrintStack(stackTrace: stackTrace);
+    } catch (error) {
+      debugPrint(
+        'Soul Rhythm audio init failed: ${AppErrorMapper.resolve(error).message}',
+      );
       _audioReady = false;
       _customTrackBytes = null;
       _useCustomTrackAsset = false;

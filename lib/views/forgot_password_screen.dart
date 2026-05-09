@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/security_flow_guard.dart';
 import '../core/sl_theme.dart';
 import '../utils/flexible_date_input.dart';
+import '../utils/app_error_mapper.dart';
 import '../widgets/sensitive_content_guard.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -204,7 +205,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           setState(() => isSendingRecoveryCode = false);
         }
       } catch (e) {
-        final msg = e.toString();
+        final resolvedMessage = AppErrorMapper.resolve(e).message;
         if (mounted) {
           setState(() {
             isSendingRecoveryCode = false;
@@ -212,9 +213,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             step = 1;
           });
         }
-        if (msg.contains('không tìm thấy') ||
-            msg.contains('user-not-found') ||
-            msg.contains('không tồn tại')) {
+        if (resolvedMessage.contains('không tìm thấy') ||
+            resolvedMessage.contains('user-not-found') ||
+            resolvedMessage.contains('không tồn tại')) {
           _showErrorDialog(
               'Email này không tồn tại trong hệ thống. Vui lòng kiểm tra lại.');
         } else {
@@ -377,7 +378,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         });
       }
     } catch (e) {
-      final msg = e.toString();
+      final resolvedMessage = AppErrorMapper.resolve(e).message;
       if (mounted) {
         setState(() {
           isBusy = false;
@@ -386,13 +387,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           step = 3;
         });
       }
-      if (msg.contains('không tìm thấy') ||
-          msg.contains('user-not-found') ||
-          msg.contains('không tồn tại')) {
+      if (resolvedMessage.contains('không tìm thấy') ||
+          resolvedMessage.contains('user-not-found') ||
+          resolvedMessage.contains('không tồn tại')) {
         _showErrorDialog(
             'Email này không tồn tại trong hệ thống. Vui lòng kiểm tra lại.');
       } else {
-        _showErrorDialog('Lỗi gửi mã khôi phục: $msg');
+        _showErrorDialog('Lỗi gửi mã khôi phục: $resolvedMessage');
       }
     }
   }

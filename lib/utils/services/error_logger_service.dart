@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
+import '../app_error_mapper.dart';
+
 class ErrorLoggerService {
   static final ErrorLoggerService instance = ErrorLoggerService._internal();
   
@@ -28,7 +30,7 @@ class ErrorLoggerService {
   }
 
   Future<void> logError(dynamic error, StackTrace? stack, {String? reason, bool fatal = false}) async {
-    debugPrint('Logging error: $error');
+    debugPrint('Logging error: ${AppErrorMapper.resolve(error).message}');
     await FirebaseCrashlytics.instance.recordError(
       error,
       stack,

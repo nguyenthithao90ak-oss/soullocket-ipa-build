@@ -291,7 +291,10 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
         });
       }
     } catch (e) {
-      debugPrint('Error fetching memory photos: $e');
+      debugPrint('Error fetching memory photos: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải danh sách ảnh kỷ niệm lúc này.',
+      ).message}');
     } finally {
       await _promptPendingUploadRetryIfNeeded();
     }
@@ -382,7 +385,10 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
         });
       }
     } catch (e) {
-      debugPrint('Error picking photos: $e');
+      debugPrint('Error picking photos: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể chọn ảnh cho collage lúc này.',
+      ).message}');
     }
   }
 
@@ -500,7 +506,10 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
             }
             return await _loadImage(url);
           } catch (e) {
-            debugPrint('Error loading image $url: $e');
+            debugPrint('Error loading image $url: ${AppErrorMapper.resolve(
+              e,
+              fallbackMessage: 'Không thể tải một ảnh trong collage.',
+            ).message}');
             return null;
           }
         }),

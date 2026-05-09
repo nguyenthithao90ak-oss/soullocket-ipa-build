@@ -5,6 +5,7 @@ import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
 import '../../services/auth_service.dart';
 import '../../utils/sl_notice.dart';
+import '../../utils/app_error_mapper.dart';
 import 'admin_support_chat_screen.dart';
 
 /// ============================================================
@@ -78,7 +79,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         _totalFeeds = fSnap.children.length;
       });
     } catch (e) {
-      debugPrint('Error loading stats: $e');
+      debugPrint('Error loading stats: ${AppErrorMapper.resolve(e).message}');
     }
   }
 
@@ -253,7 +254,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       if (navigator.mounted) navigator.pop();
       if (mounted) _showToast(msg);
     } catch (e) {
-      debugPrint('Admin action failed: $e');
+      debugPrint('Admin action failed: ${AppErrorMapper.resolve(e).message}');
       if (mounted) {
         _showToast(
             'Chưa thể hoàn tất thao tác quản trị lúc này. Vui lòng thử lại.');

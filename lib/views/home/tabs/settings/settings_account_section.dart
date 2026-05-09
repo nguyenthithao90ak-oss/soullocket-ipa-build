@@ -292,7 +292,14 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       _showToast(context.tr('saved_info'), success: true);
     } catch (e) {
       if (!mounted) return;
-      _showToast('${context.tr('err_save_info')}: $e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể lưu thông tin hồ sơ lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message,
+        success: false,
+      );
     }
   }
 
@@ -472,7 +479,14 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       _showToast(context.tr('account_success_date'), success: true);
     } catch (e) {
       if (!mounted) return;
-      _showToast('${context.tr('account_err_date')}: $e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể cập nhật ngày lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message,
+        success: false,
+      );
     }
   }
 

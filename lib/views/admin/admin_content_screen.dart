@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import '../../services/auth_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../core/sl_theme.dart';
 import 'widgets/admin_shared_widgets.dart';
 
@@ -106,7 +107,11 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _errorText = error.toString();
+        _errorText = AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể tải báo cáo nội dung. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message;
       });
     } finally {
       if (mounted) {
@@ -139,7 +144,10 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
           .showSnackBar(const SnackBar(content: Text('Đã xóa bài viết')));
       _loadData(refresh: true);
     } catch (e) {
-      debugPrint('Delete post failed: $e');
+      debugPrint('Delete post failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể xóa bài viết lúc này.',
+      ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -169,7 +177,10 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
           .showSnackBar(const SnackBar(content: Text('Đã xóa bình luận')));
       _loadData(refresh: true);
     } catch (e) {
-      debugPrint('Delete comment failed: $e');
+      debugPrint('Delete comment failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể xóa bình luận lúc này.',
+      ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -187,7 +198,10 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
           .showSnackBar(const SnackBar(content: Text('Đã bỏ qua báo cáo')));
       _loadData(refresh: true);
     } catch (e) {
-      debugPrint('Dismiss report failed: $e');
+      debugPrint('Dismiss report failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể bỏ qua báo cáo lúc này.',
+      ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

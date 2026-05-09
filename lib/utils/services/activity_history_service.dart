@@ -12,6 +12,7 @@ import 'album_service.dart';
 import 'presence_service.dart';
 import 'house_service.dart';
 import 'storage_service.dart';
+import '../app_error_mapper.dart';
 
 class ActivityHistoryEntry {
   final String id;
@@ -399,7 +400,7 @@ class ActivityHistoryService {
           memoryId: entry.entityId,
         );
       } catch (e) {
-        final errorText = e.toString();
+        final errorText = AppErrorMapper.resolve(e).message;
         final isNotFound = errorText.contains('firebase_functions/not-found') ||
             errorText.contains('not-found') ||
             errorText.contains('NOT_FOUND') ||

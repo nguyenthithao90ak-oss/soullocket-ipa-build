@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import '../../core/sl_theme.dart';
+import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 
 const List<String> _defaultBlockedTerms = <String>[
@@ -213,7 +214,10 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
         await _db.child('admin_system/banned_words').set(_bannedWords);
       }
     } catch (e) {
-      debugPrint('Lỗi tải danh sách từ cấm: $e');
+      debugPrint('Lỗi tải danh sách từ cấm: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể tải danh sách từ cấm lúc này.',
+      ).message}');
     }
   }
 
@@ -285,7 +289,10 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
         _errorText = null;
       });
     } catch (error) {
-      debugPrint('Load abuse logs failed: $error');
+      debugPrint('Load abuse logs failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Chưa thể tải nhật ký lạm dụng lúc này.',
+      ).message}');
       if (!mounted) return;
       setState(() {
         _errorText = 'Chưa thể tải nhật ký lạm dụng lúc này. Vui lòng thử lại.';
@@ -320,7 +327,10 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
         SnackBar(content: Text(_abuseActionSuccessText(actionType))),
       );
     } catch (e) {
-      debugPrint('Abuse action failed: $e');
+      debugPrint('Abuse action failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể hoàn tất thao tác chống lạm dụng lúc này.',
+      ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

@@ -968,7 +968,10 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         (route) => false,
       );
     } on HouseCreationOtpRequiredException catch (e, st) {
-      debugPrint('[HouseOnboarding] house creation OTP required: $e\n$st');
+      debugPrint('[HouseOnboarding] house creation OTP required: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Cần xác minh Gmail để tiếp tục tạo nhà.',
+      ).message}');
       if (!mounted) return;
       final otp = await _promptHouseCreationOtp(e);
       if (!mounted) return;
@@ -981,12 +984,12 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       }
       return _createHouse(houseCreationOtp: otp.trim());
     } catch (e, st) {
-      debugPrint('[HouseOnboarding] _createHouse failed: $e\n$st');
-      if (!mounted) return;
       final errorInfo = AppErrorMapper.resolve(e);
+      debugPrint('[HouseOnboarding] _createHouse failed: ${errorInfo.message}');
+      if (!mounted) return;
       final message = errorInfo.message;
 
-      final normalizedError = e.toString().toLowerCase();
+      final normalizedError = errorInfo.message.toLowerCase();
       final shouldRetryAuthSync = widget.autoCreateOnly &&
           _authSyncRetryCount < 4 &&
           (normalizedError.contains('unauthenticated') ||

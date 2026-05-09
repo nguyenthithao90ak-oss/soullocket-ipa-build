@@ -36,6 +36,7 @@ import '../utilities/calendar_screen.dart';
 import 'love_insights_screen.dart';
 import 'screens/document_viewer_screen.dart';
 import '../ui_prefs.dart';
+import '../../utils/app_error_mapper.dart';
 import 'tabs/community_tab.dart';
 import 'tabs/diary_tab.dart';
 import 'tabs/game_tab.dart';

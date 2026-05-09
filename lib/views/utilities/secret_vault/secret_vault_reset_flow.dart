@@ -130,7 +130,11 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
       );
     } catch (error) {
       _showVaultSnack(
-        error.toString().replaceFirst('Exception: ', ''),
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể tạo yêu cầu reset Kho ảnh mật. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message,
         backgroundColor: Colors.redAccent,
       );
     } finally {
@@ -200,7 +204,11 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
       );
     } catch (error) {
       _showVaultSnack(
-        error.toString().replaceFirst('Exception: ', ''),
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể thu hồi yêu cầu reset Kho ảnh mật. Hãy thử lại sau.',
+        ).message,
         backgroundColor: Colors.redAccent,
       );
     } finally {

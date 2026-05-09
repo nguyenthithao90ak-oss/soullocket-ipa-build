@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../services/gift_maker_service.dart';
 import '../../services/deeplink_service.dart';
 import '../../services/image_picker_recovery_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../services/storage_service.dart';
@@ -271,7 +272,13 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         setState(() => _selectedImage = File(picked.path));
       }
     } catch (e) {
-      _showSnack('Không thể chọn ảnh: $e');
+      _showSnack(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể chọn ảnh lúc này. Hãy kiểm tra quyền thư viện rồi thử lại.',
+        ).message,
+      );
     }
   }
 
@@ -384,7 +391,13 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         );
         imageUrl = upload?.downloadUrl ?? '';
       } catch (e) {
-        _showSnack('Lỗi tải ảnh lên: $e');
+        _showSnack(
+          AppErrorMapper.resolve(
+            e,
+            fallbackMessage:
+                'Chưa thể tải ảnh lên lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+          ).message,
+        );
       }
     }
 

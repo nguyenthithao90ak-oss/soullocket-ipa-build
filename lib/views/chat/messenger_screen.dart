@@ -13,6 +13,7 @@ import '../../models/group_chat_room.dart';
 import '../../services/presence_service.dart';
 import '../../services/chat_service.dart';
 import '../../services/group_chat_service.dart';
+import '../../utils/app_error_mapper.dart';
 import 'chat_house_info_loader.dart';
 import 'chat_detail_screen.dart';
 import 'chat_message_preview.dart';

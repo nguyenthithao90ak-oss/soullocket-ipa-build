@@ -152,7 +152,14 @@ extension _CommunityTabInteractions on _CommunityTabState {
         }
       }
     } catch (e) {
-      debugPrint('Error showing app review: $e');
+      final resolvedError = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: _ct(
+          'Không thể hiển thị đánh giá lúc này.',
+          'Cannot show the app review prompt right now.',
+        ),
+      );
+      debugPrint('Error showing app review: ${resolvedError.message}');
     }
   }
 

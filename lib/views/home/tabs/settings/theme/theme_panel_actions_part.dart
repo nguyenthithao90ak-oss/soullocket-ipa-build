@@ -411,7 +411,12 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
           }
         }
       } catch (e) {
-        debugPrint('Lỗi cắt ảnh: $e');
+        debugPrint(
+          'Lỗi cắt ảnh: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Đã có lỗi xảy ra',
+          ).message}',
+        );
         // Bỏ qua lỗi cắt ảnh, tiếp tục dùng file gốc
       }
 
@@ -458,7 +463,14 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       _showToast(context.tr('theme_success_bg_saved'), success: true);
     } catch (e) {
       if (!mounted) return;
-      _showToast('Không thể tải ảnh nền: $e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể tải ảnh nền lúc này. Hãy kiểm tra quyền ảnh và kết nối rồi thử lại.',
+        ).message,
+        success: false,
+      );
     } finally {
       if (mounted) {
         setState(() => _isUploadingThemeBackground = false);

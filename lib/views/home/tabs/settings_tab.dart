@@ -740,7 +740,14 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       });
       _showToast(context.tr('event_added_success'), success: true);
     } catch (e) {
-      _showToast('${context.tr('err_add_event')}: $e', success: false);
+      if (!mounted) return;
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage: context.tr('err_add_event'),
+        ).message,
+        success: false,
+      );
     }
   }
 
@@ -782,7 +789,13 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       _showToast(context.tr('event_deleted_success'), success: true);
     } catch (e) {
       if (!mounted) return;
-      _showToast('${context.tr('err_delete_event')}: $e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage: context.tr('err_delete_event'),
+        ).message,
+        success: false,
+      );
     } finally {
       if (mounted) {
         setState(() {

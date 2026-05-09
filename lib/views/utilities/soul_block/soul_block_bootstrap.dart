@@ -141,7 +141,9 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
     try {
       return await _adMob.isProUser();
     } catch (error) {
-      debugPrint('Soul Block premium status check failed: $error');
+      debugPrint(
+        'Soul Block premium status check failed: ${AppErrorMapper.resolve(error).message}',
+      );
       return false;
     }
   }

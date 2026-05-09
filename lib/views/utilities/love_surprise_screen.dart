@@ -10,6 +10,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/sl_theme.dart';
 import '../../services/image_picker_recovery_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/permission_helper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 
@@ -207,7 +208,10 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
         });
       }
     } catch (e) {
-      debugPrint("Lỗi load HTML: $e");
+      debugPrint("Lỗi load HTML: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải trải nghiệm 3D lúc này.',
+      ).message}");
       if (mounted) {
         setState(() {
           _isLoading = false;

@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
 import '../../services/auth_service.dart';
+import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 import 'widgets/security_protection_rollout_panel.dart';
 
@@ -81,7 +82,11 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _errorText = error.toString();
+        _errorText = AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể tải cấu hình hệ thống. Hãy kiểm tra quyền quản trị và kết nối rồi thử lại.',
+        ).message;
       });
     } finally {
       if (mounted) {
@@ -118,7 +123,11 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      debugPrint('Toggle maintenance failed: $error');
+      final errorInfo = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Chưa thể cập nhật trạng thái bảo trì lúc này.',
+      );
+      debugPrint('Toggle maintenance failed: ${errorInfo.message}');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Chưa thể cập nhật trạng thái bảo trì lúc này.'),
@@ -148,7 +157,11 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      debugPrint('Toggle community maintenance failed: $error');
+      final errorInfo = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Chưa thể cập nhật bảo trì cộng đồng lúc này.',
+      );
+      debugPrint('Toggle community maintenance failed: ${errorInfo.message}');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Chưa thể cập nhật bảo trì cộng đồng lúc này.'),
@@ -181,7 +194,13 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      debugPrint('Save community maintenance settings failed: $error');
+      final errorInfo = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Chưa thể lưu thông báo bảo trì lúc này.',
+      );
+      debugPrint(
+        'Save community maintenance settings failed: ${errorInfo.message}',
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Chưa thể lưu thông báo bảo trì lúc này.'),
@@ -256,7 +275,11 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      debugPrint('Send notification failed: $e');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể gửi thông báo lúc này. Vui lòng thử lại.',
+      );
+      debugPrint('Send notification failed: ${errorInfo.message}');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Chưa thể gửi thông báo lúc này. Vui lòng thử lại.'),

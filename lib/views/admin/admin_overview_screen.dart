@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
 import '../../services/auth_service.dart';
+import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 
 class AdminOverviewScreen extends StatefulWidget {
@@ -102,7 +103,10 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         _errorText = null;
       });
     } catch (error) {
-      debugPrint('Load admin overview failed: $error');
+      debugPrint('Load admin overview failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Chưa thể tải dữ liệu tổng quan lúc này.',
+      ).message}');
       if (!mounted) return;
       setState(() {
         _errorText = 'Chưa thể tải dữ liệu tổng quan lúc này.';
@@ -135,7 +139,10 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         ),
       );
     } catch (error) {
-      debugPrint('Toggle maintenance failed: $error');
+      debugPrint('Toggle maintenance failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Chưa thể cập nhật trạng thái bảo trì lúc này.',
+      ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -158,7 +165,10 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         ),
       );
     } catch (error) {
-      debugPrint('Toggle community maintenance failed: $error');
+      debugPrint('Toggle community maintenance failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Chưa thể cập nhật bảo trì cộng đồng lúc này.',
+      ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

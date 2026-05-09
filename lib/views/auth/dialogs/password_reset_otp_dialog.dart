@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../services/l10n_service.dart';
+import '../../../utils/app_error_mapper.dart';
 import '../../../widgets/sensitive_content_guard.dart';
 
 class PasswordResetOtpDialog {
@@ -51,10 +52,7 @@ class PasswordResetOtpDialog {
         if (!dialogContext.mounted) return;
         setDialogState(() {
           isSending = false;
-          sendError = e
-              .toString()
-              .replaceFirst('Exception: ', '')
-              .replaceFirst('Lỗi: ', '');
+          sendError = AppErrorMapper.resolve(e).message;
         });
       }
     }
@@ -246,10 +244,7 @@ class PasswordResetOtpDialog {
                               if (!dialogContext.mounted) return;
                               setDialogState(() {
                                 isVerifying = false;
-                                verifyError = e
-                                    .toString()
-                                    .replaceFirst('Exception: ', '')
-                                    .replaceFirst('Lỗi: ', '');
+                                verifyError = AppErrorMapper.resolve(e).message;
                               });
                             }
                           }

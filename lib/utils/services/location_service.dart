@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/app_error_mapper.dart';
 import '../utils/permission_helper.dart';
 
 class LocationService {
@@ -89,10 +90,12 @@ class LocationService {
       }
 
       return true;
-    } catch (e, st) {
+    } catch (e) {
       if (kDebugMode) {
-        debugPrint('LocationService.requestPermission error: $e');
-        debugPrintStack(stackTrace: st);
+        debugPrint('LocationService.requestPermission error: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể xin quyền vị trí lúc này.',
+        ).message}');
       }
       return false;
     }
@@ -145,10 +148,12 @@ class LocationService {
       ).timeout(_kInitialPositionTimeout);
       await _handlePositionUpdate(normalizedHouseId, normalizedRole, initialPosition,
           forceWrite: true);
-    } catch (e, st) {
+    } catch (e) {
       if (kDebugMode) {
-        debugPrint('LocationService.getCurrentPosition error: $e');
-        debugPrintStack(stackTrace: st);
+        debugPrint('LocationService.getCurrentPosition error: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể lấy vị trí hiện tại lúc này.',
+        ).message}');
       }
       try {
         final lastKnown = await Geolocator.getLastKnownPosition();
@@ -156,10 +161,12 @@ class LocationService {
           await _handlePositionUpdate(normalizedHouseId, normalizedRole, lastKnown,
               forceWrite: true);
         }
-      } catch (e, st) {
+      } catch (e) {
         if (kDebugMode) {
-          debugPrint('LocationService.getLastKnownPosition error: $e');
-          debugPrintStack(stackTrace: st);
+          debugPrint('LocationService.getLastKnownPosition error: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Không thể đọc vị trí gần nhất lúc này.',
+          ).message}');
         }
       }
     }
@@ -174,8 +181,10 @@ class LocationService {
           _handlePositionUpdate(normalizedHouseId, normalizedRole, position),
       onError: (e, st) {
         if (kDebugMode) {
-          debugPrint('LocationService.positionStream error: $e');
-          debugPrintStack(stackTrace: st);
+          debugPrint('LocationService.positionStream error: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Luồng vị trí gặp lỗi.',
+          ).message}');
         }
       },
     );
@@ -482,10 +491,12 @@ class LocationService {
         role: role,
         dateKey: dateKey,
       );
-    } catch (e, st) {
+    } catch (e) {
       if (kDebugMode) {
-        debugPrint('LocationService._maybeTrimGpsHistory error: $e');
-        debugPrintStack(stackTrace: st);
+        debugPrint('LocationService._maybeTrimGpsHistory error: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể dọn lịch sử GPS lúc này.',
+        ).message}');
       }
     }
   }

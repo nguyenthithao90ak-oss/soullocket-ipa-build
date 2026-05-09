@@ -898,7 +898,7 @@ class StorageService {
     try {
       await cleanupExpiredMemoryImagesTrash(houseId: normalizedHouseId);
     } catch (e) {
-      final errorText = e.toString().toLowerCase();
+      final errorText = AppErrorMapper.cleanMessage(e).toLowerCase();
       if (errorText.contains('unauthenticated')) {
         return;
       }

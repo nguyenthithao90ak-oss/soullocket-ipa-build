@@ -753,7 +753,12 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
         _persistFeedCache();
       },
       onError: (e) {
-        debugPrint('[CommunityTab] Error loading unified feed: $e');
+        debugPrint(
+          '[CommunityTab] Error loading unified feed: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Đã có lỗi xảy ra',
+          ).message}',
+        );
         _updateState(() => _isLoading = false);
       },
     );
@@ -797,7 +802,12 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
       });
       _persistFeedCache();
     } catch (e) {
-      debugPrint('[CommunityTab] Error loading feed page: $e');
+      debugPrint(
+        '[CommunityTab] Error loading feed page: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Đã có lỗi xảy ra',
+        ).message}',
+      );
     } finally {
       _updateState(() {
         _isLoading = false;

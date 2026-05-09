@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/house_service.dart';
 import '../../core/sl_theme.dart';
+import '../../utils/app_error_mapper.dart';
 
 /// ============================================================
 ///  BlockListScreen — GRA (Phase 42)
@@ -115,7 +116,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
             const SnackBar(content: Text('Đã bỏ chặn người dùng.')));
       }
     } catch (e) {
-      debugPrint('Unblock user failed: $e');
+      debugPrint('Unblock user failed: ${AppErrorMapper.resolve(e).message}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

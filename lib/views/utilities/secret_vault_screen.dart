@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/pending_upload_service.dart';
 import 'package:soullocket_app/utils/services/storage_service.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'dart:ui' as ui;
 import '../../services/activity_history_service.dart';
 import '../../services/auth_service.dart';
@@ -299,7 +300,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       if (mounted) {
         setState(() {
           _encryptionReady = false;
-          _encStatusMsg = e.toString().replaceFirst('Bad state: ', '');
+          _encStatusMsg = AppErrorMapper.resolve(e).message;
         });
       }
     } finally {
@@ -718,7 +719,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.')));
+            .showSnackBar(const SnackBar(content: Text('Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.')));
       }
     } finally {
       if (mounted) {
@@ -1050,7 +1051,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không thể tạo lại mã khôi phục: $e')),
+        SnackBar(
+          content: Text(
+            AppErrorMapper.resolve(
+              e,
+              fallbackMessage:
+                  'Chưa thể tạo lại mã khôi phục lúc này. Hãy thử lại sau ít phút.',
+            ).message,
+          ),
+        ),
       );
     }
   }

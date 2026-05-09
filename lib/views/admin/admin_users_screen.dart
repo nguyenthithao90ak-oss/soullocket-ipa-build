@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io' as io;
 import '../../services/auth_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/web_helpers.dart';
 import 'widgets/admin_shared_widgets.dart';
 import '../../core/sl_theme.dart';
@@ -76,7 +77,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _errorText = error.toString();
+        _errorText = AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể tải danh sách người dùng. Hãy kiểm tra quyền quản trị và kết nối rồi thử lại.',
+        ).message;
       });
     } finally {
       if (mounted) {
@@ -149,7 +154,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         await Share.shareXFiles([XFile(path)], text: 'Export Users');
       }
     } catch (e) {
-      debugPrint('Export users failed: $e');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể xuất danh sách người dùng lúc này.',
+      );
+      debugPrint('Export users failed: ${errorInfo.message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -271,7 +280,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           .showSnackBar(const SnackBar(content: Text('Thao tác thành công')));
       _loadData(refresh: true);
     } catch (e) {
-      debugPrint('Admin user action failed: $e');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể hoàn tất thao tác người dùng lúc này.',
+      );
+      debugPrint('Admin user action failed: ${errorInfo.message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

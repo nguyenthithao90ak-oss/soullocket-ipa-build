@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../core/sl_theme.dart';
 import '../../services/house_service.dart';
 import '../../services/social_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../visitors/visitor_profile_screen.dart';
 
 class TopHotScreen extends StatefulWidget {
@@ -150,7 +151,7 @@ class _TopHotScreenState extends State<TopHotScreen>
         });
       }
     } catch (e) {
-      debugPrint('Lỗi tải BXH: $e');
+      debugPrint('Lỗi tải BXH: ${AppErrorMapper.resolve(e).message}');
       if (mounted) {
         setState(() => _isLoading = false);
       }

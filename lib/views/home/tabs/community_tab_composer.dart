@@ -175,20 +175,24 @@ extension _CommunityTabComposer on _CommunityTabState {
         icon: Icons.rocket_launch_rounded,
       );
     } catch (e) {
+      final resolvedError = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: _ct(
+          'Không thể đăng Locket lúc này.',
+          'Cannot post this Locket right now.',
+        ),
+      );
       if (pendingKey != null) {
         await PendingUploadService.instance.markFailed(pendingKey, e);
       }
       if (!mounted) return;
       LegacyWebUi.showNoticeWithAction(
         context,
-        message: _ct(
-          'Không thể đăng Locket lúc này: $e',
-          'Cannot post this Locket right now: $e',
-        ),
-        success: false,
+        message: resolvedError.message,
         title: _ct('Lỗi', 'Error'),
         icon: Icons.error_outline_rounded,
         actionLabel: _ct('Thử lại', 'Retry'),
+        success: false,
         onAction: () {
           unawaited(_submitLocketPost(capturedImage));
         },
@@ -334,20 +338,19 @@ extension _CommunityTabComposer on _CommunityTabState {
           icon: Icons.celebration_rounded,
         );
       }
-    } catch (e, stackTrace) {
-      final pendingKey = _pendingCommunityPostUploadKey;
-      if (pendingKey != null) {
-        await PendingUploadService.instance.markFailed(pendingKey, e);
-      }
-      debugPrint('Error submit post: $e\n$stackTrace');
+    } catch (e) {
+      final resolvedError = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: _ct(
+          'Chưa thể đăng bài lúc này. Bạn thử lại sau.',
+          'Cannot publish the post right now. Please try again later.',
+        ),
+      );
+      debugPrint('Error submit post: ${resolvedError.message}');
       if (!mounted) return;
       LegacyWebUi.showNoticeWithAction(
         context,
-        message: AppErrorMapper.resolve(
-          e,
-          fallbackMessage:
-              _ct('Chưa thể đăng bài lúc này. Bạn thử lại sau.', 'Cannot publish the post right now. Please try again later.'),
-        ).message,
+        message: resolvedError.message,
         success: false,
         title: _ct('Đăng bài chưa thành công', 'Post not published'),
         icon: Icons.cloud_off_rounded,
@@ -440,27 +443,35 @@ extension _CommunityTabComposer on _CommunityTabState {
             });
           }
         } catch (e) {
-          debugPrint('Edit cropping failed: $e');
+          final resolvedError = AppErrorMapper.resolve(
+            e,
+            fallbackMessage: _ct(
+              'Không thể mở trình chỉnh sửa ảnh lúc này.',
+              'Cannot open the photo editor right now.',
+            ),
+          );
+          debugPrint('Edit cropping failed: ${resolvedError.message}');
           if (!mounted) return;
           LegacyWebUi.showNotice(
             context,
-            message: _ct(
-              'Không thể mở trình chỉnh sửa ảnh: $e',
-              'Cannot open the photo editor: $e',
-            ),
+            message: resolvedError.message,
             success: false,
             title: _ct('Lỗi', 'Error'),
             icon: Icons.broken_image_outlined,
           );
         }
       } catch (e) {
+        final resolvedError = AppErrorMapper.resolve(
+          e,
+          fallbackMessage: _ct(
+            'Không thể chỉnh sửa ảnh lúc này.',
+            'Cannot edit the photo right now.',
+          ),
+        );
         if (!mounted) return;
         LegacyWebUi.showNotice(
           context,
-          message: _ct(
-            'Không thể chỉnh sửa ảnh: $e',
-            'Cannot edit the photo: $e',
-          ),
+          message: resolvedError.message,
           success: false,
           title:
               _ct('Ảnh đính kèm đang gặp lỗi', 'Attached photo has an issue'),
@@ -514,20 +525,31 @@ extension _CommunityTabComposer on _CommunityTabState {
           }
         } catch (e) {
           // If cropping fails (some devices have issues with ImageCropper), use original image
-          debugPrint('Cropping failed: $e');
+          final resolvedError = AppErrorMapper.resolve(
+            e,
+            fallbackMessage: _ct(
+              'Không thể chỉnh sửa ảnh lúc này.',
+              'Cannot edit the photo right now.',
+            ),
+          );
+          debugPrint('Cropping failed: ${resolvedError.message}');
           if (!bottomSheetContext.mounted) return;
           setInner(() {
             selectedImage = file;
           });
         }
       } catch (e) {
+        final resolvedError = AppErrorMapper.resolve(
+          e,
+          fallbackMessage: _ct(
+            'Không thể chọn ảnh lúc này.',
+            'Cannot pick a photo right now.',
+          ),
+        );
         if (!mounted) return;
         LegacyWebUi.showNotice(
           context,
-          message: _ct(
-            'Không thể chọn ảnh: $e',
-            'Cannot pick a photo: $e',
-          ),
+          message: resolvedError.message,
           success: false,
           title: _ct('Chưa thêm được ảnh', 'Photo not added'),
           icon: Icons.image_not_supported_outlined,

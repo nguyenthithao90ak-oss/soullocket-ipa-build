@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/sl_theme.dart';
+import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../widgets/sensitive_content_guard.dart';
-
-String _sanitizeOtpDialogError(Object error) {
-  return error
-      .toString()
-      .replaceFirst('Exception: ', '')
-      .replaceFirst('Lỗi: ', '');
-}
 
 Future<bool> showSettingsEmailOtpDialog({
   required BuildContext context,
@@ -43,7 +37,7 @@ Future<bool> showSettingsEmailOtpDialog({
       if (!dialogContext.mounted) return;
       setDialogState(() {
         isSending = false;
-        sendError = _sanitizeOtpDialogError(error);
+        sendError = AppErrorMapper.resolve(error).message;
       });
     }
   }
@@ -161,7 +155,7 @@ Future<bool> showSettingsEmailOtpDialog({
                             if (ctx.mounted) {
                               setDialogState(() {
                                 isVerifying = false;
-                                verifyError = _sanitizeOtpDialogError(error);
+                                verifyError = AppErrorMapper.resolve(error).message;
                               });
                             }
                           }
@@ -222,7 +216,7 @@ Future<bool> showSettingsPasswordResetOtpDialog({
       if (!dialogContext.mounted) return;
       setDialogState(() {
         isSending = false;
-        sendError = _sanitizeOtpDialogError(error);
+        sendError = AppErrorMapper.resolve(error).message;
       });
     }
   }
@@ -337,7 +331,7 @@ Future<bool> showSettingsPasswordResetOtpDialog({
                             if (ctx.mounted) {
                               setDialogState(() {
                                 isVerifying = false;
-                                verifyError = _sanitizeOtpDialogError(error);
+                                verifyError = AppErrorMapper.resolve(error).message;
                               });
                             }
                           }

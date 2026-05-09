@@ -325,15 +325,10 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     if (isSilentRapidActionBlock(error)) {
       return;
     }
-    final raw = error.toString();
-    final normalizedRaw = raw.toLowerCase();
-    final message = normalizedRaw.contains('permission-denied') ||
-            normalizedRaw.contains("client doesn't have permission")
-        ? 'Không thể gửi tin nhắn lúc này. Vui lòng thử lại sau.'
-        : raw
-            .replaceFirst('Exception: ', '')
-            .replaceFirst('Bad state: ', '')
-            .trim();
+    final message = AppErrorMapper.resolve(
+      error,
+      fallbackMessage: 'Không thể gửi tin nhắn lúc này. Vui lòng thử lại sau.',
+    ).message;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message.isEmpty ? 'Không thể gửi tin nhắn' : message),
@@ -480,7 +475,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       }
       if (cleanupError != null) {
         debugPrint(
-            'Delete old chat background after commit failed: $cleanupError');
+            'Delete old chat background after commit failed: ${AppErrorMapper.cleanMessage(cleanupError)}');
         _showNotice(
           'Đã cập nhật nền chat nhưng chưa xóa được file cũ. Vui lòng thử lại.',
           error: true,
@@ -503,7 +498,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
             );
           } catch (cleanupError) {
             debugPrint(
-              'Rollback new chat background upload failed: $cleanupError',
+              'Rollback new chat background upload failed: ${AppErrorMapper.cleanMessage(cleanupError)}',
             );
           }
         }

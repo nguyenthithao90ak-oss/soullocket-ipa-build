@@ -280,7 +280,12 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                       if (!mounted || !context.mounted) return;
                       SLNotice.showSuccess(context, 'Đã xóa bài viết.');
                     } catch (e) {
-                      debugPrint('Delete post failed: $e');
+                      debugPrint(
+                        'Delete post failed: ${AppErrorMapper.resolve(
+                          e,
+                          fallbackMessage: 'Đã có lỗi xảy ra',
+                        ).message}',
+                      );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
                         context,
@@ -308,7 +313,12 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                         'Đã gửi báo cáo tới quản trị viên.',
                       );
                     } catch (e) {
-                      debugPrint('Report post failed: $e');
+                      debugPrint(
+                        'Report post failed: ${AppErrorMapper.resolve(
+                          e,
+                          fallbackMessage: 'Đã có lỗi xảy ra',
+                        ).message}',
+                      );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
                         context,
@@ -354,7 +364,12 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                         targetHouseId: targetHouseId,
                       );
                     } catch (e) {
-                      debugPrint('Block house failed: $e');
+                      debugPrint(
+                        'Block house failed: ${AppErrorMapper.resolve(
+                          e,
+                          fallbackMessage: 'Đã có lỗi xảy ra',
+                        ).message}',
+                      );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
                         context,

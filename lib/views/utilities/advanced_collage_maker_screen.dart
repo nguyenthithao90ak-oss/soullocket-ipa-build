@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/sl_theme.dart';
 import '../../services/image_picker_recovery_service.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
+import '../../utils/app_error_mapper.dart';
 
 const Color _advancedCream = Color(0xFFF7F0E6);
 const Color _advancedShell = Color(0xFFFFF8F2);
@@ -117,7 +118,7 @@ class _AdvancedCollageMakerScreenState
         }
       });
     } catch (e) {
-      debugPrint('Error picking images: $e');
+      debugPrint('Error picking images: ${AppErrorMapper.resolve(e).message}');
     }
   }
 

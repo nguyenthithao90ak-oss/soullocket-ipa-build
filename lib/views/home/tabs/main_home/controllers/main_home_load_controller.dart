@@ -714,7 +714,12 @@ extension _MainHomeLoadController on _MainHomeTabState {
               try {
                 await OfflineCacheService.saveCache(cacheKey, settings);
               } catch (e) {
-                debugPrint('Error saving settings to cache: $e');
+                debugPrint(
+                  'Error saving settings to cache: ${AppErrorMapper.resolve(
+                    e,
+                    fallbackMessage: 'Đã có lỗi xảy ra',
+                  ).message}',
+                );
               }
 
               if (isStale()) return;

@@ -4,6 +4,8 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../app_error_mapper.dart';
+
 /// ============================================================
 ///  WebRTCService — Gra (Logic/Data)
 ///  Hệ thống Đàm thoại Video/Audio Peer-to-Peer (Phase 4)
@@ -69,7 +71,7 @@ class WebRTCService {
         };
       }
     } catch (e) {
-      debugPrint('Failed to load WebRTC ICE servers: $e');
+      debugPrint('Failed to load WebRTC ICE servers: ${AppErrorMapper.resolve(e).message}');
     }
     return {'iceServers': iceServers};
   }
@@ -241,7 +243,7 @@ class WebRTCService {
         return legacyValue;
       }
     } catch (e) {
-      debugPrint('Failed to resolve caller house id for call room: $e');
+      debugPrint('Failed to resolve caller house id for call room: ${AppErrorMapper.resolve(e).message}');
     }
 
     return null;
@@ -388,7 +390,7 @@ class WebRTCService {
         // Có thể trigger thư viện tắt chuông hoặc ẩn Incoming Call Screen
       }
     }, onError: (error) {
-      debugPrint('Error listening for incoming calls (childChanged): $error');
+      debugPrint('Error listening for incoming calls (childChanged): ${AppErrorMapper.resolve(error).message}');
     });
 
     return callsRef.onChildAdded.listen((event) {
@@ -409,7 +411,7 @@ class WebRTCService {
           : val['callerId']?.toString().trim() ?? 'Người lạ';
       onIncomingCall(roomId, callerId, val);
     }, onError: (error) {
-      debugPrint('Error listening for incoming calls (childAdded): $error');
+      debugPrint('Error listening for incoming calls (childAdded): ${AppErrorMapper.resolve(error).message}');
     });
   }
 }

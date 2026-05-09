@@ -772,7 +772,10 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
             .invokeMethod<bool>('moveTaskToBack');
         return;
       } catch (e) {
-        debugPrint('moveTaskToBack failed: $e');
+        debugPrint('moveTaskToBack failed: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Chưa thể đưa ứng dụng về nền lúc này.',
+        ).message}');
       }
     }
     await SystemNavigator.pop();

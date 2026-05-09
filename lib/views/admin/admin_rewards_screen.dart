@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import '../../services/auth_service.dart';
+import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 import '../../core/sl_theme.dart';
 
@@ -66,7 +67,11 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _errorText = error.toString();
+        _errorText = AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể tải dữ liệu điểm thưởng. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message;
       });
     } finally {
       if (mounted) {
@@ -143,7 +148,10 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                       const SnackBar(content: Text('Đã cập nhật điểm')));
                   _loadData(refresh: true);
                 } catch (e) {
-                  debugPrint('Update reward points failed: $e');
+                  debugPrint('Update reward points failed: ${AppErrorMapper.resolve(
+                    e,
+                    fallbackMessage: 'Chưa thể cập nhật điểm lúc này.',
+                  ).message}');
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

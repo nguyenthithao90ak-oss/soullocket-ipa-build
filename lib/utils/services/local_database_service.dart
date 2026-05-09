@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../app_error_mapper.dart';
+
 class SyncQueueSummary {
   final int pendingCount;
   final int syncingCount;
@@ -378,13 +380,13 @@ class LocalDatabaseService {
             {
               'status': _queueStatusFailed,
               'retryCount': nextRetryCount,
-              'lastError': e.toString(),
+              'lastError': AppErrorMapper.cleanMessage(e),
               'timestamp': DateTime.now().millisecondsSinceEpoch,
             },
             where: 'id = ?',
             whereArgs: [id],
           );
-          debugPrint('[SyncQueue] Failed $action -> $taskPath: $e');
+          debugPrint('[SyncQueue] Failed $action -> $taskPath: ${AppErrorMapper.cleanMessage(e)}');
           if (!retryable || reachedRetryLimit) {
             shouldStopProcessing = _isBlockingQueueError(e);
           }

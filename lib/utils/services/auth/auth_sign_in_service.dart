@@ -128,8 +128,11 @@ class AuthSignInService {
         return true;
       }
       return accounts.length < AppConfig.maxNewLoginsPerDay;
-    } catch (error, stackTrace) {
-      debugPrint('checkDailyLoginLimit failed: $error\n$stackTrace');
+    } catch (error) {
+      debugPrint('checkDailyLoginLimit failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể kiểm tra giới hạn đăng nhập hôm nay.',
+      ).message}');
       return true;
     }
   }
@@ -159,8 +162,11 @@ class AuthSignInService {
         }),
       );
       return true;
-    } catch (error, stackTrace) {
-      debugPrint('recordDailyLoginLimit failed: $error\n$stackTrace');
+    } catch (error) {
+      debugPrint('recordDailyLoginLimit failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể ghi giới hạn đăng nhập hôm nay.',
+      ).message}');
       return true;
     }
   }
@@ -894,7 +900,10 @@ class AuthSignInService {
       return payload;
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('authLoginGuardHttp failed: $error');
+        debugPrint('authLoginGuardHttp failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể kiểm tra trạng thái đăng nhập lúc này.',
+        ).message}');
       }
       unawaited(
         RevenueSecurityTelemetryService.instance.logEvent(
@@ -1385,15 +1394,21 @@ class AuthSignInService {
           try {
             await currentUser.delete();
             deletedAuthUser = true;
-          } on firebase_auth.FirebaseAuthException catch (error, stackTrace) {
+          } on firebase_auth.FirebaseAuthException catch (error) {
             debugPrint(
               'rollbackIncompleteEmailSignup delete failed: '
-              '${error.code}\n$stackTrace',
+              '${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể xóa tài khoản đăng ký dang dở.',
+              ).message}',
             );
-          } catch (error, stackTrace) {
+          } catch (error) {
             debugPrint(
               'rollbackIncompleteEmailSignup delete failed: '
-              '$error\n$stackTrace',
+              '${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể xóa tài khoản đăng ký dang dở.',
+              ).message}',
             );
           }
         }
@@ -1447,9 +1462,12 @@ class AuthSignInService {
       final houseIdSnap = await _db.child('users/$uid/houseId').get();
       final houseId = houseIdSnap.value?.toString().trim() ?? '';
       return houseId.isNotEmpty;
-    } catch (error, stackTrace) {
+    } catch (error) {
       debugPrint(
-        '_hasKnownHouseContext failed for $uid: $error\n$stackTrace',
+        '_hasKnownHouseContext failed for $uid: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể kiểm tra ngữ cảnh nhà hiện tại.',
+        ).message}',
       );
       return null;
     }
@@ -1564,7 +1582,10 @@ class AuthSignInService {
         return result;
       }
       if (kDebugMode) {
-        debugPrint('deleteAccount(): failed with error=$error');
+        debugPrint('deleteAccount(): failed with error=${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể xóa tài khoản lúc này.',
+        ).message}');
       }
       if (error is String) rethrow;
       final resolvedError = AppErrorMapper.resolve(
@@ -1755,7 +1776,10 @@ class AuthSignInService {
           }
         }
       } catch (error) {
-        debugPrint('Failed to sync UI preferences: $error');
+        debugPrint('Failed to sync UI preferences: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể đồng bộ cài đặt giao diện lúc này.',
+        ).message}');
       }
     }
 
@@ -1772,10 +1796,13 @@ class AuthSignInService {
       await DeviceManagerService()
           .registerCurrentDevice()
           .timeout(const Duration(seconds: 4));
-    } catch (error, stackTrace) {
+    } catch (error) {
       debugPrint(
         'registerCurrentDevice skipped during auth finalize: '
-        '$error\n$stackTrace',
+        '${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể đăng ký thiết bị hiện tại lúc này.',
+        ).message}',
       );
     }
 
@@ -1804,8 +1831,11 @@ class AuthSignInService {
       }
       final decoded = await compute(jsonDecode, raw);
       return _asStringDynamicMap(decoded);
-    } catch (error, stackTrace) {
-      debugPrint('_getDailyLoginTracker failed: $error\n$stackTrace');
+    } catch (error) {
+      debugPrint('_getDailyLoginTracker failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể đọc bộ đếm đăng nhập hôm nay.',
+      ).message}');
       try {
         final prefs = await _prefs;
         await prefs.remove(_dailyLoginTrackerPrefsKey);
@@ -1924,10 +1954,12 @@ class AuthSignInService {
       return Map<String, dynamic>.from(decoded);
     } on TimeoutException {
       throw 'Máy chủ xóa tài khoản phản hồi quá chậm. Vui lòng thử lại khi mạng ổn định hơn.';
-    } catch (error, stackTrace) {
+    } catch (error) {
       if (kDebugMode) {
-        debugPrint('Delete account endpoint error: $error');
-        debugPrintStack(stackTrace: stackTrace);
+        debugPrint('Delete account endpoint error: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể gọi máy chủ xóa tài khoản lúc này.',
+        ).message}');
       }
       if (error is String) rethrow;
       throw 'Không hoàn tất xóa tài khoản: hãy kiểm tra mạng và đăng nhập lại nếu cần.';

@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/single_match_service.dart';
+import '../app_error_mapper.dart';
 
 class JoinHouseResult {
   final bool success;
@@ -95,9 +96,12 @@ class CoupleService {
             : 'Không thể tham gia nhà này lúc này.',
       );
     } catch (e) {
+      final resolvedMessage = AppErrorMapper.resolve(e).message;
       return JoinHouseResult.fail(
         JoinHouseError.unknown,
-        'Co loi xay ra: ${e.toString()}',
+        resolvedMessage.isNotEmpty
+            ? resolvedMessage
+            : 'Không thể tham gia nhà này lúc này.',
       );
     }
   }

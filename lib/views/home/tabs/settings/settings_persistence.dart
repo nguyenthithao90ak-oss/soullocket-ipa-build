@@ -939,7 +939,14 @@ extension _SettingsTabPersistence on _SettingsTabState {
       }
     } catch (e) {
       if (!mounted) return;
-      _showToast('${context.tr('err_restore_vip')}: $e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể khôi phục gói PRO lúc này. Hãy kiểm tra tài khoản cửa hàng và thử lại.',
+        ).message,
+        success: false,
+      );
     } finally {
       if (mounted) setState(() => _isRestoringVip = false);
     }
@@ -1101,7 +1108,14 @@ extension _SettingsTabPersistence on _SettingsTabState {
       await _authService.validateLoginEmailAliasForCurrentUser(normalized);
     } catch (e) {
       if (mounted) {
-        _showToast('$e', success: false);
+        _showToast(
+          AppErrorMapper.resolve(
+            e,
+            fallbackMessage:
+                'Email phụ này chưa thể dùng để đăng nhập. Hãy kiểm tra email hoặc chọn email khác.',
+          ).message,
+          success: false,
+        );
       }
       return;
     }
@@ -1143,13 +1157,27 @@ extension _SettingsTabPersistence on _SettingsTabState {
           }
         } catch (e) {
           if (mounted) {
-            _showToast('Đã xác thực nhưng lỗi khi lưu: $e', success: false);
+            _showToast(
+              AppErrorMapper.resolve(
+                e,
+                fallbackMessage:
+                    'Email đã xác thực nhưng chưa lưu được. Hãy kiểm tra kết nối rồi bấm lưu lại.',
+              ).message,
+              success: false,
+            );
           }
         }
       }
     } catch (e) {
       if (mounted) {
-        _showToast('Không thể gửi mã xác nhận: $e', success: false);
+        _showToast(
+          AppErrorMapper.resolve(
+            e,
+            fallbackMessage:
+                'Chưa thể gửi mã xác nhận lúc này. Hãy kiểm tra email và thử lại sau ít phút.',
+          ).message,
+          success: false,
+        );
       }
     }
   }
@@ -1385,11 +1413,12 @@ extension _SettingsTabPersistence on _SettingsTabState {
       if (!silent) {
         if (!mounted) return;
         _showToast(
-          localSaved
-              ? context
-                  .tr('saved_local_sync_fail')
-                  .replaceAll('{error}', e.toString())
-              : context.tr('save_fail').replaceAll('{error}', e.toString()),
+          AppErrorMapper.resolve(
+            e,
+            fallbackMessage: localSaved
+                ? 'Đã lưu trên máy nhưng chưa đồng bộ lên đám mây. Hãy kiểm tra kết nối rồi lưu lại.'
+                : 'Chưa thể lưu cài đặt lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+          ).message,
           success: false,
         );
       }

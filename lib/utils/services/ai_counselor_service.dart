@@ -3,6 +3,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../app_error_mapper.dart';
+
 class AiCounselorService {
   static final AiCounselorService _instance = AiCounselorService._internal();
 
@@ -47,7 +49,7 @@ class AiCounselorService {
           .whereType<AiChatHistoryMessage>()
           .toList(growable: false);
     } catch (error) {
-      debugPrint('[AiCounselor] getAiChatHistory failed: $error');
+      debugPrint('[AiCounselor] getAiChatHistory failed: ${AppErrorMapper.resolve(error).message}');
       return const <AiChatHistoryMessage>[];
     }
   }
@@ -89,7 +91,7 @@ class AiCounselorService {
       });
       return true;
     } catch (error) {
-      debugPrint('[AiCounselor] reportAiReply failed: $error');
+      debugPrint('[AiCounselor] reportAiReply failed: ${AppErrorMapper.resolve(error).message}');
       return false;
     }
   }
@@ -127,7 +129,7 @@ class AiCounselorService {
     } on FirebaseFunctionsException catch (error) {
       lastErrorMessage = _mapFunctionsError(error);
       debugPrint(
-        '[AiCounselor] generateAiReply failed: ${error.code} ${error.message ?? ''}',
+        '[AiCounselor] generateAiReply failed: ${AppErrorMapper.resolve(error).message}',
       );
       return null;
     } catch (_) {

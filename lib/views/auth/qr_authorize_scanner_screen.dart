@@ -6,6 +6,7 @@ import '../../services/house_service.dart';
 import '../../services/qr_login_service.dart';
 import '../../services/qr_payload_codec.dart';
 import '../../services/security_flow_guard.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../widgets/sensitive_content_guard.dart';
 
 class QRAuthorizeScannerScreen extends StatefulWidget {
@@ -345,7 +346,11 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
       }
       await _restartScanner();
       await _showSnack(
-        error.toString().replaceFirst('Exception: ', ''),
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể cấp quyền đăng nhập QR lúc này. Hãy thử lại sau.',
+        ).message,
         backgroundColor: const Color(0xFFD81B60),
       );
     }

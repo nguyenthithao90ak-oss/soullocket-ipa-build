@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'dart:ui' as ui;
 import 'package:intl/intl.dart';
 import '../../core/sl_theme.dart';
 import '../../services/activity_history_service.dart';
+import '../../utils/app_error_mapper.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
 class LocationDiaryScreen extends StatefulWidget {
@@ -87,7 +88,15 @@ class _LocationDiaryScreenState extends State<LocationDiaryScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi thêm check-in: $e')),
+          SnackBar(
+            content: Text(
+              AppErrorMapper.resolve(
+                e,
+                fallbackMessage:
+                    'Chưa thể thêm check-in lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+              ).message,
+            ),
+          ),
         );
       }
     }
@@ -117,7 +126,15 @@ class _LocationDiaryScreenState extends State<LocationDiaryScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi xóa check-in: $e')),
+        SnackBar(
+          content: Text(
+            AppErrorMapper.resolve(
+              e,
+              fallbackMessage:
+                  'Chưa thể xóa check-in lúc này. Hãy thử lại sau ít phút.',
+            ).message,
+          ),
+        ),
       );
     }
   }

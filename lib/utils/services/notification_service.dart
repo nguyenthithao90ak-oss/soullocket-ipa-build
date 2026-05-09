@@ -16,6 +16,7 @@ import '../views/chat/watch_together_screen.dart';
 import '../views/home/home_screen.dart';
 import '../views/utilities/creative_diary_screen.dart';
 import '../views/utilities/cinema_screen.dart';
+import '../utils/app_error_mapper.dart';
 import 'house_service.dart';
 
 /// NotificationService — Gra (Logic/Data) chịu trách nhiệm toàn bộ
@@ -150,9 +151,11 @@ class NotificationService {
 
         _isInitialized = true;
         await syncDailySleepReminder();
-      } catch (error, stackTrace) {
-        debugPrint('NotificationService initialize error: $error');
-        debugPrintStack(stackTrace: stackTrace);
+      } catch (error) {
+        debugPrint('NotificationService initialize error: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể khởi tạo thông báo lúc này.',
+        ).message}');
       } finally {}
     }();
 
@@ -478,7 +481,10 @@ class NotificationService {
         'status': 'pending',
       });
     } catch (e) {
-      debugPrint('Failed to queue partner notification: $e');
+      debugPrint('Failed to queue partner notification: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xếp hàng thông báo cho đối tác.',
+      ).message}');
     }
   }
 
@@ -504,7 +510,10 @@ class NotificationService {
         'status': 'pending',
       });
     } catch (e) {
-      debugPrint('Failed to queue house notification: $e');
+      debugPrint('Failed to queue house notification: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xếp hàng thông báo cho house.',
+      ).message}');
     }
   }
 
@@ -623,7 +632,10 @@ class NotificationService {
       _timeZoneReady = true;
       return true;
     } catch (e) {
-      debugPrint('Notification timezone init failed: $e');
+      debugPrint('Notification timezone init failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể khởi tạo múi giờ thông báo.',
+      ).message}');
       return false;
     }
   }
@@ -890,7 +902,10 @@ class NotificationService {
         }
       }
     } catch (e) {
-      debugPrint('Check time capsule error: $e');
+      debugPrint('Check time capsule error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra hộp thư tương lai lúc này.',
+      ).message}');
     }
   }
 

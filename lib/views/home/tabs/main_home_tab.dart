@@ -1327,7 +1327,16 @@ class _MainHomeTabState extends State<MainHomeTab> {
     try {
       file = presetFile ?? await _storageService.pickImage();
     } catch (e) {
-      if (mounted) SLNotice.showInfo(context, 'Lỗi chọn ảnh: $e');
+      if (mounted) {
+        SLNotice.showInfo(
+          context,
+          AppErrorMapper.resolve(
+            e,
+            fallbackMessage:
+                'Chưa thể chọn ảnh lúc này. Hãy kiểm tra quyền thư viện rồi thử lại.',
+          ).message,
+        );
+      }
     }
     if (file == null) return;
     if (!mounted) return;

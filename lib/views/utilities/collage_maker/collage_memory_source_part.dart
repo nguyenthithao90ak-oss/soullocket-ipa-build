@@ -139,7 +139,7 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
         _scheduleAutoGenerate(immediate: true);
       }
     } catch (e) {
-      debugPrint('Error fetching memory photos: $e');
+      debugPrint('Error fetching memory photos: ${AppErrorMapper.resolve(e).message}');
     }
   }
 

@@ -18,6 +18,7 @@ import '../../utils/collage_generator.dart';
 import '../../core/sl_theme.dart';
 import '../../services/collage_limit_service.dart';
 import '../../services/image_picker_recovery_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import 'sticker_library_screen.dart';
 
@@ -621,7 +622,19 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
         _scheduleAutoGenerate();
       }
     } catch (e) {
-      debugPrint('Error picking photos: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppErrorMapper.resolve(
+                e,
+                fallbackMessage:
+                    'Chưa thể chọn ảnh lúc này. Hãy kiểm tra quyền thư viện rồi thử lại.',
+              ).message,
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -811,7 +824,9 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
               maxDimension: maxDimension,
             );
           } catch (e) {
-            debugPrint('Error loading image $url: $e');
+            debugPrint(
+              'Error loading image $url: ${AppErrorMapper.resolve(e).message}',
+            );
             return null;
           }
         }),
@@ -929,8 +944,15 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     } catch (e) {
       if (mounted && requestId == _generationTicket) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không tạo được collage: $e')),
-
+          SnackBar(
+            content: Text(
+              AppErrorMapper.resolve(
+                e,
+                fallbackMessage:
+                    'Chưa thể tạo collage lúc này. Hãy thử lại sau ít phút.',
+              ).message,
+            ),
+          ),
         );
       }
     } finally {
@@ -989,7 +1011,15 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(
+            content: Text(
+              AppErrorMapper.resolve(
+                e,
+                fallbackMessage:
+                    'Chưa thể lưu ảnh lúc này. Hãy kiểm tra quyền thư viện rồi thử lại.',
+              ).message,
+            ),
+          ),
         );
       }
     }
@@ -1016,7 +1046,15 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi chia sẻ: $e')),
+          SnackBar(
+            content: Text(
+              AppErrorMapper.resolve(
+                e,
+                fallbackMessage:
+                    'Chưa thể chia sẻ ảnh lúc này. Hãy thử lại sau.',
+              ).message,
+            ),
+          ),
         );
       }
     }

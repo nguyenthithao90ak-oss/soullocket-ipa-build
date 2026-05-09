@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_config.dart';
 import 'app_check_http_headers.dart';
+import '../app_error_mapper.dart';
 import 'app_lifecycle_presence_guard.dart';
 import 'consent_service.dart';
 import 'house_service.dart';
@@ -228,7 +229,11 @@ class AdMobService {
           }
         },
         (FormError error) {
-          debugPrint('Consent Info Update Error: $error');
+          final errorInfo = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể xử lý đồng ý quảng cáo lúc này.',
+          );
+          debugPrint('Consent Info Update Error: ${errorInfo.message}');
           if (!consentCompleter.isCompleted) {
             consentCompleter.complete();
           }
@@ -236,7 +241,11 @@ class AdMobService {
       );
       await consentCompleter.future;
     } catch (e) {
-      debugPrint('Error handling UMP Consent: $e');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xử lý đồng ý quảng cáo lúc này.',
+      );
+      debugPrint('Error handling UMP Consent: ${errorInfo.message}');
     }
 
     try {
@@ -267,7 +276,11 @@ class AdMobService {
             if (map['ios_appOpenId'] != null) _iosAppOpenId = map['ios_appOpenId'].toString();
         }
       } catch (e) {
-        debugPrint('Failed to sync AdMob IDs: $e');
+        final errorInfo = AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể đồng bộ ID quảng cáo lúc này.',
+        );
+        debugPrint('Failed to sync AdMob IDs: ${errorInfo.message}');
       }
 
       await MobileAds.instance.initialize();
@@ -298,7 +311,11 @@ class AdMobService {
           _isRewardedAdLoading = false;
         },
         onAdFailedToLoad: (error) {
-          debugPrint('AdMobService: rewarded main failed to load: $error');
+          final errorInfo = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Quảng cáo thưởng chính chưa tải được.',
+          );
+          debugPrint('AdMobService: rewarded main failed to load: ${errorInfo.message}');
           _rewardedAd = null;
           _isRewardedAdLoading = false;
         },
@@ -321,12 +338,20 @@ class AdMobService {
           _isSoulGameRewardedAdLoading = false;
         },
         onAdFailedToLoad: (error) {
-          debugPrint('AdMobService: rewarded soul game failed to load: $error');
+          final errorInfo = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Quảng cáo thưởng Soul Game chưa tải được.',
+          );
+          debugPrint('AdMobService: rewarded soul game failed to load: ${errorInfo.message}');
           _soulGameRewardedAd = null;
           _isSoulGameRewardedAdLoading = false;
         },
       ),
     );
+  }
+
+  void preloadRewardedAd() {
+    _loadRewardedAd();
   }
 
   void preloadSoulGameRewardedAd() {
@@ -356,7 +381,11 @@ class AdMobService {
           }
         },
         onAdFailedToLoad: (error) {
-          debugPrint('AdMobService: app open failed to load: $error');
+          final errorInfo = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Quảng cáo App Open chưa tải được.',
+          );
+          debugPrint('AdMobService: app open failed to load: ${errorInfo.message}');
           _appOpenAd = null;
           _isAppOpenLoading = false;
           if (!completer.isCompleted) {
@@ -670,7 +699,11 @@ class AdMobService {
           }
         },
         onAdFailedToLoad: (ad, error) {
-          debugPrint('AdMobService: banner failed to load: $error');
+          final errorInfo = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Banner quảng cáo chưa tải được.',
+          );
+          debugPrint('AdMobService: banner failed to load: ${errorInfo.message}');
           ad.dispose();
           if (!completer.isCompleted) {
             completer.complete(null);
@@ -705,7 +738,11 @@ class AdMobService {
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) => _interstitialAd = ad,
         onAdFailedToLoad: (error) {
-          debugPrint('AdMobService: interstitial failed to load: $error');
+          final errorInfo = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Interstitial quảng cáo chưa tải được.',
+          );
+          debugPrint('AdMobService: interstitial failed to load: ${errorInfo.message}');
           _interstitialAd = null;
         },
       ),
@@ -995,7 +1032,11 @@ class AdMobService {
     try {
       idToken = await readBearerToken(forceRefresh: true);
     } catch (tokenError) {
-      debugPrint('Failed to get Firebase ID token (checkin): $tokenError');
+      final errorInfo = AppErrorMapper.resolve(
+        tokenError,
+        fallbackMessage: 'Không thể lấy token xác thực quảng cáo.',
+      );
+      debugPrint('Failed to get Firebase ID token (checkin): ${errorInfo.message}');
       return {'ok': false, 'error': 'network_error'};
     }
     if (idToken.isEmpty) {
@@ -1006,8 +1047,12 @@ class AdMobService {
     try {
       response = await postWithToken(idToken);
     } on StateError catch (error) {
+      final errorInfo = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Thiếu token App Check để gửi yêu cầu thưởng.',
+      );
       debugPrint(
-          'Reward server blocked due to missing App Check token: $error');
+          'Reward server blocked due to missing App Check token: ${errorInfo.message}');
       await RevenueSecurityTelemetryService.instance.logEvent(
         type: 'reward_claim_blocked',
         reason: 'missing_app_check',
@@ -1044,24 +1089,40 @@ class AdMobService {
           return {'ok': false, 'error': 'missing_app_check'};
         } on http.ClientException catch (retryError) {
           final retryMessage = retryError.message.toLowerCase();
+          final retryInfo = AppErrorMapper.resolve(
+            retryError,
+            fallbackMessage: 'Yêu cầu máy chủ thưởng chưa hoàn tất.',
+          );
           if (retryMessage.contains('parse header value')) {
             debugPrint(
-              'Reward server request still failed after token refresh: $retryError',
+              'Reward server request still failed after token refresh: ${retryInfo.message}',
             );
             return {'ok': false, 'error': 'invalid_auth_header'};
           }
-          debugPrint('Reward server request failed: $retryError');
+          debugPrint('Reward server request failed: ${retryInfo.message}');
           return {'ok': false, 'error': 'network_error'};
         }
       } else {
-        debugPrint('Reward server request failed: $error');
+        final errorInfo = AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Yêu cầu máy chủ thưởng chưa hoàn tất.',
+        );
+        debugPrint('Reward server request failed: ${errorInfo.message}');
         return {'ok': false, 'error': 'network_error'};
       }
     } on TimeoutException catch (error) {
-      debugPrint('Reward server request timed out: $error');
+      final errorInfo = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Yêu cầu máy chủ thưởng bị quá thời gian.',
+      );
+      debugPrint('Reward server request timed out: ${errorInfo.message}');
       return {'ok': false, 'error': 'network_timeout'};
     } catch (error) {
-      debugPrint('Reward server request failed: $error');
+      final errorInfo = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Yêu cầu máy chủ thưởng chưa hoàn tất.',
+      );
+      debugPrint('Reward server request failed: ${errorInfo.message}');
       return {'ok': false, 'error': 'network_error'};
     }
 

@@ -40,8 +40,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     }
     FirebaseDatabase.instance.setPersistenceEnabled(true);
   } catch (error, stackTrace) {
-    debugPrint('FCM background bootstrap error: $error');
-    debugPrintStack(stackTrace: stackTrace);
+    debugPrint('FCM background bootstrap error: ${AppErrorMapper.resolve(
+      error,
+      fallbackMessage: 'Không thể khởi tạo FCM nền lúc này.',
+    ).message}');
     unawaited(ErrorLoggerService.instance.logError(
       error,
       stackTrace,
@@ -180,7 +182,10 @@ Future<void> _clearStaleIosAuthAfterFreshInstall() async {
         'createdAtMs': DateTime.now().millisecondsSinceEpoch,
       });
     } catch (e) {
-      debugPrint('Fresh install cleanup log skipped: $e');
+      debugPrint('Fresh install cleanup log skipped: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể ghi log dọn dẹp cài đặt mới.',
+      ).message}');
     }
   }
 
@@ -315,8 +320,7 @@ void main() {
         fallbackMessage:
             'Không thể khởi động ứng dụng lúc này. Vui lòng thử lại sau.',
       );
-      debugPrint('Bootstrap error: $error');
-      debugPrintStack(stackTrace: stackTrace);
+      debugPrint('Bootstrap error: ${bootstrapError.message}');
       unawaited(
         RevenueSecurityTelemetryService.instance.logSystemEvent(
           type: 'bootstrap_error',
@@ -346,7 +350,10 @@ void main() {
       ));
     }
   }, (error, stackTrace) {
-    debugPrint('Uncaught zone error: $error');
+    debugPrint('Uncaught zone error: ${AppErrorMapper.resolve(
+      error,
+      fallbackMessage: 'Có lỗi chưa được bắt ở vùng khởi động.',
+    ).message}');
     unawaited(ErrorLoggerService.instance.logError(
       error,
       stackTrace,
@@ -384,7 +391,10 @@ Future<void> _initializeFirebaseBootstrap() async {
       // ⚡ Reduced from 10MB → 5MB to save RAM on startup
       FirebaseDatabase.instance.setPersistenceCacheSizeBytes(5000000);
     } catch (e) {
-      debugPrint('Firebase persistence error: $e');
+      debugPrint('Firebase persistence error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể bật lưu đệm Firebase.',
+      ).message}');
     }
 
     await _initializeFirebaseAppCheck();
@@ -409,9 +419,11 @@ Future<void> _initializeNativeFirebaseBootstrap() async {
   try {
     await _initializeDefaultNativeFirebaseApp();
     return;
-  } catch (nativeError, stackTrace) {
-    debugPrint('Firebase native init error: $nativeError');
-    debugPrintStack(stackTrace: stackTrace);
+  } catch (nativeError) {
+    debugPrint('Firebase native init error: ${AppErrorMapper.resolve(
+      nativeError,
+      fallbackMessage: 'Không thể khởi tạo Firebase native.',
+    ).message}');
   }
 
   final fallbackOptions = await _resolveNativeFirebaseFallbackOptions();
@@ -449,7 +461,10 @@ Future<void> _initializeDefaultNativeFirebaseApp() async {
       if (Firebase.apps.isNotEmpty) {
         return;
       }
-      debugPrint('Firebase native init attempt ${index + 1} failed: $error');
+      debugPrint('Firebase native init attempt ${index + 1} failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể khởi tạo Firebase native.',
+      ).message}');
       if (index < attemptTimeouts.length - 1) {
         await Future<void>.delayed(const Duration(milliseconds: 350));
       }
@@ -517,7 +532,10 @@ Future<FirebaseOptions?> _loadNativeFirebaseOptions() async {
       databaseURL: databaseUrl.isEmpty ? null : databaseUrl,
     );
   } catch (error) {
-    debugPrint('Native Firebase options load error: $error');
+    debugPrint('Native Firebase options load error: ${AppErrorMapper.resolve(
+      error,
+      fallbackMessage: 'Không thể đọc cấu hình Firebase native.',
+    ).message}');
     return null;
   }
 }
@@ -544,7 +562,10 @@ Future<void> _initializeFirebaseAppCheck() async {
         )
         .timeout(const Duration(seconds: 3));
   } catch (e) {
-    debugPrint('Firebase App Check init error: $e');
+    debugPrint('Firebase App Check init error: ${AppErrorMapper.resolve(
+      e,
+      fallbackMessage: 'Không thể khởi tạo App Check.',
+    ).message}');
   }
 }
 
@@ -592,8 +613,10 @@ void _scheduleDeferredBootstrap() {
         ]);
         unawaited(_warmUpBackgroundServices());
       } catch (error, stackTrace) {
-        debugPrint('Deferred bootstrap error: $error');
-        debugPrintStack(stackTrace: stackTrace);
+        debugPrint('Deferred bootstrap error: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể chạy tác vụ khởi động nền.',
+        ).message}');
         unawaited(ErrorLoggerService.instance.logError(
           error,
           stackTrace,
@@ -614,7 +637,10 @@ Future<void> _purgeDeprecatedSecretsDeferred() async {
   try {
     await _purgeDeprecatedSecrets();
   } catch (e) {
-    debugPrint('Deprecated secrets cleanup error: $e');
+    debugPrint('Deprecated secrets cleanup error: ${AppErrorMapper.resolve(
+      e,
+      fallbackMessage: 'Không thể dọn bí mật cũ.',
+    ).message}');
   }
 }
 
@@ -622,7 +648,10 @@ Future<void> _warmUpOfflineCache() async {
   try {
     await OfflineCacheService.initialize();
   } catch (e) {
-    debugPrint('Prefs init error: $e');
+    debugPrint('Prefs init error: ${AppErrorMapper.resolve(
+      e,
+      fallbackMessage: 'Không thể khởi tạo prefs.',
+    ).message}');
   }
 }
 
@@ -630,7 +659,10 @@ Future<void> _warmUpLocalDatabase() async {
   try {
     await LocalDatabaseService().initialize();
   } catch (e) {
-    debugPrint('LocalDB init error: $e');
+    debugPrint('LocalDB init error: ${AppErrorMapper.resolve(
+      e,
+      fallbackMessage: 'Không thể khởi tạo cơ sở dữ liệu cục bộ.',
+    ).message}');
   }
 }
 
@@ -639,7 +671,10 @@ Future<void> _warmUpWidgetService() async {
   try {
     await WidgetService.ensureInitialized();
   } catch (e) {
-    debugPrint('Widget bootstrap error: $e');
+    debugPrint('Widget bootstrap error: ${AppErrorMapper.resolve(
+      e,
+      fallbackMessage: 'Không thể khởi tạo widget lúc này.',
+    ).message}');
   }
 }
 
@@ -647,7 +682,10 @@ Future<void> _warmUpBackgroundServices() async {
   try {
     await L10nService().init();
   } catch (e) {
-    debugPrint('L10n init error: $e');
+    debugPrint('L10n init error: ${AppErrorMapper.resolve(
+      e,
+      fallbackMessage: 'Không thể khởi tạo ngôn ngữ.',
+    ).message}');
   }
 
   unawaited(_runBackgroundWarmUpTask(
@@ -671,7 +709,10 @@ Future<void> _runBackgroundWarmUpTask(
   try {
     await task();
   } catch (e) {
-    debugPrint('$label: $e');
+    debugPrint('$label: ${AppErrorMapper.resolve(
+      e,
+      fallbackMessage: 'Không thể chạy tác vụ khởi động nền.',
+    ).message}');
   }
 }
 

@@ -27,18 +27,10 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     Object error, {
     required String fallback,
   }) {
-    final cleaned = error
-        .toString()
-        .replaceFirst('Exception: ', '')
-        .replaceFirst('Bad state: ', '')
-        .replaceFirst('Unsupported operation: ', '')
-        .trim();
-    if (cleaned.isEmpty ||
-        cleaned.contains('Ã') ||
-        cleaned.contains('\uFFFD')) {
-      return fallback;
-    }
-    return cleaned;
+    return AppErrorMapper.resolve(
+      error,
+      fallbackMessage: fallback,
+    ).message;
   }
 
   Future<bool> _hasRewardedSaveCooldown() async {

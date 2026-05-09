@@ -1,6 +1,8 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+
 import '../../../core/sl_theme.dart';
+import '../../../utils/app_error_mapper.dart';
 
 class LocketCameraScreen extends StatefulWidget {
   const LocketCameraScreen({super.key});
@@ -34,7 +36,10 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
 
       await _startCamera(_cameras[_currentCameraIndex]);
     } catch (e) {
-      debugPrint('Error init camera: $e');
+      debugPrint('Error init camera: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể khởi động camera lúc này.',
+      ).message}');
     }
   }
 
@@ -55,7 +60,10 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
         setState(() => _isReady = true);
       }
     } catch (e) {
-      debugPrint('Camera init error: $e');
+      debugPrint('Camera init error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể khởi tạo camera lúc này.',
+      ).message}');
     }
   }
 
@@ -88,7 +96,10 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
       await _controller!.setFlashMode(nextMode);
       setState(() => _flashMode = nextMode);
     } catch (e) {
-      debugPrint('Flash error: $e');
+      debugPrint('Flash error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể đổi đèn flash lúc này.',
+      ).message}');
     }
   }
 
@@ -102,7 +113,10 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
         Navigator.pop(context, image);
       }
     } catch (e) {
-      debugPrint('Take picture error: $e');
+      debugPrint('Take picture error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể chụp ảnh lúc này.',
+      ).message}');
     }
   }
 

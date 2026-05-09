@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/security_protection_analytics_service.dart';
 import '../../../utils/services/security_protection_service.dart';
 import 'admin_shared_widgets.dart';
@@ -80,7 +81,11 @@ class _SecurityProtectionRolloutPanelState
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _errorText = error.toString();
+        _errorText = AppErrorMapper.resolve(
+          error,
+          fallbackMessage:
+              'Chưa thể tải dữ liệu rollout. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message;
       });
     } finally {
       if (mounted) {
@@ -120,12 +125,17 @@ class _SecurityProtectionRolloutPanelState
       );
     } catch (error) {
       if (!mounted) return;
+      final message = AppErrorMapper.resolve(
+        error,
+        fallbackMessage:
+            'Chưa thể lưu rollout lúc này. Hãy kiểm tra quyền quản trị rồi thử lại.',
+      ).message;
       setState(() {
-        _errorText = error.toString();
+        _errorText = message;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lưu rollout thất bại: $error'),
+          content: Text(message),
         ),
       );
     } finally {

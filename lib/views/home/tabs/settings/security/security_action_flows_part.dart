@@ -26,7 +26,12 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       // Luôn cho phép sửa các mục Shared Info (Tên, Ngày yêu, Avatar...)
       return true;
     } catch (e) {
-      debugPrint('_ensureCanModifySharedInfo failed: $e');
+      debugPrint(
+        '_ensureCanModifySharedInfo failed: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Đã có lỗi xảy ra',
+        ).message}',
+      );
       return true;
     }
   }
@@ -54,7 +59,12 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       }
       return true;
     } catch (e) {
-      debugPrint('_ensureCanModifySecurityInfo failed: $e');
+      debugPrint(
+        '_ensureCanModifySecurityInfo failed: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Đã có lỗi xảy ra',
+        ).message}',
+      );
       return true;
     }
   }
@@ -77,7 +87,12 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       });
       return;
     } catch (e) {
-      debugPrint('security scope unlock failed: $e');
+      debugPrint(
+        'security scope unlock failed: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Đã có lỗi xảy ra',
+        ).message}',
+      );
       if (!mounted) return;
       setState(() {
         _isSecurityLocked = true;
@@ -234,7 +249,14 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       }
     } catch (e) {
       if (mounted) {
-        _showToast('Không thể gửi email xác thực: $e', success: false);
+        _showToast(
+          AppErrorMapper.resolve(
+            e,
+            fallbackMessage:
+                'Chưa thể gửi mã xác thực email lúc này. Hãy kiểm tra email và kết nối mạng rồi thử lại.',
+          ).message,
+          success: false,
+        );
       }
     }
   }
@@ -374,8 +396,14 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         success: false,
       );
     } catch (e) {
-      _showToast('Không thể kiểm tra trạng thái xác thực email: $e',
-          success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể kiểm tra trạng thái xác thực email lúc này. Hãy thử lại sau ít phút.',
+        ).message,
+        success: false,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -544,7 +572,14 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       );
       await _promptOpenAppSettings(settingsLockedPermissions);
     } catch (e) {
-      _showToast('Không thể cấp quyền: $e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể cấp quyền lúc này. Hãy mở Cài đặt máy và kiểm tra quyền ứng dụng.',
+        ).message,
+        success: false,
+      );
     } finally {
       if (mounted) setState(() => _isGrantingPermissions = false);
     }
@@ -641,7 +676,12 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
           role: previousRole,
         );
       } catch (e) {
-        debugPrint('swap role presence cleanup failed: $e');
+        debugPrint(
+          'swap role presence cleanup failed: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Đã có lỗi xảy ra',
+          ).message}',
+        );
       }
       await PushNotificationHelper.systemEvent(
         toHouseId: resolvedHouseId,
@@ -690,7 +730,14 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       );
     } catch (e) {
       if (!mounted) return;
-      _showToast('$e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể liên kết Google lúc này. Hãy kiểm tra tài khoản và thử lại.',
+        ).message,
+        success: false,
+      );
     } finally {
       if (mounted) setState(() => _isLinkingGoogle = false);
     }
@@ -797,7 +844,14 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
           success: false,
         );
       } catch (e) {
-        _showToast('$e', success: false);
+        _showToast(
+          AppErrorMapper.resolve(
+            e,
+            fallbackMessage:
+                'Chưa thể tạo mật khẩu đăng nhập lúc này. Hãy thử lại với mật khẩu khác.',
+          ).message,
+          success: false,
+        );
       }
       return;
     }
@@ -829,7 +883,14 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         _showToast(e.message ?? 'Không thể đổi mật khẩu', success: false);
       }
     } catch (e) {
-      _showToast('Không thể đổi mật khẩu: $e', success: false);
+      _showToast(
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể đổi mật khẩu lúc này. Hãy kiểm tra mật khẩu cũ và thử lại.',
+        ).message,
+        success: false,
+      );
     }
   }
 
@@ -873,8 +934,14 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       _showToast('Đổi mật khẩu thành công!', success: true);
     } catch (e) {
       if (mounted) {
-        _showToast('Không thể cập nhật giao diện sau đổi mật khẩu: $e',
-            success: false);
+        _showToast(
+          AppErrorMapper.resolve(
+            e,
+            fallbackMessage:
+                'Mật khẩu đã đổi nhưng màn hình chưa kịp cập nhật. Hãy thoát vào lại phần Cài đặt.',
+          ).message,
+          success: false,
+        );
       }
     }
   }

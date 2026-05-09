@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/single_match_models.dart';
+import '../utils/app_error_mapper.dart';
 import 'house_service.dart';
 
 class SingleMatchService {
@@ -128,7 +129,10 @@ class SingleMatchService {
         fallbackProfiles = _readProfileMap(snapshot.value);
         emitMergedCandidates();
       } catch (error) {
-        debugPrint('[SingleMatch] load fallback profiles failed: $error');
+        debugPrint('[SingleMatch] load fallback profiles failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể tải hồ sơ dự phòng cho Single Match.',
+        ).message}');
         emitMergedCandidates();
       }
     }
@@ -142,7 +146,10 @@ class SingleMatchService {
             emitMergedCandidates();
           },
           onError: (Object error) {
-            debugPrint('[SingleMatch] profile index stream failed: $error');
+            debugPrint('[SingleMatch] profile index stream failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Luồng chỉ mục hồ sơ Single Match bị lỗi.',
+            ).message}');
             emitMergedCandidates();
           },
         );
@@ -260,7 +267,10 @@ class SingleMatchService {
             controller.add(entries);
           },
           onError: (Object error) {
-            debugPrint('[SingleMatch] history stream failed: $error');
+            debugPrint('[SingleMatch] history stream failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Luồng lịch sử Single Match bị lỗi.',
+            ).message}');
             if (!controller.isClosed) {
               controller.add(const <SingleMatchHistoryEntry>[]);
             }

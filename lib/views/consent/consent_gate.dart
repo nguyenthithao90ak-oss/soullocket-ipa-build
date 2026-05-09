@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../services/consent_service.dart';
 import '../home/screens/document_viewer_screen.dart';
 import '../../core/sl_theme.dart';
+import '../../utils/app_error_mapper.dart';
 
 class ConsentGate extends StatefulWidget {
   final Widget child;
@@ -85,11 +86,11 @@ class _ConsentGateState extends State<ConsentGate> {
         try {
           await widget.onReady?.call();
         } catch (e) {
-          debugPrint('ConsentGate onReady error: $e');
+          debugPrint('ConsentGate onReady error: ${AppErrorMapper.resolve(e).message}');
         }
       });
     } catch (e, st) {
-      debugPrint('ConsentGate failed: $e\n$st');
+      debugPrint('ConsentGate failed: ${AppErrorMapper.resolve(e).message}');
       if (!mounted) return;
       setState(() => _ready = true);
     } finally {

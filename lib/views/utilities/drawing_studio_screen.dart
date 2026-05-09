@@ -12,6 +12,7 @@ import 'package:flutter/rendering.dart';
 
 import '../../core/sl_theme.dart';
 import '../../services/drawing_studio_service.dart';
+import '../../utils/app_error_mapper.dart';
 
 class DrawingStudioScreen extends StatefulWidget {
   final String houseId;
@@ -203,16 +204,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     Object error, {
     required String fallback,
   }) {
-    final raw = error.toString();
-    final cleaned = raw
-        .replaceFirst('Exception: ', '')
-        .replaceFirst('Unsupported operation: ', '')
-        .replaceFirst('Bad state: ', '')
-        .trim();
-    if (cleaned.isEmpty || cleaned.contains('Ã') || cleaned.contains('�')) {
-      return fallback;
-    }
-    return cleaned;
+    return AppErrorMapper.resolve(
+      error,
+      fallbackMessage: fallback,
+    ).message;
   }
 
   Offset? _toCanvasPoint(Offset globalPosition) {
@@ -1670,16 +1665,10 @@ class _DrawingStudioPreviewScreenState
     Object error, {
     required String fallback,
   }) {
-    final raw = error.toString();
-    final cleaned = raw
-        .replaceFirst('Exception: ', '')
-        .replaceFirst('Unsupported operation: ', '')
-        .replaceFirst('Bad state: ', '')
-        .trim();
-    if (cleaned.isEmpty || cleaned.contains('Ã') || cleaned.contains('�')) {
-      return fallback;
-    }
-    return cleaned;
+    return AppErrorMapper.resolve(
+      error,
+      fallbackMessage: fallback,
+    ).message;
   }
 
   Future<void> _handleSaveToDevice() async {

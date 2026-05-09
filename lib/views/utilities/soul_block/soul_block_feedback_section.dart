@@ -114,7 +114,10 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       _audioReady = true;
       unawaited(_initBgm());
     } catch (error) {
-      debugPrint('Soul Block audio init failed: $error');
+      debugPrint('Soul Block audio init failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể khởi tạo âm thanh Soul Block lúc này.',
+      ).message}');
       _audioReady = false;
     }
   }
@@ -139,7 +142,10 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       await _bgmPlayer.setSource(source);
       await _syncBgmWithSound(restartIfStopped: true);
     } catch (error) {
-      debugPrint('Soul Block bgm init failed: $error');
+      debugPrint('Soul Block bgm init failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể khởi tạo nhạc nền Soul Block lúc này.',
+      ).message}');
     }
   }
 
@@ -289,7 +295,10 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       final ByteData data = await rootBundle.load(assetPath);
       return data.buffer.asUint8List();
     } catch (e) {
-      debugPrint('Soul Block: Error loading SFX ($assetPath): $e');
+      debugPrint('Soul Block: Error loading SFX ($assetPath): ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải hiệu ứng âm thanh cho Soul Block lúc này.',
+      ).message}');
       return null;
     }
   }

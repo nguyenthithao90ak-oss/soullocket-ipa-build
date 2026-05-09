@@ -882,7 +882,7 @@ class DiaryMemoryController extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
-      final errorText = e.toString();
+      final errorText = AppErrorMapper.resolve(e).message;
       final isNotFound = errorText.contains('firebase_functions/not-found') ||
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
@@ -940,7 +940,9 @@ class DiaryMemoryController extends ChangeNotifier {
       }
       _dismissCurrentDialog(context);
       showSnackBar(
-        L10nService().format('diary_delete_photo_error', {'error': e}),
+        L10nService().format('diary_delete_photo_error', {
+          'error': AppErrorMapper.resolve(e).message,
+        }),
         backgroundColor: const Color(0xFFE53935),
       );
     }
@@ -1027,7 +1029,9 @@ class DiaryMemoryController extends ChangeNotifier {
       }
       _dismissCurrentDialog(context);
       showSnackBar(
-        L10nService().format('diary_save_image_error', {'error': e}),
+        L10nService().format('diary_save_image_error', {
+          'error': AppErrorMapper.resolve(e).message,
+        }),
         backgroundColor: const Color(0xFFE53935),
       );
     }
@@ -1094,7 +1098,9 @@ class DiaryMemoryController extends ChangeNotifier {
       }
       _dismissCurrentDialog(context);
       showSnackBar(
-        L10nService().format('diary_save_image_error', {'error': e}),
+        L10nService().format('diary_save_image_error', {
+          'error': AppErrorMapper.resolve(e).message,
+        }),
         backgroundColor: const Color(0xFFE53935),
       );
     }
@@ -1165,7 +1171,7 @@ class DiaryMemoryController extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
-      final errorText = e.toString();
+      final errorText = AppErrorMapper.resolve(e).message;
       final isNotFound = errorText.contains('firebase_functions/not-found') ||
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
@@ -1208,7 +1214,9 @@ class DiaryMemoryController extends ChangeNotifier {
         }
       }
       showSnackBar(
-        L10nService().format('diary_delete_photo_error', {'error': e}),
+        L10nService().format('diary_delete_photo_error', {
+          'error': AppErrorMapper.resolve(e).message,
+        }),
         backgroundColor: const Color(0xFFE53935),
       );
     }
@@ -1279,12 +1287,14 @@ class DiaryMemoryController extends ChangeNotifier {
 
       if (lastError != null) {
         debugPrint('Lỗi finalize ảnh kỷ niệm: $lastError');
-        return lastError.toString();
+        return AppErrorMapper.resolve(lastError).message;
       }
       return 'Không nhận được phản hồi hợp lệ từ máy chủ.';
     } catch (e) {
-      debugPrint('Lỗi tải ảnh kỷ niệm: $e');
-      return e.toString();
+      debugPrint(
+        'Lỗi tải ảnh kỷ niệm: ${AppErrorMapper.resolve(e).message}',
+      );
+      return AppErrorMapper.resolve(e).message;
     }
   }
 
@@ -1296,7 +1306,9 @@ class DiaryMemoryController extends ChangeNotifier {
         return (countSnap.value as num).toInt();
       }
     } catch (e) {
-      debugPrint('Failed to read memoriesCount: $e');
+      debugPrint(
+        'Failed to read memoriesCount: ${AppErrorMapper.resolve(e).message}',
+      );
     }
 
     try {
@@ -1305,7 +1317,9 @@ class DiaryMemoryController extends ChangeNotifier {
           ? (memoriesSnap.value as Map).length
           : 0;
     } catch (e) {
-      debugPrint('Failed to read memories list for count: $e');
+      debugPrint(
+        'Failed to read memories list for count: ${AppErrorMapper.resolve(e).message}',
+      );
       return 0;
     }
   }
@@ -1501,7 +1515,9 @@ class DiaryMemoryController extends ChangeNotifier {
           await user.getIdToken(true);
         }
       } catch (e) {
-        debugPrint('Auth warm-up failed: $e');
+        debugPrint(
+          'Auth warm-up failed: ${AppErrorMapper.resolve(e).message}',
+        );
       }
 
       final memoryUploadQuality = vipAccess.isVip ? 82 : 78;

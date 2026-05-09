@@ -30,7 +30,10 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
         }
       }
     } catch (e) {
-      debugPrint('Failed to check schedule notifs: $e');
+      debugPrint('Failed to check schedule notifs: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể kiểm tra thông báo lịch lúc này.',
+      ).message}');
     }
   }
 
@@ -69,7 +72,14 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
                   SLNotice.showSuccess(context, 'Hoàn tác xóa thành công!');
                 } catch (e) {
                   if (!mounted) return;
-                  SLNotice.showError(context, e.toString());
+                  SLNotice.showError(
+                    context,
+                    AppErrorMapper.resolve(
+                      e,
+                      fallbackMessage:
+                          'Chưa thể hoàn tác xóa tài khoản lúc này. Hãy thử lại sau.',
+                    ).message,
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(

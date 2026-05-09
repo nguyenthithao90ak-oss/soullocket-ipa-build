@@ -4,6 +4,7 @@ import '../../services/deeplink_service.dart';
 import '../../services/gift_maker_service.dart';
 import '../../services/house_service.dart';
 import '../../services/love_card_link_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../auth/auth_action_screen.dart';
 import '../relationship/couple_connect_screen.dart';
 import '../utilities/gift_maker_screen.dart';
@@ -103,7 +104,10 @@ class AppEntryDeeplinkHandler {
     try {
       currentHouseId = await _houseService.getCurrentHouseId();
     } catch (e) {
-      debugPrint('Could not resolve current house before opening gift: $e');
+      debugPrint('Could not resolve current house before opening gift: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xác định nhà hiện tại trước khi mở quà.',
+      ).message}');
     }
 
     final hasCurrentHouse =
@@ -149,7 +153,10 @@ class AppEntryDeeplinkHandler {
         ),
       );
     } catch (e) {
-      debugPrint('Error opening gift from link: $e');
+      debugPrint('Error opening gift from link: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể mở món quà từ liên kết này.',
+      ).message}');
       showSnackBar('Không thể mở món quà từ liên kết này.');
     }
 

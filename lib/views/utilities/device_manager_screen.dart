@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
 import '../../services/device_manager_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/sl_notice.dart';
 
 /// ============================================================
@@ -42,23 +43,30 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
   Future<void> _loadDevices() async {
     setState(() => _isLoading = true);
 
-    // Auto register current device when opening screen
-    // This ensures current device info and IP are up to date and listed
     try {
       _securityDeviceSignalsAllowed = await _svc.isSecurityDeviceSignalsAllowed();
       await _svc.registerCurrentDevice();
     } catch (e) {
-      debugPrint('Error auto registering device: $e');
-      _loadMessage = 'Chưa thể đồng bộ thiết bị lên máy chủ.';
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể đồng bộ thiết bị lên máy chủ.',
+      );
+      debugPrint('Error auto registering device: ${errorInfo.message}');
+      _loadMessage = errorInfo.message;
     }
 
     List<Map<String, dynamic>> devices = const [];
     try {
       devices = await _svc.loadDevices();
     } catch (e) {
-      debugPrint('Load devices failed: $e');
-      _loadMessage = 'Chưa thể tải danh sách thiết bị từ máy chủ.';
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể tải danh sách thiết bị từ máy chủ.',
+      );
+      debugPrint('Load devices failed: ${errorInfo.message}');
+      _loadMessage = errorInfo.message;
     }
+
     if (devices.isEmpty) {
       final currentSnapshot = await _svc.getCurrentDeviceSnapshot();
       devices = [
@@ -76,6 +84,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
               : 'Chưa có dữ liệu máy chủ, đang hiển thị thiết bị hiện tại.')
           : 'Bạn chưa bật quyền tín hiệu bảo mật thiết bị nên danh sách chỉ hiển thị trên máy này.';
     }
+
     final currentDevice = devices.cast<Map<String, dynamic>?>().firstWhere(
           (device) => device?['deviceId'] == _currentDeviceId,
           orElse: () => null,
@@ -103,8 +112,12 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       _showToast('Đã duyệt thiết bị');
       await _loadDevices();
     } catch (e) {
-      debugPrint('Approve device failed: $e');
-      _showToast('Chưa thể duyệt thiết bị lúc này. Vui lòng thử lại.');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể duyệt thiết bị lúc này. Vui lòng thử lại.',
+      );
+      debugPrint('Approve device failed: ${errorInfo.message}');
+      _showToast(errorInfo.message);
     }
   }
 
@@ -136,8 +149,12 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         _showToast('Đã chặn thiết bị');
         await _loadDevices();
       } catch (e) {
-        debugPrint('Block device failed: $e');
-        _showToast('Chưa thể chặn thiết bị lúc này. Vui lòng thử lại.');
+        final errorInfo = AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Chưa thể chặn thiết bị lúc này. Vui lòng thử lại.',
+        );
+        debugPrint('Block device failed: ${errorInfo.message}');
+        _showToast(errorInfo.message);
       }
     }
   }
@@ -152,8 +169,12 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       _showToast('Đã xóa thiết bị');
       await _loadDevices();
     } catch (e) {
-      debugPrint('Delete device failed: $e');
-      _showToast('Chưa thể xóa thiết bị lúc này. Vui lòng thử lại.');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể xóa thiết bị lúc này. Vui lòng thử lại.',
+      );
+      debugPrint('Delete device failed: ${errorInfo.message}');
+      _showToast(errorInfo.message);
     }
   }
 

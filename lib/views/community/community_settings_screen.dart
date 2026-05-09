@@ -13,6 +13,7 @@ import 'settings/sections/community_settings_safety_section.dart';
 import 'settings/sections/community_settings_tools_section.dart';
 import 'settings/sections/community_settings_unsaved_banner.dart';
 import '../../utils/sl_notice.dart';
+import '../../utils/app_error_mapper.dart';
 import '../utilities/block_list_screen.dart';
 import 'house_qr_screen.dart';
 
@@ -204,7 +205,9 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      debugPrint('Error loading community settings: $e');
+      debugPrint(
+        'Error loading community settings: ${AppErrorMapper.resolve(e).message}',
+      );
       if (mounted) {
         setState(() => _isLoading = false);
       }

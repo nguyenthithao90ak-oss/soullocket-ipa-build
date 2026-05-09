@@ -36,7 +36,6 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
 
   Future<void> _handleNotificationsEnabledChanged(bool value) async {
     final previousValue = _notificationsEnabled;
-    final pushUpdateErrorTemplate = context.tr('push_update_error');
     setState(() {
       _notificationsEnabled = value;
       _notifAnniversary = value;
@@ -87,7 +86,11 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       });
       await _persistNotificationsEnabledPref(previousValue);
       _showToast(
-        pushUpdateErrorTemplate.replaceAll('{error}', e.toString()),
+        AppErrorMapper.resolve(
+          e,
+          fallbackMessage:
+              'Chưa thể cập nhật thông báo đẩy. Hãy kiểm tra kết nối rồi thử lại.',
+        ).message,
         success: false,
       );
     }

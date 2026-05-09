@@ -8,6 +8,7 @@ import '../../../core/sl_theme.dart';
 import '../../utilities/block_blast_game.dart';
 import '../../utilities/soul_rhythm_game.dart';
 import '../../utilities/caro_neon_screen.dart';
+import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/game_download_service.dart';
 import '../../../services/admob_service.dart';
 
@@ -96,7 +97,13 @@ class _GameTabState extends State<GameTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi khi tải game: $e'),
+            content: Text(
+              AppErrorMapper.resolve(
+                e,
+                fallbackMessage:
+                    'Chưa thể tải game lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+              ).message,
+            ),
             backgroundColor: const Color(0xFFD32F2F),
             behavior: SnackBarBehavior.floating,
           ),

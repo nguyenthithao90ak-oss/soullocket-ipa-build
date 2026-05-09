@@ -17,6 +17,7 @@ import '../../core/sl_theme.dart';
 import '../../services/admob_service.dart';
 import '../../services/house_service.dart';
 import '../premium/premium_store_screen.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/services/game_download_service.dart';
 
 part 'soul_block/soul_block_panels.dart';
@@ -962,7 +963,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         ),
       );
     } catch (error) {
-      debugPrint('Soul Block memory burst gallery load failed: $error');
+      debugPrint('Soul Block memory burst gallery load failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể tải thư viện kỷ niệm cho Soul Block lúc này.',
+      ).message}');
     } finally {
       _isRefreshingMemoryBurstGallery = false;
     }

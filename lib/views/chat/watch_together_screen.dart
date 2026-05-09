@@ -79,7 +79,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
               final url = request.url.toLowerCase();
               if (!url.startsWith('https://')) {
                 debugPrint(
-                    '🚨 [WatchTogether] Chặn URL không an toàn (chỉ cho phép HTTPS): $url');
+                    '🚨 [WatchTogether] Chặn URL không an toàn (chỉ cho phép HTTPS).');
                 return NavigationDecision.prevent;
               }
               return NavigationDecision.navigate;

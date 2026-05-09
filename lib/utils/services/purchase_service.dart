@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 import '../core/constants/app_config.dart';
+import '../utils/app_error_mapper.dart';
 import 'app_check_http_headers.dart';
 import 'revenue_security_telemetry_service.dart';
 
@@ -253,8 +254,10 @@ class PurchaseService {
       await syncVipEntitlements();
       _initialized = true;
     } catch (error, stackTrace) {
-      debugPrint('PurchaseService initialize error: $error');
-      debugPrintStack(stackTrace: stackTrace);
+      debugPrint('PurchaseService initialize error: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể khởi tạo mua hàng lúc này.',
+      ).message}');
       _statusController.add(VipPurchaseState.error);
     }
   }
@@ -290,7 +293,10 @@ class PurchaseService {
         debugPrint('VIP sync failed: ${response.statusCode} ${response.body}');
       }
     } catch (error) {
-      debugPrint('VIP sync error: $error');
+      debugPrint('VIP sync error: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể đồng bộ VIP lúc này.',
+      ).message}');
     }
   }
 
@@ -434,7 +440,10 @@ class PurchaseService {
       _statusController.add(VipPurchaseState.success);
       return true;
     } catch (e) {
-      debugPrint('Error verifying purchase with server: $e');
+      debugPrint('Error verifying purchase with server: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xác minh giao dịch mua với server.',
+      ).message}');
       _statusController.add(VipPurchaseState.error);
       return false;
     }

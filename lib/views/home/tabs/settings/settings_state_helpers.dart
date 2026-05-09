@@ -14,10 +14,10 @@ const Duration _kSettingsOtpSendTimeout = Duration(seconds: 15);
 const Duration _kSettingsOtpVerifyTimeout = Duration(seconds: 15);
 
 String _sanitizeSettingsDialogError(Object error) {
-  return error
-      .toString()
-      .replaceFirst('Exception: ', '')
-      .replaceFirst('Lỗi: ', '');
+  return AppErrorMapper.resolve(
+    error,
+    fallbackMessage: 'Đã có lỗi xảy ra',
+  ).message;
 }
 
 bool _looksLikeSettingsEmail(String value) {
@@ -834,7 +834,12 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
       }
       return false;
     } catch (error) {
-      debugPrint('_ensureManagedSharedInfoWriteAccess failed: $error');
+      debugPrint(
+        '_ensureManagedSharedInfoWriteAccess failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Đã có lỗi xảy ra',
+        ).message}',
+      );
       final message = _buildManagedPendingDeviceMessage();
       if (mounted) {
         setState(() {
@@ -888,7 +893,12 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
             );
         isTrusted = trustState.isTrusted;
       } catch (error) {
-        debugPrint('isCurrentDeviceTrusted failed: $error');
+        debugPrint(
+          'isCurrentDeviceTrusted failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Đã có lỗi xảy ra',
+          ).message}',
+        );
         isTrusted = false;
       }
     }
@@ -928,7 +938,12 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
             )
           : false;
     } catch (error) {
-      debugPrint('security scope unlock failed: $error');
+      debugPrint(
+        'security scope unlock failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Đã có lỗi xảy ra',
+        ).message}',
+      );
       authSuccess = false;
     }
 

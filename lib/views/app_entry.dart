@@ -15,6 +15,7 @@ import '../services/offline_cache_service.dart';
 import '../services/storage_service.dart';
 import '../services/widget_action_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
+import '../utils/app_error_mapper.dart';
 import 'app_entry/app_entry_access_resolver.dart';
 import 'app_entry/app_entry_home_asset_preparer.dart';
 import 'app_entry/app_entry_controller.dart';
@@ -188,7 +189,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       if (message.contains('permission-denied')) {
         return;
       }
-      debugPrint('[AppEntry] Maintenance listener error: $error');
+      debugPrint(
+        '[AppEntry] Maintenance listener error: ${AppErrorMapper.resolve(error).message}',
+      );
     });
   }
 
@@ -308,7 +311,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           } catch (e, st) {
             debugPrint(
               '[AppEntry] prepareSignedInHouseSession failed: '
-              '$e\n$st',
+              '${AppErrorMapper.resolve(e).message}',
             );
           }
         }());

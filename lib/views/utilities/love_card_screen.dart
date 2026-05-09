@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/sl_theme.dart';
 import '../../services/activity_history_service.dart';
 import '../../services/love_card_link_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../services/storage_service.dart';
 import 'love_card_public_viewer_screen.dart';
@@ -61,7 +62,11 @@ class LoveCardService {
       });
       return ref.key;
     } catch (e) {
-      debugPrint('Error in sendCard: $e');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Chưa thể gửi thiệp lúc này.',
+      );
+      debugPrint('Error in sendCard: ${errorInfo.message}');
       rethrow;
     }
   }
@@ -506,13 +511,19 @@ class _LoveCardScreenState extends State<LoveCardScreen>
         _selectedImageFile = file;
         _selectedImageBytes = bytes;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Không thể chọn ảnh cho thiệp lúc này.'),
+        SnackBar(
+          content: Text(
+            AppErrorMapper.resolve(
+              e,
+              fallbackMessage:
+                  'Chưa thể chọn ảnh cho thiệp lúc này. Hãy kiểm tra quyền thư viện rồi thử lại.',
+            ).message,
+          ),
         ),
       );
     } finally {
@@ -647,15 +658,23 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       await PendingUploadService.instance.clear(_pendingUploadKey);
       isSuccess = true;
     } catch (e) {
-      debugPrint('Lỗi gửi thiệp: $e');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage:
+            'Chưa thể gửi thiệp lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+      );
+      debugPrint('Lỗi gửi thiệp: ${errorInfo.message}');
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Không gửi được thiệp: $e',
-            style: SLTheme.quicksand(fontWeight: FontWeight.w700, color: Colors.white),
+            errorInfo.message,
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
           backgroundColor: Colors.red.shade800,
           behavior: SnackBarBehavior.floating,

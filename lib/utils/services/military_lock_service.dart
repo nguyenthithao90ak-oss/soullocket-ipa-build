@@ -20,6 +20,7 @@ import 'security_flow_guard.dart';
 import 'settings_sync_service.dart';
 import '../core/sl_theme.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import '../app_error_mapper.dart';
 
 part 'military_lock/military_lock_cooldown_evaluator.dart';
 part 'military_lock/military_lock_models.dart';
@@ -1200,7 +1201,7 @@ class MilitaryLockService {
         }
         setDialogState(() {
           isSending = false;
-          errorText = e.toString().replaceFirst('Exception: ', '');
+          errorText = AppErrorMapper.resolve(e).message;
         });
       }
     }
@@ -1297,9 +1298,7 @@ class MilitaryLockService {
                               }
                               setDialogState(() {
                                 isVerifying = false;
-                                errorText = e
-                                    .toString()
-                                    .replaceFirst('Exception: ', '');
+                                errorText = AppErrorMapper.resolve(e).message;
                               });
                             }
                           }

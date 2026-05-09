@@ -18,6 +18,7 @@ import '../../services/presence_service.dart';
 import '../../services/security_service.dart';
 import '../../services/session/app_background_session_tracker.dart';
 import '../../services/session/session_connectivity_coordinator.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/services/consent_service.dart';
 import '../../utils/services/widget_service.dart';
 
@@ -119,7 +120,11 @@ class AppEntryController {
       try {
         await NotificationService().initialize();
       } catch (e) {
-        debugPrint('[AppEntry] Notification init failed: $e');
+        final errorInfo = AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể khởi tạo thông báo lúc này.',
+        );
+        debugPrint('[AppEntry] Notification init failed: ${errorInfo.message}');
       }
     });
   }
@@ -152,8 +157,12 @@ class AppEntryController {
             isAuthenticated: true,
             isCheckingAuth: false,
           );
-    } catch (e, st) {
-      debugPrint('[AppEntry] Bootstrap failed or timed out: $e\n$st');
+    } catch (e, _) {
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể khởi động ứng dụng lúc này.',
+      );
+      debugPrint('[AppEntry] Bootstrap failed or timed out: ${errorInfo.message}');
       return const AppEntryAuthState(
         isAuthenticated: true,
         isCheckingAuth: false,
@@ -223,8 +232,12 @@ class AppEntryController {
         isAuthenticated: authSuccess,
         isCheckingAuth: false,
       );
-    } catch (e, st) {
-      debugPrint('[AppEntry] checkAppLock failed: $e\n$st');
+    } catch (e, _) {
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra khóa ứng dụng lúc này.',
+      );
+      debugPrint('[AppEntry] checkAppLock failed: ${errorInfo.message}');
       return const AppEntryAuthState(
         isAuthenticated: true,
         isCheckingAuth: false,
@@ -323,8 +336,12 @@ class AppEntryController {
         isCheckingAuth: false,
         isCompromised: true,
       );
-    } catch (e, st) {
-      debugPrint('[AppEntry] isDeviceCompromised failed: $e\n$st');
+    } catch (e, _) {
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra trạng thái thiết bị lúc này.',
+      );
+      debugPrint('[AppEntry] isDeviceCompromised failed: ${errorInfo.message}');
       return null;
     }
   }
@@ -378,6 +395,13 @@ class AppEntryController {
       'initialize AdMob',
       () => _adMobService.initialize(),
     );
+
+    unawaited(_runGuarded('preload rewarded ad', () async {
+      _adMobService.preloadRewardedAd();
+    }));
+    unawaited(_runGuarded('preload soul game rewarded ad', () async {
+      _adMobService.preloadSoulGameRewardedAd();
+    }));
 
     if (!hasTriggeredInitialAppOpenAd) {
       didScheduleInitialAppOpenAd = true;
@@ -459,7 +483,11 @@ class AppEntryController {
     try {
       await _initPresence(houseId).timeout(const Duration(seconds: 3));
     } catch (e) {
-      debugPrint('[AppEntry] Presence init deferred: $e');
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể khởi tạo trạng thái hiện diện lúc này.',
+      );
+      debugPrint('[AppEntry] Presence init deferred: ${errorInfo.message}');
     }
   }
 
@@ -577,9 +605,12 @@ class AppEntryController {
   ) async {
     try {
       await action();
-    } catch (e, st) {
-      debugPrint('[AppEntry] $label failed: $e');
-      debugPrintStack(stackTrace: st);
+    } catch (e, _) {
+      final errorInfo = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Tác vụ nền chưa thể hoàn tất lúc này.',
+      );
+      debugPrint('[AppEntry] $label failed: ${errorInfo.message}');
     }
   }
 }

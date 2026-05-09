@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart'
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/models/diary_post.dart';
 import 'package:soullocket_app/models/house_settings.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 
@@ -217,7 +218,9 @@ class DiaryFeedController extends ChangeNotifier {
       _startDate = sdRaw == null ? null : DateTime.tryParse(sdRaw.toString());
       _notifySafely();
     } catch (e) {
-      debugPrint('Error fetching settings for diary names: $e');
+      debugPrint(
+        'Error fetching settings for diary names: ${AppErrorMapper.resolve(e).message}',
+      );
     }
   }
 

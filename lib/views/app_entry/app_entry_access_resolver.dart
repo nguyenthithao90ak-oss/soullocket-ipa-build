@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/house_service.dart';
+import '../../utils/app_error_mapper.dart';
 
 class AppEntryAccessState {
   final String? houseId;
@@ -112,7 +113,7 @@ class AppEntryAccessResolver {
     try {
       prefs = await _getPrefs().timeout(_prefsTimeout);
     } catch (e) {
-      debugPrint('[AppEntry] Prefs read timed out: $e');
+      debugPrint('[AppEntry] Prefs read timed out: ${AppErrorMapper.resolve(e).message}');
     }
     final cachedHouseId = prefs?.getString('il_house_id');
     final cachedAuthUid = prefs?.getString('il_auth_uid');
@@ -168,7 +169,7 @@ class AppEntryAccessResolver {
         onTimeout: () => throw Exception('Remote auth checks timed out'),
       );
     } catch (e) {
-      debugPrint('[AppEntry] Offline fallback triggered: $e');
+      debugPrint('[AppEntry] Offline fallback triggered: ${AppErrorMapper.resolve(e).message}');
       return AppEntryAccessState(
         houseId: null,
         isAdmin: isAdmin,
@@ -198,7 +199,7 @@ class AppEntryAccessResolver {
         cachedHouseId: cachedHouseId,
       );
     }, onError: (Object e, StackTrace stackTrace) {
-      debugPrint('[AppEntry] Background fetch error: $e');
+      debugPrint('[AppEntry] Background fetch error: ${AppErrorMapper.resolve(e).message}');
     });
   }
 
