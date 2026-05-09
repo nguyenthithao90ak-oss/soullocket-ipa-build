@@ -421,22 +421,24 @@ class _MainHomeTabState extends State<MainHomeTab> {
       case 'glow':
         return BoxDecoration(
           shape: BoxShape.circle,
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [
-              const Color(0xFFFFF5FA).withValues(alpha: 0.7),
-              const Color(0xFFFFD9E8).withValues(alpha: 0.7)
+              Color.fromARGB(179, 255, 245, 250),
+              Color.fromARGB(179, 255, 217, 232)
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 6),
-          boxShadow: [
+          border: Border.fromBorderSide(
+            const BorderSide(color: Color(0xBFFFFFFF), width: 6),
+          ),
+          boxShadow: const [
             BoxShadow(
-              color: const Color(0xFFFF5E92).withValues(alpha: 0.42),
+              color: Color(0x6BFF5E92),
               blurRadius: 48,
             ),
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Color(0x0D000000),
               blurRadius: 24,
               blurStyle: BlurStyle.inner,
             ),

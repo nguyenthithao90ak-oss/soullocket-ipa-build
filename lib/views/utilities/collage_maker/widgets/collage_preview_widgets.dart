@@ -296,7 +296,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
             filterQuality: FilterQuality.high,
             fadeInDuration: Duration.zero,
             fadeOutDuration: Duration.zero,
-            placeholder: (context, url) => Center(
+            placeholder: (context, url) => const Center(
               child: SizedBox(
                 width: 22,
                 height: 22,

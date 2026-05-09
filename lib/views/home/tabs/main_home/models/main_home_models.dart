@@ -282,23 +282,30 @@ Widget _buildInteractionVisual({
   if (visual is IconData) {
     return Icon(
       visual,
-      size: size,
+      size: 55,
       color: iconColor ?? Colors.white,
     );
   }
 
-  return Text(
-    visual?.toString() ?? '',
-    textAlign: TextAlign.center,
-    style: TextStyle(
-      fontSize: emojiSize ?? size,
-      height: 1,
-      shadows: emojiShadows,
-      fontFamilyFallback: const [
-        'Noto Color Emoji',
-        'Apple Color Emoji',
-        'Segoe UI Emoji',
-      ],
+  return Center(
+    child: Text(
+      visual?.toString() ?? '',
+      style: TextStyle(
+        fontSize: 40,
+        height: 1,
+        shadows: [
+          Shadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        fontFamilyFallback: const [
+          'Noto Color Emoji',
+          'Apple Color Emoji',
+          'Segoe UI Emoji',
+        ],
+      ),
     ),
   );
 }

@@ -105,15 +105,18 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: canSendMissYou ? 88 : 74,
-              height: canSendMissYou ? 88 : 74,
+              width: canSendMissYou ? 112 : 74,
+              height: canSendMissYou ? 112 : 74,
               child: Center(
                 child: canSendMissYou
                     ? (showDefaultHeart
-                        ? const Icon(
-                            Icons.favorite_rounded,
-                            color: Color(0xFFFF4D79),
-                            size: 52,
+                        ? _buildInteractionVisual(
+                            visual: '\u{1F496}',
+                            assetPath:
+                                'assets/images/interaction_stickers/custom/numbered/sticker_082.png',
+                            size: 84,
+                            emojiSize: 72,
+                            preferAsset: true,
                           )
                         : _buildInteractionVisual(
                             visual: displayPreset.emoji,

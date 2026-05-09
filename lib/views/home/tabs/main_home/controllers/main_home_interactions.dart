@@ -1,6 +1,9 @@
 part of '../../main_home_tab.dart';
 
 extension _MainHomeInteractions on _MainHomeTabState {
+  static const String _kInteractionRotationLastTypePrefsKey =
+      'il_home_interaction_rotation_last_type_v1';
+
   void _setManualInteractionPreset(String type) {
     final preset = _maybePresetForInteractionType(type);
     if (preset == null) return;
@@ -15,6 +18,101 @@ extension _MainHomeInteractions on _MainHomeTabState {
       _showDefaultHeartSuggestion = false;
       _smartInteractionPreset = preset;
     });
+  }
+
+  List<_PartnerInteractionPreset> _interactionRotationPresets() {
+    return _kPartnerInteractionPresets;
+  }
+
+  _PartnerInteractionPreset _pickRandomInteractionPreset({String? avoidType}) {
+    final presets = _interactionRotationPresets();
+    if (presets.isEmpty) {
+      return _defaultSmartInteractionPreset();
+    }
+
+    final filtered = avoidType == null || presets.length == 1
+        ? presets
+        : presets.where((preset) => preset.type != avoidType).toList();
+    final pool = filtered.isNotEmpty ? filtered : presets;
+    return pool[_random.nextInt(pool.length)];
+  }
+
+  Future<String?> _readLastInteractionRotationType() async {
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    final value = prefs.getString(_kInteractionRotationLastTypePrefsKey);
+    final normalized = value?.trim() ?? '';
+    return normalized.isEmpty ? null : normalized;
+  }
+
+  Future<void> _rememberInteractionRotationType(String type) async {
+    final normalized = type.trim();
+    if (normalized.isEmpty) return;
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    await prefs.setString(_kInteractionRotationLastTypePrefsKey, normalized);
+  }
+
+  void _startInteractionRotationLoop() {
+    if (!_isTabActive) return;
+    _interactionRotationTimer?.cancel();
+    _interactionRotationTimer = null;
+    _showDefaultHeartSuggestion = true;
+    unawaited(() async {
+      final lastType = await _readLastInteractionRotationType();
+      final nextPreset = _pickRandomInteractionPreset(avoidType: lastType);
+      if (!mounted) {
+        _showDefaultHeartSuggestion = false;
+        _smartInteractionPreset = nextPreset;
+        return;
+      }
+      _safeSetState(() {
+        _showDefaultHeartSuggestion = false;
+        _smartInteractionPreset = nextPreset;
+      });
+      await _rememberInteractionRotationType(nextPreset.type);
+    }());
+    _interactionRotationTimer =
+        Timer(_kInteractionSuggestionRefreshInterval, () {
+      final nextPreset = _pickRandomInteractionPreset(
+        avoidType: _smartInteractionPreset.type,
+      );
+      if (mounted) {
+        _safeSetState(() {
+          _showDefaultHeartSuggestion = false;
+          _smartInteractionPreset = nextPreset;
+        });
+      } else {
+        _showDefaultHeartSuggestion = false;
+        _smartInteractionPreset = nextPreset;
+      }
+      unawaited(_rememberInteractionRotationType(nextPreset.type));
+      _interactionRotationTimer = Timer.periodic(
+        _kInteractionSuggestionRefreshInterval,
+        (_) => _refreshSmartInteraction(forceRotate: true),
+      );
+    });
+  }
+
+  void _refreshSmartInteraction({bool forceRotate = false}) {
+    if (_showDefaultHeartSuggestion) {
+      return;
+    }
+    final nextPreset = _pickRandomInteractionPreset(
+      avoidType: forceRotate ? _smartInteractionPreset.type : null,
+    );
+    if (!mounted) {
+      _smartInteractionPreset = nextPreset;
+      unawaited(_rememberInteractionRotationType(nextPreset.type));
+      return;
+    }
+    if (!forceRotate && nextPreset.type == _smartInteractionPreset.type) {
+      return;
+    }
+    _safeSetState(() {
+      _smartInteractionPreset = nextPreset;
+    });
+    unawaited(_rememberInteractionRotationType(nextPreset.type));
   }
 
   void _showReactionFlight(_HomeReactionFlight flight) {
@@ -40,47 +138,6 @@ extension _MainHomeInteractions on _MainHomeTabState {
     if (!mounted) return;
     _safeSetState(() {
       _reactionFlights.removeWhere((item) => item.id == id);
-    });
-  }
-
-  void _startInteractionRotationLoop() {
-    if (!_isTabActive) return;
-    _interactionRotationTimer?.cancel();
-    _showDefaultHeartSuggestion = true;
-    _interactionRotationTimer =
-        Timer(_kInteractionSuggestionRefreshInterval, () {
-      final nextPreset = _pickSmartInteractionPresetFromSignals();
-      if (mounted) {
-        _safeSetState(() {
-          _showDefaultHeartSuggestion = false;
-          _smartInteractionPreset = nextPreset;
-        });
-      } else {
-        _showDefaultHeartSuggestion = false;
-        _smartInteractionPreset = nextPreset;
-      }
-      _interactionRotationTimer = Timer.periodic(
-        _kInteractionSuggestionRefreshInterval,
-        (_) => _refreshSmartInteraction(forceRotate: true),
-      );
-    });
-  }
-
-  void _refreshSmartInteraction({bool forceRotate = false}) {
-    if (_showDefaultHeartSuggestion) {
-      return;
-    }
-    final nextPreset =
-        _pickSmartInteractionPresetFromSignals(avoidCurrent: forceRotate);
-    if (!mounted) {
-      _smartInteractionPreset = nextPreset;
-      return;
-    }
-    if (!forceRotate && nextPreset.type == _smartInteractionPreset.type) {
-      return;
-    }
-    _safeSetState(() {
-      _smartInteractionPreset = nextPreset;
     });
   }
 

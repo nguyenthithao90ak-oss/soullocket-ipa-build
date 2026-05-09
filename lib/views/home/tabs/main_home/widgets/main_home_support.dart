@@ -604,6 +604,9 @@ class _InteractionSuccessDialog extends StatelessWidget {
     );
     final lightweightEffects = !effectProfile.premiumEffects;
 
+    final presetAssetPath =
+        _maybePresetForInteractionType(interactionType)?.assetPath;
+
     final (dynamic iconOrEmoji, List<Color> gradient, Color accent) =
         switch (interactionType) {
       'hot' => (
@@ -685,28 +688,43 @@ class _InteractionSuccessDialog extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: iconOrEmoji is IconData
-                        ? Icon(
-                            iconOrEmoji,
-                            color: Colors.white,
-                            size: 44,
-                          )
-                        : Center(
-                            child: Text(
-                              iconOrEmoji.toString(),
-                              style: TextStyle(
-                                fontSize: 40,
-                                height: 1,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                    child: presetAssetPath != null
+                        ? _buildInteractionVisual(
+                            visual: iconOrEmoji,
+                            assetPath: presetAssetPath,
+                            size: 56,
+                            emojiSize: 40,
+                            iconColor: Colors.white,
+                            emojiShadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
-                            ),
-                          ),
+                            ],
+                          )
+                        : iconOrEmoji is IconData
+                            ? Icon(
+                                iconOrEmoji,
+                                color: Colors.white,
+                                size: 55,
+                              )
+                            : Center(
+                                child: Text(
+                                  iconOrEmoji.toString(),
+                                  style: TextStyle(
+                                    fontSize: 40,
+                                    height: 1,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                   ),
                   SLSpacing.h16,
                   Text(
@@ -1022,6 +1040,8 @@ class __MissYouScreenState extends State<_MissYouScreen>
                     (shortestSide * 0.56).clamp(140.0, 250.0).toDouble();
                 final emojiSize =
                     (artSize * 0.42).clamp(64.0, 106.0).toDouble();
+                final reactionVisualSize =
+                    presetAssetPath != null ? artSize : emojiSize;
                 final titleSize =
                     (shortestSide * 0.062).clamp(22.0, 26.0).toDouble();
                 final messageSize = constraints.maxWidth < 360 ? 15.0 : 16.0;
@@ -1086,7 +1106,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
                                       child: _buildInteractionVisual(
                                         visual: iconOrEmoji,
                                         assetPath: presetAssetPath,
-                                        size: emojiSize,
+                                        size: reactionVisualSize,
                                         emojiSize: emojiSize,
                                         iconColor: accent,
                                         emojiShadows: [
@@ -1106,7 +1126,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
                                     child: _buildInteractionVisual(
                                       visual: iconOrEmoji,
                                       assetPath: presetAssetPath,
-                                      size: emojiSize,
+                                      size: reactionVisualSize,
                                       emojiSize: emojiSize,
                                       iconColor: accent,
                                       emojiShadows: [

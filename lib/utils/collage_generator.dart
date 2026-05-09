@@ -1002,12 +1002,13 @@ class CollageGenerator {
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 6),
     );
 
-    final double badgeWidth = min(198, max(132, width - 188)).toDouble();
+    final double badgeWidth =
+        min(max(148, decor.badge.length * 10.0 + 36), width - 120).toDouble();
     final badgeRect = RRect.fromRectAndRadius(
       Rect.fromCenter(
         center: Offset(headerCenterX, 133),
         width: badgeWidth,
-        height: 42,
+        height: 38,
       ),
       const Radius.circular(999),
     );
@@ -1019,22 +1020,22 @@ class CollageGenerator {
       canvas,
       decor.badge.toUpperCase(),
       headerCenterX,
-      122,
+      123,
       decor.primary,
-      width < 420 ? 14 : 17,
-      maxWidth: badgeWidth - 34,
-      centerWidth: badgeWidth - 34,
-      letterSpacing: 1.4,
+      width < 420 ? 12 : 14,
+      maxWidth: badgeWidth - 18,
+      centerWidth: badgeWidth - 18,
+      letterSpacing: 1.1,
     );
 
-    const double titleY = 162;
-    final double titleSize = width < 420 ? 40 : 50;
+    const double titleY = 154;
+    final double titleSize = width < 420 ? 44 : 58;
     final double titleMaxWidth =
-        min(max(180, width - 140).toDouble(), headerRect.outerRect.width - 88);
+        min(max(190, width - 132).toDouble(), headerRect.outerRect.width - 82);
     _drawText(
       canvas,
       title,
-      headerCenterX + 3,
+      headerCenterX + 2,
       titleY + 2,
       decor.primary.withValues(alpha: 0.16),
       titleSize,
@@ -1127,17 +1128,14 @@ class CollageGenerator {
     double height,
     CollageDecor decor,
   ) {
-    final footerRect = RRect.fromRectAndCorners(
-      Rect.fromLTWH(58, height - 64, width - 116, 40),
-      topLeft: const Radius.circular(18),
-      topRight: const Radius.circular(10),
-      bottomLeft: const Radius.circular(12),
-      bottomRight: const Radius.circular(20),
+    final footerRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(width - 254, height - 72, 194, 40),
+      const Radius.circular(999),
     );
     canvas.drawRRect(
       footerRect,
       Paint()
-        ..color = Colors.white.withValues(alpha: 0.52)
+        ..color = Colors.white.withValues(alpha: 0.68)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
     );
     canvas.drawRRect(
@@ -1145,16 +1143,17 @@ class CollageGenerator {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0
-        ..color = decor.primary.withValues(alpha: 0.16),
+        ..color = decor.primary.withValues(alpha: 0.12),
     );
     _drawText(
       canvas,
       decor.footerText,
-      width / 2,
-      height - 55,
-      decor.primary,
-      16,
-      maxWidth: width - 140,
+      footerRect.outerRect.center.dx,
+      height - 66,
+      decor.primary.withValues(alpha: 0.88),
+      14,
+      maxWidth: footerRect.outerRect.width - 28,
+      centerWidth: footerRect.outerRect.width - 28,
       isBold: false,
       fontStyle: FontStyle.italic,
     );
