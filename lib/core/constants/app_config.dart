@@ -134,10 +134,10 @@ class AppConfig {
   static const int presenceIdleMs = 5 * 60 * 1000; // 5 phút
 
   // ── VIP CONFIG ────────────────────────────────────────────────────────
-  /// Tạm ẩn toàn bộ entry mua PRO/IAP trong bản review iOS.
+  /// Hiển thị entry mua PRO/IAP để paid digital content luôn có đường mua trong app.
   static const bool showPurchaseUi = bool.fromEnvironment(
     'SHOW_PURCHASE_UI',
-    defaultValue: false,
+    defaultValue: true,
   );
 
   /// Số ngày dùng thử VIP khi tạo nhà mới

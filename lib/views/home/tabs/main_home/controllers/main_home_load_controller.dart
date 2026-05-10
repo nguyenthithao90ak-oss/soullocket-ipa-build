@@ -723,7 +723,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 _lastWidgetSettingsSyncKey != widgetSettingsKey;
 
             if (visibilityPrefsChanged) {
-              final prefs = await SharedPreferences.getInstance();
+              final prefs = OfflineCacheService.getPrefsSync() ??
+                  await SharedPreferences.getInstance();
               if (isStale()) return;
               await prefs.setBool('il_show_status', nextShowStatus);
               await prefs.setBool('il_show_weather', nextShowWeather);

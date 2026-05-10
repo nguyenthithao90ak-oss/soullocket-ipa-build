@@ -1277,28 +1277,36 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _isLoading || _isPurchasing ? null : _restorePurchases,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+          if (_isAndroidStorePlatform)
+            Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed:
+                        _isLoading || _isPurchasing ? null : _restorePurchases,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.16),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: Text(
+                      'Khôi phục mua hàng',
+                      style: SLTheme.quicksand(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: Text(
-                'Khôi phục mua hàng',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+                const SizedBox(height: 14),
+              ],
             ),
-          ),
-          const SizedBox(height: 14),
           Wrap(
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,

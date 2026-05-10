@@ -63,11 +63,13 @@ class RankingService {
           return;
         }
 
+        final nowMs = DateTime.now().millisecondsSinceEpoch;
         final ranked = await Future.wait(
           candidateIds.map(
             (houseId) => _loadRankedHouse(
               houseId: houseId,
               fireTotal: fireTotals[houseId] ?? 0,
+              nowMs: nowMs,
             ),
           ),
         );
@@ -160,6 +162,7 @@ class RankingService {
   Future<RankedHouse?> _loadRankedHouse({
     required String houseId,
     required int fireTotal,
+    required int nowMs,
   }) async {
     final merged = await _loadMergedHouseSnapshot(houseId);
     final settings = _asStringMap(merged['settings']);
@@ -194,7 +197,7 @@ class RankingService {
       hearts: totalHearts,
       hasAdminFireTick:
           settings['adminFireTick'] == true || settings['redTickPro'] == true,
-      isPro: proUntil > DateTime.now().millisecondsSinceEpoch && proUntil > 0,
+      isPro: proUntil > nowMs && proUntil > 0,
     );
   }
 

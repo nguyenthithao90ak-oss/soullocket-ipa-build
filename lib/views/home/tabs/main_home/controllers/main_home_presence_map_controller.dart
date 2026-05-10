@@ -302,7 +302,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         : (_weatherMatchesCold(weather) ? 'warmth' : '');
     if (type.isEmpty) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final currentBucket = _weatherCareBucket(weather);
     final bucketKey = 'il_weather_care_bucket_${houseId}_$_currentRole';
     final lastBucket = prefs.getString(bucketKey) ?? '';
@@ -673,7 +674,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         locLabel = 'TP.HCM';
 
         try {
-          final prefs = await SharedPreferences.getInstance();
+          final prefs = OfflineCacheService.getPrefsSync() ??
+              await SharedPreferences.getInstance();
           final lastShownStr = prefs.getString('il_weather_perm_notice_ts');
           final now = DateTime.now();
           bool shouldShow = true;

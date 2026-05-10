@@ -32,7 +32,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   final _scrollCtrl = ScrollController();
 
   String? _selectedTopicId;
-  String? _lastPrefilledDraft;
   String? _houseId;
   String? _ticketId;
   String _myName = 'Người dùng';
@@ -119,9 +118,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         setState(() => _selectedTopicId = initialTopic.id);
       } else {
         _selectedTopicId = initialTopic.id;
-      }
-      if ((_msgCtrl.text.trim()).isEmpty) {
-        _primeTopicDraft(initialTopic.id, forceReplace: true);
       }
     }
   }
@@ -235,40 +231,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     });
   }
 
-  void _primeTopicDraft(String topicId, {bool forceReplace = false}) {
-    final topic = supportTopicById(topicId);
-    if (topic == null) return;
-
-    final draft = buildSupportDraft(
-      topic,
-      contextLabel: buildSupportContextLabel(_supportContext),
-      appVersionLabel: supportAppVersionLabel,
-    );
-
-    final existing = _msgCtrl.text.trim();
-    final shouldReplace = forceReplace ||
-        existing.isEmpty ||
-        RegExp(r'^[1-9]$').hasMatch(existing) ||
-        existing == (_lastPrefilledDraft?.trim() ?? '');
-
-    final nextText = shouldReplace || existing.contains(draft)
-        ? draft
-        : '$existing\n\n$draft';
-
-    _msgCtrl.value = _msgCtrl.value.copyWith(
-      text: nextText,
-      selection: TextSelection.collapsed(offset: nextText.length),
-      composing: TextRange.empty,
-    );
-
-    if (!mounted) return;
-    setState(() {
-      _selectedTopicId = topic.id;
-      _lastPrefilledDraft = draft;
-    });
-    _scrollToBottom();
-  }
-
   Map<String, dynamic> _buildMessageContext({
     required String summary,
     required SupportTopicDefinition? topic,
@@ -339,7 +301,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               '1. Quên mật khẩu / Đăng nhập\n'
               '2. Ghép đôi / Mất kết nối\n'
               '3. Lỗi ảnh, video hoặc nhật ký\n'
-              '4. Gói PRO / Trạng thái mua hàng\n'
+              '4. Thanh toán / Trạng thái mua hàng\n'
               '5. Đổi điện thoại / Đồng bộ lại dữ liệu\n'
               '6. Góp ý / Báo lỗi kỹ thuật khác\n'
               '7. Tư vấn gỡ rối tình cảm\n'
@@ -358,7 +320,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     setState(() {
       _ticketStatus = 'new';
       _selectedTopicId = null;
-      _lastPrefilledDraft = null;
       _messages.clear();
     });
     _msgCtrl.clear();
@@ -412,7 +373,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       _msgCtrl.clear();
     }
     if (isMenuCommand) {
-      _primeTopicDraft(commandId);
+      _selectedTopicId = commandId;
     }
 
     final ticketSnapshot = await _db.ref('support_tickets/$_ticketId').get();
@@ -628,7 +589,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       case '3':
         return 'Lỗi hiển thị ảnh, tải ảnh lên hoặc nhật ký trống';
       case '4':
-        return 'Hỏi về gói PRO, tính năng trả phí, lỗi thanh toán';
+        return 'Hỏi về thanh toán, tính năng trả phí, lỗi mua hàng';
       case '5':
         return 'Mất dữ liệu khi đổi điện thoại, cài lại app';
       case '6':
@@ -709,14 +670,12 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     }
 
     if (text == '4') {
-      return '💎 KÍCH HOẠT VÀ KHÔI PHỤC GÓI PRO SOULLOCKET\n\n'
-          '* Điểm quyền lợi PRO:\n'
-          'Bạn có giao diện đẹp hơn, tắt toàn bộ quảng cáo và mở thêm quyền lợi lưu trữ hình ảnh.\n\n'
-          '* Đã thanh toán bị trừ tiền nhưng không thấy lên PRO:\n'
+      return '💳 HỖ TRỢ THANH TOÁN VÀ MUA HÀNG\n\n'
+          '* Nếu bạn cần kiểm tra giao dịch hoặc khôi phục quyền lợi đã thanh toán:\n'
           'Bước 1: Mở mục "Tiện Ích" ở thanh dưới cùng.\n'
           'Bước 2: Chọn "Cửa Hàng".\n'
           'Bước 3: Cuộn xuống mục "Khôi Phục Mua Hàng", nhấn vào đó và chờ vài giây.\n\n'
-          '👉 Nếu vẫn chưa khôi phục được, hãy chụp lại hóa đơn từ cửa hàng trong ứng dụng rồi gửi vào đây để tụi mình kiểm tra.';
+          '👉 Nếu vẫn chưa xử lý được, hãy chụp lại hóa đơn hoặc màn hình giao dịch rồi gửi vào đây để tụi mình kiểm tra.';
     }
 
     if (text == '5') {
@@ -1104,9 +1063,10 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           final isSelected = _selectedTopicId == topic.id;
           return GestureDetector(
             onTap: () {
-              if (!_isSending) {
-                _primeTopicDraft(topic.id);
-              }
+              if (_isSending || _selectedTopicId == topic.id) return;
+              setState(() {
+                _selectedTopicId = topic.id;
+              });
             },
             child: Container(
               constraints: const BoxConstraints(minHeight: 36),
@@ -1218,34 +1178,17 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                   ),
                 ],
               );
-              final refill = topic == null
-                  ? const SizedBox.shrink()
-                  : TextButton(
-                      onPressed: _isSending
-                          ? null
-                          : () =>
-                              _primeTopicDraft(topic.id, forceReplace: true),
-                      child: Text(
-                        'Chèn lại mẫu',
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFFD81B60),
-                        ),
-                      ),
-                    );
               if (stacked) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     info,
-                    if (topic != null)
-                      Align(alignment: Alignment.centerRight, child: refill),
                   ],
                 );
               }
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [Expanded(child: info), if (topic != null) refill],
+                children: [Expanded(child: info)],
               );
             },
           ),

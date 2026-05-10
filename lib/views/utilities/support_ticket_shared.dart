@@ -106,19 +106,17 @@ const List<SupportTopicDefinition> supportTopicCatalog = [
   ),
   SupportTopicDefinition(
     id: '4',
-    chipLabel: '💎 PRO',
-    title: 'PRO / Thanh toán',
-    subtitle: 'Nâng cấp, khôi phục mua hàng, hóa đơn, quyền lợi PRO',
+    chipLabel: '💳 Thanh toán',
+    title: 'Thanh toán / Mua hàng',
+    subtitle: 'Khôi phục mua hàng, hóa đơn và quyền lợi đã thanh toán',
     priority: 'high',
     requiredFields: [
-      'Bạn mua gói nào hoặc cần khôi phục quyền lợi nào:',
+      'Bạn đã thanh toán cho nội dung hoặc tính năng nào:',
       'Thời điểm thanh toán gần nhất:',
       'Mã đơn hàng / hóa đơn (nếu có):',
       'Bạn thanh toán qua App Store hay Google Play:',
     ],
     keywords: [
-      'vip',
-      'premium',
       'thanh toán',
       'mua hàng',
       'restore',
