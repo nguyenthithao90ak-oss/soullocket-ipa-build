@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
+import '../app_error_mapper.dart';
+
 class RevenueSecurityTelemetryService {
   RevenueSecurityTelemetryService._();
 
@@ -85,14 +87,20 @@ class RevenueSecurityTelemetryService {
       if (kDebugMode && !_permissionDeniedLogged) {
         _permissionDeniedLogged = true;
         debugPrint(
-          'Revenue security telemetry disabled for this session: $error',
+          'Revenue security telemetry disabled for this session: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể ghi telemetry bảo mật doanh thu.',
+          ).message}',
         );
       }
       return;
     }
 
     if (kDebugMode) {
-      debugPrint('Revenue security telemetry skipped: $error');
+      debugPrint('Revenue security telemetry skipped: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể ghi telemetry bảo mật doanh thu.',
+      ).message}');
     }
   }
 }

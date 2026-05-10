@@ -16,8 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/sl_theme.dart';
 import '../../services/admob_service.dart';
 import '../../services/house_service.dart';
-import '../premium/premium_store_screen.dart';
 import '../../utils/app_error_mapper.dart';
+import '../premium/premium_store_screen.dart';
 import '../../utils/services/game_download_service.dart';
 
 part 'soul_block/soul_block_panels.dart';
@@ -63,7 +63,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   static const double _boardLayoutSafetyInset = 12.0;
   static const double _bannerDockBaseHeight = 54.0;
   static const double _memoryBurstCardAspectRatio = 0.9;
-  static const double _dragLiftOffset = 0;
+  static const double _dragLiftOffset = 12;
   static const int _trayPreviewGridSize = 5;
   static const double _dragUpdateEpsilon = 0.5;
   static const double _dragOverlayUpdateEpsilon = 1.6;
@@ -571,34 +571,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     );
   }
 
-  List<_SoulPieceOption> _buildOpeningTray(List<List<_SoulTile?>> board) {
-    final List<_SoulPieceOption> tray = _buildSmartBatch(board);
-    final List<_SoulPieceTemplate> curatedTemplates = <_SoulPieceTemplate>[
-      _kSoulBlockTemplates.firstWhere((template) => template.id == 'duo_h'),
-      _kSoulBlockTemplates.firstWhere((template) => template.id == 'duo_v'),
-      _kSoulBlockTemplates.firstWhere((template) => template.id == 'square_2'),
-    ];
-
-    final List<_SoulPieceOption> curated = <_SoulPieceOption>[];
-    for (final template in curatedTemplates) {
-      final _SoulPieceOption option = tray.firstWhere(
-        (_SoulPieceOption item) => item.template.id == template.id,
-        orElse: () => _spawnPieceFromTemplate(template),
-      );
-      curated.add(option);
-    }
-
-    if (curated.any((piece) =>
-        _findPlacements(_boardMask(board), piece.template).isEmpty)) {
-      return tray.take(3).toList(growable: false);
-    }
-
-    return curated;
-  }
-
   _PreparedSoulRun _prepareFreshRun() {
     final nextBoard = _createOpeningBoard();
-    final nextTray = _buildOpeningTray(nextBoard);
+    final nextTray = _buildSmartBatch(nextBoard);
     return _PreparedSoulRun(
       board: nextBoard,
       tray: nextTray,
@@ -634,17 +609,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _memoryBurstController.stop();
     _explosionController.stop();
 
-    final restoredBoard = _cloneBoard(nextRun.board);
-    final restoredTray = List<_SoulPieceOption>.from(nextRun.tray);
-    final restoredRecommendedMove =
-        _recommendMoveFor(restoredBoard, restoredTray);
-    final restoredGameOver = restoredTray.isEmpty ||
-        !_hasAnyPlayableMove(restoredBoard, restoredTray);
-
     setState(() {
-      _board = restoredBoard;
-      _tray = restoredTray;
-      _recommendedMove = restoredRecommendedMove;
+      _board = _cloneBoard(nextRun.board);
+      _tray = List<_SoulPieceOption>.from(nextRun.tray);
+      _recommendedMove = nextRun.recommendedMove;
       _score = restoringExistingRun ? _score : 0;
       _combo = restoringExistingRun ? _combo : 0;
       _streak = restoringExistingRun ? _streak : 0;
@@ -662,9 +630,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _memoryBurstSnapshot = null;
       _snapBackPieceId = null;
       _isBusy = false;
-      _isGameOver = restoredGameOver;
-      _continueUsedThisRun =
-          restoringExistingRun ? _continueUsedThisRun : false;
+      _isGameOver = nextRun.tray.isEmpty || nextRun.recommendedMove == null;
+      _continueUsedThisRun = restoringExistingRun ? _continueUsedThisRun : false;
       _isReviving = false;
       _isRestarting = false;
       _isOpeningGameplay = false;
@@ -963,10 +930,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         ),
       );
     } catch (error) {
-      debugPrint('Soul Block memory burst gallery load failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể tải thư viện kỷ niệm cho Soul Block lúc này.',
-      ).message}');
+      debugPrint(
+        'Soul Block memory burst gallery load failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể tải ảnh kỷ niệm Soul Block.',
+        ).message}',
+      );
     } finally {
       _isRefreshingMemoryBurstGallery = false;
     }
@@ -1048,11 +1017,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         <Point<int>>[
           const Point<int>(2, 2),
           const Point<int>(3, 2),
-          const Point<int>(4, 2),
+          const Point<int>(2, 3),
         ],
         <Point<int>>[
           const Point<int>(5, 2),
           const Point<int>(5, 3),
+          const Point<int>(5, 4),
         ],
         <Point<int>>[
           const Point<int>(2, 5),
@@ -1065,14 +1035,17 @@ class _SoulBlockGameState extends State<SoulBlockGame>
           const Point<int>(1, 1),
           const Point<int>(2, 1),
           const Point<int>(1, 2),
+          const Point<int>(2, 2),
         ],
         <Point<int>>[
           const Point<int>(5, 1),
           const Point<int>(5, 2),
+          const Point<int>(6, 2),
         ],
         <Point<int>>[
           const Point<int>(3, 5),
           const Point<int>(4, 5),
+          const Point<int>(5, 5),
           const Point<int>(4, 6),
         ],
       ],
@@ -1081,44 +1054,53 @@ class _SoulBlockGameState extends State<SoulBlockGame>
           const Point<int>(3, 1),
           const Point<int>(4, 1),
           const Point<int>(3, 2),
+          const Point<int>(4, 2),
         ],
         <Point<int>>[
           const Point<int>(1, 4),
           const Point<int>(2, 4),
+          const Point<int>(3, 4),
         ],
         <Point<int>>[
           const Point<int>(5, 4),
           const Point<int>(5, 5),
+          const Point<int>(5, 6),
         ],
       ],
       <List<Point<int>>>[
         <Point<int>>[
           const Point<int>(1, 2),
           const Point<int>(2, 2),
+          const Point<int>(3, 2),
         ],
         <Point<int>>[
           const Point<int>(4, 4),
           const Point<int>(5, 4),
           const Point<int>(4, 5),
+          const Point<int>(5, 5),
         ],
         <Point<int>>[
           const Point<int>(2, 6),
           const Point<int>(3, 6),
+          const Point<int>(4, 6),
         ],
       ],
       <List<Point<int>>>[
         <Point<int>>[
           const Point<int>(2, 1),
           const Point<int>(2, 2),
+          const Point<int>(2, 3),
         ],
         <Point<int>>[
           const Point<int>(4, 2),
           const Point<int>(5, 2),
+          const Point<int>(6, 2),
           const Point<int>(5, 3),
         ],
         <Point<int>>[
           const Point<int>(3, 5),
           const Point<int>(4, 5),
+          const Point<int>(4, 6),
         ],
       ],
     ];
@@ -1457,35 +1439,38 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     _isBusy = true;
 
-    final remainingTray = List<_SoulPieceOption>.from(_tray)
-      ..removeWhere((item) => item.id == piece.id);
-    final placement = _placeTemplate(_board, piece, row, col);
     final placedBoard = List<List<_SoulTile?>>.generate(
       _boardSize,
-      (boardRow) => List<_SoulTile?>.generate(
-        _boardSize,
-        (boardCol) {
-          final _SoulTile? tile = placement.board[boardRow][boardCol];
-          if (tile == null || tile.pieceId != piece.id) {
-            return tile;
-          }
-          return _SoulTile(
-            toneIndex: tile.toneIndex,
-            pieceId: tile.pieceId,
-            placedTurn: _turn + 1,
-          );
-        },
-        growable: false,
-      ),
-      growable: false,
+      (boardRow) => List<_SoulTile?>.from(_board[boardRow]),
     );
-    final clearResolution = _clearAffectedLines(
-      placedBoard,
-      placement.rowsToClear,
-      placement.colsToClear,
-    );
-    final clearedRows = clearResolution.clearedRows.toList(growable: false);
-    final clearedCols = clearResolution.clearedCols.toList(growable: false);
+    for (final cell in piece.template.cells) {
+      placedBoard[row + cell.y][col + cell.x] = _SoulTile(
+        toneIndex: piece.toneIndex,
+        pieceId: piece.id,
+        placedTurn: _turn + 1,
+      );
+    }
+
+    final clearedRows = <int>[];
+    final clearedCols = <int>[];
+    for (var boardRow = 0; boardRow < _boardSize; boardRow++) {
+      if (placedBoard[boardRow].every((cell) => cell != null)) {
+        clearedRows.add(boardRow);
+      }
+    }
+    for (var boardCol = 0; boardCol < _boardSize; boardCol++) {
+      var full = true;
+      for (var boardRow = 0; boardRow < _boardSize; boardRow++) {
+        if (placedBoard[boardRow][boardCol] == null) {
+          full = false;
+          break;
+        }
+      }
+      if (full) {
+        clearedCols.add(boardCol);
+      }
+    }
+
     final clearedNow = clearedRows.length + clearedCols.length;
     final gainedScore = _scoreGainFor(piece.template, clearedNow, _combo);
     final nextScore = _score + gainedScore;
@@ -1493,6 +1478,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final nextStreak = clearedNow > 0 ? _streak + 1 : 0;
     final bool beatBestThisMove =
         _score <= _bestScore && nextScore > _bestScore;
+    final remainingTray = List<_SoulPieceOption>.from(_tray)
+      ..removeWhere((item) => item.id == piece.id);
 
     _emitPlaceFeedback();
     if (clearedNow > 0) {
@@ -1503,9 +1490,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _triggerScreenPulse();
       if (clearedNow >= 2) {
         _showComboBurst(clearedNow);
-      }
-      if (nextStreak >= 2) {
-        _showStreakBurst(nextStreak);
+      } else if (nextStreak >= 2) {
+        _showFloatingMessage(
+          'Chain x$nextStreak!',
+          color: const Color(0xFF00C3FF),
+        );
       }
     }
     if (beatBestThisMove) {
@@ -1524,23 +1513,36 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _combo = nextCombo;
       _streak = nextStreak;
       _scorePulseTick += 1;
-      _clearingRows = clearResolution.clearedRows;
-      _clearingCols = clearResolution.clearedCols;
+      _clearingRows = clearedRows.toSet();
+      _clearingCols = clearedCols.toSet();
     });
 
     if (clearedNow > 0) {
-      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       if (!mounted) {
         return;
       }
     }
 
-    final resolvedBoard = clearResolution.board;
+    final resolvedBoard = List<List<_SoulTile?>>.generate(
+      _boardSize,
+      (boardRow) => List<_SoulTile?>.from(placedBoard[boardRow]),
+    );
+    for (final boardRow in clearedRows) {
+      for (var boardCol = 0; boardCol < _boardSize; boardCol++) {
+        resolvedBoard[boardRow][boardCol] = null;
+      }
+    }
+    for (final boardCol in clearedCols) {
+      for (var boardRow = 0; boardRow < _boardSize; boardRow++) {
+        resolvedBoard[boardRow][boardCol] = null;
+      }
+    }
+
     final replenishedTray =
         remainingTray.isEmpty ? _buildFastTray(resolvedBoard) : remainingTray;
     final nextRecommended = _recommendMoveFor(resolvedBoard, replenishedTray);
-    final noMovesLeft = replenishedTray.isEmpty ||
-        !_hasAnyPlayableMove(resolvedBoard, replenishedTray);
+    final noMovesLeft = replenishedTray.isEmpty || nextRecommended == null;
 
     setState(() {
       _board = resolvedBoard;
@@ -1687,10 +1689,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       }
     }
 
-    final nextTray = List<_SoulPieceOption>.from(_tray);
-    final nextRecommended = _recommendMoveFor(nextBoard, nextTray);
-    final nextIsGameOver =
-        nextTray.isEmpty || !_hasAnyPlayableMove(nextBoard, nextTray);
+    var nextTray = List<_SoulPieceOption>.from(_tray);
+    var nextRecommended = _recommendMoveFor(nextBoard, nextTray);
+    if (nextRecommended == null) {
+      nextTray = List<_SoulPieceOption>.from(nextTray)
+        ..add(_spawnPieceFromTemplate(_kSoulBlockTemplates.first));
+      nextRecommended = _recommendMoveFor(nextBoard, nextTray);
+    }
 
     setState(() {
       _board = nextBoard;
@@ -1700,7 +1705,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _clearingCols = <int>{};
       _continueUsedThisRun = true;
       _isReviving = false;
-      _isGameOver = nextIsGameOver;
+      _isGameOver = false;
       _isBusy = false;
     });
 
@@ -1831,11 +1836,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
     final Map<String, dynamic> json = Map<String, dynamic>.from(raw);
     final String templateId = (json['templateId'] as String? ?? '').trim();
-    final _SoulPieceTemplate? template =
-        _kSoulBlockTemplates.cast<_SoulPieceTemplate?>().firstWhere(
-              (_SoulPieceTemplate? item) => item?.id == templateId,
-              orElse: () => null,
-            );
+    final _SoulPieceTemplate? template = _kSoulBlockTemplates.cast<_SoulPieceTemplate?>().firstWhere(
+      (_SoulPieceTemplate? item) => item?.id == templateId,
+      orElse: () => null,
+    );
     if (template == null) {
       return null;
     }
@@ -1907,13 +1911,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
               .whereType<_SoulPieceOption>()
               .toList(growable: false);
       final _RecommendedMove? recommendedMove = _recommendMoveFor(board, tray);
-      if (tray.isEmpty || !_hasAnyPlayableMove(board, tray)) {
+      if (tray.isEmpty || recommendedMove == null) {
         return null;
       }
       _pieceSequence = max(
         (json['pieceSequence'] as num?)?.toInt() ?? 0,
-        tray.fold<int>(
-            0, (int maxId, _SoulPieceOption piece) => max(maxId, piece.id)),
+        tray.fold<int>(0, (int maxId, _SoulPieceOption piece) => max(maxId, piece.id)),
       );
       _score = (json['score'] as num?)?.toInt() ?? 0;
       _bestScore = max(_bestScore, (json['bestScore'] as num?)?.toInt() ?? 0);

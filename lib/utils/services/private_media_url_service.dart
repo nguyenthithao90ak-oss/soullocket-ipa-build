@@ -1,6 +1,8 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../app_error_mapper.dart';
+
 class PrivateMediaUrlResult {
   const PrivateMediaUrlResult({
     required this.url,
@@ -43,18 +45,23 @@ class PrivateMediaUrlService {
     }
     await user.getIdToken(true);
 
-    final callable = _functions.httpsCallable('resolvePrivateMediaUrl');
-    final response = await callable.call(<String, dynamic>{
-      'houseId': houseId.trim(),
-      'mediaId': mediaId.trim(),
-      'kind': kind.trim(),
-    });
-    final data = Map<String, dynamic>.from(response.data as Map);
-    final url = data['url']?.toString().trim() ?? '';
-    final expiresAt = (data['expiresAt'] as num?)?.toInt() ?? 0;
-    if (url.isEmpty || expiresAt <= 0) {
-      throw Exception('Không lấy được liên kết media tạm thời.');
+    try {
+      final callable = _functions.httpsCallable('resolvePrivateMediaUrl');
+      final response = await callable.call(<String, dynamic>{
+        'houseId': houseId.trim(),
+        'mediaId': mediaId.trim(),
+        'kind': kind.trim(),
+      });
+      final data = Map<String, dynamic>.from(response.data as Map);
+      final url = data['url']?.toString().trim() ?? '';
+      final expiresAt = (data['expiresAt'] as num?)?.toInt() ?? 0;
+      if (url.isEmpty || expiresAt <= 0) {
+        throw Exception('Không lấy được liên kết media tạm thời.');
+      }
+      return PrivateMediaUrlResult(url: url, expiresAt: expiresAt);
+    } catch (error) {
+      throw Exception(AppErrorMapper.resolve(error).message);
     }
-    return PrivateMediaUrlResult(url: url, expiresAt: expiresAt);
   }
 }
+

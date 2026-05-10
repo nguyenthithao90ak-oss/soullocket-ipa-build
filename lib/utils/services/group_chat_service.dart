@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../models/chat_message.dart';
 import '../../models/group_chat_room.dart';
 import 'chat_service.dart';
 import '../rapid_action_feedback_policy.dart';
+import '../app_error_mapper.dart';
 import 'anti_spam_service.dart';
 
 class GroupChatService {
@@ -374,14 +376,29 @@ class GroupChatService {
     controller = StreamController<ChatMessage>(
       onListen: () {
         addedSub = query.onChildAdded.map(readMessage).listen(
-              controller.add,
-              onError: controller.addError,
+          controller.add,
+          onError: (Object error) {
+            debugPrint(
+              '[GroupChat] message add stream failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể tải tin nhắn nhóm.',
+              ).message}',
             );
+          },
+        );
         changedSub = query.onChildChanged.map(readMessage).listen(
-              controller.add,
-              onError: controller.addError,
+          controller.add,
+          onError: (Object error) {
+            debugPrint(
+              '[GroupChat] message change stream failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể cập nhật tin nhắn nhóm.',
+              ).message}',
             );
-        membershipSub = _dbRef.child('groups/$groupId/memberHouseIds').onValue.listen((
+          },
+        );
+        membershipSub =
+            _dbRef.child('groups/$groupId/memberHouseIds').onValue.listen((
           event,
         ) {
           final raw = event.snapshot.value;
@@ -406,7 +423,15 @@ class GroupChatService {
               nextMembers.contains(viewerHouseId.trim())) {
             return;
           }
-          controller.addError(Exception('Bạn không còn là thành viên của nhóm này.'));
+          controller
+              .addError(Exception('Bạn không còn là thành viên của nhóm này.'));
+        }, onError: (Object error) {
+          debugPrint(
+            '[GroupChat] membership stream failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải danh sách thành viên nhóm.',
+            ).message}',
+          );
         });
       },
       onCancel: () async {
@@ -473,7 +498,13 @@ class GroupChatService {
             );
             emit();
           },
-          onError: controller.addError,
+          onError: (Object error) {
+            debugPrint(
+                '[GroupChat] group room stream failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải phòng chat nhóm.',
+            ).message}');
+          },
         );
       }
 
@@ -498,7 +529,14 @@ class GroupChatService {
             ids.sort();
             unawaited(syncGroupSubscriptions(ids));
           },
-          onError: controller.addError,
+          onError: (Object error) {
+            debugPrint(
+              '[GroupChat] group index stream failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể tải chỉ mục nhóm.',
+              ).message}',
+            );
+          },
         );
       },
       onCancel: () async {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../services/webrtc_service.dart';
 import '../../core/sl_theme.dart';
 
@@ -102,16 +103,29 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
       // Lắng nghe trạng thái room để tự hủy timeout và tự kết thúc gọi
       if (_roomId != null) {
-        _roomStatusSub = FirebaseDatabase.instance.ref('calls/$_roomId/status').onValue.listen((event) {
-          final status = event.snapshot.value as String?;
-          if (status == 'connected') {
-            _timeoutTimer?.cancel();
-          } else if (status == 'ended') {
-            if (mounted) {
-              _endCall();
+        _roomStatusSub = FirebaseDatabase.instance
+            .ref('calls/$_roomId/status')
+            .onValue
+            .listen(
+          (event) {
+            final status = event.snapshot.value as String?;
+            if (status == 'connected') {
+              _timeoutTimer?.cancel();
+            } else if (status == 'ended') {
+              if (mounted) {
+                _endCall();
+              }
             }
-          }
-        });
+          },
+          onError: (Object error) {
+            debugPrint(
+              'Video call room listener failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể theo dõi trạng thái cuộc gọi.',
+              ).message}',
+            );
+          },
+        );
       }
     } catch (e) {
       if (!mounted) return;

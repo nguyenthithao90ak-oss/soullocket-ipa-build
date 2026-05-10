@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'critical_data_sync_service.dart';
 import 'local_database_service.dart';
 import 'presence_service.dart';
+import '../app_error_mapper.dart';
 
 enum ConnectivityStatus {
   online,
@@ -81,7 +82,10 @@ class ConnectivityService {
         }
       });
     } catch (e) {
-      debugPrint('[Connectivity] Failed to initialize: $e');
+      debugPrint('[Connectivity] Failed to initialize: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể khởi tạo kết nối.',
+      ).message}');
       _isOnline = true;
       _emitStatus();
     }

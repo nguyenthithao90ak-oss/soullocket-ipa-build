@@ -567,6 +567,7 @@ mixin _SoulBlockStrategyLogic {
     return template.cells.map((cell) => startCol + cell.x).toSet();
   }
 
+  // ignore: unused_element
   _PlacementResolution _placeTemplate(
     List<List<_SoulTile?>> boardTiles,
     _SoulPieceOption piece,
@@ -596,6 +597,7 @@ mixin _SoulBlockStrategyLogic {
     );
   }
 
+  // ignore: unused_element
   _LineClearResolution _clearAffectedLines(
     List<List<_SoulTile?>> boardTiles,
     Set<int> rowsToClear,
@@ -716,6 +718,7 @@ mixin _SoulBlockStrategyLogic {
     );
   }
 
+  // ignore: unused_element
   bool _hasAnyPlayableMove(
     List<List<_SoulTile?>> boardTiles,
     List<_SoulPieceOption> tray,

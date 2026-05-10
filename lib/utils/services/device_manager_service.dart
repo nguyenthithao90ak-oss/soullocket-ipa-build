@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'push_notification_helper.dart';
 import 'consent_service.dart';
 import 'security_service.dart';
+import '../app_error_mapper.dart';
 
 class DeviceTrustState {
   static const Duration autoTrustDelay = Duration(hours: 12);
@@ -148,7 +149,10 @@ class DeviceManagerService {
       }
       return trustState;
     } catch (e) {
-      debugPrint('getCurrentDeviceTrustState ignored: $e');
+      debugPrint('getCurrentDeviceTrustState ignored: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra trạng thái thiết bị.',
+      ).message}');
       return _cachedTrustStateUid == uid
           ? _cachedTrustState ?? _unknownTrustState
           : _unknownTrustState;
@@ -239,7 +243,10 @@ class DeviceManagerService {
         isAdmin: isAdmin,
       );
     } catch (e) {
-      debugPrint('getCurrentDeviceTrustState ignored: $e');
+      debugPrint('getCurrentDeviceTrustState ignored: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra trạng thái thiết bị.',
+      ).message}');
       return _unknownTrustState;
     }
   }
@@ -280,7 +287,10 @@ class DeviceManagerService {
           return data;
         }
       } catch (e) {
-        debugPrint('fetchIpData $sourceName error: $e');
+        debugPrint('fetchIpData error: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể lấy dữ liệu mạng thiết bị.',
+        ).message}');
       }
       return null;
     }
@@ -329,7 +339,10 @@ class DeviceManagerService {
         }
       }
     } catch (e) {
-      debugPrint('registerCurrentDevice IP fetch error: $e');
+      debugPrint('registerCurrentDevice IP fetch error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể lấy dữ liệu mạng thiết bị.',
+      ).message}');
     }
 
     try {
@@ -487,7 +500,10 @@ class DeviceManagerService {
             'status': 'pending',
           });
         } catch (e) {
-          debugPrint('Failed to queue new device notification: $e');
+          debugPrint('Failed to queue new device notification: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Không thể tạo thông báo thiết bị mới.',
+          ).message}');
         }
         await PushNotificationHelper.systemEvent(
           toHouseId: houseId,
@@ -506,7 +522,10 @@ class DeviceManagerService {
       // Start realtime tracking to auto logout if blocked or deleted
       startRealtimeTracking();
     } catch (e) {
-      debugPrint('registerCurrentDevice ignored: $e');
+      debugPrint('registerCurrentDevice ignored: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể đăng ký thiết bị hiện tại.',
+      ).message}');
     }
   }
 
@@ -527,7 +546,10 @@ class DeviceManagerService {
       debugPrint('registerCurrentDeviceSecure fallback to legacy DB write: ${e.code}');
       return false;
     } catch (e) {
-      debugPrint('registerCurrentDeviceSecure fallback to legacy DB write: $e');
+      debugPrint('registerCurrentDeviceSecure fallback to legacy DB write: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể đăng ký thiết bị qua máy chủ bảo mật.',
+      ).message}');
       return false;
     }
   }
@@ -549,7 +571,10 @@ class DeviceManagerService {
           return data;
         }
       } catch (e) {
-        debugPrint('fetchIpData $sourceName error: $e');
+        debugPrint('fetchIpData error: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể lấy dữ liệu mạng thiết bị.',
+        ).message}');
       }
       return null;
     }
@@ -707,7 +732,10 @@ class DeviceManagerService {
       return false;
       */
     } catch (e) {
-      debugPrint('isCurrentDeviceTrusted ignored: $e');
+      debugPrint('isCurrentDeviceTrusted ignored: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra thiết bị tin cậy.',
+      ).message}');
       return false;
     }
   }
@@ -731,7 +759,10 @@ class DeviceManagerService {
       if (!snap.exists) return false;
       return snap.value == 'blocked';
     } catch (e) {
-      debugPrint('isCurrentDeviceBlocked ignored: $e');
+      debugPrint('isCurrentDeviceBlocked ignored: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra trạng thái chặn thiết bị.',
+      ).message}');
       return false;
     }
   }
@@ -820,7 +851,10 @@ class DeviceManagerService {
       debugPrint('getDeviceListSecure fallback to legacy DB read: ${e.code}');
       return null;
     } catch (e) {
-      debugPrint('getDeviceListSecure fallback to legacy DB read: $e');
+      debugPrint('getDeviceListSecure fallback to legacy DB read: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải danh sách thiết bị bảo mật.',
+      ).message}');
       return null;
     }
   }
@@ -901,7 +935,10 @@ class DeviceManagerService {
       debugPrint('$functionName fallback to legacy DB write: ${e.code}');
       return false;
     } catch (e) {
-      debugPrint('$functionName fallback to legacy DB write: $e');
+      debugPrint('Device action fallback to legacy DB write: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xử lý thao tác thiết bị qua máy chủ bảo mật.',
+      ).message}');
       return false;
     }
   }

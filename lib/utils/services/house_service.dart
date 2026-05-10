@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/device_manager_service.dart';
 import '../../services/single_match_service.dart';
+import '../app_error_mapper.dart';
 
 class HouseCreationOtpRequiredException implements Exception {
   final String maskedEmail;
@@ -53,10 +54,15 @@ class HouseService {
 
   Future<Map<String, String>> _safeCurrentDeviceSnapshot() async {
     try {
-      final deviceInfo = await DeviceManagerService().getCurrentDeviceSnapshot();
+      final deviceInfo =
+          await DeviceManagerService().getCurrentDeviceSnapshot();
       return Map<String, String>.from(deviceInfo);
     } catch (error) {
-      debugPrint('[HouseService] device snapshot unavailable: $error');
+      debugPrint(
+          '[HouseService] device snapshot unavailable: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể đọc thông tin thiết bị.',
+      ).message}');
       return const <String, String>{};
     }
   }
@@ -71,7 +77,11 @@ class HouseService {
         try {
           await user.reload().timeout(const Duration(seconds: 4));
         } catch (error) {
-          debugPrint('[HouseService] user.reload skipped: $error');
+          debugPrint(
+              '[HouseService] user.reload skipped: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể làm mới phiên đăng nhập.',
+          ).message}');
         }
 
         user = _auth.currentUser ?? user;
@@ -83,7 +93,11 @@ class HouseService {
             return;
           }
         } catch (error) {
-          debugPrint('[HouseService] getIdToken skipped: $error');
+          debugPrint(
+              '[HouseService] getIdToken skipped: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể làm mới token đăng nhập.',
+          ).message}');
         }
       }
 
@@ -105,7 +119,11 @@ class HouseService {
           .getToken(force)
           .timeout(const Duration(seconds: 5));
     } catch (error) {
-      debugPrint('[HouseService] App Check token warmup skipped: $error');
+      debugPrint(
+          '[HouseService] App Check token warmup skipped: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể chuẩn bị App Check.',
+      ).message}');
     }
   }
 
@@ -151,7 +169,8 @@ class HouseService {
     final details = error.details;
     Map<String, dynamic>? detailMap;
     if (details is Map) {
-      detailMap = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(details));
+      detailMap =
+          Map<String, dynamic>.from(Map<dynamic, dynamic>.from(details));
     }
     final reason = detailMap?['reason']?.toString().trim() ?? '';
     if (message != 'HOUSE_CREATION_OTP_REQUIRED' &&
@@ -197,7 +216,11 @@ class HouseService {
       if (!_shouldRetryCreateHouse(error)) {
         rethrow;
       }
-      debugPrint('[HouseService] createHouseSecure security sync retry: $error');
+      debugPrint(
+          '[HouseService] createHouseSecure security sync retry: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Đang thử lại đồng bộ bảo mật.',
+      ).message}');
       await Future.delayed(const Duration(milliseconds: 700));
       await _refreshCallableSecurityContext(force: true);
       return _callCreateHouseSecure(payload);
@@ -334,13 +357,19 @@ class HouseService {
       if (_isDebugAppCheckFailure(error) && _allowLegacyDirectCreateFallback) {
         try {
           return await createAdminDebugFallback();
-        } catch (adminDebugError, stackTrace) {
+        } catch (adminDebugError) {
           debugPrint(
-            '[HouseService] createHouseSecureAdminDebug failed: $adminDebugError\n$stackTrace',
+            '[HouseService] createHouseSecureAdminDebug failed: ${AppErrorMapper.resolve(
+              adminDebugError,
+              fallbackMessage: 'Không thể tạo nhà bằng kênh dự phòng.',
+            ).message}',
           );
         }
         debugPrint(
-            '[HouseService] createHouseSecure blocked, using direct fallback: $error');
+            '[HouseService] createHouseSecure blocked, using direct fallback: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Tạo nhà bảo mật bị chặn.',
+        ).message}');
         return createDirectFallback();
       }
 
@@ -359,9 +388,12 @@ class HouseService {
         throw Exception(message);
       }
       throw Exception('Không thể tạo nhà mới lúc này.');
-    } on TimeoutException catch (error, stackTrace) {
+    } on TimeoutException catch (error) {
       debugPrint(
-        '[HouseService] createHouseSecure timed out: $error\n$stackTrace',
+        '[HouseService] createHouseSecure timed out: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Tạo nhà đang mất quá nhiều thời gian.',
+        ).message}',
       );
       if (_allowLegacyDirectCreateFallback) {
         return createDirectFallback();
@@ -462,9 +494,11 @@ class HouseService {
     } on TimeoutException {
       // Fallback cache below handles slow network without spamming logs.
     } catch (e) {
-      debugPrint('Error resolving house id: $e');
+      debugPrint('Error resolving house id: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xác định mã nhà.',
+      ).message}');
     }
-
 
     final fallback = prefs.getString('il_house_id')?.trim() ?? '';
     if (fallback.isEmpty) {
@@ -500,7 +534,10 @@ class HouseService {
     } on TimeoutException {
       return false;
     } catch (e) {
-      debugPrint('Error validating house membership: $e');
+      debugPrint('Error validating house membership: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xác minh thành viên nhà.',
+      ).message}');
       return false;
     }
   }

@@ -182,7 +182,7 @@ class GameDownloadService extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       final errorMessage = AppErrorMapper.resolve(e).message;
-      debugPrint('Lỗi tải game $gameId: $errorMessage');
+      debugPrint('Lỗi tải game: $errorMessage');
       _isDownloading[gameId] = false;
       _downloadProgress.remove(gameId);
       notifyListeners();

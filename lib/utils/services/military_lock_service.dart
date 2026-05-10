@@ -423,7 +423,10 @@ class MilitaryLockService {
         ),
       );
     } catch (e) {
-      debugPrint('[MilitaryLock] Test Biometric error: $e');
+      debugPrint('[MilitaryLock] Test Biometric error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra sinh trắc học.',
+      ).message}');
       return false;
     } finally {
       isAuthenticatingBiometrics = false;
@@ -463,7 +466,10 @@ class MilitaryLockService {
         ),
       );
     } catch (e) {
-      debugPrint('[MilitaryLock] Biometric error: $e');
+      debugPrint('[MilitaryLock] Biometric error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xác thực sinh trắc học.',
+      ).message}');
       return false;
     } finally {
       isAuthenticatingBiometrics = false;

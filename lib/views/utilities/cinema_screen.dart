@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
 
 import '../../core/sl_theme.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/services/cinema_video_export_service.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/love_insight_service.dart';
@@ -128,20 +129,28 @@ class _CinemaScreenState extends State<CinemaScreen> {
   }
 
   void _listenToSettings() {
-    _settingsSub = _dbRef
-        .child('houses/${widget.houseId}/settings')
-        .onValue
-        .listen((event) {
-      final data = _asMap(event.snapshot.value);
-      final nextHouseName = _readTrimmedString(data['houseName']);
-      _houseName = nextHouseName.isEmpty ? 'Rạp kỷ niệm' : nextHouseName;
-      _startDate = _parseDate(data['startDate']);
-      _didLoadSettings = true;
-      if (mounted) {
-        setState(() {});
-      }
-      unawaited(_ensureDailyReel());
-    });
+    _settingsSub =
+        _dbRef.child('houses/${widget.houseId}/settings').onValue.listen(
+      (event) {
+        final data = _asMap(event.snapshot.value);
+        final nextHouseName = _readTrimmedString(data['houseName']);
+        _houseName = nextHouseName.isEmpty ? 'Rạp kỷ niệm' : nextHouseName;
+        _startDate = _parseDate(data['startDate']);
+        _didLoadSettings = true;
+        if (mounted) {
+          setState(() {});
+        }
+        unawaited(_ensureDailyReel());
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Cinema settings listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải cài đặt rạp.',
+          ).message}',
+        );
+      },
+    );
   }
 
   void _listenToMemories() {
@@ -186,27 +195,45 @@ class _CinemaScreenState extends State<CinemaScreen> {
         }
         unawaited(_ensureDailyReel());
       },
+      onError: (Object error) {
+        debugPrint(
+          'Cinema memories listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải ảnh rạp.',
+          ).message}',
+        );
+      },
     );
   }
 
   void _listenToDailyReel() {
-    _dailyReelSub = _dailyReelRef.onValue.listen((event) {
-      final nextReel = _CinemaDailyReel.fromRaw(event.snapshot.value);
-      final previousItemId = _selectedItem?.id;
-      final nextIndex = _resolvePreviewIndex(nextReel, previousItemId);
-      _didLoadDailyReel = true;
+    _dailyReelSub = _dailyReelRef.onValue.listen(
+      (event) {
+        final nextReel = _CinemaDailyReel.fromRaw(event.snapshot.value);
+        final previousItemId = _selectedItem?.id;
+        final nextIndex = _resolvePreviewIndex(nextReel, previousItemId);
+        _didLoadDailyReel = true;
 
-      if (!mounted) {
-        return;
-      }
+        if (!mounted) {
+          return;
+        }
 
-      setState(() {
-        _dailyReel = nextReel;
-        _previewIndex = nextIndex;
-      });
-      _scheduleFilmstripAlignment(animate: false);
-      unawaited(_ensureDailyReel());
-    });
+        setState(() {
+          _dailyReel = nextReel;
+          _previewIndex = nextIndex;
+        });
+        _scheduleFilmstripAlignment(animate: false);
+        unawaited(_ensureDailyReel());
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Cinema reel listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải reel hôm nay.',
+          ).message}',
+        );
+      },
+    );
   }
 
   Future<void> _ensureDailyReel() async {

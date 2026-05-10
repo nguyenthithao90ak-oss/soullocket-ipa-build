@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 import 'calendar_event_state_card.dart';
 import 'calendar_event_tile.dart';
@@ -140,7 +141,8 @@ class CalendarEventListSection extends StatelessWidget {
                       return CalendarEventStateCard(
                         icon: Icons.error_outline_rounded,
                         title: 'Không tải được lịch của ngày này',
-                        description: '${snapshot.error}',
+                        description:
+                            AppErrorMapper.resolve(snapshot.error).message,
                         color: const Color(0xFFE46A7A),
                       );
                     }

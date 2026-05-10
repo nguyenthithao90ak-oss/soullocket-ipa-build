@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../app_error_mapper.dart';
 class StorageDownloadCacheHelper {
   const StorageDownloadCacheHelper();
 
@@ -98,10 +99,16 @@ class StorageDownloadCacheHelper {
         return cacheFile;
       }
       debugPrint(
-        'Cached download failed ($namespace): ${response.statusCode} $normalizedUrl',
+        'Cached download failed ($namespace): ${AppErrorMapper.resolve(
+          response.statusCode,
+          fallbackMessage: 'Không thể tải cache từ mạng.',
+        ).message} $normalizedUrl',
       );
     } catch (e) {
-      debugPrint('Cached download error ($namespace): $e');
+      debugPrint('Cached download error ($namespace): ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải cache từ mạng.',
+      ).message}');
     }
 
     if (await cacheFile.exists() && await cacheFile.length() > 0) {
@@ -148,7 +155,10 @@ class StorageDownloadCacheHelper {
       }
       return bytes;
     } catch (e) {
-      debugPrint('Cached bytes read error ($namespace): $e');
+      debugPrint('Cached bytes read error ($namespace): ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể đọc cache đã tải.',
+      ).message}');
       return null;
     }
   }

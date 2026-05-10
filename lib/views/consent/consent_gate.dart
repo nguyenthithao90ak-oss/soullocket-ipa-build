@@ -89,7 +89,7 @@ class _ConsentGateState extends State<ConsentGate> {
           debugPrint('ConsentGate onReady error: ${AppErrorMapper.resolve(e).message}');
         }
       });
-    } catch (e, st) {
+    } catch (e) {
       debugPrint('ConsentGate failed: ${AppErrorMapper.resolve(e).message}');
       if (!mounted) return;
       setState(() => _ready = true);

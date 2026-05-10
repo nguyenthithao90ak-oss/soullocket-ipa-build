@@ -1,4 +1,8 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+
+import '../utils/app_error_mapper.dart';
 
 export '../utils/services/gps_tracker_service.dart' show GpsTrackerService;
 
@@ -42,6 +46,15 @@ class GpsHistoryCleanupService {
         role: normalizedRole,
       );
       _lastRunAtMsByScope[scopeKey] = nowMs;
+    } on FirebaseException catch (error) {
+      final info = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể dọn lịch sử GPS.',
+      );
+      if (error.code.toLowerCase() == 'permission-denied') {
+        return;
+      }
+      debugPrint('GPS cleanup failed: ${info.message}');
     } finally {
       _runningScopes.remove(scopeKey);
     }
@@ -52,42 +65,49 @@ class GpsHistoryCleanupService {
     required String role,
   }) async {
     final basePath = 'gps_history/$houseId/$role';
-    final snapshot = await _dbRef.child(basePath).get();
-    if (!snapshot.exists || snapshot.value is! Map) {
-      return;
-    }
-
-    final rawBuckets = Map<dynamic, dynamic>.from(snapshot.value as Map);
-    final buckets = <_GpsHistoryDayBucket>[
-      for (final entry in rawBuckets.entries)
-        _GpsHistoryDayBucket(
-          dateKey: entry.key.toString(),
-          rawPoints: entry.value is Map
-              ? Map<dynamic, dynamic>.from(entry.value as Map)
-              : const <dynamic, dynamic>{},
-        ),
-    ]..sort((left, right) => left.dateKey.compareTo(right.dateKey));
-
-    final updates = <String, dynamic>{};
-    final keepStartIndex =
-        buckets.length > maxRetainedDays ? buckets.length - maxRetainedDays : 0;
-
-    for (var i = 0; i < keepStartIndex; i++) {
-      updates['$basePath/${buckets[i].dateKey}'] = null;
-    }
-
-    for (var i = keepStartIndex; i < buckets.length; i++) {
-      final bucket = buckets[i];
-      final removableKeys = _collectOverflowPointKeys(bucket.rawPoints);
-      for (final pointKey in removableKeys) {
-        updates['$basePath/${bucket.dateKey}/$pointKey'] = null;
+    try {
+      final snapshot = await _dbRef.child(basePath).get();
+      if (!snapshot.exists || snapshot.value is! Map) {
+        return;
       }
-    }
 
-    if (updates.isEmpty) {
-      return;
+      final rawBuckets = Map<dynamic, dynamic>.from(snapshot.value as Map);
+      final buckets = <_GpsHistoryDayBucket>[
+        for (final entry in rawBuckets.entries)
+          _GpsHistoryDayBucket(
+            dateKey: entry.key.toString(),
+            rawPoints: entry.value is Map
+                ? Map<dynamic, dynamic>.from(entry.value as Map)
+                : const <dynamic, dynamic>{},
+          ),
+      ]..sort((left, right) => left.dateKey.compareTo(right.dateKey));
+
+      final updates = <String, dynamic>{};
+      final keepStartIndex =
+          buckets.length > maxRetainedDays ? buckets.length - maxRetainedDays : 0;
+
+      for (var i = 0; i < keepStartIndex; i++) {
+        updates['$basePath/${buckets[i].dateKey}'] = null;
+      }
+
+      for (var i = keepStartIndex; i < buckets.length; i++) {
+        final bucket = buckets[i];
+        final removableKeys = _collectOverflowPointKeys(bucket.rawPoints);
+        for (final pointKey in removableKeys) {
+          updates['$basePath/${bucket.dateKey}/$pointKey'] = null;
+        }
+      }
+
+      if (updates.isEmpty) {
+        return;
+      }
+      await _dbRef.update(updates);
+    } on FirebaseException catch (error) {
+      if (error.code.toLowerCase() == 'permission-denied') {
+        return;
+      }
+      rethrow;
     }
-    await _dbRef.update(updates);
   }
 
   List<String> _collectOverflowPointKeys(Map<dynamic, dynamic> rawPoints) {

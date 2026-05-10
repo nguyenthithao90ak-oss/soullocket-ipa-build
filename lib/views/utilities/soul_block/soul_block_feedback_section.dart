@@ -445,6 +445,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     _flashController.forward(from: 0);
   }
 
+  // ignore: unused_element
   void _showStreakBurst(int streakCount) {
     if (streakCount < 2) {
       return;

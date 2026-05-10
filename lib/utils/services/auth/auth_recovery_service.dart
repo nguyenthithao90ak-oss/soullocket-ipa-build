@@ -98,7 +98,10 @@ class AuthRecoveryService {
       return (token ?? '').trim().isNotEmpty;
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('AuthRecoveryService App Check warm-up failed: $error');
+        debugPrint('AuthRecoveryService App Check warm-up failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể chuẩn bị App Check.',
+        ).message}');
       }
     }
     return false;

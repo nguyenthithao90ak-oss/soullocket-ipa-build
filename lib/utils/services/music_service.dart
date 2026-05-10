@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../views/ui_prefs.dart';
+import '../app_error_mapper.dart';
 
 class MusicService {
   static final MusicService _instance = MusicService._internal();
@@ -171,7 +172,10 @@ class MusicService {
     try {
       await _audioPlayer.play(DeviceFileSource(normalizedUrl));
     } catch (e) {
-      debugPrint('Error playing music: $e');
+      debugPrint('Error playing music: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể phát nhạc.',
+      ).message}');
       isPlayingNotifier.value = false;
     }
   }

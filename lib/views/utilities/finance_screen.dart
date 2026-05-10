@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/sl_theme.dart';
 import '../../services/l10n_service.dart';
+import '../../utils/app_error_mapper.dart';
 
 /// Finance Screen - Visual parity 100% với Web gốc hhaaluutru5h49
 /// Card trắng glass, màu #d81b60, gradient hồng, list-item CSS
@@ -407,8 +408,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
             width: 2),
         boxShadow: [
           BoxShadow(
-              color:
-                  (isOverBudget ? Colors.red : Colors.green).withValues(alpha: 0.05),
+              color: (isOverBudget ? Colors.red : Colors.green)
+                  .withValues(alpha: 0.05),
               blurRadius: 15,
               offset: const Offset(0, 5))
         ],
@@ -548,7 +549,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 2),
+        border:
+            Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 2),
         boxShadow: [
           BoxShadow(
               color: Colors.amber.withValues(alpha: 0.1),
@@ -743,7 +745,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(
@@ -857,7 +860,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(children: [
@@ -924,7 +928,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1121,7 +1126,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           return SliverToBoxAdapter(
             child: Center(
               child: Text(
-                'Lỗi tải giao dịch: ${snapshot.error}',
+                'Lỗi tải giao dịch: ${AppErrorMapper.resolve(snapshot.error).message}',
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                     color: SLTheme.textMain, fontWeight: FontWeight.w700),

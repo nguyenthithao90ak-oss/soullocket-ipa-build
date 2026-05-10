@@ -2,6 +2,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart';
 
+import '../app_error_mapper.dart';
 class StorageAppCheckHelper {
   const StorageAppCheckHelper();
 
@@ -83,14 +84,20 @@ class StorageAppCheckHelper {
           _warmUpCooldownLogged = true;
           debugPrint(
             'StorageService App Check warm-up paused for '
-            '${_warmUpFailureCooldown.inMinutes}m: $error',
+            '${_warmUpFailureCooldown.inMinutes}m: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể khởi động App Check.',
+            ).message}',
           );
         }
         return false;
       }
 
       if (kDebugMode) {
-        debugPrint('StorageService App Check warm-up failed: $error');
+        debugPrint('StorageService App Check warm-up failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể khởi động App Check.',
+        ).message}');
       }
     }
     return false;

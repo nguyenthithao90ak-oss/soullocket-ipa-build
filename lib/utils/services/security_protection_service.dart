@@ -5,6 +5,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../app_error_mapper.dart';
+
 enum SecurityProtectionRiskLevel {
   allow,
   warn,
@@ -366,7 +368,10 @@ class SecurityProtectionRolloutService {
             return config;
           }
         } catch (e) {
-          debugPrint('Security rollout cache decode failed: $e');
+          debugPrint('Security rollout cache decode failed: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Không thể đọc cache bảo vệ bảo mật.',
+          ).message}');
         }
       }
     }
@@ -381,7 +386,10 @@ class SecurityProtectionRolloutService {
       _rememberConfig(config);
       return config;
     } catch (e) {
-      debugPrint('Security rollout fetch failed, fallback cache: $e');
+      debugPrint('Security rollout fetch failed, fallback cache: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải cấu hình bảo vệ bảo mật.',
+      ).message}');
       if (cachedJson != null && cachedJson.trim().isNotEmpty) {
         try {
           final cachedMap = jsonDecode(cachedJson);

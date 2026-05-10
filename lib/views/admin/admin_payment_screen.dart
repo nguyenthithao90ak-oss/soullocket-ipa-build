@@ -141,6 +141,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
         e,
         fallbackMessage: 'Chưa thể hoàn tiền lúc này. Bạn thử lại sau.',
       );
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorInfo.message),

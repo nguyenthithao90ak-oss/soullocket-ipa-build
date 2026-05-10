@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../core/sl_theme.dart';
+import '../app_error_mapper.dart';
 
 /// ============================================================================
 /// LÕI NHẮN TIN SIÊU CẤP (SUPER LOVE MESSENGER CORE) - GRA BUILD KHÔNG CẦN TRAE
@@ -93,7 +94,10 @@ class LoveMessengerCore {
         },
       );
     } catch (e) {
-      debugPrint('⚠️ Lỗi Engine SQLite: $e');
+      debugPrint('⚠️ Lỗi Engine SQLite: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể khởi tạo bộ nhớ tin nhắn.',
+      ).message}');
     }
   }
 
@@ -125,6 +129,12 @@ class LoveMessengerCore {
         // Add vào stream
         _messageStreamController.sink.add([msg]);
       }
+    }, onError: (Object error) {
+      debugPrint(
+          'Love messenger realtime listener failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể tải tin nhắn realtime.',
+      ).message}');
     });
   }
 
@@ -142,6 +152,12 @@ class LoveMessengerCore {
         });
         _partnerTypingController.sink.add(isPartnerTyping);
       }
+    }, onError: (Object error) {
+      debugPrint(
+          'Love messenger typing listener failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể tải trạng thái đang gõ.',
+      ).message}');
     });
   }
 
@@ -210,7 +226,10 @@ class LoveMessengerCore {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
-      debugPrint('Lỗi chép bộ nhớ đệm: $e');
+      debugPrint('Lỗi chép bộ nhớ đệm: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể lưu bộ nhớ đệm tin nhắn.',
+      ).message}');
     }
   }
 
@@ -226,7 +245,10 @@ class LoveMessengerCore {
         return MessageCoreModel.fromMap(maps[i]);
       });
     } catch (e) {
-      debugPrint('Hỏng lịch sử nội bộ: $e');
+      debugPrint('Hỏng lịch sử nội bộ: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải lịch sử tin nhắn nội bộ.',
+      ).message}');
       return [];
     }
   }
@@ -577,7 +599,8 @@ class SuperLoveMessengerViewState extends State<SuperLoveMessengerView>
                         boxShadow: [
                           BoxShadow(
                               color: isMe
-                                  ? const Color(0xFFE94057).withValues(alpha: 0.3)
+                                  ? const Color(0xFFE94057)
+                                      .withValues(alpha: 0.3)
                                   : Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4))

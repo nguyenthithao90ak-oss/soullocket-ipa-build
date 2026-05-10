@@ -16,6 +16,7 @@ import '../../../services/military_lock_service.dart';
 import '../../../services/utility_service.dart';
 import '../../../services/offline_cache_service.dart';
 import '../../../core/sl_theme.dart';
+import '../../../utils/app_error_mapper.dart';
 import '../../utilities/bucket_list_screen.dart';
 import '../../utilities/shared_notes_screen.dart';
 import '../../utilities/finance_screen.dart';
@@ -363,14 +364,16 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
 
   List<UtilityApp> get _shortcutPinnedApps {
     return _pinnedApps
-        .where((app) => UtilityService.isUtilityAllowed(app.id, _relationshipMode))
+        .where(
+            (app) => UtilityService.isUtilityAllowed(app.id, _relationshipMode))
         .toList(growable: false);
   }
 
   List<UtilityApp> get _shortcutRecentApps {
     final pinnedIds = _shortcutPinnedApps.map((app) => app.id).toSet();
     return _recentApps
-        .where((app) => UtilityService.isUtilityAllowed(app.id, _relationshipMode))
+        .where(
+            (app) => UtilityService.isUtilityAllowed(app.id, _relationshipMode))
         .where((app) => !pinnedIds.contains(app.id))
         .toList(growable: false);
   }
@@ -545,11 +548,14 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: active ? SLColors.primary : Colors.white.withValues(alpha: 0.9),
+          color:
+              active ? SLColors.primary : Colors.white.withValues(alpha: 0.9),
           shape: BoxShape.circle,
           boxShadow: SLShadow.subtle,
           border: Border.all(
-              color: active ? SLColors.primary : Colors.white.withValues(alpha: 0.5)),
+              color: active
+                  ? SLColors.primary
+                  : Colors.white.withValues(alpha: 0.5)),
         ),
         child: Icon(
           icon,
@@ -676,7 +682,8 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
           12, MediaQuery.of(context).padding.top + 14, 12, 12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.95),
-        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+        border: Border(
+            bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -746,7 +753,8 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFD81B60).withValues(alpha: 0.18)),
+        border:
+            Border.all(color: const Color(0xFFD81B60).withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFD81B60).withValues(alpha: 0.12),
@@ -922,6 +930,13 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         _smartTip = suggestion.message;
         _suggestedUtilityId = suggestion.utilityId;
       });
+    }, onError: (Object error) {
+      debugPrint(
+        'Utilities smart panel listener failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể tải trạng thái tiện ích.',
+        ).message}',
+      );
     });
   }
 

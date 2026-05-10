@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../services/session/presence_status_formatter.dart';
+import '../app_error_mapper.dart';
 
 class PresenceService {
   static const PresenceStatusFormatter _statusFormatter =
@@ -305,7 +306,10 @@ class PresenceService {
         }
       },
       onError: (Object error) {
-        debugPrint('Presence backend listener failed: $error');
+        debugPrint('Presence backend listener failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể lắng nghe trạng thái hiện diện.',
+        ).message}');
       },
     );
   }
@@ -340,7 +344,10 @@ class PresenceService {
     } on TimeoutException {
       return;
     } catch (e) {
-      debugPrint('Presence heartbeat failed: $e');
+      debugPrint('Presence heartbeat failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể cập nhật trạng thái hiện diện.',
+      ).message}');
     }
   }
 
@@ -381,7 +388,10 @@ class PresenceService {
             'Presence pruned stale sessions: ${updates.keys.join(', ')}');
       }
     } catch (e) {
-      debugPrint('Presence stale session prune failed: $e');
+      debugPrint('Presence stale session prune failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể dọn phiên hiện diện cũ.',
+      ).message}');
     }
   }
 
@@ -430,7 +440,10 @@ class PresenceService {
         'Presence removed ghost sessions from $oppositeRole for uid $uid: ${updates.keys.join(', ')}',
       );
     } catch (e) {
-      debugPrint('Presence ghost session cleanup failed: $e');
+      debugPrint('Presence ghost session cleanup failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể dọn phiên hiện diện trùng.',
+      ).message}');
     }
   }
 
@@ -476,7 +489,10 @@ class PresenceService {
         '[Presence] aggregate role=${ref.key} status=${freshSessionCount > 0 ? 'online' : 'offline'} sessions=$freshSessionCount lastSeen=$resolvedLastSeen device=${resolvedDevice ?? '-'}',
       );
     } catch (e) {
-      debugPrint('Presence aggregate refresh failed: $e');
+      debugPrint('Presence aggregate refresh failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tổng hợp trạng thái hiện diện.',
+      ).message}');
     }
   }
 
@@ -521,7 +537,10 @@ class PresenceService {
     } on TimeoutException {
       return;
     } catch (e) {
-      debugPrint('Presence write failed: $e');
+      debugPrint('Presence write failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể ghi trạng thái hiện diện.',
+      ).message}');
     }
   }
 
@@ -601,7 +620,10 @@ class PresenceService {
       if (_isPermissionDenied(e)) {
         return true;
       }
-      debugPrint('Presence backend reachability failed: $e');
+      debugPrint('Presence backend reachability failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra kết nối hiện diện.',
+      ).message}');
       return false;
     }
   }

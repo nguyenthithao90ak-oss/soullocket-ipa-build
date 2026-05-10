@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 import '../../core/constants/app_config.dart';
+import '../../utils/app_error_mapper.dart';
 import '../app_check_http_headers.dart';
 import '../revenue_security_telemetry_service.dart';
 import 'auth_support.dart';
@@ -450,7 +451,10 @@ class PlayIntegrityService {
             : 'Hệ thống kiểm tra an toàn phản hồi quá chậm. Hãy thử lại sau.',
       );
     } catch (error) {
-      debugPrint('PlayIntegrity assess failed: $error');
+      debugPrint('PlayIntegrity assess failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể kiểm tra Play Integrity.',
+      ).message}');
       unawaited(
         RevenueSecurityTelemetryService.instance.logEvent(
           type: 'play_integrity_failed',

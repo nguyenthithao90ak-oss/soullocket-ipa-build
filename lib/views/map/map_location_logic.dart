@@ -552,27 +552,43 @@ extension _MapLocationLogicExt on _MapScreenState {
       unawaited(partnerLocSub.cancel());
     }
 
-    _myLocSub = _dbRef
-        .child('gps/${widget.houseId}/${widget.myRole}')
-        .onValue
-        .listen((event) {
-      _setRoleLocationState(
-        widget.myRole,
-        _parseLocationNodeState(event.snapshot.value),
-      );
-      _scheduleLiveRefresh();
-    });
+    _myLocSub =
+        _dbRef.child('gps/${widget.houseId}/${widget.myRole}').onValue.listen(
+      (event) {
+        _setRoleLocationState(
+          widget.myRole,
+          _parseLocationNodeState(event.snapshot.value),
+        );
+        _scheduleLiveRefresh();
+      },
+      onError: (Object error) {
+        final message = AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể theo dõi vị trí hiện tại.',
+        ).message;
+        debugPrint('Map live GPS listen failed: $message');
+      },
+    );
 
     _partnerLocSub = _dbRef
         .child('gps/${widget.houseId}/${widget.partnerRole}')
         .onValue
-        .listen((event) {
-      _setRoleLocationState(
-        widget.partnerRole,
-        _parseLocationNodeState(event.snapshot.value),
-      );
-      _scheduleLiveRefresh();
-    });
+        .listen(
+      (event) {
+        _setRoleLocationState(
+          widget.partnerRole,
+          _parseLocationNodeState(event.snapshot.value),
+        );
+        _scheduleLiveRefresh();
+      },
+      onError: (Object error) {
+        final message = AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể theo dõi vị trí đối phương.',
+        ).message;
+        debugPrint('Map partner GPS listen failed: $message');
+      },
+    );
   }
 
   void _listenMemoryNodes() {
@@ -605,43 +621,65 @@ extension _MapLocationLogicExt on _MapScreenState {
           _MapMemorySourceKind.publicHouseBucket,
           _extractHouseScopedMemoryItems(event.snapshot.value),
         ),
+        onError: (Object error) {
+          final message = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải ghim kỷ niệm bản đồ.',
+          ).message;
+          debugPrint('Map public memory listen failed: $message');
+        },
       ),
       houseMemoriesQuery.onValue.listen(
         (event) => syncMemorySource(
           _MapMemorySourceKind.houseScoped,
           _extractHouseScopedMemoryItems(event.snapshot.value),
         ),
+        onError: (Object error) {
+          final message = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải ghim kỷ niệm trong nhà.',
+          ).message;
+          debugPrint('Map house memory listen failed: $message');
+        },
       ),
     ]);
   }
 
   Future<void> _primeMemoryPipeline() async {
-    final publicSnapshot = await _dbRef
-        .child('map_memories/${widget.houseId}')
-        .orderByChild('ts')
-        .limitToLast(_kMapMemoryQueryLimit)
-        .get();
-    final houseSnapshot = await _dbRef
-        .child('houses/${widget.houseId}/memories')
-        .orderByChild('ts')
-        .limitToLast(_kMapMemoryQueryLimit)
-        .get();
+    try {
+      final publicSnapshot = await _dbRef
+          .child('map_memories/${widget.houseId}')
+          .orderByChild('ts')
+          .limitToLast(_kMapMemoryQueryLimit)
+          .get();
+      final houseSnapshot = await _dbRef
+          .child('houses/${widget.houseId}/memories')
+          .orderByChild('ts')
+          .limitToLast(_kMapMemoryQueryLimit)
+          .get();
 
-    final didChangePublicDirect = _replaceMemorySourceKindFromItems(
-        _MapMemorySourceKind.publicDirect, const {});
-    final didChangePublicBucket = _replaceMemorySourceKindFromItems(
-      _MapMemorySourceKind.publicHouseBucket,
-      _extractHouseScopedMemoryItems(publicSnapshot.value),
-    );
-    final didChangeHouseScoped = _replaceMemorySourceKindFromItems(
-      _MapMemorySourceKind.houseScoped,
-      _extractHouseScopedMemoryItems(houseSnapshot.value),
-    );
+      final didChangePublicDirect = _replaceMemorySourceKindFromItems(
+          _MapMemorySourceKind.publicDirect, const {});
+      final didChangePublicBucket = _replaceMemorySourceKindFromItems(
+        _MapMemorySourceKind.publicHouseBucket,
+        _extractHouseScopedMemoryItems(publicSnapshot.value),
+      );
+      final didChangeHouseScoped = _replaceMemorySourceKindFromItems(
+        _MapMemorySourceKind.houseScoped,
+        _extractHouseScopedMemoryItems(houseSnapshot.value),
+      );
 
-    if (didChangePublicDirect ||
-        didChangePublicBucket ||
-        didChangeHouseScoped) {
-      _emitMergedMemoryState();
+      if (didChangePublicDirect ||
+          didChangePublicBucket ||
+          didChangeHouseScoped) {
+        _emitMergedMemoryState();
+      }
+    } catch (error) {
+      final message = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể tải dữ liệu ghim kỷ niệm.',
+      ).message;
+      debugPrint('Map memory bootstrap failed: $message');
     }
   }
 
@@ -706,6 +744,13 @@ extension _MapLocationLogicExt on _MapScreenState {
           rebuildMemories: false,
           rebuildCheckins: true,
         );
+      },
+      onError: (Object error) {
+        final message = AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể tải danh sách check-in.',
+        ).message;
+        debugPrint('Map check-in listen failed: $message');
       },
     );
   }
@@ -1445,8 +1490,9 @@ extension _MapLocationLogicExt on _MapScreenState {
           pulse: myLive || partnerLive,
           avatarUrl: widget.myAvatarUrl,
           secondaryAvatarUrl: widget.partnerAvatarUrl,
-          secondaryIcon:
-              partnerLive ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          secondaryIcon: partnerLive
+              ? Icons.favorite_rounded
+              : Icons.favorite_border_rounded,
           secondaryColor: partnerLive ? _kMapPinkDeep : _kMapPink,
           onTap: () => _showMapPointDialog(
             title: '${widget.myName} & ${widget.partnerName}',

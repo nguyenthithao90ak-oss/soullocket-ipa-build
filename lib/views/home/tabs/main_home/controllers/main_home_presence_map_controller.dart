@@ -869,7 +869,13 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
           alertText: nextAlert,
         );
       },
-      onError: (_) {
+      onError: (Object error) {
+        debugPrint(
+          'Home GPS preview listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải dữ liệu vị trí lúc này.',
+          ).message}',
+        );
         if (!mounted) return;
         _updateHomeMapPreview(
           distanceText: 'Đang định vị...',
@@ -882,7 +888,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   Future<void> _openMapScreen() async {
     if (!mounted) return;
 
-    final hasPermission = await _locationService.requestPermission(context: context);
+    final hasPermission =
+        await _locationService.requestPermission(context: context);
     if (!hasPermission) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -71,7 +71,8 @@ class WebRTCService {
         };
       }
     } catch (e) {
-      debugPrint('Failed to load WebRTC ICE servers: ${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Failed to load WebRTC ICE servers: ${AppErrorMapper.resolve(e).message}');
     }
     return {'iceServers': iceServers};
   }
@@ -194,27 +195,48 @@ class WebRTCService {
     }).timeout(const Duration(seconds: 12));
 
     // Lắng nghe Answer từ B
-    roomRef.child('answer').onValue.listen((event) async {
-      final val = event.snapshot.value as Map<dynamic, dynamic>?;
-      if (val != null) {
-        final currentRemoteDesc = await _peerConnection?.getRemoteDescription();
-        if (currentRemoteDesc == null) {
-          final answer = RTCSessionDescription(val['sdp'], val['type']);
-          await _peerConnection?.setRemoteDescription(answer);
+    roomRef.child('answer').onValue.listen(
+      (event) async {
+        final val = event.snapshot.value as Map<dynamic, dynamic>?;
+        if (val != null) {
+          final currentRemoteDesc =
+              await _peerConnection?.getRemoteDescription();
+          if (currentRemoteDesc == null) {
+            final answer = RTCSessionDescription(val['sdp'], val['type']);
+            await _peerConnection?.setRemoteDescription(answer);
+          }
         }
-      }
-    });
+      },
+      onError: (Object error) {
+        debugPrint(
+          'WebRTC answer listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể nhận tín hiệu trả lời.',
+          ).message}',
+        );
+      },
+    );
 
-    roomRef.child('calleeCandidates').onChildAdded.listen((event) {
-      final val = event.snapshot.value;
-      if (val is! Map) return;
-      final candidate = RTCIceCandidate(
-        val['candidate']?.toString(),
-        val['sdpMid']?.toString(),
-        val['sdpMLineIndex'] as int?,
-      );
-      _peerConnection?.addCandidate(candidate);
-    });
+    roomRef.child('calleeCandidates').onChildAdded.listen(
+      (event) {
+        final val = event.snapshot.value;
+        if (val is! Map) return;
+        final candidate = RTCIceCandidate(
+          val['candidate']?.toString(),
+          val['sdpMid']?.toString(),
+          val['sdpMLineIndex'] as int?,
+        );
+        _peerConnection?.addCandidate(candidate);
+      },
+      onError: (Object error) {
+        debugPrint(
+          'WebRTC callee candidate listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể nhận ICE candidate phía người nghe.',
+          ).message}',
+        );
+      },
+    );
 
     return _roomId!;
   }
@@ -243,7 +265,8 @@ class WebRTCService {
         return legacyValue;
       }
     } catch (e) {
-      debugPrint('Failed to resolve caller house id for call room: ${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Failed to resolve caller house id for call room: ${AppErrorMapper.resolve(e).message}');
     }
 
     return null;
@@ -298,17 +321,27 @@ class WebRTCService {
         .update({'status': 'connected'}).timeout(const Duration(seconds: 8));
 
     // Lắng nghe ICE Candidate của A
-    roomRef.child('callerCandidates').onChildAdded.listen((event) {
-      final raw = event.snapshot.value;
-      if (raw is! Map) return;
-      final val = Map<String, dynamic>.from(raw);
-      final candidate = RTCIceCandidate(
-        val['candidate']?.toString(),
-        val['sdpMid']?.toString(),
-        val['sdpMLineIndex'] as int?,
-      );
-      _peerConnection?.addCandidate(candidate);
-    });
+    roomRef.child('callerCandidates').onChildAdded.listen(
+      (event) {
+        final raw = event.snapshot.value;
+        if (raw is! Map) return;
+        final val = Map<String, dynamic>.from(raw);
+        final candidate = RTCIceCandidate(
+          val['candidate']?.toString(),
+          val['sdpMid']?.toString(),
+          val['sdpMLineIndex'] as int?,
+        );
+        _peerConnection?.addCandidate(candidate);
+      },
+      onError: (Object error) {
+        debugPrint(
+          'WebRTC caller candidate listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể nhận ICE candidate phía người gọi.',
+          ).message}',
+        );
+      },
+    );
   }
 
   /// Cúp máy và dọn dẹp
@@ -390,7 +423,8 @@ class WebRTCService {
         // Có thể trigger thư viện tắt chuông hoặc ẩn Incoming Call Screen
       }
     }, onError: (error) {
-      debugPrint('Error listening for incoming calls (childChanged): ${AppErrorMapper.resolve(error).message}');
+      debugPrint(
+          'Error listening for incoming calls (childChanged): ${AppErrorMapper.resolve(error).message}');
     });
 
     return callsRef.onChildAdded.listen((event) {
@@ -411,7 +445,8 @@ class WebRTCService {
           : val['callerId']?.toString().trim() ?? 'Người lạ';
       onIncomingCall(roomId, callerId, val);
     }, onError: (error) {
-      debugPrint('Error listening for incoming calls (childAdded): ${AppErrorMapper.resolve(error).message}');
+      debugPrint(
+          'Error listening for incoming calls (childAdded): ${AppErrorMapper.resolve(error).message}');
     });
   }
 }

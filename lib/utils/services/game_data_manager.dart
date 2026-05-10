@@ -4,6 +4,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
+import '../app_error_mapper.dart';
+
 class GameDataManager {
   static const String _downloadedKeyPrefix = 'game_downloaded_';
 
@@ -71,7 +73,10 @@ class GameDataManager {
           await file.writeAsBytes(response.bodyBytes);
         }
       } catch (e) {
-        debugPrint('Error downloading $fileRelativePath: $e');
+        debugPrint('Error downloading game asset: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể tải tài nguyên game.',
+        ).message}');
       }
 
       onProgress?.call((i + 1) / files.length);

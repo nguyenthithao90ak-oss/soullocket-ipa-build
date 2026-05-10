@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import 'house_service.dart';
 import 'security_protection_service.dart';
+import '../app_error_mapper.dart';
 
 class SecurityProtectionDailySummary {
   final String dayKey;
@@ -75,7 +76,10 @@ class SecurityProtectionAnalyticsService {
         'updatedAt': ServerValue.timestamp,
       });
     } catch (e) {
-      debugPrint('Security protection analytics log failed: $e');
+      debugPrint('Security protection analytics log failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể ghi thống kê bảo vệ bảo mật.',
+      ).message}');
     }
   }
 
@@ -111,7 +115,10 @@ class SecurityProtectionAnalyticsService {
       items.sort((left, right) => right.dayKey.compareTo(left.dayKey));
       return items;
     } catch (e) {
-      debugPrint('Security protection summary fetch failed: $e');
+      debugPrint('Security protection summary fetch failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải tổng hợp bảo vệ bảo mật.',
+      ).message}');
       return const <SecurityProtectionDailySummary>[];
     }
   }

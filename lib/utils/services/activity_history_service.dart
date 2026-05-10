@@ -251,7 +251,10 @@ class ActivityHistoryService {
         }
       }
     } catch (e) {
-      debugPrint('ActivityHistory remote load failed: $e');
+      debugPrint('ActivityHistory remote load failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải lịch sử hoạt động từ máy chủ.',
+      ).message}');
     }
 
     final cache = await _loadCache(resolvedHouseId);
@@ -346,7 +349,10 @@ class ActivityHistoryService {
         );
         return;
       } catch (e) {
-        debugPrint('ActivityHistory direct sync failed: $e');
+        debugPrint('ActivityHistory direct sync failed: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể đồng bộ lịch sử hoạt động.',
+        ).message}');
       }
     }
 
@@ -372,7 +378,10 @@ class ActivityHistoryService {
           itemId: entry.entityId,
         );
       } catch (e) {
-        debugPrint('ActivityHistory album restore failed: $e');
+        debugPrint('ActivityHistory album restore failed: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể khôi phục album.',
+        ).message}');
         return false;
       }
 
@@ -416,7 +425,10 @@ class ActivityHistoryService {
             payload.isEmpty ||
             entry.houseId.isEmpty ||
             isExpired) {
-          debugPrint('ActivityHistory diary memory restore failed: $e');
+          debugPrint('ActivityHistory diary memory restore failed: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Không thể khôi phục kỷ niệm.',
+          ).message}');
           return false;
         }
 
@@ -436,7 +448,10 @@ class ActivityHistoryService {
           });
         } catch (fallbackError) {
           debugPrint(
-            'ActivityHistory diary memory fallback restore failed: $fallbackError',
+            'ActivityHistory diary memory fallback restore failed: ${AppErrorMapper.resolve(
+              fallbackError,
+              fallbackMessage: 'Không thể khôi phục kỷ niệm bằng dữ liệu dự phòng.',
+            ).message}',
           );
           return false;
         }
@@ -744,7 +759,10 @@ $rows
         await _db.ref('houses/$houseId/activity_history').update(updates);
       }
     } catch (e) {
-      debugPrint('ActivityHistory trim failed: $e');
+      debugPrint('ActivityHistory trim failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể rút gọn lịch sử hoạt động.',
+      ).message}');
     }
   }
 

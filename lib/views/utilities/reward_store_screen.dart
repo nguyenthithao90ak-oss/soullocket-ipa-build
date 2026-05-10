@@ -121,17 +121,27 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     if (user == null) return;
 
     _userSubscription =
-        _dbRef.child('users/${user.uid}/checkinDays').onValue.listen((event) {
-      final rawData = event.snapshot.value;
-      final data = rawData is Map ? Map<dynamic, dynamic>.from(rawData) : {};
-      if (mounted) {
-        setState(() {
-          _checkinDays = _parseCheckinDays(data);
-          _checkedInToday = _checkinDays[_todayKey()] == true;
-          _streak = _calculateStreak(_checkinDays);
-        });
-      }
-    });
+        _dbRef.child('users/${user.uid}/checkinDays').onValue.listen(
+      (event) {
+        final rawData = event.snapshot.value;
+        final data = rawData is Map ? Map<dynamic, dynamic>.from(rawData) : {};
+        if (mounted) {
+          setState(() {
+            _checkinDays = _parseCheckinDays(data);
+            _checkedInToday = _checkinDays[_todayKey()] == true;
+            _streak = _calculateStreak(_checkinDays);
+          });
+        }
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Reward check-in listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể theo dõi điểm danh.',
+          ).message}',
+        );
+      },
+    );
   }
 
   String _todayKey([DateTime? date]) {
@@ -709,7 +719,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.3),
                   borderRadius: SLRadius.pillAll,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.45)),
                 ),
                 child: Row(
                   children: [
@@ -1246,7 +1257,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   (_checkedInToday || _isCheckingIn) ? null : _executeCheckin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: SLTheme.primary,
-                disabledBackgroundColor: SLTheme.primary.withValues(alpha: 0.35),
+                disabledBackgroundColor:
+                    SLTheme.primary.withValues(alpha: 0.35),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: SLRadius.pillAll),
                 elevation: 0,
@@ -1393,7 +1405,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                               color: SLColors.warningLight,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                  color: SLColors.warningGold.withValues(alpha: 0.5)),
+                                  color: SLColors.warningGold
+                                      .withValues(alpha: 0.5)),
                             ),
                             child: Text('+${q['points']} Điểm',
                                 style: SLTheme.quicksand(
@@ -1408,7 +1421,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                               onPressed: () {},
                               style: FilledButton.styleFrom(
                                 backgroundColor: (q['done'] as bool)
-                                    ? const Color(0xFF2EA86B).withValues(alpha: 0.15)
+                                    ? const Color(0xFF2EA86B)
+                                        .withValues(alpha: 0.15)
                                     : SLColors.primaryLight,
                                 foregroundColor: (q['done'] as bool)
                                     ? const Color(0xFF2EA86B)

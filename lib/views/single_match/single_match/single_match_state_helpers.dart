@@ -238,7 +238,14 @@ class _StreamGroup {
     for (final stream in streams) {
       final subscription = stream.listen(
         controller.add,
-        onError: controller.addError,
+        onError: (Object error) {
+          debugPrint(
+            '[SingleMatch] merged stream failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải dữ liệu Single Match.',
+            ).message}',
+          );
+        },
         onDone: () {
           completed++;
           closeIfDone();

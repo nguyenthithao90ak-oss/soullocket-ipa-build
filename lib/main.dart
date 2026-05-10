@@ -93,7 +93,8 @@ Future<_AppSignatureStatus> _loadAppSignatureStatus() async {
   final raw = await _bootstrapChannel.invokeMapMethod<String, dynamic>(
     _signatureMethod,
   );
-  final status = (raw?['status'] as String? ?? 'package_info_unavailable').trim();
+  final status =
+      (raw?['status'] as String? ?? 'package_info_unavailable').trim();
   final reasonCode =
       (raw?['reasonCode'] as String? ?? _signatureMismatchReasonCode).trim();
   final isTrusted = raw?['isTrusted'] == true;
@@ -135,7 +136,6 @@ List<String> _detailsForSignatureStatus(_UnofficialBuildDetected error) {
     if (kDebugMode) 'reasonCode=${error.reasonCode}; status=${error.status}',
   ];
 }
-
 
 Future<void> _purgeDeprecatedSecrets() async {
   await OfflineCacheService.initialize();
@@ -255,6 +255,10 @@ void main() {
     };
 
     PlatformDispatcher.instance.onError = (error, stackTrace) {
+      final mappedError = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Lỗi nền hệ thống.',
+      );
       unawaited(ErrorLoggerService.instance.logError(
         error,
         stackTrace,
@@ -264,10 +268,7 @@ void main() {
       unawaited(
         RevenueSecurityTelemetryService.instance.logSystemEvent(
           type: 'platform_dispatcher_error',
-          reason: error.toString(),
-          extra: {
-            'stack': stackTrace.toString().split('\n').take(8).join('\n'),
-          },
+          reason: mappedError.message,
         ),
       );
       return true;
@@ -314,7 +315,7 @@ void main() {
         message: 'Ứng dụng chỉ cho phép chạy trên bản phát hành chính thức.',
         details: _detailsForSignatureStatus(error),
       ));
-    } catch (error, stackTrace) {
+    } catch (error) {
       final bootstrapError = AppErrorMapper.resolve(
         error,
         fallbackMessage:
@@ -324,9 +325,8 @@ void main() {
       unawaited(
         RevenueSecurityTelemetryService.instance.logSystemEvent(
           type: 'bootstrap_error',
-          reason: error.toString(),
+          reason: bootstrapError.message,
           extra: {
-            'stack': stackTrace.toString().split('\n').take(8).join('\n'),
             'mappedMessage': bootstrapError.message,
           },
         ),
@@ -350,10 +350,11 @@ void main() {
       ));
     }
   }, (error, stackTrace) {
-    debugPrint('Uncaught zone error: ${AppErrorMapper.resolve(
+    final mappedError = AppErrorMapper.resolve(
       error,
       fallbackMessage: 'Có lỗi chưa được bắt ở vùng khởi động.',
-    ).message}');
+    );
+    debugPrint('Uncaught zone error: ${mappedError.message}');
     unawaited(ErrorLoggerService.instance.logError(
       error,
       stackTrace,
@@ -363,10 +364,7 @@ void main() {
     unawaited(
       RevenueSecurityTelemetryService.instance.logSystemEvent(
         type: 'uncaught_zone_error',
-        reason: error.toString(),
-        extra: {
-          'stack': stackTrace.toString().split('\n').take(8).join('\n'),
-        },
+        reason: mappedError.message,
       ),
     );
   });
@@ -461,7 +459,8 @@ Future<void> _initializeDefaultNativeFirebaseApp() async {
       if (Firebase.apps.isNotEmpty) {
         return;
       }
-      debugPrint('Firebase native init attempt ${index + 1} failed: ${AppErrorMapper.resolve(
+      debugPrint(
+          'Firebase native init attempt ${index + 1} failed: ${AppErrorMapper.resolve(
         error,
         fallbackMessage: 'Không thể khởi tạo Firebase native.',
       ).message}');
@@ -604,6 +603,25 @@ void _scheduleDeferredBootstrap() {
   SchedulerBinding.instance.addPostFrameCallback((_) {
     unawaited(Future<void>(() async {
       try {
+        PlatformDispatcher.instance.onError = (error, stackTrace) {
+          final mappedError = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Lỗi nền hệ thống.',
+          );
+          unawaited(ErrorLoggerService.instance.logError(
+            error,
+            stackTrace,
+            reason: 'platform_dispatcher',
+            fatal: true,
+          ));
+          unawaited(
+            RevenueSecurityTelemetryService.instance.logSystemEvent(
+              type: 'platform_dispatcher_error',
+              reason: mappedError.message,
+            ),
+          );
+          return true;
+        };
         await Future.wait([
           _initializeDeferredFirebaseAppCheck(),
           _purgeDeprecatedSecretsDeferred(),
@@ -819,8 +837,10 @@ class MyApp extends StatelessWidget {
             );
 
             if (kIsWeb) {
-              final maxWidth = SLResponsive.maxContentWidthForWidth(screenWidth);
-              final outerPadding = SLResponsive.horizontalPaddingForWidth(screenWidth);
+              final maxWidth =
+                  SLResponsive.maxContentWidthForWidth(screenWidth);
+              final outerPadding =
+                  SLResponsive.horizontalPaddingForWidth(screenWidth);
               return Container(
                 color: const Color(0xFFFDFDFD),
                 child: Center(
@@ -979,8 +999,10 @@ class MyApp extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 foregroundColor: SLColors.textInverse,
                 backgroundColor: SLColors.primary,
-                disabledForegroundColor: SLColors.textInverse.withValues(alpha: 0.7),
-                disabledBackgroundColor: SLColors.primary.withValues(alpha: 0.45),
+                disabledForegroundColor:
+                    SLColors.textInverse.withValues(alpha: 0.7),
+                disabledBackgroundColor:
+                    SLColors.primary.withValues(alpha: 0.45),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18,

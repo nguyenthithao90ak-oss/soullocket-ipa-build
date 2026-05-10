@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
+
+import '../../utils/app_error_mapper.dart';
 import '../../core/sl_theme.dart';
 
 // ============================================================
@@ -571,7 +573,14 @@ class StreamGroup {
     for (final stream in streams) {
       stream.listen(
         controller.add,
-        onError: controller.addError,
+        onError: (Object error) {
+          debugPrint(
+            '[DateSpot] merged stream failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải dữ liệu bản đồ hẹn hò.',
+            ).message}',
+          );
+        },
         onDone: () {
           completed++;
           if (completed == streams.length) {

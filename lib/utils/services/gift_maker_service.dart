@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'activity_history_service.dart';
+import '../app_error_mapper.dart';
 
 /// ============================================================
 ///  GiftMakerService — GRA (Phase 34)
@@ -110,7 +111,10 @@ class GiftMakerService {
           'giftId': giftId,
         });
       } catch (e) {
-        debugPrint('Warning: Could not save global gift link: $e');
+        debugPrint('Warning: Could not save global gift link: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể lưu liên kết quà toàn cục.',
+        ).message}');
       }
 
       // Nếu gửi cho người khác, lưu thêm vào house người nhận
@@ -122,7 +126,10 @@ class GiftMakerService {
             'status': 'pending',
           });
         } catch (e) {
-          debugPrint('Warning: Could not save to received_gifts: $e');
+          debugPrint('Warning: Could not save to received_gifts: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Không thể lưu quà vào nhà người nhận.',
+          ).message}');
         }
       }
 
@@ -141,13 +148,19 @@ class GiftMakerService {
             'direction': 'sent',
           });
         } catch (e) {
-          debugPrint('Warning: Could not save to gift_feed_sender: $e');
+          debugPrint('Warning: Could not save to gift_feed_sender: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Không thể lưu lịch sử quà đã gửi.',
+          ).message}');
         }
       }
 
       return giftId;
-    } catch (e, stackTrace) {
-      debugPrint('Error creating gift: $e\n$stackTrace');
+    } catch (e) {
+      debugPrint('Error creating gift: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tạo quà lúc này.',
+      ).message}');
       return null;
     }
   }
@@ -173,8 +186,11 @@ class GiftMakerService {
       final data = Map<String, dynamic>.from(snap.value as Map);
       data['giftId'] = giftId;
       return GiftData.fromMap(data);
-    } catch (e, stackTrace) {
-      debugPrint('Error getting gift: $e\n$stackTrace');
+    } catch (e) {
+      debugPrint('Error getting gift: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể đọc dữ liệu quà.',
+      ).message}');
       return null;
     }
   }
@@ -208,7 +224,10 @@ class GiftMakerService {
         data['status'] ??= 'new';
         return GiftData.fromMap(data);
       } catch (e) {
-        debugPrint('Could not resolve gift link from $path: $e');
+        debugPrint('Could not resolve gift link from $path: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể đọc liên kết quà.',
+        ).message}');
       }
     }
 
@@ -510,8 +529,11 @@ class GiftMakerService {
           }
         } catch (_) {}
       }
-    } catch (e, stackTrace) {
-      debugPrint('Error deleting gift link: $e - $stackTrace');
+    } catch (e) {
+      debugPrint('Error deleting gift link: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xóa liên kết quà.',
+      ).message}');
       rethrow;
     }
   }

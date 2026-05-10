@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/foundation.dart';
 import '../views/ui_prefs.dart';
+import '../app_error_mapper.dart';
 
 class SettingsSyncService {
   static const List<String> _legacySecretKeys = [
@@ -196,7 +197,10 @@ class SettingsSyncService {
       // inheriting the previous account's local state.
       await UiPrefs.reload();
     } catch (e) {
-      debugPrint('Error restoring settings: $e');
+      debugPrint('Error restoring settings: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể khôi phục cài đặt.',
+      ).message}');
     }
   }
 

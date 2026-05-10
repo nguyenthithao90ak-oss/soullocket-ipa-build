@@ -588,7 +588,13 @@ class DiaryFeedController extends ChangeNotifier {
           unawaited(_hydrateAuthorNames(loadedPosts));
           _setLoading(false);
         },
-        onError: (_, __) {
+        onError: (Object error) {
+          debugPrint(
+            'Diary realtime listener failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải nhật ký.',
+            ).message}',
+          );
           _setLoading(false);
         },
       );

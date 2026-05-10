@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
 import '../utils/zodiac_utils.dart';
+import '../app_error_mapper.dart';
 import 'love_insight_service.dart';
 
 String _t(bool isEnglish, String vi, String en) => isEnglish ? en : vi;
@@ -576,7 +577,10 @@ class TarotReadingService {
           .toList();
       return items.reversed.take(16).toList().reversed.toList();
     } catch (e) {
-      debugPrint('[TarotReading] load messages error: $e');
+      debugPrint('[TarotReading] load messages error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải tin nhắn gần đây cho tarot.',
+      ).message}');
       return const [];
     }
   }

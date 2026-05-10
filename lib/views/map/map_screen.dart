@@ -24,6 +24,7 @@ import '../../services/gps_tracker_service.dart';
 import '../../services/location_service.dart';
 import '../../services/map_pin_limit_service.dart';
 import '../../services/notification_service.dart';
+import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 
 part 'dialogs/map_checkin_sheet.dart';

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
+import '../app_error_mapper.dart';
 typedef StorageRefPathNormalizer = String Function(String storagePath);
 
 class StorageDeleteHelper {
@@ -25,10 +26,16 @@ class StorageDeleteHelper {
       if (error.code.trim().toLowerCase() == 'object-not-found') {
         return true;
       }
-      debugPrint('Failed to delete storage file $normalizedPath: $error');
+      debugPrint('Failed to delete storage file $normalizedPath: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể xóa tệp lưu trữ.',
+      ).message}');
       return false;
     } catch (e) {
-      debugPrint('Failed to delete storage file $normalizedPath: $e');
+      debugPrint('Failed to delete storage file $normalizedPath: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xóa tệp lưu trữ.',
+      ).message}');
       return false;
     }
   }
@@ -51,7 +58,10 @@ class StorageDeleteHelper {
       await file.delete();
       return true;
     } catch (e) {
-      debugPrint('Failed to delete local file $normalizedPath: $e');
+      debugPrint('Failed to delete local file $normalizedPath: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xóa tệp cục bộ.',
+      ).message}');
       return false;
     }
   }
@@ -74,12 +84,21 @@ class StorageDeleteHelper {
         return true;
       }
       debugPrint(
-        'Failed to delete storage file from URL $normalizedUrl: $error',
+        'Failed to delete storage file from URL $normalizedUrl: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể xóa tệp từ URL.',
+        ).message}',
       );
       return false;
     } catch (e) {
-      debugPrint('Failed to delete storage file from URL $normalizedUrl: $e');
-      debugPrint('Lỗi không thể xóa ảnh: $e');
+      debugPrint('Failed to delete storage file from URL $normalizedUrl: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xóa tệp từ URL.',
+      ).message}');
+      debugPrint('Lỗi không thể xóa ảnh: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xóa ảnh.',
+      ).message}');
       return false;
     }
   }

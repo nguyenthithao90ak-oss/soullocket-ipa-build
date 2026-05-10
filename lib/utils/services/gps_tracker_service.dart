@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
+import '../app_error_mapper.dart';
+
 typedef GeofenceCallback = void Function(
   String zoneName,
   double distanceMeters,
@@ -161,7 +163,10 @@ class GpsTrackerService {
             Map<String, dynamic>.from(event.snapshot.value as Map);
       },
       onError: (Object error) {
-        debugPrint('[GPS] Partner monitor error: $error');
+        debugPrint('[GPS] Partner monitor error: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể theo dõi vị trí đối phương.',
+        ).message}');
       },
     );
   }
@@ -188,7 +193,10 @@ class GpsTrackerService {
         if (role == 'user1' || role == 'user2') return role;
       }
     } catch (e) {
-      debugPrint('[GPS] Resolve role error: $e');
+      debugPrint('[GPS] Resolve role error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể xác định vai trò GPS.',
+      ).message}');
     }
     return null;
   }
@@ -215,7 +223,10 @@ class GpsTrackerService {
         onGeofenceAlert?.call('nearby_partner', distance);
       }
     } catch (e) {
-      debugPrint('[GPS] Geofence check error: $e');
+      debugPrint('[GPS] Geofence check error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra vùng GPS.',
+      ).message}');
     }
   }
 
@@ -263,7 +274,10 @@ class GpsTrackerService {
         dateKey: dateKey,
       );
     } catch (e) {
-      debugPrint('[GPS] History cleanup error: $e');
+      debugPrint('[GPS] History cleanup error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể dọn lịch sử GPS.',
+      ).message}');
     }
   }
 

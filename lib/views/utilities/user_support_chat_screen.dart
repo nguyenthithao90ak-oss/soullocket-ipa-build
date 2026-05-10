@@ -8,6 +8,7 @@ import '../../services/ai_counselor_service.dart';
 import '../../services/device_manager_service.dart';
 import '../../services/house_service.dart';
 import '../../utils/services/security_service.dart';
+import '../../utils/app_error_mapper.dart';
 import 'support_ticket_shared.dart';
 
 class UserSupportChatScreen extends StatefulWidget {
@@ -143,6 +144,14 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           _ticketStatus = nextStatus;
         });
       },
+      onError: (Object error) {
+        debugPrint(
+          'Support ticket status listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể theo dõi trạng thái hỗ trợ.',
+          ).message}',
+        );
+      },
     );
 
     _messagesSub = _db
@@ -150,44 +159,54 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         .orderByChild('ts')
         .limitToLast(80)
         .onValue
-        .listen((event) {
-      if (!event.snapshot.exists) {
-        if (_messages.isEmpty) {
-          _showGreeting();
+        .listen(
+      (event) {
+        if (!event.snapshot.exists) {
+          if (_messages.isEmpty) {
+            _showGreeting();
+          }
+          return;
         }
-        return;
-      }
 
-      final raw = event.snapshot.value;
-      if (raw is! Map) return;
+        final raw = event.snapshot.value;
+        if (raw is! Map) return;
 
-      final loaded = <_SupportMessage>[];
-      raw.forEach((key, value) {
-        if (value is! Map) return;
-        final text = value['text']?.toString() ?? '';
-        loaded.add(
-          _SupportMessage(
-            id: key.toString(),
-            text: text,
-            isBot: value['is_bot'] == true,
-            isAdmin: value['is_admin'] == true,
-            isMenuCommand: value['is_menu_command'] == true ||
-                _isSupportMenuCommandText(text),
-            ts: (value['ts'] as num?)?.toInt() ?? 0,
-          ),
+        final loaded = <_SupportMessage>[];
+        raw.forEach((key, value) {
+          if (value is! Map) return;
+          final text = value['text']?.toString() ?? '';
+          loaded.add(
+            _SupportMessage(
+              id: key.toString(),
+              text: text,
+              isBot: value['is_bot'] == true,
+              isAdmin: value['is_admin'] == true,
+              isMenuCommand: value['is_menu_command'] == true ||
+                  _isSupportMenuCommandText(text),
+              ts: (value['ts'] as num?)?.toInt() ?? 0,
+            ),
+          );
+        });
+
+        loaded.sort((a, b) => a.ts.compareTo(b.ts));
+
+        if (!mounted) return;
+        setState(() {
+          _messages
+            ..clear()
+            ..addAll(loaded);
+        });
+        _scrollToBottom();
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Support ticket messages listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải nội dung hỗ trợ.',
+          ).message}',
         );
-      });
-
-      loaded.sort((a, b) => a.ts.compareTo(b.ts));
-
-      if (!mounted) return;
-      setState(() {
-        _messages
-          ..clear()
-          ..addAll(loaded);
-      });
-      _scrollToBottom();
-    });
+      },
+    );
   }
 
   SupportTopicDefinition? get _currentTopic =>

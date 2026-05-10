@@ -8,6 +8,8 @@ import 'package:flutter/painting.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../app_error_mapper.dart';
+
 class CommunityFeedService {
   static final CommunityFeedService _instance =
       CommunityFeedService._internal();
@@ -261,7 +263,10 @@ class CommunityFeedService {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
-      debugPrint('Cache Post Failed: $e');
+      debugPrint('Cache Post Failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể lưu bài viết vào bộ nhớ đệm.',
+      ).message}');
     }
   }
 

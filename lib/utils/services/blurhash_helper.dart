@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image/image.dart' as img;
 
+import '../app_error_mapper.dart';
+
 class BlurHashHelper {
   /// Generates a BlurHash from an image file path.
   /// Compresses the image first to a very small size to speed up generation.
@@ -21,7 +23,10 @@ class BlurHashHelper {
       // 2. Decode and Encode in background thread to avoid ANR
       return await compute(_processBlurHashBytes, smallImageBytes);
     } catch (e) {
-      debugPrint('Error generating BlurHash: $e');
+      debugPrint('Error generating BlurHash: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tạo BlurHash.',
+      ).message}');
       return null;
     }
   }
@@ -31,7 +36,10 @@ class BlurHashHelper {
     try {
       return await compute(_processBlurHashBytes, bytes);
     } catch (e) {
-      debugPrint('Error generating BlurHash from bytes: $e');
+      debugPrint('Error generating BlurHash from bytes: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tạo BlurHash từ dữ liệu ảnh.',
+      ).message}');
       return null;
     }
   }

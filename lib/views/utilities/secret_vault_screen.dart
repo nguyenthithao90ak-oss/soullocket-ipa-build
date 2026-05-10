@@ -132,7 +132,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     if (_didPromptPendingVaultUploadRetry || !_encryptionReady || !mounted) {
       return;
     }
-    final hasPending = await _hasPendingVaultUploadRecord(_pendingVaultUploadKey);
+    final hasPending =
+        await _hasPendingVaultUploadRecord(_pendingVaultUploadKey);
     if (!hasPending || !mounted) {
       return;
     }
@@ -318,73 +319,82 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         .child('houses/${widget.houseId}/private_secure')
         .orderByChild('ts')
         .limitToLast(_initialVisiblePhotoLimit);
-    _photosSub = query.onValue.listen((event) async {
-      final raw = event.snapshot.value;
-      if (raw is Map) {
-        final data = Map<dynamic, dynamic>.from(raw);
-        bool needsLegacyMigrationLocal = false;
-        final loaded = await Future.wait(
-          data.entries.map((entry) async {
-            final value = entry.value;
-            if (value is! Map) {
-              return <String, dynamic>{'id': entry.key};
-            }
-            final item = Map<String, dynamic>.from(value);
-            item['id'] = entry.key;
-
-            if (item['caption'] != null &&
-                item['caption'].toString().isNotEmpty) {
-              try {
-                final decrypted = await _enc.decryptMessage(
-                  widget.houseId,
-                  item['caption'].toString(),
-                );
-                item['caption_plain'] = decrypted;
-                if (decrypted == '[Cần nhập mật khẩu để xem nội dung cũ]') {
-                  needsLegacyMigrationLocal = true;
-                }
-              } catch (_) {
-                item['caption_plain'] = item['caption'];
+    _photosSub = query.onValue.listen(
+      (event) async {
+        final raw = event.snapshot.value;
+        if (raw is Map) {
+          final data = Map<dynamic, dynamic>.from(raw);
+          bool needsLegacyMigrationLocal = false;
+          final loaded = await Future.wait(
+            data.entries.map((entry) async {
+              final value = entry.value;
+              if (value is! Map) {
+                return <String, dynamic>{'id': entry.key};
               }
-            }
+              final item = Map<String, dynamic>.from(value);
+              item['id'] = entry.key;
 
-            return item;
-          }),
+              if (item['caption'] != null &&
+                  item['caption'].toString().isNotEmpty) {
+                try {
+                  final decrypted = await _enc.decryptMessage(
+                    widget.houseId,
+                    item['caption'].toString(),
+                  );
+                  item['caption_plain'] = decrypted;
+                  if (decrypted == '[Cần nhập mật khẩu để xem nội dung cũ]') {
+                    needsLegacyMigrationLocal = true;
+                  }
+                } catch (_) {
+                  item['caption_plain'] = item['caption'];
+                }
+              }
+
+              return item;
+            }),
+          );
+
+          if (needsLegacyMigrationLocal && mounted) {
+            setState(() => _encStatusMsg =
+                'Có nội dung cũ cần chuyển đổi. Vui lòng thử khóa bằng mật khẩu Web.');
+          }
+
+          loaded.sort(
+              (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
+          if (mounted) {
+            final oldestTs =
+                loaded.isEmpty ? null : (loaded.last['ts'] as num?)?.toInt();
+            setState(() {
+              _photos = loaded;
+              _oldestLoadedPhotoTs = oldestTs;
+              _hasMorePhotos = loaded.length >= _initialVisiblePhotoLimit;
+              _isLoadingMorePhotos = false;
+            });
+          }
+        } else {
+          if (mounted) {
+            setState(() {
+              _photos = [];
+              _oldestLoadedPhotoTs = null;
+              _hasMorePhotos = false;
+              _isLoadingMorePhotos = false;
+            });
+          }
+        }
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Secret vault listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải kho mật.',
+          ).message}',
         );
-
-        if (needsLegacyMigrationLocal && mounted) {
-          setState(() => _encStatusMsg =
-              'Có nội dung cũ cần chuyển đổi. Vui lòng thử khóa bằng mật khẩu Web.');
+        if (!mounted) {
+          return;
         }
-
-        loaded.sort(
-            (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
-        if (mounted) {
-          final oldestTs =
-              loaded.isEmpty ? null : (loaded.last['ts'] as num?)?.toInt();
-          setState(() {
-            _photos = loaded;
-            _oldestLoadedPhotoTs = oldestTs;
-            _hasMorePhotos = loaded.length >= _initialVisiblePhotoLimit;
-            _isLoadingMorePhotos = false;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            _photos = [];
-            _oldestLoadedPhotoTs = null;
-            _hasMorePhotos = false;
-            _isLoadingMorePhotos = false;
-          });
-        }
-      }
-    }, onError: (_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() => _isLoadingMorePhotos = false);
-    });
+        setState(() => _isLoadingMorePhotos = false);
+      },
+    );
   }
 
   void _loadMorePhotos() async {
@@ -718,8 +728,9 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.')));
       }
     } finally {
       if (mounted) {
@@ -1318,7 +1329,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       _encStatusMsg = '🔐 Kho mật đã mở';
                     });
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Mật khẩu cũ chưa đúng. Bạn kiểm tra lại rồi thử lại nhé.'),
+                        content: Text(
+                            'Mật khẩu cũ chưa đúng. Bạn kiểm tra lại rồi thử lại nhé.'),
                         backgroundColor: Colors.redAccent));
                   }
                 }

@@ -7,6 +7,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import '../../core/sl_theme.dart';
 import '../../services/activity_history_service.dart';
+import '../../utils/app_error_mapper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Bucket List Screen - Visual parity với Web gốc hhaaluutru5h49
@@ -169,7 +170,8 @@ class _BucketListScreenState extends State<BucketListScreen>
                         child: SLTheme.emptyStatePanel(
                           icon: Icons.error_outline_rounded,
                           title: 'Không tải được bucket list',
-                          subtitle: '${snapshot.error}',
+                          subtitle:
+                              AppErrorMapper.resolve(snapshot.error).message,
                           accentColor: SLColors.danger,
                         ),
                       ),

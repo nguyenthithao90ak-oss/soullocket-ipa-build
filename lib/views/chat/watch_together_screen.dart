@@ -9,6 +9,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../services/chat_service.dart';
 import '../../core/sl_theme.dart';
+import '../../utils/app_error_mapper.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../services/webrtc_service.dart';
@@ -325,29 +326,39 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   }
 
   void _listenSharedRoom() {
-    _watchSubscription = _watchRef.onValue.listen((event) async {
-      if (!mounted) return;
-      final raw = event.snapshot.value;
-      if (raw is! Map) return;
-      final data = Map<String, dynamic>.from(raw);
-      _isHost = data['sharedBy']?.toString() == widget.myHouseId;
+    _watchSubscription = _watchRef.onValue.listen(
+      (event) async {
+        if (!mounted) return;
+        final raw = event.snapshot.value;
+        if (raw is! Map) return;
+        final data = Map<String, dynamic>.from(raw);
+        _isHost = data['sharedBy']?.toString() == widget.myHouseId;
 
-      final url = data['url']?.toString();
-      if (url != null && url.isNotEmpty && url != _currentUrl) {
-        await _loadUrl(url);
-      }
+        final url = data['url']?.toString();
+        if (url != null && url.isNotEmpty && url != _currentUrl) {
+          await _loadUrl(url);
+        }
 
-      if (data['originClientId']?.toString() == _syncClientId) {
-        return;
-      }
+        if (data['originClientId']?.toString() == _syncClientId) {
+          return;
+        }
 
-      final isPlaying = data['isPlaying'] == true;
-      final positionSec = (data['positionSec'] as num?)?.toDouble() ?? 0.0;
-      _applyRemotePlaybackState(
-        isPlaying: isPlaying,
-        positionSec: positionSec,
-      );
-    });
+        final isPlaying = data['isPlaying'] == true;
+        final positionSec = (data['positionSec'] as num?)?.toDouble() ?? 0.0;
+        _applyRemotePlaybackState(
+          isPlaying: isPlaying,
+          positionSec: positionSec,
+        );
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Watch together listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể đồng bộ phòng xem chung.',
+          ).message}',
+        );
+      },
+    );
   }
 
   Future<void> _shareCurrentUrl() async {

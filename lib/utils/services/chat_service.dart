@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_firebase_paths.dart';
 import '../models/chat_message.dart';
 import '../rapid_action_feedback_policy.dart';
+import '../app_error_mapper.dart';
 import 'activity_history_service.dart';
 import 'anti_spam_service.dart';
 import 'storage_service.dart';
@@ -970,11 +971,25 @@ class ChatService {
       attached = true;
       messageAddedSub = newMessageStream().listen(
         controller.add,
-        onError: controller.addError,
+        onError: (Object error) {
+          debugPrint(
+            '[ChatService] message add stream failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải tin nhắn phòng chat.',
+            ).message}',
+          );
+        },
       );
       messageChangedSub = changedMessageStream().listen(
         controller.add,
-        onError: controller.addError,
+        onError: (Object error) {
+          debugPrint(
+            '[ChatService] message change stream failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể cập nhật tin nhắn phòng chat.',
+            ).message}',
+          );
+        },
       );
     }
 
@@ -991,7 +1006,14 @@ class ChatService {
             unawaited(attachMessageStream());
           }
         },
-        onError: controller.addError,
+        onError: (Object error) {
+          debugPrint(
+            '[ChatService] room index stream failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải chỉ mục phòng chat.',
+            ).message}',
+          );
+        },
       );
     }
 
@@ -1035,13 +1057,27 @@ class ChatService {
     controller = StreamController<ChatMessage>(
       onListen: () {
         addedSub = query.onChildAdded.map(readMessage).listen(
-              controller.add,
-              onError: controller.addError,
+          controller.add,
+          onError: (Object error) {
+            debugPrint(
+              '[ChatService] internal message add stream failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể tải tin nhắn nội bộ.',
+              ).message}',
             );
+          },
+        );
         changedSub = query.onChildChanged.map(readMessage).listen(
-              controller.add,
-              onError: controller.addError,
+          controller.add,
+          onError: (Object error) {
+            debugPrint(
+              '[ChatService] internal message change stream failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể cập nhật tin nhắn nội bộ.',
+              ).message}',
             );
+          },
+        );
       },
       onCancel: () async {
         await addedSub?.cancel();
@@ -1110,7 +1146,14 @@ class ChatService {
             assign(_readMetaString(event.snapshot.value));
             emitIfChanged();
           },
-          onError: controller.addError,
+          onError: (Object error) {
+            debugPrint(
+              'Chat room field listener failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể tải thông tin phòng chat.',
+              ).message}',
+            );
+          },
         ),
       );
     }
@@ -1125,7 +1168,14 @@ class ChatService {
             lastMessage = _readLastMessageMap(event.snapshot.value);
             emitIfChanged();
           },
-          onError: controller.addError,
+          onError: (Object error) {
+            debugPrint(
+              'Chat room lastMessage listener failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể tải tin nhắn gần nhất.',
+              ).message}',
+            );
+          },
         ),
       );
 
@@ -1188,7 +1238,14 @@ class ChatService {
         includeDeletedDisplayName: includeDeletedDisplayName,
       ).listen(
         controller.add,
-        onError: controller.addError,
+        onError: (Object error) {
+          debugPrint(
+            '[ChatService] room meta stream failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải thông tin phòng chat.',
+            ).message}',
+          );
+        },
       );
       try {
         await _ensureViewerRoomIndex(viewerHouseId, roomId);

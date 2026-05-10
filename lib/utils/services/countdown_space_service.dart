@@ -251,7 +251,7 @@ class CountdownSpaceService {
         requestId: requestId,
       );
     } catch (e) {
-      return CountdownSpaceRequestResult(
+      return const CountdownSpaceRequestResult(
         success: false,
         message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
@@ -312,7 +312,7 @@ class CountdownSpaceService {
         message: 'Đã chấp nhận yêu cầu ghép nối.',
       );
     } catch (e) {
-      return CountdownSpaceRequestResult(
+      return const CountdownSpaceRequestResult(
         success: false,
         message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
@@ -329,7 +329,7 @@ class CountdownSpaceService {
         message: 'Đã từ chối yêu cầu ghép nối.',
       );
     } catch (e) {
-      return CountdownSpaceRequestResult(
+      return const CountdownSpaceRequestResult(
         success: false,
         message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
@@ -344,7 +344,7 @@ class CountdownSpaceService {
         message: 'Đã hủy yêu cầu ghép nối.',
       );
     } catch (e) {
-      return CountdownSpaceRequestResult(
+      return const CountdownSpaceRequestResult(
         success: false,
         message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
@@ -485,7 +485,7 @@ class CountdownSpaceService {
         message: 'Đã gửi yêu cầu xóa không gian.',
       );
     } catch (e) {
-      return CountdownSpaceRequestResult(
+      return const CountdownSpaceRequestResult(
         success: false,
         message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );
@@ -506,7 +506,7 @@ class CountdownSpaceService {
         message: 'Đã xóa không gian đếm.',
       );
     } catch (e) {
-      return CountdownSpaceRequestResult(
+      return const CountdownSpaceRequestResult(
         success: false,
         message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
       );

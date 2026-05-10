@@ -568,8 +568,12 @@ class DiaryMemoryController extends ChangeNotifier {
         '[DiaryMemory] signed url refreshed id=$memoryId urlLen=${result.url.length}',
       );
     } catch (e) {
+      final message = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể tải liên kết ảnh kỷ niệm.',
+      ).message;
       debugPrint(
-        '[DiaryMemory] signed url refresh FAILED id=$memoryId error=$e',
+        '[DiaryMemory] signed url refresh failed id=$memoryId message=$message',
       );
     }
   }

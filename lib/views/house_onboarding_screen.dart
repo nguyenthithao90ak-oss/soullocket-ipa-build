@@ -967,7 +967,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         MaterialPageRoute(builder: (_) => const AppEntry()),
         (route) => false,
       );
-    } on HouseCreationOtpRequiredException catch (e, st) {
+    } on HouseCreationOtpRequiredException catch (e) {
       debugPrint('[HouseOnboarding] house creation OTP required: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Cần xác minh Gmail để tiếp tục tạo nhà.',
@@ -983,7 +983,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         return;
       }
       return _createHouse(houseCreationOtp: otp.trim());
-    } catch (e, st) {
+    } catch (e) {
       final errorInfo = AppErrorMapper.resolve(e);
       debugPrint('[HouseOnboarding] _createHouse failed: ${errorInfo.message}');
       if (!mounted) return;

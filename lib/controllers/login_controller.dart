@@ -153,7 +153,8 @@ class LoginController extends ChangeNotifier {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
+          content:
+              Text('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
           duration: Duration(seconds: 2),
         ),
       );
@@ -300,10 +301,12 @@ class LoginController extends ChangeNotifier {
               debugPrint(
                 '[Auth][Register] pending relationship mode saved',
               );
-            }).catchError((error, stackTrace) {
+            }).catchError((error) {
               debugPrint(
-                'savePendingRelationshipModeForCurrentUser failed: '
-                '$error\n$stackTrace',
+                'savePendingRelationshipModeForCurrentUser failed: ${AppErrorMapper.resolve(
+                  error,
+                  fallbackMessage: 'Không thể lưu chế độ quan hệ đang chờ.',
+                ).message}',
               );
             }),
           );

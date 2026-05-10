@@ -5,6 +5,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../app_error_mapper.dart';
 import 'storage_upload_result.dart';
 
 typedef StorageCurrentUidProvider = String Function();
@@ -85,7 +86,10 @@ class StorageManagedUploadHelper {
             tempCompressedPath = null;
           }
         } catch (compressError) {
-          debugPrint('Lỗi khi nén ảnh WebP: $compressError');
+          debugPrint('Lỗi khi nén ảnh WebP: ${AppErrorMapper.resolve(
+            compressError,
+            fallbackMessage: 'Không thể nén ảnh WebP.',
+          ).message}');
           tempCompressedPath = null;
         }
       }
@@ -128,7 +132,10 @@ class StorageManagedUploadHelper {
         }
       }
     } catch (e) {
-      debugPrint('Lỗi khi upload ảnh: $e');
+      debugPrint('Lỗi khi upload ảnh: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không tải ảnh lên đám mây được.',
+      ).message}');
       throw 'Không thể tải ảnh lên đám mây, vui lòng kiểm tra kết nối mạng.';
     }
   }

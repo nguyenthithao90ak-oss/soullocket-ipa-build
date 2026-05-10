@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -167,32 +166,42 @@ class _MessengerScreenState extends State<MessengerScreen>
     if (_myHouseId == null) return;
 
     _friendsSub?.cancel();
-    _friendsSub = _dbRef.child('friends/$_myHouseId').onValue.listen((event) {
-      if (!mounted) return;
+    _friendsSub = _dbRef.child('friends/$_myHouseId').onValue.listen(
+      (event) {
+        if (!mounted) return;
 
-      final data = event.snapshot.value as Map<dynamic, dynamic>? ?? {};
-      final ids = <String>[];
+        final data = event.snapshot.value as Map<dynamic, dynamic>? ?? {};
+        final ids = <String>[];
 
-      data.forEach((key, value) {
-        final friendId = key.toString();
-        ids.add(friendId);
-      });
+        data.forEach((key, value) {
+          final friendId = key.toString();
+          ids.add(friendId);
+        });
 
-      if (_sameStringList(_friends, ids)) {
-        return;
-      }
+        if (_sameStringList(_friends, ids)) {
+          return;
+        }
 
-      setState(() {
-        _friends = ids;
-        _friendIdsSet
-          ..clear()
-          ..addAll(ids);
-        _sortedFriendsDirty = true;
-      });
-      _pruneRemovedFriendRealtime(ids);
-      _warmupFriendRealtime(ids);
-      _loadHousesInfo(ids);
-    });
+        setState(() {
+          _friends = ids;
+          _friendIdsSet
+            ..clear()
+            ..addAll(ids);
+          _sortedFriendsDirty = true;
+        });
+        _pruneRemovedFriendRealtime(ids);
+        _warmupFriendRealtime(ids);
+        _loadHousesInfo(ids);
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Messenger friends listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải danh sách bạn bè.',
+          ).message}',
+        );
+      },
+    );
   }
 
   Future<void> _loadHousesInfo(List<String> houseIds) async {
@@ -231,33 +240,49 @@ class _MessengerScreenState extends State<MessengerScreen>
     _internalPartnerPresenceSub?.cancel();
     _internalRoomMetaSub?.cancel();
 
-    _internalPartnerPresenceSub = _dbRef
-        .child('houses/$houseId/presence/$_partnerRole')
-        .onValue
-        .listen((event) {
-      final rawPresence = event.snapshot.value;
-      final presence =
-          rawPresence is Map ? Map<dynamic, dynamic>.from(rawPresence) : null;
-      if (_samePresence(_internalPartnerPresence, presence)) {
-        return;
-      }
-      if (!mounted) return;
-      setState(() {
-        _internalPartnerPresence = presence;
-      });
-    });
+    _internalPartnerPresenceSub =
+        _dbRef.child('houses/$houseId/presence/$_partnerRole').onValue.listen(
+      (event) {
+        final rawPresence = event.snapshot.value;
+        final presence =
+            rawPresence is Map ? Map<dynamic, dynamic>.from(rawPresence) : null;
+        if (_samePresence(_internalPartnerPresence, presence)) {
+          return;
+        }
+        if (!mounted) return;
+        setState(() {
+          _internalPartnerPresence = presence;
+        });
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Messenger partner presence listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải trạng thái người ấy.',
+          ).message}',
+        );
+      },
+    );
 
-    _internalRoomMetaSub = _chatService.streamInternalRoomMeta(houseId).listen((
-      meta,
-    ) {
-      if (_internalPartnerRoomMeta.sameAs(meta)) {
-        return;
-      }
-      if (!mounted) return;
-      setState(() {
-        _internalPartnerRoomMeta = meta;
-      });
-    });
+    _internalRoomMetaSub = _chatService.streamInternalRoomMeta(houseId).listen(
+      (meta) {
+        if (_internalPartnerRoomMeta.sameAs(meta)) {
+          return;
+        }
+        if (!mounted) return;
+        setState(() {
+          _internalPartnerRoomMeta = meta;
+        });
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Messenger internal room meta listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải tin nhắn gần nhất.',
+          ).message}',
+        );
+      },
+    );
   }
 
   void _mergeHouseInfo(
@@ -352,18 +377,29 @@ class _MessengerScreenState extends State<MessengerScreen>
 
   void _startFriendRealtimeIfNeeded(String friendId) {
     _presenceSubs.putIfAbsent(friendId, () {
-      return _dbRef.child('houses/$friendId/presence').onValue.listen((event) {
-        final rawPresence = event.snapshot.value;
-        final presence =
-            rawPresence is Map ? Map<dynamic, dynamic>.from(rawPresence) : null;
-        if (_samePresence(_presenceByFriendId[friendId], presence)) {
-          return;
-        }
-        if (!mounted) return;
-        setState(() {
-          _presenceByFriendId[friendId] = presence;
-        });
-      });
+      return _dbRef.child('houses/$friendId/presence').onValue.listen(
+        (event) {
+          final rawPresence = event.snapshot.value;
+          final presence = rawPresence is Map
+              ? Map<dynamic, dynamic>.from(rawPresence)
+              : null;
+          if (_samePresence(_presenceByFriendId[friendId], presence)) {
+            return;
+          }
+          if (!mounted) return;
+          setState(() {
+            _presenceByFriendId[friendId] = presence;
+          });
+        },
+        onError: (Object error) {
+          debugPrint(
+            'Messenger friend presence listener failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải trạng thái bạn bè.',
+            ).message}',
+          );
+        },
+      );
     });
 
     _roomMetaSubs.putIfAbsent(friendId, () {
@@ -375,21 +411,31 @@ class _MessengerScreenState extends State<MessengerScreen>
         includeClosedMessage: false,
         includeDeletedDisplayName: false,
       )
-          .listen((meta) {
-        final current = _roomMetaByFriendId[friendId] ?? const ChatRoomMeta();
-        if (current.sameAs(meta)) {
-          return;
-        }
-        final shouldResort =
-            _lastMessageTsFromMeta(current) != _lastMessageTsFromMeta(meta);
-        if (!mounted) return;
-        setState(() {
-          _roomMetaByFriendId[friendId] = meta;
-          if (shouldResort) {
-            _sortedFriendsDirty = true;
+          .listen(
+        (meta) {
+          final current = _roomMetaByFriendId[friendId] ?? const ChatRoomMeta();
+          if (current.sameAs(meta)) {
+            return;
           }
-        });
-      });
+          final shouldResort =
+              _lastMessageTsFromMeta(current) != _lastMessageTsFromMeta(meta);
+          if (!mounted) return;
+          setState(() {
+            _roomMetaByFriendId[friendId] = meta;
+            if (shouldResort) {
+              _sortedFriendsDirty = true;
+            }
+          });
+        },
+        onError: (Object error) {
+          debugPrint(
+            'Messenger room meta listener failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải tin nhắn gần nhất.',
+            ).message}',
+          );
+        },
+      );
     });
   }
 
@@ -602,8 +648,8 @@ class _MessengerScreenState extends State<MessengerScreen>
     if (_sortedFriendsDirty) {
       final items = [..._friends];
       items.sort((a, b) {
-        final byUnread =
-            (_friendHasUnread(b) ? 1 : 0).compareTo(_friendHasUnread(a) ? 1 : 0);
+        final byUnread = (_friendHasUnread(b) ? 1 : 0)
+            .compareTo(_friendHasUnread(a) ? 1 : 0);
         if (byUnread != 0) {
           return byUnread;
         }

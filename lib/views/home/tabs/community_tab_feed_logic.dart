@@ -11,38 +11,48 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
 
   void _listenToCommunityMaintenance() {
     _communityMaintenanceSub?.cancel();
-    _communityMaintenanceSub =
-        _dbRef.child('sys_settings').onValue.listen((event) {
-      final settings = event.snapshot.value;
-      final map = settings is Map
-          ? settings.map((key, value) => MapEntry(key.toString(), value))
-          : const <String, dynamic>{};
-      final fallbackMessage = _ct(
-        'Tính năng mạng xã hội tạm thời đóng để nâng cấp.',
-        'The community feature is temporarily closed for an upgrade.',
-      );
-      final nextMaintenance = map['community_maintenance_mode'] == true;
-      final nextMessage =
-          map['community_maintenance_msg']?.toString().trim() ?? '';
-      final nextEta = map['community_maintenance_eta']?.toString().trim() ?? '';
-      final hasChanges = _isCommunityMaintenance != nextMaintenance ||
-          _communityMaintenanceMsg !=
-              (nextMessage.isNotEmpty ? nextMessage : fallbackMessage) ||
-          _communityMaintenanceEta != nextEta;
+    _communityMaintenanceSub = _dbRef.child('sys_settings').onValue.listen(
+      (event) {
+        final settings = event.snapshot.value;
+        final map = settings is Map
+            ? settings.map((key, value) => MapEntry(key.toString(), value))
+            : const <String, dynamic>{};
+        final fallbackMessage = _ct(
+          'Tính năng mạng xã hội tạm thời đóng để nâng cấp.',
+          'The community feature is temporarily closed for an upgrade.',
+        );
+        final nextMaintenance = map['community_maintenance_mode'] == true;
+        final nextMessage =
+            map['community_maintenance_msg']?.toString().trim() ?? '';
+        final nextEta =
+            map['community_maintenance_eta']?.toString().trim() ?? '';
+        final hasChanges = _isCommunityMaintenance != nextMaintenance ||
+            _communityMaintenanceMsg !=
+                (nextMessage.isNotEmpty ? nextMessage : fallbackMessage) ||
+            _communityMaintenanceEta != nextEta;
 
-      if (!hasChanges) {
+        if (!hasChanges) {
+          _syncRealtimeFeedSubscription();
+          return;
+        }
+
+        _updateState(() {
+          _isCommunityMaintenance = nextMaintenance;
+          _communityMaintenanceMsg =
+              nextMessage.isNotEmpty ? nextMessage : fallbackMessage;
+          _communityMaintenanceEta = nextEta;
+        });
         _syncRealtimeFeedSubscription();
-        return;
-      }
-
-      _updateState(() {
-        _isCommunityMaintenance = nextMaintenance;
-        _communityMaintenanceMsg =
-            nextMessage.isNotEmpty ? nextMessage : fallbackMessage;
-        _communityMaintenanceEta = nextEta;
-      });
-      _syncRealtimeFeedSubscription();
-    });
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Community maintenance listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải trạng thái cộng đồng.',
+          ).message}',
+        );
+      },
+    );
     _loadBannedWords();
   }
 
@@ -648,32 +658,51 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
           _friendRequestsRevision++;
         });
       });
-      _friendsSubscription =
-          _dbRef.child('friends/$houseId').onValue.listen((event) {
-        final v = event.snapshot.value;
-        final next = <String, dynamic>{};
-        if (v is Map) {
-          v.forEach((k, val) => next[k.toString()] = val);
-        }
-        _updateState(() {
-          _friends = next;
-          _friendsRevision++;
-          _invalidateFilteredPostsCache();
-        });
-      });
+      _friendsSubscription = _dbRef.child('friends/$houseId').onValue.listen(
+        (event) {
+          final v = event.snapshot.value;
+          final next = <String, dynamic>{};
+          if (v is Map) {
+            v.forEach((k, val) => next[k.toString()] = val);
+          }
+          _updateState(() {
+            _friends = next;
+            _friendsRevision++;
+            _invalidateFilteredPostsCache();
+          });
+        },
+        onError: (Object error) {
+          debugPrint(
+            'Community friends listener failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải danh sách bạn bè.',
+            ).message}',
+          );
+        },
+      );
       _blockedUsersSubscription =
-          _dbRef.child('houses/$houseId/blocked_users').onValue.listen((event) {
-        final v = event.snapshot.value;
-        final next = <String, dynamic>{};
-        if (v is Map) {
-          v.forEach((k, val) => next[k.toString()] = val);
-        }
-        _updateState(() {
-          _blockedUsers = next;
-          _blockedUsersRevision++;
-          _invalidateFilteredPostsCache();
-        });
-      });
+          _dbRef.child('houses/$houseId/blocked_users').onValue.listen(
+        (event) {
+          final v = event.snapshot.value;
+          final next = <String, dynamic>{};
+          if (v is Map) {
+            v.forEach((k, val) => next[k.toString()] = val);
+          }
+          _updateState(() {
+            _blockedUsers = next;
+            _blockedUsersRevision++;
+            _invalidateFilteredPostsCache();
+          });
+        },
+        onError: (Object error) {
+          debugPrint(
+            'Community blocked-users listener failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể tải danh sách chặn.',
+            ).message}',
+          );
+        },
+      );
     } else {
       _communityMessengerPreviewSubscription?.cancel();
       _updateState(() {
@@ -867,10 +896,8 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
 
   void _persistFeedCache() {
     _feedCachePersistTimer?.cancel();
-    final cache = _allPosts
-        .take(40)
-        .map(_compactFeedCachePost)
-        .toList(growable: false);
+    final cache =
+        _allPosts.take(40).map(_compactFeedCachePost).toList(growable: false);
     _feedCachePersistTimer =
         Timer(_CommunityTabState._feedCachePersistDelay, () {
       unawaited(OfflineCacheService.saveCache('community_unified_feed', cache));
@@ -889,8 +916,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
       'videoUrl': (post['videoUrl'] ?? '').toString(),
       'livePhotoUrl': (post['livePhotoUrl'] ?? '').toString(),
       'thumbUrl': (post['thumbUrl'] ?? '').toString(),
-      'privacy':
-          (post['privacy'] ?? post['visibility'] ?? 'public').toString(),
+      'privacy': (post['privacy'] ?? post['visibility'] ?? 'public').toString(),
       'visibility':
           (post['visibility'] ?? post['privacy'] ?? 'public').toString(),
       'likes': _getLikes(post),

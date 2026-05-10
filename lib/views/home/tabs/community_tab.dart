@@ -670,75 +670,83 @@ class _CommunityTabState extends State<CommunityTab>
 
   void _listenCommunityMessengerPreview(String houseId) {
     _communityMessengerPreviewSubscription?.cancel();
-    _communityMessengerPreviewSubscription = _dbRef
-        .child('house_chat_rooms/$houseId')
-        .limitToLast(8)
-        .onValue
-        .listen((event) async {
-      if (!mounted) return;
-      final rawRooms = event.snapshot.value;
-      if (rawRooms is! Map) {
-        _updateState(() {
-          _communityMessengerUnreadCount = 0;
-          _communityMessengerPreviewText = '';
-        });
-        return;
-      }
+    _communityMessengerPreviewSubscription =
+        _dbRef.child('house_chat_rooms/$houseId').limitToLast(8).onValue.listen(
+      (event) async {
+        if (!mounted) return;
+        final rawRooms = event.snapshot.value;
+        if (rawRooms is! Map) {
+          _updateState(() {
+            _communityMessengerUnreadCount = 0;
+            _communityMessengerPreviewText = '';
+          });
+          return;
+        }
 
-      final activeSubscription = _communityMessengerPreviewSubscription;
-      final roomIds = rawRooms.keys
-          .map((key) => key.toString().trim())
-          .where((roomId) => roomId.isNotEmpty)
-          .take(8)
-          .toList(growable: false);
-      if (roomIds.isEmpty) {
-        _updateState(() {
-          _communityMessengerUnreadCount = 0;
-          _communityMessengerPreviewText = '';
-        });
-        return;
-      }
+        final activeSubscription = _communityMessengerPreviewSubscription;
+        final roomIds = rawRooms.keys
+            .map((key) => key.toString().trim())
+            .where((roomId) => roomId.isNotEmpty)
+            .take(8)
+            .toList(growable: false);
+        if (roomIds.isEmpty) {
+          _updateState(() {
+            _communityMessengerUnreadCount = 0;
+            _communityMessengerPreviewText = '';
+          });
+          return;
+        }
 
-      final snapshots = await Future.wait<DataSnapshot?>(
-        roomIds.map((roomId) async {
-          try {
-            return await _dbRef.child('chats/$roomId/lastMessage').get();
-          } catch (_) {
-            return null;
+        final snapshots = await Future.wait<DataSnapshot?>(
+          roomIds.map((roomId) async {
+            try {
+              return await _dbRef.child('chats/$roomId/lastMessage').get();
+            } catch (_) {
+              return null;
+            }
+          }),
+        );
+        if (!mounted ||
+            activeSubscription != _communityMessengerPreviewSubscription) {
+          return;
+        }
+
+        var unread = 0;
+        var latestTs = 0;
+        var latestPreview = '';
+
+        for (final snap in snapshots) {
+          final value = snap?.value;
+          if (value is! Map) continue;
+          final lastMessage = Map<dynamic, dynamic>.from(value);
+          final ts = readChatMetaTimestamp(lastMessage);
+          final text = readChatMetaText(lastMessage);
+          if (isChatMetaUnreadForHouse(
+            lastMessage,
+            viewerHouseId: houseId,
+          )) {
+            unread++;
           }
-        }),
-      );
-      if (!mounted || activeSubscription != _communityMessengerPreviewSubscription) {
-        return;
-      }
-
-      var unread = 0;
-      var latestTs = 0;
-      var latestPreview = '';
-
-      for (final snap in snapshots) {
-        final value = snap?.value;
-        if (value is! Map) continue;
-        final lastMessage = Map<dynamic, dynamic>.from(value);
-        final ts = readChatMetaTimestamp(lastMessage);
-        final text = readChatMetaText(lastMessage);
-        if (isChatMetaUnreadForHouse(
-          lastMessage,
-          viewerHouseId: houseId,
-        )) {
-          unread++;
+          if (ts >= latestTs && text.isNotEmpty) {
+            latestTs = ts;
+            latestPreview = text;
+          }
         }
-        if (ts >= latestTs && text.isNotEmpty) {
-          latestTs = ts;
-          latestPreview = text;
-        }
-      }
 
-      _updateState(() {
-        _communityMessengerUnreadCount = unread.clamp(0, 99).toInt();
-        _communityMessengerPreviewText = latestPreview;
-      });
-    });
+        _updateState(() {
+          _communityMessengerUnreadCount = unread.clamp(0, 99).toInt();
+          _communityMessengerPreviewText = latestPreview;
+        });
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Community messenger preview listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải xem trước tin nhắn cộng đồng.',
+          ).message}',
+        );
+      },
+    );
   }
 
   Future<void> _openCommunityMessenger() async {
@@ -784,13 +792,13 @@ class _CommunityTabState extends State<CommunityTab>
                   onPanEnd: (_) {
                     final current =
                         _communityMessengerButtonOffset ?? resolvedOffset;
-                    final snapX = current.dx +
-                                (_communityMessengerButtonSize.width / 2) <
-                            (viewport.width / 2)
-                        ? _communityMessengerButtonMargin
-                        : viewport.width -
-                            _communityMessengerButtonSize.width -
-                            _communityMessengerButtonMargin;
+                    final snapX =
+                        current.dx + (_communityMessengerButtonSize.width / 2) <
+                                (viewport.width / 2)
+                            ? _communityMessengerButtonMargin
+                            : viewport.width -
+                                _communityMessengerButtonSize.width -
+                                _communityMessengerButtonMargin;
                     final snapped = _clampCommunityMessengerButtonOffset(
                       Offset(snapX, current.dy),
                       viewport,
@@ -827,12 +835,14 @@ class _CommunityTabState extends State<CommunityTab>
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFD81B60).withValues(alpha: 0.22),
+                              color: const Color(0xFFD81B60)
+                                  .withValues(alpha: 0.22),
                               blurRadius: 18,
                               offset: const Offset(0, 10),
                             ),
                             BoxShadow(
-                              color: const Color(0xFFFFC1D8).withValues(alpha: 0.18),
+                              color: const Color(0xFFFFC1D8)
+                                  .withValues(alpha: 0.18),
                               blurRadius: 10,
                               offset: const Offset(0, 2),
                             ),
@@ -851,10 +861,12 @@ class _CommunityTabState extends State<CommunityTab>
                                     width: 34,
                                     height: 34,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.18),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.18),
                                       borderRadius: BorderRadius.circular(13),
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.20),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.20),
                                       ),
                                     ),
                                     child: const Icon(
@@ -938,7 +950,9 @@ class _CommunityTabState extends State<CommunityTab>
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              if (_communityMessengerPreviewText.trim().isNotEmpty)
+                              if (_communityMessengerPreviewText
+                                  .trim()
+                                  .isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4),
                                   child: Text(
@@ -947,7 +961,8 @@ class _CommunityTabState extends State<CommunityTab>
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: SLTheme.quicksand(
-                                      color: Colors.white.withValues(alpha: 0.88),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.88),
                                       fontSize: 8.1,
                                       height: 1.12,
                                       fontWeight: FontWeight.w700,

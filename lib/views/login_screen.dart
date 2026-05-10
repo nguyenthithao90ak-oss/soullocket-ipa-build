@@ -681,7 +681,7 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (_) => const AppEntry()),
       );
       return;
-    } catch (e, stackTrace) {
+    } catch (e) {
       final resolvedMessage = AppErrorMapper.resolve(
         e,
         fallbackMessage: L10nService().translate('auth_login_unavailable'),

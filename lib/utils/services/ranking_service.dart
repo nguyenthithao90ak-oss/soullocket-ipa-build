@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+
+import '../app_error_mapper.dart';
 
 /// ============================================================
 ///  RankingService - GRA (Phase 41)
@@ -81,8 +84,13 @@ class RankingService {
         }
 
         controller.add(list);
-      } catch (error, stackTrace) {
-        controller.addError(error, stackTrace);
+      } catch (error) {
+        debugPrint(
+          '[Ranking] refresh failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể cập nhật bảng xếp hạng.',
+          ).message}',
+        );
       } finally {
         isRefreshing = false;
         if (refreshQueued) {
@@ -109,7 +117,14 @@ class RankingService {
             fireTotals = _parseScoreMap(event.snapshot.value);
             scheduleRefresh();
           },
-          onError: controller.addError,
+          onError: (Object error) {
+            debugPrint(
+              '[Ranking] fire totals stream failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể tải dữ liệu xếp hạng.',
+              ).message}',
+            );
+          },
         );
 
         publicHotSub = _db
@@ -122,7 +137,14 @@ class RankingService {
             publicHotIds = _parseKeySet(event.snapshot.value);
             scheduleRefresh();
           },
-          onError: controller.addError,
+          onError: (Object error) {
+            debugPrint(
+              '[Ranking] public hot stream failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể tải danh sách nổi bật.',
+              ).message}',
+            );
+          },
         );
       },
       onCancel: () async {

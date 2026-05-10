@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../app_error_mapper.dart';
 import 'storage_media_constants.dart';
 
 typedef StorageVideoUploadRejector = void Function({
@@ -60,7 +61,10 @@ class StorageRawUploadHelper {
 
       return uploadTask.ref.getDownloadURL();
     } catch (e) {
-      debugPrint('Lỗi khi upload tệp $storagePath: $e');
+      debugPrint('Lỗi khi upload tệp $storagePath: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không tải tệp lên đám mây được.',
+      ).message}');
       throw Exception(
         'Không tải tệp lên đám mây được: hãy kiểm tra kết nối mạng, đăng nhập và quyền truy cập tệp.',
       );
@@ -153,7 +157,10 @@ class StorageRawUploadHelper {
 
       return uploadTask.ref.getDownloadURL();
     } catch (e) {
-      debugPrint('Lỗi khi upload file nhạc $storagePath: $e');
+      debugPrint('Lỗi khi upload file nhạc $storagePath: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không tải file nhạc lên đám mây được.',
+      ).message}');
       throw Exception(
         'Không tải file nhạc lên đám mây được: hãy kiểm tra kết nối mạng, định dạng file và quyền truy cập tệp.',
       );
@@ -241,7 +248,10 @@ class StorageRawUploadHelper {
 
       return uploadTask.ref.getDownloadURL();
     } catch (e) {
-      debugPrint('Lỗi khi upload tệp $storagePath: $e');
+      debugPrint('Lỗi khi upload tệp $storagePath: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không tải tệp lên đám mây được.',
+      ).message}');
       throw Exception(
         'Không tải tệp lên đám mây được: hãy kiểm tra kết nối mạng, đăng nhập và quyền truy cập tệp.',
       );

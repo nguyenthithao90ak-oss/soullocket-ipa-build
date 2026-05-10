@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'security_protection_service.dart';
 import 'security_runtime_risk_service.dart';
 import 'security_verdict_cache_service.dart';
+import '../app_error_mapper.dart';
 
 class SensitiveContentService {
   SensitiveContentService._() {
@@ -131,7 +132,10 @@ class SensitiveContentService {
         ttl: _runtimeRiskService.defaultCacheTtl(verdict),
       );
     } catch (error) {
-      debugPrint('SensitiveContentService signal handling failed: $error');
+      debugPrint('SensitiveContentService signal handling failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể xử lý tín hiệu bảo vệ nội dung.',
+      ).message}');
     }
   }
 }

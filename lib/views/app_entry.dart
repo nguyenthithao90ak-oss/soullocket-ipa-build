@@ -308,7 +308,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             debugPrint(
               '[AppEntry] prepareSignedInHouseSession finished: $houseId',
             );
-          } catch (e, st) {
+          } catch (e) {
             debugPrint(
               '[AppEntry] prepareSignedInHouseSession failed: '
               '${AppErrorMapper.resolve(e).message}',
@@ -481,7 +481,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           return BlockedScaffold(
             title: 'Lỗi xác thực',
             message: kDebugMode
-                ? 'Không thể kết nối hệ thống xác thực. Vui lòng thử lại.\n${snapshot.error}'
+                ? 'Không thể kết nối hệ thống xác thực. Vui lòng thử lại.\n${AppErrorMapper.resolve(snapshot.error).message}'
                 : 'Không thể kiểm tra đăng nhập. Hãy kiểm tra mạng rồi mở lại ứng dụng.',
             onSignOut: () async {},
           );
@@ -522,7 +522,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
               return BlockedScaffold(
                 title: 'Lỗi hệ thống',
                 message:
-                    'Không thể tải thông tin tài khoản.\n${accessSnap.error}',
+                    'Không thể tải thông tin tài khoản.\n${AppErrorMapper.resolve(accessSnap.error).message}',
                 onSignOut: () async {
                   await _authService.signOut();
                 },

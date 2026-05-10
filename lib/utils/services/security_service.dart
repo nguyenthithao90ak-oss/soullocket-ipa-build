@@ -18,6 +18,7 @@ import 'local_action_throttle_service.dart';
 import 'security_protection_service.dart';
 import 'security_runtime_risk_service.dart';
 import 'security_verdict_cache_service.dart';
+import '../app_error_mapper.dart';
 
 class SecurityService {
   static const String _deviceIdStorageKey = 'il_device_id';
@@ -81,7 +82,10 @@ class SecurityService {
         'uid': user.uid,
       });
     } catch (e) {
-      debugPrint('Error logging security alert: $e');
+      debugPrint('Error logging security alert: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể ghi cảnh báo bảo mật.',
+      ).message}');
     }
   }
 
@@ -133,7 +137,10 @@ class SecurityService {
       _lastProxyCheck = DateTime.now();
       return isDetected;
     } catch (e) {
-      debugPrint('Error checking VPN/Proxy: $e');
+      debugPrint('Error checking VPN/Proxy: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra VPN/Proxy.',
+      ).message}');
       return false;
     }
   }

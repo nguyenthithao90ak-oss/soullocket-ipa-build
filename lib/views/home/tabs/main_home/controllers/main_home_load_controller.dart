@@ -482,61 +482,89 @@ extension _MainHomeLoadController on _MainHomeTabState {
         if (mounted) setState(() => _isCoupleConnected = connected);
 
         _membersSubscription =
-            _dbRef.child('houses/$houseId/members').onValue.listen((event) {
-          if (isStale()) return;
-          if (event.snapshot.value != null && mounted) {
-            final raw = event.snapshot.value;
-            if (raw is Map) {
-              final nextConnected = raw.length >= 2;
-              if (_isCoupleConnected != nextConnected) {
+            _dbRef.child('houses/$houseId/members').onValue.listen(
+          (event) {
+            if (isStale()) return;
+            if (event.snapshot.value != null && mounted) {
+              final raw = event.snapshot.value;
+              if (raw is Map) {
+                final nextConnected = raw.length >= 2;
+                if (_isCoupleConnected != nextConnected) {
+                  if (isStale()) return;
+                  setState(() {
+                    _isCoupleConnected = nextConnected;
+                  });
+                }
+              }
+            } else if (mounted) {
+              if (_isCoupleConnected) {
                 if (isStale()) return;
                 setState(() {
-                  _isCoupleConnected = nextConnected;
+                  _isCoupleConnected = false;
                 });
               }
             }
-          } else if (mounted) {
-            if (_isCoupleConnected) {
-              if (isStale()) return;
-              setState(() {
-                _isCoupleConnected = false;
-              });
-            }
-          }
-        });
+          },
+          onError: (Object error) {
+            debugPrint(
+              'Home members listener failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể tải trạng thái thành viên.',
+              ).message}',
+            );
+          },
+        );
 
         _presenceSubscription =
-            _dbRef.child('houses/$houseId/presence').onValue.listen((event) {
-          if (isStale()) return;
-          if (event.snapshot.value != null && mounted) {
-            final raw = event.snapshot.value;
-            if (raw is Map) {
-              final map = _toStringDynamicMap(raw);
-              final hadLoadedPresenceSnapshot = _hasLoadedPresenceSnapshot;
-              _hasLoadedPresenceSnapshot = true;
-              final didUpdatePresence = _updatePresenceDataIfNeededImpl(map);
-              if (!didUpdatePresence && !hadLoadedPresenceSnapshot && mounted) {
-                setState(() {});
-              }
+            _dbRef.child('houses/$houseId/presence').onValue.listen(
+          (event) {
+            if (isStale()) return;
+            if (event.snapshot.value != null && mounted) {
+              final raw = event.snapshot.value;
+              if (raw is Map) {
+                final map = _toStringDynamicMap(raw);
+                final hadLoadedPresenceSnapshot = _hasLoadedPresenceSnapshot;
+                _hasLoadedPresenceSnapshot = true;
+                final didUpdatePresence = _updatePresenceDataIfNeededImpl(map);
+                if (!didUpdatePresence &&
+                    !hadLoadedPresenceSnapshot &&
+                    mounted) {
+                  setState(() {});
+                }
 
-              if (didUpdatePresence &&
-                  _isRoleOnline('user1') &&
-                  _isRoleOnline('user2')) {
-                DailyQuestService().recordProgress('simultaneous_online');
-              }
+                if (didUpdatePresence &&
+                    _isRoleOnline('user1') &&
+                    _isRoleOnline('user2')) {
+                  DailyQuestService().recordProgress('simultaneous_online');
+                }
 
-              if (didUpdatePresence) {
-                final partnerPresence = _presenceForRole(_partnerRole);
-                final partnerWeatherRaw = partnerPresence?['weather'];
-                if (partnerWeatherRaw is Map) {
-                  unawaited(
-                    _maybeSendAutomaticWeatherCare(
-                      _toStringDynamicMap(partnerWeatherRaw),
-                    ),
+                if (didUpdatePresence) {
+                  final partnerPresence = _presenceForRole(_partnerRole);
+                  final partnerWeatherRaw = partnerPresence?['weather'];
+                  if (partnerWeatherRaw is Map) {
+                    unawaited(
+                      _maybeSendAutomaticWeatherCare(
+                        _toStringDynamicMap(partnerWeatherRaw),
+                      ),
+                    );
+                  }
+                }
+
+                if (didUpdatePresence && _houseSettings != null) {
+                  _scheduleLoveWidgetSync(
+                    _houseSettings!,
+                    includeDiaryMedia: false,
                   );
                 }
               }
-
+            } else if (mounted) {
+              final hadLoadedPresenceSnapshot = _hasLoadedPresenceSnapshot;
+              _hasLoadedPresenceSnapshot = true;
+              final didUpdatePresence =
+                  _updatePresenceDataIfNeededImpl(const <String, dynamic>{});
+              if (!didUpdatePresence && !hadLoadedPresenceSnapshot) {
+                setState(() {});
+              }
               if (didUpdatePresence && _houseSettings != null) {
                 _scheduleLoveWidgetSync(
                   _houseSettings!,
@@ -544,22 +572,16 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 );
               }
             }
-          } else if (mounted) {
-            final hadLoadedPresenceSnapshot = _hasLoadedPresenceSnapshot;
-            _hasLoadedPresenceSnapshot = true;
-            final didUpdatePresence =
-                _updatePresenceDataIfNeededImpl(const <String, dynamic>{});
-            if (!didUpdatePresence && !hadLoadedPresenceSnapshot) {
-              setState(() {});
-            }
-            if (didUpdatePresence && _houseSettings != null) {
-              _scheduleLoveWidgetSync(
-                _houseSettings!,
-                includeDiaryMedia: false,
-              );
-            }
-          }
-        });
+          },
+          onError: (Object error) {
+            debugPrint(
+              'Home presence listener failed: ${AppErrorMapper.resolve(
+                error,
+                fallbackMessage: 'Không thể tải trạng thái hiện diện.',
+              ).message}',
+            );
+          },
+        );
 
         _alertSubscription = _dbRef
             .child('houses/$houseId/alerts')

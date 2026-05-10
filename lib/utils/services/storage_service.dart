@@ -170,7 +170,10 @@ class StorageService {
       await prefs.remove('il_imgbb_api_key');
       _legacyImgBBKeyPurged = true;
     } catch (e) {
-      debugPrint('Legacy ImgBB key purge failed: $e');
+      debugPrint('Legacy ImgBB key purge failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể dọn khóa ImgBB cũ.',
+      ).message}');
     }
   }
 
@@ -902,7 +905,10 @@ class StorageService {
       if (errorText.contains('unauthenticated')) {
         return;
       }
-      debugPrint('Cleanup expired memory trash failed: $e');
+      debugPrint('Cleanup expired memory trash failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể dọn thùng rác Kỷ niệm hết hạn.',
+      ).message}');
     }
   }
 

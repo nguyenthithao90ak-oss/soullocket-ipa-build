@@ -729,12 +729,12 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                           frameBuilder:
                               (context, child, frame, wasSynchronouslyLoaded) =>
                                   child,
-                          errorBuilder: (context, error, stackTrace) {
+                              errorBuilder: (context, error, stackTrace) {
                             final retries = _retryCount[photoId] ?? 0;
                             if (retries < 2) {
                               _retryCount[photoId] = retries + 1;
                               debugPrint(
-                                '[DiaryMemory] image load failed id=$photoId retry=${retries + 1} error=${AppErrorMapper.resolve(error).message}',
+                                '[DiaryMemory] image load failed id=$photoId retry=${retries + 1} message=${AppErrorMapper.resolve(error).message}',
                               );
                               WidgetsBinding.instance.addPostFrameCallback((_) async {
                                 if (!mounted) return;
@@ -742,7 +742,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                                   await _refreshStalePhotoUrl(photo);
                                 } catch (refreshError) {
                                   debugPrint(
-                                    '[DiaryMemory] refresh url failed id=$photoId error=${AppErrorMapper.resolve(refreshError).message}',
+                                    '[DiaryMemory] refresh url failed id=$photoId message=${AppErrorMapper.resolve(refreshError).message}',
                                   );
                                 }
                               });

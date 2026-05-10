@@ -253,7 +253,7 @@ class PurchaseService {
       await _iap.restorePurchases();
       await syncVipEntitlements();
       _initialized = true;
-    } catch (error, stackTrace) {
+    } catch (error) {
       debugPrint('PurchaseService initialize error: ${AppErrorMapper.resolve(
         error,
         fallbackMessage: 'Không thể khởi tạo mua hàng lúc này.',
@@ -290,7 +290,12 @@ class PurchaseService {
       await getVipAccessInfo();
 
       if (response.statusCode != 200) {
-        debugPrint('VIP sync failed: ${response.statusCode} ${response.body}');
+        debugPrint(
+          'VIP sync failed: ${AppErrorMapper.resolve(
+            response.body,
+            fallbackMessage: 'Đồng bộ VIP thất bại.',
+          ).message} (status=${response.statusCode})',
+        );
       }
     } catch (error) {
       debugPrint('VIP sync error: ${AppErrorMapper.resolve(

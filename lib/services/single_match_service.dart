@@ -129,7 +129,8 @@ class SingleMatchService {
         fallbackProfiles = _readProfileMap(snapshot.value);
         emitMergedCandidates();
       } catch (error) {
-        debugPrint('[SingleMatch] load fallback profiles failed: ${AppErrorMapper.resolve(
+        debugPrint(
+            '[SingleMatch] load fallback profiles failed: ${AppErrorMapper.resolve(
           error,
           fallbackMessage: 'Không thể tải hồ sơ dự phòng cho Single Match.',
         ).message}');
@@ -146,7 +147,8 @@ class SingleMatchService {
             emitMergedCandidates();
           },
           onError: (Object error) {
-            debugPrint('[SingleMatch] profile index stream failed: ${AppErrorMapper.resolve(
+            debugPrint(
+                '[SingleMatch] profile index stream failed: ${AppErrorMapper.resolve(
               error,
               fallbackMessage: 'Luồng chỉ mục hồ sơ Single Match bị lỗi.',
             ).message}');
@@ -267,7 +269,8 @@ class SingleMatchService {
             controller.add(entries);
           },
           onError: (Object error) {
-            debugPrint('[SingleMatch] history stream failed: ${AppErrorMapper.resolve(
+            debugPrint(
+                '[SingleMatch] history stream failed: ${AppErrorMapper.resolve(
               error,
               fallbackMessage: 'Luồng lịch sử Single Match bị lỗi.',
             ).message}');

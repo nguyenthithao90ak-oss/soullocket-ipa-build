@@ -71,7 +71,7 @@ class WidgetService {
       if (forceUpdate) {
         await refreshWidgetShell();
       }
-    } catch (error, stackTrace) {
+    } catch (error) {
       debugPrint('Widget bootstrap error: ${AppErrorMapper.resolve(
         error,
         fallbackMessage: 'Không thể khởi tạo widget lúc này.',

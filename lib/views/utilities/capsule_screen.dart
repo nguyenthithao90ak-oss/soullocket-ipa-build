@@ -166,6 +166,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
 
     if (_selectedImage != null &&
         !await File(_selectedImage!.path).exists()) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Ảnh đã chọn không còn sẵn sàng. Bạn chọn lại ảnh rồi thử tiếp.')));
       return;

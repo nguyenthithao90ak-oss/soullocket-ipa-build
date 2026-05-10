@@ -651,7 +651,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
           )
           .timeout(const Duration(seconds: 8));
     } catch (error) {
-      debugPrint('[SingleMatch] log skip history failed: ${AppErrorMapper.resolve(
+      debugPrint(
+          '[SingleMatch] log skip history failed: ${AppErrorMapper.resolve(
         error,
         fallbackMessage: 'Không thể ghi lịch sử bỏ qua Single Match.',
       ).message}');
@@ -716,7 +717,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             )
             .timeout(const Duration(seconds: 8));
       } catch (error) {
-        debugPrint('[SingleMatch] log call history failed: ${AppErrorMapper.resolve(
+        debugPrint(
+            '[SingleMatch] log call history failed: ${AppErrorMapper.resolve(
           error,
           fallbackMessage: 'Không thể ghi lịch sử cuộc gọi Single Match.',
         ).message}');
@@ -918,7 +920,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _SingleMatchLoadErrorCard(
-            loadError: snapshot.error.toString(),
+            loadError: AppErrorMapper.resolve(snapshot.error).message,
             onRetry: _loadBootstrap,
           );
         }
@@ -1122,7 +1124,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         final history = snapshot.data ?? const <SingleMatchHistoryEntry>[];
         if (snapshot.hasError) {
           return _SingleMatchLoadErrorCard(
-            loadError: snapshot.error.toString(),
+            loadError: AppErrorMapper.resolve(snapshot.error).message,
             onRetry: _loadBootstrap,
           );
         }

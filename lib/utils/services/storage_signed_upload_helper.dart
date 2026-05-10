@@ -5,6 +5,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../app_error_mapper.dart';
 import 'blurhash_helper.dart';
 import 'storage_upload_result.dart';
 
@@ -148,7 +149,10 @@ class StorageSignedUploadHelper {
         }
       }
     } catch (e) {
-      debugPrint('${request.errorLabel} upload failed: $e');
+      debugPrint('${request.errorLabel} upload failed: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: request.errorMessage,
+      ).message}');
       throw Exception(request.errorMessage);
     }
   }

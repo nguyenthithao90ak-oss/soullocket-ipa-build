@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../app_error_mapper.dart';
 import 'pending_upload_service.dart';
 
 typedef PendingUploadRetryHandler = Future<bool> Function(
@@ -35,7 +36,8 @@ class PendingUploadRetryCoordinator {
     if (_isRetrying) return;
     _isRetrying = true;
     try {
-      final pendingUploads = await PendingUploadService.instance.listSummaries();
+      final pendingUploads =
+          await PendingUploadService.instance.listSummaries();
       for (final pending in pendingUploads) {
         if (pending.retryCount >= maxRetryPerItem) continue;
         final handler = _handlers[pending.category];
@@ -48,10 +50,12 @@ class PendingUploadRetryCoordinator {
               'Pending upload retry was not handled.',
             );
           }
-        } catch (error, stackTrace) {
+        } catch (error) {
           debugPrint(
-            '[PendingUploadRetryCoordinator] retry failed '
-            '${pending.key}: $error\n$stackTrace',
+            '[PendingUploadRetryCoordinator] retry failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Không thể thử lại upload đang chờ.',
+            ).message}',
           );
           await PendingUploadService.instance.markFailed(pending.key, error);
         }

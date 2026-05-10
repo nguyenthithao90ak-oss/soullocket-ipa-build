@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
 
+import '../app_error_mapper.dart';
+
 /// ============================================================
 ///  SpotifySyncService — Gra (Logic/Data)
 ///  Trạm phát nhạc chung - Play/Pause Realtime (Phase 11)
@@ -41,7 +43,10 @@ class SpotifySyncService {
     try {
       await platform.invokeMethod('playTrack', {'trackUri': trackId});
     } catch (e) {
-      debugPrint("Lỗi không mở được Spotify: $e");
+      debugPrint("Lỗi không mở được Spotify: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể mở Spotify.',
+      ).message}");
     }
   }
 
@@ -67,7 +72,10 @@ class SpotifySyncService {
         await platform.invokeMethod('pausePlayback');
       }
     } catch (e) {
-      debugPrint("Lỗi đài âm thanh: $e");
+      debugPrint("Lỗi đài âm thanh: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể điều khiển phát nhạc.',
+      ).message}");
     }
   }
 

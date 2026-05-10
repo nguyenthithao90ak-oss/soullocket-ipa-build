@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../app_error_mapper.dart';
+
 class ImagePickerRecoveryService {
   ImagePickerRecoveryService._();
 
@@ -112,7 +114,10 @@ class ImagePickerRecoveryService {
         );
       }
     } catch (error) {
-      debugPrint('Image picker lost data check failed: $error');
+      debugPrint('Image picker lost data check failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể kiểm tra ảnh chưa khôi phục.',
+      ).message}');
     } finally {
       _didPrimeLostData = true;
     }

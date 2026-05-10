@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
+import '../../utils/app_error_mapper.dart';
 import 'support_ticket_shared.dart';
 
 class AdminSupportChatScreen extends StatefulWidget {
@@ -22,35 +23,45 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
   @override
   void initState() {
     super.initState();
-    _ticketsSub = _db.child('support_tickets').onValue.listen((event) {
-      final raw = event.snapshot.value;
-      if (raw is! Map) {
-        if (mounted) {
-          setState(() => _tickets.clear());
+    _ticketsSub = _db.child('support_tickets').onValue.listen(
+      (event) {
+        final raw = event.snapshot.value;
+        if (raw is! Map) {
+          if (mounted) {
+            setState(() => _tickets.clear());
+          }
+          return;
         }
-        return;
-      }
 
-      final loaded = <Map<String, dynamic>>[];
-      raw.forEach((key, value) {
-        if (key == 'general_chat' || value is! Map) return;
-        final item = Map<String, dynamic>.from(value);
-        item['id'] = key.toString();
-        loaded.add(item);
-      });
+        final loaded = <Map<String, dynamic>>[];
+        raw.forEach((key, value) {
+          if (key == 'general_chat' || value is! Map) return;
+          final item = Map<String, dynamic>.from(value);
+          item['id'] = key.toString();
+          loaded.add(item);
+        });
 
-      loaded.sort(
-        (a, b) => ((b['last_ts'] as num?)?.toInt() ?? 0)
-            .compareTo((a['last_ts'] as num?)?.toInt() ?? 0),
-      );
+        loaded.sort(
+          (a, b) => ((b['last_ts'] as num?)?.toInt() ?? 0)
+              .compareTo((a['last_ts'] as num?)?.toInt() ?? 0),
+        );
 
-      if (!mounted) return;
-      setState(() {
-        _tickets
-          ..clear()
-          ..addAll(loaded);
-      });
-    });
+        if (!mounted) return;
+        setState(() {
+          _tickets
+            ..clear()
+            ..addAll(loaded);
+        });
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Admin support listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải danh sách hỗ trợ.',
+          ).message}',
+        );
+      },
+    );
   }
 
   @override
@@ -330,6 +341,14 @@ class _AdminSupportChatDetailScreenState
         if (!mounted) return;
         setState(() => _ticket = item);
       },
+      onError: (Object error) {
+        debugPrint(
+          'Admin ticket listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải dữ liệu ticket.',
+          ).message}',
+        );
+      },
     );
 
     _messagesSub = _db
@@ -337,35 +356,45 @@ class _AdminSupportChatDetailScreenState
         .orderByChild('ts')
         .limitToLast(100)
         .onValue
-        .listen((event) {
-      final raw = event.snapshot.value;
-      if (raw is! Map) {
-        if (mounted) {
-          setState(() => _messages.clear());
+        .listen(
+      (event) {
+        final raw = event.snapshot.value;
+        if (raw is! Map) {
+          if (mounted) {
+            setState(() => _messages.clear());
+          }
+          return;
         }
-        return;
-      }
 
-      final loaded = <Map<String, dynamic>>[];
-      raw.forEach((key, value) {
-        if (value is! Map) return;
-        final item = Map<String, dynamic>.from(value);
-        item['id'] = key.toString();
-        loaded.add(item);
-      });
+        final loaded = <Map<String, dynamic>>[];
+        raw.forEach((key, value) {
+          if (value is! Map) return;
+          final item = Map<String, dynamic>.from(value);
+          item['id'] = key.toString();
+          loaded.add(item);
+        });
 
-      loaded.sort(
-        (a, b) => ((a['ts'] as num?)?.toInt() ?? 0)
-            .compareTo((b['ts'] as num?)?.toInt() ?? 0),
-      );
+        loaded.sort(
+          (a, b) => ((a['ts'] as num?)?.toInt() ?? 0)
+              .compareTo((b['ts'] as num?)?.toInt() ?? 0),
+        );
 
-      if (!mounted) return;
-      setState(() {
-        _messages
-          ..clear()
-          ..addAll(loaded);
-      });
-    });
+        if (!mounted) return;
+        setState(() {
+          _messages
+            ..clear()
+            ..addAll(loaded);
+        });
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Admin messages listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tải hội thoại ticket.',
+          ).message}',
+        );
+      },
+    );
   }
 
   @override

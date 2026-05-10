@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../app_error_mapper.dart';
+
 /// ============================================================
 ///  IotSmarthomeService — Gra (Phase 18)
 ///  Lâu Đài Ánh Sáng — Điều khiển đèn thông minh qua mạng nội bộ
@@ -92,7 +94,12 @@ class IotSmarthomeService {
 
       return response.statusCode == 200;
     } catch (e) {
-      if (kDebugMode) debugPrint('[IoT] Hub unreachable: $e');
+      if (kDebugMode) {
+        debugPrint('[IoT] Hub unreachable: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'Không thể kết nối hub IoT.',
+        ).message}');
+      }
       return false; // Không có hub / không có mạng LAN → bỏ qua
     }
   }
