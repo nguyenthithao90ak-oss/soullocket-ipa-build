@@ -635,6 +635,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     });
 
     try {
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
       await _service
           .logHistory(
             houseId: widget.houseId,
@@ -643,8 +644,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             peerName: scored.candidate.displayName,
             peerAvatarUrl: scored.candidate.avatarUrl,
             goal: scored.candidate.goal,
-            startedAt: DateTime.now().millisecondsSinceEpoch,
-            endedAt: DateTime.now().millisecondsSinceEpoch,
+            startedAt: nowMs,
+            endedAt: nowMs,
             durationSeconds: 0,
             compatibilityScore: scored.score,
             note: 'Đã lướt qua từ danh sách ghép nối',

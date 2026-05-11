@@ -671,11 +671,11 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
 
     if (text == '4') {
       return '💳 HỖ TRỢ THANH TOÁN VÀ MUA HÀNG\n\n'
-          '* Nếu bạn cần kiểm tra giao dịch hoặc khôi phục quyền lợi đã thanh toán:\n'
-          'Bước 1: Mở mục "Tiện Ích" ở thanh dưới cùng.\n'
-          'Bước 2: Chọn "Cửa Hàng".\n'
-          'Bước 3: Cuộn xuống mục "Khôi Phục Mua Hàng", nhấn vào đó và chờ vài giây.\n\n'
-          '👉 Nếu vẫn chưa xử lý được, hãy chụp lại hóa đơn hoặc màn hình giao dịch rồi gửi vào đây để tụi mình kiểm tra.';
+          '* Nếu bạn cần kiểm tra giao dịch hoặc quyền lợi trong ứng dụng:\n'
+          'Bước 1: Mở đúng màn hình mua hàng trong ứng dụng.\n'
+          'Bước 2: Chụp lại thông báo hiển thị nếu có lỗi.\n'
+          'Bước 3: Gửi mô tả ngắn thao tác vừa làm để Admin kiểm tra.\n\n'
+          '👉 Mọi nội dung số trả phí trong app cần được mua trực tiếp bằng hệ thống mua hàng trong ứng dụng.';
     }
 
     if (text == '5') {
