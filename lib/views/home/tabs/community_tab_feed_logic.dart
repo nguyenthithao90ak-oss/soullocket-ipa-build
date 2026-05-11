@@ -90,7 +90,8 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
   Future<void> _persistCommunityUsageSession() async {
     final startedAt = _communityUsageStartedAt;
     if (startedAt == null) return;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     final windowStartMs =
         prefs.getInt(_communityUsageWindowStartPrefsKey) ?? nowMs;
@@ -99,12 +100,12 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
       await prefs.setInt(_communityUsageAccumulatedPrefsKey, 0);
     }
     final current = prefs.getInt(_communityUsageAccumulatedPrefsKey) ?? 0;
-    final elapsed = DateTime.now().difference(startedAt).inMilliseconds;
+    final elapsed = nowMs - startedAt.millisecondsSinceEpoch;
     await prefs.setInt(
       _communityUsageAccumulatedPrefsKey,
       current + math.max(elapsed, 0),
     );
-    _communityUsageStartedAt = DateTime.now();
+    _communityUsageStartedAt = DateTime.fromMillisecondsSinceEpoch(nowMs);
   }
 
   Future<void> _resetCommunityUsageWindow() async {
@@ -112,7 +113,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     await prefs.setInt(_communityUsageWindowStartPrefsKey, nowMs);
     await prefs.setInt(_communityUsageAccumulatedPrefsKey, 0);
-    _communityUsageStartedAt = DateTime.now();
+    _communityUsageStartedAt = DateTime.fromMillisecondsSinceEpoch(nowMs);
   }
 
   void _startAdLogic() {
@@ -524,7 +525,8 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
     final anniversaryDate = _communityAnniversaryDate();
     final houseId = (_houseId ?? '').trim();
     if (anniversaryDate != null && houseId.isNotEmpty) {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       final seenKey = _communityAnniversaryMemorySeenKey(
         houseId: houseId,
         anniversaryDate: anniversaryDate,

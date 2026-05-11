@@ -231,7 +231,10 @@ class PlayIntegrityService {
       return false;
     } on PlatformException catch (error) {
       _prepared = false;
-      debugPrint('PlayIntegrity warmUp failed: ${error.code} ${error.message}');
+      debugPrint('PlayIntegrity warmUp failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể khởi tạo Play Integrity.',
+      ).message}');
       return false;
     }
   }

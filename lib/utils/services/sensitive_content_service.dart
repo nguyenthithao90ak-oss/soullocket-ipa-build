@@ -76,7 +76,10 @@ class SensitiveContentService {
         },
       );
     } on PlatformException catch (error) {
-      debugPrint('SensitiveContentService failed: ${error.message}');
+      debugPrint('SensitiveContentService failed: ${AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể áp dụng bảo vệ nội dung.',
+      ).message}');
     }
   }
 

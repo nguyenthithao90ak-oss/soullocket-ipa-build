@@ -6,6 +6,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/app_error_mapper.dart';
+import 'offline_cache_service.dart';
+
 class GameAssetInfo {
   final String gameId;
   final List<String> relativePaths;
@@ -65,7 +67,8 @@ class GameDownloadService extends ChangeNotifier {
 
   Future<bool> isGameDownloaded(String gameId) async {
     final config = _gameConfigs[gameId];
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final savedStatus = prefs.getBool('game_downloaded_$gameId') ?? false;
     if (savedStatus) {
       return true;
@@ -174,7 +177,8 @@ class GameDownloadService extends ChangeNotifier {
       }
 
       // Lưu trạng thái đã tải
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       await prefs.setBool('game_downloaded_$gameId', true);
 
       _downloadProgress.remove(gameId);
@@ -196,7 +200,8 @@ class GameDownloadService extends ChangeNotifier {
     if (await gameDir.exists()) {
       await gameDir.delete(recursive: true);
     }
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setBool('game_downloaded_$gameId', false);
     notifyListeners();
   }

@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/sl_theme.dart';
+import '../../utils/services/offline_cache_service.dart';
 
 class WishlistScreen extends StatefulWidget {
   final String houseId;
@@ -46,7 +47,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
     final priceText = _priceController.text.replaceAll(RegExp(r'[^0-9]'), '');
     final price = int.tryParse(priceText) ?? 0;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final role = prefs.getString('il_role') ?? 'user1';
 
     final now = DateTime.now();

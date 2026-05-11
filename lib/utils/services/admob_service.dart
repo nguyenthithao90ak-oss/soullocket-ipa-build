@@ -574,7 +574,12 @@ class AdMobService {
     if (!_sdkInitialized) return false;
     if (_rewardedAd == null) {
       _loadRewardedAd();
-      return false;
+      for (var i = 0; i < 8 && _rewardedAd == null; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+      }
+      if (_rewardedAd == null) {
+        return false;
+      }
     }
 
     final completer = Completer<bool>();
@@ -610,7 +615,6 @@ class AdMobService {
     return completer.future.timeout(
       const Duration(seconds: 12),
       onTimeout: () {
-        debugPrint('AdMobService: rewarded main show timed out.');
         AppLifecyclePresenceGuard.settle();
         return false;
       },
@@ -632,7 +636,12 @@ class AdMobService {
     if (!_sdkInitialized) return false;
     if (_soulGameRewardedAd == null) {
       _loadSoulGameRewardedAd();
-      return false;
+      for (var i = 0; i < 8 && _soulGameRewardedAd == null; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+      }
+      if (_soulGameRewardedAd == null) {
+        return false;
+      }
     }
 
     final completer = Completer<bool>();
