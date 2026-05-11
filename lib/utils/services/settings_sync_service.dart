@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../views/ui_prefs.dart';
 import '../app_error_mapper.dart';
+import 'offline_cache_service.dart';
 
 class SettingsSyncService {
   static const List<String> _legacySecretKeys = [
@@ -80,7 +81,8 @@ class SettingsSyncService {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await _purgeLegacySensitivePrefs(prefs);
     final Map<String, dynamic> settings = {};
     final Map<String, dynamic> houseBackup = {};
@@ -152,7 +154,8 @@ class SettingsSyncService {
   Future<void> restoreSettingsFromCloud(String uid) async {
     try {
       final snapshot = await _db.child('users/$uid/settings').get();
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
       await _purgeLegacySensitivePrefs(prefs);
       await _clearLocalSyncedSettingsFromPrefs(
         prefs,
@@ -207,7 +210,8 @@ class SettingsSyncService {
   Future<void> clearLocalSyncedSettings({
     bool reloadUiPrefs = true,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await _clearLocalSyncedSettingsFromPrefs(
       prefs,
       reloadUiPrefs: reloadUiPrefs,

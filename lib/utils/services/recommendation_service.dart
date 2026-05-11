@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'offline_cache_service.dart';
+
 class RecommendationService {
   static const String _houseAffinityKey = 'il_rec_house_affinity';
   static const String _moodAffinityKey = 'il_rec_mood_affinity';
@@ -20,7 +22,8 @@ class RecommendationService {
   Future<void> init() async {
     if (_initialized) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
 
     final houseData = prefs.getString(_houseAffinityKey);
     if (houseData != null) {
@@ -125,7 +128,8 @@ class RecommendationService {
   }
 
   Future<void> _save() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
 
     // Giới hạn số lượng lưu trữ để không bị phình to (giữ top 100)
     if (_houseAffinities.length > 100) {

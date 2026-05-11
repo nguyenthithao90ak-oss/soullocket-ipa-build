@@ -21,6 +21,7 @@ import 'settings_sync_service.dart';
 import '../core/sl_theme.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import '../app_error_mapper.dart';
+import 'offline_cache_service.dart';
 
 part 'military_lock/military_lock_cooldown_evaluator.dart';
 part 'military_lock/military_lock_models.dart';
@@ -147,7 +148,8 @@ class MilitaryLockService {
   }
 
   Future<bool> isMilitaryModeEnabled() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     return prefs.getBool(_prefMilitaryMode) ?? false;
   }
 

@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'offline_cache_service.dart';
+
 class PendingUploadSummary {
   final String key;
   final int createdAt;
@@ -33,7 +35,8 @@ class PendingUploadService {
     Map<String, dynamic> payload, {
     String category = 'generic',
   }) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final now = DateTime.now().millisecondsSinceEpoch;
     final current = await _readEnvelope(prefs, key);
     final currentMeta = current?[_metaKey];
@@ -61,7 +64,8 @@ class PendingUploadService {
   }
 
   Future<Map<String, dynamic>?> load(String key) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final envelope = await _readEnvelope(prefs, key);
     if (envelope == null) {
       return null;
@@ -78,7 +82,8 @@ class PendingUploadService {
   }
 
   Future<List<PendingUploadSummary>> listSummaries() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final keys = prefs
         .getKeys()
         .where((key) => key.startsWith(_prefix))
@@ -114,7 +119,8 @@ class PendingUploadService {
   }
 
   Future<void> markFailed(String key, Object error) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final envelope = await _readEnvelope(prefs, key);
     if (envelope == null) return;
     final payload = envelope[_payloadKey];
@@ -136,7 +142,8 @@ class PendingUploadService {
   }
 
   Future<void> clear(String key) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.remove('$_prefix$key');
   }
 

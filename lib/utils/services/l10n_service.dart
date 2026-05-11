@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'offline_cache_service.dart';
+
 part 'l10n/l10n_asset_loader.dart';
 part 'l10n/l10n_format_helper.dart';
 part 'l10n/l10n_locale_state.dart';
@@ -33,7 +35,8 @@ class L10nService extends ChangeNotifier {
     if (bundle != null) {
       _state.assetBundle = bundle;
     }
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final langCode = prefs.getString('il_lang') ?? 'vi';
     await _ensureAssetTranslationsLoaded();
     _state.currentLocale = Locale(langCode);
@@ -42,7 +45,8 @@ class L10nService extends ChangeNotifier {
 
   Future<void> setLocale(String langCode) async {
     _state.currentLocale = Locale(langCode);
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setString('il_lang', langCode);
     await _ensureAssetTranslationsLoaded();
     notifyListeners();

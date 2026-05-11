@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'push_notification_helper.dart';
 import 'consent_service.dart';
 import 'security_service.dart';
+import 'offline_cache_service.dart';
 import '../app_error_mapper.dart';
 
 class DeviceTrustState {
@@ -661,13 +662,15 @@ class DeviceManagerService {
         if (data != null) {
           if (data['status'] == 'blocked') {
             stopRealtimeTracking();
-            final prefs = await SharedPreferences.getInstance();
+            final prefs = OfflineCacheService.getPrefsSync() ??
+                await SharedPreferences.getInstance();
             await prefs.setString('il_kick_reason',
                 'Thiết bị của bạn đã bị chủ nhà chặn truy cập vĩnh viễn.');
             await _forceSignOutWithLocalSessionClear();
           } else if (data['status'] == 'deleted') {
             stopRealtimeTracking();
-            final prefs = await SharedPreferences.getInstance();
+            final prefs = OfflineCacheService.getPrefsSync() ??
+                await SharedPreferences.getInstance();
             await prefs.setString('il_kick_reason',
                 'Thiết bị của bạn đã bị xóa khỏi nhà. Bạn sẽ không thể đăng nhập lại trong 1 giờ tới.');
             await _forceSignOutWithLocalSessionClear();
@@ -677,7 +680,8 @@ class DeviceManagerService {
         // Nếu thiết bị từng tồn tại nhưng sau đó bị xóa khỏi DB
         if (hasSeenExists) {
           stopRealtimeTracking();
-          final prefs = await SharedPreferences.getInstance();
+          final prefs = OfflineCacheService.getPrefsSync() ??
+                await SharedPreferences.getInstance();
           await prefs.setString('il_kick_reason',
               'Thiết bị của bạn đã bị xóa khỏi nhà. Bạn sẽ không thể đăng nhập lại trong 1 giờ tới.');
           await _forceSignOutWithLocalSessionClear();
@@ -692,7 +696,8 @@ class DeviceManagerService {
   }
 
   Future<void> _forceSignOutWithLocalSessionClear() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+                await SharedPreferences.getInstance();
     await prefs.remove(_prefHouseId);
     await prefs.remove(_prefAuthUid);
     await prefs.remove('il_role');
@@ -952,7 +957,8 @@ class DeviceManagerService {
       return memoryHouseId;
     }
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final cachedHouseId = prefs.getString(_prefHouseId)?.trim() ?? '';
     final cachedAuthUid = prefs.getString(_prefAuthUid)?.trim() ?? '';
     if (cachedHouseId.isNotEmpty) {

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../views/ui_prefs.dart';
 import '../app_error_mapper.dart';
+import 'offline_cache_service.dart';
 
 class MusicService {
   static final MusicService _instance = MusicService._internal();
@@ -99,7 +100,8 @@ class MusicService {
   }
 
   Future<void> _applyResolvedMusic() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final localMusicData = _readLocalMusicData(prefs);
     final data = localMusicData;
     final url = _resolveMusicUrl(data);

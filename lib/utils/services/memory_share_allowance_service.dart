@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'offline_cache_service.dart';
+
 class MemoryShareAllowanceGateResult {
   const MemoryShareAllowanceGateResult({
     required this.allow,
@@ -21,12 +23,14 @@ class MemoryShareAllowanceService {
   static const String _creditsKey = 'memory_share_allowance_credits_v1';
 
   Future<int> getCreateCount() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     return prefs.getInt(_createCountKey) ?? 0;
   }
 
   Future<int> getCredits() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     return prefs.getInt(_creditsKey) ?? 0;
   }
 
@@ -39,7 +43,8 @@ class MemoryShareAllowanceService {
   Future<MemoryShareAllowanceGateResult> allowNextCreate({
     required Future<bool> Function() showRewardedAd,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final createCount = prefs.getInt(_createCountKey) ?? 0;
     final nextCount = createCount + 1;
     var credits = prefs.getInt(_creditsKey) ?? 0;

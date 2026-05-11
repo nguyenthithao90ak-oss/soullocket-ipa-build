@@ -20,7 +20,8 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
       return memoryHouseId;
     }
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final cachedHouseId =
         prefs.getString(MilitaryLockService._prefHouseId)?.trim() ?? '';
     final cachedAuthUid =
@@ -90,7 +91,8 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
     required String cacheKey,
     String? houseId,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final localSecret = _buildLockSecretRecord(
       prefs.getString(MilitaryLockService._prefCustomLock),
       rawSalt: prefs.getString(MilitaryLockService._prefCustomLockSalt),
@@ -204,7 +206,8 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
     int? configuredAtEpochMs,
     required Map<String, bool> scopeMap,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final trimmedLock = customLock.trim();
     final trimmedSalt = customLockSalt?.trim() ?? '';
     final normalizedPinLength =

@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../app_error_mapper.dart';
+import 'offline_cache_service.dart';
 import 'secret_vault_media_policy.dart' as secret_vault_policy;
 import 'storage_app_check_helper.dart';
 import 'storage_content_policy.dart';
@@ -166,7 +167,8 @@ class StorageService {
     }
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       await prefs.remove('il_imgbb_api_key');
       _legacyImgBBKeyPurged = true;
     } catch (e) {

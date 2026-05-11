@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/app_error_mapper.dart';
 import '../utils/permission_helper.dart';
+import 'offline_cache_service.dart';
 
 class LocationService {
   static const int _kGpsHistoryRetentionDays = 14;
@@ -39,7 +40,8 @@ class LocationService {
   Future<bool> requestPermission(
       {BuildContext? context, bool forcePrompt = false}) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
 
       final permission = await Geolocator.checkPermission().timeout(
         const Duration(seconds: 6),

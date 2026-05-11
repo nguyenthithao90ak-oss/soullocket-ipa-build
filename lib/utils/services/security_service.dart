@@ -18,6 +18,7 @@ import 'local_action_throttle_service.dart';
 import 'security_protection_service.dart';
 import 'security_runtime_risk_service.dart';
 import 'security_verdict_cache_service.dart';
+import 'offline_cache_service.dart';
 import '../app_error_mapper.dart';
 
 class SecurityService {
@@ -250,7 +251,8 @@ class SecurityService {
         if (await _shouldRotateStoredPlatformDeviceId(sanitizedStoredId)) {
           final deviceId = _sanitizeDeviceId(_generateFallbackDeviceId());
           await _secureStorage.write(key: _deviceIdStorageKey, value: deviceId);
-          final prefs = await SharedPreferences.getInstance();
+          final prefs = OfflineCacheService.getPrefsSync() ??
+              await SharedPreferences.getInstance();
           await prefs.remove(_deviceIdStorageKey);
           _cachedDeviceId = deviceId;
           return deviceId;
@@ -271,7 +273,8 @@ class SecurityService {
       );
       await _secureStorage.write(key: _deviceIdStorageKey, value: deviceId);
 
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       await prefs.remove(_deviceIdStorageKey);
 
       _cachedDeviceId = deviceId;

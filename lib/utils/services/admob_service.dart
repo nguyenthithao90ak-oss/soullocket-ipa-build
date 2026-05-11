@@ -677,7 +677,6 @@ class AdMobService {
     return completer.future.timeout(
       const Duration(seconds: 12),
       onTimeout: () {
-        debugPrint('AdMobService: rewarded soul game show timed out.');
         AppLifecyclePresenceGuard.settle();
         return false;
       },

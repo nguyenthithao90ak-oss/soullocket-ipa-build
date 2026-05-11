@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../views/utilities/utilities_config.dart';
 import 'l10n_service.dart';
+import 'offline_cache_service.dart';
 
 class UtilityApp {
   final String title;
@@ -283,7 +284,8 @@ class UtilityService {
   }
 
   Future<List<String>> getCustomOrder() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final stored = prefs.getStringList(_customOrderPrefKey) ?? const <String>[];
     final order = _completeOrder(stored);
     if (stored.isNotEmpty && order.length != stored.length) {
@@ -293,17 +295,20 @@ class UtilityService {
   }
 
   Future<void> saveCustomOrder(Iterable<String> appIds) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setStringList(_customOrderPrefKey, _sanitizeAppIds(appIds));
   }
 
   Future<void> clearCustomOrder() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.remove(_customOrderPrefKey);
   }
 
   Future<List<String>> getPinnedAppIds() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final stored = prefs.getStringList(_pinnedAppsPrefKey) ?? const <String>[];
     final sanitized = _sanitizeAppIds(stored);
     if (sanitized.length != stored.length) {
@@ -319,7 +324,8 @@ class UtilityService {
 
     if (!_allAppIds.contains(normalizedId)) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final current = _sanitizeAppIds(
       prefs.getStringList(_pinnedAppsPrefKey) ?? const <String>[],
     );
@@ -344,7 +350,8 @@ class UtilityService {
   }
 
   Future<List<String>> getRecentAppIds() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final stored = prefs.getStringList(_recentAppsPrefKey) ?? const <String>[];
     final sanitized = _sanitizeAppIds(stored).take(_maxRecentApps).toList();
     if (sanitized.length != stored.length) {
@@ -360,7 +367,8 @@ class UtilityService {
 
     if (!_allAppIds.contains(normalizedId)) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final current = await getRecentAppIds();
     current.removeWhere((id) => id == normalizedId);
     current.insert(0, normalizedId);

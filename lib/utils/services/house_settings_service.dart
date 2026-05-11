@@ -7,6 +7,7 @@ import 'activity_history_service.dart';
 import '../models/house_settings.dart';
 import '../utils/flexible_date_input.dart';
 import 'device_manager_service.dart';
+import 'offline_cache_service.dart';
 
 /// HouseSettingsService - realtime listener cho settings nhà
 /// Kết hợp với HouseService hiện tại (HouseService lo phần tạo nhà)
@@ -53,7 +54,8 @@ class HouseSettingsService {
   }
 
   Future<String> _resolvedActivityRole() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final role = (prefs.getString('il_role') ?? 'user1').trim();
     return role == 'user2' ? 'user2' : 'user1';
   }

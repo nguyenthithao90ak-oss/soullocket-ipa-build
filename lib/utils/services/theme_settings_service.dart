@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+import 'offline_cache_service.dart';
+
 /// ============================================================
 ///  ThemeSettingsService — Gra (Phase 25 Backend)
 ///  Lõi Cấu Hình Áo Mới (Themes, Avatars, Màu Sắc)
@@ -16,7 +18,8 @@ class ThemeSettingsService {
 
   /// Áp dụng nhanh Màu sắc Không cần tải lại trang (Lưu RAM/SharedPreferences)
   Future<void> saveLocalTheme(String themeColorHex, bool isDarkMode) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setString('app_primary_color', themeColorHex);
     await prefs.setBool('app_is_dark', isDarkMode);
 

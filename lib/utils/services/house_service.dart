@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/device_manager_service.dart';
 import '../../services/single_match_service.dart';
 import '../app_error_mapper.dart';
+import 'offline_cache_service.dart';
 
 class HouseCreationOtpRequiredException implements Exception {
   final String maskedEmail;
@@ -409,7 +410,8 @@ class HouseService {
       return null;
     }
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final cachedHouseId = prefs.getString('il_house_id')?.trim() ?? '';
     final cachedAuthUid = prefs.getString(_authUidPrefsKey)?.trim() ?? '';
 
@@ -555,7 +557,8 @@ class HouseService {
         }
       }
     } catch (_) {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       final cached = prefs.getString('il_offline_cache_home_settings');
       if (cached != null) {
         try {

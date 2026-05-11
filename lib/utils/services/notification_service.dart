@@ -18,6 +18,7 @@ import '../views/utilities/creative_diary_screen.dart';
 import '../views/utilities/cinema_screen.dart';
 import '../utils/app_error_mapper.dart';
 import 'house_service.dart';
+import 'offline_cache_service.dart';
 
 /// NotificationService — Gra (Logic/Data) chịu trách nhiệm toàn bộ
 /// Chức năng:
@@ -574,7 +575,8 @@ class NotificationService {
   Future<void> syncDailySleepReminder() async {
     if (kIsWeb || !_isInitialized) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final notificationsEnabled =
         prefs.getBool('il_notifications_enabled') ?? true;
     if (!notificationsEnabled || !await hasPermission()) {
@@ -686,7 +688,8 @@ class NotificationService {
   }
 
   Future<void> checkAutoSleepGreetings(String houseId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final notificationsEnabled =
         prefs.getBool('il_notifications_enabled') ?? true;
     if (!notificationsEnabled) return;
@@ -887,7 +890,8 @@ class NotificationService {
         if (now.year == unlockDate.year &&
             now.month == unlockDate.month &&
             now.day == unlockDate.day) {
-          final prefs = await SharedPreferences.getInstance();
+          final prefs = OfflineCacheService.getPrefsSync() ??
+              await SharedPreferences.getInstance();
           final key = 'capsule_notified_${capsule['id']}';
 
           if (!(prefs.getBool(key) ?? false)) {
