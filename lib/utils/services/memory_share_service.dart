@@ -223,7 +223,7 @@ class MemoryShareService {
     if (serverUrl.isNotEmpty) {
       return serverUrl;
     }
-    return 'https://soullockket.web.app/'
+    return 'https://soullocket.web.app/'
         'memory-share?token=${Uri.encodeQueryComponent(token)}';
   }
 

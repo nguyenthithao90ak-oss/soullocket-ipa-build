@@ -1024,9 +1024,9 @@ class _DiaryTabState extends State<DiaryTab> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.42),
+                            Colors.black.withValues(alpha: 0.62),
                             Colors.transparent,
-                            Colors.black.withValues(alpha: 0.28),
+                            Colors.black.withValues(alpha: 0.58),
                           ],
                           stops: const [0.0, 0.22, 1.0],
                         ),
@@ -1061,6 +1061,97 @@ class _DiaryTabState extends State<DiaryTab> {
                       builder: (context) => buildViewerImage(initialItem),
                     ),
                   ),
+                Positioned(
+                  left: 18,
+                  right: 86,
+                  bottom: MediaQuery.of(context).padding.bottom + 18,
+                  child: IgnorePointer(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.42),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.10),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF6F91), Color(0xFF7C8BFF)],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.favorite_rounded,
+                              color: Colors.white,
+                              size: 17,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '${currentIndex + 1}/${allPhotos.isEmpty ? 1 : allPhotos.length} kỷ niệm',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: SLTheme.quicksand(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _formatMemoryTimestamp(currentItem),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: SLTheme.quicksand(
+                                    color: Colors.white.withValues(alpha: 0.68),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 14,
+                  left: 18,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.42),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: IconButton(
+                      tooltip: 'Đóng',
+                      onPressed: () => Navigator.pop(dialogContext),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 14,
                   right: 18,
