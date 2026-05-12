@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../app_error_mapper.dart';
+import 'offline_cache_service.dart';
 
 enum SecurityProtectionRiskLevel {
   allow,
@@ -338,7 +339,9 @@ class SecurityProtectionRolloutService {
   SharedPreferences? _prefs;
 
   Future<SharedPreferences> _getPrefs() async {
-    return _prefs ??= await SharedPreferences.getInstance();
+    return _prefs ??=
+        OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
   }
 
   Future<SecurityProtectionRolloutConfig> fetchConfig({
@@ -510,7 +513,8 @@ class SecurityProtectionRolloutService {
   }
 
   Future<void> _persistCache(SecurityProtectionRolloutConfig config) async {
-    final prefs = await _getPrefs();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setString(_prefsCacheKey, jsonEncode(config.toCacheMap()));
     await prefs.setInt(
       _prefsFetchedAtKey,

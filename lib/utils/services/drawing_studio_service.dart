@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
 
+import 'offline_cache_service.dart';
+
 class DrawingStudioGalleryItem {
   final String id;
   final String path;
@@ -454,7 +456,8 @@ class DrawingStudioService {
 
   Future<List<DrawingStudioGalleryItem>> _loadLocalGallery() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
       final raw = prefs.getString(_galleryPrefsKey);
       if (raw == null || raw.isEmpty) {
         return const <DrawingStudioGalleryItem>[];
@@ -477,7 +480,8 @@ class DrawingStudioService {
 
   Future<void> _persistLocalGallery(
       List<DrawingStudioGalleryItem> items) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setString(
       _galleryPrefsKey,
       jsonEncode(
@@ -548,7 +552,8 @@ class DrawingStudioService {
 
   Future<void> _clearCloudMarkers(String houseId) async {
     final trimmedHouseId = houseId.trim();
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     if (trimmedHouseId.isNotEmpty) {
       await prefs.remove('$_cachePrefix$trimmedHouseId');
       await prefs.remove('$_migratedPrefix$trimmedHouseId');

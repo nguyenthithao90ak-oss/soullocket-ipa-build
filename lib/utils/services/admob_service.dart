@@ -15,6 +15,7 @@ import '../app_error_mapper.dart';
 import 'app_lifecycle_presence_guard.dart';
 import 'consent_service.dart';
 import 'house_service.dart';
+import 'offline_cache_service.dart';
 import 'purchase_service.dart';
 import 'revenue_security_telemetry_service.dart';
 
@@ -462,7 +463,8 @@ class AdMobService {
   }
 
   Future<bool> _canShowAppOpenToday() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final todayDate = _getTodayDateKey();
     final storedDate = prefs.getString(_appOpenShownDatePrefsKey);
     if (storedDate != todayDate) {
@@ -493,7 +495,8 @@ class AdMobService {
   }
 
   Future<void> _incrementAppOpenShownCount() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final todayDate = _getTodayDateKey();
     final storedDate = prefs.getString(_appOpenShownDatePrefsKey);
     final currentCount = storedDate == todayDate
@@ -513,7 +516,8 @@ class AdMobService {
 
   /// Lấy số lần xem quảng cáo rewarded hôm nay
   Future<int> getDailyRewardedAdCount() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final storedDate = prefs.getString(_dailyRewardedAdDatePrefsKey);
     final todayDate = _getTodayDateKey();
 
@@ -541,7 +545,8 @@ class AdMobService {
 
   /// Tăng bộ đếm lên 1
   Future<void> _incrementDailyRewardedAdCount() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final storedDate = prefs.getString(_dailyRewardedAdDatePrefsKey);
     final todayDate = _getTodayDateKey();
 
@@ -838,7 +843,8 @@ class AdMobService {
     _autoInterstitialTimer?.cancel();
     _autoInterstitialTimer = null;
     if (clearPersisted) {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
       await prefs.remove(_autoInterstitialNextAtPrefsKey);
     }
   }
@@ -941,14 +947,16 @@ class AdMobService {
   }
 
   Future<DateTime?> _readNextAutoInterstitialAt() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final nextAtMs = prefs.getInt(_autoInterstitialNextAtPrefsKey);
     if (nextAtMs == null || nextAtMs <= 0) return null;
     return DateTime.fromMillisecondsSinceEpoch(nextAtMs);
   }
 
   Future<void> _setNextAutoInterstitialAt(DateTime nextAt) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setInt(
       _autoInterstitialNextAtPrefsKey,
       nextAt.millisecondsSinceEpoch,

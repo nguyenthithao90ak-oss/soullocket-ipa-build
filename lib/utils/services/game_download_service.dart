@@ -104,7 +104,8 @@ class GameDownloadService extends ChangeNotifier {
         notifyListeners();
       }
 
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       await prefs.setBool('game_downloaded_$gameId', true);
       _downloadProgress.remove(gameId);
       _isDownloading[gameId] = false;

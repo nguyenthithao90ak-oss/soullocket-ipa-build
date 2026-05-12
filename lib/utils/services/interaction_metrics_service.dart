@@ -1,6 +1,8 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'offline_cache_service.dart';
+
 class InteractionMetricsService {
   InteractionMetricsService({
     DatabaseReference? dbRef,
@@ -48,7 +50,8 @@ class InteractionMetricsService {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final now = DateTime.now().millisecondsSinceEpoch;
     final gateKey =
         '$_prefsPrefix|$metricKey|$normalizedHouseId|$normalizedRole';

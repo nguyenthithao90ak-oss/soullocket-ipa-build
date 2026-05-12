@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/sl_theme.dart';
 import 'admob_service.dart';
+import 'offline_cache_service.dart';
 
 class CollageLimitService {
   static final CollageLimitService _instance = CollageLimitService._internal();
@@ -17,7 +18,8 @@ class CollageLimitService {
 
   /// Kiểm tra có thể tạo không, nếu chưa thể thì hỏi xem quảng cáo.
   Future<bool> checkLimitAndAskAd(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final today = _getTodayKey();
     final countKey = 'collage_count_$today';
     final extraKey = 'collage_extra_$today';
@@ -121,7 +123,8 @@ class CollageLimitService {
 
   /// Trừ 1 lượt sau khi tạo thành công (để không bị mất lượt nếu fail giữa chừng)
   Future<void> consumeLimit() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final today = _getTodayKey();
     final countKey = 'collage_count_$today';
     int currentCount = prefs.getInt(countKey) ?? 0;

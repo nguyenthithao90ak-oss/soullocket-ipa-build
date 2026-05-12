@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_config.dart';
 import 'app_check_http_headers.dart';
 import 'auth_service.dart';
+import 'offline_cache_service.dart';
 import 'revenue_security_telemetry_service.dart';
 import 'security_service.dart';
 
@@ -623,7 +624,8 @@ class BreakupService {
   }
 
   Future<void> _clearLocalBreakupState() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.remove('il_house_id');
     await prefs.remove('il_auth_uid');
     await prefs.remove('il_rel_mode');

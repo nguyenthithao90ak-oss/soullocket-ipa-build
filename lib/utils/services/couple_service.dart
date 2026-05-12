@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/single_match_service.dart';
 import '../app_error_mapper.dart';
+import 'offline_cache_service.dart';
 
 class JoinHouseResult {
   final bool success;
@@ -72,7 +73,8 @@ class CoupleService {
               ? payload['assignedRole'].toString().trim()
               : 'user2';
 
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       await prefs.setString('il_house_id', resolvedHouseId);
       await prefs.setString('il_auth_uid', user.uid);
       await prefs.setString('il_role', assignedRole);

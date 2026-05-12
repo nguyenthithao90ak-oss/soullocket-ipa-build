@@ -552,26 +552,30 @@ class SLTheme {
   }
 
   static TextTheme textThemeForKey(String? fontKey, TextTheme base) {
-    switch (normalizeFontKey(fontKey)) {
-      case 'patrickHand':
-        return GoogleFonts.patrickHandTextTheme(base);
-      case 'dancingScript':
-        return GoogleFonts.dancingScriptTextTheme(base);
-      case 'caveat':
-        return GoogleFonts.caveatTextTheme(base);
-      case 'lora':
-        return GoogleFonts.loraTextTheme(base);
-      case 'nunito':
-        return GoogleFonts.nunitoTextTheme(base);
-      case 'comfortaa':
-        return GoogleFonts.comfortaaTextTheme(base);
-      case 'playfair':
-        return GoogleFonts.playfairDisplayTextTheme(base);
-      case 'beVietnam':
-        return GoogleFonts.beVietnamProTextTheme(base);
-      case defaultFontKey:
-      default:
-        return GoogleFonts.quicksandTextTheme(base);
+    try {
+      switch (normalizeFontKey(fontKey)) {
+        case 'patrickHand':
+          return GoogleFonts.patrickHandTextTheme(base);
+        case 'dancingScript':
+          return GoogleFonts.dancingScriptTextTheme(base);
+        case 'caveat':
+          return GoogleFonts.caveatTextTheme(base);
+        case 'lora':
+          return GoogleFonts.loraTextTheme(base);
+        case 'nunito':
+          return GoogleFonts.nunitoTextTheme(base);
+        case 'comfortaa':
+          return GoogleFonts.comfortaaTextTheme(base);
+        case 'playfair':
+          return GoogleFonts.playfairDisplayTextTheme(base);
+        case 'beVietnam':
+          return GoogleFonts.beVietnamProTextTheme(base);
+        case defaultFontKey:
+        default:
+          return GoogleFonts.quicksandTextTheme(base);
+      }
+    } catch (_) {
+      return base;
     }
   }
 
@@ -618,26 +622,30 @@ class SLTheme {
       decorationThickness: decorationThickness,
     ).merge(textStyle);
 
-    switch (normalizeFontKey(fontKey)) {
-      case 'patrickHand':
-        return GoogleFonts.patrickHand(textStyle: baseStyle);
-      case 'dancingScript':
-        return GoogleFonts.dancingScript(textStyle: baseStyle);
-      case 'caveat':
-        return GoogleFonts.caveat(textStyle: baseStyle);
-      case 'lora':
-        return GoogleFonts.lora(textStyle: baseStyle);
-      case 'nunito':
-        return GoogleFonts.nunito(textStyle: baseStyle);
-      case 'comfortaa':
-        return GoogleFonts.comfortaa(textStyle: baseStyle);
-      case 'playfair':
-        return GoogleFonts.playfairDisplay(textStyle: baseStyle);
-      case 'beVietnam':
-        return GoogleFonts.beVietnamPro(textStyle: baseStyle);
-      case defaultFontKey:
-      default:
-        return GoogleFonts.quicksand(textStyle: baseStyle);
+    try {
+      switch (normalizeFontKey(fontKey)) {
+        case 'patrickHand':
+          return GoogleFonts.patrickHand(textStyle: baseStyle);
+        case 'dancingScript':
+          return GoogleFonts.dancingScript(textStyle: baseStyle);
+        case 'caveat':
+          return GoogleFonts.caveat(textStyle: baseStyle);
+        case 'lora':
+          return GoogleFonts.lora(textStyle: baseStyle);
+        case 'nunito':
+          return GoogleFonts.nunito(textStyle: baseStyle);
+        case 'comfortaa':
+          return GoogleFonts.comfortaa(textStyle: baseStyle);
+        case 'playfair':
+          return GoogleFonts.playfairDisplay(textStyle: baseStyle);
+        case 'beVietnam':
+          return GoogleFonts.beVietnamPro(textStyle: baseStyle);
+        case defaultFontKey:
+        default:
+          return GoogleFonts.quicksand(textStyle: baseStyle);
+      }
+    } catch (_) {
+      return baseStyle;
     }
   }
 

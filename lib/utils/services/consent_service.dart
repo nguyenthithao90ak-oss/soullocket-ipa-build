@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'offline_cache_service.dart';
+
 class ConsentService {
   static const String tosAcceptedKey = 'il_tos_accepted';
   static const String privacyAcceptedKey = 'il_privacy_accepted';
@@ -8,39 +10,46 @@ class ConsentService {
       'il_security_device_signals_consent';
 
   Future<bool> isTosAccepted() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     return prefs.getBool(tosAcceptedKey) ?? false;
   }
 
   Future<void> setTosAccepted(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setBool(tosAcceptedKey, value);
   }
 
   Future<bool> isPrivacyAccepted() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     return prefs.getBool(privacyAcceptedKey) ?? false;
   }
 
   Future<void> setPrivacyAccepted(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setBool(privacyAcceptedKey, value);
   }
 
   Future<String?> getCookieConsentLevel() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final v = prefs.getString(cookieConsentKey);
     if (v == null || v.trim().isEmpty) return null;
     return v;
   }
 
   Future<void> setCookieConsentLevel(String level) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setString(cookieConsentKey, level);
   }
 
   Future<String?> getSecurityDeviceSignalsConsentStatus() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final value = prefs.getString(securityDeviceSignalsConsentKey);
     if (value == null || value.trim().isEmpty) return null;
     return value;
@@ -57,7 +66,8 @@ class ConsentService {
   }
 
   Future<void> setSecurityDeviceSignalsAllowed(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setString(
       securityDeviceSignalsConsentKey,
       value ? 'accepted' : 'declined',
@@ -74,7 +84,8 @@ class ConsentService {
   }
 
   Future<void> clearAll() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.remove(tosAcceptedKey);
     await prefs.remove(privacyAcceptedKey);
     await prefs.remove(cookieConsentKey);

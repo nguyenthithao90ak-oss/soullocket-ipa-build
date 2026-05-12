@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'activity_history_service.dart';
 import '../app_error_mapper.dart';
+import 'offline_cache_service.dart';
 
 /// ============================================================
 ///  GiftMakerService — GRA (Phase 34)
@@ -40,7 +41,8 @@ class GiftMakerService {
   final _auth = FirebaseAuth.instance;
 
   Future<String> _resolvedActivityRole() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final role = (prefs.getString('il_role') ?? 'user1').trim();
     return role == 'user2' ? 'user2' : 'user1';
   }

@@ -12,6 +12,7 @@ import 'album_service.dart';
 import 'presence_service.dart';
 import 'house_service.dart';
 import 'storage_service.dart';
+import 'offline_cache_service.dart';
 import '../app_error_mapper.dart';
 
 class ActivityHistoryEntry {
@@ -501,14 +502,16 @@ class ActivityHistoryService {
   Future<void> clear({String? houseId}) async {
     final resolvedHouseId = await _resolveHouseId(houseId);
     if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       await prefs.remove(_legacyKey);
       await prefs.remove(_legacySeqKey);
       return;
     }
 
     await _saveCache(resolvedHouseId, const <ActivityHistoryEntry>[]);
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.remove(_seqKey(resolvedHouseId));
 
     if (ConnectivityService().isOnline) {
@@ -533,7 +536,8 @@ class ActivityHistoryService {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     if (prefs.getBool('$_migratedPrefix$resolvedHouseId') == true) {
       return;
     }
@@ -635,7 +639,8 @@ $rows
 
   Future<List<ActivityHistoryEntry>> _loadCache(String houseId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       final raw = prefs.getString(_cacheKey(houseId));
       if (raw == null || raw.isEmpty) {
         return const <ActivityHistoryEntry>[];
@@ -656,7 +661,8 @@ $rows
 
   Future<List<ActivityHistoryEntry>> _loadLegacyLocalEntries() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       final raw = prefs.getString(_legacyKey);
       if (raw == null || raw.isEmpty) {
         return const <ActivityHistoryEntry>[];
@@ -680,7 +686,8 @@ $rows
     String houseId,
     List<ActivityHistoryEntry> list,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setString(
       _cacheKey(houseId),
       jsonEncode(
@@ -708,7 +715,8 @@ $rows
   Future<void> _appendLegacyLocal(ActivityHistoryEntry entry) async {
     final list = await _loadLegacyLocalEntries();
     final merged = _normalizeEntries([...list, entry]);
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setString(
       _legacyKey,
       jsonEncode(merged.map((item) => item.toJson()).toList()),
@@ -777,7 +785,8 @@ $rows
       return resolved;
     }
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final cached = prefs.getString('il_house_id')?.trim() ?? '';
     final cachedAuthUid = prefs.getString('il_auth_uid')?.trim() ?? '';
     if (cached.isNotEmpty) {
@@ -807,7 +816,8 @@ $rows
   }
 
   Future<int> _nextSeq(String? houseId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final key =
         houseId == null || houseId.isEmpty ? _legacySeqKey : _seqKey(houseId);
     int next = prefs.getInt(key) ?? 0;

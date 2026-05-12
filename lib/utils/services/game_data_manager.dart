@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 import '../app_error_mapper.dart';
+import 'offline_cache_service.dart';
 
 class GameDataManager {
   static const String _downloadedKeyPrefix = 'game_downloaded_';
@@ -22,7 +23,8 @@ class GameDataManager {
   }
 
   static Future<bool> isGameDownloaded(String gameId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final isMarked = prefs.getBool('$_downloadedKeyPrefix$gameId') ?? false;
     if (!isMarked) return false;
 
@@ -86,12 +88,14 @@ class GameDataManager {
   }
 
   static Future<void> markAsDownloaded(String gameId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setBool('$_downloadedKeyPrefix$gameId', true);
   }
 
   static Future<void> deleteGameData(String gameId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.remove('$_downloadedKeyPrefix$gameId');
 
     final folder = await getGameFolder(gameId);

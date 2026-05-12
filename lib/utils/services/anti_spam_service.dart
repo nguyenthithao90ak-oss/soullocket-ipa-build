@@ -1,6 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 
+import 'offline_cache_service.dart';
+
 /// ============================================================
 ///  AntiSpamRateLimitService — Gra (Logic/Data)
 ///  Bộ lọc chống SPAM cho Tin nhắn và Tương tác (Phase 6)
@@ -26,7 +28,8 @@ class AntiSpamRateLimitService {
     if (_deviceId != null) return _deviceId!;
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
       _deviceId = prefs.getString('il_antispam_device_id');
 
       if (_deviceId == null) {
@@ -45,14 +48,16 @@ class AntiSpamRateLimitService {
 
   /// Kiểm tra xem thiết bị có đang bị khoá Spam không
   Future<bool> get isLocked async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final cooldown = prefs.getInt('il_antispam_cooldown') ?? 0;
     return DateTime.now().millisecondsSinceEpoch < cooldown;
   }
 
   /// Kiểm tra xem người dùng có bị Shadow B?n không
   Future<bool> get isShadowBanned async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final violations = prefs.getInt('il_antispam_violations') ?? 0;
     return violations >= 5; // Cấm ngầm nếu vi phạm từ 5 lần trở lên
   }
@@ -97,7 +102,8 @@ class AntiSpamRateLimitService {
   }
 
   Future<void> _handleViolation() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     int violations = (prefs.getInt('il_antispam_violations') ?? 0) + 1;
     await prefs.setInt('il_antispam_violations', violations);
 
@@ -119,7 +125,8 @@ class AntiSpamRateLimitService {
 
   /// Lấy số giây còn lại phải chờ (khi bị block)
   Future<int> get remainingCooldownSeconds async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final cooldown = prefs.getInt('il_antispam_cooldown') ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
     if (cooldown <= now) return 0;

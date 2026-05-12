@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/album_item.dart';
 import 'daily_quest_service.dart';
+import 'offline_cache_service.dart';
 import 'purchase_service.dart';
 
 class AlbumService {
@@ -42,7 +43,8 @@ class AlbumService {
     final trimmedHouseId = houseId.trim();
     if (trimmedHouseId.isEmpty) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final migrationKey = 'album_counter_migrated_$trimmedHouseId';
     if (prefs.getBool(migrationKey) == true) return;
 
@@ -118,7 +120,8 @@ class AlbumService {
     bool enforceLocalDailyLimit = true,
   }) async {
     final dailyLimit = access.dailyMemoryUploadLimit;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final today = DateTime.now().toLocal().toString().substring(0, 10);
     final todayKey = 'album_up_$today';
     final uploadedToday = prefs.getInt(todayKey) ?? 0;
@@ -145,7 +148,8 @@ class AlbumService {
   }
 
   Future<void> incrementDailyCount(String todayKey, int count) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final prev = prefs.getInt(todayKey) ?? 0;
     await prefs.setInt(todayKey, prev + count);
   }

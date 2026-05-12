@@ -1043,7 +1043,8 @@ class LoveInsightService {
     String relationshipMode,
   ) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       final now = DateTime.now();
       final nowTs = now.millisecondsSinceEpoch;
       final data = await computeInsights(houseId, relationshipMode);

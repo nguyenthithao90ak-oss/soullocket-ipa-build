@@ -2,6 +2,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/data_export_result.dart';
+import 'offline_cache_service.dart';
 
 class DataExportException implements Exception {
   const DataExportException(this.message);
@@ -62,7 +63,8 @@ class DataExportService {
   }
 
   Future<Map<String, dynamic>> _buildLocalConsentSnapshot() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final values = <String, dynamic>{};
     for (final key in _consentKeys) {
       final value = prefs.get(key);

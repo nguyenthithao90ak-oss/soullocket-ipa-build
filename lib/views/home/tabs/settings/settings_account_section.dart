@@ -686,15 +686,11 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     gradient: const [Color(0xFFffc107), Color(0xFFff9800)],
                     textColor: Colors.black87,
                     onTap: () {
-                      if (_houseId == null) {
-                        _showToast('Chưa có mã nhà', success: false);
-                        return;
-                      }
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => PremiumStoreScreen(
-                              houseId: _houseId!, myName: _nameU1),
+                              houseId: _houseId ?? '', myName: _nameU1),
                         ),
                       );
                     },

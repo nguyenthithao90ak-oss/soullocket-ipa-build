@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../app_error_mapper.dart';
+import 'offline_cache_service.dart';
 
 /// ============================================================
 ///  IotSmarthomeService — Gra (Phase 18)
@@ -27,7 +28,8 @@ class IotSmarthomeService {
   IotSmarthomeService._internal();
 
   Future<IotHubConfig> loadConfig() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     return IotHubConfig(
       hubAddress: (prefs.getString(_prefsHubAddressKey) ?? '').trim(),
       useHttps: prefs.getBool(_prefsUseHttpsKey) ?? false,
@@ -38,7 +40,8 @@ class IotSmarthomeService {
     required String hubAddress,
     required bool useHttps,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     await prefs.setString(_prefsHubAddressKey, hubAddress.trim());
     await prefs.setBool(_prefsUseHttpsKey, useHttps);
   }

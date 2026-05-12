@@ -343,7 +343,8 @@ class NotificationService {
             : 'Bạn';
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
       final role = prefs.getString('il_role') ?? 'user1';
       final settings = await houseService.getHouseSettings(houseId);
       if (settings == null) return fallback;
