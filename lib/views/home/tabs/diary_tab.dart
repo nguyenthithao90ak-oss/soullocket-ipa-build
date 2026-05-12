@@ -921,9 +921,15 @@ class _DiaryTabState extends State<DiaryTab> {
     final pageController = PageController(initialPage: currentIndex);
     _warmMemoryViewerAroundIndex(allPhotos, currentIndex);
 
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
+    Navigator.push<void>(
+      context,
+      PageRouteBuilder(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black.withValues(alpha: 0.92),
+        transitionDuration: const Duration(milliseconds: 320),
+        reverseTransitionDuration: const Duration(milliseconds: 320),
+        pageBuilder: (dialogContext, animation, secondaryAnimation) => StatefulBuilder(
         builder: (context, setState) {
           final currentItem =
               allPhotos.isNotEmpty ? allPhotos[currentIndex] : initialItem;
@@ -1006,16 +1012,17 @@ class _DiaryTabState extends State<DiaryTab> {
             );
           }
 
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: EdgeInsets.zero,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(dialogContext),
-                  child: Container(color: Colors.black.withValues(alpha: 0.92)),
-                ),
+          return FadeTransition(
+            opacity: animation,
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Stack(
+                alignment: Alignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(dialogContext),
+                    child: Container(color: Colors.transparent),
+                  ),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: DecoratedBox(
@@ -1316,11 +1323,12 @@ class _DiaryTabState extends State<DiaryTab> {
                 ),
               ],
             ),
-          );
-        },
-      ),
-    );
-  }
+          ),
+        );
+      },
+    ),
+  ));
+}
 
   String _formatMemoryTimestamp(Map<String, dynamic> item) {
     final timestamp = item['ts'] as int? ?? 0;

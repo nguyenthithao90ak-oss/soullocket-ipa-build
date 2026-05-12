@@ -22,22 +22,54 @@ class _WishlistScreenState extends State<WishlistScreen> {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final TextEditingController _itemController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  late Stream<DatabaseEvent> _wishlistStream;
+  StreamSubscription<DatabaseEvent>? _sub;
+  Map<dynamic, dynamic>? _data;
+  bool _isLoading = true;
 
   String _selectedScope = 'together'; // 'together', 'mine', 'partner'
 
   @override
   void initState() {
     super.initState();
-    _wishlistStream = _dbRef.child('houses/${widget.houseId}/wishlist').onValue;
+    _loadData();
+  }
+
+  void _loadData() {
+    final cacheKey = 'wishlist_${widget.houseId}';
+    final cached = OfflineCacheService.loadCacheSync(cacheKey);
+    if (cached != null && cached is Map) {
+      _data = Map<dynamic, dynamic>.from(cached);
+      _isLoading = false;
+    }
+
+    _sub?.cancel();
+    _sub = _dbRef.child('houses/${widget.houseId}/wishlist').onValue.listen((event) {
+      if (!mounted) return;
+      final val = event.snapshot.value;
+      if (val is Map) {
+        OfflineCacheService.saveCache(cacheKey, val);
+        setState(() {
+          _data = Map<dynamic, dynamic>.from(val);
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _data = {};
+          _isLoading = false;
+        });
+      }
+    }, onError: (_) {
+      if (mounted && _data == null) {
+        setState(() => _isLoading = false);
+      }
+    });
   }
 
   @override
   void didUpdateWidget(covariant WishlistScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.houseId != widget.houseId) {
-      _wishlistStream =
-          _dbRef.child('houses/${widget.houseId}/wishlist').onValue;
+      _loadData();
     }
   }
 
@@ -85,6 +117,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   void dispose() {
     _itemController.dispose();
     _priceController.dispose();
+    _sub?.cancel();
     super.dispose();
   }
 
@@ -94,9 +127,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
       extendBodyBehindAppBar: true,
       appBar: SLTheme.appBar(context, 'Wishlist đôi'),
       body: SLTheme.softCanvasBackdrop(
-        baseColor: const Color(0xFFFFF8EC),
-        accentColor: const Color(0xFFF59E0B),
-        secondaryAccent: const Color(0xFFEC4899),
+        baseColor: SLColors.bgMain,
+        accentColor: SLColors.warning,
+        secondaryAccent: SLColors.primary,
         motif: SLCanvasBackdropMotif.sparkles,
         child: SafeArea(
           child: Column(
@@ -114,7 +147,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     return SLTheme.softPanel(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-      borderColor: const Color(0xFFF6C16A).withValues(alpha: 0.50),
+      borderColor: SLColors.warning.withValues(alpha: 0.50),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -126,11 +159,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
                   gradient: const LinearGradient(
-                    colors: <Color>[Color(0xFFF59E0B), Color(0xFFEC4899)],
+                    colors: <Color>[SLColors.warning, SLColors.primary],
                   ),
                   boxShadow: <BoxShadow>[
                     BoxShadow(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
+                      color: SLColors.warning.withValues(alpha: 0.18),
                       blurRadius: 14,
                       offset: const Offset(0, 7),
                     ),
@@ -203,11 +236,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: const LinearGradient(
-                      colors: <Color>[Color(0xFFF59E0B), Color(0xFFEC4899)],
+                      colors: <Color>[SLColors.warning, SLColors.primary],
                     ),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
-                        color: const Color(0xFFEC4899).withValues(alpha: 0.22),
+                        color: SLColors.primary.withValues(alpha: 0.22),
                         blurRadius: 14,
                         offset: const Offset(0, 7),
                       ),
@@ -231,14 +264,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8EC),
+        color: SLColors.bgMain,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF6C16A).withValues(alpha: 0.46)),
+        border: Border.all(color: SLColors.warning.withValues(alpha: 0.46)),
       ),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
-        cursorColor: const Color(0xFFEC4899),
+        cursorColor: SLColors.primary,
         style: SLTheme.quicksand(
           color: SLColors.textPrimary,
           fontWeight: FontWeight.w800,
@@ -268,12 +301,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color:
-                isSelected ? const Color(0xFFFFEDF4) : const Color(0xFFFFFAF1),
+                isSelected ? SLColors.primaryLight : SLColors.bgCard,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color: isSelected
-                  ? const Color(0xFFEC4899).withValues(alpha: 0.42)
-                  : const Color(0xFFF6C16A).withValues(alpha: 0.34),
+                  ? SLColors.primary.withValues(alpha: 0.42)
+                  : SLColors.warning.withValues(alpha: 0.34),
             ),
           ),
           child: Text(
@@ -283,7 +316,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w900,
-              color: isSelected ? const Color(0xFFBE185D) : SLColors.textSecond,
+              color: isSelected ? SLColors.primaryActive : SLColors.textSecond,
             ),
           ),
         ),
@@ -292,102 +325,96 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   Widget _buildWishList() {
-    return StreamBuilder(
-      stream: _wishlistStream,
-      builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: SLColors.primary),
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: SLColors.primary),
+      );
+    }
+
+    if (_data == null) {
+      return Padding(
+        padding: SLSpacing.all16,
+        child: Center(
+          child: SLTheme.emptyStatePanel(
+            icon: Icons.error_outline_rounded,
+            title: 'Không tải được wishlist',
+            subtitle: 'Không tải được danh sách lúc này. Hãy thử lại sau.',
+            accentColor: SLColors.danger,
+          ),
+        ),
+      );
+    }
+
+    if (_data!.isEmpty) {
+      return Padding(
+        padding: SLSpacing.all16,
+        child: Center(
+          child: SLTheme.emptyStatePanel(
+            icon: Icons.shopping_bag_rounded,
+            title: 'Chưa có điều ước nào',
+            subtitle: 'Thêm món đầu tiên để hai bạn cùng lên kế hoạch nhé.',
+            accentColor: SLColors.warning,
+          ),
+        ),
+      );
+    }
+
+    final data = _data!;
+    final allItems = data.entries
+        .map((e) => {'key': e.key, ...Map<String, dynamic>.from(e.value as Map)})
+        .toList();
+    var items = allItems
+        .where((item) =>
+            item['scope'] == _selectedScope || item['scope'] == null)
+        .toList();
+    items.sort(
+        (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
+
+    final int totalCount = allItems.length;
+    final int doneCount =
+        allItems.where((item) => item['done'] == true).length;
+    final int totalPrice = allItems.fold<int>(
+      0,
+      (sum, item) => sum + (item['est'] as int? ?? 0),
+    );
+
+    if (items.isEmpty) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+        children: <Widget>[
+          _buildWishlistSummary(
+            totalCount: totalCount,
+            doneCount: doneCount,
+            totalPrice: totalPrice,
+          ),
+          SLSpacing.h12,
+          SLTheme.emptyStatePanel(
+            icon: Icons.filter_alt_off_rounded,
+            title: 'Mục này đang trống',
+            subtitle: 'Hãy đổi nhóm hoặc thêm điều ước mới vào nhóm này.',
+            accentColor: SLColors.primary,
+          ),
+        ],
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+      itemCount: items.length + 1,
+      separatorBuilder: (_, __) => SLSpacing.h12,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return _buildWishlistSummary(
+            totalCount: totalCount,
+            doneCount: doneCount,
+            totalPrice: totalPrice,
           );
         }
 
-        if (snapshot.hasError) {
-          return Padding(
-            padding: SLSpacing.all16,
-            child: Center(
-              child: SLTheme.emptyStatePanel(
-                icon: Icons.error_outline_rounded,
-                title: 'Không tải được wishlist',
-                subtitle: 'Không tải được danh sách lúc này. Hãy thử lại sau.',
-                accentColor: SLColors.danger,
-              ),
-            ),
-          );
-        }
-
-        if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
-          return Padding(
-            padding: SLSpacing.all16,
-            child: Center(
-              child: SLTheme.emptyStatePanel(
-                icon: Icons.shopping_bag_rounded,
-                title: 'Chưa có điều ước nào',
-                subtitle: 'Thêm món đầu tiên để hai bạn cùng lên kế hoạch nhé.',
-                accentColor: const Color(0xFFF59E0B),
-              ),
-            ),
-          );
-        }
-
-        final data =
-            Map<dynamic, dynamic>.from(snapshot.data!.snapshot.value as Map);
-        final allItems = data.entries
-            .map((e) => {'key': e.key, ...Map<String, dynamic>.from(e.value)})
-            .toList();
-        var items = allItems
-            .where((item) =>
-                item['scope'] == _selectedScope || item['scope'] == null)
-            .toList();
-        items.sort(
-            (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
-
-        final int totalCount = allItems.length;
-        final int doneCount =
-            allItems.where((item) => item['done'] == true).length;
-        final int totalPrice = allItems.fold<int>(
-          0,
-          (sum, item) => sum + (item['est'] as int? ?? 0),
-        );
-
-        if (items.isEmpty) {
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-            children: <Widget>[
-              _buildWishlistSummary(
-                totalCount: totalCount,
-                doneCount: doneCount,
-                totalPrice: totalPrice,
-              ),
-              SLSpacing.h12,
-              SLTheme.emptyStatePanel(
-                icon: Icons.filter_alt_off_rounded,
-                title: 'Mục này đang trống',
-                subtitle: 'Hãy đổi nhóm hoặc thêm điều ước mới vào nhóm này.',
-                accentColor: const Color(0xFFEC4899),
-              ),
-            ],
-          );
-        }
-
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-          itemCount: items.length + 1,
-          separatorBuilder: (_, __) => SLSpacing.h12,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return _buildWishlistSummary(
-                totalCount: totalCount,
-                doneCount: doneCount,
-                totalPrice: totalPrice,
-              );
-            }
-
-            final item = items[index - 1];
-            final isDone = item['done'] == true;
-            final price = item['est'] as int? ?? 0;
-            return _buildWishCard(item: item, isDone: isDone, price: price);
-          },
-        );
+        final item = items[index - 1];
+        final isDone = item['done'] == true;
+        final price = item['est'] as int? ?? 0;
+        return _buildWishCard(item: item, isDone: isDone, price: price);
       },
     );
   }
@@ -399,7 +426,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }) {
     return SLTheme.softPanel(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      borderColor: const Color(0xFFF6C16A).withValues(alpha: 0.50),
+      borderColor: SLColors.warning.withValues(alpha: 0.50),
       child: Row(
         children: <Widget>[
           Container(
@@ -409,17 +436,17 @@ class _WishlistScreenState extends State<WishlistScreen> {
               borderRadius: BorderRadius.circular(20),
               gradient: LinearGradient(
                 colors: <Color>[
-                  const Color(0xFFF59E0B).withValues(alpha: 0.24),
-                  const Color(0xFFEC4899).withValues(alpha: 0.14),
+                  SLColors.warning.withValues(alpha: 0.24),
+                  SLColors.primary.withValues(alpha: 0.14),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               border:
-                  Border.all(color: const Color(0xFFF6C16A).withValues(alpha: 0.50)),
+                  Border.all(color: SLColors.warning.withValues(alpha: 0.50)),
             ),
             child: const Icon(Icons.local_mall_rounded,
-                color: Color(0xFFB45309), size: 28),
+                color: SLColors.warning, size: 28),
           ),
           SLSpacing.w12,
           Expanded(
@@ -447,7 +474,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
             ),
           ),
           SLSpacing.w12,
-          SLTheme.chip('$doneCount xong', const Color(0xFF16A34A)),
+          SLTheme.chip('$doneCount xong', SLColors.success),
         ],
       ),
     );
@@ -462,17 +489,17 @@ class _WishlistScreenState extends State<WishlistScreen> {
       padding: const EdgeInsets.fromLTRB(14, 13, 10, 13),
       decoration: BoxDecoration(
         color: isDone
-            ? const Color(0xFFF0FDF4).withValues(alpha: 0.96)
+            ? SLColors.successLight.withValues(alpha: 0.96)
             : Colors.white.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isDone
-              ? const Color(0xFFBBF7D0)
-              : const Color(0xFFF6C16A).withValues(alpha: 0.30),
+              ? SLColors.successLight
+              : SLColors.warning.withValues(alpha: 0.30),
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: const Color(0xFF7C4A03).withValues(alpha: 0.07),
+            color: SLColors.warning.withValues(alpha: 0.07),
             blurRadius: 16,
             spreadRadius: -8,
             offset: const Offset(0, 10),
@@ -490,11 +517,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color:
-                    isDone ? const Color(0xFF16A34A) : const Color(0xFFFFFAF1),
+                    isDone ? SLColors.success : SLColors.bgCard,
                 border: Border.all(
                   color: isDone
-                      ? const Color(0xFF16A34A)
-                      : const Color(0xFFF6C16A).withValues(alpha: 0.72),
+                      ? SLColors.success
+                      : SLColors.warning.withValues(alpha: 0.72),
                   width: 2,
                 ),
               ),
@@ -511,13 +538,13 @@ class _WishlistScreenState extends State<WishlistScreen> {
             height: 42,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: const Color(0xFFFFF4DB),
+              color: SLColors.warningLight,
               border:
-                  Border.all(color: const Color(0xFFF6C16A).withValues(alpha: 0.42)),
+                  Border.all(color: SLColors.warning.withValues(alpha: 0.42)),
             ),
             child: Icon(
               isDone ? Icons.done_all_rounded : Icons.card_giftcard_rounded,
-              color: isDone ? const Color(0xFF16A34A) : const Color(0xFFB45309),
+              color: isDone ? SLColors.success : SLColors.warning,
               size: 21,
             ),
           ),
@@ -555,16 +582,16 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF4DB),
+                          color: SLColors.warningLight,
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                              color: const Color(0xFFF6C16A).withValues(alpha: 0.45)),
+                              color: SLColors.warning.withValues(alpha: 0.45)),
                         ),
                         child: Text(
                           _currencyFormat.format(price),
                           style: SLTheme.quicksand(
                             fontSize: 10.5,
-                            color: const Color(0xFFB45309),
+                            color: SLColors.warning,
                             fontWeight: FontWeight.w900,
                           ),
                         ),

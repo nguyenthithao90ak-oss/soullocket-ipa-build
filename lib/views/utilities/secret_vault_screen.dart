@@ -533,7 +533,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           content: Text(isPro
               ? 'Đã đạt giới hạn $dailyLimit ảnh/ngày của gói PRO.'
               : 'Đã đạt giới hạn $dailyLimit ảnh/ngày. Nâng cấp PRO để đăng nhiều hơn!'),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: SLColors.danger,
         ));
       }
       return;
@@ -558,7 +558,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         content: Text(
           'Bạn đã chạm mốc $uploadedToday/$dailyLimit ảnh hôm nay. Hệ thống sẽ kiểm tra lại trước khi cho tải thêm.',
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: SLColors.warning,
       ));
     }
 
@@ -567,7 +567,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
               'Chỉ còn lại ${dailyLimit - uploadedToday} lượt đăng hôm nay. Bạn đã chọn ${images.length} ảnh.'),
-          backgroundColor: Colors.orange,
+          backgroundColor: SLColors.warning,
         ));
       }
       return;
@@ -591,7 +591,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         context: context,
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setLocalState) => AlertDialog(
-            backgroundColor: const Color(0xFF1F1C2C),
+            backgroundColor: SLColors.darkBgCard,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Text('Thêm ghi chú (tùy chọn)',
@@ -614,7 +614,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                         borderSide: const BorderSide(color: Colors.white24)),
                     focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.redAccent)),
+                        borderSide: const BorderSide(color: SLColors.danger)),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -629,7 +629,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                           setLocalState(() => dontAskAgain = v ?? false);
                         },
                         checkColor: Colors.white,
-                        activeColor: Colors.redAccent,
+                        activeColor: SLColors.danger,
                         side: const BorderSide(color: Colors.white54),
                       ),
                     ),
@@ -674,7 +674,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     Navigator.pop(ctx, captionCtrl.text.trim());
                   },
                   child: Text('THÊM',
-                      style: SLTheme.quicksand(color: Colors.redAccent))),
+                      style: SLTheme.quicksand(color: SLColors.danger))),
             ],
           ),
         ),
@@ -724,7 +724,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       if (mounted && successCount > 0) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Đã thêm $successCount ảnh vào kho mật! 🔐'),
-          backgroundColor: Colors.green,
+          backgroundColor: SLColors.success,
         ));
       }
     } catch (e) {
@@ -785,7 +785,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocalState) => AlertDialog(
-          backgroundColor: const Color(0xFF1F1C2C),
+          backgroundColor: SLColors.darkBgCard,
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           scrollable: true,
@@ -836,7 +836,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.redAccent),
+                      borderSide: const BorderSide(color: SLColors.danger),
                     ),
                   ),
                 ),
@@ -870,7 +870,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.redAccent),
+                        borderSide: const BorderSide(color: SLColors.danger),
                       ),
                     ),
                   ),
@@ -884,7 +884,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 onPressed: () => Navigator.pop(ctx, _recoveryAction),
                 child: Text(
                   'Dùng mã khôi phục',
-                  style: SLTheme.quicksand(color: Colors.blueAccent),
+                  style: SLTheme.quicksand(color: SLColors.info),
                 ),
               ),
             TextButton(
@@ -918,7 +918,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               },
               child: Text(
                 hasSetup ? 'MỞ KHÓA' : 'THIẾT LẬP',
-                style: SLTheme.quicksand(color: Colors.redAccent),
+                style: SLTheme.quicksand(color: SLColors.danger),
               ),
             ),
           ],
@@ -933,7 +933,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1F1C2C),
+        backgroundColor: SLColors.darkBgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Nhập mã khôi phục',
@@ -966,7 +966,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
             child: Text(
               'Mở kho',
-              style: SLTheme.quicksand(color: Colors.redAccent),
+              style: SLTheme.quicksand(color: SLColors.danger),
             ),
           ),
         ],
@@ -984,7 +984,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1F1C2C),
+        backgroundColor: SLColors.darkBgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           title,
@@ -1014,7 +1014,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 recoveryCode,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.jetBrainsMono(
-                  color: Colors.greenAccent,
+                  color: SLColors.success,
                   fontWeight: FontWeight.w800,
                   fontSize: 18,
                   letterSpacing: 1.2,
@@ -1041,7 +1041,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Tôi đã lưu',
-              style: SLTheme.quicksand(color: Colors.redAccent),
+              style: SLTheme.quicksand(color: SLColors.danger),
             ),
           ),
         ],
@@ -1079,7 +1079,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   void _showSettingsModal() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1F1C2C),
+      backgroundColor: SLColors.darkBgCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1102,7 +1102,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     ? Icons.undo_rounded
                     : Icons.delete_forever_rounded,
                 color:
-                    _hasPendingReset ? Colors.orangeAccent : Colors.redAccent,
+                    _hasPendingReset ? SLColors.warning : SLColors.danger,
               ),
               title: Text(
                 _hasPendingReset
@@ -1135,7 +1135,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.key_rounded, color: Colors.lightBlue),
+              leading: const Icon(Icons.key_rounded, color: SLColors.infoLight),
               title: Text(
                 _hasRecoveryCode ? 'Tạo lại mã khôi phục' : 'Tạo mã khôi phục',
                 style: SLTheme.quicksand(color: Colors.white),
@@ -1149,9 +1149,9 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               onTap: _handleRegenerateRecoveryCode,
             ),
             ListTile(
-              leading: const Icon(Icons.logout, color: Colors.orange),
+              leading: const Icon(Icons.logout, color: SLColors.warning),
               title: Text('Khóa lại kho mật',
-                  style: SLTheme.quicksand(color: Colors.orange)),
+                  style: SLTheme.quicksand(color: SLColors.warning)),
               onTap: () {
                 Navigator.pop(ctx);
                 _enc.clearCache(widget.houseId);
@@ -1188,7 +1188,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocalState) => AlertDialog(
-          backgroundColor: const Color(0xFF1F1C2C),
+          backgroundColor: SLColors.darkBgCard,
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           scrollable: true,
@@ -1263,7 +1263,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       },
                       child: Text('Tôi đã quên mật khẩu?',
                           style: SLTheme.quicksand(
-                              color: Colors.blueAccent,
+                              color: SLColors.info,
                               decoration: TextDecoration.underline)),
                     ),
                   ),
@@ -1313,7 +1313,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     });
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Đã đổi mật khẩu thành công!'),
-                        backgroundColor: Colors.green));
+                        backgroundColor: SLColors.success));
                     if (recoveryCode != null) {
                       await _showGeneratedRecoveryCodeDialog(
                         recoveryCode,
@@ -1332,12 +1332,12 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text(
                             'Mật khẩu cũ chưa đúng. Bạn kiểm tra lại rồi thử lại nhé.'),
-                        backgroundColor: Colors.redAccent));
+                        backgroundColor: SLColors.danger));
                   }
                 }
               },
               child: Text('ĐỔI MẬT KHẨU',
-                  style: SLTheme.quicksand(color: Colors.redAccent)),
+                  style: SLTheme.quicksand(color: SLColors.danger)),
             ),
           ],
         ),
@@ -1349,13 +1349,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1F1C2C),
+        backgroundColor: SLColors.darkBgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           _hasPendingReset ? 'Yêu cầu reset đang chờ' : 'Reset Kho ảnh mật',
           style: SLTheme.quicksand(
             fontWeight: FontWeight.bold,
-            color: _hasPendingReset ? Colors.orangeAccent : Colors.redAccent,
+            color: _hasPendingReset ? SLColors.warning : SLColors.danger,
           ),
         ),
         content: Text(
@@ -1388,7 +1388,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               _hasPendingReset ? 'Thu hồi yêu cầu' : 'Xác nhận qua email',
               style: SLTheme.quicksand(
                 color:
-                    _hasPendingReset ? Colors.orangeAccent : Colors.redAccent,
+                    _hasPendingReset ? SLColors.warning : SLColors.danger,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1403,11 +1403,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1F1C2C),
+        backgroundColor: SLColors.darkBgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Khôi phục kho mật',
             style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold, color: Colors.redAccent)),
+                fontWeight: FontWeight.bold, color: SLColors.danger)),
         content: Text(
             isWithin12Hours
                 ? 'Vì bạn thiết lập mật khẩu trong vòng 12 giờ qua, bạn có thể tạo mật khẩu mới mà không bị mất ảnh hiện tại.'
@@ -1438,7 +1438,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text(
                             'Đã reset mật khẩu. Hãy thiết lập mật khẩu mới.'),
-                        backgroundColor: Colors.green));
+                        backgroundColor: SLColors.success));
                   }
                 } else {
                   await _enc.resetVault(widget.houseId);
@@ -1450,7 +1450,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     });
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Đã xóa kho mật cũ. Hãy thiết lập lại.'),
-                        backgroundColor: Colors.orange));
+                        backgroundColor: SLColors.warning));
                   }
                 }
                 if (mounted) {
@@ -1466,7 +1466,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             },
             child: Text(isWithin12Hours ? 'Tiếp tục' : 'Xóa và tạo lại',
                 style: SLTheme.quicksand(
-                    color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                    color: SLColors.danger, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -1512,7 +1512,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF2B1B3D), Color(0xFF12121A)],
+            colors: [SLColors.darkBorder, SLColors.darkBgMain],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

@@ -21,6 +21,7 @@ class UtilitiesTabBody extends StatelessWidget {
     required this.onAppTap,
     required this.onReorder,
     required this.onEditModeChanged,
+    this.smartPanelWidget,
   });
 
   final int currentSegment;
@@ -36,6 +37,7 @@ class UtilitiesTabBody extends StatelessWidget {
   final ValueChanged<String> onAppTap;
   final void Function(String fromId, String toId) onReorder;
   final ValueChanged<bool> onEditModeChanged;
+  final Widget? smartPanelWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +48,11 @@ class UtilitiesTabBody extends StatelessWidget {
           onSegmentChanged: onSegmentChanged,
           onResetTap: onResetTap,
         ),
+        if (smartPanelWidget != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: smartPanelWidget!,
+          ),
         Expanded(
           child: UtilitiesHubGrid(
             apps: apps,

@@ -62,7 +62,7 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
                               child: Row(
                                 children: [
                                   const Icon(Icons.lock_outline,
-                                      color: Colors.greenAccent, size: 14),
+                                      color: SLColors.success, size: 14),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
@@ -111,13 +111,13 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: _encryptionReady
-            ? Colors.green.withValues(alpha: 0.15)
-            : Colors.orange.withValues(alpha: 0.15),
+            ? SLColors.success.withValues(alpha: 0.15)
+            : SLColors.warning.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
             color: _encryptionReady
-                ? Colors.greenAccent.withValues(alpha: 0.4)
-                : Colors.orange.withValues(alpha: 0.4)),
+                ? SLColors.success.withValues(alpha: 0.4)
+                : SLColors.warning.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -125,7 +125,7 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
         children: [
           Icon(
             _encryptionReady ? Icons.lock : Icons.lock_open,
-            color: _encryptionReady ? Colors.greenAccent : Colors.orange,
+            color: _encryptionReady ? SLColors.success : SLColors.warning,
             size: 14,
           ),
           const SizedBox(width: 8),
@@ -134,7 +134,7 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
               _encStatusMsg,
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
-                color: _encryptionReady ? Colors.greenAccent : Colors.orange,
+                color: _encryptionReady ? SLColors.success : SLColors.warning,
                 fontWeight: FontWeight.w700,
                 fontSize: 11,
               ),

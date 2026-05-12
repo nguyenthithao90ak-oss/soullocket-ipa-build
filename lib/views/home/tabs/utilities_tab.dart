@@ -67,13 +67,6 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
   List<String> _customOrder = [];
   String _relationshipMode = 'single';
   bool _isEditMode = false;
-  StreamSubscription<DatabaseEvent>? _smartPanelSubscription;
-  int _bucketCount = 0;
-  int _pendingBucketCount = 0;
-  int _noteCount = 0;
-  int _voiceCount = 0;
-  String _smartTip = 'Đang phân tích thói quen để gợi ý tiện ích phù hợp nhất.';
-  String? _suggestedUtilityId;
   int _currentSegment = 0;
   BannerAd? _bottomBannerAd;
   bool _isBottomBannerReady = false;
@@ -265,8 +258,6 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
     try {
       _houseId = await _houseService.getCurrentHouseId();
       if (_houseId != null) {
-        _subscribeToSmartPanel(_houseId!);
-
         // Tải từ cache trước
         final cachedData =
             OfflineCacheService.loadCacheSync('utilities_settings_$_houseId');
@@ -302,7 +293,6 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
 
   @override
   void dispose() {
-    _smartPanelSubscription?.cancel();
     _bottomBannerAd?.dispose();
     super.dispose();
   }
@@ -566,451 +556,6 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
     );
   }
 
-  Widget _buildUtilitiesSmartPanel() {
-    return SLTheme.glassCard(
-      padding: SLSpacing.all20,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: SLColors.secondary.withValues(alpha: 0.1),
-                  borderRadius: SLRadius.mdAll,
-                ),
-                child: const Icon(Icons.auto_awesome_rounded,
-                    color: SLColors.secondary, size: 20),
-              ),
-              SLSpacing.w12,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'TRỢ LÝ THÔNG MINH',
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: SLColors.secondary,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    Text(
-                      '$_pendingBucketCount Bucket mới',
-                      style: SLTheme.quicksand(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: SLColors.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SLTheme.primaryButton(
-                text: 'MỞ GỢI Ý',
-                onPressed: _openSuggestedUtility,
-                width: 118,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-            ],
-          ),
-          SLSpacing.h16,
-          Text(
-            _smartTip,
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: SLColors.textSecondary,
-              height: 1.5,
-            ),
-          ),
-          SLSpacing.h20,
-          Row(
-            children: [
-              Expanded(child: _buildSmartStat('$_bucketCount', 'BUCKET')),
-              SLSpacing.w12,
-              Expanded(child: _buildSmartStat('$_noteCount', 'GHI CHÚ')),
-              SLSpacing.w12,
-              Expanded(child: _buildSmartStat('$_voiceCount', 'VOICE')),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSmartStat(String value, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.4),
-        borderRadius: SLRadius.mdAll,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: SLTheme.quicksand(
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-              color: SLColors.primary,
-            ),
-          ),
-          Text(
-            label,
-            style: SLTheme.quicksand(
-              fontSize: 9,
-              fontWeight: FontWeight.w900,
-              color: SLColors.textTertiary,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ignore: unused_element
-  Widget _buildHeader() {
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-          12, MediaQuery.of(context).padding.top + 14, 12, 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        border: Border(
-            bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Header Tối ưu (Bỏ BackdropFilter gây lag trên web)
-              Expanded(
-                child: ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [Color(0xFFff6f91), Color(0xFFd81b60)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ).createShader(bounds),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.inventory_2_rounded,
-                          color: Colors.white, size: 22),
-                      SLSpacing.w8,
-                      Flexible(
-                        child: Text(
-                          'TIỆN ÍCH',
-                          softWrap: true,
-                          style: SLTheme.quicksand(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SLSpacing.w8,
-            ],
-          ),
-          SLSpacing.h12,
-          // Nút sắp xếp
-          Row(
-            children: [
-              _buildEditBtn(
-                'Đặt lại',
-                isReset: true,
-                onTap: _confirmResetLayout,
-              ),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  // ignore: unused_element
-  Widget _buildSmartPanel() {
-    final subject = _relationshipMode == 'single' ? 'bạn' : 'hai bạn';
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFEFF), Color(0xFFFFF0F8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border:
-            Border.all(color: const Color(0xFFD81B60).withValues(alpha: 0.18)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.12),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    const Icon(Icons.auto_awesome_rounded,
-                        color: Color(0xFFD81B60), size: 18),
-                    SLSpacing.w8,
-                    Text(
-                      'Trợ lý Tiện ích',
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFFD81B60),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ElevatedButton(
-                onPressed: _openSuggestedUtility,
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  backgroundColor: const Color(0xFFD81B60),
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: SLRadius.pillAll,
-                  ),
-                ),
-                child: Text(
-                  'Mở gợi ý',
-                  style: SLTheme.quicksand(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SLSpacing.h12,
-          Text(
-            'Đang phân tích thói quen của $subject để gợi ý utility phù hợp nhất.',
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF555555),
-              height: 1.4,
-            ),
-          ),
-          SLSpacing.h12,
-          Row(
-            children: [
-              Expanded(child: _buildSmartStat('0', 'Bucket')),
-              SLSpacing.w8,
-              Expanded(child: _buildSmartStat('0', 'Ghi chú')),
-              SLSpacing.w8,
-              Expanded(child: _buildSmartStat('0', 'Voice')),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _openSuggestedUtility() {
-    final suggestedId = _suggestedUtilityId;
-    if (suggestedId != null &&
-        UtilityService.isUtilityAllowed(suggestedId, _relationshipMode)) {
-      _navigateToApp(suggestedId);
-      return;
-    }
-    final preferredIds = _relationshipMode == 'single'
-        ? ['history', 'note']
-        : ['bucket', 'note', 'voice', 'calendar'];
-    for (final id in preferredIds) {
-      if (UtilityService.isUtilityAllowed(id, _relationshipMode)) {
-        _navigateToApp(id);
-        return;
-      }
-    }
-    final visibleApps = UtilityService.appsForMode(_relationshipMode);
-    if (visibleApps.isNotEmpty) {
-      _navigateToApp(visibleApps.first.id);
-    }
-  }
-
-  void _subscribeToSmartPanel(String houseId) {
-    _smartPanelSubscription?.cancel();
-    _smartPanelSubscription =
-        _dbRef.child('houses/$houseId/utilities').onValue.listen((
-      event,
-    ) {
-      final root = event.snapshot.value;
-      if (root is! Map) {
-        final defaultSuggestedUtilityId = _defaultSuggestedUtilityId();
-        const defaultSmartTip =
-            'Đang phân tích thói quen để gợi ý tiện ích phù hợp nhất.';
-        final shouldUpdate = _bucketCount != 0 ||
-            _pendingBucketCount != 0 ||
-            _noteCount != 0 ||
-            _voiceCount != 0 ||
-            _smartTip != defaultSmartTip ||
-            _suggestedUtilityId != defaultSuggestedUtilityId;
-        if (!shouldUpdate || !mounted) return;
-        setState(() {
-          _bucketCount = 0;
-          _pendingBucketCount = 0;
-          _noteCount = 0;
-          _voiceCount = 0;
-          _smartTip = defaultSmartTip;
-          _suggestedUtilityId = defaultSuggestedUtilityId;
-        });
-        return;
-      }
-
-      final utilities = Map<dynamic, dynamic>.from(root);
-      final bucketRaw = utilities['bucket'];
-      final notesRaw = utilities['notes'];
-      final voicesRaw = utilities['voices'];
-
-      final bucketMap = bucketRaw is Map
-          ? Map<dynamic, dynamic>.from(bucketRaw)
-          : <dynamic, dynamic>{};
-      final notesMap = notesRaw is Map
-          ? Map<dynamic, dynamic>.from(notesRaw)
-          : <dynamic, dynamic>{};
-      final voicesMap = voicesRaw is Map
-          ? Map<dynamic, dynamic>.from(voicesRaw)
-          : <dynamic, dynamic>{};
-
-      final pendingBucketCount = bucketMap.values.where((item) {
-        if (item is! Map) return false;
-        final map = Map<dynamic, dynamic>.from(item);
-        return map['isDone'] != true;
-      }).length;
-
-      final suggestion = _resolveSuggestedUtility(
-        pendingBucketCount: pendingBucketCount,
-        noteCount: notesMap.length,
-        voiceCount: voicesMap.length,
-      );
-      final bucketCount = bucketMap.length;
-      final noteCount = notesMap.length;
-      final voiceCount = voicesMap.length;
-      final shouldUpdate = _bucketCount != bucketCount ||
-          _pendingBucketCount != pendingBucketCount ||
-          _noteCount != noteCount ||
-          _voiceCount != voiceCount ||
-          _smartTip != suggestion.message ||
-          _suggestedUtilityId != suggestion.utilityId;
-
-      if (!shouldUpdate || !mounted) return;
-      setState(() {
-        _bucketCount = bucketCount;
-        _pendingBucketCount = pendingBucketCount;
-        _noteCount = noteCount;
-        _voiceCount = voiceCount;
-        _smartTip = suggestion.message;
-        _suggestedUtilityId = suggestion.utilityId;
-      });
-    }, onError: (Object error) {
-      debugPrint(
-        'Utilities smart panel listener failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể tải trạng thái tiện ích.',
-        ).message}',
-      );
-    });
-  }
-
-  _UtilitySuggestion _resolveSuggestedUtility({
-    required int pendingBucketCount,
-    required int noteCount,
-    required int voiceCount,
-  }) {
-    if (pendingBucketCount > 0 &&
-        UtilityService.isUtilityAllowed('bucket', _relationshipMode)) {
-      return _UtilitySuggestion(
-        utilityId: 'bucket',
-        message:
-            'Bạn còn $pendingBucketCount việc Bucket chưa hoàn thành, mở ra xử lý nhanh nhé.',
-      );
-    }
-
-    final hour = DateTime.now().hour;
-    if ((hour >= 22 || hour <= 6) &&
-        UtilityService.isUtilityAllowed('voice', _relationshipMode)) {
-      return const _UtilitySuggestion(
-        utilityId: 'voice',
-        message:
-            'Khung giờ này hợp gửi voice ngắn trước khi ngủ, giữ cảm xúc gần nhau hơn.',
-      );
-    }
-
-    if (noteCount > 0 &&
-        UtilityService.isUtilityAllowed('note', _relationshipMode)) {
-      return const _UtilitySuggestion(
-        utilityId: 'note',
-        message:
-            'Bạn đang có ghi chú lưu sẵn, vào rà lại để không quên kế hoạch quan trọng.',
-      );
-    }
-
-    if (voiceCount == 0 &&
-        UtilityService.isUtilityAllowed('voice', _relationshipMode)) {
-      return const _UtilitySuggestion(
-        utilityId: 'voice',
-        message:
-            'Chưa có lời nhắn thoại nào, thử gửi một voice ngắn để tab Tiện ích ấm hơn nhé.',
-      );
-    }
-
-    if (UtilityService.isUtilityAllowed('love_card', _relationshipMode)) {
-      return const _UtilitySuggestion(
-        utilityId: 'love_card',
-        message:
-            'Gợi ý hôm nay: tạo một tấm thiệp tình yêu để tăng điểm kết nối tình cảm.',
-      );
-    }
-
-    final fallbackId = _defaultSuggestedUtilityId();
-    return _UtilitySuggestion(
-      utilityId: fallbackId,
-      message:
-          'Đã sẵn sàng gợi ý tiện ích phù hợp với nhịp dùng hiện tại của bạn.',
-    );
-  }
-
-  String? _defaultSuggestedUtilityId() {
-    final preferredIds = _relationshipMode == 'single'
-        ? ['history', 'note']
-        : ['bucket', 'note', 'voice', 'calendar'];
-    for (final id in preferredIds) {
-      if (UtilityService.isUtilityAllowed(id, _relationshipMode)) {
-        return id;
-      }
-    }
-    final visibleApps = UtilityService.appsForMode(_relationshipMode);
-    return visibleApps.isNotEmpty ? visibleApps.first.id : null;
-  }
-
   Widget _buildEditBtn(String label,
       {bool isReset = false, required VoidCallback onTap}) {
     return GestureDetector(
@@ -1191,7 +736,28 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
       if (!mounted) {
         return;
       }
-      Navigator.push(context, MaterialPageRoute(builder: (_) => screen!));
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => screen!,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.0, 0.05),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                )),
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      );
     } else {
       if (!mounted) {
         return;
@@ -1200,14 +766,4 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
           const SnackBar(content: Text('Tiện ích này đang được hoàn thiện.')));
     }
   }
-}
-
-class _UtilitySuggestion {
-  final String? utilityId;
-  final String message;
-
-  const _UtilitySuggestion({
-    required this.utilityId,
-    required this.message,
-  });
 }

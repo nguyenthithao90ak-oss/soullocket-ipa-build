@@ -84,6 +84,13 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
   PreparedDiaryMemoryFeed? _lastPreparedFeed;
   String _thumbnailWarmupSignature = '';
   bool _isUploadingMemory = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   Future<void> _handleAddMemory() async {
     if (_isUploadingMemory) {
@@ -320,29 +327,39 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                         }
                       }
 
-                      return CustomScrollView(
-                        key: const ValueKey('memory_content'),
-                        physics: const BouncingScrollPhysics(),
-                        slivers: [
-                          SliverToBoxAdapter(
-                            child: _DiaryMemoryHeroCard(
-                              totalPhotos: visiblePhotoCount,
-                              isOffline: isOffline,
-                              isSyncing: waitingForLive,
-                              showingCache: showingCache,
-                              onAdd: _handleAddMemory,
-                              hasPendingUploadRetry:
-                                  widget.hasPendingUploadRetry,
-                              pendingUploadMessage: widget.pendingUploadMessage,
-                              onRetryPendingUpload: _handleRetryPendingUpload,
-                              isUploading: _isUploadingMemory,
+                      return RawScrollbar(
+                        controller: _scrollController,
+                        thumbColor: const Color(0xFFD81B60).withValues(alpha: 0.6),
+                        radius: const Radius.circular(8),
+                        thickness: 6,
+                        interactive: true,
+                        mainAxisMargin: 32,
+                        crossAxisMargin: 2,
+                        child: CustomScrollView(
+                          key: const ValueKey('memory_content'),
+                          controller: _scrollController,
+                          physics: const BouncingScrollPhysics(),
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: _DiaryMemoryHeroCard(
+                                totalPhotos: visiblePhotoCount,
+                                isOffline: isOffline,
+                                isSyncing: waitingForLive,
+                                showingCache: showingCache,
+                                onAdd: _handleAddMemory,
+                                hasPendingUploadRetry:
+                                    widget.hasPendingUploadRetry,
+                                pendingUploadMessage: widget.pendingUploadMessage,
+                                onRetryPendingUpload: _handleRetryPendingUpload,
+                                isUploading: _isUploadingMemory,
+                              ),
                             ),
-                          ),
-                          ...bodySlivers,
-                          const SliverPadding(
-                            padding: EdgeInsets.only(bottom: 128),
-                          ),
-                        ],
+                            ...bodySlivers,
+                            const SliverPadding(
+                              padding: EdgeInsets.only(bottom: 128),
+                            ),
+                          ],
+                        ),
                       );
                     },
                   );
