@@ -391,7 +391,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 380;
-    const showPurchaseUi = AppConfig.showPurchaseUi;
+    final showPurchaseUi = AppConfig.isPurchaseEnabled;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(

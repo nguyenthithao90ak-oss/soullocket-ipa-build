@@ -117,7 +117,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
   }
 
   Future<void> _openPremiumStoreFromThemePanel() async {
-    if (!AppConfig.showPurchaseUi) {
+    if (!AppConfig.isPurchaseEnabled) {
       _showToast('Gói PRO đang tạm ẩn trong bản review.', success: false);
       return;
     }

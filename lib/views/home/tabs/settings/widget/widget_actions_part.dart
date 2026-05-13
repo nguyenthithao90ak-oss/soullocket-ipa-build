@@ -50,7 +50,7 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   }
 
   Future<void> _openPremiumStoreFromWidgetPanel() async {
-    if (!AppConfig.showPurchaseUi) {
+    if (!AppConfig.isPurchaseEnabled) {
       _showToast('Gói PRO đang tạm ẩn trong bản review.', success: false);
       return;
     }

@@ -677,7 +677,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             ),
           ),
           SLSpacing.h8,
-          if (AppConfig.showPurchaseUi)
+          if (AppConfig.isPurchaseEnabled)
             Row(
               children: [
                 Expanded(
@@ -706,8 +706,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 ),
               ],
             ),
-          if (AppConfig.showPurchaseUi) SLSpacing.h8,
-          if (AppConfig.showPurchaseUi)
+          if (AppConfig.isPurchaseEnabled) SLSpacing.h8,
+          if (AppConfig.isPurchaseEnabled)
             Text(
               context.tr('restore_vip_desc'),
               style: SLTextStyles.quicksand(
