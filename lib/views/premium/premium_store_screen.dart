@@ -84,10 +84,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     }
 
     if (products.isEmpty) {
-      if (_isAppleStorePlatform) {
-        return 'Cửa hàng trên thiết bị chưa trả về gói PRO. Vui lòng kiểm tra cấu hình IAP và gắn gói mua vào bản phát hành đang gửi duyệt.';
-      }
-      return 'Hiện chưa tải được danh sách gói PRO. Vui lòng thử lại sau ít phút.';
+      return 'Hiện chưa tải được danh sách gói PRO. Vui lòng thử lại sau ít phút hoặc kiểm tra lại kết nối mạng.';
     }
 
     return 'Hiện chưa có gói PRO khả dụng trên cửa hàng này.';
@@ -1178,7 +1175,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Chưa tải được gói PRO',
+            'Các gói PRO đang được cập nhật',
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: Colors.white,
