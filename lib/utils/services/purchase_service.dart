@@ -218,6 +218,7 @@ class PurchaseService {
   Stream<VipPurchaseState> get statusStream => _statusController.stream;
 
   Future<void> initialize() async {
+    if (!AppConfig.isPurchaseEnabled) return;
     if (_initialized) return;
     if (_initializing != null) {
       await _initializing;
@@ -648,6 +649,14 @@ class PurchaseService {
   }
 
   Future<VipAccessInfo> getVipAccessInfo() async {
+    if (!AppConfig.isPurchaseEnabled) {
+      return const VipAccessInfo(
+        isVip: false,
+        planId: '',
+        expiresAtMs: null,
+      );
+    }
+
     final user = _auth.currentUser;
     if (user == null) {
       return const VipAccessInfo(
@@ -701,6 +710,15 @@ class PurchaseService {
   }
 
   Stream<VipAccessInfo> vipAccessStream() async* {
+    if (!AppConfig.isPurchaseEnabled) {
+      yield const VipAccessInfo(
+        isVip: false,
+        planId: '',
+        expiresAtMs: null,
+      );
+      return;
+    }
+
     final user = _auth.currentUser;
     if (user == null) {
       yield const VipAccessInfo(

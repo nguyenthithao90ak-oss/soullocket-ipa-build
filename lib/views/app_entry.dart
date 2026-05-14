@@ -565,6 +565,11 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
               _hasTriggeredInitialAppOpenAd = false;
               _removeSplashOnce();
               return ConsentGate(
+                onReady: () async {
+                  await _appEntryController.requestStartupPermissionsIfNeeded(
+                    context,
+                  );
+                },
                 child: HouseOnboardingScreen(
                   autoCreateOnly: true,
                   initialHouseName: 'Chúng mình',

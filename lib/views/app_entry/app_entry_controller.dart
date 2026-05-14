@@ -74,7 +74,7 @@ class AppEntryController {
             interactionMetricsService ?? InteractionMetricsService();
 
   static const String _startupPermissionPromptedPrefsKey =
-      'il_startup_permission_prompted_v1';
+      'il_startup_permission_prompted_v2';
   static const Duration _deviceRegistrationCooldown = Duration(seconds: 15);
 
   final HouseService _houseService;
@@ -466,11 +466,15 @@ class AppEntryController {
 
     if (!activeContext.mounted) return;
 
-    await LocationService().requestPermission(context: activeContext);
+    final notificationGranted =
+        await NotificationService().requestPermissionAndInit();
     if (!activeContext.mounted) return;
 
-    await NotificationService().requestPermissionAndInit();
-    await prefs.setBool(_startupPermissionPromptedPrefsKey, true);
+    final locationGranted =
+        await LocationService().requestPermission(context: activeContext);
+    if (locationGranted || notificationGranted) {
+      await prefs.setBool(_startupPermissionPromptedPrefsKey, true);
+    }
   }
 
   Future<void> clearPresenceSession() async {

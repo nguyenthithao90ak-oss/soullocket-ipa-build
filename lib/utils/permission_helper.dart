@@ -117,22 +117,12 @@ class PermissionHelper {
           result == LocationPermission.whileInUse;
     }
 
-    if (!context.mounted) return false;
+    final result = await _withLifecyclePresenceGuard(
+      Geolocator.requestPermission,
+    );
 
-    // Show app disclosure before handing off to the native location permission prompt.
-    final shouldRequest =
-        await _showDisclosureDialog(context, title, disclosure);
-
-    if (shouldRequest == true) {
-      final result = await _withLifecyclePresenceGuard(
-        Geolocator.requestPermission,
-      );
-
-      return result == LocationPermission.always ||
-          result == LocationPermission.whileInUse;
-    }
-
-    return false;
+    return result == LocationPermission.always ||
+        result == LocationPermission.whileInUse;
   }
 
   static Future<bool> requestBackgroundLocationWithDisclosure(

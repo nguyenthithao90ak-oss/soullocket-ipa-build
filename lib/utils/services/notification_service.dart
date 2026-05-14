@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,6 +72,12 @@ class NotificationService {
       await initialize();
       return true;
     }
+
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      final androidStatus = await app_permission.Permission.notification.request();
+      if (!androidStatus.isGranted) return false;
+    }
+
     final settings = await _fcm.requestPermission(
       alert: true,
       badge: true,

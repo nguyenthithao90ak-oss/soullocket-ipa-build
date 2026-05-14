@@ -711,6 +711,19 @@ extension _SettingsTabPersistence on _SettingsTabState {
     final user = _auth.currentUser;
     if (user == null) return;
 
+    if (!AppConfig.isPurchaseEnabled) {
+      if (mounted) {
+        setState(() {
+          _isVipActive = false;
+          _vipPlanLabel = 'Tài khoản Basic';
+          _vipExpiryLabel = 'Gói cơ bản đang hoạt động';
+          _vipPlanCode = '';
+          _isLifetimeVip = false;
+        });
+      }
+      return;
+    }
+
     try {
       final access = await PurchaseService()
           .getVipAccessInfo()

@@ -551,11 +551,6 @@ class _DiaryTabState extends State<DiaryTab> {
     BuildContext dialogContext,
     Map<String, dynamic> item,
   ) async {
-    final activeTokens = await _findActiveMemoryShareTokensForPhoto(item);
-    if (!mounted) {
-      return;
-    }
-
     final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.white,
@@ -584,23 +579,6 @@ class _DiaryTabState extends State<DiaryTab> {
                 title: const Text('Chi tiết ảnh'),
                 onTap: () => Navigator.of(sheetContext).pop('info'),
               ),
-              if (activeTokens.isNotEmpty)
-                ListTile(
-                  leading: const Icon(
-                    Icons.link_off_rounded,
-                    color: Color(0xFFFF7043),
-                  ),
-                  title: Text(
-                    activeTokens.length > 1
-                        ? 'Thu hồi ${activeTokens.length} liên kết'
-                        : 'Thu hồi liên kết',
-                    style: SLTheme.quicksand(
-                      color: const Color(0xFFFF7043),
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  onTap: () => Navigator.of(sheetContext).pop('revoke_share'),
-                ),
               ListTile(
                 leading: const Icon(
                   Icons.delete_outline_rounded,
@@ -631,9 +609,6 @@ class _DiaryTabState extends State<DiaryTab> {
         break;
       case 'info':
         await _showMemoryInfoSheet(dialogContext, item);
-        break;
-      case 'revoke_share':
-        await _revokeMemoryShareLinksForPhoto(dialogContext, item);
         break;
       case 'delete':
         Navigator.pop(dialogContext);

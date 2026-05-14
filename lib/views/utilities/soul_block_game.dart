@@ -13,6 +13,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
 import '../../services/admob_service.dart';
 import '../../services/house_service.dart';
@@ -319,6 +320,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
   Future<void> _openPremiumStore() async {
     _emitClickFeedback();
+    if (!AppConfig.isPurchaseEnabled) {
+      _showSnackBar('Gói PRO đang tạm ẩn trong bản review.');
+      return;
+    }
     final houseId = _houseId ?? await _houseService.getCurrentHouseId() ?? '';
     if (!mounted) {
       return;
