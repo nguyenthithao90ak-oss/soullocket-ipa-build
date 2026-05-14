@@ -652,8 +652,9 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
 
         if (hasLocationPermission && isLocationServiceEnabled) {
           final position = await Geolocator.getCurrentPosition(
-            desiredAccuracy:
-                kIsWeb ? LocationAccuracy.medium : LocationAccuracy.high,
+            locationSettings: const LocationSettings(
+              accuracy: kIsWeb ? LocationAccuracy.medium : LocationAccuracy.high,
+            ),
           );
           lat = position.latitude;
           lng = position.longitude;

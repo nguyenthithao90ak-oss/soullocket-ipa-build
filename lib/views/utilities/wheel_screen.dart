@@ -170,7 +170,8 @@ class _WheelScreenState extends State<WheelScreen>
       }
 
       final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
 
       const apiKey =
           String.fromEnvironment('GOOGLE_MAPS_API_KEY', defaultValue: '');

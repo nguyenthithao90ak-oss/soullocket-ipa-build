@@ -79,7 +79,7 @@ class EncryptionService {
 
   // Flutter Secure Storage — backed by Android Keystore / iOS Secure Enclave
   static const _secureStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),

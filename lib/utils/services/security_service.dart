@@ -24,7 +24,7 @@ import '../app_error_mapper.dart';
 class SecurityService {
   static const String _deviceIdStorageKey = 'il_device_id';
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),

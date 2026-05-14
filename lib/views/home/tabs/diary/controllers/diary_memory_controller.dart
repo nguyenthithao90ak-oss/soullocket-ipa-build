@@ -1473,7 +1473,9 @@ class DiaryMemoryController extends ChangeNotifier {
             return null;
           }
           return Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.low,
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.low,
+            ),
           ).timeout(const Duration(seconds: 1));
         }).catchError((_) => null as Position?);
       }

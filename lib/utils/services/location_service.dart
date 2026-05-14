@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/app_error_mapper.dart';
@@ -104,6 +105,12 @@ class LocationService {
   }
 
   Future<bool> requestBackgroundPermission({BuildContext? context}) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return false;
+    }
+    if (await hasBackgroundPermission()) return true;
+
+    await app_permission.openAppSettings();
     return hasBackgroundPermission();
   }
 
@@ -146,7 +153,7 @@ class LocationService {
 
     try {
       final initialPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: _bestForegroundAccuracy,
+        locationSettings: LocationSettings(accuracy: _bestForegroundAccuracy),
       ).timeout(_kInitialPositionTimeout);
       await _handlePositionUpdate(normalizedHouseId, normalizedRole, initialPosition,
           forceWrite: true);
