@@ -44,8 +44,7 @@ class AuthSignInService {
         _databaseRef = databaseRef,
         _sharedPreferencesProvider =
             sharedPreferencesProvider ?? SharedPreferences.getInstance,
-        _googleSignInBuilder =
-            googleSignInBuilder ?? (() => GoogleSignIn(scopes: ['email'])),
+        _googleSignInBuilder = googleSignInBuilder ?? (() => GoogleSignIn.instance),
         _firebaseFunctions = firebaseFunctions,
         _httpPost = httpPost ?? http.post,
         _nowProvider = nowProvider ?? DateTime.now,
@@ -215,18 +214,16 @@ class AuthSignInService {
       } else {
         final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
         await googleSignIn.signOut();
-        final googleUser = await googleSignIn.signIn();
-        if (googleUser == null) {
-          throw 'Bạn đã hủy chọn tài khoản Google.';
-        }
-
-        final googleAuth = await googleUser.authentication;
+        await googleSignIn.initialize();
+        final googleUser = await googleSignIn.authenticate(
+          scopeHint: const ['email'],
+        );
+        final googleAuth = googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
           throw 'Google không trả về ID token hợp lệ. Hãy kiểm tra kết nối mạng và thử lại.';
         }
 
         final credential = firebase_auth.GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
         await user.linkWithCredential(credential);
@@ -562,18 +559,16 @@ class AuthSignInService {
 
       final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
       await googleSignIn.signOut();
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        throw 'Bạn đã hủy xác minh lại Google.';
-      }
-
-      final googleAuth = await googleUser.authentication;
+      await googleSignIn.initialize();
+      final googleUser = await googleSignIn.authenticate(
+        scopeHint: const ['email'],
+      );
+      final googleAuth = googleUser.authentication;
       if ((googleAuth.idToken ?? '').isEmpty) {
         throw 'Google không trả về ID token hợp lệ để xác minh lại tài khoản.';
       }
 
       final credential = firebase_auth.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
       await user.reauthenticateWithCredential(credential);
@@ -1130,22 +1125,16 @@ class AuthSignInService {
       } else {
         final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
         await googleSignIn.signOut();
-        final googleUser = await googleSignIn.signIn();
-        if (googleUser == null) {
-          return null;
-        }
-
-        final refreshedGoogleUser = await googleSignIn.signInSilently(
-          reAuthenticate: true,
+        await googleSignIn.initialize();
+        final googleUser = await googleSignIn.authenticate(
+          scopeHint: const ['email'],
         );
-        final googleAuth =
-            await (refreshedGoogleUser ?? googleUser).authentication;
+        final googleAuth = googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
           throw 'Google không trả về ID token hợp lệ. Hãy kiểm tra cấu hình Firebase Google Sign-In.';
         }
 
         final credential = firebase_auth.GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
         userCredential = await _auth.signInWithCredential(credential);

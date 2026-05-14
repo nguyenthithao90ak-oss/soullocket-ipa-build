@@ -16,7 +16,6 @@ import '../../../services/military_lock_service.dart';
 import '../../../services/utility_service.dart';
 import '../../../services/offline_cache_service.dart';
 import '../../../core/sl_theme.dart';
-import '../../../utils/app_error_mapper.dart';
 import '../../utilities/bucket_list_screen.dart';
 import '../../utilities/shared_notes_screen.dart';
 import '../../utilities/finance_screen.dart';

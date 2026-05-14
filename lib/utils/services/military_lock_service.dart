@@ -405,24 +405,15 @@ class MilitaryLockService {
           AndroidAuthMessages(
             signInTitle: 'Kiểm tra sinh trắc học',
             cancelButton: 'Hủy',
-            biometricHint: 'Chạm cảm biến hoặc nhìn vào camera',
-            biometricNotRecognized: 'Không nhận diện được. Vui lòng thử lại.',
-            biometricSuccess: 'Xác thực thành công!',
+            signInHint: 'Chạm cảm biến hoặc nhìn vào camera',
           ),
           IOSAuthMessages(
-            lockOut: 'Face ID / Touch ID đang tạm khóa. Vui lòng thử lại sau.',
-            goToSettingsButton: 'Mở cài đặt',
-            goToSettingsDescription:
-                'Hãy bật Face ID hoặc Touch ID cho SoulLocket trong phần cài đặt iPhone.',
-            cancelButton: 'Dùng mã PIN',
+            localizedFallbackTitle: 'Dùng mã PIN',
+            cancelButton: 'Hủy',
           ),
         ],
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-          useErrorDialogs: true,
-
-        ),
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
       );
     } catch (e) {
       debugPrint('[MilitaryLock] Test Biometric error: ${AppErrorMapper.resolve(
@@ -448,24 +439,15 @@ class MilitaryLockService {
           AndroidAuthMessages(
             signInTitle: 'Xác thực sinh trắc học',
             cancelButton: 'Dùng mã PIN',
-            biometricHint: 'Chạm cảm biến hoặc nhìn vào camera',
-            biometricNotRecognized: 'Không nhận diện được. Vui lòng thử lại.',
-            biometricSuccess: 'Xác thực thành công!',
+            signInHint: 'Chạm cảm biến hoặc nhìn vào camera',
           ),
           IOSAuthMessages(
-            lockOut: 'Face ID / Touch ID đang tạm khóa. Vui lòng thử lại sau.',
-            goToSettingsButton: 'Mở cài đặt',
-            goToSettingsDescription:
-                'Hãy bật Face ID hoặc Touch ID cho SoulLocket trong phần cài đặt iPhone.',
-            cancelButton: 'Dùng mã PIN',
+            localizedFallbackTitle: 'Dùng mã PIN',
+            cancelButton: 'Hủy',
           ),
         ],
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-          useErrorDialogs: true,
-
-        ),
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
       );
     } catch (e) {
       debugPrint('[MilitaryLock] Biometric error: ${AppErrorMapper.resolve(
