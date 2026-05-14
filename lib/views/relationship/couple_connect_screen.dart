@@ -429,7 +429,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                   if (raw == null || raw.isEmpty) return;
                   unawaited(_handleValue(raw, source: 'camera'));
                 },
-                errorBuilder: (context, error, child) {
+                errorBuilder: (context, error) {
                   return Container(
                     color: const Color(0xFF111827),
                     padding: const EdgeInsets.all(24),

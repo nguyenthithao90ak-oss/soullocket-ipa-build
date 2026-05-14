@@ -408,7 +408,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
             MobileScanner(
               controller: _controller,
               onDetect: _onDetect,
-              errorBuilder: (context, error, child) {
+              errorBuilder: (context, error) {
                 return Container(
                   color: const Color(0xFF0B0B0D),
                   padding: const EdgeInsets.all(24),

@@ -812,7 +812,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                       MobileScanner(
                         controller: _scannerController,
                         onDetect: _onDetect,
-                        placeholderBuilder: (context, child) => Container(
+                        placeholderBuilder: (context) => Container(
                           color: const Color(0xFF111827),
                           child: const Center(
                             child: CircularProgressIndicator(
@@ -820,7 +820,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                             ),
                           ),
                         ),
-                        errorBuilder: (context, error, child) {
+                        errorBuilder: (context, error) {
                           return Container(
                             color: const Color(0xFF111827),
                             padding: SLSpacing.all20,

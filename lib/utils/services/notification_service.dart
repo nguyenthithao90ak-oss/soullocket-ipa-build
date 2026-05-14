@@ -123,13 +123,21 @@ class NotificationService {
           requestSoundPermission: true,
         );
 
+        const WindowsInitializationSettings windowsSettings =
+            WindowsInitializationSettings(
+          appName: 'SoulLocket',
+          appUserModelId: 'SoulLocket.App',
+          guid: '8d76c80d-3f20-4f42-9ad0-7f3f148bf17c',
+        );
+
         const InitializationSettings initSettings = InitializationSettings(
           android: androidSettings,
           iOS: iosSettings,
+          windows: windowsSettings,
         );
 
         await _localNotif.initialize(
-          initSettings,
+          settings: initSettings,
           onDidReceiveNotificationResponse: _onNotificationTap,
         );
 
@@ -452,10 +460,10 @@ class NotificationService {
     final notificationId = _notificationIdForPayload(payloadData, key);
 
     await _localNotif.show(
-      notificationId,
-      title,
-      body,
-      _notificationDetails(isCinemaInvite: isCinemaInvite),
+      id: notificationId,
+      title: title,
+      body: body,
+      notificationDetails: _notificationDetails(isCinemaInvite: isCinemaInvite),
       payload: jsonEncode(payloadData),
     );
   }
@@ -558,18 +566,16 @@ class NotificationService {
     if (!await _ensureTimeZoneReady()) return;
 
     await _localNotif.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      _notificationDetails(),
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails: _notificationDetails(),
       payload: jsonEncode(<String, dynamic>{
         'screen': 'home',
         'type': 'scheduled_local',
       }),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -589,28 +595,26 @@ class NotificationService {
     final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
     final displayName = await _resolveSleepReminderDisplayName(prefs, role);
 
-    await _localNotif.cancel(_dailySleepReminderId);
+    await _localNotif.cancel(id: _dailySleepReminderId);
     await _localNotif.zonedSchedule(
-      _dailySleepReminderId,
-      buildSleepReminderTitle(displayName),
-      buildSleepReminderMessage(displayName),
-      _nextDailySleepReminderTime(),
-      _notificationDetails(),
+      id: _dailySleepReminderId,
+      title: buildSleepReminderTitle(displayName),
+      body: buildSleepReminderMessage(displayName),
+      scheduledDate: _nextDailySleepReminderTime(),
+      notificationDetails: _notificationDetails(),
       payload: jsonEncode(<String, dynamic>{
         'screen': 'home',
         'type': 'daily_sleep_reminder',
         'role': role,
       }),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.wallClockTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
   Future<void> cancelDailySleepReminder() async {
     if (!_isInitialized) return;
-    await _localNotif.cancel(_dailySleepReminderId);
+    await _localNotif.cancel(id: _dailySleepReminderId);
   }
 
   String buildSleepReminderTitle(String displayName) {
