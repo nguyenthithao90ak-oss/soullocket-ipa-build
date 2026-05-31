@@ -25,7 +25,7 @@ struct SoulLocketLiveActivity: Widget {
                 HStack {
                     Text("💞 SoulLocket")
                         .font(.system(.headline, design: .rounded))
-                        .foregroundColor(Color(hex: "FF4D73"))
+                        .foregroundColor(Color(hexStr: "FF4D73"))
                     Spacer()
                     Text(context.attributes.title)
                         .font(.system(.subheadline, design: .rounded))
@@ -40,12 +40,12 @@ struct SoulLocketLiveActivity: Widget {
                     Text(timerInterval: Date()...context.state.endTime, countsDown: true)
                         .font(.system(.title3, design: .rounded))
                         .bold()
-                        .foregroundColor(Color(hex: "FF4D73"))
+                        .foregroundColor(Color(hexStr: "FF4D73"))
                         .monospacedDigit()
                 }
             }
             .padding()
-            .activityBackgroundTint(Color(hex: "FFEEF5"))
+            .activityBackgroundTint(Color(hexStr: "FFEEF5"))
             .activitySystemActionForegroundColor(Color.black)
         } dynamicIsland: { context in
             DynamicIsland {
@@ -56,14 +56,14 @@ struct SoulLocketLiveActivity: Widget {
                         Text("SoulLocket")
                             .font(.system(.body, design: .rounded))
                             .bold()
-                            .foregroundColor(Color(hex: "FF8FB1"))
+                            .foregroundColor(Color(hexStr: "FF8FB1"))
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     Text(timerInterval: Date()...context.state.endTime, countsDown: true)
                         .font(.system(.body, design: .rounded))
                         .bold()
-                        .foregroundColor(Color(hex: "FF4D73"))
+                        .foregroundColor(Color(hexStr: "FF4D73"))
                         .monospacedDigit()
                 }
                 DynamicIslandExpandedRegion(.bottom) {
@@ -78,7 +78,7 @@ struct SoulLocketLiveActivity: Widget {
                 Text(timerInterval: Date()...context.state.endTime, countsDown: true)
                     .font(.system(.caption2, design: .rounded))
                     .bold()
-                    .foregroundColor(Color(hex: "FF4D73"))
+                    .foregroundColor(Color(hexStr: "FF4D73"))
                     .monospacedDigit()
             } minimal: {
                 Text("💞")
@@ -89,8 +89,8 @@ struct SoulLocketLiveActivity: Widget {
 
 // Extension helper cho màu Color từ mã Hex để dùng thống nhất trong hệ thống giao diện
 fileprivate extension Color {
-    init(hex: String) {
-        let sanitized = hex.replacingOccurrences(of: "#", with: "")
+    init(hexStr: String) {
+        let sanitized = hexStr.replacingOccurrences(of: "#", with: "")
         var value: UInt64 = 0
         Scanner(string: sanitized).scanHexInt64(&value)
 
