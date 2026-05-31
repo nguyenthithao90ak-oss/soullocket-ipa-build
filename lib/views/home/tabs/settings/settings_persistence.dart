@@ -1,4 +1,4 @@
-﻿part of '../settings_tab.dart';
+part of '../settings_tab.dart';
 
 const Duration _countdownAdUnlockWindow = Duration(days: 7);
 const List<String> _countdownPremiumStyleKeys = <String>[
@@ -681,11 +681,10 @@ extension _SettingsTabPersistence on _SettingsTabState {
       // Trigger notifier assignment to ensure listeners redraw even when
       // copyWith values are same as current saved state edge-cases.
       UiPrefs.notifier.value = UiPrefs.notifier.value.copyWith();
-        _showToast(
-          successMsg,
-          success: true,
-        );
-      }
+      _showToast(
+        successMsg,
+        success: true,
+      );
     } catch (e) {
       if (!mounted) return;
       if (!silent) {
