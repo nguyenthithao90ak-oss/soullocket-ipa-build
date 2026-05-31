@@ -55,12 +55,12 @@ String _singleMatchAvailableModesLabel({
   required bool canVideoCall,
 }) {
   if (canAudioCall && canVideoCall) {
-    return 'Thoại hoặc video đều được';
+    return L10nService().translate('match_thoihocvid_61d810');
   }
   if (canVideoCall) {
-    return 'Ưu tiên video call';
+    return L10nService().translate('match_utinvideoc_f3b4fe');
   }
-  return 'Có thể gọi thoại ngay';
+  return L10nService().translate('match_cthgithoin_b1c34e');
 }
 
 String _singleMatchBuildCandidatePreviewText(
@@ -93,13 +93,13 @@ String _singleMatchChoiceLabel(List<_MatchChoice> options, String value) {
 
 String _singleMatchFormatRelativeTime(int epochMs) {
   if (epochMs <= 0) {
-    return 'Vừa xong';
+    return L10nService().translate('match_vaxong_e92d16');
   }
   final diff = DateTime.now().difference(
     DateTime.fromMillisecondsSinceEpoch(epochMs),
   );
   if (diff.inMinutes < 1) {
-    return 'Vừa xong';
+    return L10nService().translate('match_vaxong_e92d16');
   }
   if (diff.inMinutes < 60) {
     return '${diff.inMinutes} phút trước';
@@ -118,7 +118,7 @@ String _singleMatchFormatRelativeTime(int epochMs) {
 
 String _singleMatchFormatDuration(int seconds) {
   if (seconds <= 0) {
-    return 'Chưa bắt máy rõ';
+    return L10nService().translate('match_chabtmyr_9abb94');
   }
   final minutes = seconds ~/ 60;
   final remain = seconds % 60;
@@ -242,7 +242,7 @@ class _StreamGroup {
           debugPrint(
             '[SingleMatch] merged stream failed: ${AppErrorMapper.resolve(
               error,
-              fallbackMessage: 'Không thể tải dữ liệu Single Match.',
+              fallbackMessage: L10nService().translate('match_khngthtidl_74b99d'),
             ).message}',
           );
         },

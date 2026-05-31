@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import '../../core/constants/app_config.dart';
@@ -85,7 +86,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
         _errorText = AppErrorMapper.resolve(
           error,
           fallbackMessage:
-              'Chưa thể tải cấu hình hệ thống. Hãy kiểm tra quyền quản trị và kết nối rồi thử lại.',
+              context.tr('admin_chathticuh_10b42f'),
         ).message;
       });
     } finally {
@@ -119,18 +120,18 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       if (!mounted) return;
       setState(() => _isMaintenanceMode = value);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(value ? 'Đã bật bảo trì' : 'Đã tắt bảo trì')),
+        SnackBar(content: Text(value ? context.tr('admin_btbotr_26d9dd') : context.tr('admin_ttbotr_75a6e2'))),
       );
     } catch (error) {
       if (!mounted) return;
       final errorInfo = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Chưa thể cập nhật trạng thái bảo trì lúc này.',
+        fallbackMessage: context.tr('admin_chathcpnht_68b279'),
       );
       debugPrint('Toggle maintenance failed: ${errorInfo.message}');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể cập nhật trạng thái bảo trì lúc này.'),
+        SnackBar(
+          content: Text(context.tr('admin_chathcpnht_68b279')),
         ),
       );
     }
@@ -152,19 +153,19 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(value
-                ? 'Đã bật bảo trì Cộng Đồng'
-                : 'Đã tắt bảo trì Cộng Đồng')),
+                ? context.tr('admin_btbotrcngn_0ee821')
+                : context.tr('admin_ttbotrcngn_668a0e'))),
       );
     } catch (error) {
       if (!mounted) return;
       final errorInfo = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Chưa thể cập nhật bảo trì cộng đồng lúc này.',
+        fallbackMessage: context.tr('admin_chathcpnht_df06b6'),
       );
       debugPrint('Toggle community maintenance failed: ${errorInfo.message}');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể cập nhật bảo trì cộng đồng lúc này.'),
+        SnackBar(
+          content: Text(context.tr('admin_chathcpnht_df06b6')),
         ),
       );
     }
@@ -190,20 +191,20 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã lưu thông báo bảo trì!')),
+        SnackBar(content: Text(context.tr('admin_luthngbobo_ffd83d'))),
       );
     } catch (error) {
       if (!mounted) return;
       final errorInfo = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Chưa thể lưu thông báo bảo trì lúc này.',
+        fallbackMessage: context.tr('admin_chathluthn_ed6103'),
       );
       debugPrint(
         'Save community maintenance settings failed: ${errorInfo.message}',
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể lưu thông báo bảo trì lúc này.'),
+        SnackBar(
+          content: Text(context.tr('admin_chathluthn_ed6103')),
         ),
       );
     }
@@ -214,10 +215,15 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
     final body = _bodyCtrl.text.trim();
     final targetId = _targetHouseIdCtrl.text.trim();
 
+    final inputErrorMsg = context.tr('admin_vuilngnhpy_5eed10');
+    final noHousesMsg = context.tr('admin_khngtmthyn_fd9b5f');
+    final systemAdminFrom = context.tr('admin_hthngadmin_432841');
+    final errorFallback = context.tr('admin_chathgithn_2acce6');
+
     if (title.isEmpty || body.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Vui lòng nhập đầy đủ tiêu đề và nội dung')),
+        SnackBar(
+            content: Text(inputErrorMsg)),
       );
       return;
     }
@@ -231,7 +237,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       } else {
         // 1. Fetch all active houses
         final housesSnap = await _db.child('houses').get();
-        if (!housesSnap.exists) throw 'Không tìm thấy nhà nào';
+        if (!housesSnap.exists) throw noHousesMsg;
 
         final houses = Map<dynamic, dynamic>.from(housesSnap.value as Map);
         houseIds = houses.keys.map((k) => k.toString()).toList();
@@ -242,7 +248,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       for (final hid in houseIds) {
         batch.add(_db.child('notifications/$hid').push().set({
           'type': 'system',
-          'from': 'Hệ Thống (Admin)',
+          'from': systemAdminFrom,
           'title': title,
           'msg': body, // Using msg instead of content to match push() in helper
           'ts': ServerValue.timestamp,
@@ -277,12 +283,12 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       if (!mounted) return;
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể gửi thông báo lúc này. Vui lòng thử lại.',
+        fallbackMessage: errorFallback,
       );
       debugPrint('Send notification failed: ${errorInfo.message}');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể gửi thông báo lúc này. Vui lòng thử lại.'),
+        SnackBar(
+          content: Text(errorFallback),
         ),
       );
     } finally {
@@ -302,7 +308,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
               child: Column(
                 children: [
                   AdminTopBar(
-                    title: 'Cấu hình Hệ thống & Thông báo',
+                    title: context.tr('admin_cuhnhhthng_73c643'),
                     user: widget.user,
                     isRefreshing: _isRefreshing,
                     lastUpdatedAt: _lastUpdatedAt,
@@ -338,7 +344,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'Chế độ bảo trì',
+                                                  context.tr('admin_chbotr_a5b13d'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 18,
@@ -349,13 +355,13 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                 SwitchListTile(
                                                   contentPadding:
                                                       EdgeInsets.zero,
-                                                  title: const Text(
-                                                      'Bật bảo trì toàn hệ thống',
-                                                      style: TextStyle(
+                                                  title: Text(
+                                                      context.tr('admin_btbotrtonh_31085d'),
+                                                      style: const TextStyle(
                                                           color: Colors.white)),
-                                                  subtitle: const Text(
-                                                      'Người dùng thường sẽ không thể truy cập app',
-                                                      style: TextStyle(
+                                                  subtitle: Text(
+                                                      context.tr('admin_ngidngthng_70f24c'),
+                                                      style: const TextStyle(
                                                           color: Colors.grey)),
                                                   value: _isMaintenanceMode,
                                                   onChanged: _toggleMaintenance,
@@ -365,13 +371,13 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                 SwitchListTile(
                                                   contentPadding:
                                                       EdgeInsets.zero,
-                                                  title: const Text(
-                                                      'Bảo trì Cộng Đồng (Social Feed)',
-                                                      style: TextStyle(
+                                                  title: Text(
+                                                      context.tr('admin_botrcngngs_d286ae'),
+                                                      style: const TextStyle(
                                                           color: Colors.white)),
-                                                  subtitle: const Text(
-                                                      'Chỉ khóa tab Cộng Đồng, các tính năng khác vẫn dùng bình thường',
-                                                      style: TextStyle(
+                                                  subtitle: Text(
+                                                      context.tr('admin_chkhatabcn_c5ab3c'),
+                                                      style: const TextStyle(
                                                           color: Colors.grey)),
                                                   value:
                                                       _isCommunityMaintenanceMode,
@@ -388,22 +394,22 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                       color: Colors.white),
                                                   maxLines: 2,
                                                   decoration:
-                                                      const InputDecoration(
+                                                      InputDecoration(
                                                     labelText:
-                                                        'Lời nhắn bảo trì',
-                                                    labelStyle: TextStyle(
+                                                        context.tr('admin_linhnbotr_067aa4'),
+                                                    labelStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     hintText:
-                                                        'Mặc định: Tính năng mạng xã hội tạm thời đóng...',
-                                                    hintStyle: TextStyle(
+                                                        context.tr('admin_mcnhtnhnng_d9687b'),
+                                                    hintStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     enabledBorder:
-                                                        OutlineInputBorder(
+                                                        const OutlineInputBorder(
                                                       borderSide: BorderSide(
                                                           color: Colors.grey),
                                                     ),
                                                     focusedBorder:
-                                                        OutlineInputBorder(
+                                                        const OutlineInputBorder(
                                                       borderSide: BorderSide(
                                                           color: Color(
                                                               0xFFFF4B91)),
@@ -417,22 +423,22 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   style: const TextStyle(
                                                       color: Colors.white),
                                                   decoration:
-                                                      const InputDecoration(
+                                                      InputDecoration(
                                                     labelText:
-                                                        'Dự kiến mở lại (Tùy chọn)',
-                                                    labelStyle: TextStyle(
+                                                        context.tr('admin_dkinmlityc_02d30d'),
+                                                    labelStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     hintText:
-                                                        'Ví dụ: 15:30 ngày hôm nay',
-                                                    hintStyle: TextStyle(
+                                                        context.tr('admin_vd1530ngyh_3994f5'),
+                                                    hintStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     enabledBorder:
-                                                        OutlineInputBorder(
+                                                        const OutlineInputBorder(
                                                       borderSide: BorderSide(
                                                           color: Colors.grey),
                                                     ),
                                                     focusedBorder:
-                                                        OutlineInputBorder(
+                                                        const OutlineInputBorder(
                                                       borderSide: BorderSide(
                                                           color: Color(
                                                               0xFFFF4B91)),
@@ -456,9 +462,9 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                           horizontal: 24,
                                                           vertical: 12),
                                                     ),
-                                                    child: const Text(
-                                                        'Lưu thông báo',
-                                                        style: TextStyle(
+                                                    child: Text(
+                                                        context.tr('admin_luthngbo_188629'),
+                                                        style: const TextStyle(
                                                             color:
                                                                 Colors.white)),
                                                   ),
@@ -479,7 +485,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'Gửi thông báo đẩy (System)',
+                                                  context.tr('admin_githngboys_2d765a'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 18,
@@ -487,9 +493,9 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   ),
                                                 ),
                                                 SLSpacing.h8,
-                                                const Text(
-                                                    'Gửi trực tiếp vào hòm thư của người dùng.',
-                                                    style: TextStyle(
+                                                Text(
+                                                    context.tr('admin_gitrctipvo_eb8f27'),
+                                                    style: const TextStyle(
                                                         color: Colors.grey)),
                                                 SLSpacing.h16,
                                                 TextField(
@@ -498,19 +504,19 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   style: const TextStyle(
                                                       color: Colors.white),
                                                   decoration:
-                                                      const InputDecoration(
+                                                      InputDecoration(
                                                     labelText:
-                                                        'ID Nhà (Để trống nếu muốn gửi toàn Server)',
-                                                    labelStyle: TextStyle(
+                                                        context.tr('admin_idnhtrngnu_62421e'),
+                                                    labelStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     enabledBorder:
-                                                        OutlineInputBorder(
+                                                        const OutlineInputBorder(
                                                             borderSide:
                                                                 BorderSide(
                                                                     color: Colors
                                                                         .grey)),
                                                     focusedBorder:
-                                                        OutlineInputBorder(
+                                                        const OutlineInputBorder(
                                                             borderSide: BorderSide(
                                                                 color: Color(
                                                                     0xFFFF4B91))),
@@ -522,19 +528,19 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   style: const TextStyle(
                                                       color: Colors.white),
                                                   decoration:
-                                                      const InputDecoration(
+                                                      InputDecoration(
                                                     labelText:
-                                                        'Tiêu đề thông báo',
-                                                    labelStyle: TextStyle(
+                                                        context.tr('admin_tiuthngbo_ea017e'),
+                                                    labelStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     enabledBorder:
-                                                        OutlineInputBorder(
+                                                        const OutlineInputBorder(
                                                             borderSide:
                                                                 BorderSide(
                                                                     color: Colors
                                                                         .grey)),
                                                     focusedBorder:
-                                                        OutlineInputBorder(
+                                                        const OutlineInputBorder(
                                                             borderSide: BorderSide(
                                                                 color: Color(
                                                                     0xFFFF4B91))),
@@ -547,18 +553,18 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   style: const TextStyle(
                                                       color: Colors.white),
                                                   decoration:
-                                                      const InputDecoration(
-                                                    labelText: 'Nội dung',
-                                                    labelStyle: TextStyle(
+                                                      InputDecoration(
+                                                    labelText: context.tr('admin_nidung_ee7ca5'),
+                                                    labelStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     enabledBorder:
-                                                        OutlineInputBorder(
+                                                        const OutlineInputBorder(
                                                             borderSide:
                                                                 BorderSide(
                                                                     color: Colors
                                                                         .grey)),
                                                     focusedBorder:
-                                                        OutlineInputBorder(
+                                                        const OutlineInputBorder(
                                                             borderSide: BorderSide(
                                                                 color: Color(
                                                                     0xFFFF4B91))),
@@ -582,9 +588,9 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                     icon: const Icon(
                                                         Icons.send_rounded,
                                                         color: Colors.white),
-                                                    label: const Text(
-                                                        'Phát Thông Báo',
-                                                        style: TextStyle(
+                                                    label: Text(
+                                                        context.tr('admin_phtthngbo_b92386'),
+                                                        style: const TextStyle(
                                                             color: Colors.white,
                                                             fontWeight:
                                                                 FontWeight

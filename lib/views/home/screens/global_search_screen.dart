@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../core/sl_route.dart';
 import '../../../services/global_search_service.dart';
 import '../../utilities/history_screen.dart';
 
@@ -148,10 +150,9 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
 
     if (!mounted) return;
     if (result.actionId == 'history') {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => HistoryScreen(houseId: widget.houseId),
-        ),
+      await slPush(
+        context,
+        HistoryScreen(houseId: widget.houseId),
       );
     }
   }
@@ -166,7 +167,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       children: [
         if (defaultResults.isNotEmpty) ...[
-          _buildSearchSectionHeader('Gợi ý cần thiết'),
+          _buildSearchSectionHeader(context.tr('home_gicnthit_96156a')),
           const SizedBox(height: 8),
           ...defaultResults.map(
             (result) => Padding(
@@ -183,12 +184,12 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         if (_recentSearches.isNotEmpty) ...[
           Row(
             children: [
-              _buildSearchSectionHeader('Tìm kiếm gần đây'),
+              _buildSearchSectionHeader(context.tr('home_tmkimgny_6201df')),
               const Spacer(),
               TextButton(
                 onPressed: _clearRecentSearches,
                 child: Text(
-                  'Xóa',
+                  context.tr('home_xa_4ed187'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     color: const Color(0xFF7A8598),
@@ -214,7 +215,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
             child: Padding(
               padding: const EdgeInsets.only(top: 120),
               child: Text(
-                'Nhập từ khóa để tìm trong app.',
+                context.tr('home_nhptkhatmt_9d989f'),
                 style: SLTheme.quicksand(
                   color: const Color(0xFF7A8598),
                   fontWeight: FontWeight.w700,
@@ -341,7 +342,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Gần đây',
+                            context.tr('home_gny_a3ae09'),
                             style: SLTheme.quicksand(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w800,
@@ -394,7 +395,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       backgroundColor: const Color(0xFFF7F8FC),
       appBar: AppBar(
         title: Text(
-          'Tìm kiếm',
+          context.tr('home_tmkim_8929ef'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             color: const Color(0xFF243042),
@@ -413,7 +414,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
               autofocus: true,
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                hintText: 'Tìm tiện ích hoặc lịch sử hoạt động...',
+                hintText: context.tr('home_tmtinchhoc_b42fd7'),
                 prefixIcon: const Icon(Icons.search_rounded),
                 filled: true,
                 fillColor: Colors.white,
@@ -436,7 +437,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                         ? _buildIdleSearchContent()
                         : Center(
                             child: Text(
-                              'Chưa có kết quả phù hợp.',
+                              context.tr('home_chacktquph_868a34'),
                               style: SLTheme.quicksand(
                                 color: const Color(0xFF7A8598),
                                 fontWeight: FontWeight.w700,

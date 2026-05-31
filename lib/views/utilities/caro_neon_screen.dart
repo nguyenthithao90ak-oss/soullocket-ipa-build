@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,8 +45,8 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
   bool _isBusy = false;
   String? _houseId;
   String _myRole = 'user1';
-  String _user1Name = 'Bạn nam';
-  String _user2Name = 'Bạn nữ';
+  String _user1Name = 'Bạn Nam';
+  String _user2Name = 'Bạn Nữ';
   int _selectedWinLength = 3;
   bool _soundEnabled = true;
   _CaroPlayMode _playMode = _CaroPlayMode.house;
@@ -103,9 +104,9 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
       _houseId = houseId?.trim().isNotEmpty == true ? houseId!.trim() : null;
       _myRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       _user1Name =
-          settings.nameU1.trim().isEmpty ? 'Bạn nam' : settings.nameU1.trim();
+          settings.nameU1.trim().isEmpty ? context.tr('util_bnnam_694d9e') : settings.nameU1.trim();
       _user2Name =
-          settings.nameU2.trim().isEmpty ? 'Bạn nữ' : settings.nameU2.trim();
+          settings.nameU2.trim().isEmpty ? context.tr('util_bnn_14cea6') : settings.nameU2.trim();
       _soundEnabled = UiPrefs.notifier.value.touchSound;
       _isLoading = false;
     });
@@ -124,28 +125,28 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
   int _boardSizeFor(int winLength) => winLength == 5 ? 10 : 3;
 
   String _modeLabel(int winLength) {
-    return winLength == 5 ? '5 ô thắng' : '3 ô thắng';
+    return winLength == 5 ? context.tr('util_5thng_5e66bf') : context.tr('util_3thng_080f34');
   }
 
   String _botStyleLabel(_BotStyle style) {
     switch (style) {
       case _BotStyle.gentle:
-        return 'Hiền';
+        return context.tr('util_hin_00f6d7');
       case _BotStyle.balanced:
-        return 'Cân bằng';
+        return context.tr('util_cnbng_25c728');
       case _BotStyle.tricky:
-        return 'Tinh quái';
+        return context.tr('util_tinhqui_51118a');
     }
   }
 
   String _botStyleDescription(_BotStyle style) {
     switch (style) {
       case _BotStyle.gentle:
-        return 'Nhường nhẹ hơn, dễ thở hơn và hay chọn nước an toàn.';
+        return context.tr('util_nhngnhhndt_ff8a31');
       case _BotStyle.balanced:
-        return 'Đánh gọn, đều tay và bàn 3 ô cố tình lệch nhịp nhẹ.';
+        return context.tr('util_nhgnutayvb_ae1c67');
       case _BotStyle.tricky:
-        return 'Ưu tiên gài thế nhanh, chặn gắt hơn và ít mắc lỗi hơn.';
+        return context.tr('util_utingithnh_fafbad');
     }
   }
 
@@ -252,17 +253,17 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
 
   String _badgeLabel(CaroRoom? houseRoom) {
     if (_playMode == _CaroPlayMode.bot) {
-      if (_botThinking) return 'BOT ĐANG NGHĨ';
+      if (_botThinking) return context.tr('util_botangngh_e997cd');
       final room = _botRoom;
-      if (room == null) return 'BOT SẴN SÀNG';
-      return room.isDone ? 'BOT XONG' : 'BOT ĐANG CHƠI';
+      if (room == null) return context.tr('util_botsnsng_f356f9');
+      return room.isDone ? 'BOT XONG' : context.tr('util_botangchi_d26c0a');
     }
-    if (houseRoom == null) return 'SẴN SÀNG';
-    if (houseRoom.isWaiting) return 'ĐANG CHỜ';
-    if (houseRoom.isActive) return 'ĐANG CHƠI';
-    if (houseRoom.isDraw) return 'HÒA';
-    if (houseRoom.isDone) return 'KẾT THÚC';
-    return 'SẴN SÀNG';
+    if (houseRoom == null) return context.tr('util_snsng_baaa25');
+    if (houseRoom.isWaiting) return context.tr('util_angch_7a6550');
+    if (houseRoom.isActive) return context.tr('util_angchi_c83f37');
+    if (houseRoom.isDraw) return context.tr('util_ha_7ed50f');
+    if (houseRoom.isDone) return context.tr('util_ktthc_1856c2');
+    return context.tr('util_snsng_baaa25');
   }
 
   Future<void> _playTapFx() async {
@@ -370,7 +371,7 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
       _focusArenaViewport();
       unawaited(_playAlertFx());
       _showSnack(
-        'Đã mở bàn ${winLength == 5 ? '5 ô thắng' : '3 ô thắng'} và gửi lời mời cho $_partnerName.',
+        L10nService().format('util_caro_table_opened_invite', {'mode': winLength == 5 ? context.tr('util_5thng_5e66bf') : context.tr('util_3thng_080f34'), 'name': _partnerName}),
       );
     });
   }
@@ -389,7 +390,7 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
         _focusArenaViewport();
       }
       unawaited(_playAlertFx());
-      _showSnack(joined ? 'Đã vào bàn cờ.' : 'Không thể tham gia bàn này.');
+      _showSnack(joined ? context.tr('util_vobnc_cb57cb') : context.tr('util_khngththam_254fbc'));
     });
   }
 
@@ -401,7 +402,7 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
       if (!mounted) return;
       setState(() => _sceneTab = _CaroSceneTab.lounge);
       unawaited(_playTapFx());
-      _showSnack('Đã dọn bàn cờ.');
+      _showSnack(context.tr('util_dnbnc_221281'));
     });
   }
 
@@ -427,7 +428,7 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
         winLength: winLength,
       );
       if (!mounted) return;
-      _showSnack('Đã mở ván mới ${_modeLabel(winLength).toLowerCase()}.');
+      _showSnack(L10nService().format('util_caro_new_match_opened', {'mode': _modeLabel(winLength).toLowerCase()}));
       unawaited(_playAlertFx());
     });
   }
@@ -462,7 +463,7 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
     if (houseId == null || !room.isActive) return;
     if (room.turnRole != _myRole) {
       unawaited(_playTapFx());
-      _showSnack('Chưa tới lượt bạn.');
+      _showSnack(context.tr('util_chatiltbn_4021b5'));
       return;
     }
     if (room.cellAt(row, col) != null) return;
@@ -488,7 +489,7 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
     if (room == null || !room.isActive || _botThinking) return;
     if (room.turnRole != _myRole) {
       unawaited(_playTapFx());
-      _showSnack('Bot đang tính nước đi.');
+      _showSnack(context.tr('util_botangtnhn_9d9a3d'));
       return;
     }
 
@@ -633,96 +634,96 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
 
   String _statusText(CaroRoom? room) {
     if (room == null) {
-      return 'Bắt đầu trong không gian riêng bằng cách tạo bàn mới rồi mời $_partnerName vào chơi.';
+      return L10nService().format('util_caro_start_private_hint', {'name': _partnerName});
     }
     if (room.isWaiting) {
       if (room.createdByRole == _myRole) {
-        return 'Đang chờ $_partnerName vào bàn ${_modeLabel(room.winLength)}.';
+        return L10nService().format('util_caro_waiting_partner', {'name': _partnerName, 'mode': _modeLabel(room.winLength)});
       }
-      return '${_displayNameForRole(room.createdByRole)} đang mời bạn vào bàn ${_modeLabel(room.winLength)}.';
+      return L10nService().format('util_caro_inviting_you', {'name': _displayNameForRole(room.createdByRole), 'mode': _modeLabel(room.winLength)});
     }
     if (room.isActive) {
       if (room.turnRole == _myRole) {
-        return 'Tới lượt bạn. Đặt ${room.symbolForRole(_myRole)} vào ô muốn đánh.';
+        return L10nService().format('util_caro_your_turn_place', {'symbol': room.symbolForRole(_myRole)});
       }
-      return 'Đang chờ ${_displayNameForRole(room.turnRole)} đi tiếp.';
+      return L10nService().format('util_caro_waiting_turn', {'name': _displayNameForRole(room.turnRole)});
     }
     if (room.isDraw) {
-      return 'Ván này hòa. Bạn có thể tạo ván mới ngay.';
+      return context.tr('util_vnnyhabnct_77070f');
     }
     if (room.winnerRole == _myRole) {
-      return 'Bạn vừa thắng. Tạo bàn mới để chơi tiếp.';
+      return context.tr('util_bnvathngto_d13e30');
     }
-    return '${_displayNameForRole(room.winnerRole)} đã thắng ván này.';
+    return L10nService().format('util_caro_winner_round', {'name': _displayNameForRole(room.winnerRole)});
   }
 
   String _botStatusText(CaroRoom? room) {
     if (room == null) {
-      return 'Bạn có thể chơi trong không gian riêng với người ấy hoặc mở Bot Neon để luyện tay.';
+      return context.tr('util_bncthchitr_6d2bdf');
     }
     if (_botThinking) {
-      return 'Bot Neon đang tính nước. Bot ưu tiên thắng ngay, chặn thua ngay và giữ thế trung tâm.';
+      return context.tr('util_botneonang_45582d');
     }
     if (room.isActive && room.turnRole == _myRole) {
-      return 'Tới lượt bạn. Bạn đánh X, bot đánh O.';
+      return context.tr('util_tiltbnbnnh_064c70');
     }
     if (room.isActive) {
-      return 'Bot Neon đang ra nước đi.';
+      return context.tr('util_botneonang_c4d96c');
     }
     if (room.isDraw) {
-      return 'Ván này hòa. Bạn có thể bắt đầu ván mới ngay.';
+      return context.tr('util_vnnyhabnct_8b6042');
     }
     if (room.winnerRole == _myRole) {
-      return 'Bạn đã thắng Bot Neon.';
+      return context.tr('util_bnthngbotn_b2d517');
     }
-    return 'Bot Neon vừa thắng ván này.';
+    return context.tr('util_botneonvat_179a25');
   }
 
   String _sceneStatusText(CaroRoom? room) {
     if (_playMode == _CaroPlayMode.bot) {
       if (room == null) {
-        return 'Chọn luật chơi rồi bấm Bắt đầu để vào bàn với Bot Neon.';
+        return context.tr('util_chnlutchir_faf13a');
       }
       if (_botThinking) {
-        return 'Bot Neon đang tính nước.';
+        return context.tr('util_botneonang_76c9e9');
       }
       if (room.isActive && room.turnRole == _myRole) {
-        return 'Tới lượt bạn. Bạn đánh X, bot đánh O.';
+        return context.tr('util_tiltbnbnnh_064c70');
       }
       if (room.isActive) {
-        return 'Bot Neon đang ra nước.';
+        return context.tr('util_botneonang_aaa9c1');
       }
       if (room.isDraw) {
-        return 'Ván này hòa. Có thể mở ván mới ngay.';
+        return context.tr('util_vnnyhacthm_c25b46');
       }
       if (room.winnerRole == _myRole) {
-        return 'Bạn đã thắng Bot Neon.';
+        return context.tr('util_bnthngbotn_b2d517');
       }
-      return 'Bot Neon thắng ván này.';
+      return context.tr('util_botneonthn_9d4917');
     }
 
     if (room == null) {
-      return 'Chọn luật chơi rồi bấm Bắt đầu để mở bàn riêng.';
+      return context.tr('util_chnlutchir_1b4278');
     }
     if (room.isWaiting) {
       if (room.createdByRole == _myRole) {
-        return 'Đã mở bàn ${_modeLabel(room.winLength)}. Chờ $_partnerName vào trận.';
+        return L10nService().format('util_caro_opened_waiting', {'mode': _modeLabel(room.winLength), 'name': _partnerName});
       }
-      return '${_displayNameForRole(room.createdByRole)} đã mở bàn ${_modeLabel(room.winLength)} cho bạn.';
+      return L10nService().format('util_caro_opened_for_you', {'name': _displayNameForRole(room.createdByRole), 'mode': _modeLabel(room.winLength)});
     }
     if (room.isActive) {
       if (room.turnRole == _myRole) {
-        return 'Tới lượt bạn. Chạm ô trống để đặt ${room.symbolForRole(_myRole)}.';
+        return L10nService().format('util_caro_your_turn_tap', {'symbol': room.symbolForRole(_myRole)});
       }
-      return 'Đang chờ ${_displayNameForRole(room.turnRole)} ra nước.';
+      return L10nService().format('util_caro_waiting_move', {'name': _displayNameForRole(room.turnRole)});
     }
     if (room.isDraw) {
-      return 'Ván này hòa. Có thể mở bàn mới ngay.';
+      return context.tr('util_vnnyhacthm_5b064f');
     }
     if (room.winnerRole == _myRole) {
-      return 'Bạn vừa thắng ván này.';
+      return context.tr('util_bnvathngvn_5a2b5b');
     }
-    return '${_displayNameForRole(room.winnerRole)} vừa thắng ván này.';
+    return L10nService().format('util_caro_winner_just_won', {'name': _displayNameForRole(room.winnerRole)});
   }
 
   Future<void> _openStartChooser({
@@ -805,18 +806,18 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
   String _launchCardTitle(CaroRoom? room, bool isBotMode) {
     if (room == null) {
       return isBotMode
-          ? 'Bắt đầu nhanh với Bot Neon'
-          : 'Bắt đầu trong không gian riêng';
+          ? context.tr('util_btunhanhvi_cda8c5')
+          : context.tr('util_btutrongkh_329e97');
     }
     if (room.isWaiting) {
       return room.createdByRole == _myRole
-          ? 'Bàn đã sẵn sàng'
-          : 'Có lời mời đang chờ';
+          ? context.tr('util_bnsnsng_193b32')
+          : context.tr('util_climiangch_b68066');
     }
     if (room.isDone) {
-      return isBotMode ? 'Mở ván mới với Bot' : 'Bắt đầu ván mới';
+      return isBotMode ? context.tr('util_mvnmivibot_a7f0ea') : context.tr('util_btuvnmi_084494');
     }
-    return 'Tiếp tục bàn đấu';
+    return context.tr('util_tiptcbnu_546b49');
   }
 
   String _launchCardDescription(
@@ -827,47 +828,47 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
     final modeText = _modeLabel(winLength);
     if (room == null) {
       return isBotMode
-          ? 'Bấm Bắt đầu rồi chọn 3 ô hoặc 5 ô. Nếu muốn, bạn đổi luôn kiểu bot trước khi vào bàn.'
-          : 'Bấm Bắt đầu rồi chọn 3 ô hoặc 5 ô. Sau đó app mở bàn riêng và mời $_partnerName.';
+          ? context.tr('util_bmbturichn_459e3f')
+          : L10nService().format('util_caro_start_invite_desc', {'name': _partnerName});
     }
     if (room.isWaiting) {
       return room.createdByRole == _myRole
-          ? 'Lời mời đã gửi. Khi $_partnerName vào, tab Bàn đấu sẽ là nơi chơi chính.'
-          : 'Người ấy đã mở bàn $modeText. Bạn có thể vào trận ngay từ đây.';
+          ? L10nService().format('util_caro_invite_sent_desc', {'name': _partnerName})
+          : L10nService().format('util_caro_partner_opened_desc', {'mode': modeText});
     }
     if (room.isDone) {
       return isBotMode
-          ? 'Bấm Bắt đầu để chọn lại luật chơi hoặc kiểu bot rồi mở ván mới.'
-          : 'Bấm Bắt đầu để chọn lại 3 ô hoặc 5 ô rồi mở bàn mới.';
+          ? context.tr('util_bmbtuchnli_e54a69')
+          : context.tr('util_bmbtuchnli_180415');
     }
-    return 'Ván đang diễn ra. Chạm Bàn đấu để quay lại đúng khu chơi chính.';
+    return context.tr('util_vnangdinra_6707dd');
   }
 
   String _primaryLaunchLabel(CaroRoom? room, bool isBotMode) {
     if (isBotMode) {
-      if (room == null) return 'Bắt đầu với Bot';
-      if (room.isDone) return 'Ván mới với Bot';
-      return 'Vào bàn đấu';
+      if (room == null) return context.tr('util_btuvibot_9e8cf3');
+      if (room.isDone) return context.tr('util_vnmivibot_092422');
+      return context.tr('util_vobnu_961476');
     }
 
-    if (room == null) return 'Bắt đầu';
+    if (room == null) return context.tr('util_btu_3cb0f0');
     if (room.isWaiting && room.createdByRole != _myRole) {
       return 'Tham gia ngay';
     }
-    if (room.isDone) return 'Mở bàn mới';
-    return 'Vào bàn đấu';
+    if (room.isDone) return context.tr('util_mbnmi_4e809b');
+    return context.tr('util_vobnu_961476');
   }
 
   String _primaryLaunchCaption(CaroRoom? room, bool isBotMode) {
     if (room == null || room.isDone) {
       return isBotMode
-          ? 'Bấm xong sẽ chọn 3 ô, 5 ô và kiểu bot'
-          : 'Bấm xong sẽ chọn 3 ô hoặc 5 ô';
+          ? context.tr('util_bmxongschn_286a19')
+          : context.tr('util_bmxongschn_0bc7a6');
     }
     if (!isBotMode && room.isWaiting && room.createdByRole != _myRole) {
-      return 'Vào ngay bàn người ấy đã mở';
+      return context.tr('util_vongaybnng_b2a600');
     }
-    return 'Mở lại khu đánh riêng gọn hơn';
+    return context.tr('util_mlikhunhri_5f3ae7');
   }
 
   IconData _primaryLaunchIcon(CaroRoom? room, bool isBotMode) {
@@ -886,25 +887,25 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
   String _arenaBannerText(CaroRoom? room, bool isBotMode) {
     if (room == null) {
       return isBotMode
-          ? 'Chưa có ván với Bot. Quay lại Sảnh để bắt đầu nhanh.'
-          : 'Chưa có bàn riêng. Quay lại Sảnh để mở bàn.';
+          ? context.tr('util_chacvnvibo_478f79')
+          : context.tr('util_chacbnring_e8897c');
     }
     if (room.isWaiting) {
       return room.createdByRole == _myRole
-          ? 'Bàn đã mở, đang chờ $_partnerName vào.'
-          : 'Lời mời đã sẵn sàng, bạn có thể vào trận ngay.';
+          ? L10nService().format('util_caro_table_waiting_short', {'name': _partnerName})
+          : context.tr('util_limisnsngb_b65f70');
     }
     if (room.isActive) {
       return room.turnRole == _myRole
-          ? 'Tới lượt bạn. Chạm ô trống để đánh.'
-          : 'Đang chờ ${_displayNameForRole(room.turnRole)} ra nước.';
+          ? context.tr('util_tiltbnchmt_8fabaf')
+          : L10nService().format('util_caro_waiting_move', {'name': _displayNameForRole(room.turnRole)});
     }
     if (room.isDraw) {
-      return 'Ván này hòa. Có thể chơi lại ngay.';
+      return context.tr('util_vnnyhacthc_71bb39');
     }
     return room.winnerRole == _myRole
-        ? 'Bạn vừa thắng ván này.'
-        : '${_displayNameForRole(room.winnerRole)} vừa thắng.';
+        ? context.tr('util_bnvathngvn_5a2b5b')
+        : L10nService().format('util_caro_winner_short', {'name': _displayNameForRole(room.winnerRole)});
   }
 
   Widget _buildScreenBody() {
@@ -936,7 +937,7 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
   }) {
     final accent =
         isBotMode ? const Color(0xFFFF5E9E) : const Color(0xFF4EDBFF);
-    final roomLabel = isBotMode ? 'BOT NEON' : 'KHÔNG GIAN RIÊNG';
+    final roomLabel = isBotMode ? 'BOT NEON' : context.tr('util_khnggianri_165062');
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1077,8 +1078,8 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
                             const SizedBox(height: 6),
                             Text(
                               isBotMode
-                                  ? 'Chơi rõ ràng hơn với khu bắt đầu ở giữa và tab bàn đấu riêng.'
-                                  : 'Mở bàn từ Sảnh, sau đó đánh trong tab riêng cho gọn và dễ nhìn.',
+                                  ? context.tr('util_chirrnghnv_a3f8f4')
+                                  : context.tr('util_mbntsnhsau_bd583a'),
                               style: SLTheme.quicksand(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -1126,8 +1127,8 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
                                     const BoxConstraints(maxWidth: 620),
                                 child: _LaunchStageCard(
                                   badgeText: isBotMode
-                                      ? 'BẮT ĐẦU Ở GIỮA'
-                                      : 'SẢNH RIÊNG TƯ',
+                                      ? context.tr('util_btugia_789e76')
+                                      : context.tr('util_snhringt_111a2d'),
                                   title: _launchCardTitle(room, isBotMode),
                                   description: _launchCardDescription(
                                     room,
@@ -1163,8 +1164,8 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
                               children: [
                                 _ArenaStageBanner(
                                   title: isBotMode
-                                      ? 'Bàn đấu với Bot Neon'
-                                      : 'Bàn đấu riêng',
+                                      ? context.tr('util_bnuvibotne_e10d51')
+                                      : context.tr('util_bnuring_e5f9ef'),
                                   caption: _arenaBannerText(room, isBotMode),
                                   badgeText: _badgeLabel(room),
                                   accent: accent,
@@ -1272,8 +1273,8 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
                     const SizedBox(height: 6),
                     Text(
                       isBotMode
-                          ? 'Bắt đầu nhanh với Bot Neon để luyện phản xạ và thử chiến thuật.'
-                          : 'Bắt đầu trong không gian riêng để chơi theo thời gian thực cùng người ấy.',
+                          ? context.tr('util_btunhanhvi_0c82ac')
+                          : context.tr('util_btutrongkh_ecdcca'),
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -1290,11 +1291,11 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
           _StartBanner(
             icon: isBotMode ? Icons.smart_toy_rounded : Icons.home_rounded,
             title: isBotMode
-                ? 'Bắt đầu cùng Bot Neon'
-                : 'Bắt đầu trong không gian riêng',
+                ? context.tr('util_btucngbotn_807130')
+                : context.tr('util_btutrongkh_329e97'),
             description: isBotMode
-                ? 'Chạm để vào nhanh ván mới, luyện 3 ô hoặc 5 ô với nhịp chơi gọn và rõ.'
-                : 'Tạo bàn riêng, mời người ấy và giữ mọi thao tác ngay trong một màn hình gọn gàng.',
+                ? context.tr('util_chmvonhanh_093c90')
+                : context.tr('util_tobnringmi_27f48f'),
           ),
           const SizedBox(height: 16),
           Row(

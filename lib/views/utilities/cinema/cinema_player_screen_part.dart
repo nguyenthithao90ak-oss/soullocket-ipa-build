@@ -103,13 +103,13 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
     if (subtitle.isNotEmpty) {
       return subtitle;
     }
-    return 'Album ảnh được SoulLocket dựng riêng cho hôm nay.';
+    return context.tr('util_albumnhcso_007f75');
   }
 
   String get _exportTagLabel {
     final cleaned = _cleanReelLabel(widget.reel.title);
     if (cleaned.isEmpty) {
-      return 'Kỷ niệm trong ngày';
+      return context.tr('util_knimtrongn_4bf058');
     }
     return 'Kỷ niệm $cleaned';
   }
@@ -142,9 +142,9 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
   String _buildDefaultExportTitle(_CinemaDailyReel reel) {
     final cleaned = _cleanReelLabel(reel.title);
     if (cleaned.isEmpty) {
-      return 'Kỷ niệm album ảnh';
+      return context.tr('util_knimalbumn_62ecb7');
     }
-    if (cleaned.toLowerCase().startsWith('kỷ niệm')) {
+    if (cleaned.toLowerCase().startsWith(context.tr('util_knim_61098c'))) {
       return cleaned;
     }
     return 'Kỷ niệm album ảnh $cleaned';
@@ -154,7 +154,7 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
     setState(() {
       _isAdjustingTitlePosition = !_isAdjustingTitlePosition;
       if (_isAdjustingTitlePosition) {
-        _videoStatus = 'Kéo khối tiêu đề tới vị trí bạn muốn.';
+        _videoStatus = context.tr('util_kokhitiuti_18a059');
       }
     });
   }
@@ -175,7 +175,7 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
       _exportedVideoSignature = null;
       _videoProgress = null;
       _videoStatus =
-          'Vị trí tiêu đề đã thay đổi. Tạo lại video để xuất bản mới.';
+          context.tr('util_vtrtiuthay_12e0a5');
     });
   }
 
@@ -396,7 +396,7 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                     alignment: Alignment.centerRight,
                     child: _buildControlChip(
                       icon: Icons.tune_rounded,
-                      label: 'Cài đặt video',
+                      label: context.tr('util_citvideo_dbe045'),
                       onTap: () => _showVideoSettingsSheet(accent),
                       accent: accent,
                     ),

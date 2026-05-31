@@ -16,7 +16,7 @@ const Duration _kSettingsOtpVerifyTimeout = Duration(seconds: 15);
 String _sanitizeSettingsDialogError(Object error) {
   return AppErrorMapper.resolve(
     error,
-    fallbackMessage: 'Đã có lỗi xảy ra',
+    fallbackMessage: L10nService().translate('home_clixyra_775791'),
   ).message;
 }
 
@@ -52,6 +52,7 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
     BuildContext dialogContext,
     StateSetter setDialogState,
   ) async {
+    final timeoutMsg = context.tr('home_gimxcnhnqu_e64b92');
     setDialogState(() {
       isSending = true;
       sendError = null;
@@ -62,8 +63,7 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
     try {
       await sendCode().timeout(
         _kSettingsOtpSendTimeout,
-        onTimeout: () =>
-            throw Exception('Gửi mã xác nhận quá lâu. Vui lòng thử lại.'),
+        onTimeout: () => throw Exception(timeoutMsg),
       );
       if (!dialogContext.mounted) return;
       setDialogState(() => isSending = false);
@@ -112,7 +112,7 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                   isSending
                       ? 'Đang gửi mã xác nhận 6 số đến $email...\nBạn có thể chờ ngay tại bảng này.'
                       : isVerifying
-                          ? 'Đang kiểm tra mã...'
+                          ? context.tr('home_angkimtram_b80b59')
                           : sendError != null
                               ? 'Không gửi được mã:\n$sendError'
                               : verifyError != null
@@ -145,7 +145,7 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                     letterSpacing: 4,
                   ),
                   decoration: InputDecoration(
-                    labelText: 'Mã xác nhận',
+                    labelText: context.tr('home_mxcnhn_ef70d2'),
                     counterText: '',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -158,7 +158,7 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(
-                  'Hủy',
+                  context.tr('home_hy_1e4050'),
                   style: SLTheme.quicksand(
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w600,
@@ -169,7 +169,7 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                 TextButton(
                   onPressed: () => startSend(ctx, setDialogState),
                   child: Text(
-                    'Gửi lại',
+                    context.tr('home_gili_11a40e'),
                     style: SLTheme.quicksand(
                       color: const Color(0xFFD81B60),
                       fontWeight: FontWeight.bold,
@@ -186,12 +186,14 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                 ),
                 onPressed: canConfirm
                     ? () async {
+                        final verifyTimeoutMsg = context.tr('home_kimtramxcn_cd2cff');
+                        final invalidOtpMsg = context.tr('home_vuilngnhp6_526103');
                         final otp = otpCtrl.text.trim();
                         if (otp.length != 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content:
-                                  Text('Vui lòng nhập đủ 6 số mã xác nhận.'),
+                                  Text(invalidOtpMsg),
                             ),
                           );
                           return;
@@ -206,7 +208,7 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                           await verifyCode(otp).timeout(
                             _kSettingsOtpVerifyTimeout,
                             onTimeout: () => throw Exception(
-                              'Kiểm tra mã xác nhận quá lâu. Vui lòng thử lại.',
+                              verifyTimeoutMsg,
                             ),
                           );
                           if (ctx.mounted) Navigator.pop(ctx, true);
@@ -222,10 +224,10 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                     : null,
                 child: Text(
                   isSending
-                      ? 'Đang gửi...'
+                      ? context.tr('home_anggi_6b22c8')
                       : isVerifying
-                          ? 'Đang kiểm tra...'
-                          : 'Xác nhận',
+                          ? context.tr('home_angkimtra_92e8dd')
+                          : context.tr('home_xcnhn_1e2eb2'),
                   style: SLTheme.quicksand(
                     color: canConfirm ? Colors.white : Colors.black54,
                     fontWeight: FontWeight.bold,
@@ -262,6 +264,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
     BuildContext dialogContext,
     StateSetter setDialogState,
   ) async {
+    final timeoutMsg = context.tr('home_gimtlimtkh_135b6c');
     setDialogState(() {
       isSending = true;
       sendError = null;
@@ -274,7 +277,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
       await sendCode().timeout(
         _kSettingsOtpSendTimeout,
         onTimeout: () => throw Exception(
-          'Gửi mã đặt lại mật khẩu quá lâu. Vui lòng thử lại.',
+          timeoutMsg,
         ),
       );
       if (!dialogContext.mounted) return;
@@ -311,7 +314,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
               borderRadius: BorderRadius.circular(20),
             ),
             title: Text(
-              'Đặt lại mật khẩu bằng mã',
+              context.tr('home_tlimtkhubn_b840ab'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFFD81B60),
@@ -325,7 +328,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                     isSending
                         ? 'Đang gửi mã đặt lại mật khẩu đến $email...\nBảng nhập mã đã mở sẵn để bạn không phải chờ.'
                         : isVerifying
-                            ? 'Đang kiểm tra mã và đổi mật khẩu...'
+                            ? context.tr('home_angkimtram_9b5339')
                             : sendError != null
                                 ? 'Không gửi được mã:\n$sendError'
                                 : verifyError != null
@@ -358,7 +361,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                       letterSpacing: 4,
                     ),
                     decoration: InputDecoration(
-                      labelText: 'Mã xác nhận',
+                      labelText: context.tr('home_mxcnhn_ef70d2'),
                       counterText: '',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -376,8 +379,8 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                       }
                     },
                     decoration: InputDecoration(
-                      labelText: 'Mật khẩu mới',
-                      helperText: 'Tối thiểu 6 ký tự',
+                      labelText: context.tr('home_mtkhumi_ccef95'),
+                      helperText: context.tr('home_tithiu6kt_159f57'),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -402,7 +405,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(
-                  'Hủy',
+                  context.tr('home_hy_1e4050'),
                   style: SLTheme.quicksand(
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w600,
@@ -413,7 +416,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                 TextButton(
                   onPressed: () => startSend(ctx, setDialogState),
                   child: Text(
-                    'Gửi lại',
+                    context.tr('home_gili_11a40e'),
                     style: SLTheme.quicksand(
                       color: const Color(0xFFD81B60),
                       fontWeight: FontWeight.bold,
@@ -430,22 +433,25 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                 ),
                 onPressed: canConfirm
                     ? () async {
+                        final invalidOtpMsg = context.tr('home_vuilngnhp6_526103');
+                        final invalidPasswordMsg = context.tr('home_mtkhumiphi_472132');
+                        final verifyTimeoutMsg = context.tr('home_imtkhuqulu_bfeb3a');
                         final otp = otpCtrl.text.trim();
                         final newPassword = newPasswordCtrl.text;
                         if (otp.length != 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content:
-                                  Text('Vui lòng nhập đủ 6 số mã xác nhận.'),
+                                  Text(invalidOtpMsg),
                             ),
                           );
                           return;
                         }
                         if (newPassword.length < 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
-                                'Mật khẩu mới phải có ít nhất 6 ký tự.',
+                                invalidPasswordMsg,
                               ),
                             ),
                           );
@@ -461,7 +467,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                           await verifyCode(otp, newPassword).timeout(
                             _kSettingsOtpVerifyTimeout,
                             onTimeout: () => throw Exception(
-                              'Đổi mật khẩu quá lâu. Vui lòng thử lại.',
+                              verifyTimeoutMsg,
                             ),
                           );
                           if (ctx.mounted) Navigator.pop(ctx, true);
@@ -477,10 +483,10 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                     : null,
                 child: Text(
                   isSending
-                      ? 'Đang gửi...'
+                      ? context.tr('home_anggi_6b22c8')
                       : isVerifying
-                          ? 'Đang kiểm tra...'
-                          : 'Đổi mật khẩu',
+                          ? context.tr('home_angkimtra_92e8dd')
+                          : context.tr('home_imtkhu_ff6fe7'),
                   style: SLTheme.quicksand(
                     color: canConfirm ? Colors.white : Colors.black54,
                     fontWeight: FontWeight.bold,
@@ -522,6 +528,49 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
     if (raw == 'true' || raw == '1') return true;
     if (raw == 'false' || raw == '0') return false;
     return null;
+  }
+
+  String _formatPendingAccountDeletionDate(int epochMs) {
+    if (epochMs <= 0) return '';
+    final dt = DateTime.fromMillisecondsSinceEpoch(epochMs);
+    final dd = dt.day.toString().padLeft(2, '0');
+    final mm = dt.month.toString().padLeft(2, '0');
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final min = dt.minute.toString().padLeft(2, '0');
+    return '$dd/$mm/${dt.year} lúc $hh:$min';
+  }
+
+  Future<void> _loadPendingAccountDeletionState() async {
+    final houseId = _houseId?.trim() ?? '';
+    if (houseId.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _pendingAccountDeletionAtMs = 0;
+          _pendingAccountDeletionUid = '';
+        });
+      }
+      return;
+    }
+    try {
+      final snap = await _dbRef
+          .child('houses/$houseId')
+          .get()
+          .timeout(const Duration(seconds: 3));
+      final data = snap.value is Map
+          ? Map<String, dynamic>.from(
+              Map<dynamic, dynamic>.from(snap.value as Map))
+          : <String, dynamic>{};
+      final deletionAt = _toIntOrNull(data['scheduledDeletionAt']) ?? 0;
+      final deletionUid =
+          (data['scheduledDeletionUid'] ?? '').toString().trim();
+      if (!mounted) return;
+      setState(() {
+        _pendingAccountDeletionAtMs =
+            deletionAt > DateTime.now().millisecondsSinceEpoch ? deletionAt : 0;
+        _pendingAccountDeletionUid =
+            _pendingAccountDeletionAtMs > 0 ? deletionUid : '';
+      });
+    } catch (_) {}
   }
 
   int _loveDayCounter() {
@@ -590,6 +639,11 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
       return;
     }
 
+    final loveDaysUnitMsg = context.tr('home_ngyyu_722b21');
+    final loveHouseDefaultName = context.tr('home_nginhtnhyu_dbebce');
+    final maleRoleName = context.tr('role_male');
+    final femaleRoleName = context.tr('role_female');
+
     try {
       _houseId = await _houseService.getCurrentHouseId();
       final syncedRelationshipMode =
@@ -598,6 +652,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
         houseId: _houseId,
       );
       _bindBreakupRequestWatcher();
+      await _loadPendingAccountDeletionState();
 
       if (_houseId != null) {
         final houseSnapshot = await _dbRef
@@ -615,13 +670,15 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               (data['countdownTopLabel'] ?? data['greetingQuote'] ?? '')
                   .toString()
                   .trim();
-          final resolvedLoveUnit =
-              (data['countdownBottomLabel'] ?? data['dayUnit'] ?? 'ngày yêu')
-                  .toString()
-                  .trim();
+          final resolvedLoveUnit = (data['countdownBottomLabel'] ??
+                  data['dayUnit'] ??
+                  loveDaysUnitMsg)
+              .toString()
+              .trim();
           if (mounted) {
             setState(() {
-              _houseName = data['houseName'] ?? 'Ngôi Nhà Tình Yêu';
+              _houseName =
+                  data['houseName'] ?? loveHouseDefaultName;
               _homeShowHouseName = data.containsKey('homeShowHouseName')
                   ? (data['homeShowHouseName'] == true ||
                       data['homeShowHouseName'] == 'true')
@@ -631,14 +688,15 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                       data['homeShowTimer'] == 'true')
                   : false;
               _loveDate = data['startDate'] ?? '';
-              _nameU1 = data['nameU1'] ?? context.tr('role_male');
-              _nameU2 = data['nameU2'] ?? context.tr('role_female');
+              _nameU1 = data['nameU1'] ?? maleRoleName;
+              _nameU2 = data['nameU2'] ?? femaleRoleName;
               _avatarUrl1 = data['avtUser1'] ?? '';
               _avatarUrl2 = data['avtUser2'] ?? '';
               _dobU1 = data['dobU1'] ?? '';
               _dobU2 = data['dobU2'] ?? '';
-              _loveUnit =
-                  resolvedLoveUnit.isEmpty ? 'ngày yêu' : resolvedLoveUnit;
+              _loveUnit = resolvedLoveUnit.isEmpty
+                  ? loveDaysUnitMsg
+                  : resolvedLoveUnit;
               _relationshipMode = relMode;
               _musicAutoplay = _musicAutoplay;
               _draftThemeKey ??= (data['theme'] ?? '').toString().trim().isEmpty
@@ -693,6 +751,14 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _notifChat = _toBoolOrNull(data['notifChat']) ?? _notifChat;
               _notifFriend = _toBoolOrNull(data['notifFriend']) ?? _notifFriend;
               _notifHeart = _toBoolOrNull(data['notifHeart']) ?? _notifHeart;
+              _smartDiaryReminder = _toBoolOrNull(data['smartReminderDiary']) ??
+                  _smartDiaryReminder;
+              _smartCapsuleReminder =
+                  _toBoolOrNull(data['smartReminderCapsule']) ??
+                      _smartCapsuleReminder;
+              _smartLoveNoteReminder =
+                  _toBoolOrNull(data['smartReminderLoveNote']) ??
+                      _smartLoveNoteReminder;
               _touchSound = _toBoolOrNull(data['touchSound']) ?? _touchSound;
               _confettiFx = _toBoolOrNull(data['confettiFx']) ?? _confettiFx;
               _showWeather = _toBoolOrNull(data['showWeather']) ?? _showWeather;
@@ -785,21 +851,21 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
   }
 
   String _buildManagedPendingDeviceMessage([DeviceTrustState? trustState]) {
-    if (trustState == null || !trustState.exists || trustState.status == 'unknown') {
-      return 'Không thể xác minh độ tin cậy của thiết bị. Hãy kiểm tra mạng rồi thử lại.';
+    if (trustState == null ||
+        !trustState.exists ||
+        trustState.status == 'unknown') {
+      return context.tr('home_khngthxcmi_2b9511');
     }
     if (trustState.isBlocked) {
-      return 'Thiết bị này đang bị chặn. Hãy dùng thiết bị tin cậy để mở lại quyền truy cập.';
+      return context.tr('home_thitbnyang_23704c');
     }
 
     final unlockAtMs = trustState.autoApproveAtMs;
     final unlockLabel = _formatManagedPendingUnlockDate(unlockAtMs);
     final waitMessage = unlockLabel.isNotEmpty
         ? 'Hãy duyệt trên thiết bị tin cậy hoặc đợi đến $unlockLabel.'
-        : 'Hãy duyệt trên thiết bị tin cậy. Thời điểm tự được tin cậy sẽ hiển thị ngay khi hệ thống trả về.';
-    return 'Thiết bị này đang chờ duyệt nên tạm thời chưa thể chỉnh sửa phần Cài đặt. '
-        'Các mục khác trong ứng dụng vẫn dùng bình thường. '
-        '$waitMessage';
+        : context.tr('home_hyduyttrnt_a5b595');
+    return '${context.tr('home_thitbnyang_94c8c6')}${context.tr('home_ccmckhctro_11e074')}$waitMessage';
   }
 
   Future<bool> _ensureManagedSharedInfoWriteAccess({
@@ -837,7 +903,7 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
       debugPrint(
         '_ensureManagedSharedInfoWriteAccess failed: ${AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Đã có lỗi xảy ra',
+          fallbackMessage: L10nService().translate('home_clixyra_775791'),
         ).message}',
       );
       final message = _buildManagedPendingDeviceMessage();
@@ -896,7 +962,7 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
         debugPrint(
           'isCurrentDeviceTrusted failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Đã có lỗi xảy ra',
+            fallbackMessage: L10nService().translate('home_clixyra_775791'),
           ).message}',
         );
         isTrusted = false;
@@ -932,7 +998,7 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
               context: context,
               scope: LockScope.security,
               houseId: _houseId,
-              title: 'Khu bảo mật',
+              title: context.tr('home_khubomt_2143a3'),
               reason: MilitaryLockService.scopeReason(LockScope.security),
               effectiveSettings: effectiveSettings,
             )
@@ -941,7 +1007,7 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
       debugPrint(
         'security scope unlock failed: ${AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Đã có lỗi xảy ra',
+          fallbackMessage: L10nService().translate('home_clixyra_775791'),
         ).message}',
       );
       authSuccess = false;

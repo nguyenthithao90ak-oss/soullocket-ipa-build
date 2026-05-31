@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -105,11 +106,11 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
     } catch (error) {
       debugPrint('Load admin overview failed: ${AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Chưa thể tải dữ liệu tổng quan lúc này.',
+        fallbackMessage: context.tr('admin_chathtidli_78f16e'),
       ).message}');
       if (!mounted) return;
       setState(() {
-        _errorText = 'Chưa thể tải dữ liệu tổng quan lúc này.';
+        _errorText = context.tr('admin_chathtidli_78f16e');
       });
     } finally {
       if (mounted) {
@@ -133,20 +134,20 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         SnackBar(
           content: Text(
             value
-                ? 'Đã bật chế độ bảo trì toàn bộ.'
-                : 'Đã tắt chế độ bảo trì toàn bộ.',
+                ? context.tr('admin_btchbotrto_981636')
+                : context.tr('admin_ttchbotrto_4c7512'),
           ),
         ),
       );
     } catch (error) {
       debugPrint('Toggle maintenance failed: ${AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Chưa thể cập nhật trạng thái bảo trì lúc này.',
+        fallbackMessage: context.tr('admin_chathcpnht_68b279'),
       ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể cập nhật trạng thái bảo trì lúc này.'),
+        SnackBar(
+          content: Text(context.tr('admin_chathcpnht_68b279')),
         ),
       );
     }
@@ -160,19 +161,19 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            value ? 'Đã bật bảo trì Cộng Đồng.' : 'Đã tắt bảo trì Cộng Đồng.',
+            value ? context.tr('admin_btbotrcngn_270bad') : context.tr('admin_ttbotrcngn_9c7665'),
           ),
         ),
       );
     } catch (error) {
       debugPrint('Toggle community maintenance failed: ${AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Chưa thể cập nhật bảo trì cộng đồng lúc này.',
+        fallbackMessage: context.tr('admin_chathcpnht_df06b6'),
       ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể cập nhật bảo trì cộng đồng lúc này.'),
+        SnackBar(
+          content: Text(context.tr('admin_chathcpnht_df06b6')),
         ),
       );
     }
@@ -242,10 +243,10 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 sectionTag(
-                                                    'Dashboard tổng quan'),
+                                                    context.tr('admin_dashboardt_954f1f')),
                                                 SLSpacing.h12,
                                                 Text(
-                                                  'Theo dõi nhanh sức khỏe hệ thống admin',
+                                                  context.tr('admin_theodinhan_44dfc9'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 30,
@@ -254,7 +255,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                 ),
                                                 SLSpacing.h12,
                                                 Text(
-                                                  'Hiển thị dữ liệu chính từ Firebase Realtime Database và trạng thái vận hành hiện tại.',
+                                                  context.tr('admin_hinthdliuc_0d6528'),
                                                   style: SLTheme.quicksand(
                                                     color:
                                                         const Color(0xFFB7C1D6),
@@ -317,7 +318,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                                           _bannedHouses)
                                                                       .toDouble(),
                                                                   title:
-                                                                      'Thường',
+                                                                      context.tr('admin_thng_c10b85'),
                                                                   radius: 30,
                                                                   titleStyle: const TextStyle(
                                                                       fontSize:
@@ -374,7 +375,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'Trạng thái hệ thống',
+                                                  context.tr('admin_trngthihth_caf17e'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 18,
@@ -407,8 +408,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                               children: [
                                                                 Text(
                                                                   _isMaintenanceMode
-                                                                      ? 'Bảo trì toàn bộ (ĐANG BẬT)'
-                                                                      : 'Bảo trì toàn bộ (ĐANG TẮT)',
+                                                                      ? context.tr('admin_botrtonban_65c143')
+                                                                      : context.tr('admin_botrtonban_b4ed8c'),
                                                                   style: SLTheme
                                                                       .quicksand(
                                                                     color: Colors
@@ -423,8 +424,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                                 SLSpacing.h8,
                                                                 Text(
                                                                   _isMaintenanceMode
-                                                                      ? 'Người dùng thường sẽ bị chặn và đăng xuất.'
-                                                                      : 'Hệ thống hoạt động bình thường.',
+                                                                      ? context.tr('admin_ngidngthng_2c78b3')
+                                                                      : context.tr('admin_hthnghotng_006fd9'),
                                                                   style: SLTheme
                                                                       .quicksand(
                                                                     color: const Color(
@@ -465,8 +466,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                               children: [
                                                                 Text(
                                                                   _isCommunityMaintenanceMode
-                                                                      ? 'Bảo trì Cộng Đồng (ĐANG BẬT)'
-                                                                      : 'Bảo trì Cộng Đồng (ĐANG TẮT)',
+                                                                      ? context.tr('admin_botrcngnga_b6fd85')
+                                                                      : context.tr('admin_botrcngnga_5e948f'),
                                                                   style: SLTheme
                                                                       .quicksand(
                                                                     color: Colors
@@ -481,8 +482,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                                 SLSpacing.h8,
                                                                 Text(
                                                                   _isCommunityMaintenanceMode
-                                                                      ? 'Tính năng Cộng Đồng bị chặn truy cập.'
-                                                                      : 'Tính năng Cộng Đồng hoạt động bình thường.',
+                                                                      ? context.tr('admin_tnhnngcngn_3e9b83')
+                                                                      : context.tr('admin_tnhnngcngn_f6dcf7'),
                                                                   style: SLTheme
                                                                       .quicksand(
                                                                     color: const Color(
@@ -546,25 +547,25 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                       children: [
                                         AdminStatCard(
                                           width: cardWidth,
-                                          title: 'Tổng nhà',
+                                          title: context.tr('admin_tngnh_c8a1f6'),
                                           value: '$_totalHouses',
-                                          subtitle: 'Bản ghi houses',
+                                          subtitle: context.tr('admin_bnghihouse_ec7358'),
                                           color: const Color(0xFF4F8CFF),
                                           icon: Icons.home_work_rounded,
                                         ),
                                         AdminStatCard(
                                           width: cardWidth,
-                                          title: 'Báo cáo',
+                                          title: context.tr('admin_boco_2e9037'),
                                           value: '$_totalReports',
-                                          subtitle: 'Bản ghi reports',
+                                          subtitle: context.tr('admin_bnghirepor_e7df60'),
                                           color: const Color(0xFFFF6B81),
                                           icon: Icons.report_problem_rounded,
                                         ),
                                         AdminStatCard(
                                           width: cardWidth,
-                                          title: 'Bài viết',
+                                          title: context.tr('admin_bivit_998bbe'),
                                           value: '$_totalFeeds',
-                                          subtitle: 'Bản ghi social_feed',
+                                          subtitle: context.tr('admin_bnghisocia_bab4d4'),
                                           color: const Color(0xFF00C896),
                                           icon: Icons.dynamic_feed_rounded,
                                         ),
@@ -601,7 +602,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'Nhanh gọn cho giai đoạn 1',
+                                                  context.tr('admin_nhanhgncho_02d993'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 18,
@@ -609,27 +610,27 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                   ),
                                                 ),
                                                 SLSpacing.h16,
-                                                const OverviewListTile(
+                                                OverviewListTile(
                                                   icon: Icons
                                                       .verified_user_rounded,
-                                                  title: 'Đăng nhập admin',
+                                                  title: context.tr('admin_ngnhpadmin_eb6486'),
                                                   subtitle:
-                                                      'Xác thực bằng Firebase Auth và kiểm tra custom claim.',
+                                                      context.tr('admin_xcthcbngfi_f16353'),
                                                 ),
                                                 SLSpacing.h12,
-                                                const OverviewListTile(
+                                                OverviewListTile(
                                                   icon: Icons.insights_rounded,
-                                                  title: 'Dashboard tổng quan',
+                                                  title: context.tr('admin_dashboardt_954f1f'),
                                                   subtitle:
-                                                      'Hiển thị houses, reports, feed và support tickets.',
+                                                      context.tr('admin_hinthhouse_105d2e'),
                                                 ),
                                                 SLSpacing.h12,
-                                                const OverviewListTile(
+                                                OverviewListTile(
                                                   icon: Icons.toggle_on_rounded,
                                                   title:
-                                                      'Maintenance ngay trên dashboard',
+                                                      context.tr('admin_maintenanc_96cb53'),
                                                   subtitle:
-                                                      'Bật tắt nhanh trạng thái bảo trì hệ thống.',
+                                                      context.tr('admin_btttnhanht_822a70'),
                                                 ),
                                               ],
                                             ),
@@ -647,7 +648,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'Phiên đăng nhập',
+                                                  context.tr('admin_phinngnhp_d906a2'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 18,
@@ -663,7 +664,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                 MetaRow(
                                                   label: 'Email',
                                                   value: widget.user.email ??
-                                                      'Chưa có email',
+                                                      context.tr('admin_chacemail_4d9065'),
                                                 ),
                                                 SLSpacing.h12,
                                                 const MetaRow(
@@ -672,9 +673,9 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                 ),
                                                 SLSpacing.h12,
                                                 MetaRow(
-                                                  label: 'Cập nhật',
+                                                  label: context.tr('admin_cpnht_3b7db4'),
                                                   value: _lastUpdatedAt == null
-                                                      ? 'Chưa tải dữ liệu'
+                                                      ? context.tr('admin_chatidliu_16f82f')
                                                       : formatDateTime(
                                                           _lastUpdatedAt!),
                                                 ),

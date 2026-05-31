@@ -406,6 +406,11 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
         const [Color(0xFFFFE4E1), Color(0xFFEFDFFF), Color(0xFFBDE1FF)],
       ),
       (
+        '30s 👑',
+        'theme-vip-rotate',
+        const [Color(0xFFFFD166), Color(0xFFFF4D8D), Color(0xFF7C4DFF)],
+      ),
+      (
         'Hồng',
         'theme-pink-glow',
         const [Color(0xFFFFD9E8), Color(0xFFFF9DBB)],

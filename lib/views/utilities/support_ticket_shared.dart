@@ -1,3 +1,5 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+
 class SupportTopicDefinition {
   const SupportTopicDefinition({
     required this.id,
@@ -30,212 +32,211 @@ const String supportBuildNumber = String.fromEnvironment(
 String get supportAppVersionLabel =>
     'v$supportBuildName (build $supportBuildNumber)';
 
-const List<SupportTopicDefinition> supportTopicCatalog = [
+final List<SupportTopicDefinition> supportTopicCatalog = [
   SupportTopicDefinition(
     id: '1',
-    chipLabel: '🔑 Tài khoản',
-    title: 'Tài khoản / Đăng nhập',
-    subtitle: 'Quên mật khẩu, không vào được app, lỗi email hoặc đăng nhập',
+    chipLabel: L10nService().translate('util_tikhon_bbc710'),
+    title: L10nService().translate('util_tikhonngnh_eba407'),
+    subtitle: L10nService().translate('util_qunmtkhukh_047e0d'),
     priority: 'high',
     requiredFields: [
-      'Email hoặc cách đăng nhập đang dùng:',
-      'Bạn đăng nhập bằng Email / Google / Apple / Facebook:',
-      'Màn hình nào đang lỗi:',
-      'Thông báo lỗi hiện nguyên văn:',
+      L10nService().translate('util_emailhoccc_ff2f9c'),
+      L10nService().translate('util_bnngnhpbng_f2164d'),
+      L10nService().translate('util_mnhnhnoang_5e0d35'),
+      L10nService().translate('util_thngbolihi_2391f4'),
     ],
     keywords: [
-      'đăng nhập',
-      'tài khoản',
+      L10nService().translate('util_ngnhp_5f027d'),
+      L10nService().translate('util_tikhon_ab3a50'),
       'email',
-      'mật khẩu',
+      L10nService().translate('util_mtkhu_8b7c6c'),
       'password',
       'login',
       'google',
       'apple',
       'facebook',
-      'quên mật khẩu',
+      L10nService().translate('util_qunmtkhu_e4e603'),
     ],
   ),
   SupportTopicDefinition(
     id: '2',
-    chipLabel: '🔗 Ghép đôi',
-    title: 'Ghép đôi / Mất kết nối',
-    subtitle: 'QR, tham gia nhà, lệch dữ liệu nhà hoặc mất đồng bộ giữa 2 bên',
+    chipLabel: L10nService().translate('util_ghpi_c374d8'),
+    title: L10nService().translate('util_ghpimtktni_ddcd54'),
+    subtitle: L10nService().translate('util_qrthamgian_2573bb'),
     priority: 'high',
     requiredFields: [
-      'House ID hoặc thông tin QR liên quan:',
-      'Lỗi xảy ra trên máy bạn hay trên cả 2 máy:',
-      'Bạn đang đứng ở bước nào thì lỗi:',
-      'Nếu có, mô tả trạng thái của người còn lại:',
+      L10nService().translate('util_houseidhoc_aac628'),
+      L10nService().translate('util_lixyratrnm_a8b481'),
+      L10nService().translate('util_bnangngbcn_8052d9'),
+      L10nService().translate('util_nucmttrngt_752b49'),
     ],
     keywords: [
-      'ghép đôi',
+      L10nService().translate('util_ghpi_f175c9'),
       'qr',
-      'kết nối',
-      'mã nhà',
-      'tham gia nhà',
+      L10nService().translate('util_ktni_36931a'),
+      L10nService().translate('util_mnh_f293b9'),
+      L10nService().translate('util_thamgianh_fb6185'),
       'house',
       'offline',
       'online',
-      'mất kết nối',
+      L10nService().translate('util_mtktni_dff6a9'),
     ],
   ),
   SupportTopicDefinition(
     id: '3',
-    chipLabel: '📸 Hình ảnh',
-    title: 'Hình ảnh / Video / Nhật ký',
+    chipLabel: L10nService().translate('util_hnhnh_c868d5'),
+    title: L10nService().translate('util_hnhnhvideo_0e879b'),
     subtitle:
-        'Không tải được ảnh, mất album, nhật ký trống, lỗi hiển thị media',
+        L10nService().translate('util_khngticnhm_187885'),
     priority: 'high',
     requiredFields: [
-      'Album / nhật ký / video nào đang lỗi:',
-      'Nội dung hoặc ngày đang bị ảnh hưởng:',
-      'Bạn vừa tải lên, chỉnh sửa hay xem lại:',
-      'Ảnh/video bị lỗi theo kiểu nào:',
+      L10nService().translate('util_albumnhtkv_783431'),
+      L10nService().translate('util_nidunghocn_c538a9'),
+      L10nService().translate('util_bnvatilnch_9cac77'),
+      L10nService().translate('util_nhvideobli_a02a41'),
     ],
     keywords: [
-      'ảnh',
+      L10nService().translate('util_nh_1ed361'),
       'video',
-      'nhật ký',
+      L10nService().translate('util_nhtk_1b8c37'),
       'album',
       'upload',
-      'tải ảnh',
+      L10nService().translate('util_tinh_e4c67c'),
       'media',
-      'kỷ niệm',
+      L10nService().translate('util_knim_61098c'),
     ],
   ),
   SupportTopicDefinition(
     id: '4',
-    chipLabel: '💳 Thanh toán',
-    title: 'Thanh toán / Mua hàng',
-    subtitle: 'Kiểm tra giao dịch và quyền lợi trong màn mua hàng của ứng dụng',
+    chipLabel: L10nService().translate('util_tikhon_453eec'),
+    title: L10nService().translate('util_tikhonquyn_4f7faa'),
+    subtitle: L10nService().translate('util_kimtratrng_be3f31'),
     priority: 'high',
     requiredFields: [
-      'Bạn thao tác ở màn mua hàng nào trong ứng dụng:',
-      'Thời điểm thao tác gần nhất:',
-      'Thông báo hiển thị trên màn hình (nếu có):',
-      'Bạn cần kiểm tra giao dịch hay quyền lợi nào:',
+      L10nService().translate('util_bnthaotcmn_4ac381'),
+      L10nService().translate('util_thiimthaot_368a27'),
+      L10nService().translate('util_thngbohint_a735e4'),
+      L10nService().translate('util_bncnkimtra_840cc9'),
     ],
     keywords: [
-      'thanh toán',
-      'mua hàng',
-      'restore',
-      'khôi phục',
-      'giao dịch',
-      'gói',
+      L10nService().translate('util_tikhon_ab3a50'),
+      L10nService().translate('util_quynli_898c4c'),
+      L10nService().translate('util_trngthi_8e1610'),
+      L10nService().translate('util_kimtra_cdbca4'),
+      L10nService().translate('util_htr_3f19ab'),
     ],
   ),
   SupportTopicDefinition(
     id: '5',
-    chipLabel: '📱 Đổi máy',
-    title: 'Đổi điện thoại / Đồng bộ lại dữ liệu',
-    subtitle: 'Đổi máy, cài lại app, mất dữ liệu sau khi đăng nhập lại',
+    chipLabel: L10nService().translate('util_imy_8cdb2f'),
+    title: L10nService().translate('util_iinthoingb_0a3af2'),
+    subtitle: L10nService().translate('util_imyciliapp_82b357'),
     priority: 'medium',
     requiredFields: [
-      'Máy cũ là gì và máy mới là gì:',
-      'Bạn đang đăng nhập lại bằng tài khoản nào:',
-      'Dữ liệu nào đang thiếu sau khi đổi máy:',
-      'Bạn còn giữ được máy cũ hoặc QR cũ không:',
+      L10nService().translate('util_myclgvmymi_0476a9'),
+      L10nService().translate('util_bnangngnhp_a63f64'),
+      L10nService().translate('util_dliunoangt_3f7809'),
+      L10nService().translate('util_bncngicmyc_aca572'),
     ],
     keywords: [
-      'đổi máy',
-      'điện thoại mới',
-      'đồng bộ',
-      'mất dữ liệu',
-      'cài lại',
-      'khôi phục dữ liệu',
+      L10nService().translate('util_imy_760f99'),
+      L10nService().translate('util_inthoimi_28f18b'),
+      L10nService().translate('util_ngb_0a52bc'),
+      L10nService().translate('util_mtdliu_3b15e9'),
+      L10nService().translate('util_cili_e4a078'),
+      L10nService().translate('util_khiphcdliu_2c4ac7'),
     ],
   ),
   SupportTopicDefinition(
     id: '6',
-    chipLabel: '🛠 Báo lỗi',
-    title: 'Báo lỗi kỹ thuật / Góp ý',
+    chipLabel: L10nService().translate('util_boli_5df258'),
+    title: L10nService().translate('util_bolikthutg_ee1692'),
     subtitle:
-        'Crash app, trắng màn hình, lag, tính năng chưa đúng, góp ý cải tiến',
+        L10nService().translate('util_crashapptr_e06701'),
     priority: 'high',
     requiredFields: [
-      'Vấn đề kỹ thuật hoặc góp ý chính:',
-      'Màn hình / tính năng liên quan:',
-      'Các bước để tái hiện lỗi:',
-      'Lỗi ảnh hưởng thường xuyên hay chỉ thỉnh thoảng:',
+      L10nService().translate('util_vnkthuthoc_17b4ee'),
+      L10nService().translate('util_mnhnhtnhnn_88f01e'),
+      L10nService().translate('util_ccbctihinl_8c3be0'),
+      L10nService().translate('util_linhhngthn_4d6e7c'),
     ],
     keywords: [
-      'lỗi',
+      L10nService().translate('util_li_0c9ec1'),
       'bug',
       'crash',
-      'trắng màn hình',
+      L10nService().translate('util_trngmnhnh_87aa01'),
       'lag',
       'treo',
-      'không hiện',
-      'góp ý',
-      'đề xuất',
-      'tính năng',
+      L10nService().translate('util_khnghin_e4735c'),
+      L10nService().translate('util_gp_a4c3bb'),
+      L10nService().translate('util_xut_5c3170'),
+      L10nService().translate('util_tnhnng_d3cb43'),
     ],
   ),
   SupportTopicDefinition(
     id: '7',
-    chipLabel: '❤️ Tình cảm',
-    title: 'Tư vấn gỡ rối tình cảm',
-    subtitle: 'Cần được lắng nghe, xin lời khuyên nhẹ nhàng, tâm sự cá nhân',
+    chipLabel: L10nService().translate('util_tnhcm_edefb8'),
+    title: L10nService().translate('util_tvngritnhc_a9c56f'),
+    subtitle: L10nService().translate('util_cnclngnghe_db51ce'),
     priority: 'medium',
     requiredFields: [
-      'Bạn đang muốn được lắng nghe hay cần lời khuyên:',
-      'Điều làm bạn buồn hoặc rối nhất lúc này:',
-      'Bạn muốn SoulLocket hỗ trợ theo cách nào:',
-      'Có điều gì cần tránh nhắc đến không:',
+      L10nService().translate('util_bnangmuncl_37c9e2'),
+      L10nService().translate('util_iulmbnbunh_439f48'),
+      L10nService().translate('util_bnmunsoull_9fd43e'),
+      L10nService().translate('util_ciugcntrnh_4f8ca9'),
     ],
     keywords: [
-      'buồn',
-      'cô đơn',
-      'khóc',
-      'tình cảm',
+      L10nService().translate('util_bun_bff2fb'),
+      L10nService().translate('util_cn_1fa6ea'),
+      L10nService().translate('util_khc_291c9d'),
+      L10nService().translate('util_tnhcm_516e30'),
       'chia tay',
-      'áp lực',
-      'mệt mỏi',
-      'tâm sự',
+      L10nService().translate('util_plc_eced84'),
+      L10nService().translate('util_mtmi_1eb61e'),
+      L10nService().translate('util_tms_45cdeb'),
     ],
   ),
   SupportTopicDefinition(
     id: '8',
-    chipLabel: '🗑 Xóa nhà',
-    title: 'Xóa tài khoản / Xóa nhà',
+    chipLabel: L10nService().translate('util_xanh_da3be7'),
+    title: L10nService().translate('util_xatikhonxa_3f3624'),
     subtitle:
-        'Rời nhà đôi, xóa tài khoản, hủy liên kết, xác nhận hậu quả dữ liệu',
+        L10nService().translate('util_rinhixatik_d3f334'),
     priority: 'high',
     requiredFields: [
-      'Bạn muốn rời nhà, xóa tài khoản hay xóa dữ liệu nào:',
-      'House ID hoặc email liên quan:',
-      'Bạn đã sao lưu dữ liệu quan trọng chưa:',
-      'Bạn cần hướng dẫn hay muốn Admin kiểm tra giúp:',
+      L10nService().translate('util_bnmunrinhx_4458c5'),
+      L10nService().translate('util_houseidhoc_98e978'),
+      L10nService().translate('util_bnsaoludli_d4eb2e'),
+      L10nService().translate('util_bncnhngdnh_5f6bb5'),
     ],
     keywords: [
-      'xóa tài khoản',
-      'xóa nhà',
-      'rời nhà',
-      'hủy ghép đôi',
+      L10nService().translate('util_xatikhon_232744'),
+      L10nService().translate('util_xanh_21d3f5'),
+      L10nService().translate('util_rinh_422814'),
+      L10nService().translate('util_hyghpi_90bde0'),
       'chia tay',
-      'đóng tài khoản',
+      L10nService().translate('util_ngtikhon_78f19f'),
     ],
   ),
   SupportTopicDefinition(
     id: '9',
     chipLabel: '🧑‍💻 Admin',
-    title: 'Gặp Admin hỗ trợ trực tiếp',
+    title: L10nService().translate('util_gpadminhtr_e7f15b'),
     subtitle:
-        'Cần Admin kiểm tra trực tiếp, yêu cầu khẩn hoặc vấn đề liên quan dữ liệu',
+        L10nService().translate('util_cnadminkim_058bb2'),
     priority: 'high',
     requiredFields: [
-      'Tóm tắt ngắn vấn đề cần Admin xử lý:',
-      'Tài khoản / house / đơn hàng liên quan:',
-      'Bạn cần Admin kiểm tra gấp vì:',
-      'Nếu có ảnh chụp lỗi, mô tả ảnh đó giúp mình:',
+      L10nService().translate('util_tmttngnvnc_b6c021'),
+      L10nService().translate('util_tikhonhous_b61d39'),
+      L10nService().translate('util_bncnadmink_56f479'),
+      L10nService().translate('util_nucnhchpli_b6ac44'),
     ],
     keywords: [
       'admin',
-      'kiểm tra tay',
-      'khẩn',
-      'gặp admin',
-      'hỗ trợ trực tiếp',
+      L10nService().translate('util_kimtratay_262ae4'),
+      L10nService().translate('util_khn_120b18'),
+      L10nService().translate('util_gpadmin_de1679'),
+      L10nService().translate('util_htrtrctip_7a2f68'),
     ],
   ),
 ];
@@ -273,15 +274,15 @@ String buildSupportDraft(
   required String appVersionLabel,
 }) {
   final prompts = <String>[
-    'Tóm tắt ngắn vấn đề đang gặp:',
+    L10nService().translate('util_tmttngnvna_6929b0'),
     ...topic.requiredFields,
-    'Các bước bạn đã thử rồi:',
-    'Mức độ ảnh hưởng / cần hỗ trợ gấp vì:',
+    L10nService().translate('util_ccbcbnthri_d20100'),
+    L10nService().translate('util_mcnhhngcnh_808532'),
   ];
 
   final buffer = StringBuffer()
     ..writeln('[${topic.title.toUpperCase()}]')
-    ..writeln('Điền càng đủ thông tin thì Admin xử lý càng nhanh:')
+    ..writeln(L10nService().translate('util_incngthngt_99a61c'))
     ..writeln();
 
   for (final prompt in prompts) {
@@ -298,7 +299,7 @@ String buildSupportDraft(
   if (autoAttached.isNotEmpty) {
     buffer
       ..writeln()
-      ..writeln('Thông tin hệ thống sẽ tự đính kèm khi gửi:')
+      ..writeln(L10nService().translate('util_thngtinhth_bfb4c1'))
       ..writeln('- ${autoAttached.join(' • ')}');
   }
 
@@ -314,7 +315,7 @@ String buildSupportSummary(
       .map((line) => line.trim())
       .where((line) => line.isNotEmpty)
       .where((line) => !line.startsWith('['))
-      .where((line) => !line.startsWith('Thông tin hệ thống'))
+      .where((line) => !line.startsWith(L10nService().translate('util_thngtinhth_71b4d7')))
       .toList();
 
   var snippet = '';
@@ -338,7 +339,7 @@ String buildSupportSummary(
   }
 
   if (snippet.isEmpty) {
-    snippet = topic?.subtitle ?? 'Người dùng cần được hỗ trợ thêm.';
+    snippet = topic?.subtitle ?? L10nService().translate('util_ngidngcnch_2580cd');
   }
 
   if (snippet.length > 140) {

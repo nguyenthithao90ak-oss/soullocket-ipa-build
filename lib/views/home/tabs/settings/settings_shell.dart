@@ -40,7 +40,7 @@ extension _SettingsTabShell on _SettingsTabState {
   Future<void> _togglePanel(String id) async {
     final sectionId = _sectionIdForPanel(id);
     if (_isBootstrappingSettings) {
-      _showToast('Cài đặt đang tải, vui lòng chờ vài giây rồi thử lại.',
+      _showToast('Đang tải dữ liệu cài đặt, vui lòng thử lại sau vài giây.',
           success: false);
       return;
     }
@@ -60,11 +60,9 @@ extension _SettingsTabShell on _SettingsTabState {
       _startWidgetPreviewTicker();
     }
     try {
-      await Navigator.push(
+      await slPush(
         context,
-        MaterialPageRoute(
-          builder: (_) => _buildStandalonePanelPage(sectionId),
-        ),
+        _buildStandalonePanelPage(sectionId),
       );
     } finally {
       if (shouldAnimateWidgetPreview) {
@@ -123,10 +121,9 @@ extension _SettingsTabShell on _SettingsTabState {
   Future<void> _openSearchResultFromSettings(dynamic result) async {
     final action = result.actionId as String;
     if (action == 'history') {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => HistoryScreen(houseId: _houseId ?? ''),
-        ),
+      await slPush(
+        context,
+        HistoryScreen(houseId: _houseId ?? ''),
       );
       return;
     }
@@ -143,7 +140,9 @@ extension _SettingsTabShell on _SettingsTabState {
     Widget? screen;
     switch (utilityId) {
       case 'store':
-        screen = const RewardStoreScreen();
+        screen = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+            ? null
+            : const RewardStoreScreen();
         break;
       case 'calculator':
         screen = const CalculatorScreen();
@@ -259,8 +258,9 @@ extension _SettingsTabShell on _SettingsTabState {
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => screen!),
+    await slPush(
+      context,
+      screen,
     );
   }
 
@@ -301,8 +301,8 @@ extension _SettingsTabShell on _SettingsTabState {
                                 _buildActionBtn(
                                   icon: Icons.swap_horiz_rounded,
                                   label: _activeRoleKey == 'user1'
-                                      ? 'Đổi vai Bạn Nữ'
-                                      : 'Đổi vai Bạn Nam',
+                                      ? context.tr('settings_swap_role_to_female')
+                                      : context.tr('settings_swap_role_to_male'),
                                   gradient: const [
                                     Color(0xFF42A5F5),
                                     Color(0xFF1E88E5)
@@ -358,7 +358,7 @@ extension _SettingsTabShell on _SettingsTabState {
                               const SizedBox(height: 12),
                               _buildActionBtn(
                                 icon: Icons.delete_forever_rounded,
-                                label: 'Xóa tài khoản và dữ liệu',
+                                label: context.tr('settings_delete_account_data'),
                                 gradient: const [
                                   Color(0xFFB71C1C),
                                   Color(0xFF7F0000)
@@ -581,17 +581,16 @@ extension _SettingsTabShell on _SettingsTabState {
               if (houseId.isEmpty) {
                 return;
               }
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => GlobalSearchScreen(
-                    houseId: houseId,
-                    relationshipMode: _relationshipMode,
-                    allowedUtilityIds: _settingsSearchableUtilityIds(),
-                    onResultSelected: (result) async {
-                      Navigator.of(context).pop();
-                      await _openSearchResultFromSettings(result);
-                    },
-                  ),
+              slPush(
+                context,
+                GlobalSearchScreen(
+                  houseId: houseId,
+                  relationshipMode: _relationshipMode,
+                  allowedUtilityIds: _settingsSearchableUtilityIds(),
+                  onResultSelected: (result) async {
+                    Navigator.of(context).pop();
+                    await _openSearchResultFromSettings(result);
+                  },
                 ),
               );
             },
@@ -756,19 +755,6 @@ extension _SettingsTabShell on _SettingsTabState {
         textColor: const Color(0xFF1565C0),
         onTap: () => _togglePanel('dataHealth'),
       ),
-      _buildControlCard(
-        icon: Icons.support_agent_rounded,
-        accentIcons: const [
-          Icons.menu_book_rounded,
-          Icons.gavel_rounded,
-        ],
-        label: context.tr('settings_support_legal_label'),
-        desc: context.tr('settings_support_legal_desc'),
-        gradient: const [Color(0xFFE6DBFF), Color(0xFFBBA4EE)],
-        border: const Color(0xFFB99CF0),
-        textColor: const Color(0xFF6A46C6),
-        onTap: () => _togglePanel('supportLegal'),
-      ),
     ];
 
     return LayoutBuilder(
@@ -885,8 +871,11 @@ extension _SettingsTabShell on _SettingsTabState {
     }
     switch (sectionId) {
       case 'account':
+        final hideVipPanelOnIos = !kIsWeb &&
+            defaultTargetPlatform == TargetPlatform.iOS;
         return _buildSectionStack([
-          _buildVipPanel(hideBackButton: false),
+          if (!hideVipPanelOnIos)
+            _buildVipPanel(hideBackButton: false),
           _buildIdentityPanel(hideBackButton: true),
           _buildLanguagePanel(hideBackButton: true),
         ]);

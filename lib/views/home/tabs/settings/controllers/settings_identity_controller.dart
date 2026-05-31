@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../services/house_settings_service.dart';
 import '../../../../../utils/flexible_date_input.dart';
+import '../../../../../utils/services/l10n_service.dart';
 
 class SettingsIdentityDraft {
   const SettingsIdentityDraft({
@@ -43,7 +44,7 @@ class SettingsIdentityDraft {
   String get normalizedNameU2 => nameU2.trim();
   String get normalizedGreetingQuote => greetingQuote.trim();
   String get normalizedDayUnit =>
-      dayUnit.trim().isEmpty ? 'ngày yêu' : dayUnit.trim();
+      dayUnit.trim().isEmpty ? L10nService().translate('home_ngyyu_722b21') : dayUnit.trim();
 }
 
 class SettingsIdentityController {
@@ -124,7 +125,7 @@ class SettingsIdentityController {
       lastYear: DateTime.now().year,
     );
     if (normalizedDate == null) {
-      throw 'Ngày không hợp lệ.';
+      throw L10nService().translate('home_ngykhnghpl_b660fe');
     }
 
     await houseSettingsService.updateStartDate(houseId, normalizedDate);

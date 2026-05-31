@@ -32,16 +32,20 @@ class TravelPlannerService {
     bool visited = false,
   }) async {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) return null;
+    final normalizedHouseId = houseId.trim();
+    final normalizedCity = city.trim();
+    if (uid == null || normalizedHouseId.isEmpty || normalizedCity.isEmpty) {
+      return null;
+    }
 
-    final ref = _db.ref('houses/$houseId/travel_pins').push();
+    final ref = _db.ref('houses/$normalizedHouseId/travel_pins').push();
     await ref.set({
       'lat': lat,
       'lng': lng,
-      'city': city,
-      'country': country ?? '',
-      'note': note ?? '',
-      'imageUrl': imageUrl ?? '',
+      'city': normalizedCity,
+      'country': country?.trim() ?? '',
+      'note': note?.trim() ?? '',
+      'imageUrl': imageUrl?.trim() ?? '',
       'visited': visited,
       'addedBy': uid,
       'ts': ServerValue.timestamp,
@@ -51,13 +55,19 @@ class TravelPlannerService {
 
   /// Xóa địa điểm du lịch
   Future<void> removeTravelPin(String houseId, String pinId) async {
-    await _db.ref('houses/$houseId/travel_pins/$pinId').remove();
+    final normalizedHouseId = houseId.trim();
+    final normalizedPinId = pinId.trim();
+    if (normalizedHouseId.isEmpty || normalizedPinId.isEmpty) return;
+    await _db.ref('houses/$normalizedHouseId/travel_pins/$normalizedPinId').remove();
   }
 
   /// Đánh dấu đã thăm / chưa thăm địa điểm
   Future<void> toggleVisited(String houseId, String pinId, bool visited) async {
+    final normalizedHouseId = houseId.trim();
+    final normalizedPinId = pinId.trim();
+    if (normalizedHouseId.isEmpty || normalizedPinId.isEmpty) return;
     await _db
-        .ref('houses/$houseId/travel_pins/$pinId')
+        .ref('houses/$normalizedHouseId/travel_pins/$normalizedPinId')
         .update({'visited': visited});
   }
 
@@ -68,44 +78,59 @@ class TravelPlannerService {
     String? note,
     String? imageUrl,
   }) async {
+    final normalizedHouseId = houseId.trim();
+    final normalizedPinId = pinId.trim();
+    if (normalizedHouseId.isEmpty || normalizedPinId.isEmpty) return;
     final updates = <String, dynamic>{};
-    if (note != null) updates['note'] = note;
-    if (imageUrl != null) updates['imageUrl'] = imageUrl;
+    if (note != null) updates['note'] = note.trim();
+    if (imageUrl != null) updates['imageUrl'] = imageUrl.trim();
     if (updates.isNotEmpty) {
-      await _db.ref('houses/$houseId/travel_pins/$pinId').update(updates);
+      await _db
+          .ref('houses/$normalizedHouseId/travel_pins/$normalizedPinId')
+          .update(updates);
     }
   }
 
   /// Stream danh sách tất cả địa điểm (để vẽ markers trên bản đồ)
   Stream<List<TravelPin>> streamTravelPins(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return Stream<List<TravelPin>>.value(const []);
     return _db
-        .ref('houses/$houseId/travel_pins')
+        .ref('houses/$normalizedHouseId/travel_pins')
         .orderByChild('ts')
         .onValue
         .map((event) {
-      if (!event.snapshot.exists) return <TravelPin>[];
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return <TravelPin>[];
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-      return data.entries.map((e) {
+      final pins = <TravelPin>[];
+      for (final e in data.entries) {
+        if (e.value is! Map) continue;
         final map = Map<String, dynamic>.from(e.value as Map);
         map['id'] = e.key.toString();
-        return TravelPin.fromMap(map);
-      }).toList()
-        ..sort((a, b) => b.ts.compareTo(a.ts));
+        pins.add(TravelPin.fromMap(map));
+      }
+      return pins..sort((a, b) => b.ts.compareTo(a.ts));
     });
   }
 
   /// Lấy một lần (không realtime) danh sách địa điểm
   Future<List<TravelPin>> getTravelPins(String houseId) async {
-    final snap =
-        await _db.ref('houses/$houseId/travel_pins').orderByChild('ts').get();
-    if (!snap.exists) return [];
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return [];
+    final snap = await _db
+        .ref('houses/$normalizedHouseId/travel_pins')
+        .orderByChild('ts')
+        .get();
+    if (!snap.exists || snap.value is! Map) return [];
     final data = Map<dynamic, dynamic>.from(snap.value as Map);
-    return data.entries.map((e) {
+    final pins = <TravelPin>[];
+    for (final e in data.entries) {
+      if (e.value is! Map) continue;
       final map = Map<String, dynamic>.from(e.value as Map);
       map['id'] = e.key.toString();
-      return TravelPin.fromMap(map);
-    }).toList()
-      ..sort((a, b) => b.ts.compareTo(a.ts));
+      pins.add(TravelPin.fromMap(map));
+    }
+    return pins..sort((a, b) => b.ts.compareTo(a.ts));
   }
 
   /// Thống kê số quốc gia và thành phố unique đã thăm
@@ -155,17 +180,27 @@ class TravelPin {
   factory TravelPin.fromMap(Map<String, dynamic> map) {
     return TravelPin(
       id: map['id']?.toString() ?? '',
-      lat: (map['lat'] as num?)?.toDouble() ?? 0.0,
-      lng: (map['lng'] as num?)?.toDouble() ?? 0.0,
+      lat: _asDouble(map['lat']),
+      lng: _asDouble(map['lng']),
       city: map['city']?.toString() ?? '',
       country: map['country']?.toString() ?? '',
       note: map['note']?.toString() ?? '',
       imageUrl: map['imageUrl']?.toString() ?? '',
       visited: map['visited'] == true,
       addedBy: map['addedBy']?.toString() ?? '',
-      ts: (map['ts'] as num?)?.toInt() ?? 0,
+      ts: _asTimestamp(map['ts']),
     );
   }
+}
+
+double _asDouble(Object? value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0.0;
+}
+
+int _asTimestamp(Object? value) {
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? 0;
 }
 
 class TravelStats {

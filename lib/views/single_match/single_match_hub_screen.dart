@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
 import '../../models/single_match_models.dart';
@@ -32,73 +33,73 @@ class SingleMatchHubScreen extends StatefulWidget {
 
 class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     with SingleTickerProviderStateMixin {
-  static const List<_MatchChoice> _goalOptions = <_MatchChoice>[
+  static final List<_MatchChoice> _goalOptions = <_MatchChoice>[
     _MatchChoice(
       value: 'meaningful',
-      label: 'Nói chuyện sâu',
+      label: L10nService().translate('match_nichuynsu_12b47b'),
       icon: Icons.favorite_rounded,
-      color: Color(0xFFFF5F8F),
+      color: const Color(0xFFFF5F8F),
     ),
     _MatchChoice(
       value: 'friendship',
-      label: 'Bạn mới',
+      label: L10nService().translate('match_bnmi_5e3d3b'),
       icon: Icons.groups_rounded,
-      color: Color(0xFF5B8DEF),
+      color: const Color(0xFF5B8DEF),
     ),
     _MatchChoice(
       value: 'serious',
-      label: 'Hẹn hò nghiêm túc',
+      label: L10nService().translate('match_hnhnghimtc_1c8988'),
       icon: Icons.auto_awesome_rounded,
-      color: Color(0xFFFFB347),
+      color: const Color(0xFFFFB347),
     ),
     _MatchChoice(
       value: 'night_owl',
-      label: 'Tâm sự đêm khuya',
+      label: L10nService().translate('match_tmsmkhuya_490c41'),
       icon: Icons.nightlight_round,
-      color: Color(0xFF7C5CFF),
+      color: const Color(0xFF7C5CFF),
     ),
   ];
 
-  static const List<_MatchChoice> _voiceOptions = <_MatchChoice>[
+  static final List<_MatchChoice> _voiceOptions = <_MatchChoice>[
     _MatchChoice(
       value: 'warm',
-      label: 'Dịu dàng',
+      label: L10nService().translate('match_dudng_2cd6f3'),
       icon: Icons.waves_rounded,
-      color: Color(0xFFEF5DA8),
+      color: const Color(0xFFEF5DA8),
     ),
     _MatchChoice(
       value: 'funny',
-      label: 'Hài hước',
+      label: L10nService().translate('match_hihc_bde77a'),
       icon: Icons.celebration_rounded,
-      color: Color(0xFFFF9D42),
+      color: const Color(0xFFFF9D42),
     ),
     _MatchChoice(
       value: 'deep',
-      label: 'Sâu sắc',
+      label: L10nService().translate('match_susc_a9464f'),
       icon: Icons.psychology_rounded,
-      color: Color(0xFF4E7BF2),
+      color: const Color(0xFF4E7BF2),
     ),
     _MatchChoice(
       value: 'energetic',
-      label: 'Năng lượng',
+      label: L10nService().translate('match_nnglng_5d96ac'),
       icon: Icons.bolt_rounded,
-      color: Color(0xFF18B67A),
+      color: const Color(0xFF18B67A),
     ),
   ];
 
-  static const List<String> _tagSuggestions = <String>[
-    'Âm nhạc',
-    'Du lịch',
+  static final List<String> _tagSuggestions = <String>[
+    L10nService().translate('match_mnhc_cd81b4'),
+    L10nService().translate('match_dulch_03dc53'),
     'Cafe',
     'Podcast',
-    'Đêm khuya',
-    'Sách',
-    'Chụp ảnh',
+    L10nService().translate('match_mkhuya_1be535'),
+    L10nService().translate('match_sch_7f55e9'),
+    L10nService().translate('match_chpnh_d5d09c'),
     'Game',
-    'Chữa lành',
+    L10nService().translate('match_chalnh_bef395'),
     'Workout',
-    'Tâm lý',
-    'Nấu ăn',
+    L10nService().translate('match_tml_c8ad50'),
+    L10nService().translate('match_nun_4c482f'),
   ];
 
   final SingleMatchService _service = SingleMatchService.instance;
@@ -125,7 +126,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   Map<String, dynamic> _mySettings = <String, dynamic>{};
   String _myDob = '';
   String _savedDob = '';
-  String _displayName = 'Bạn';
+  String _displayName = L10nService().translate('match_bn_1fd75b');
   // ignore: unused_field
   String _houseName = '';
   String _avatarUrl = '';
@@ -183,7 +184,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       } catch (error) {
         debugPrint('[SingleMatch] $label failed: ${AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể tải dữ liệu Single Match lúc này.',
+          fallbackMessage: L10nService().translate('match_khngthtidl_11f27c'),
         ).message}');
         return fallback;
       }
@@ -212,7 +213,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       final preferences = results[1] as SingleMatchPreferences;
       final blocked = Set<String>.from(results[2] as Set);
 
-      final displayName = (settings['nameU1'] ?? settings['houseName'] ?? 'Bạn')
+      final displayName = (settings['nameU1'] ?? settings['houseName'] ?? L10nService().translate('match_bn_1fd75b'))
           .toString()
           .trim();
       final houseName =
@@ -234,7 +235,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         _savedPreferences = preferences;
         _draftPreferences = preferences;
         _blockedHouseIds = blocked;
-        _displayName = displayName.isEmpty ? 'Bạn' : displayName;
+        _displayName = displayName.isEmpty ? L10nService().translate('match_bn_1fd75b') : displayName;
         _houseName = houseName.isEmpty ? widget.houseId : houseName;
         _avatarUrl = avatarUrl;
         _myDob = dob;
@@ -248,7 +249,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       setState(() {
         _loadError = AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể tải Single Match lúc này.',
+          fallbackMessage: L10nService().translate('match_khngthtisi_79646e'),
         ).message;
         _isLoading = false;
       });
@@ -280,10 +281,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   List<String> _profileIssues() {
     final issues = <String>[];
     if (!_currentPreferences.enabled) {
-      issues.add('đang tắt xuất hiện trong pool');
+      issues.add(L10nService().translate('match_angttxuthi_22db9c'));
     }
     if (!_hasEnabledCallMode) {
-      issues.add('chưa bật thoại hoặc video');
+      issues.add(L10nService().translate('match_chabtthoih_c1bcff'));
     }
     return issues;
   }
@@ -344,7 +345,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         !preferences.allowAudioCalls &&
         !preferences.allowVideoCalls) {
       _showSnack(
-        'Hãy bật ít nhất thoại hoặc video nếu muốn hồ sơ xuất hiện trong Single Match.',
+        L10nService().translate('match_hybttnhtth_903e92'),
         isError: true,
       );
       return;
@@ -375,12 +376,12 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         _savedDob = _myDob;
         _mySettings['dobU1'] = _myDob;
       });
-      _showSnack('Đã lưu cài đặt ghép nối.');
+      _showSnack(L10nService().translate('match_lucitghpni_a4856f'));
     } catch (error) {
       _showSnack(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể lưu cài đặt lúc này.',
+          fallbackMessage: L10nService().translate('match_khngthluci_a7196a'),
         ).message,
         isError: true,
       );
@@ -473,7 +474,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             candidate.age! <= current.preferredAgeMax;
         if (inRange) {
           score += 22;
-          reasons.add('Đúng độ tuổi bạn muốn');
+          reasons.add(L10nService().translate('match_ngtuibnmun_b5562a'));
         } else {
           final gap = candidate.age! < current.preferredAgeMin
               ? current.preferredAgeMin - candidate.age!
@@ -489,12 +490,12 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
 
       if (candidate.goal == current.goal) {
         score += 14;
-        reasons.add('Cùng mục tiêu trò chuyện');
+        reasons.add(L10nService().translate('match_cngmctiutr_aaeea2'));
       }
 
       if (candidate.voiceStyle == current.voiceStyle) {
         score += 10;
-        reasons.add('Vibe nói chuyện khá hợp');
+        reasons.add(L10nService().translate('match_vibenichuy_858a1c'));
       }
 
       final sharedTags = candidate.tags
@@ -519,7 +520,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       if (candidate.updatedAt > 0) {
         if (updatedDelta <= const Duration(days: 3).inMilliseconds) {
           score += 8;
-          reasons.add('Hồ sơ vừa hoạt động');
+          reasons.add(L10nService().translate('match_hsvahotng_8f547a'));
         } else if (updatedDelta <= const Duration(days: 14).inMilliseconds) {
           score += 4;
         }
@@ -531,18 +532,18 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         if (lastAction.isCall) {
           if (lastActionAgeMs < recentCallCooldown.inMilliseconds) {
             score -= 18;
-            reasons.add('Vừa kết nối gần đây');
+            reasons.add(L10nService().translate('match_vaktnigny_9edeed'));
           } else if (lastActionAgeMs < recentCallPenaltyWindow.inMilliseconds) {
             score -= 10;
-            reasons.add('Ưu tiên thử hồ sơ mới trước');
+            reasons.add(L10nService().translate('match_utinthhsmi_c565de'));
           } else {
             score += 4;
-            reasons.add('Từng nói chuyện khá ổn');
+            reasons.add(L10nService().translate('match_tngnichuyn_056417'));
           }
         } else if (lastAction.isSkipped &&
             lastActionAgeMs < recentSkipPenaltyWindow.inMilliseconds) {
           score -= 8;
-          reasons.add('Bạn vừa bỏ qua hồ sơ này');
+          reasons.add(L10nService().translate('match_bnvabquahs_12d6a6'));
         }
       }
 
@@ -648,17 +649,17 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             endedAt: nowMs,
             durationSeconds: 0,
             compatibilityScore: scored.score,
-            note: 'Đã lướt qua từ danh sách ghép nối',
+            note: L10nService().translate('match_ltquatdanh_0639b9'),
           )
           .timeout(const Duration(seconds: 8));
     } catch (error) {
       debugPrint(
           '[SingleMatch] log skip history failed: ${AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Không thể ghi lịch sử bỏ qua Single Match.',
+        fallbackMessage: L10nService().translate('match_khngthghil_4400ee'),
       ).message}');
     }
-    _showSnack('Đã ẩn hồ sơ này trong phiên hiện tại.');
+    _showSnack(L10nService().translate('match_nhsnytrong_4f704d'));
   }
 
   Future<void> _launchCall(
@@ -668,7 +669,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     final candidate = scored.candidate;
     if ((isVideo && !scored.canVideoCall) ||
         (!isVideo && !scored.canAudioCall)) {
-      _showSnack('Hồ sơ này chưa mở mode gọi bạn chọn.', isError: true);
+      _showSnack(L10nService().translate('match_hsnychammo_561339'), isError: true);
       return;
     }
     if (_callingHouseId != null) {
@@ -714,14 +715,14 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               endedAt: endedAt,
               durationSeconds: ((endedAt - startedAt) / 1000).round(),
               compatibilityScore: scored.score,
-              note: 'Khởi tạo từ tab ghép nối ngẫu nhiên',
+              note: L10nService().translate('match_khitottabg_083000'),
             )
             .timeout(const Duration(seconds: 8));
       } catch (error) {
         debugPrint(
             '[SingleMatch] log call history failed: ${AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể ghi lịch sử cuộc gọi Single Match.',
+          fallbackMessage: L10nService().translate('match_khngthghil_443f52'),
         ).message}');
       }
       if (mounted) {
@@ -852,10 +853,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                             fontWeight: FontWeight.w800,
                             fontSize: compactWidth ? 12 : 13,
                           ),
-                          tabs: const <Tab>[
-                            Tab(text: 'Ghép nối'),
-                            Tab(text: 'Lịch sử'),
-                            Tab(text: 'Cài đặt'),
+                          tabs: <Tab>[
+                            Tab(text: L10nService().translate('match_ghpni_91676a')),
+                            Tab(text: L10nService().translate('match_lchs_3061f5')),
+                            Tab(text: L10nService().translate('match_cit_1a6910')),
                           ],
                         ),
                       ),
@@ -896,7 +897,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   }
 
   Widget _buildHeaderCard() {
-    final ageText = _myAge == null ? 'Chưa có tuổi' : '$_myAge tuổi';
+    final ageText = _myAge == null ? L10nService().translate('match_chactui_a686b2') : '$_myAge tuổi';
     final goalText = _choiceLabel(_goalOptions, _currentPreferences.goal);
     return _SingleMatchHeaderCard(
       avatarUrl: _avatarUrl,
@@ -981,7 +982,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               children: <Widget>[
                 Expanded(
                   child: Text(
-                    'Hồ sơ phù hợp nhất',
+                    L10nService().translate('match_hsphhpnht_681857'),
                     style: SLTheme.quicksand(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
@@ -1010,13 +1011,13 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   Widget _buildWarningCard() {
     final issues = <String>[];
     if (_myDob.trim().isEmpty) {
-      issues.add('thiếu ngày sinh');
+      issues.add(L10nService().translate('match_thiungysin_8615ef'));
     }
     if ((_mySettings['bio'] ?? '').toString().trim().isEmpty) {
-      issues.add('thiếu bio công khai');
+      issues.add(L10nService().translate('match_thiubiocng_ab442d'));
     }
     if (_avatarUrl.trim().isEmpty) {
-      issues.add('thiếu avatar hồ sơ');
+      issues.add(L10nService().translate('match_thiuavatar_17d432'));
     }
 
     return _SingleMatchWarningCard(
@@ -1149,7 +1150,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Chưa có lịch sử',
+                      L10nService().translate('match_chaclchs_03d58f'),
                       style: SLTheme.quicksand(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -1158,7 +1159,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Khi bạn gọi hoặc lướt qua hồ sơ trong Single Match, mọi thứ sẽ hiện ở đây để gọi lại nhanh hơn.',
+                      L10nService().translate('match_khibngihoc_c9ed47'),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 13,
@@ -1200,7 +1201,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Chưa có lịch sử',
+                      L10nService().translate('match_chaclchs_03d58f'),
                       style: SLTheme.quicksand(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -1209,7 +1210,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Khi bạn gọi hoặc lướt qua hồ sơ trong Single Match, mọi thứ sẽ hiện ở đây để gọi lại nhanh hơn.',
+                      L10nService().translate('match_khibngihoc_c9ed47'),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 13,
@@ -1232,7 +1233,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               children: <Widget>[
                 Expanded(
                   child: _StatTile(
-                    label: 'Tổng cuộc gọi',
+                    label: L10nService().translate('match_tngcucgi_8e041e'),
                     value: '${callEntries.length}',
                     icon: Icons.call_rounded,
                     color: const Color(0xFFFF4F87),
@@ -1241,7 +1242,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 const SizedBox(width: 10),
                 Expanded(
                   child: _StatTile(
-                    label: 'Phút trò chuyện',
+                    label: L10nService().translate('match_phttrchuyn_b7d1cd'),
                     value: '$totalMinutes',
                     icon: Icons.schedule_rounded,
                     color: const Color(0xFF7C61FF),
@@ -1260,10 +1261,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   Widget _buildHistoryCard(SingleMatchHistoryEntry entry) {
     final isVideo = entry.action == 'video_call';
     final actionLabel = switch (entry.action) {
-      'audio_call' => 'Cuộc gọi thoại',
-      'video_call' => 'Cuộc gọi video',
-      'skipped' => 'Đã lướt qua',
-      _ => 'Hoạt động',
+      'audio_call' => L10nService().translate('match_cucgithoi_98f19b'),
+      'video_call' => L10nService().translate('match_cucgivideo_e7e38f'),
+      'skipped' => L10nService().translate('match_ltqua_a653f5'),
+      _ => L10nService().translate('match_hotng_2c21bc'),
     };
     final accent = switch (entry.action) {
       'audio_call' => const Color(0xFFFF4F87),
@@ -1298,7 +1299,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     children: <Widget>[
                       Expanded(
                         child: Text(
-                          entry.peerName.isEmpty ? 'Hồ sơ cũ' : entry.peerName,
+                          entry.peerName.isEmpty ? L10nService().translate('match_hsc_81b822') : entry.peerName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: SLTheme.quicksand(
@@ -1364,7 +1365,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                           ),
                           icon:
                               const Icon(Icons.person_search_rounded, size: 17),
-                          label: const Text('Mở hồ sơ'),
+                          label: Text(L10nService().translate('match_mhs_d226ff')),
                         ),
                       if (entry.isCall && entry.peerHouseId.isNotEmpty)
                         TextButton.icon(
@@ -1402,7 +1403,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                                 : Icons.call_made_rounded,
                             size: 17,
                           ),
-                          label: Text(isVideo ? 'Gọi video lại' : 'Gọi lại'),
+                          label: Text(isVideo ? L10nService().translate('match_givideoli_c273d4') : L10nService().translate('match_gili_69e918')),
                         ),
                     ],
                   ),
@@ -1422,9 +1423,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
       children: <Widget>[
         _buildSettingsSection(
-          title: 'Hồ sơ hiển thị khi ghép',
+          title: L10nService().translate('match_hshinthkhi_3fa84b'),
           subtitle:
-              'Avatar, bio và quyền riêng tư đang lấy từ hồ sơ cộng đồng hiện tại của bạn.',
+              L10nService().translate('match_avatarbiov_6b5c42'),
           child: Column(
             children: <Widget>[
               Row(
@@ -1450,7 +1451,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                         const SizedBox(height: 4),
                         Text(
                           (_mySettings['bio'] ?? '').toString().trim().isEmpty
-                              ? 'Chưa có bio công khai'
+                              ? L10nService().translate('match_chacbiocng_f4c0b3')
                               : (_mySettings['bio'] ?? '').toString().trim(),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -1469,7 +1470,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                       backgroundColor: const Color(0xFF7C61FF),
                     ),
                     icon: const Icon(Icons.edit_rounded, size: 18),
-                    label: const Text('Sửa'),
+                    label: Text(L10nService().translate('match_sa_9026a7')),
                   ),
                 ],
               ),
@@ -1490,7 +1491,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     Expanded(
                       child: Text(
                         _myAge == null
-                            ? 'Bạn chưa thêm ngày sinh nên bộ lọc tuổi chưa chính xác.'
+                            ? L10nService().translate('match_bnchathmng_98f34a')
                             : 'Đang dùng $_myAge tuổi cho thuật toán gợi ý.',
                         style: SLTheme.quicksand(
                           fontSize: 12,
@@ -1501,7 +1502,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     ),
                     TextButton(
                       onPressed: _pickDob,
-                      child: const Text('Cập nhật'),
+                      child: Text(L10nService().translate('match_cpnht_3b7db4')),
                     ),
                   ],
                 ),
@@ -1511,9 +1512,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         ),
         const SizedBox(height: 14),
         _buildSettingsSection(
-          title: 'Pool và mode gọi',
+          title: L10nService().translate('match_poolvmodeg_7fc33d'),
           subtitle:
-              'Bật xuất hiện trong random pool và chọn kiểu cuộc gọi bạn sẵn sàng nhận.',
+              L10nService().translate('match_btxuthintr_279295'),
           child: Column(
             children: <Widget>[
               SwitchListTile.adaptive(
@@ -1521,11 +1522,11 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 value: current.enabled,
                 activeThumbColor: const Color(0xFFFF4F87),
                 title: Text(
-                  'Xuất hiện trong ghép nối ngẫu nhiên',
+                  L10nService().translate('match_xuthintron_5ab706'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                 ),
                 subtitle: Text(
-                  'Khi tắt, hồ sơ của bạn sẽ không hiện trong pool single match.',
+                  L10nService().translate('match_khitthscab_87be09'),
                   style: SLTheme.quicksand(
                       fontSize: 12, fontWeight: FontWeight.w700),
                 ),
@@ -1542,11 +1543,11 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 value: current.allowAudioCalls,
                 activeThumbColor: const Color(0xFFFF4F87),
                 title: Text(
-                  'Cho phép gọi thoại',
+                  L10nService().translate('match_chophpgith_5a78ca'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                 ),
                 subtitle: Text(
-                  'Giữ mode nhẹ, dễ bắt chuyện nhanh như Litmatch.',
+                  L10nService().translate('match_gimodenhdb_dfbb74'),
                   style: SLTheme.quicksand(
                       fontSize: 12, fontWeight: FontWeight.w700),
                 ),
@@ -1563,11 +1564,11 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 value: current.allowVideoCalls,
                 activeThumbColor: const Color(0xFFFF4F87),
                 title: Text(
-                  'Cho phép gọi video',
+                  L10nService().translate('match_chophpgivi_95d26f'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                 ),
                 subtitle: Text(
-                  'Chỉ bật khi bạn muốn thấy mặt ngay sau khi match.',
+                  L10nService().translate('match_chbtkhibnm_10d366'),
                   style: SLTheme.quicksand(
                       fontSize: 12, fontWeight: FontWeight.w700),
                 ),
@@ -1583,9 +1584,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         ),
         const SizedBox(height: 14),
         _buildSettingsSection(
-          title: 'Độ tuổi bạn muốn gặp',
+          title: L10nService().translate('match_tuibnmungp_0fc277'),
           subtitle:
-              'Thuật toán ưu tiên hồ sơ nằm trong khoảng này trước khi random.',
+              L10nService().translate('match_thuttonuti_fa0b79'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -1624,9 +1625,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         ),
         const SizedBox(height: 14),
         _buildSettingsSection(
-          title: 'Bạn muốn gặp người theo kiểu nào',
+          title: L10nService().translate('match_bnmungpngi_d21532'),
           subtitle:
-              'Mục tiêu này sẽ tăng điểm tương thích cho các hồ sơ cùng gu.',
+              L10nService().translate('match_mctiunystn_614ab0'),
           child: Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -1662,9 +1663,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         ),
         const SizedBox(height: 14),
         _buildSettingsSection(
-          title: 'Vibe giọng nói của bạn',
+          title: L10nService().translate('match_vibegingni_e6402c'),
           subtitle:
-              'Dùng để ưu tiên những hồ sơ có kiểu trò chuyện gần với vibe bạn thích.',
+              L10nService().translate('match_dngutinnhn_c21718'),
           child: Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -1700,16 +1701,16 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         ),
         const SizedBox(height: 14),
         _buildSettingsSection(
-          title: 'Sở thích nổi bật',
+          title: L10nService().translate('match_sthchnibt_32a2e6'),
           subtitle:
-              'Nhập bằng dấu phẩy hoặc chạm gợi ý nhanh. Đây là phần giúp tìm người hợp thật.',
+              L10nService().translate('match_nhpbngduph_108600'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               TextField(
                 controller: _tagsController,
                 decoration: InputDecoration(
-                  hintText: 'Ví dụ: Âm nhạc, Đêm khuya, Podcast',
+                  hintText: L10nService().translate('match_vdmnhcmkhu_602d8a'),
                   filled: true,
                   fillColor: const Color(0xFFF9F4FF),
                   border: OutlineInputBorder(
@@ -1747,9 +1748,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         ),
         const SizedBox(height: 14),
         _buildSettingsSection(
-          title: 'Lời mở đầu khi match',
+          title: L10nService().translate('match_limukhimat_05cb9f'),
           subtitle:
-              'Một intro ngắn sẽ xuất hiện ngay ở top card để người kia quyết định gọi nhanh hơn.',
+              L10nService().translate('match_mtintrongn_109f85'),
           child: TextField(
             controller: _introController,
             minLines: 3,
@@ -1757,7 +1758,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             maxLength: 180,
             decoration: InputDecoration(
               hintText:
-                  'Ví dụ: Mình thích những cuộc gọi nhẹ nhàng, không cần quá gồng, chỉ cần nói chuyện thật.',
+                  L10nService().translate('match_vdmnhthchn_afb6c9'),
               filled: true,
               fillColor: const Color(0xFFF9F4FF),
               border: OutlineInputBorder(
@@ -1784,7 +1785,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                   )
                 : const Icon(Icons.save_rounded),
             label: Text(
-              _isSaving ? 'Đang lưu...' : 'Lưu cài đặt ghép nối',
+              _isSaving ? L10nService().translate('match_anglu_4d30b6') : L10nService().translate('match_lucitghpni_394565'),
               style: SLTheme.quicksand(fontWeight: FontWeight.w900),
             ),
           ),

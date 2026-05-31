@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -20,7 +19,7 @@ import '../../../utils/services/memory_share_service.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../widgets/share_bottom_sheet.dart';
 import '../../../widgets/skeleton_container.dart';
-import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../../utils/services/l10n_service.dart';
 import 'diary_composer.dart';
 
 import 'diary/controllers/diary_composer_controller.dart';
@@ -128,12 +127,33 @@ class _DiaryTabState extends State<DiaryTab> {
 
   void _toggleSelectionMode(Map<String, dynamic> photo) {
     _memoryController.toggleSelectionMode(photo);
+    _preloadMemoryShareRewardedAd();
     _handleControllerChange();
   }
 
   void _exitSelectionMode() {
     _memoryController.exitSelectionMode();
     _handleControllerChange();
+  }
+
+  void _selectAllVisibleMemories() {
+    final selectedCount = _memoryController.selectAllVisibleMemories();
+    if (selectedCount == 0) {
+      _showDiarySnackBar(
+        context.tr('home_hychntnht1_7e4198'),
+        backgroundColor: const Color(0xFFE53935),
+      );
+    }
+    _preloadMemoryShareRewardedAd();
+    _handleControllerChange();
+  }
+
+  void _preloadMemoryShareRewardedAd() {
+    unawaited(() async {
+      final adMob = AdMobService();
+      await adMob.initialize();
+      adMob.preloadRewardedAd();
+    }());
   }
 
   void _setCurrentTab(String tab) {
@@ -185,29 +205,32 @@ class _DiaryTabState extends State<DiaryTab> {
     final houseId = _houseId?.trim() ?? '';
     if (houseId.isEmpty) {
       _showDiarySnackBar(
-        'Chưa có mã nhà để tạo liên kết.',
+        context.tr('home_chacmnhtol_5583df'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
     }
     if (photos.isEmpty) {
       _showDiarySnackBar(
-        'Hãy chọn ít nhất 1 ảnh để tạo liên kết.',
+        context.tr('home_hychntnht1_7e4198'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
     }
+    final isProUser = await AdMobService().isProUser();
     final memoryLimits = await _memoryShareService.fetchLimits();
-    if (photos.length > memoryLimits.shareMaxItems) {
+    final maxItems = isProUser ? memoryLimits.shareProMaxItems : memoryLimits.shareFreeMaxItems;
+    if (photos.length > maxItems) {
       _showDiarySnackBar(
-        'Mỗi liên kết chỉ hỗ trợ tối đa ${memoryLimits.shareMaxItems} ảnh. Hãy bỏ chọn bớt ảnh nhé.',
+        'Mỗi liên kết chỉ hỗ trợ tối đa $maxItems ảnh đối với tài khoản ${isProUser ? 'PRO' : 'thường'}. Hãy bỏ chọn bớt ảnh nhé.',
         backgroundColor: const Color(0xFFE53935),
       );
       return;
     }
-    if (FirebaseAuth.instance.currentUser == null) {
+    final currentUser = await _guardController.resolveCurrentUser();
+    if (currentUser == null) {
       _showDiarySnackBar(
-        'Phiên đăng nhập đã hết. Vui lòng đăng nhập lại rồi thử lại.',
+        context.tr('home_phinngnhph_4893ad'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -218,21 +241,31 @@ class _DiaryTabState extends State<DiaryTab> {
       return;
     }
 
-    final gateResult = await _memoryShareAllowanceService.allowNextCreate(
-      showRewardedAd: () async {
-        await AdMobService().initialize();
-        return AdMobService().showRewardedAd();
-      },
-    );
-    if (!gateResult.allow) {
-      _showDiarySnackBar(
-        'Cần xem quảng cáo để tiếp tục tạo liên kết ở lần này.',
-        backgroundColor: const Color(0xFFE53935),
+    MemoryShareAllowanceGateResult? gateResult;
+    if (!isProUser) {
+      gateResult = await _memoryShareAllowanceService.allowNextCreate(
+        showRewardedAd: () async {
+          _showDiarySnackBar(context.tr('home_angtiqungc_dbfb83'));
+          final adMob = AdMobService();
+          await adMob.initialize();
+          return adMob.showRewardedAd(
+            ignoreCooldown: true,
+            loadTimeout: const Duration(seconds: 10),
+          );
+        },
       );
-      return;
+      if (!gateResult.allow) {
+        _showDiarySnackBar(
+          gateResult.requiresAd
+              ? context.tr('util_khngticqun_ce9d80')
+              : context.tr('home_cnxemqungc_878e59'),
+          backgroundColor: const Color(0xFFE53935),
+        );
+        return;
+      }
     }
 
-    if (gateResult.rewardGranted > 0) {
+    if (gateResult != null && gateResult.rewardGranted > 0) {
       _showDiarySnackBar(
         'Bạn nhận được ${gateResult.rewardGranted} lượt tạo liên kết. Còn lại ${gateResult.remainingCredits} lượt.',
       );
@@ -267,7 +300,7 @@ class _DiaryTabState extends State<DiaryTab> {
               const SizedBox(width: 14),
               Flexible(
                 child: Text(
-                  'Đang tạo liên kết...',
+                  context.tr('home_angtolinkt_21937e'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     color: SLColors.textPrimary,
@@ -308,8 +341,7 @@ class _DiaryTabState extends State<DiaryTab> {
       Navigator.of(context).pop();
       final resolvedError = AppErrorMapper.resolve(
         error,
-        fallbackMessage:
-            'Chưa thể tạo liên kết chia sẻ lúc này. Vui lòng thử lại sau.',
+        fallbackMessage: context.tr('home_chathtolin_20194a'),
       );
       _showDiarySnackBar(
         resolvedError.message,
@@ -319,12 +351,32 @@ class _DiaryTabState extends State<DiaryTab> {
   }
 
   Future<int?> _pickMemoryShareExpiryDays() {
-    const options = <({int days, String label, String subtitle})>[
-      (days: 7, label: '7 ngày', subtitle: 'Mặc định'),
-      (days: 14, label: '14 ngày', subtitle: 'Thêm 1 tuần'),
-      (days: 30, label: '30 ngày', subtitle: 'Khoảng 1 tháng'),
-      (days: 90, label: '3 tháng', subtitle: 'Giữ lâu hơn'),
-      (days: 183, label: '6 tháng', subtitle: 'Tối đa'),
+    final options = <({int days, String label, String subtitle})>[
+      (
+        days: 7,
+        label: context.tr('home_7ngy_d51ffb'),
+        subtitle: context.tr('home_mcnh_a57a8e')
+      ),
+      (
+        days: 14,
+        label: context.tr('home_14ngy_b98056'),
+        subtitle: context.tr('home_thm1tun_2da196')
+      ),
+      (
+        days: 30,
+        label: context.tr('home_30ngy_06199c'),
+        subtitle: context.tr('home_khong1thng_5fa21c')
+      ),
+      (
+        days: 90,
+        label: context.tr('home_3thng_f220f0'),
+        subtitle: context.tr('home_giluhn_238ae5')
+      ),
+      (
+        days: 183,
+        label: context.tr('home_6thng_06506c'),
+        subtitle: context.tr('home_tia_9b8ce7')
+      ),
     ];
 
     return showModalBottomSheet<int>(
@@ -342,7 +394,7 @@ class _DiaryTabState extends State<DiaryTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Chọn thời hạn liên kết',
+                context.tr('home_chnthihnli_2f138c'),
                 style: SLTheme.quicksand(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -351,7 +403,7 @@ class _DiaryTabState extends State<DiaryTab> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Liên kết mặc định là 7 ngày và tối đa 6 tháng.',
+                context.tr('home_linktmcnhl_54cf39'),
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w700,
@@ -412,8 +464,8 @@ class _DiaryTabState extends State<DiaryTab> {
       return const <String>[];
     }
 
-    final shareIndex =
-        Map<dynamic, dynamic>.from(sharesIndexSnap.value as Map<dynamic, dynamic>);
+    final shareIndex = Map<dynamic, dynamic>.from(
+        sharesIndexSnap.value as Map<dynamic, dynamic>);
     if (shareIndex.isEmpty) {
       return const <String>[];
     }
@@ -473,7 +525,7 @@ class _DiaryTabState extends State<DiaryTab> {
     final tokens = await _findActiveMemoryShareTokensForPhoto(item);
     if (tokens.isEmpty) {
       _showDiarySnackBar(
-        'Ảnh này hiện chưa có liên kết chia sẻ nào còn hiệu lực.',
+        context.tr('home_nhnyhincha_0362e9'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -484,24 +536,24 @@ class _DiaryTabState extends State<DiaryTab> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Thu hồi liên kết?',
+          context.tr('home_thuhilinkt_d5bcf0'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
           tokens.length > 1
               ? 'Ảnh này đang nằm trong ${tokens.length} liên kết chia sẻ còn hiệu lực. Thu hồi tất cả các liên kết này?'
-              : 'Ảnh này đang có 1 liên kết chia sẻ còn hiệu lực. Bạn muốn thu hồi liên kết đó?',
+              : context.tr('home_nhnyangc1l_3d102c'),
           style: SLTheme.quicksand(height: 1.4),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Hủy'),
+            child: Text(context.tr('home_hy_1e4050')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: const Text('Thu hồi'),
+            child: Text(context.tr('home_thuhi_b8c669')),
           ),
         ],
       ),
@@ -530,7 +582,7 @@ class _DiaryTabState extends State<DiaryTab> {
       _showDiarySnackBar(
         tokens.length > 1
             ? 'Đã thu hồi ${tokens.length} liên kết chia sẻ của ảnh này.'
-            : 'Đã thu hồi liên kết chia sẻ của ảnh này.',
+            : context.tr('home_thuhilinkt_e806cf'),
       );
     } catch (error) {
       if (!mounted) {
@@ -540,7 +592,7 @@ class _DiaryTabState extends State<DiaryTab> {
       _showDiarySnackBar(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể thu hồi liên kết lúc này. Vui lòng thử lại sau.',
+          fallbackMessage: context.tr('home_khngththuh_4e5dfa'),
         ).message,
         backgroundColor: const Color(0xFFE53935),
       );
@@ -566,17 +618,17 @@ class _DiaryTabState extends State<DiaryTab> {
             children: [
               ListTile(
                 leading: const Icon(Icons.download_rounded),
-                title: const Text('Lưu ảnh'),
+                title: Text(context.tr('home_lunh_9088ba')),
                 onTap: () => Navigator.of(sheetContext).pop('save'),
               ),
               ListTile(
                 leading: const Icon(Icons.ios_share_rounded),
-                title: const Text('Chia sẻ ảnh'),
+                title: Text(context.tr('home_chiasnh_003604')),
                 onTap: () => Navigator.of(sheetContext).pop('share'),
               ),
               ListTile(
                 leading: const Icon(Icons.info_outline_rounded),
-                title: const Text('Chi tiết ảnh'),
+                title: Text(context.tr('home_chititnh_958bbd')),
                 onTap: () => Navigator.of(sheetContext).pop('info'),
               ),
               ListTile(
@@ -585,7 +637,7 @@ class _DiaryTabState extends State<DiaryTab> {
                   color: Color(0xFFFF6B6B),
                 ),
                 title: Text(
-                  'Xóa ảnh',
+                  context.tr('home_xanh_0b98d1'),
                   style: SLTheme.quicksand(
                     color: const Color(0xFFFF6B6B),
                     fontWeight: FontWeight.w800,
@@ -796,10 +848,12 @@ class _DiaryTabState extends State<DiaryTab> {
     if (houseId == null || houseId.isEmpty) {
       return;
     }
-    await _interactionMetricsService.recordDiaryView(
-      houseId: houseId,
-      role: role,
-    );
+    try {
+      await _interactionMetricsService.recordDiaryView(
+        houseId: houseId,
+        role: role,
+      );
+    } catch (_) {}
   }
 
   void _showDiarySnackBar(String message, {Color? backgroundColor}) {
@@ -809,6 +863,42 @@ class _DiaryTabState extends State<DiaryTab> {
       SLNotice.showError(context, message);
     } else {
       SLNotice.showSuccess(context, message);
+    }
+  }
+
+  Future<void> _updateMemoryGroupDate({
+    required DateTime selectedDate,
+    required List<Map<String, dynamic>> photos,
+  }) async {
+    final houseId = _houseId?.trim() ?? '';
+    if (houseId.isEmpty) {
+      _showDiarySnackBar(
+        context.tr('home_chacmnhtol_5583df'),
+        backgroundColor: const Color(0xFFE53935),
+      );
+      return;
+    }
+    if (photos.isEmpty) {
+      return;
+    }
+
+    try {
+      await _memoryController.updateMemoryGroupDate(
+        houseId: houseId,
+        selectedDate: selectedDate,
+        photos: photos,
+      );
+      _showDiarySnackBar(
+        'Đã đổi ngày album sang ${DateFormat('dd/MM/yyyy').format(selectedDate)}.',
+      );
+    } catch (error) {
+      _showDiarySnackBar(
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể đổi ngày album lúc này.',
+        ).message,
+        backgroundColor: const Color(0xFFE53935),
+      );
     }
   }
 
@@ -828,14 +918,14 @@ class _DiaryTabState extends State<DiaryTab> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(L10nService().translate('Xác nhận xóa')),
+        title: Text(L10nService().translate(context.tr('home_xcnhnxa_f4ccd7'))),
         content: Text(
-          L10nService().translate('Bạn có chắc muốn xóa tâm sự này không?'),
+          L10nService().translate(context.tr('home_bncchcmunx_483a7a')),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(L10nService().translate('Hủy')),
+            child: Text(L10nService().translate(context.tr('home_hy_1e4050'))),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -851,13 +941,13 @@ class _DiaryTabState extends State<DiaryTab> {
     try {
       await _feedController.deleteDiaryPost(post);
       _handleFeedControllerChange();
-      _showDiarySnackBar(L10nService().translate('Đã xóa tâm sự.'));
+      _showDiarySnackBar(
+          L10nService().translate(context.tr('home_xatms_0872c5')));
     } catch (error) {
       _showDiarySnackBar(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage:
-              'Không xóa được tâm sự: bài viết có thể đã bị xóa, bạn không còn quyền hoặc mạng đang lỗi.',
+          fallbackMessage: context.tr('home_khngxactms_fea0e9'),
         ).message,
         backgroundColor: const Color(0xFFE53935),
       );
@@ -897,413 +987,424 @@ class _DiaryTabState extends State<DiaryTab> {
     _warmMemoryViewerAroundIndex(allPhotos, currentIndex);
 
     Navigator.push<void>(
-      context,
-      PageRouteBuilder(
-        opaque: false,
-        barrierDismissible: true,
-        barrierColor: Colors.black.withValues(alpha: 0.92),
-        transitionDuration: const Duration(milliseconds: 320),
-        reverseTransitionDuration: const Duration(milliseconds: 320),
-        pageBuilder: (dialogContext, animation, secondaryAnimation) => StatefulBuilder(
-        builder: (context, setState) {
-          final currentItem =
-              allPhotos.isNotEmpty ? allPhotos[currentIndex] : initialItem;
+        context,
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black.withValues(alpha: 0.92),
+          transitionDuration: const Duration(milliseconds: 320),
+          reverseTransitionDuration: const Duration(milliseconds: 320),
+          pageBuilder: (dialogContext, animation, secondaryAnimation) =>
+              StatefulBuilder(
+            builder: (context, setState) {
+              final currentItem =
+                  allPhotos.isNotEmpty ? allPhotos[currentIndex] : initialItem;
 
-          void closeOnVerticalSwipe(DragEndDetails details) {
-            final velocity = details.primaryVelocity ?? 0;
-            if (velocity.abs() < 200) {
-              return;
-            }
-            Navigator.pop(dialogContext);
-          }
-
-          Widget buildViewerImage(Map<String, dynamic> item) {
-            final imageProvider = _memoryImageProvider(
-              item['url']?.toString() ?? '',
-              maxWidth: 2200,
-            );
-            final transformationController = TransformationController();
-            final panEnabledVN = ValueNotifier<bool>(false);
-
-            void handleTransformChanged() {
-              final matrix = transformationController.value;
-              final scale = matrix.getMaxScaleOnAxis();
-              final shouldEnablePan = scale > 1.02;
-              if (panEnabledVN.value != shouldEnablePan) {
-                panEnabledVN.value = shouldEnablePan;
-              }
-            }
-
-            void handleSwipeDown() {
-              final scale = transformationController.value.getMaxScaleOnAxis();
-              if (scale > 1.05) {
-                transformationController.value = Matrix4.identity();
-                handleTransformChanged();
-                return;
-              }
-              Navigator.pop(dialogContext);
-            }
-
-            transformationController.addListener(handleTransformChanged);
-
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onLongPress: () => _showMemoryViewerActions(dialogContext, item),
-              onVerticalDragEnd: (details) {
+              void closeOnVerticalSwipe(DragEndDetails details) {
                 final velocity = details.primaryVelocity ?? 0;
-                if (velocity > 220) {
-                  handleSwipeDown();
+                if (velocity.abs() < 200) {
+                  return;
                 }
-              },
-              child: ValueListenableBuilder<bool>(
-                valueListenable: panEnabledVN,
-                builder: (context, panEnabled, _) {
-                  return InteractiveViewer(
-                    transformationController: transformationController,
-                    panEnabled: panEnabled,
-                    minScale: 1.0,
-                    maxScale: 4.5,
-                    boundaryMargin: const EdgeInsets.all(24),
-                    clipBehavior: Clip.none,
-                    interactionEndFrictionCoefficient: 0.00008,
-                    child: Hero(
-                      tag: 'memory_image_${item['id']}',
-                      child: Image(
-                        image: imageProvider,
-                        fit: BoxFit.contain,
-                        width: double.infinity,
-                        height: double.infinity,
-                        filterQuality: FilterQuality.high,
-                        gaplessPlayback: true,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.broken_image,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-          }
+                Navigator.pop(dialogContext);
+              }
 
-          return FadeTransition(
-            opacity: animation,
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              body: Stack(
-                alignment: Alignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(dialogContext),
-                    child: Container(color: Colors.transparent),
-                  ),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withValues(alpha: 0.62),
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.58),
-                          ],
-                          stops: const [0.0, 0.22, 1.0],
+              Widget buildViewerImage(Map<String, dynamic> item) {
+                final imageProvider = _memoryImageProvider(
+                  item['url']?.toString() ?? '',
+                  maxWidth: 2200,
+                );
+                final transformationController = TransformationController();
+                final panEnabledVN = ValueNotifier<bool>(false);
+
+                void handleTransformChanged() {
+                  final matrix = transformationController.value;
+                  final scale = matrix.getMaxScaleOnAxis();
+                  final shouldEnablePan = scale > 1.02;
+                  if (panEnabledVN.value != shouldEnablePan) {
+                    panEnabledVN.value = shouldEnablePan;
+                  }
+                }
+
+                void handleSwipeDown() {
+                  final scale =
+                      transformationController.value.getMaxScaleOnAxis();
+                  if (scale > 1.05) {
+                    transformationController.value = Matrix4.identity();
+                    handleTransformChanged();
+                    return;
+                  }
+                  Navigator.pop(dialogContext);
+                }
+
+                transformationController.addListener(handleTransformChanged);
+
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onLongPress: () =>
+                      _showMemoryViewerActions(dialogContext, item),
+                  onVerticalDragEnd: (details) {
+                    final velocity = details.primaryVelocity ?? 0;
+                    if (velocity > 220) {
+                      handleSwipeDown();
+                    }
+                  },
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: panEnabledVN,
+                    builder: (context, panEnabled, _) {
+                      return InteractiveViewer(
+                        transformationController: transformationController,
+                        panEnabled: panEnabled,
+                        minScale: 1.0,
+                        maxScale: 4.5,
+                        boundaryMargin: const EdgeInsets.all(24),
+                        clipBehavior: Clip.none,
+                        interactionEndFrictionCoefficient: 0.00008,
+                        child: Hero(
+                          tag: 'memory_image_${item['id']}',
+                          child: Image(
+                            image: imageProvider,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            filterQuality: FilterQuality.high,
+                            gaplessPlayback: true,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                ),
-                if (allPhotos.isNotEmpty)
-                  GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onVerticalDragEnd: closeOnVerticalSwipe,
-                    child: PageView.builder(
-                      controller: pageController,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: allPhotos.length,
-                      onPageChanged: (index) {
-                        setState(() {
-                          currentIndex = index;
-                        });
-                        _warmMemoryViewerAroundIndex(allPhotos, index);
-                      },
-                      itemBuilder: (context, index) {
-                        return buildViewerImage(allPhotos[index]);
-                      },
-                    ),
-                  )
-                else
-                  GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onVerticalDragEnd: closeOnVerticalSwipe,
-                    child: Builder(
-                      builder: (context) => buildViewerImage(initialItem),
-                    ),
-                  ),
-                Positioned(
-                  left: 18,
-                  right: 86,
-                  bottom: MediaQuery.of(context).padding.bottom + 18,
-                  child: IgnorePointer(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
+                );
+              }
+
+              return FadeTransition(
+                opacity: animation,
+                child: Scaffold(
+                  backgroundColor: Colors.transparent,
+                  body: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(dialogContext),
+                        child: Container(color: Colors.transparent),
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.42),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.10),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: DecoratedBox(
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFF6F91), Color(0xFF7C8BFF)],
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.62),
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.58),
+                                ],
+                                stops: const [0.0, 0.22, 1.0],
                               ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.favorite_rounded,
-                              color: Colors.white,
-                              size: 17,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  '${currentIndex + 1}/${allPhotos.isEmpty ? 1 : allPhotos.length} kỷ niệm',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: SLTheme.quicksand(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _formatMemoryTimestamp(currentItem),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: SLTheme.quicksand(
-                                    color: Colors.white.withValues(alpha: 0.68),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 14,
-                  left: 18,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.42),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.12),
-                      ),
-                    ),
-                    child: IconButton(
-                      tooltip: 'Đóng',
-                      onPressed: () => Navigator.pop(dialogContext),
-                      icon: const Icon(
-                        Icons.close_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 14,
-                  right: 18,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.42),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.12),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.22),
-                          blurRadius: 18,
-                          offset: const Offset(0, 8),
                         ),
-                      ],
-                    ),
-                    child: PopupMenuButton<String>(
-                      tooltip: 'Tùy chọn ảnh',
-                      padding: const EdgeInsets.all(11),
-                      icon: const Icon(
-                        Icons.more_vert_rounded,
-                        color: Colors.white,
-                        size: 23,
                       ),
-                      color: const Color(0xFF171A21),
-                      surfaceTintColor: const Color(0xFF171A21),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      itemBuilder: (menuContext) => [
-                        PopupMenuItem<String>(
-                          value: 'save',
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.download_rounded,
-                                color: Colors.white,
-                                size: 19,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Lưu ảnh',
-                                style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
+                      if (allPhotos.isNotEmpty)
+                        GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onVerticalDragEnd: closeOnVerticalSwipe,
+                          child: PageView.builder(
+                            controller: pageController,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: allPhotos.length,
+                            onPageChanged: (index) {
+                              setState(() {
+                                currentIndex = index;
+                              });
+                              _warmMemoryViewerAroundIndex(allPhotos, index);
+                            },
+                            itemBuilder: (context, index) {
+                              return buildViewerImage(allPhotos[index]);
+                            },
+                          ),
+                        )
+                      else
+                        GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onVerticalDragEnd: closeOnVerticalSwipe,
+                          child: Builder(
+                            builder: (context) => buildViewerImage(initialItem),
                           ),
                         ),
-                        PopupMenuItem<String>(
-                          value: 'share',
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.ios_share_rounded,
-                                color: Colors.white,
-                                size: 19,
+                      Positioned(
+                        left: 18,
+                        right: 86,
+                        bottom: MediaQuery.of(context).padding.bottom + 18,
+                        child: IgnorePointer(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.42),
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.10),
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Chia sẻ ảnh',
-                                style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'info',
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.info_outline_rounded,
-                                color: Colors.white,
-                                size: 19,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Chi tiết ảnh',
-                                style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if ((currentItem['id']?.toString().trim() ?? '').isNotEmpty)
-                          PopupMenuItem<String>(
-                            value: 'revoke_share',
+                            ),
                             child: Row(
                               children: [
-                                const Icon(
-                                  Icons.link_off_rounded,
-                                  color: Color(0xFFFFB074),
-                                  size: 19,
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFFFF6F91),
+                                        Color(0xFF7C8BFF)
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.favorite_rounded,
+                                    color: Colors.white,
+                                    size: 17,
+                                  ),
                                 ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Thu hồi liên kết',
-                                  style: SLTheme.quicksand(
-                                    color: const Color(0xFFFFB074),
-                                    fontWeight: FontWeight.w800,
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${currentIndex + 1}/${allPhotos.isEmpty ? 1 : allPhotos.length} kỷ niệm',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: SLTheme.quicksand(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _formatMemoryTimestamp(currentItem),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: SLTheme.quicksand(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.68),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        PopupMenuItem<String>(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.delete_outline_rounded,
-                                color: Color(0xFFFF6B6B),
-                                size: 19,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Xóa ảnh',
-                                style: SLTheme.quicksand(
-                                  color: const Color(0xFFFF6B6B),
-                                  fontWeight: FontWeight.w800,
-                                ),
+                        ),
+                      ),
+                      Positioned(
+                        top: MediaQuery.of(context).padding.top + 14,
+                        left: 18,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.42),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          child: IconButton(
+                            tooltip: context.tr('home_ng_f63d1e'),
+                            onPressed: () => Navigator.pop(dialogContext),
+                            icon: const Icon(
+                              Icons.close_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: MediaQuery.of(context).padding.top + 14,
+                        right: 18,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.42),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.22),
+                                blurRadius: 18,
+                                offset: const Offset(0, 8),
                               ),
                             ],
                           ),
+                          child: PopupMenuButton<String>(
+                            tooltip: context.tr('home_tychnnh_5e18e0'),
+                            padding: const EdgeInsets.all(11),
+                            icon: const Icon(
+                              Icons.more_vert_rounded,
+                              color: Colors.white,
+                              size: 23,
+                            ),
+                            color: const Color(0xFF171A21),
+                            surfaceTintColor: const Color(0xFF171A21),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            itemBuilder: (menuContext) => [
+                              PopupMenuItem<String>(
+                                value: 'save',
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.download_rounded,
+                                      color: Colors.white,
+                                      size: 19,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      context.tr('home_lunh_9088ba'),
+                                      style: SLTheme.quicksand(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem<String>(
+                                value: 'share',
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.ios_share_rounded,
+                                      color: Colors.white,
+                                      size: 19,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      context.tr('home_chiasnh_003604'),
+                                      style: SLTheme.quicksand(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem<String>(
+                                value: 'info',
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.info_outline_rounded,
+                                      color: Colors.white,
+                                      size: 19,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      context.tr('home_chititnh_958bbd'),
+                                      style: SLTheme.quicksand(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if ((currentItem['id']?.toString().trim() ?? '')
+                                  .isNotEmpty)
+                                PopupMenuItem<String>(
+                                  value: 'revoke_share',
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.link_off_rounded,
+                                        color: Color(0xFFFFB074),
+                                        size: 19,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        context.tr('home_thuhilinkt_8e3e83'),
+                                        style: SLTheme.quicksand(
+                                          color: const Color(0xFFFFB074),
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              PopupMenuItem<String>(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.delete_outline_rounded,
+                                      color: Color(0xFFFF6B6B),
+                                      size: 19,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      context.tr('home_xanh_0b98d1'),
+                                      style: SLTheme.quicksand(
+                                        color: const Color(0xFFFF6B6B),
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onSelected: (value) async {
+                              switch (value) {
+                                case 'save':
+                                  await _downloadSingleImage(
+                                      currentItem['url']);
+                                  break;
+                                case 'share':
+                                  Navigator.pop(dialogContext);
+                                  await _shareSingleMemory(currentItem);
+                                  break;
+                                case 'info':
+                                  await _showMemoryInfoSheet(
+                                      dialogContext, currentItem);
+                                  break;
+                                case 'revoke_share':
+                                  await _revokeMemoryShareLinksForPhoto(
+                                    dialogContext,
+                                    currentItem,
+                                  );
+                                  break;
+                                case 'delete':
+                                  Navigator.pop(dialogContext);
+                                  await _deleteMemory(currentItem);
+                                  break;
+                              }
+                            },
+                          ),
                         ),
-                      ],
-                      onSelected: (value) async {
-                        switch (value) {
-                          case 'save':
-                            await _downloadSingleImage(currentItem['url']);
-                            break;
-                          case 'share':
-                            Navigator.pop(dialogContext);
-                            await _shareSingleMemory(currentItem);
-                            break;
-                          case 'info':
-                            await _showMemoryInfoSheet(
-                                dialogContext, currentItem);
-                            break;
-                          case 'revoke_share':
-                            await _revokeMemoryShareLinksForPhoto(
-                              dialogContext,
-                              currentItem,
-                            );
-                            break;
-                          case 'delete':
-                            Navigator.pop(dialogContext);
-                            await _deleteMemory(currentItem);
-                            break;
-                        }
-                      },
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
-        );
-      },
-    ),
-  ));
-}
+        ));
+  }
 
   String _formatMemoryTimestamp(Map<String, dynamic> item) {
     final timestamp = item['ts'] as int? ?? 0;
@@ -1311,7 +1412,6 @@ class _DiaryTabState extends State<DiaryTab> {
       DateTime.fromMillisecondsSinceEpoch(timestamp),
     );
   }
-
 
   Future<void> _showMemoryInfoSheet(
     BuildContext dialogContext,
@@ -1357,7 +1457,7 @@ class _DiaryTabState extends State<DiaryTab> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Chi tiết ảnh',
+                    context.tr('home_chititnh_958bbd'),
                     style: SLTheme.quicksand(
                       color: Colors.white,
                       fontSize: 17,
@@ -1367,14 +1467,15 @@ class _DiaryTabState extends State<DiaryTab> {
                   const SizedBox(height: 16),
                   _MemoryInfoTile(
                     icon: Icons.person_outline_rounded,
-                    label: 'Người đăng',
-                    value:
-                        authorName.isEmpty ? 'Chưa có thông tin' : authorName,
+                    label: context.tr('home_nging_c93b87'),
+                    value: authorName.isEmpty
+                        ? context.tr('home_chacthngti_ad20b9')
+                        : authorName,
                   ),
                   const SizedBox(height: 12),
                   _MemoryInfoTile(
                     icon: Icons.schedule_rounded,
-                    label: 'Ngày đăng',
+                    label: context.tr('home_ngyng_d1c813'),
                     value: postedAt,
                   ),
                 ],

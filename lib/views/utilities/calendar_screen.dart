@@ -1,18 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:ui' as ui;
 import '../../services/notification_service.dart';
 import '../../core/sl_theme.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
-import 'package:soullocket_app/views/utilities/calendar/dialogs/calendar_quick_add_sheet.dart';
-import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_background_decor.dart';
-import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_event_input_panel.dart';
-import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_event_list_section.dart';
-import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_header_section.dart';
-import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_info_pill.dart';
-import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_selected_day_summary.dart';
+import '../../core/fast_backdrop_filter.dart';
+import 'calendar/dialogs/calendar_quick_add_sheet.dart';
+import 'calendar/widgets/calendar_background_decor.dart';
+import 'calendar/widgets/calendar_event_input_panel.dart';
+import 'calendar/widgets/calendar_event_list_section.dart';
+import 'calendar/widgets/calendar_header_section.dart';
+import 'calendar/widgets/calendar_info_pill.dart';
+import 'calendar/widgets/calendar_selected_day_summary.dart';
 
 class CalendarScreen extends StatefulWidget {
   final String houseId;
@@ -139,38 +140,38 @@ class _CalendarScreenState extends State<CalendarScreen> {
   String _weekdayName(DateTime date) {
     switch (date.weekday) {
       case DateTime.monday:
-        return 'Thứ Hai';
+        return context.tr('util_thhai_5bb9bc');
       case DateTime.tuesday:
-        return 'Thứ Ba';
+        return context.tr('util_thba_daeb4b');
       case DateTime.wednesday:
-        return 'Thứ Tư';
+        return context.tr('util_tht_1bd584');
       case DateTime.thursday:
-        return 'Thứ Năm';
+        return context.tr('util_thnm_f3409d');
       case DateTime.friday:
-        return 'Thứ Sáu';
+        return context.tr('util_thsu_f2726e');
       case DateTime.saturday:
-        return 'Thứ Bảy';
+        return context.tr('util_thby_7d9b56');
       case DateTime.sunday:
-        return 'Chủ Nhật';
+        return context.tr('util_chnht_3ab601');
       default:
-        return 'Hôm nay';
+        return context.tr('util_hmnay_928c25');
     }
   }
 
   String _monthName(int month) {
-    const months = <String>[
-      'tháng 1',
-      'tháng 2',
-      'tháng 3',
-      'tháng 4',
-      'tháng 5',
-      'tháng 6',
-      'tháng 7',
-      'tháng 8',
-      'tháng 9',
-      'tháng 10',
-      'tháng 11',
-      'tháng 12',
+    final months = <String>[
+      context.tr('util_thng1_db2569'),
+      context.tr('util_thng2_afb937'),
+      context.tr('util_thng3_b426e8'),
+      context.tr('util_thng4_a41472'),
+      context.tr('util_thng5_421305'),
+      context.tr('util_thng6_09ac20'),
+      context.tr('util_thng7_736c97'),
+      context.tr('util_thng8_7c30f4'),
+      context.tr('util_thng9_b91fa1'),
+      context.tr('util_thng10_592fc9'),
+      context.tr('util_thng11_1bfbf7'),
+      context.tr('util_thng12_8dffb8'),
     ];
     return months[month - 1];
   }
@@ -185,7 +186,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   String _formatCreatedTime(int timestamp) {
     if (timestamp <= 0) {
-      return 'Không rõ giờ tạo';
+      return context.tr('util_khngrgito_22882c');
     }
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
     final hour = date.hour.toString().padLeft(2, '0');
@@ -195,36 +196,36 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   String _selectedDayBadge(DateTime date) {
     if (_isToday(date)) {
-      return 'Hôm nay';
+      return context.tr('util_hmnay_928c25');
     }
     if (_isTomorrow(date)) {
-      return 'Ngày mai';
+      return context.tr('util_ngymai_cd64f0');
     }
     if (_isPastDate(date)) {
-      return 'Đã qua';
+      return context.tr('util_qua_8ff9a0');
     }
-    return 'Sắp tới';
+    return context.tr('util_spti_c7f0f9');
   }
 
   String _selectedDayDescription(DateTime date, int eventCount) {
     if (_isToday(date)) {
       return eventCount == 0
-          ? 'Hôm nay đang trống lịch. Bạn có thể thêm kế hoạch mới để cả hai cùng theo dõi.'
-          : 'Hôm nay có $eventCount kế hoạch. Nên ghi càng cụ thể càng dễ nhớ và dễ chuẩn bị.';
+          ? context.tr('util_hmnayangtr_1d1c51')
+          : L10nService().format('util_calendar_today_with_count', {'count': eventCount});
     }
     if (_isTomorrow(date)) {
       return eventCount == 0
-          ? 'Ngày mai chưa có lịch nào. Có thể thêm lịch hẹn, việc cần làm hoặc nhắc quà từ bây giờ.'
-          : 'Ngày mai đã có $eventCount kế hoạch. Ứng dụng sẽ nhắc trước để không bị quên.';
+          ? context.tr('util_ngymaichac_c9028e')
+          : L10nService().format('util_calendar_tomorrow_with_count', {'count': eventCount});
     }
     if (_isPastDate(date)) {
       return eventCount == 0
-          ? 'Ngày này đã qua và chưa có dấu mốc nào được lưu lại.'
-          : 'Ngày này đã qua, bạn vẫn có thể xem lại $eventCount kế hoạch từng được tạo.';
+          ? context.tr('util_ngynyquavc_7fd2b2')
+          : L10nService().format('util_calendar_past_with_count', {'count': eventCount});
     }
     return eventCount == 0
-        ? 'Ngày này đang trống. Hãy thêm lịch để biến nó thành một mốc đáng nhớ.'
-        : 'Đã có $eventCount kế hoạch cho ngày này. Bạn có thể bổ sung thêm chi tiết nếu cần.';
+        ? context.tr('util_ngynyangtr_12488d')
+        : L10nService().format('util_calendar_day_with_count', {'count': eventCount});
   }
 
   Future<bool> _saveEventForDay({
@@ -290,7 +291,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Đã thêm kế hoạch cho ${_formatShortDate(day)}',
+              L10nService().format('util_calendar_added_for_date', {'date': _formatShortDate(day)}),
             ),
           ),
         );
@@ -330,8 +331,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (scheduleTime.isAfter(now)) {
       NotificationService().scheduleLocalNotification(
         id: scheduleTime.millisecondsSinceEpoch ~/ 1000,
-        title: 'Lịch trình hôm nay 📅',
-        body: 'Đừng quên: $eventTitle',
+        title: context.tr('util_calendar_today_title'),
+        body: L10nService().format('util_calendar_reminder_body', {'title': eventTitle}),
         scheduledDate: scheduleTime,
       );
     }
@@ -341,8 +342,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (dayBefore.isAfter(now)) {
       NotificationService().scheduleLocalNotification(
         id: (dayBefore.millisecondsSinceEpoch ~/ 1000) + 1,
-        title: 'Nhắc nhở ngày mai ⏰',
-        body: 'Sắp tới: $eventTitle',
+        title: context.tr('util_nhcnhngyma_b07d5b'),
+        body: L10nService().format('util_calendar_upcoming_body', {'title': eventTitle}),
         scheduledDate: dayBefore,
       );
     }
@@ -425,7 +426,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Hướng dẫn dùng Lịch chung',
+                                context.tr('util_hngdndnglc_234451'),
                                 style: SLTheme.quicksand(
                                   fontSize: compact ? 16 : 17,
                                   fontWeight: FontWeight.w900,
@@ -434,7 +435,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               ),
                               SLSpacing.h4,
                               Text(
-                                'Thêm lịch hẹn, việc cần nhớ hoặc kế hoạch chung để cả hai cùng theo dõi dễ hơn.',
+                                context.tr('util_thmlchhnvi_3cd2f4'),
                                 style: SLTheme.quicksand(
                                   fontSize: compact ? 11.5 : 12,
                                   fontWeight: FontWeight.w700,
@@ -460,13 +461,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       children: [
                         CalendarInfoPill(
                           icon: Icons.notifications_active_rounded,
-                          label: 'Nhắc vào 9:00 sáng',
+                          label: context.tr('util_nhcvo900sn_1062db'),
                           accent: const Color(0xFFE85D75),
                           compact: compact,
                         ),
                         CalendarInfoPill(
                           icon: Icons.event_available_rounded,
-                          label: 'Nhắc trước 1 ngày',
+                          label: context.tr('util_nhctrc1ngy_09c55a'),
                           accent: const Color(0xFF2157F2),
                           compact: compact,
                         ),
@@ -475,27 +476,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     SizedBox(height: compact ? 14 : 16),
                     _buildGuideStep(
                       number: '1',
-                      title: 'Chọn ngày',
+                      title: context.tr('util_chnngy_d2cce5'),
                       description:
-                          'Chạm vào ngày bạn muốn tạo lịch trên lịch phía trên.',
+                          context.tr('util_chmvongybn_92732b'),
                     ),
                     _buildGuideStep(
                       number: '2',
-                      title: 'Nhập nội dung',
+                      title: context.tr('util_nhpnidung_5f153e'),
                       description:
-                          'Ghi ngắn gọn nhưng rõ ràng, ví dụ giờ hẹn, địa điểm hoặc việc cần chuẩn bị.',
+                          context.tr('util_ghingngnnh_2d7dac'),
                     ),
                     _buildGuideStep(
                       number: '3',
-                      title: 'Thêm vào lịch',
+                      title: context.tr('util_thmvolch_2a1508'),
                       description:
-                          'Bấm nút thêm để lưu kế hoạch vào ngày đã chọn.',
+                          context.tr('util_bmntthmluk_aa8abf'),
                     ),
                     _buildGuideStep(
                       number: '4',
-                      title: 'Cách thông báo hoạt động',
+                      title: context.tr('util_cchthngboh_efb6db'),
                       description:
-                          'Ứng dụng hiện sẽ nhắc trước 1 ngày vào 9:00 sáng và nhắc lại vào chính ngày đó lúc 9:00 sáng nếu thời điểm đó vẫn còn ở phía trước.',
+                          context.tr('util_ngdnghinsn_2db6a9'),
                     ),
                     SizedBox(height: compact ? 14 : 16),
                     Container(
@@ -517,7 +518,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           SLSpacing.w10,
                           Expanded(
                             child: Text(
-                              'Mẹo: nên ghi kiểu “19:30 đi ăn ở ..., mang quà, gọi trước 15 phút” để khi nhận thông báo là hiểu ngay cần làm gì.',
+                              context.tr('util_monnghikiu_82a005'),
                               style: SLTheme.quicksand(
                                 fontSize: compact ? 11.5 : 12,
                                 fontWeight: FontWeight.w700,
@@ -664,7 +665,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Hướng dẫn sử dụng',
+            tooltip: context.tr('util_hngdnsdng_14c212'),
             onPressed: _showUsageGuide,
             icon: const Icon(
               Icons.info_outline_rounded,

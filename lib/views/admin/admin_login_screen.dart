@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/sl_theme.dart';
 import '../../services/auth_service.dart';
@@ -32,12 +33,25 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    final emptyFieldsMsg = context.tr('admin_vuilngnhpe_f63f07');
+    final noAccessMsg = context.tr('admin_tikhonnych_d4de90');
+    final loginErrorFallback = context.tr('admin_chathngnhp_9fcc73');
+
+    // Cache translations for error mapping
+    final invalidEmailMsg = context.tr('admin_emailadmin_fa6f96');
+    final wrongCredsMsg = context.tr('admin_emailhocmt_c494cd');
+    final disabledMsg = context.tr('admin_tikhonadmi_b31672');
+    final tooManyRequestsMsg = context.tr('admin_bnthngnhpq_566a49');
+    final networkFailedMsg = context.tr('admin_ktnimngcha_f1ad2d');
+    final adminRoleMissingTerm = context.tr('admin_chacquynad_0ef75d');
+    final genericLoginErrorMsg = context.tr('admin_chathngnhp_01bfd9');
+
     FocusScope.of(context).unfocus();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      setState(() => _errorText = 'Vui lòng nhập email và mật khẩu admin.');
+      setState(() => _errorText = emptyFieldsMsg);
       return;
     }
 
@@ -66,7 +80,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           await _authService.isCurrentUserAdmin(forceRefresh: true);
       if (!hasAccess) {
         await _authService.signOut();
-        throw 'Tài khoản này chưa có quyền admin.';
+        throw noAccessMsg;
       }
 
       // Đăng nhập thành công -> reset bộ đếm
@@ -88,11 +102,21 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       } else {
         debugPrint('Admin login failed: ${AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Chưa thể đăng nhập admin lúc này.',
+          fallbackMessage: loginErrorFallback,
         ).message}');
         setState(() {
           _errorText =
-              '${_adminLoginErrorText(error)}\n(Sai $newFailedAttempts/$maxFailedAttempts lần)';
+              '${_adminLoginErrorText(
+                error,
+                invalidEmail: invalidEmailMsg,
+                wrongCreds: wrongCredsMsg,
+                disabled: disabledMsg,
+                tooManyRequests: tooManyRequestsMsg,
+                networkFailed: networkFailedMsg,
+                adminRoleMissing: adminRoleMissingTerm,
+                noAccess: noAccessMsg,
+                genericError: genericLoginErrorMsg,
+              )}\n(Sai $newFailedAttempts/$maxFailedAttempts lần)';
         });
       }
     } finally {
@@ -102,28 +126,38 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     }
   }
 
-  String _adminLoginErrorText(Object error) {
+  String _adminLoginErrorText(
+    Object error, {
+    required String invalidEmail,
+    required String wrongCreds,
+    required String disabled,
+    required String tooManyRequests,
+    required String networkFailed,
+    required String adminRoleMissing,
+    required String noAccess,
+    required String genericError,
+  }) {
     if (error is firebase_auth.FirebaseAuthException) {
       switch (error.code) {
         case 'invalid-email':
-          return 'Email admin chưa đúng định dạng.';
+          return invalidEmail;
         case 'user-not-found':
         case 'wrong-password':
         case 'invalid-credential':
-          return 'Email hoặc mật khẩu admin chưa đúng.';
+          return wrongCreds;
         case 'user-disabled':
-          return 'Tài khoản admin này đã bị vô hiệu hóa.';
+          return disabled;
         case 'too-many-requests':
-          return 'Bạn thử đăng nhập quá nhiều lần. Vui lòng chờ một lúc rồi thử lại.';
+          return tooManyRequests;
         case 'network-request-failed':
-          return 'Kết nối mạng chưa ổn định. Vui lòng thử lại.';
+          return networkFailed;
       }
     }
     final message = error.toString();
-    if (message.contains('chưa có quyền admin')) {
-      return 'Tài khoản này chưa có quyền admin.';
+    if (message.contains(adminRoleMissing)) {
+      return noAccess;
     }
-    return 'Chưa thể đăng nhập admin lúc này. Vui lòng thử lại.';
+    return genericError;
   }
 
   @override
@@ -153,7 +187,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             sectionTag('SoulLocket Admin'),
                             SLSpacing.h16,
                             Text(
-                              'Web admin dark cho đăng nhập và dashboard tổng quan',
+                              context.tr('admin_webadminda_bc6955'),
                               style: SLTheme.quicksand(
                                 color: Colors.white,
                                 fontSize: 34,
@@ -163,7 +197,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             ),
                             SLSpacing.h16,
                             Text(
-                              'Giai đoạn 1 tập trung vào xác thực admin bằng Firebase Auth và màn hình tổng quan dữ liệu hệ thống.',
+                              context.tr('admin_giaion1tpt_5cb427'),
                               style: SLTheme.quicksand(
                                 color: const Color(0xFFB7C1D6),
                                 fontSize: 15,
@@ -172,19 +206,19 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                               ),
                             ),
                             SLSpacing.h24,
-                            const Wrap(
+                            Wrap(
                               spacing: 12,
                               runSpacing: 12,
                               children: [
                                 HighlightChip(
                                   icon: Icons.security_rounded,
-                                  label: 'Kiểm tra custom claim admin',
+                                  label: context.tr('admin_kimtracust_db4d9b'),
                                 ),
-                                HighlightChip(
+                                const HighlightChip(
                                   icon: Icons.dashboard_rounded,
                                   label: 'Dashboard overview realtime',
                                 ),
-                                HighlightChip(
+                                const HighlightChip(
                                   icon: Icons.dark_mode_rounded,
                                   label: 'Dark UI Flutter Web',
                                 ),
@@ -205,7 +239,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Đăng nhập admin',
+                              context.tr('admin_ngnhpadmin_eb6486'),
                               style: SLTheme.quicksand(
                                 color: Colors.white,
                                 fontSize: 26,
@@ -214,7 +248,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             ),
                             SLSpacing.h8,
                             Text(
-                              'Dùng tài khoản đã được gán custom claim admin.',
+                              context.tr('admin_dngtikhonc_ffd8dc'),
                               style: SLTheme.quicksand(
                                 color: const Color(0xFF9AA8C4),
                                 fontSize: 14,
@@ -232,7 +266,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             SLSpacing.h16,
                             AdminTextField(
                               controller: _passwordController,
-                              label: 'Mật khẩu',
+                              label: context.tr('admin_mtkhu_3a6648'),
                               obscureText: _obscurePassword,
                               textInputAction: TextInputAction.done,
                               prefixIcon: Icons.lock_outline_rounded,
@@ -301,7 +335,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                         ),
                                       )
                                     : Text(
-                                        'Vào dashboard',
+                                        context.tr('admin_vodashboar_d303e7'),
                                         style: SLTheme.quicksand(
                                           color: Colors.white,
                                           fontSize: 15,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/app_error_mapper.dart';
@@ -55,6 +56,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   }
 
   Future<void> _initRenderers() async {
+    final msgListenerFail = context.tr('relationship_khngththeo_dec6d3');
+    final msgErrorOccurred = context.tr('relationship_chathbtucu_cd4ee1');
     await _localRenderer.initialize();
     await _remoteRenderer.initialize();
     try {
@@ -121,7 +124,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             debugPrint(
               'Video call room listener failed: ${AppErrorMapper.resolve(
                 error,
-                fallbackMessage: 'Không thể theo dõi trạng thái cuộc gọi.',
+                fallbackMessage: msgListenerFail,
               ).message}',
             );
           },
@@ -131,8 +134,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       if (!mounted) return;
       setState(() => _isPreparing = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể bắt đầu cuộc gọi lúc này. Vui lòng thử lại.'),
+        SnackBar(
+          content: Text(msgErrorOccurred),
         ),
       );
       Navigator.pop(context);
@@ -216,7 +219,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  _isPreparing ? 'Đang kết nối...' : callLabel,
+                                  _isPreparing ? context.tr('relationship_angktni_e4af2e') : callLabel,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.center,
@@ -352,7 +355,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   Widget _buildWaitingState(String callLabel) {
     return Center(
       child: Text(
-        _isPreparing ? 'Đang khởi tạo $callLabel...' : 'Đang chờ kết nối...',
+        _isPreparing ? 'Đang khởi tạo $callLabel...' : context.tr('relationship_angchktni_a08068'),
         style: SLTheme.quicksand(color: Colors.white54, fontSize: 16),
       ),
     );
@@ -401,7 +404,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             ),
             SLSpacing.h8,
             Text(
-              _isPreparing ? 'Đang kết nối $callLabel...' : 'Mic đang bật',
+              _isPreparing ? 'Đang kết nối $callLabel...' : context.tr('relationship_micangbt_8c0d7f'),
               style: SLTheme.quicksand(
                 color: Colors.white70,
                 fontSize: 14,

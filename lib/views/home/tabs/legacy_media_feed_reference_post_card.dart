@@ -233,7 +233,7 @@ class _LegacyMediaFeedReferencePostCardState
 
   void _showComments() {
     if (!widget.post.commentsEnabled && widget.post.houseId != widget.houseId) {
-      SLNotice.showInfo(context, 'Bài viết này đang tắt bình luận.');
+      SLNotice.showInfo(context, context.tr('home_bivitnyang_350b57'));
       return;
     }
     showModalBottomSheet(
@@ -272,8 +272,11 @@ class _LegacyMediaFeedReferencePostCardState
               if (widget.post.houseId == widget.houseId)
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: Colors.red),
-                  title: Text('Xóa bài viết', style: SLTheme.quicksand()),
+                  title: Text(context.tr('home_xabivit_2c7199'), style: SLTheme.quicksand()),
                   onTap: () async {
+                    final errFallback = context.tr('home_clixyra_775791');
+                    final successMsg = context.tr('home_xabivit_55f95f');
+                    final failMsg = context.tr('home_chathxabiv_72f417');
                     Navigator.pop(context);
                     try {
                       await SocialService().deletePost(
@@ -281,18 +284,18 @@ class _LegacyMediaFeedReferencePostCardState
                         requestingHouseId: widget.houseId,
                       );
                       if (!mounted || !context.mounted) return;
-                      SLNotice.showSuccess(context, 'Đã xóa bài viết.');
+                      SLNotice.showSuccess(context, successMsg);
                     } catch (e) {
                       debugPrint(
                         'Delete post failed: ${AppErrorMapper.resolve(
                           e,
-                          fallbackMessage: 'Đã có lỗi xảy ra',
+                          fallbackMessage: errFallback,
                         ).message}',
                       );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
                         context,
-                        'Chưa thể xóa bài viết lúc này. Vui lòng thử lại.',
+                        failMsg,
                       );
                     }
                   },
@@ -301,8 +304,11 @@ class _LegacyMediaFeedReferencePostCardState
                 ListTile(
                   leading:
                       const Icon(Icons.flag_outlined, color: Colors.orange),
-                  title: Text('Báo cáo bài viết', style: SLTheme.quicksand()),
+                  title: Text(context.tr('home_bocobivit_08313a'), style: SLTheme.quicksand()),
                   onTap: () async {
+                    final errFallback = context.tr('home_clixyra_775791');
+                    final successMsg = context.tr('home_gibocotiqu_efe49e');
+                    final failMsg = context.tr('home_chathgiboc_05046c');
                     Navigator.pop(context);
                     try {
                       await SocialService().reportPost(
@@ -313,28 +319,33 @@ class _LegacyMediaFeedReferencePostCardState
                       if (!mounted || !context.mounted) return;
                       SLNotice.showSuccess(
                         context,
-                        'Đã gửi báo cáo tới quản trị viên.',
+                        successMsg,
                       );
                     } catch (e) {
                       debugPrint(
                         'Report post failed: ${AppErrorMapper.resolve(
                           e,
-                          fallbackMessage: 'Đã có lỗi xảy ra',
+                          fallbackMessage: errFallback,
                         ).message}',
                       );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
                         context,
-                        'Chưa thể gửi báo cáo lúc này. Vui lòng thử lại.',
+                        failMsg,
                       );
                     }
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.block_rounded, color: Colors.red),
-                  title: Text('Chặn người dùng này',
+                  title: Text(context.tr('home_chnngidngn_27d0c8'),
                       style: SLTheme.quicksand(color: Colors.red)),
                   onTap: () async {
+                    final confirmTitle = context.tr('home_xcnhnchn_ae00a6');
+                    final errFallback = context.tr('home_clixyra_775791');
+                    final failMsg = context.tr('home_chathchnng_81d840');
+                    final successMsg = context.tr('home_chnngidngn_adcaff');
+
                     Navigator.pop(context);
                     final targetHouseId = widget.post.houseId;
                     if (targetHouseId.isEmpty) return;
@@ -342,7 +353,7 @@ class _LegacyMediaFeedReferencePostCardState
                     final ok = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        title: Text('Xác nhận chặn',
+                        title: Text(confirmTitle,
                             style:
                                 SLTheme.quicksand(fontWeight: FontWeight.w900)),
                         content: Text(
@@ -351,11 +362,11 @@ class _LegacyMediaFeedReferencePostCardState
                         actions: [
                           TextButton(
                               onPressed: () => Navigator.pop(ctx, false),
-                              child: const Text('Hủy')),
+                              child: Text(ctx.tr('home_hy_1e4050'))),
                           TextButton(
                               onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('Chặn',
-                                  style: TextStyle(color: Colors.red))),
+                              child: Text(ctx.tr('home_chn_483b6f'),
+                                  style: const TextStyle(color: Colors.red))),
                         ],
                       ),
                     );
@@ -370,19 +381,19 @@ class _LegacyMediaFeedReferencePostCardState
                       debugPrint(
                         'Block house failed: ${AppErrorMapper.resolve(
                           e,
-                          fallbackMessage: 'Đã có lỗi xảy ra',
+                          fallbackMessage: errFallback,
                         ).message}',
                       );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
                         context,
-                        'Chưa thể chặn người dùng lúc này. Vui lòng thử lại.',
+                        failMsg,
                       );
                       return;
                     }
 
                     if (!mounted || !context.mounted) return;
-                    SLNotice.showSuccess(context, 'Đã chặn người dùng này.');
+                    SLNotice.showSuccess(context, successMsg);
                   },
                 ),
               ],
@@ -754,13 +765,13 @@ class _LegacyMediaFeedReferencePostCardState
         SLSpacing.h20,
         _SideAction(
           icon: Icons.share_outlined,
-          label: 'Chia sẻ',
+          label: context.tr('home_chias_569031'),
           onTap: () {},
         ),
         SLSpacing.h20,
         _SideAction(
           icon: Icons.more_horiz,
-          label: 'Thêm',
+          label: context.tr('home_thm_d9cb42'),
           onTap: _showPostOptions,
         ),
       ],

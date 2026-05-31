@@ -49,6 +49,10 @@ class DiaryMemorySection extends StatefulWidget {
   final bool isLoadingMoreMemories;
   final VoidCallback onLoadMore;
   final Future<void> Function(Map<String, dynamic> photo) onEnsurePhotoUrl;
+  final Future<void> Function(
+    DateTime selectedDate,
+    List<Map<String, dynamic>> photos,
+  ) onEditGroupDate;
 
   const DiaryMemorySection({
     super.key,
@@ -73,6 +77,7 @@ class DiaryMemorySection extends StatefulWidget {
     required this.isLoadingMoreMemories,
     required this.onLoadMore,
     required this.onEnsurePhotoUrl,
+    required this.onEditGroupDate,
   });
 
   @override
@@ -161,8 +166,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
   Widget build(BuildContext context) {
     if (widget.houseId == null) {
       return DiaryHouseSetupCard(
-        title: 'CHƯA TẢI ĐƯỢC KỶ NIỆM',
-        message: 'Không tìm thấy mã nhà. Vui lòng kiểm tra kết nối và thử lại.',
+        title: context.tr('home_chaticknim_96daa5'),
+        message: context.tr('home_khngtmthym_030e31'),
         onRetry: widget.onRetry,
       );
     }
@@ -179,8 +184,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
 
               if (isOffline && widget.initialMemoriesCache == null) {
                 return DiaryHouseSetupCard(
-                  title: 'KHÔNG CÓ KẾT NỐI',
-                  message: 'Vui lòng kiểm tra internet để tải kỷ niệm mới nhất.',
+                  title: context.tr('home_khngcktni_2053bb'),
+                  message: context.tr('home_vuilngkimt_2a0344'),
                   onRetry: widget.onRetry,
                 );
               }
@@ -329,7 +334,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
 
                       return RawScrollbar(
                         controller: _scrollController,
-                        thumbColor: const Color(0xFFD81B60).withValues(alpha: 0.6),
+                        thumbColor:
+                            const Color(0xFFD81B60).withValues(alpha: 0.6),
                         radius: const Radius.circular(8),
                         thickness: 6,
                         interactive: true,
@@ -349,7 +355,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                 onAdd: _handleAddMemory,
                                 hasPendingUploadRetry:
                                     widget.hasPendingUploadRetry,
-                                pendingUploadMessage: widget.pendingUploadMessage,
+                                pendingUploadMessage:
+                                    widget.pendingUploadMessage,
                                 onRetryPendingUpload: _handleRetryPendingUpload,
                                 isUploading: _isUploadingMemory,
                               ),
@@ -452,7 +459,7 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Album ngày',
+                    context.tr('home_albumngy_7e474f'),
                     style: SLTheme.quicksand(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
@@ -480,7 +487,10 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
                 border: Border.all(color: const Color(0xFFE9D7FF)),
               ),
               child: Text(
-                '$totalPhotos ảnh',
+                L10nService().format(
+                  'diary_photos_count',
+                  {'count': totalPhotos},
+                ),
                 style: SLTheme.quicksand(
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
@@ -555,7 +565,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Story đặc biệt',
+                  context.tr('home_storycbit_5a2a17'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF7C5CE6),
@@ -594,7 +604,10 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
               border: Border.all(color: const Color(0xFFE9D7FF)),
             ),
             child: Text(
-              '$totalPhotos ảnh',
+              L10nService().format(
+                'diary_photos_count',
+                {'count': totalPhotos},
+              ),
               style: SLTheme.quicksand(
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
@@ -792,7 +805,8 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                       borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF5C71D8).withValues(alpha: 0.14),
+                          color:
+                              const Color(0xFF5C71D8).withValues(alpha: 0.14),
                           blurRadius: 14,
                           offset: const Offset(0, 6),
                         ),
@@ -815,14 +829,15 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                           frameBuilder:
                               (context, child, frame, wasSynchronouslyLoaded) =>
                                   child,
-                              errorBuilder: (context, error, stackTrace) {
+                          errorBuilder: (context, error, stackTrace) {
                             final retries = _retryCount[photoId] ?? 0;
                             if (retries < 2) {
                               _retryCount[photoId] = retries + 1;
                               debugPrint(
                                 '[DiaryMemory] image load failed id=$photoId retry=${retries + 1} message=${AppErrorMapper.resolve(error).message}',
                               );
-                              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                              WidgetsBinding.instance
+                                  .addPostFrameCallback((_) async {
                                 if (!mounted) return;
                                 try {
                                   await _refreshStalePhotoUrl(photo);
@@ -847,7 +862,9 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    retries >= 2 ? 'Không tải được' : 'Đang nạp lại...',
+                                    retries >= 2
+                                        ? context.tr('home_khngtic_8400e4')
+                                        : context.tr('home_angnpli_3b7624'),
                                     style: SLTheme.quicksand(
                                       fontSize: 9,
                                       fontWeight: FontWeight.w700,
@@ -863,7 +880,8 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                     ),
                   ),
                   builder: (context, _, imageChild) {
-                    final isSelected = widget.selectedMemories.containsKey(photoId);
+                    final isSelected =
+                        widget.selectedMemories.containsKey(photoId);
 
                     return GestureDetector(
                       onLongPress: () => widget.onToggleSelection(photo),
@@ -893,28 +911,6 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                                   begin: Alignment.center,
                                   end: Alignment.bottomCenter,
                                 ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            left: 8,
-                            bottom: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.82),
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.72),
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.favorite_rounded,
-                                size: 12,
-                                color: Color(0xFFFF6F91),
                               ),
                             ),
                           ),
@@ -1082,7 +1078,10 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
     final statusChips = <Widget>[
       _DiaryMemoryHeroChip(
         icon: Icons.photo_rounded,
-        label: '$totalPhotos ảnh',
+        label: L10nService().format(
+          'diary_photos_count',
+          {'count': totalPhotos},
+        ),
         color: const Color(0xFFD81B60),
         background: const Color(0xFFFFEEF5),
       ),
@@ -1108,7 +1107,8 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.86), width: 1.4),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.86), width: 1.4),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFF7FB2).withValues(alpha: 0.16),
@@ -1151,7 +1151,8 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF6F91).withValues(alpha: 0.24),
+                          color:
+                              const Color(0xFFFF6F91).withValues(alpha: 0.24),
                           blurRadius: 18,
                           offset: const Offset(0, 8),
                         ),
@@ -1169,7 +1170,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Kỷ niệm của chúng mình',
+                          context.tr('home_knimcachng_692bf0'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: SLTheme.quicksand(
@@ -1181,7 +1182,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Lưu ảnh, mở lại như album tình yêu và kéo dần về những khoảnh khắc cũ hơn.',
+                          context.tr('home_lunhmlinha_795e58'),
                           style: SLTheme.quicksand(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
@@ -1190,16 +1191,16 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Row(
+                        Row(
                           children: [
                             _DiaryMemoryMiniBadge(
                               icon: Icons.auto_awesome_rounded,
-                              label: 'Memory Wall',
+                              label: context.tr('diary_memory_wall_label'),
                             ),
-                            SizedBox(width: 6),
+                            const SizedBox(width: 6),
                             _DiaryMemoryMiniBadge(
                               icon: Icons.swipe_rounded,
-                              label: 'Chạm để xem',
+                              label: context.tr('home_chmxem_7f7897'),
                             ),
                           ],
                         ),
@@ -1241,8 +1242,11 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   totalPhotos > 0
-                                      ? 'Có $totalPhotos ảnh đang được lưu trong album này.'
-                                      : 'Album này đang chờ ảnh đầu tiên để trở nên sống động hơn.',
+                                      ? L10nService().format(
+                                          'diary_album_saved_photo_count',
+                                          {'count': totalPhotos},
+                                        )
+                                      : context.tr('home_albumnyang_2e7ab1'),
                                   style: SLTheme.quicksand(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
@@ -1287,9 +1291,10 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                       ),
                     );
                     final retryButton = TextButton(
-                      onPressed: isUploading ? null : () => onRetryPendingUpload(),
+                      onPressed:
+                          isUploading ? null : () => onRetryPendingUpload(),
                       child: Text(
-                        'Thử lại',
+                        context.tr('home_thli_4dffdf'),
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w900,
                           color: const Color(0xFF8E5B00),
@@ -1371,15 +1376,15 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
 
   String get _statusLabel {
     if (isOffline) {
-      return 'Đang offline';
+      return L10nService().translate('home_angoffline_bbb3d5');
     }
     if (showingCache) {
-      return 'Dữ liệu tạm';
+      return L10nService().translate('home_dliutm_0004b5');
     }
     if (isSyncing) {
-      return 'Đang đồng bộ';
+      return L10nService().translate('home_angngb_3bb88c');
     }
-    return 'Đã đồng bộ';
+    return L10nService().translate('home_ngb_85d905');
   }
 
   Color get _statusColor {
@@ -1494,7 +1499,10 @@ class _DiaryMemoryLoadMoreCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Đang hiển thị $loadedCount ảnh gần nhất.',
+            L10nService().format(
+              'diary_showing_latest_photos',
+              {'count': loadedCount},
+            ),
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w800,
@@ -1503,7 +1511,7 @@ class _DiaryMemoryLoadMoreCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Kéo xuống cuối để mở thêm các kỷ niệm cũ hơn.',
+            context.tr('home_koxungcuim_61162c'),
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -1535,7 +1543,9 @@ class _DiaryMemoryLoadMoreCard extends StatelessWidget {
                     )
                   : const Icon(Icons.expand_more_rounded),
               label: Text(
-                isLoading ? 'Đang tải thêm...' : 'Tải thêm ảnh cũ hơn',
+                isLoading
+                    ? context.tr('home_angtithm_87de84')
+                    : context.tr('home_tithmnhchn_9cdfaf'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
               ),
             ),
@@ -1596,7 +1606,7 @@ class _DiaryMemoryAddButton extends StatelessWidget {
                     ),
               const SizedBox(width: 5),
               Text(
-                'Thêm ảnh',
+                context.tr('home_thmnh_f63081'),
                 style: SLTheme.quicksand(
                   fontSize: 11,
                   fontWeight: FontWeight.w900,

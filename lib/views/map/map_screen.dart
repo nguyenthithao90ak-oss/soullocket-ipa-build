@@ -8,13 +8,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart' as ll;
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/services/offline_cache_service.dart';
+
 
 import '../../core/constants/app_config.dart';
 import '../../core/fast_backdrop_filter.dart';
@@ -143,15 +145,15 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   List<_MapMemoryItem> _memories = [];
   List<_MapCheckinItem> _checkins = [];
 
-  String _distanceText = 'Đang định vị...';
+  String _distanceText = L10nService().translate('map_angnhv_ea3669');
   String _routeDistanceText = '--';
   String _etaText = '--';
-  String _mapInsightText = 'Đang quét dữ liệu...';
+  String _mapInsightText = L10nService().translate('map_angqutdliu_8eeb1b');
   String? _mapAlert;
-  String _memorySummary = 'Chưa có ghim kỷ niệm';
-  String _checkinSummary = 'Chưa có check-in';
-  String _myAddressText = 'Chưa có vị trí';
-  String _partnerAddressText = 'Chưa có vị trí';
+  String _memorySummary = L10nService().translate('map_chacghimkn_c6823f');
+  String _checkinSummary = L10nService().translate('map_chacchecki_51b108');
+  String _myAddressText = L10nService().translate('map_chacvtr_a02989');
+  String _partnerAddressText = L10nService().translate('map_chacvtr_a02989');
 
   StreamSubscription<DatabaseEvent>? _myLocSub;
   StreamSubscription<DatabaseEvent>? _partnerLocSub;
@@ -201,11 +203,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       _effectiveLiveGpsForRole(widget.myRole)?.latLng;
   bool get _isSingleRelationship =>
       widget.relationshipMode.trim().toLowerCase() == 'single';
-  String get _mapScreenTitle =>
-      _isSingleRelationship ? 'Vị trí hiện tại' : 'Vị trí của chúng mình';
+  String get _mapScreenTitle => _isSingleRelationship
+      ? context.tr('map_vtrhinti_f5956d')
+      : context.tr('map_vtrcachngm_07f765');
   String get _mapScreenSubtitle => _isSingleRelationship
-      ? 'Bản đồ • Vị trí của bạn'
-      : 'Bản đồ • Khoảng cách • Lịch sử di chuyển';
+      ? context.tr('map_bnvtrcabn_fdf5bc')
+      : context.tr('map_bnkhongcch_486245');
 
   @override
   void initState() {
@@ -264,8 +267,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       setState(() {
         _isBootstrappingLocation = false;
-        _locationStatusMessage =
-            'SoulLocket sẽ tiếp tục cập nhật vị trí nếu bạn đã cấp quyền vị trí luôn luôn.';
+        _locationStatusMessage = context.tr('map_soullocket_ece6e9');
       });
     }
   }
@@ -394,9 +396,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final map = _toStringDynamicMap(raw);
     final parsedCurrent = _parseGpsPoint(map);
     final lastKnown = _parseGpsPoint(map['lastKnown']);
-    final current = _isStableLiveGpsPoint(parsedCurrent, lastKnown)
-        ? parsedCurrent
-        : null;
+    final current =
+        _isStableLiveGpsPoint(parsedCurrent, lastKnown) ? parsedCurrent : null;
     final isLive = (map['isLive'] == true || map['sharingEnabled'] == true) &&
         current != null &&
         _isGpsFresh(_readInt(map['ts']) ?? current.ts);
@@ -413,12 +414,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _initMap() async {
-    _setRealtimePipelinesActive(true);
-
-    // Automatically bootstrap location when entering the map screen
-    _bootstrapLocationTracking();
-
     try {
+      _setRealtimePipelinesActive(true);
+
+      // Automatically bootstrap location when entering the map screen
+      unawaited(_bootstrapLocationTracking());
+
       await Future.wait([
         _primeMemoryPipeline().timeout(
           const Duration(seconds: 8),
@@ -427,7 +428,14 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         _loadHistoryForDate(_selectedHistoryDate, fitToHistory: false)
             .timeout(const Duration(seconds: 8), onTimeout: () {}),
       ]);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint(
+        'Map init failed: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: L10nService().translate('map_bntmthicha_687e4b'),
+        ).message}',
+      );
+    }
 
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -480,7 +488,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       double? accuracy) {
     if (accuracy == null || !accuracy.isFinite) {
       return (
-        label: 'Đang đo GPS...',
+        label: context.tr('map_angogps_61d784'),
         color: _kMapTextMuted,
         isLow: false,
       );
@@ -512,7 +520,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         accuracy <= _kMapFairAccuracyMeters) {
       return null;
     }
-    return 'Bật Vị trí chính xác hoặc ra nơi thoáng hơn để GPS sát hơn.';
+    return context.tr('map_btvtrchnhx_dbd0e8');
   }
 
   Future<void> _bootstrapLocationTracking() async {
@@ -520,7 +528,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (mounted) {
       setState(() {
         _isBootstrappingLocation = true;
-        _locationStatusMessage = 'Đang xin quyền GPS...';
+        _locationStatusMessage = context.tr('map_angxinquyn_ef9d31');
       });
     }
 
@@ -532,14 +540,14 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       setState(() {
         _isBootstrappingLocation = false;
         _locationStatusMessage = kIsWeb
-            ? 'Chưa cấp quyền Location. Cho phép để xem vị trí hiện tại và check-in.'
-            : 'Chưa cấp quyền vị trí. Cho phép Location để cập nhật GPS.';
+            ? context.tr('map_chacpquynl_36c63d')
+            : context.tr('map_chacpquynv_efd5c3');
       });
       return;
     }
 
     setState(() {
-      _locationStatusMessage = 'Đang bật cập nhật GPS...';
+      _locationStatusMessage = context.tr('map_angbtcpnht_1f1aeb');
     });
 
     final started = await _locationService
@@ -551,15 +559,15 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         .timeout(const Duration(seconds: 12), onTimeout: () => false);
 
     if (!mounted) return;
-    
+
     if (!started) {
       // Kiểm tra xem thực sự là do tắt GPS hay do lỗi khác
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       setState(() {
         _isBootstrappingLocation = false;
-        _locationStatusMessage = serviceEnabled 
-            ? 'GPS chưa sẵn sàng. Hãy đảm bảo bạn đã cấp quyền vị trí cho SoulLocket.'
-            : 'Bạn chưa bật định vị GPS. Hãy vuốt bảng điều khiển xuống để bật GPS nhé.';
+        _locationStatusMessage = serviceEnabled
+            ? context.tr('map_gpschasnsn_4ffc6e')
+            : context.tr('map_bnchabtnhv_df0da5');
       });
       return;
     }
@@ -578,8 +586,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _mapReadyTimeout = Timer(const Duration(seconds: 15), () {
       if (!mounted || _isMapReady) return;
       setState(() {
-        _mapInitError =
-            'Bản đồ OpenStreetMap chưa sẵn sàng. Vui lòng thử lại hoặc kiểm tra kết nối mạng.';
+        _mapInitError = context.tr('map_bnopenstre_1e6bc7');
       });
     });
   }
@@ -621,7 +628,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     setState(() {
       _memories = merged;
       _memorySummary = merged.isEmpty
-          ? 'Chưa có ghim kỷ niệm'
+          ? context.tr('map_chacghimkn_c6823f')
           : '${merged.length} ghim kỷ niệm trên bản đồ';
     });
     _memorySummary = _buildMemorySummaryLabel(merged.length);
@@ -643,7 +650,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       id: id,
       lat: lat,
       lng: lng,
-      title: (map['text'] ?? map['title'] ?? 'Kỷ niệm').toString(),
+      title: (map['text'] ?? map['title'] ?? context.tr('map_knim_4f6aeb'))
+          .toString(),
       note: (map['desc'] ?? map['note'] ?? '').toString(),
       imageUrl: (map['imageUrl'] ?? map['url'] ?? '').toString(),
       author: (map['author'] ?? '').toString(),
@@ -774,9 +782,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       ).timeout(const Duration(seconds: 10));
       if (response.statusCode != 200) return null;
 
-      final map = jsonDecode(response.body) as Map<String, dynamic>;
-      final routes = map['routes'];
-      if (routes is! List || routes.isEmpty) return null;
+      final decoded = response.body.length > 20000
+          ? await compute(jsonDecode, response.body)
+          : jsonDecode(response.body);
+      final map = decoded as Map<String, dynamic>;
+      final routes = map['routes'];      if (routes is! List || routes.isEmpty) return null;
 
       final route = routes.first as Map<String, dynamic>;
       final geometry = route['geometry'];
@@ -835,7 +845,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           headers: const {'User-Agent': 'SoulLocket-App'},
         ).timeout(const Duration(seconds: 10));
         if (response.statusCode != 200) return null;
-        final map = jsonDecode(response.body) as Map<String, dynamic>;
+        final decoded = response.body.length > 12000
+            ? await compute(jsonDecode, response.body)
+            : jsonDecode(response.body);
+        final map = decoded as Map<String, dynamic>;
         final displayName = map['display_name']?.toString().trim();
         return displayName == null || displayName.isEmpty ? null : displayName;
       } catch (_) {
@@ -1256,7 +1269,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   Future<void> _startCheckinPlacementFlow() async {
     if (_isSelectingCheckinLocation) return;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     final shownCount = prefs.getInt('il_map_pin_hint_shown_count') ?? 0;
     if (shownCount < 3) {
       await prefs.setInt('il_map_pin_hint_shown_count', shownCount + 1);
@@ -1265,9 +1278,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Bạn có thể ghim vị trí. Hãy ấn vào bản đồ ở chỗ muốn ghim nhé.',
+              context.tr('map_bncthghimv_4c0adc'),
             ),
             behavior: SnackBarBehavior.floating,
             duration: Duration(seconds: 3),
@@ -1315,10 +1328,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   decoration: BoxDecoration(
                     color: const Color(0xB3121A2B),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: IconButton(
-                    tooltip: 'Về vị trí của bạn',
+                    tooltip: context.tr('map_vvtrcabn_bc0bdb'),
                     onPressed: _focusCameraNearMe,
                     icon: const Icon(Icons.my_location_rounded),
                   ),
@@ -1337,13 +1351,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   fm.Marker _buildOsmMarker(_MapMarkerSpec marker) {
-    final markerSize = marker.compact ? 46.0 : 58.0;
-    final markerWidth = marker.compact ? 58.0 : 72.0;
-    final markerHeight = marker.compact ? 58.0 : 76.0;
-    final avatarSize = marker.compact ? 24.0 : 30.0;
+    final markerSize = marker.compact ? 48.0 : 72.0;
+    final markerWidth = marker.compact ? 62.0 : 92.0;
+    final markerHeight = marker.compact ? 62.0 : 100.0;
+    final avatarSize = marker.compact ? 26.0 : 50.0;
     final hasAvatar = marker.avatarUrl != null && marker.avatarUrl!.isNotEmpty;
-    final hasSecondaryAvatar =
-        marker.secondaryAvatarUrl != null && marker.secondaryAvatarUrl!.isNotEmpty;
+    final hasSecondaryAvatar = marker.secondaryAvatarUrl != null &&
+        marker.secondaryAvatarUrl!.isNotEmpty;
 
     return fm.Marker(
       key: ValueKey(marker.id),
@@ -1366,46 +1380,114 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               children: [
                 if (marker.pulse)
                   Positioned(
-                    bottom: marker.compact ? 7 : 9,
-                    child: Container(
-                      width: markerSize,
-                      height: markerSize,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: marker.color.withValues(alpha: 0.18),
+                    bottom: marker.compact ? 7 : 12,
+                    child: marker.compact
+                        ? Container(
+                            width: markerSize,
+                            height: markerSize,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: marker.color.withValues(alpha: 0.18),
+                            ),
+                          )
+                        : _PulseGlowCircle(
+                            size: 68.0,
+                            color: marker.color,
+                          ),
+                  ),
+                if (marker.compact) ...[
+                  SizedBox(
+                    width: markerSize,
+                    height: markerSize,
+                    child: CustomPaint(
+                      painter: _MapPinPainter(color: marker.color),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 22,
+                    child: _buildPinnedMarkerFace(
+                      size: avatarSize,
+                      avatarUrl: marker.avatarUrl,
+                      icon: marker.icon,
+                      color: marker.color,
+                      isCompact: true,
+                    ),
+                  ),
+                ] else ...[
+                  // Premium pointer tip at the bottom of the rounded rectangle pin
+                  Positioned(
+                    bottom: 12,
+                    child: Transform.rotate(
+                      angle: 45 * 3.141592653589793 / 180,
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            right: BorderSide(color: marker.color, width: 2.5),
+                            bottom: BorderSide(color: marker.color, width: 2.5),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 4,
+                              offset: const Offset(2, 2),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                SizedBox(
-                  width: markerSize,
-                  height: markerSize,
-                  child: CustomPaint(
-                    painter: _MapPinPainter(color: marker.color),
-                  ),
-                ),
-                Positioned(
-                  bottom: marker.compact ? 22 : 29,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildPinnedMarkerFace(
-                        size: avatarSize,
-                        avatarUrl: marker.avatarUrl,
-                        icon: marker.icon,
-                        color: marker.color,
+                  // Premium Rounded Square pin body
+                  Positioned(
+                    bottom: 20,
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(color: marker.color, width: 3.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: marker.color.withValues(alpha: 0.45),
+                            blurRadius: 18,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 6),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                      if (hasSecondaryAvatar) ...[
-                        const SizedBox(width: 2),
-                        _buildPinnedMarkerFace(
-                          size: avatarSize,
-                          avatarUrl: marker.secondaryAvatarUrl,
-                          icon: marker.secondaryIcon ?? Icons.favorite_rounded,
-                          color: marker.secondaryColor ?? _kMapPinkDeep,
-                        ),
-                      ],
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildPinnedMarkerFace(
+                            size: avatarSize,
+                            avatarUrl: marker.avatarUrl,
+                            icon: marker.icon,
+                            color: marker.color,
+                            isCompact: false,
+                          ),
+                          if (hasSecondaryAvatar) ...[
+                            const SizedBox(width: 4),
+                            _buildPinnedMarkerFace(
+                              size: avatarSize,
+                              avatarUrl: marker.secondaryAvatarUrl,
+                              icon: marker.secondaryIcon ??
+                                  Icons.favorite_rounded,
+                              color: marker.secondaryColor ?? _kMapPinkDeep,
+                              isCompact: false,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
                 if (!marker.compact)
                   Positioned(
                     bottom: markerHeight - 4,
@@ -1448,29 +1530,39 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     required String? avatarUrl,
     required IconData icon,
     required Color color,
+    bool isCompact = true,
   }) {
     final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
+    final borderRadius =
+        isCompact ? BorderRadius.circular(999) : BorderRadius.circular(16);
+
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
+        borderRadius: borderRadius,
         color: color,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 1.4),
-        image: hasAvatar
-            ? DecorationImage(
-                image: CachedNetworkImageProvider(avatarUrl),
-                fit: BoxFit.cover,
-              )
-            : null,
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.95), width: 2.5),
       ),
-      child: hasAvatar
-          ? null
-          : Icon(
-              icon,
-              color: Colors.white,
-              size: size * 0.54,
-            ),
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: hasAvatar
+            ? CachedNetworkImage(
+                imageUrl: avatarUrl,
+                fit: BoxFit.cover,
+                errorWidget: (context, url, error) => Icon(
+                  icon,
+                  color: Colors.white,
+                  size: size * 0.54,
+                ),
+              )
+            : Icon(
+                icon,
+                color: Colors.white,
+                size: size * 0.54,
+              ),
+      ),
     );
   }
 
@@ -1588,7 +1680,7 @@ class _LiveUiSnapshot {
     required this.mapAlert,
   });
 
-  factory _LiveUiSnapshot.empty() => const _LiveUiSnapshot(
+  factory _LiveUiSnapshot.empty() => _LiveUiSnapshot(
         myPoint: null,
         partnerPoint: null,
         myIsLive: false,
@@ -1596,14 +1688,14 @@ class _LiveUiSnapshot {
         myHasHistory: false,
         partnerHasHistory: false,
         isFetchingRoute: false,
-        myAddressText: 'Chưa có vị trí',
-        partnerAddressText: 'Chưa có vị trí',
-        myUpdatedText: 'Chưa có thời gian',
-        partnerUpdatedText: 'Chưa có thời gian',
-        distanceText: 'Đang định vị...',
+        myAddressText: L10nService().translate('map_chacvtr_a02989'),
+        partnerAddressText: L10nService().translate('map_chacvtr_a02989'),
+        myUpdatedText: L10nService().translate('map_chacthigia_2ba794'),
+        partnerUpdatedText: L10nService().translate('map_chacthigia_2ba794'),
+        distanceText: L10nService().translate('map_angnhv_ea3669'),
         routeDistanceText: '--',
         etaText: '--',
-        mapInsightText: 'Đang quét dữ liệu...',
+        mapInsightText: L10nService().translate('map_angqutdliu_8eeb1b'),
         mapAlert: null,
       );
 }
@@ -1861,5 +1953,33 @@ class _MapPinPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _MapPinPainter oldDelegate) {
     return oldDelegate.color != color;
+  }
+}
+
+class _PulseGlowCircle extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _PulseGlowCircle({
+    required this.size,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            color.withValues(alpha: 0.28),
+            color.withValues(alpha: 0.08),
+            color.withValues(alpha: 0.0),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -14,7 +14,7 @@ class _UnavailableState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Chưa xác định được ngôi nhà để mở game Caro.',
+              context.tr('util_chaxcnhcng_f20dbf'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 18,
@@ -24,7 +24,7 @@ class _UnavailableState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Hãy mở lại sau khi app đã vào đúng không gian riêng, hoặc thử tải lại dữ liệu.',
+              context.tr('util_hymlisaukh_bb1913'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 13,
@@ -40,7 +40,7 @@ class _UnavailableState extends StatelessWidget {
                 backgroundColor: const Color(0xFF4EDBFF),
                 foregroundColor: const Color(0xFF120519),
               ),
-              child: const Text('Tải lại'),
+              child: Text(context.tr('util_tili_13be6c')),
             ),
           ],
         ),

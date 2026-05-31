@@ -9,6 +9,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -20,7 +21,7 @@ import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/private_media_url_service.dart';
 import '../../services/activity_history_service.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import '../../core/fast_backdrop_filter.dart';
 
 class VoiceScreen extends StatefulWidget {
   final String houseId;
@@ -83,21 +84,30 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pickAndUploadVoice() async {
+    final errInvalidHouse = context.tr('util_chatmthynh_c77d9c');
+    final errRecordingInProgress = context.tr('util_angghimvui_cd6c6e');
+    final errNoFileBytes = context.tr('util_khngccfile_e69550');
+    final errFileTooBig = context.tr('util_fileaudion_98a287');
+    final errNoDuration = context.tr('util_khngccthil_ff2924');
+    final errNoCapacity = context.tr('util_khoghimtgi_e908da');
+    final successMsg = context.tr('util_gilinhntho_f7601a');
+    final fallbackErrMsg = context.tr('util_khngthchnf_d2beb2');
+
     try {
       if (_isUploading) return;
 
       if (widget.houseId.trim().isEmpty) {
-        _showMessage('Chưa tìm thấy nhà chung. Bạn vào lại ứng dụng rồi thử tiếp.');
+        _showMessage(errInvalidHouse);
         return;
       }
 
       if (_isRecording) {
-        _showMessage('Đang ghi âm, vui lòng dừng trước khi chọn file.');
+        _showMessage(errRecordingInProgress);
         return;
       }
 
       final result = await AppLifecyclePresenceGuard.guard(
-        () => FilePicker.platform.pickFiles(
+        () => FilePicker.pickFiles(
           type: FileType.custom,
           allowMultiple: false,
           withData: true,
@@ -112,10 +122,10 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       final file = result.files.single;
       final bytes = file.bytes;
       if (bytes == null || bytes.isEmpty) {
-        throw Exception('Không đọc được file audio.');
+        throw Exception(errNoFileBytes);
       }
       if (bytes.length > _maxPickedVoiceBytes) {
-        _showMessage('File audio này quá lớn, hãy chọn file khác nhỏ hơn.');
+        _showMessage(errFileTooBig);
         return;
       }
 
@@ -129,11 +139,11 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
         mimeType: mimeType,
       );
       if (durationMs == null) {
-        throw Exception('Không đọc được thời lượng file audio.');
+        throw Exception(errNoDuration);
       }
       final remainingMs = await _remainingVoiceCapacityMs();
       if (remainingMs <= 0) {
-        _showMessage('Kho ghi âm đã đạt giới hạn 5 phút.');
+        _showMessage(errNoCapacity);
         return;
       }
       if (durationMs > remainingMs) {
@@ -159,12 +169,11 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
         mimeType: mimeType,
         durationMs: durationMs,
       );
-      _showMessage('Đã gửi lời nhắn thoại lên nhà chung.');
+      _showMessage(successMsg);
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage:
-            'Không thể chọn file âm thanh lúc này. Bạn thử lại sau.',
+        fallbackMessage: fallbackErrMsg,
       );
       _showMessage(errorInfo.message);
     } finally {
@@ -177,8 +186,13 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   Future<void> _toggleRecordAndUpload() async {
     if (_isUploading) return;
 
+    final errInvalidHouse = context.tr('util_chatmthynh_c77d9c');
+    final errNoPermission = context.tr('util_chacquynmi_786856');
+    final errNoCapacity = context.tr('util_khoghimtgi_e908da');
+    final fallbackErrMsg = context.tr('util_khngthbtug_2c71cb');
+
     if (widget.houseId.trim().isEmpty) {
-      _showMessage('Chưa tìm thấy nhà chung. Bạn vào lại ứng dụng rồi thử tiếp.');
+      _showMessage(errInvalidHouse);
       return;
     }
 
@@ -190,7 +204,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     try {
       final hasPermission = await _recorder.hasPermission();
       if (!hasPermission) {
-        _showMessage('Chưa có quyền microphone để ghi âm.');
+        _showMessage(errNoPermission);
         return;
       }
 
@@ -240,7 +254,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
             _recordElapsed = Duration.zero;
           });
         }
-        _showMessage('Kho ghi âm đã đạt giới hạn 5 phút.');
+        _showMessage(errNoCapacity);
         return;
       }
 
@@ -251,7 +265,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể bắt đầu ghi âm lúc này. Bạn thử lại sau.',
+        fallbackMessage: fallbackErrMsg,
       );
       _showMessage(errorInfo.message);
     }
@@ -259,6 +273,13 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
 
   Future<void> _stopRecordingAndUpload({bool reachedLimit = false}) async {
     if (!_isRecording) return;
+
+    final errNoFile = context.tr('util_khngtmthyf_96836b');
+    final errTooShort = context.tr('util_bnghiqungn_019531');
+    final errNoCapacity = context.tr('util_khoghimkhn_25536a');
+    final limitReachedMsg = context.tr('util_tdngmc5pht_4e5f44');
+    final successMsg = context.tr('util_gibnghimln_67b0fd');
+    final fallbackErrMsg = context.tr('util_khngthgibn_953e06');
 
     _recordTicker?.cancel();
     _recordLimitTimer?.cancel();
@@ -287,21 +308,21 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       recordPath = await _recorder.stop();
       _recordStartedAt = null;
       if (recordPath == null || recordPath.isEmpty) {
-        throw Exception('Không tìm thấy file ghi âm.');
+        throw Exception(errNoFile);
       }
 
       final durationMs = safeElapsed.inMilliseconds;
       if (durationMs <= 0) {
-        throw Exception('Bản ghi quá ngắn, vui lòng thử lại.');
+        throw Exception(errTooShort);
       }
       if (remainingMs <= 0 || durationMs > remainingMs) {
-        _showMessage('Kho ghi âm không còn đủ dung lượng.');
+        _showMessage(errNoCapacity);
         return;
       }
 
       final recordFile = File(recordPath);
       if (!await recordFile.exists()) {
-        throw Exception('Không tìm thấy file ghi âm.');
+        throw Exception(errNoFile);
       }
 
       final persistedPath = await _persistPendingUploadFile(
@@ -318,13 +339,13 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
 
       _showMessage(
         reachedLimit
-            ? 'Đã tự dừng ở mốc 5 phút và gửi bản ghi.'
-            : 'Đã gửi bản ghi âm lên nhà chung.',
+            ? limitReachedMsg
+            : successMsg,
       );
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể gửi bản ghi âm lúc này. Bạn thử lại sau.',
+        fallbackMessage: fallbackErrMsg,
       );
       _showMessage(errorInfo.message);
     } finally {
@@ -350,6 +371,8 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     required String mimeType,
     required int durationMs,
   }) async {
+    final errNoSession = context.tr('util_chatocphin_2b4d32');
+
     final session = await _createVoiceUploadSession(
       fileName: fileName,
       contentType: mimeType,
@@ -362,7 +385,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       ),
     );
     if (uploadUrl.isEmpty || sessionId.isEmpty) {
-      throw Exception('Chưa tạo được phiên tải lời nhắn thoại.');
+      throw Exception(errNoSession);
     }
     headers.putIfAbsent('Content-Type', () => mimeType);
 
@@ -391,6 +414,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     required String fileName,
     required String contentType,
   }) async {
+    final errCreateSession = context.tr('util_khngthtoph_d7489b');
     try {
       final callable = _functions.httpsCallable('createVoiceUploadSession');
       final response = await callable
@@ -408,7 +432,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     } on FirebaseFunctionsException catch (error) {
       throw Exception(error.message?.trim().isNotEmpty == true
           ? error.message!.trim()
-          : 'Không thể tạo phiên tải lời nhắn thoại.');
+          : errCreateSession);
     }
   }
 
@@ -419,6 +443,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     required int durationMs,
     required int size,
   }) async {
+    final errFinalize = context.tr('util_khngthhont_91a9c4');
     try {
       final callable = _functions.httpsCallable('finalizeVoiceUpload');
       await callable
@@ -435,7 +460,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     } on FirebaseFunctionsException catch (error) {
       throw Exception(error.message?.trim().isNotEmpty == true
           ? error.message!.trim()
-          : 'Không thể hoàn tất việc gửi lời nhắn thoại.');
+          : errFinalize);
     }
   }
 
@@ -512,6 +537,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _togglePlay(Map<String, dynamic> item) async {
+    final errNoUrl = context.tr('util_khngmclinh_37686c');
     final key = item['key']?.toString() ?? '';
     if (_playingKey == key) {
       await _player.stop();
@@ -522,7 +548,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
 
     final url = await _resolveVoiceUrl(item);
     if (url.isEmpty) {
-      _showMessage('Không mở được lời nhắn thoại này.');
+      _showMessage(errNoUrl);
       return;
     }
 
@@ -533,15 +559,22 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _deleteVoice(String key, String? url) async {
+    final title = context.tr('util_xaghim_fd8c5c');
+    final content = context.tr('util_bncchcmunx_ff38b5');
+    final cancel = context.tr('util_hu_9daba0');
+    final logText = context.tr('util_xamtbnghim_453273');
+    final logTitle = context.tr('util_xaghim_9013be');
+    final sourceLabel = context.tr('util_ghim_f8ac88');
+
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Xóa ghi âm?'),
-            content: const Text('Bạn có chắc muốn xóa bản ghi này không?'),
+            title: Text(title),
+            content: Text(content),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Huỷ'),
+                child: Text(cancel),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
@@ -558,15 +591,15 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     if (snapshot.exists && snapshot.value is Map) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       await ActivityHistoryService.instance.add(
-        'đã xóa một bản ghi âm',
+        logText,
         houseId: widget.houseId,
-        title: 'Đã xóa ghi âm',
+        title: logTitle,
         subtitle: data['name']?.toString() ?? data['a']?.toString() ?? '',
         action: 'delete',
         module: 'voice',
         entityType: 'voice',
         entityId: key,
-        sourceLabel: 'Ghi âm',
+        sourceLabel: sourceLabel,
         previewUrl: data['aud']?.toString() ?? '',
         previewType: 'audio',
         restorePath: 'houses/${widget.houseId}/voice/$key',
@@ -697,12 +730,16 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       return;
     }
     final localPath = payload['localPath']?.toString() ?? '';
+    final errNoFile = context.tr('util_khngcnfile_2c41f4');
+    final successMsg = context.tr('util_gililinhnt_d1cbf0');
+    final errRetryFailed = context.tr('util_khngththli_8551ac');
+
     if (localPath.isEmpty || !await File(localPath).exists()) {
       await _clearPendingUpload();
       if (mounted) {
         setState(() => _pendingRetryUpload = null);
       }
-      _showMessage('Không còn file ghi âm tạm để thử lại.');
+      _showMessage(errNoFile);
       return;
     }
 
@@ -723,9 +760,9 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       if (mounted) {
         setState(() => _pendingRetryUpload = null);
       }
-      _showMessage('Đã gửi lại lời nhắn thoại lên nhà chung.');
+      _showMessage(successMsg);
     } catch (e) {
-      _showMessage('Không thể thử lại bản ghi lúc này. Hãy thử lại sau.');
+      _showMessage(errRetryFailed);
     } finally {
       if (mounted) {
         setState(() {
@@ -769,7 +806,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       appBar: AppBar(
         automaticallyImplyLeading: !widget.embedded,
         title: Text(
-          'GHI ÂM LỜI NHẮN',
+          context.tr('util_ghimlinhn_7761df'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -838,7 +875,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                   icon: Icons.mic_rounded,
                   label: _isRecording
                       ? 'Dừng ${_formatDuration(_recordElapsed.inMilliseconds)}'
-                      : 'Ghi âm',
+                      : context.tr('util_ghim_f8ac88'),
                   onTap: _isUploading ? null : _toggleRecordAndUpload,
                   filled: _isRecording,
                 ),
@@ -875,8 +912,8 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                     const SizedBox(width: 8),
                     Text(
                       _isRestoringUpload
-                          ? 'Đang khôi phục upload'
-                          : 'Đang upload',
+                          ? context.tr('util_angkhiphcu_076cd4')
+                          : context.tr('util_angupload_7ded4c'),
                       style: SLTheme.quicksand(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -907,7 +944,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Lần upload ghi âm trước đã bị gián đoạn. Bạn có thể thử lại.',
+                      context.tr('util_lnuploadgh_c94950'),
                       style: SLTheme.quicksand(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -920,7 +957,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                   TextButton(
                     onPressed: _retryPendingUpload,
                     child: Text(
-                      'Thử lại',
+                      context.tr('util_thli_4dffdf'),
                       style: SLTheme.quicksand(
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
@@ -984,7 +1021,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              'Không tải được lời nhắn thoại lúc này. Hãy thử lại sau.',
+              context.tr('util_khngticlin_a510e1'),
               style: SLTheme.quicksand(
                   color: Colors.white70, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
@@ -995,7 +1032,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
         if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
           return Center(
             child: Text(
-              'Chưa có lời nhắn thoại nào',
+              context.tr('util_chaclinhnt_9864b0'),
               style: SLTheme.quicksand(
                   color: Colors.white70, fontWeight: FontWeight.w600),
             ),
@@ -1006,7 +1043,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
         if (rawValue is! Map) {
           return Center(
             child: Text(
-              'Dữ liệu lời nhắn thoại không hợp lệ.',
+              context.tr('util_dliulinhnt_f7fe04'),
               style: SLTheme.quicksand(
                   color: Colors.white70, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,

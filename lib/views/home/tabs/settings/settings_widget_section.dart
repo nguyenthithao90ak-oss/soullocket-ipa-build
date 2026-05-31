@@ -34,23 +34,24 @@ class _WidgetPanelConfig {
 extension _SettingsTabWidgetSection on _SettingsTabState {
   _WidgetPanelConfig _buildWidgetPanelConfig() {
     final themeOptions = [
-      ('Hồng ngọt', 'pink'),
-      ('Tối hiện đại', 'dark'),
-      ('Trắng tinh', 'white'),
+      (context.tr('home_hngngt_6a8c4a'), 'pink'),
+      (context.tr('home_tihini_18f563'), 'dark'),
+      (context.tr('home_trngtinh_2fff95'), 'white'),
       ('Xanh lam', 'blue'),
-      ('Cam nắng', 'orange'),
-      ('Tím mộng', 'purple'),
-      ('Xanh ngọc', 'green'),
-      ('Đỏ đậm', 'red'),
-      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
+      (context.tr('home_camnng_da76a5'), 'orange'),
+      (context.tr('home_tmmng_9db47d'), 'purple'),
+      (context.tr('home_xanhngc_49b55b'), 'green'),
+      (context.tr('home_m_720483'), 'red'),
+      if (AppConfig.isPurchaseEnabled)
+        (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
     ];
     final heartColorOptions = [
-      ('Hồng rose', 'rose'),
-      ('Đỏ ruby', 'ruby'),
-      ('Tím violet', 'violet'),
+      (context.tr('home_hngrose_ee75eb'), 'rose'),
+      (context.tr('home_ruby_cb8e85'), 'ruby'),
+      (context.tr('home_tmviolet_19bc69'), 'violet'),
       ('Xanh ocean', 'ocean'),
       ('Mint', 'mint'),
-      ('Hoàng hôn', 'sunset'),
+      (context.tr('home_honghn_ab7dad'), 'sunset'),
       ('Gold', 'gold'),
     ];
     final previewSizeOptions = _widgetPreviewSizeKeys
@@ -78,7 +79,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         )
         .$1;
     final smartSeasonLabel = smartSeasonKey == 'none'
-        ? 'Tự động phối màu'
+        ? context.tr('home_tngphimu_c549ba')
         : WidgetService.seasonLabel(smartSeasonKey);
 
     return _WidgetPanelConfig(
@@ -98,8 +99,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
   Widget _buildWidgetPanelTabBar() {
     final items = <(String, String, IconData)>[
-      (WidgetService.defaultWidgetStyleKey, 'Mặc định', Icons.widgets_rounded),
-      ('countdown', 'Đếm ngày', Icons.timer_outlined),
+      (WidgetService.defaultWidgetStyleKey, context.tr('home_mcnh_a57a8e'), Icons.widgets_rounded),
+      ('countdown', context.tr('home_mngy_5500cb'), Icons.timer_outlined),
     ];
 
     return Container(
@@ -171,23 +172,24 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
   Widget _buildWidgetPanel({bool hideBackButton = false}) {
     final config = _buildWidgetPanelConfig();
     final themeOptions = [
-      ('Hồng ngọt', 'pink'),
-      ('Tối hiện đại', 'dark'),
-      ('Trắng tinh', 'white'),
+      (context.tr('home_hngngt_6a8c4a'), 'pink'),
+      (context.tr('home_tihini_18f563'), 'dark'),
+      (context.tr('home_trngtinh_2fff95'), 'white'),
       ('Xanh lam', 'blue'),
-      ('Cam nắng', 'orange'),
-      ('Tím mộng', 'purple'),
-      ('Xanh ngọc', 'green'),
-      ('Đỏ đậm', 'red'),
-      (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
+      (context.tr('home_camnng_da76a5'), 'orange'),
+      (context.tr('home_tmmng_9db47d'), 'purple'),
+      (context.tr('home_xanhngc_49b55b'), 'green'),
+      (context.tr('home_m_720483'), 'red'),
+      if (AppConfig.isPurchaseEnabled)
+        (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
     ];
     final heartColorOptions = [
-      ('Hồng rose', 'rose'),
-      ('Đỏ ruby', 'ruby'),
-      ('Tím violet', 'violet'),
+      (context.tr('home_hngrose_ee75eb'), 'rose'),
+      (context.tr('home_ruby_cb8e85'), 'ruby'),
+      (context.tr('home_tmviolet_19bc69'), 'violet'),
       ('Xanh ocean', 'ocean'),
       ('Mint', 'mint'),
-      ('Hoàng hôn', 'sunset'),
+      (context.tr('home_honghn_ab7dad'), 'sunset'),
       ('Gold', 'gold'),
     ];
     final previewSizeOptions = _widgetPreviewSizeKeys
@@ -215,12 +217,12 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         )
         .$1;
     final smartSeasonLabel = smartSeasonKey == 'none'
-        ? 'Tự động phối màu'
+        ? context.tr('home_tngphimu_c549ba')
         : WidgetService.seasonLabel(smartSeasonKey);
 
     Future<void> handlePinWidget() async {
       if (kIsWeb) {
-        _showToast('Tiện ích này không hỗ trợ trên Web');
+        _showToast(context.tr('home_tinchnykhn_b04ead'));
         return;
       }
       try {
@@ -242,13 +244,13 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         _showToast(context.tr('widget_pin_req_sent'), success: true);
       } catch (_) {
         if (!mounted) return;
-        _showToast('Chưa thể ghim widget lúc này. Bạn thử lại sau.');
+        _showToast(context.tr('home_chathghimw_8f0d01'));
       }
     }
 
     Future<void> handleRefreshWidget() async {
       if (kIsWeb) {
-        _showToast('Tiện ích này không hỗ trợ trên Web');
+        _showToast(context.tr('home_tinchnykhn_b04ead'));
         return;
       }
       try {
@@ -257,7 +259,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         _showToast(context.tr('widget_updated_success'), success: true);
       } catch (_) {
         if (!mounted) return;
-        _showToast('Chưa thể cập nhật widget lúc này. Bạn thử lại sau.');
+        _showToast(context.tr('home_chathcpnht_1f5871'));
       }
     }
 
@@ -292,7 +294,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
-                  'Xem trước widget',
+                  context.tr('home_xemtrcwidg_189f43'),
                   style: SLTheme.quicksand(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w900,
@@ -329,7 +331,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 const SizedBox(height: 12),
                 _buildWidgetSectionCard(
                   icon: Icons.favorite_rounded,
-                  title: 'Trái tim và nội dung',
+                  title: context.tr('home_tritimvnid_67f35f'),
                   subtitle: null,
                   iconGradient: const [
                     Color(0xFFFF86A8),
@@ -339,7 +341,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Kiểu trái tim',
+                        context.tr('home_kiutritim_87a57e'),
                         style: SLTheme.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
@@ -350,7 +352,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                       _buildWidgetHeartStylePicker(),
                       const SizedBox(height: 14),
                       Text(
-                        'Màu trái tim',
+                        context.tr('home_mutritim_6406c9'),
                         style: SLTheme.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
@@ -392,9 +394,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 const SizedBox(height: 12),
                 _buildWidgetSectionCard(
                   icon: Icons.timer_rounded,
-                  title: 'Widget đếm ngày',
+                  title: context.tr('home_widgetmngy_92c2bc'),
                   subtitle:
-                      'Chế độ này ưu tiên số ngày ở giữa và ngày bắt đầu bên dưới.',
+                      context.tr('home_chnyutinsn_20a566'),
                   iconGradient: const [
                     Color(0xFFFFB84D),
                     Color(0xFFFF7A59),
@@ -413,7 +415,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               const SizedBox(height: 12),
               _buildWidgetSectionCard(
                   icon: Icons.add_to_home_screen_rounded,
-                  title: context.tr('android_real_widget'),
+                  title: Theme.of(context).platform == TargetPlatform.iOS
+                      ? '${context.tr('settings_widget_label')}:'
+                      : context.tr('android_real_widget'),
                   subtitle: context.tr('add_widget_desc'),
                   iconGradient: const [
                     Color(0xFF14B8A6),
@@ -422,61 +426,49 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (Theme.of(context).platform != TargetPlatform.iOS)
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final useColumn = constraints.maxWidth < 330;
-                            if (useColumn) {
-                              return Column(
-                                children: [
-                                  _buildGradientBtn(
-                                    label: context.tr('add_widget'),
-                                    gradient: const [
-                                      Color(0xFF10C8E6),
-                                      Color(0xFF0E9EB0),
-                                    ],
-                                    onTap: handlePinWidget,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _buildGradientBtn(
-                                    label: context.tr('update_widget'),
-                                    gradient: const [
-                                      Color(0xFFFF7898),
-                                      Color(0xFFD81B60),
-                                    ],
-                                    onTap: handleRefreshWidget,
-                                  ),
-                                ],
-                              );
-                            }
-
-                            return Row(
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final useColumn = constraints.maxWidth < 330;
+                          final showPinButton =
+                              Theme.of(context).platform != TargetPlatform.iOS;
+                          final updateButton = _buildGradientBtn(
+                            label: context.tr('update_widget'),
+                            gradient: const [
+                              Color(0xFFFF7898),
+                              Color(0xFFD81B60),
+                            ],
+                            onTap: handleRefreshWidget,
+                          );
+                          if (!showPinButton) {
+                            return updateButton;
+                          }
+                          final addButton = _buildGradientBtn(
+                            label: context.tr('add_widget'),
+                            gradient: const [
+                              Color(0xFF10C8E6),
+                              Color(0xFF0E9EB0),
+                            ],
+                            onTap: handlePinWidget,
+                          );
+                          if (useColumn) {
+                            return Column(
                               children: [
-                                Expanded(
-                                  child: _buildGradientBtn(
-                                    label: context.tr('add_widget'),
-                                    gradient: const [
-                                      Color(0xFF10C8E6),
-                                      Color(0xFF0E9EB0),
-                                    ],
-                                    onTap: handlePinWidget,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _buildGradientBtn(
-                                    label: context.tr('update_widget'),
-                                    gradient: const [
-                                      Color(0xFFFF7898),
-                                      Color(0xFFD81B60),
-                                    ],
-                                    onTap: handleRefreshWidget,
-                                  ),
-                                ),
+                                addButton,
+                                const SizedBox(height: 10),
+                                updateButton,
                               ],
                             );
-                          },
-                        ),
+                          }
+
+                          return Row(
+                            children: [
+                              Expanded(child: addButton),
+                              const SizedBox(width: 12),
+                              Expanded(child: updateButton),
+                            ],
+                          );
+                        },
+                      ),
                       if (Theme.of(context).platform == TargetPlatform.iOS) ...[
                         const SizedBox(height: 12),
                         Container(
@@ -509,7 +501,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Hướng dẫn iOS',
+                                      context.tr('home_hngdnios_522391'),
                                       style: SLTheme.quicksand(
                                         fontSize: 12.6,
                                         fontWeight: FontWeight.w900,

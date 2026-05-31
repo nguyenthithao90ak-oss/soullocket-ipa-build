@@ -99,7 +99,7 @@ class SoulLocketBrand {
     ),
     SoulLocketBrandStyle(
       key: 'aurora',
-      label: 'Aurora PRO',
+      label: 'Aurora',
       backgroundColors: <Color>[Color(0xFF67E8F9), Color(0xFF7C3AED)],
       frameColor: Color(0xFFA5B4FC),
       surfaceColor: Color(0xFFF9FAFB),

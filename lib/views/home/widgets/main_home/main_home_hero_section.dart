@@ -137,6 +137,7 @@ class _ModernHomeBody extends StatelessWidget {
                           onEditStartDate: onEditStartDate,
                           onEditTopLabel: onEditTopLabel,
                           onEditBottomLabel: onEditBottomLabel,
+                          firstGuideHeroKey: state.widget.firstGuideHeroKey,
                         ),
                       ),
                       SLSpacing.h8,
@@ -188,6 +189,7 @@ class _ModernHomeBody extends StatelessWidget {
           state: state,
           isSingle: isSingle,
           onOpenSettings: onOpenSettings,
+          firstGuideSettingsKey: state.widget.firstGuideSettingsKey,
         ),
       ],
     );

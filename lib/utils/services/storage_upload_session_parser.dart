@@ -3,8 +3,9 @@ Map<String, dynamic> parseUploadSessionResponse(
   required String label,
   bool requireSessionId = false,
 }) {
+  final normalizedLabel = label.trim().isEmpty ? 'tải lên' : label.trim();
   if (data is! Map) {
-    throw Exception('$label is invalid.');
+    throw Exception('Phản hồi $normalizedLabel không hợp lệ.');
   }
 
   final session = Map<String, dynamic>.from(data);
@@ -18,9 +19,13 @@ Map<String, dynamic> parseUploadSessionResponse(
       downloadUrl.isEmpty ||
       (requireSessionId && sessionId.isEmpty);
   if (isIncomplete) {
-    throw Exception('$label is incomplete.');
+    throw Exception('Phản hồi $normalizedLabel thiếu thông tin tải lên.');
   }
 
+  session['uploadUrl'] = uploadUrl;
+  session['storagePath'] = storagePath;
+  session['downloadUrl'] = downloadUrl;
+  if (sessionId.isNotEmpty) session['sessionId'] = sessionId;
   return session;
 }
 
@@ -28,8 +33,9 @@ Map<String, dynamic> parseFinalizeResponse(
   Object? data, {
   required String label,
 }) {
+  final normalizedLabel = label.trim().isEmpty ? 'hoàn tất tải lên' : label.trim();
   if (data is! Map) {
-    throw Exception('$label is invalid.');
+    throw Exception('Phản hồi $normalizedLabel không hợp lệ.');
   }
   return Map<String, dynamic>.from(data);
 }

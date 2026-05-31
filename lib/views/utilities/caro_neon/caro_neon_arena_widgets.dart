@@ -109,7 +109,7 @@ class _PlayTargetTabs extends StatelessWidget {
         children: [
           Expanded(
             child: _TargetChip(
-              label: 'RIÊNG TƯ',
+              label: context.tr('util_ringt_2c6365'),
               selected: playMode == _CaroPlayMode.house,
               color: const Color(0xFF4EDBFF),
               onTap: () => onSelected(_CaroPlayMode.house),
@@ -226,7 +226,7 @@ class _SoundToggleButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Âm chạm',
+                    context.tr('util_mchm_7088bf'),
                     style: SLTheme.quicksand(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -234,7 +234,7 @@ class _SoundToggleButton extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    enabled ? 'Bật' : 'Tắt',
+                    enabled ? context.tr('util_bt_9eae51') : context.tr('util_tt_258f00'),
                     style: SLTheme.quicksand(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
@@ -282,8 +282,8 @@ class _ModeTabs extends StatelessWidget {
         children: [
           Expanded(
             child: _ModeTabButton(
-              label: '3 ô thắng',
-              caption: 'Bàn gọn, vào trận nhanh',
+              label: context.tr('util_3thng_080f34'),
+              caption: context.tr('util_bngnvotrnn_d55348'),
               selected: selectedWinLength == 3,
               enabled: !roomLocked || selectedWinLength == 3,
               onTap: () => onSelected(3),
@@ -292,8 +292,8 @@ class _ModeTabs extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: _ModeTabButton(
-              label: '5 ô thắng',
-              caption: 'Bàn rộng, kéo ngang dễ xem',
+              label: context.tr('util_5thng_5e66bf'),
+              caption: context.tr('util_bnrngkonga_033e8e'),
               selected: selectedWinLength == 5,
               enabled: !roomLocked || selectedWinLength == 5,
               onTap: () => onSelected(5),
@@ -409,7 +409,7 @@ class _HeroPanel extends StatelessWidget {
     final partnerRole = room == null
         ? (myRole == 'user2' ? 'user1' : 'user2')
         : (room!.playerXRole == myRole ? room!.playerORole : room!.playerXRole);
-    final partnerLabel = partnerRole == 'bot' ? 'BOT' : 'NGƯỜI ẤY';
+    final partnerLabel = partnerRole == 'bot' ? 'BOT' : context.tr('util_ngiy_e21b71');
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
@@ -441,7 +441,7 @@ class _HeroPanel extends StatelessWidget {
               Expanded(
                 child: _PlayerPlate(
                   name: myName,
-                  roleLabel: 'BẠN',
+                  roleLabel: context.tr('util_bn_415bfa'),
                   symbol: room?.symbolForRole(myRole) ?? '',
                   isAccentBlue: true,
                   isWinner: room?.winnerRole == myRole,
@@ -560,7 +560,7 @@ class _PlayerPlate extends StatelessWidget {
           const SizedBox(height: 10),
           if (isWinner || isTurn)
             _TinyPill(
-              text: isWinner ? 'ĐANG THẮNG' : 'TỚI LƯỢT',
+              text: isWinner ? context.tr('util_angthng_e4bde5') : context.tr('util_tilt_db7dc9'),
               color: isWinner ? const Color(0xFFFFD76F) : accent,
               darkText: isWinner,
             ),
@@ -598,7 +598,7 @@ class _ArenaActionPanel extends StatelessWidget {
     if (currentRoom == null) {
       buttons.add(
         _ActionButton(
-          label: 'Bắt đầu',
+          label: context.tr('util_btu_3cb0f0'),
           color: const Color(0xFF4EDBFF),
           foreground: const Color(0xFF14051A),
           icon: Icons.rocket_launch_rounded,
@@ -606,11 +606,11 @@ class _ArenaActionPanel extends StatelessWidget {
         ),
       );
       infoText =
-          'Bấm Bắt đầu để chọn 3 ô hoặc 5 ô rồi mở bàn riêng. Luật gần nhất là ${selectedWinLength == 5 ? '5 ô thắng' : '3 ô thắng'}.';
+          'Bấm Bắt đầu để chọn 3 ô hoặc 5 ô rồi mở bàn riêng. Luật gần nhất là ${selectedWinLength == 5 ? context.tr('util_5thng_5e66bf') : context.tr('util_3thng_080f34')}.';
     } else if (currentRoom.isWaiting && currentRoom.createdByRole != myRole) {
       buttons.add(
         _ActionButton(
-          label: 'Tham gia bàn',
+          label: context.tr('util_thamgiabn_a8b113'),
           color: const Color(0xFFFF5E9E),
           foreground: Colors.white,
           icon: Icons.login_rounded,
@@ -619,18 +619,18 @@ class _ArenaActionPanel extends StatelessWidget {
       );
       buttons.add(
         _ActionButton(
-          label: 'Đóng lời mời',
+          label: context.tr('util_nglimi_af8d28'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.close_rounded,
           onTap: isBusy ? null : onClear,
         ),
       );
-      infoText = 'Bàn đang chờ bạn xác nhận để bắt đầu.';
+      infoText = context.tr('util_bnangchbnx_ed804e');
     } else if (currentRoom.isWaiting) {
       buttons.add(
         _ActionButton(
-          label: 'Hủy bàn',
+          label: context.tr('util_hybn_e09cfc'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.delete_outline_rounded,
@@ -638,11 +638,11 @@ class _ArenaActionPanel extends StatelessWidget {
         ),
       );
       infoText =
-          'Lời mời đã gửi. Khi người kia vào, bàn sẽ tự chuyển sang trạng thái chơi.';
+          context.tr('util_limigikhin_d80433');
     } else if (currentRoom.isDone) {
       buttons.add(
         _ActionButton(
-          label: 'Ván mới',
+          label: context.tr('util_vnmi_ea7b55'),
           color: const Color(0xFF4EDBFF),
           foreground: const Color(0xFF14051A),
           icon: Icons.replay_rounded,
@@ -651,18 +651,18 @@ class _ArenaActionPanel extends StatelessWidget {
       );
       buttons.add(
         _ActionButton(
-          label: 'Xóa bàn',
+          label: context.tr('util_xabn_fd33c4'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.layers_clear_rounded,
           onTap: isBusy ? null : onClear,
         ),
       );
-      infoText = 'Ván đã xong. Có thể chọn lại 3 ô hoặc 5 ô rồi mở bàn mới.';
+      infoText = context.tr('util_vnxongcthc_418275');
     } else {
       buttons.add(
         _ActionButton(
-          label: 'Làm mới bàn',
+          label: context.tr('util_lmmibn_976b32'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.refresh_rounded,
@@ -670,7 +670,7 @@ class _ArenaActionPanel extends StatelessWidget {
         ),
       );
       infoText =
-          'Chạm ô trống để đánh. Bàn này đồng bộ theo thời gian thực cho cả hai máy.';
+          context.tr('util_chmtrngnhb_816fec');
     }
 
     return Column(
@@ -712,12 +712,12 @@ class _ArenaBotActionPanel extends StatelessWidget {
     final currentRoom = room;
     final buttons = <Widget>[];
     String infoText =
-        'Kiểu bot hiện tại: $styleLabel. Luật gần nhất: ${selectedWinLength == 5 ? '5 ô thắng' : '3 ô thắng'}. $styleDescription';
+        'Kiểu bot hiện tại: $styleLabel. Luật gần nhất: ${selectedWinLength == 5 ? context.tr('util_5thng_5e66bf') : context.tr('util_3thng_080f34')}. $styleDescription';
 
     if (currentRoom == null) {
       buttons.add(
         _ActionButton(
-          label: 'Chọn bàn rồi vào chơi',
+          label: context.tr('util_chnbnrivoc_c64e2a'),
           color: const Color(0xFF4EDBFF),
           foreground: const Color(0xFF14051A),
           icon: Icons.smart_toy_rounded,
@@ -727,7 +727,7 @@ class _ArenaBotActionPanel extends StatelessWidget {
     } else if (currentRoom.isDone) {
       buttons.add(
         _ActionButton(
-          label: 'Ván mới với Bot',
+          label: context.tr('util_vnmivibot_092422'),
           color: const Color(0xFF4EDBFF),
           foreground: const Color(0xFF14051A),
           icon: Icons.replay_rounded,
@@ -736,7 +736,7 @@ class _ArenaBotActionPanel extends StatelessWidget {
       );
       buttons.add(
         _ActionButton(
-          label: 'Đóng ván',
+          label: context.tr('util_ngvn_636849'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.layers_clear_rounded,
@@ -744,11 +744,11 @@ class _ArenaBotActionPanel extends StatelessWidget {
         ),
       );
       infoText =
-          'Ván này đã xong. Có thể đổi lại kiểu bàn hoặc kiểu bot rồi vào ván mới.';
+          context.tr('util_vnnyxongct_2f6faa');
     } else {
       buttons.add(
         _ActionButton(
-          label: isBusy ? 'Bot đang nghĩ' : 'Đổi bàn mới',
+          label: isBusy ? context.tr('util_botangngh_6f8ac2') : context.tr('util_ibnmi_381420'),
           color: const Color(0xFFFF5E9E),
           foreground: Colors.white,
           icon: Icons.auto_awesome_rounded,
@@ -757,7 +757,7 @@ class _ArenaBotActionPanel extends StatelessWidget {
       );
       buttons.add(
         _ActionButton(
-          label: 'Thoát ván',
+          label: context.tr('util_thotvn_4c3f2f'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.close_rounded,
@@ -811,7 +811,7 @@ class _ActionPanel extends StatelessWidget {
       buttons.add(
         _ActionButton(
           label:
-              'Mời chơi ${selectedWinLength == 5 ? '5 ô thắng' : '3 ô thắng'}',
+              'Mời chơi ${selectedWinLength == 5 ? context.tr('util_5thng_5e66bf') : context.tr('util_3thng_080f34')}',
           color: const Color(0xFF4EDBFF),
           foreground: const Color(0xFF14051A),
           icon: Icons.rocket_launch_rounded,
@@ -821,7 +821,7 @@ class _ActionPanel extends StatelessWidget {
     } else if (currentRoom.isWaiting && currentRoom.createdByRole != myRole) {
       buttons.add(
         _ActionButton(
-          label: 'Tham gia bàn',
+          label: context.tr('util_thamgiabn_a8b113'),
           color: const Color(0xFFFF5E9E),
           foreground: Colors.white,
           icon: Icons.videogame_asset_rounded,
@@ -830,7 +830,7 @@ class _ActionPanel extends StatelessWidget {
       );
       buttons.add(
         _ActionButton(
-          label: 'Xóa lời mời',
+          label: context.tr('util_xalimi_507183'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.close_rounded,
@@ -838,12 +838,12 @@ class _ActionPanel extends StatelessWidget {
         ),
       );
     } else if (currentRoom.isWaiting) {
-      buttons.add(const _InfoStrip(
+      buttons.add(_InfoStrip(
           text:
-              'Lời mời đã gửi. Khi người kia vào game, bàn sẽ tự chuyển sang trạng thái chơi.'));
+              context.tr('util_limigikhin_670a47')));
       buttons.add(
         _ActionButton(
-          label: 'Hủy bàn',
+          label: context.tr('util_hybn_e09cfc'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.delete_outline_rounded,
@@ -853,7 +853,7 @@ class _ActionPanel extends StatelessWidget {
     } else if (currentRoom.isDone) {
       buttons.add(
         _ActionButton(
-          label: 'Chơi lại',
+          label: context.tr('util_chili_ddbf84'),
           color: const Color(0xFF4EDBFF),
           foreground: const Color(0xFF14051A),
           icon: Icons.replay_rounded,
@@ -862,7 +862,7 @@ class _ActionPanel extends StatelessWidget {
       );
       buttons.add(
         _ActionButton(
-          label: 'Xóa bàn',
+          label: context.tr('util_xabn_fd33c4'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.layers_clear_rounded,
@@ -870,12 +870,12 @@ class _ActionPanel extends StatelessWidget {
         ),
       );
     } else {
-      buttons.add(const _InfoStrip(
+      buttons.add(_InfoStrip(
           text:
-              'Chạm trực tiếp vào ô trống để đánh. Bàn này đang đồng bộ theo thời gian thực cho cả hai thiết bị.'));
+              context.tr('util_chmtrctipv_16c48f')));
       buttons.add(
         _ActionButton(
-          label: 'Làm mới bàn',
+          label: context.tr('util_lmmibn_976b32'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.refresh_rounded,
@@ -912,16 +912,16 @@ class _BotActionPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentRoom = room;
     final buttons = <Widget>[
-      const _InfoStrip(
+      _InfoStrip(
         text:
-            'Bot Neon có 2 kiểu đánh: bàn 3 ô dùng minimax gần như hoàn hảo, bàn 5 ô ưu tiên thắng ngay và chặn các dãy nguy hiểm.',
+            context.tr('util_botneonc2k_4dc639'),
       ),
     ];
 
     if (currentRoom == null) {
       buttons.add(
         _ActionButton(
-          label: 'Bắt đầu với Bot ${selectedWinLength == 5 ? '5 ô' : '3 ô'}',
+          label: 'Bắt đầu với Bot ${selectedWinLength == 5 ? '5 ô' : context.tr('util_3_ad928e')}',
           color: const Color(0xFF4EDBFF),
           foreground: const Color(0xFF14051A),
           icon: Icons.smart_toy_rounded,
@@ -931,7 +931,7 @@ class _BotActionPanel extends StatelessWidget {
     } else if (currentRoom.isDone) {
       buttons.add(
         _ActionButton(
-          label: 'Chơi lại với Bot',
+          label: context.tr('util_chilivibot_4a56ce'),
           color: const Color(0xFF4EDBFF),
           foreground: const Color(0xFF14051A),
           icon: Icons.replay_rounded,
@@ -940,7 +940,7 @@ class _BotActionPanel extends StatelessWidget {
       );
       buttons.add(
         _ActionButton(
-          label: 'Đóng ván',
+          label: context.tr('util_ngvn_636849'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.layers_clear_rounded,
@@ -950,7 +950,7 @@ class _BotActionPanel extends StatelessWidget {
     } else {
       buttons.add(
         _ActionButton(
-          label: isBusy ? 'Bot đang nghĩ' : 'Ván mới',
+          label: isBusy ? context.tr('util_botangngh_6f8ac2') : context.tr('util_vnmi_ea7b55'),
           color: const Color(0xFFFF5E9E),
           foreground: Colors.white,
           icon: Icons.auto_awesome_rounded,
@@ -959,7 +959,7 @@ class _BotActionPanel extends StatelessWidget {
       );
       buttons.add(
         _ActionButton(
-          label: 'Thoát ván',
+          label: context.tr('util_thotvn_4c3f2f'),
           color: const Color(0x291E2638),
           foreground: const Color(0xFFEAE5F8),
           icon: Icons.close_rounded,

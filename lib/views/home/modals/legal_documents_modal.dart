@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../core/sl_theme.dart';
 import '../screens/document_viewer_screen.dart';
@@ -78,7 +79,7 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Chính sách & Điều khoản',
+                    context.tr('home_chnhschiuk_b1904f'),
                     style: SLTheme.quicksand(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
@@ -87,7 +88,7 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
                   ),
                   SLSpacing.h4,
                   Text(
-                    'Vui lòng xem xét và chấp nhận các chính sách của chúng tôi',
+                    context.tr('home_vuilngxemx_a2d7c9'),
                     style: SLTheme.quicksand(
                       fontSize: 12.4,
                       fontWeight: FontWeight.w700,
@@ -102,9 +103,9 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
                     child: Row(
                       children: [
                         _buildTabButton(
-                            'tos', 'Bảo mật', Icons.gavel_rounded, _accentRose),
+                            'tos', context.tr('home_bomt_46487e'), Icons.gavel_rounded, _accentRose),
                         SLSpacing.w8,
-                        _buildTabButton('privacy', 'Điều khoản',
+                        _buildTabButton('privacy', context.tr('home_iukhon_bdeda1'),
                             Icons.privacy_tip_rounded, _accentLavender),
                         SLSpacing.w8,
                         _buildTabButton('security', 'Cookie',
@@ -129,7 +130,7 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
                             ),
                           ),
                           child: Text(
-                            'Không đồng ý',
+                            context.tr('home_khngng_e6ce42'),
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               fontWeight: FontWeight.w900,
@@ -141,7 +142,7 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
                       SLSpacing.w8,
                       Expanded(
                         child: _buildPrimaryButton(
-                          label: 'Tiếp tục',
+                          label: context.tr('home_tiptc_555f1f'),
                           accent: _getTabAccent(),
                           onTap: () => Navigator.pop(context, true),
                         ),
@@ -236,7 +237,7 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             border: Border.all(color: _accentRose.withValues(alpha: 0.16)),
           ),
           child: Text(
-            'Trước khi vào app, bạn cần xác nhận đã đọc bộ điều khoản sử dụng để hiểu rõ quyền lợi, trách nhiệm và quy tắc sử dụng SoulLocket.',
+            context.tr('home_trckhivoap_a78836'),
             style: SLTheme.quicksand(
               fontSize: 12.4,
               fontWeight: FontWeight.w700,
@@ -258,25 +259,25 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             children: [
               _buildDocItem(
                 icon: Icons.verified_user_rounded,
-                title: 'Quyền và trách nhiệm',
+                title: context.tr('home_quynvtrchn_bb2554'),
                 description:
-                    'Làm rõ trách nhiệm tài khoản, hành vi được phép và giới hạn sử dụng trong ứng dụng.',
+                    context.tr('home_lmrtrchnhi_ce82e7'),
                 accent: _accentRose,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.groups_rounded,
-                title: 'Quy tắc cộng đồng',
+                title: context.tr('home_quytccngng_8862e1'),
                 description:
-                    'Nêu các nguyên tắc khi đăng bài, chat, chia sẻ media và tương tác với người khác.',
+                    context.tr('home_nuccnguynt_1015f9'),
                 accent: _accentRose,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.workspace_premium_rounded,
-                title: 'PRO và dịch vụ số',
+                title: context.tr('home_provdchvs_00f86a'),
                 description:
-                    'Giải thích cách hoạt động của PRO, quà tặng, quảng cáo thưởng và các quyền lợi mở rộng.',
+                    context.tr('home_giithchcch_1cbbe5'),
                 accent: _accentRose,
               ),
             ],
@@ -284,11 +285,11 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
         ),
         SLSpacing.h12,
         _buildPrimaryButton(
-          label: 'Xem chi tiết Điều khoản',
+          label: context.tr('home_xemchititi_eda09f'),
           icon: Icons.open_in_new_rounded,
           accent: _accentRose,
           onTap: () =>
-              _openDoc('Điều khoản sử dụng (TOS)', 'assets/docs/terms.html'),
+              _openDoc(context.tr('home_iukhonsdng_b931f0'), 'assets/docs/terms.html'),
         ),
       ],
     );
@@ -308,7 +309,7 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             border: Border.all(color: _accentLavender.withValues(alpha: 0.16)),
           ),
           child: Text(
-            'Bảng này tóm tắt dữ liệu nào được dùng, vì sao được dùng và cách bạn kiểm soát dữ liệu của mình trước khi tiếp tục.',
+            context.tr('home_bngnytmttd_7ba1b0'),
             style: SLTheme.quicksand(
               fontSize: 12.4,
               fontWeight: FontWeight.w700,
@@ -330,25 +331,25 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             children: [
               _buildDocItem(
                 icon: Icons.folder_shared_rounded,
-                title: 'Dữ liệu được xử lý',
+                title: context.tr('home_dliucxl_cbc4d9'),
                 description:
-                    'Bao gồm định vị GPS (ngay cả trong nền để cập nhật bản đồ), ảnh riêng tư, dữ liệu sức khỏe (chu kỳ kinh nguyệt), tin nhắn chat và thiết bị.',
+                    context.tr('home_baogmnhvgp_7cae8c'),
                 accent: _accentLavender,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.lock_outline_rounded,
-                title: 'Mục đích sử dụng',
+                title: context.tr('home_mcchsdng_803f65'),
                 description:
-                    'Dùng để kết nối cặp đôi, chia sẻ vị trí realtime, sao lưu kỷ niệm, nhắc nhở chu kỳ sức khỏe và cảnh báo bảo mật thiết bị.',
+                    context.tr('home_dngktnicpi_abde74'),
                 accent: _accentLavender,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.manage_accounts_rounded,
-                title: 'Quyền kiểm soát',
+                title: context.tr('home_quynkimsot_363315'),
                 description:
-                    'Bạn có thể tắt GPS, xóa tin nhắn, xóa ảnh hoặc yêu cầu xóa toàn bộ dữ liệu tài khoản trong Cài đặt bất kỳ lúc nào.',
+                    context.tr('home_bncthttgps_338c10'),
                 accent: _accentLavender,
               ),
             ],
@@ -356,11 +357,11 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
         ),
         SLSpacing.h12,
         _buildPrimaryButton(
-          label: 'Xem chi tiết Bảo mật',
+          label: context.tr('home_xemchititb_d4c7c5'),
           icon: Icons.open_in_new_rounded,
           accent: _accentLavender,
           onTap: () =>
-              _openDoc('Chính sách bảo mật', 'assets/docs/privacy.html'),
+              _openDoc(context.tr('home_chnhschbom_98b319'), 'assets/docs/privacy.html'),
         ),
       ],
     );
@@ -380,7 +381,7 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             border: Border.all(color: _accentGreen.withValues(alpha: 0.16)),
           ),
           child: Text(
-            'SoulLocket có thể lưu mẫu thiết bị, địa chỉ IP công khai và vị trí gần đúng suy ra từ IP để phát hiện đăng nhập lạ, duyệt thiết bị và gửi cảnh báo bảo mật. Dữ liệu này không dùng cho quảng cáo.',
+            context.tr('home_soullocket_3df71a'),
             style: SLTheme.quicksand(
               fontSize: 12.4,
               fontWeight: FontWeight.w700,
@@ -402,25 +403,25 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             children: [
               _buildDocItem(
                 icon: Icons.phone_iphone_rounded,
-                title: 'Dữ liệu được lưu',
+                title: context.tr('home_dliuclu_f572e2'),
                 description:
-                    'Model máy, hệ điều hành, token thiết bị, IP công khai và dấu thời gian đăng nhập.',
+                    context.tr('home_modelmyhiu_a0b2e6'),
                 accent: _accentGreen,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.public_rounded,
-                title: 'Vị trí gần đúng từ IP',
+                title: context.tr('home_vtrgnngtip_a84a67'),
                 description:
-                    'Chỉ suy ra ở mức thành phố/khu vực từ IP công khai, không phải GPS nền.',
+                    context.tr('home_chsuyramct_3cfdc0'),
                 accent: _accentGreen,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.security_rounded,
-                title: 'Mục đích sử dụng',
+                title: context.tr('home_mcchsdng_803f65'),
                 description:
-                    'Cảnh báo đăng nhập bất thường, phê duyệt/chặn thiết bị và hỗ trợ điều tra sự cố bảo mật.',
+                    context.tr('home_cnhbongnhp_c8f63c'),
                 accent: _accentGreen,
               ),
             ],
@@ -436,7 +437,7 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             border: Border.all(color: _accentGreen.withValues(alpha: 0.16)),
           ),
           child: Text(
-            'Nếu bạn không bật mục này, app vẫn dùng được nhưng nhật ký thiết bị và một số cảnh báo bảo mật sẽ không đầy đủ.',
+            context.tr('home_nubnkhngbt_347436'),
             style: SLTheme.quicksand(
               fontSize: 11.8,
               fontWeight: FontWeight.w800,
@@ -463,7 +464,7 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             border: Border.all(color: _accentBlue.withValues(alpha: 0.16)),
           ),
           child: Text(
-            'Chúng tôi sử dụng cookies để giúp bạn truy cập SoulLocket, cách người dùng tương tác với ứng dụng của chúng tôi, bảo vệ chống gian lận và cải thiện hiệu suất của chúng tôi.',
+            context.tr('home_chngtisdng_5b806c'),
             style: SLTheme.quicksand(
               fontSize: 12.4,
               fontWeight: FontWeight.w700,
@@ -485,25 +486,25 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
             children: [
               _buildDocItem(
                 icon: Icons.check_rounded,
-                title: 'Cookies cần thiết',
+                title: context.tr('home_cookiescnt_91dc47'),
                 description:
-                    'Cần thiết để SoulLocket hoạt động bình thường (đăng nhập, bảo mật, tùy chỉnh).',
+                    context.tr('home_cnthitsoul_2d6da0'),
                 accent: _accentBlue,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.analytics_rounded,
-                title: 'Cookies phân tích',
+                title: context.tr('home_cookiesphn_3ea21d'),
                 description:
-                    'Giúp chúng tôi hiểu cách bạn sử dụng ứng dụng để cải thiện trải nghiệm.',
+                    context.tr('home_gipchngtih_99fd82'),
                 accent: _accentBlue,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.campaign_rounded,
-                title: 'Cookies tiếp thị',
+                title: context.tr('home_cookiestip_7fd163'),
                 description:
-                    'Được sử dụng để hiển thị quảng cáo liên quan và đo hiệu quả chiến dịch.',
+                    context.tr('home_csdnghinth_be761d'),
                 accent: _accentBlue,
               ),
             ],

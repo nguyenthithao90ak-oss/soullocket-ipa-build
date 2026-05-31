@@ -4,9 +4,11 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
   Widget _buildSecurityPanel({bool hideBackButton = false}) {
     final activeName = _displayNameForRole(_activeRoleKey);
     final isSingleMode = _relationshipMode == 'single';
+    final showSecretVault =
+        UtilityService.isUtilityVisibleInCurrentBuild('vault');
     void openDeviceManager() {
       if (_houseId == null || _houseId!.trim().isEmpty) {
-        _showToast('Vui lòng tạo/vào nhà trước khi dùng Quản lý thiết bị.');
+        _showToast(context.tr('home_vuilngtovo_6d854c'));
         return;
       }
       Navigator.push(
@@ -48,7 +50,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFFFC1D1).withValues(alpha: 0.5), width: 1.5),
+                border: Border.all(
+                    color: const Color(0xFFFFC1D1).withValues(alpha: 0.5),
+                    width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFFF78A8).withValues(alpha: 0.05),
@@ -62,10 +66,11 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.person_pin_rounded, color: Color(0xFFE57373), size: 16),
+                      const Icon(Icons.person_pin_rounded,
+                          color: Color(0xFFE57373), size: 16),
                       const SizedBox(width: 6),
                       Text(
-                        'ĐANG ĐĂNG NHẬP',
+                        context.tr('home_angngnhp_af3562'),
                         style: SLTextStyles.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
@@ -88,14 +93,19 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFFFC1D1).withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color:
+                              const Color(0xFFFFC1D1).withValues(alpha: 0.3)),
                     ),
                     child: Text(
-                      _houseId == null ? 'Mã nhà: Chưa có' : 'ID: $_houseId',
+                      _houseId == null
+                          ? context.tr('home_mnhchac_a0dca8')
+                          : 'ID: $_houseId',
                       style: SLTextStyles.quicksand(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -111,13 +121,16 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           if (isSingleMode) ...[
             Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFDEEF4),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  _houseId == null ? 'Mã nhà: Chưa có' : 'Mã nhà: $_houseId',
+                  _houseId == null
+                      ? context.tr('home_mnhchac_a0dca8')
+                      : 'Mã nhà: $_houseId',
                   style: SLTextStyles.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w900,
@@ -129,18 +142,17 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             SLSpacing.h12,
           ],
           _buildSecurityCard(
-            title: 'Thông tin đăng nhập riêng tư',
-            subtitle:
-                'Thông tin tài khoản dùng để đăng nhập và khôi phục khi cần thiết.',
+            title: context.tr('home_thngtinngn_7bc2e7'),
+            subtitle: context.tr('home_thngtintik_0a7339'),
             borderColor: const Color(0xFFF0D6DF),
             backgroundColor: Colors.white,
             children: [
               // --- EMAIL CHÍNH ---
               _buildModernIdentityTile(
                 icon: Icons.email_rounded,
-                label: 'Email chính',
+                label: context.tr('home_emailchnh_c3795e'),
                 value: _securityEmail.isEmpty
-                    ? 'Chưa có dữ liệu'
+                    ? context.tr('home_chacdliu_08e970')
                     : _authService.maskEmail(_securityEmail),
                 isVerified: _isMainEmailVerified,
                 onAction: !_isMainEmailVerified && _emailVerifyWaitSeconds <= 0
@@ -148,33 +160,41 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     : null,
                 actionLabel: _emailVerifyWaitSeconds > 0
                     ? 'Thử lại sau ${_emailVerifyWaitSeconds}s'
-                    : 'Xác thực',
-                onSecondaryAction: !_isMainEmailVerified ? _changePrimaryEmailV2 : null,
-                secondaryActionLabel: 'Đổi email',
+                    : context.tr('home_xcthc_7e8a1b'),
+                onSecondaryAction:
+                    !_isMainEmailVerified ? _changePrimaryEmailV2 : null,
+                secondaryActionLabel: context.tr('home_iemail_3dfe1f'),
               ),
               SLSpacing.h12,
               // --- EMAIL PHỤ ---
               _buildModernIdentityTile(
                 icon: Icons.mark_email_read_rounded,
-                label: 'Email dự phòng',
+                label: context.tr('home_emaildphng_60bcd4'),
                 value: _secondaryEmail.isEmpty
-                    ? 'Chưa thiết lập'
+                    ? context.tr('home_chathitlp_bf65d4')
                     : _authService.maskEmail(_secondaryEmail),
                 isVerified: _secondaryEmail.isNotEmpty,
-                onAction: () => _showSecondaryEmailModal(), // Sử dụng modal thay vì input inline dài dòng
-                actionLabel: _secondaryEmail.isEmpty ? 'Thêm ngay' : 'Thay đổi',
-                statusLabel: _secondaryEmail.isEmpty ? 'Trống' : 'An toàn',
+                onAction: () =>
+                    _showSecondaryEmailModal(), // Sử dụng modal thay vì input inline dài dòng
+                actionLabel: _secondaryEmail.isEmpty
+                    ? context.tr('home_thmngay_9f02d3')
+                    : context.tr('home_thayi_d4d9d8'),
+                statusLabel: _secondaryEmail.isEmpty
+                    ? context.tr('home_trng_bf792b')
+                    : context.tr('home_anton_94fd1f'),
                 accentColor: const Color(0xFF9C27B0),
               ),
               SLSpacing.h12,
               // --- LIÊN KẾT GOOGLE ---
               _buildModernIdentityTile(
                 icon: Icons.account_circle_rounded,
-                label: 'Tài khoản Google',
-                value: _googleLinked ? 'Đã liên kết' : 'Chưa liên kết',
+                label: context.tr('home_tikhongoog_fba9e3'),
+                value: _googleLinked
+                    ? context.tr('home_linkt_708640')
+                    : context.tr('home_chalinkt_1f9e3b'),
                 isVerified: _googleLinked,
                 onAction: _googleLinked ? null : _linkGoogleAccount,
-                actionLabel: 'Liên kết',
+                actionLabel: context.tr('home_linkt_9d73d8'),
                 isLoading: _isLinkingGoogle,
                 accentColor: const Color(0xFFEA4335),
                 showCheckmark: _googleLinked,
@@ -183,18 +203,22 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           ),
           SLSpacing.h12,
           _buildSecurityCard(
-            title: 'Mật khẩu nhà',
+            title: context.tr('home_mtkhunh_58f4ec'),
             subtitle: _passwordLinked
-                ? 'Đây là mật khẩu đăng nhập tài khoản hiện tại của bạn.'
-                : 'Tài khoản hiện tại chưa có mật khẩu đăng nhập. Hãy tạo một lần để các lần sau đăng nhập được bằng email và mật khẩu này.',
+                ? context.tr('home_ylmtkhungn_f5cdf1')
+                : context.tr('home_tikhonhint_e0973b'),
             borderColor: const Color(0xFFFFCC80),
             backgroundColor: const Color(0xFFFFFBF5),
             children: [
               _buildSecurityLine(
-                label: 'Trạng thái',
-                value: _passwordLinked ? '••••••••' : 'Chưa tạo mật khẩu',
+                label: context.tr('home_trngthi_0fbc27'),
+                value: _passwordLinked
+                    ? '••••••••'
+                    : context.tr('home_chatomtkhu_29aa68'),
                 trailing: _buildSecurityBadge(
-                  _passwordLinked ? 'Bảo mật' : 'Chưa tạo',
+                  _passwordLinked
+                      ? context.tr('home_bomt_46487e')
+                      : context.tr('home_chato_492567'),
                   background: _passwordLinked
                       ? const Color(0xFFFFCC80)
                       : const Color(0xFFFFE0B2),
@@ -205,11 +229,11 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               _buildSecurityInlineButton(
                 label: _showPasswordEditor
                     ? (_passwordLinked
-                        ? 'Ẩn phần đổi mật khẩu'
-                        : 'Ẩn phần tạo mật khẩu')
+                        ? context.tr('home_nphnimtkhu_53ea3e')
+                        : context.tr('home_nphntomtkh_5483e8'))
                     : (_passwordLinked
-                        ? 'Mở phần đổi mật khẩu'
-                        : 'Tạo mật khẩu lần đầu'),
+                        ? context.tr('home_mphnimtkhu_fb2c60')
+                        : context.tr('home_tomtkhulnu_2b399b')),
                 gradient: const [Color(0xFFFFC107), Color(0xFFFF9800)],
                 textColor: Colors.black87,
                 onTap: () =>
@@ -220,20 +244,24 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 if (!_passwordLinked) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFF9C4).withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFFBC02D).withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color:
+                              const Color(0xFFFBC02D).withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.info_outline_rounded, color: Color(0xFFF57F17), size: 20),
+                        const Icon(Icons.info_outline_rounded,
+                            color: Color(0xFFF57F17), size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Bạn đang dùng Google/Facebook nên chưa có mật khẩu riêng. Tạo mật khẩu tại đây để đăng nhập bằng email sau này nhé!',
+                            context.tr('home_bnangdnggo_f12b63'),
                             style: SLTheme.quicksand(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -256,15 +284,18 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                       fontWeight: FontWeight.w700,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Mật khẩu hiện tại',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: Colors.grey),
+                      hintText: context.tr('home_mtkhuhinti_d94873'),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded,
+                          color: Colors.grey),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+                        borderSide: BorderSide(
+                            color: Colors.grey.withValues(alpha: 0.2)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+                        borderSide: BorderSide(
+                            color: Colors.grey.withValues(alpha: 0.2)),
                       ),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.8),
@@ -280,8 +311,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   ),
                   decoration: InputDecoration(
                     hintText: _passwordLinked
-                        ? 'Mật khẩu mới (tối thiểu 6 ký tự)'
-                        : 'Tạo mật khẩu đăng nhập (tối thiểu 6 ký tự)',
+                        ? context.tr('home_mtkhumitit_9da358')
+                        : context.tr('home_tomtkhungn_3e6b26'),
                     prefixIcon:
                         const Icon(Icons.lock, color: Color(0xFFD81B60)),
                     border: OutlineInputBorder(
@@ -294,8 +325,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 SLSpacing.h8,
                 _buildGradientBtn(
                   label: _passwordLinked
-                      ? 'Lưu Mật Khẩu Mới'
-                      : 'Tạo Mật Khẩu Đăng Nhập',
+                      ? context.tr('home_lumtkhumi_a84375')
+                      : context.tr('home_tomtkhungn_b628e5'),
                   gradient: const [Color(0xFFFFC107), Color(0xFFFF9800)],
                   textColor: Colors.black,
                   onTap: _changeHousePassword,
@@ -303,7 +334,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 if (_passwordLinked) ...[
                   SLSpacing.h8,
                   _buildGradientBtn(
-                    label: '📧 Gửi Mã Đặt Lại Mật Khẩu',
+                    label: context.tr('home_gimtlimtkh_0dcb54'),
                     gradient: const [Color(0xFF90CAF9), Color(0xFF90CAF9)],
                     textColor: const Color(0xFF1565C0),
                     onTap: _sendPasswordResetLink,
@@ -317,19 +348,21 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             title: context.tr('security_question'),
             subtitle: recoveryLocked
                 ? context.tr('security_q_locked')
-                : 'Chỉ nên đặt một lần. Chọn câu hỏi thật dễ nhớ nhưng khó đoán.',
+                : context.tr('home_chnntmtlnc_0791a2'),
             borderColor: const Color(0xFFF48FB1),
             backgroundColor: const Color(0xFFFFF7FB),
             children: [
               _buildSecurityLine(
-                label: 'Câu hỏi',
+                label: context.tr('home_cuhi_c1a8b2'),
                 value: _securityQuestion.isEmpty
-                    ? 'Chưa thiết lập'
+                    ? context.tr('home_chathitlp_bf65d4')
                     : _securityQuestion,
               ),
               _buildSecurityLine(
-                label: 'Trả lời',
-                value: _hasRecoveryAnswer ? 'Đã thiết lập' : 'Chưa thiết lập',
+                label: context.tr('home_trli_4c5df0'),
+                value: _hasRecoveryAnswer
+                    ? context.tr('home_thitlp_2fdbaa')
+                    : context.tr('home_chathitlp_bf65d4'),
                 valueColor: _hasRecoveryAnswer
                     ? const Color(0xFF2E7D32)
                     : const Color(0xFF8D6E63),
@@ -346,7 +379,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   fontWeight: FontWeight.w700,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Chọn câu hỏi bảo mật',
+                  hintText: context.tr('home_chncuhibom_0eba13'),
                   border: OutlineInputBorder(
                     borderRadius: SLRadius.mdAll,
                   ),
@@ -407,8 +440,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                         onEditingComplete: _normalizeRecoveryBirthDateAnswer,
                         onSubmitted: (_) => _normalizeRecoveryBirthDateAnswer(),
                         decoration: InputDecoration(
-                          hintText: 'ngày/tháng/năm',
-                          helperText: 'Đang nhập ngày/tháng/năm',
+                          hintText: context.tr('home_ngythngnm_a697d0'),
+                          helperText: context.tr('home_angnhpngyt_377d85'),
                           prefixIcon: const Icon(
                             Icons.calendar_month_rounded,
                             color: Color(0xFFD81B60),
@@ -446,7 +479,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               SLSpacing.h8,
               _buildGradientBtn(
                 label: recoveryLocked
-                    ? 'Đã thiết lập câu hỏi bảo mật'
+                    ? context.tr('home_thitlpcuhi_bc15f7')
                     : context.tr('save_security_question'),
                 gradient: recoveryLocked
                     ? const [Color(0xFFF48FB1), Color(0xFFE1BEE7)]
@@ -465,14 +498,13 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           ),
           SLSpacing.h12,
           _buildSecurityCard(
-            title: 'Thiết bị đăng nhập',
-            subtitle:
-                'Quản lý thiết bị đăng nhập tin cậy và xem thông tin máy đang dùng.',
+            title: context.tr('home_thitbngnhp_d39323'),
+            subtitle: context.tr('home_qunlthitbn_8d057f'),
             borderColor: const Color(0xFF90CAF9),
             backgroundColor: const Color(0xFFF3F9FF),
             children: [
               _buildGradientBtn(
-                label: 'MỞ QUẢN LÝ THIẾT BỊ',
+                label: context.tr('home_mqunlthitb_7882fa'),
                 gradient: const [Color(0xFF64B5F6), Color(0xFF1976D2)],
                 onTap: openDeviceManager,
               ),
@@ -486,12 +518,14 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             backgroundColor: const Color(0xFFFFF8EF),
             children: [
               _buildSecurityLine(
-                label: 'PIN phụ',
+                label: context.tr('home_pinph_af7cc5'),
                 value: _maskPin(_housePin),
                 trailing: TextButton(
                   onPressed: () =>
                       setState(() => _showHousePin = !_showHousePin),
-                  child: Text(_showHousePin ? 'Ẩn' : 'Hiện'),
+                  child: Text(_showHousePin
+                      ? context.tr('home_n_f7bc96')
+                      : context.tr('home_hin_726cac')),
                 ),
               ),
               SLSpacing.h8,
@@ -524,176 +558,86 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             ],
           ),
           SLSpacing.h12,
-          _buildSecurityCard(
-            title: 'Kho Ảnh Bí Mật',
-            subtitle: context.tr('vault_timeout_desc'),
-            borderColor: const Color(0xFFCE93D8),
-            backgroundColor: const Color(0xFFF3E5F5),
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: SLRadius.mdAll,
-                  border: Border.all(color: const Color(0xFFCE93D8)),
+          if (showSecretVault)
+            _buildSecurityCard(
+              title: context.tr('home_khonhbmt_d6cf38'),
+              subtitle: context.tr('vault_timeout_desc'),
+              borderColor: const Color(0xFFCE93D8),
+              backgroundColor: const Color(0xFFF3E5F5),
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: SLRadius.mdAll,
+                    border: Border.all(color: const Color(0xFFCE93D8)),
+                  ),
+                  child: DropdownButtonFormField<int>(
+                    initialValue: UiPrefs.notifier.value.vaultTimeoutMins,
+                    isExpanded: true,
+                    style: SLTextStyles.quicksand(
+                      color: const Color(0xFF4A148C),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    decoration: const InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                      border: InputBorder.none,
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: 0,
+                        child: Text(context.tr('lock_immediately')),
+                      ),
+                      DropdownMenuItem(
+                        value: 5,
+                        child: Text(context.tr('lock_5m')),
+                      ),
+                      DropdownMenuItem(
+                        value: 15,
+                        child: Text(context.tr('lock_15m')),
+                      ),
+                      DropdownMenuItem(
+                        value: 60,
+                        child: Text(context.tr('lock_1h')),
+                      ),
+                      DropdownMenuItem(
+                        value: 1440,
+                        child: Text(context.tr('lock_24h')),
+                      ),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        UiPrefs.saveState(UiPrefs.notifier.value
+                            .copyWith(vaultTimeoutMins: val));
+                        _showToast(context.tr('saved_vault_timeout'));
+                      }
+                    },
+                  ),
                 ),
-                child: DropdownButtonFormField<int>(
-                  initialValue: UiPrefs.notifier.value.vaultTimeoutMins,
-                  isExpanded: true,
+                SLSpacing.h8,
+                Text(
+                  context.tr('home_monubnngho_5a6b7f'),
                   style: SLTextStyles.quicksand(
-                    color: const Color(0xFF4A148C),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: const Color(0xFF6A1B9A),
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
                   ),
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                    border: InputBorder.none,
-                  ),
-                  items: [
-                    DropdownMenuItem(
-                      value: 0,
-                      child: Text(context.tr('lock_immediately')),
-                    ),
-                    DropdownMenuItem(
-                      value: 5,
-                      child: Text(context.tr('lock_5m')),
-                    ),
-                    DropdownMenuItem(
-                      value: 15,
-                      child: Text(context.tr('lock_15m')),
-                    ),
-                    DropdownMenuItem(
-                      value: 60,
-                      child: Text(context.tr('lock_1h')),
-                    ),
-                    DropdownMenuItem(
-                      value: 1440,
-                      child: Text(context.tr('lock_24h')),
-                    ),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) {
-                      UiPrefs.saveState(UiPrefs.notifier.value
-                          .copyWith(vaultTimeoutMins: val));
-                      _showToast(context.tr('saved_vault_timeout'));
-                    }
-                  },
                 ),
-              ),
-              SLSpacing.h12,
-              Text(
-                'Giao diện ở Home',
-                style: SLTextStyles.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF4A148C),
-                ),
-              ),
-              SLSpacing.h8,
-              _buildSwitchRow(
-                'Hiển thị Không gian riêng trên Home',
-                UiPrefs.notifier.value.vaultHomeEnabled,
-                (v) async {
-                  await UiPrefs.saveState(
-                    UiPrefs.notifier.value.copyWith(vaultHomeEnabled: v),
-                  );
-                  if (mounted) setState(() {});
-                },
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: SLRadius.mdAll,
-                  border: Border.all(color: const Color(0xFFCE93D8)),
-                ),
-                child: DropdownButtonFormField<String>(
-                  initialValue: UiPrefs.notifier.value.vaultHomeStyle,
-                  isExpanded: true,
-                  style: SLTextStyles.quicksand(
-                    color: const Color(0xFF4A148C),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                    border: InputBorder.none,
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'soft',
-                      child: Text('Dịu nhẹ giống Home'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'secure',
-                      child: Text('Bảo mật nổi bật'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'compact',
-                      child: Text('Gọn gàng'),
-                    ),
-                  ],
-                  onChanged: (value) async {
-                    if (value == null) return;
-                    await UiPrefs.saveState(
-                      UiPrefs.notifier.value.copyWith(vaultHomeStyle: value),
-                    );
-                    if (mounted) setState(() {});
-                  },
-                ),
-              ),
-              SLSpacing.h8,
-              _buildSwitchRow(
-                'Hiện badge riêng tư',
-                UiPrefs.notifier.value.vaultHomeBadgeEnabled,
-                (v) async {
-                  await UiPrefs.saveState(
-                    UiPrefs.notifier.value.copyWith(vaultHomeBadgeEnabled: v),
-                  );
-                  if (mounted) setState(() {});
-                },
-              ),
-              _buildSwitchRow(
-                'Hiện preview an toàn',
-                UiPrefs.notifier.value.vaultHomePreviewEnabled,
-                (v) async {
-                  await UiPrefs.saveState(
-                    UiPrefs.notifier.value.copyWith(vaultHomePreviewEnabled: v),
-                  );
-                  if (mounted) setState(() {});
-                },
-              ),
-              _buildSwitchRow(
-                'Ẩn preview khi đang khóa',
-                UiPrefs.notifier.value.vaultHomeHidePreviewWhenLocked,
-                (v) async {
-                  await UiPrefs.saveState(
-                    UiPrefs.notifier.value
-                        .copyWith(vaultHomeHidePreviewWhenLocked: v),
-                  );
-                  if (mounted) setState(() {});
-                },
-              ),
-              SLSpacing.h8,
-              Text(
-                'Mẹo: Nếu bạn đóng hoàn toàn ứng dụng (thoát đa nhiệm), kho ảnh sẽ luôn khóa lại ngay lập tức để bảo đảm an toàn.',
-                style: SLTextStyles.quicksand(
-                  fontSize: 12,
-                  color: const Color(0xFF6A1B9A),
-                  fontWeight: FontWeight.w600,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );
   }
 
   Widget _buildLockPanel({bool hideBackButton = false}) {
+    final showSecretVault =
+        UtilityService.isUtilityVisibleInCurrentBuild('vault');
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'lock',
-      title: '🔒 Trung Tâm Khóa Ứng Dụng',
+      title: context.tr('home_trungtmkha_d42ff3'),
       borderColor: const Color(0xFFD81B60),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -723,8 +667,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     children: [
                       Text(
                         _isAppLockEnabled
-                            ? 'MÃ PIN ĐANG BẬT'
-                            : 'CHƯA BẬT MÃ PIN',
+                            ? context.tr('home_mpinangbt_467063')
+                            : context.tr('home_chabtmpin_ceae9d'),
                         style: SLTextStyles.quicksand(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
@@ -733,8 +677,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                       ),
                       Text(
                         _isAppLockEnabled
-                            ? 'Ứng dụng đang được khóa bằng mã PIN.'
-                            : 'Hãy bật mã PIN để bảo vệ riêng tư của hai bạn.',
+                            ? context.tr('home_ngdngangck_d70e01')
+                            : context.tr('home_hybtmpinbo_df23d6'),
                         style: SLTextStyles.quicksand(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -760,7 +704,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                         await _saveAppLockSettings();
                       }
                     } else {
-                      final authSuccess = await _authenticateLockSettingsChange();
+                      final authSuccess =
+                          await _authenticateLockSettingsChange();
                       if (authSuccess) {
                         _customLockCtrl.clear();
                         if (!mounted) return;
@@ -810,6 +755,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 value: _useBiometrics,
                 activeThumbColor: const Color(0xFFD81B60),
                 onChanged: (v) async {
+                  final msgBioNotSupported = context.tr('home_thitbkhngh_75b1e3');
+                  final msgBioFailed = context.tr('home_xcthcsinht_2fd95b');
                   final requiresExistingLock =
                       _isAppLockEnabled && _storedLockSecret.trim().isNotEmpty;
                   if (requiresExistingLock) {
@@ -822,16 +769,14 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     final canBio =
                         await _militaryLockService.canUseBiometrics();
                     if (!canBio) {
-                      _showToast(
-                          'Thiết bị không hỗ trợ hoặc chưa cài đặt Face ID/Vân tay.',
+                      _showToast(msgBioNotSupported,
                           success: false);
                       return;
                     }
                     final testAuth = await _militaryLockService
                         .authenticateWithDeviceForTest();
                     if (!testAuth) {
-                      _showToast(
-                          'Xác thực sinh trắc học thất bại, chưa thể bật tính năng này.',
+                      _showToast(msgBioFailed,
                           success: false);
                       return;
                     }
@@ -844,7 +789,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             Padding(
               padding: const EdgeInsets.only(left: 44, right: 16, bottom: 8),
               child: Text(
-                'Lưu ý: Khi bật sinh trắc học, app sẽ ưu tiên Face ID/Vân tay. Nếu hủy hoặc nhận diện thất bại, bạn vẫn cần nhập mã PIN ứng dụng hiện tại. Tùy chọn "Dùng mật khẩu" là mật khẩu/khóa màn hình của thiết bị.',
+                'Lưu ý: Khi bật sinh trắc học, app sẽ ưu tiên Face ID/Vân tay. Nếu hủy hoặc nhận diện thất bại, bạn vẫn cần nhập mã PIN ứng dụng hiện tại. Tùy chọn ${context.tr('home_dngmtkhu_281aff')} là mật khẩu/khóa màn hình của thiết bị.',
                 style: SLTheme.quicksand(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -913,7 +858,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
-                      label: Text(m == 0 ? 'Tức thì' : '$m phút'),
+                      label: Text(
+                          m == 0 ? context.tr('home_tcth_3c4371') : '$m phút'),
                       selected: isSel,
                       selectedColor: const Color(0xFFD81B60),
                       labelStyle: SLTextStyles.quicksand(
@@ -928,7 +874,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                         if (!s) {
                           return;
                         }
-                        final authSuccess = await _authenticateLockSettingsChange();
+                        final authSuccess =
+                            await _authenticateLockSettingsChange();
                         if (!authSuccess) {
                           return;
                         }
@@ -955,7 +902,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   child: _buildSimpleButton(
                     label: context.tr('lock_all'),
                     onTap: () async {
-                      final authSuccess = await _authenticateLockSettingsChange();
+                      final authSuccess =
+                          await _authenticateLockSettingsChange();
                       if (!authSuccess) {
                         return;
                       }
@@ -970,7 +918,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   child: _buildSimpleButton(
                     label: context.tr('lock_app_only'),
                     onTap: () async {
-                      final authSuccess = await _authenticateLockSettingsChange();
+                      final authSuccess =
+                          await _authenticateLockSettingsChange();
                       if (!authSuccess) {
                         return;
                       }
@@ -983,17 +932,21 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               ],
             ),
             SLSpacing.h12,
-            ..._lockScopes.entries.where((e) => e.key != 'app').map((e) {
+            ..._lockScopes.entries.where((e) {
+              if (e.key == 'app') return false;
+              if (!showSecretVault && e.key == 'private') return false;
+              return true;
+            }).map((e) {
               String label = '';
               switch (e.key) {
                 case 'security':
                   label = context.tr('security_settings');
                   break;
                 case 'diary':
-                  label = 'Nhật ký Tình yêu';
+                  label = context.tr('home_nhtktnhyu_84a6e2');
                   break;
                 case 'chat':
-                  label = 'Lời nhắn yêu thương';
+                  label = context.tr('home_linhnyuthn_d28cd1');
                   break;
                 case 'private':
                   label = context.tr('secret_vault');
@@ -1020,7 +973,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                         value: e.value,
                         activeThumbColor: const Color(0xFFD81B60),
                         onChanged: (v) async {
-                          final authSuccess = await _authenticateLockSettingsChange();
+                          final authSuccess =
+                              await _authenticateLockSettingsChange();
                           if (!authSuccess) {
                             return;
                           }

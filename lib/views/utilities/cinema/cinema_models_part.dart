@@ -118,7 +118,7 @@ class _CinemaDailyReel {
 
     return _CinemaDailyReel(
       dateKey: dateKey,
-      title: title.isEmpty ? 'Video kỷ niệm trong ngày' : title,
+      title: title.isEmpty ? L10nService().translate('util_videoknimt_772f2d') : title,
       subtitle: subtitle,
       accentValue: accentValue,
       createdAt: createdAtMs <= 0

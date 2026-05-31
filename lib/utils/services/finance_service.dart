@@ -21,7 +21,9 @@ class FinanceService {
 
   /// Nhập hoá đơn chi tiêu / nạp quỹ
   Future<void> addTransaction(String houseId, FinanceTransaction tr) async {
-    final ref = _db.ref('houses/$houseId/finances').push();
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
+    final ref = _db.ref('houses/$normalizedHouseId/finances').push();
 
     // Ghi hoá đơn lên Firebase Database
     await ref.set({
@@ -33,8 +35,12 @@ class FinanceService {
 
   /// Lắng nghe Realtime toàn bộ hoá đơn trong quỹ chung để Trae vẽ biểu đồ hình tròn
   Stream<List<FinanceTransaction>> getTransactions(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<List<FinanceTransaction>>.value(const []);
+    }
     return _db
-        .ref('houses/$houseId/finances')
+        .ref('houses/$normalizedHouseId/finances')
         .orderByChild('ts')
         .onValue
         .map((event) {
@@ -42,8 +48,11 @@ class FinanceService {
 
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       return data.entries
-          .map((e) =>
-              FinanceTransaction.fromMap(e.key.toString(), e.value as Map))
+          .where((e) => e.value is Map)
+          .map((e) => FinanceTransaction.fromMap(
+                e.key.toString(),
+                Map<dynamic, dynamic>.from(e.value as Map),
+              ))
           .toList();
     });
   }
@@ -52,10 +61,18 @@ class FinanceService {
   /// Phải có người kia (Chữ ký điện tử/UID) duyệt thì mới cho phép xóa hoặc sửa.
   Future<bool> requestDeleteTransaction(
       String houseId, String transactionId, String requesterUid) async {
-    final ref = _db.ref('houses/$houseId/finances/$transactionId');
+    final normalizedHouseId = houseId.trim();
+    final normalizedTransactionId = transactionId.trim();
+    final normalizedRequesterUid = requesterUid.trim();
+    if (normalizedHouseId.isEmpty ||
+        normalizedTransactionId.isEmpty ||
+        normalizedRequesterUid.isEmpty) {
+      return false;
+    }
+    final ref = _db.ref('houses/$normalizedHouseId/finances/$normalizedTransactionId');
     final snap = await ref.get();
 
-    if (!snap.exists) return false;
+    if (!snap.exists || snap.value is! Map) return false;
     final data = Map<dynamic, dynamic>.from(snap.value as Map);
 
     final bool isLocked = data['locked'] ?? false;
@@ -63,12 +80,14 @@ class FinanceService {
     if (isLocked) {
       // Đã nộp giấy tờ khoá tài khoản, kích hoạt luồng xin phép (Bật cờ yêu cầu xóa)
       await ref.child('delete_requests').update({
-        requesterUid: true,
+        normalizedRequesterUid: true,
       });
 
       // Kiểm tra xem người kia đã đồng ý xóa chưa?
       final reqSnap = await ref.child('delete_requests').get();
-      if (reqSnap.exists && (reqSnap.value as Map).length == 2) {
+      if (reqSnap.exists &&
+          reqSnap.value is Map &&
+          (reqSnap.value as Map).length == 2) {
         // Cả 2 cùng đồng ý xóa (2 keys UID) (Bật transaction rỗng xóa data)
         await ref.remove();
         return true;
@@ -83,8 +102,11 @@ class FinanceService {
 
   /// Chốt sổ (Khoá số liệu một tháng, không cho sửa bằng tay nữa)
   Future<void> lockMonthlyBook(String houseId, String transactionId) async {
+    final normalizedHouseId = houseId.trim();
+    final normalizedTransactionId = transactionId.trim();
+    if (normalizedHouseId.isEmpty || normalizedTransactionId.isEmpty) return;
     await _db
-        .ref('houses/$houseId/finances/$transactionId')
+        .ref('houses/$normalizedHouseId/finances/$normalizedTransactionId')
         .update({'locked': true});
   }
 }

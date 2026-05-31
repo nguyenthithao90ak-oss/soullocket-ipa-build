@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/sl_theme.dart';
-import 'package:soullocket_app/services/l10n_service.dart';
+import '../../services/l10n_service.dart';
 
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
@@ -111,14 +111,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       if (!commitHistory) return;
       setState(() {
         _result =
-            error is FormatException ? error.message : 'Biểu thức chưa hợp lệ';
+            error is FormatException ? error.message : L10nService().translate('util_biuthcchah_e4f8bc');
       });
     }
   }
 
   String _formatNumber(double value) {
     if (value.isNaN || value.isInfinite) {
-      return 'Không hợp lệ';
+      return L10nService().translate('util_khnghpl_a3991c');
     }
     if ((value - value.round()).abs() < 0.0000001) {
       return value.round().toString();
@@ -142,7 +142,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, 'MÁY TÍNH'),
+      appBar: SLTheme.appBar(context, L10nService().translate('util_mytnh_fcce20')),
       body: SLTheme.background(
         child: SafeArea(
           child: Column(
@@ -214,7 +214,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
-            'Biểu thức',
+            L10nService().translate('util_biuthc_e6993f'),
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w800,
@@ -235,7 +235,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           ),
           SLSpacing.h12,
           Text(
-            'Kết quả',
+            L10nService().translate('util_ktqu_80d598'),
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w800,
@@ -275,7 +275,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           Row(
             children: [
               Text(
-                'Tính gần đây',
+                L10nService().translate('util_tnhgny_8a207f'),
                 style: SLTheme.quicksand(
                   fontSize: 13,
                   fontWeight: FontWeight.w900,
@@ -286,7 +286,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               TextButton(
                 onPressed: () => setState(_history.clear),
                 child: Text(
-                  L10nService().translate('Xóa'),
+                  L10nService().translate(L10nService().translate('util_xa_4ed187')),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     color: const Color(0xFF7A8AA0),
@@ -381,7 +381,7 @@ class _SafeExpressionParser {
     final value = _parseExpression();
     _skipSpaces();
     if (_index != _input.length) {
-      throw const FormatException('Biểu thức chưa hợp lệ');
+      throw FormatException(L10nService().translate('util_biuthcchah_e4f8bc'));
     }
     return value;
   }
@@ -409,7 +409,7 @@ class _SafeExpressionParser {
       } else if (_match('/')) {
         final divisor = _parseFactor();
         if (divisor == 0) {
-          throw const FormatException('Không thể chia cho 0');
+          throw FormatException(L10nService().translate('util_khngthchia_9602c6'));
         }
         value /= divisor;
       } else {
@@ -428,7 +428,7 @@ class _SafeExpressionParser {
       final value = _parseExpression();
       _skipSpaces();
       if (!_match(')')) {
-        throw const FormatException('Thiếu dấu đóng ngoặc');
+        throw FormatException(L10nService().translate('util_thiudungng_ff9ccf'));
       }
       return _applyPercentIfNeeded(value);
     }
@@ -466,7 +466,7 @@ class _SafeExpressionParser {
     }
 
     if (start == _index) {
-      throw const FormatException('Biểu thức chưa hợp lệ');
+      throw FormatException(L10nService().translate('util_biuthcchah_e4f8bc'));
     }
 
     return double.parse(_input.substring(start, _index));

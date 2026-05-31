@@ -39,7 +39,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isSingle ? 'Vị trí hiện tại' : 'Vị trí của chúng mình',
+                        isSingle ? L10nService().translate('home_vtrhinti_f5956d') : L10nService().translate('home_vtrcachngm_07f765'),
                         style: SLTheme.quicksand(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
@@ -49,8 +49,8 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                       SLSpacing.gapH(2),
                       Text(
                         isSingle
-                            ? 'Bản đồ • Vị trí của bạn'
-                            : 'Bản đồ • Khoảng cách',
+                            ? L10nService().translate('home_bnvtrcabn_fdf5bc')
+                            : L10nService().translate('home_bnkhongcch_3c5ca9'),
                         style: SLTheme.quicksand(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -120,6 +120,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                             child: _buildMapPreviewMarker(
                               '📍',
                               const Color(0xFFD81B60),
+                              avatarUrl: _houseSettings?['avtUser1']?.toString(),
                             ),
                           ),
                         ),
@@ -136,7 +137,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
-                              'Vị trí hiện tại',
+                              L10nService().translate('home_vtrhinti_f5956d'),
                               style: SLTheme.quicksand(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
@@ -153,6 +154,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                           child: _buildMapPreviewMarker(
                             '🧑',
                             const Color(0xFFD81B60),
+                            avatarUrl: _houseSettings?['avtUser1']?.toString(),
                           ),
                         ),
                         Positioned(
@@ -161,6 +163,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                           child: _buildMapPreviewMarker(
                             '👧',
                             const Color(0xFF1E88E5),
+                            avatarUrl: _houseSettings?['avtUser2']?.toString(),
                           ),
                         ),
                         Positioned(
@@ -247,17 +250,22 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
     );
   }
 
-  Widget _buildMapPreviewMarker(String emoji, Color color) {
+  Widget _buildMapPreviewMarker(
+    String emoji,
+    Color color, {
+    String? avatarUrl,
+  }) {
+    final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
     return Column(
       children: [
         Container(
-          width: 28,
-          height: 28,
+          width: 36,
+          height: 36,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.white,
-            shape: BoxShape.circle,
-            border: Border.all(color: color, width: 2.5),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color, width: 2.2),
             boxShadow: [
               BoxShadow(
                 color: color.withValues(alpha: 0.28),
@@ -266,7 +274,19 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
               ),
             ],
           ),
-          child: Text(emoji, style: const TextStyle(fontSize: 12)),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: hasAvatar
+                ? CachedNetworkImage(
+                    imageUrl: avatarUrl,
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.cover,
+                    errorWidget: (context, url, error) =>
+                        Text(emoji, style: const TextStyle(fontSize: 12)),
+                  )
+                : Text(emoji, style: const TextStyle(fontSize: 12)),
+          ),
         ),
         Container(
           width: 6,

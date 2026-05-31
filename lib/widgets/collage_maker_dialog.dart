@@ -18,6 +18,7 @@ import '../utils/services/pending_upload_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
 import '../core/sl_theme.dart';
 import '../utils/app_error_mapper.dart';
+import '../services/l10n_service.dart';
 
 const Color _dialogPaperCream = Color(0xFFF7F0E6);
 const Color _dialogPaperShell = Color(0xFFFFF8F2);
@@ -54,41 +55,41 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
   final ImagePicker _picker = ImagePicker();
   final Map<String, ui.Image> _decodedImageCache = {};
   int _generationTicket = 0;
-  static const List<_DialogStylePreset> _stylePresets = [
+  static List<_DialogStylePreset> get _stylePresets => [
     _DialogStylePreset(
       id: 'grid',
-      label: 'Lưới',
-      subtitle: 'Cân đều',
+      label: L10nService().translate('collage_style_grid'),
+      subtitle: L10nService().translate('collage_style_balanced'),
       accent: _dialogPaperRoseDeep,
-      background: Color(0xFFF7EDE3),
+      background: const Color(0xFFF7EDE3),
     ),
     _DialogStylePreset(
       id: 'masonry',
-      label: 'So le',
-      subtitle: 'Nhịp lệch',
+      label: L10nService().translate('collage_style_masonry'),
+      subtitle: L10nService().translate('collage_style_offset_rhythm'),
       accent: _dialogPaperMistDeep,
-      background: Color(0xFFF0F2EA),
+      background: const Color(0xFFF0F2EA),
     ),
     _DialogStylePreset(
       id: 'polaroid',
-      label: 'Ảnh giấy',
-      subtitle: 'Khung nổi',
+      label: L10nService().translate('collage_style_polaroid'),
+      subtitle: L10nService().translate('collage_style_raised_frame'),
       accent: _dialogPaperRose,
-      background: Color(0xFFFFF7EF),
+      background: const Color(0xFFFFF7EF),
     ),
     _DialogStylePreset(
       id: 'scatter',
-      label: 'Bay tự do',
-      subtitle: 'Vui tươi',
+      label: L10nService().translate('collage_style_scatter'),
+      subtitle: L10nService().translate('collage_style_playful'),
       accent: _dialogPaperRoseDeep,
-      background: Color(0xFFF6ECE3),
+      background: const Color(0xFFF6ECE3),
     ),
     _DialogStylePreset(
       id: 'heart',
-      label: 'Trái tim',
-      subtitle: 'Dịu nhẹ',
+      label: L10nService().translate('collage_style_heart'),
+      subtitle: L10nService().translate('collage_style_soft'),
       accent: _dialogPaperMistDeep,
-      background: Color(0xFFF0F1EA),
+      background: const Color(0xFFF0F1EA),
     ),
   ];
 
@@ -127,9 +128,9 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Lần tạo collage trước đã bị gián đoạn.'),
+          content: Text(L10nService().translate('collage_pending_interrupted')),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: L10nService().translate('core_retry'),
             onPressed: () {
               unawaited(_retryPendingCollageUpload());
             },
@@ -174,9 +175,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
           return;
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không còn ảnh cũ để thử lại collage.'),
-          ),
+          SnackBar(content: Text(L10nService().translate('collage_no_old_photos_retry'))) ,
         );
         return;
       }
@@ -293,7 +292,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
     } catch (e) {
       debugPrint('Error fetching memory photos: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể tải danh sách ảnh kỷ niệm lúc này.',
+        fallbackMessage: L10nService().translate('collage_load_memory_failed'),
       ).message}');
     } finally {
       await _promptPendingUploadRetryIfNeeded();
@@ -355,13 +354,13 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
 
   String _memoryLabelForMonth(String value) {
     if (value == 'all') {
-      return 'Tất cả';
+      return L10nService().translate('core_all');
     }
     final parts = value.split('-');
     if (parts.length != 2) {
       return value;
     }
-    return 'Tháng ${parts[1]}/${parts[0]}';
+    return L10nService().format('core_month_year', {'month': parts[1], 'year': parts[0]});
   }
 
   Future<void> _pickDevicePhotos() async {
@@ -378,8 +377,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
           if (_deviceFiles.length > 50) {
             _deviceFiles.removeRange(50, _deviceFiles.length);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Chỉ chọn tối đa 50 ảnh. Đã tự động cắt bớt.')),
+              SnackBar(content: Text(L10nService().translate('collage_max_50_photos'))) ,
             );
           }
         });
@@ -387,7 +385,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
     } catch (e) {
       debugPrint('Error picking photos: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể chọn ảnh cho collage lúc này.',
+        fallbackMessage: L10nService().translate('collage_pick_photos_failed'),
       ).message}');
     }
   }
@@ -470,7 +468,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
     timeoutTimer = Timer(const Duration(seconds: 18), () {
       if (completer.isCompleted) return;
       cleanup();
-      completer.completeError(TimeoutException('Tải ảnh kỷ niệm quá lâu'));
+      completer.completeError(TimeoutException(L10nService().translate('collage_image_load_timeout')));
     });
 
     stream.addListener(listener);
@@ -508,7 +506,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
           } catch (e) {
             debugPrint('Error loading image $url: ${AppErrorMapper.resolve(
               e,
-              fallbackMessage: 'Không thể tải một ảnh trong collage.',
+              fallbackMessage: L10nService().translate('collage_load_one_image_failed'),
             ).message}');
             return null;
           }
@@ -532,8 +530,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
     var urls = _getFilteredUrls();
     if (urls.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Chưa có ảnh để ghép. Hãy chọn ảnh trước nhé.')),
+        SnackBar(content: Text(L10nService().translate('collage_no_photos_selected'))) ,
       );
       return;
     }
@@ -545,10 +542,10 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
       if (resolvedTitle.isEmpty) {
         if (_isFromMemory) {
           resolvedTitle = _selectedMonth == 'all'
-              ? 'Kỷ niệm của chúng mình ❤️'
-              : 'Kỷ niệm tháng ${_selectedMonth.split('-')[1]} ❤️';
+              ? L10nService().translate('collage_default_title_our_memories')
+              : L10nService().format('collage_default_title_month', {'month': _selectedMonth.split('-')[1]});
         } else {
-          resolvedTitle = 'Kỷ niệm tuyệt vời ❤️';
+          resolvedTitle = L10nService().translate('collage_default_title_wonderful');
         }
       }
       await PendingUploadService.instance.save(
@@ -576,17 +573,17 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
       }
 
       if (uiImages.isEmpty) {
-        throw Exception('Không tải được ảnh nào.');
+        throw Exception(L10nService().translate('collage_no_image_loaded'));
       }
 
       String title = _titleCtrl.text.trim();
       if (title.isEmpty) {
         if (_isFromMemory) {
           title = _selectedMonth == 'all'
-              ? 'Kỷ niệm của chúng mình ❤️'
-              : 'Kỷ niệm tháng ${_selectedMonth.split('-')[1]} ❤️';
+              ? L10nService().translate('collage_default_title_our_memories')
+              : L10nService().format('collage_default_title_month', {'month': _selectedMonth.split('-')[1]});
         } else {
-          title = 'Kỷ niệm tuyệt vời ❤️';
+          title = L10nService().translate('collage_default_title_wonderful');
         }
       }
 
@@ -610,8 +607,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Ảnh ghép đã được tạo và lưu vào album.')),
+            SnackBar(content: Text(L10nService().translate('collage_saved_to_album'))) ,
           );
         }
       }
@@ -620,8 +616,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
       if (mounted) {
         final message = AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              'Chưa thể tạo ảnh ghép lúc này. Vui lòng kiểm tra ảnh hoặc thử lại sau.',
+          fallbackMessage: L10nService().translate('collage_generate_failed'),
         ).message;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
@@ -663,11 +658,11 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
               children: [
                 Transform.rotate(
                   angle: -0.05,
-                  child: const _DialogStamp(label: 'Chỉnh nhanh'),
+                  child: _DialogStamp(label: L10nService().translate('collage_quick_edit_stamp')),
                 ),
                 SLSpacing.w8,
                 Text(
-                  'Ảnh Ghép Kỷ Niệm',
+                  L10nService().translate('collage_title'),
                   style: _editorialStyle(
                     size: 24,
                     color: _dialogPaperInk,
@@ -678,7 +673,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
             ),
             SLSpacing.h4,
             Text(
-              'Tạo collage từ kho kỷ niệm hoặc thiết bị của bạn',
+              L10nService().translate('collage_subtitle'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 12,
@@ -721,7 +716,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'Từ Kỷ Niệm',
+                          L10nService().translate('collage_from_memories'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.bold,
                             color: _isFromMemory
@@ -755,7 +750,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'Từ Thiết Bị',
+                          L10nService().translate('collage_from_device'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.bold,
                             color: !_isFromMemory
@@ -781,7 +776,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Chọn mốc thời gian',
+                              L10nService().translate('collage_choose_time'),
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w800,
                                 color: _dialogPaperInk,
@@ -800,7 +795,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                               flipped: true,
                             ),
                             child: Text(
-                              '${_memoryCountForMonth(_selectedMonth)} ảnh',
+                              L10nService().format('core_photo_count', {'count': _memoryCountForMonth(_selectedMonth)}),
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w800,
                                 color: _dialogPaperRoseDeep,
@@ -812,7 +807,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                       ),
                       SLSpacing.h8,
                       Text(
-                        'Vuốt ngang để chọn nhanh mốc thời gian.',
+                        L10nService().translate('collage_swipe_time_hint'),
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w700,
                           color: _dialogPaperMuted,
@@ -909,7 +904,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                       const SizedBox.shrink(),
                     ] else ...[
                       Text(
-                        'Tải ảnh lên (Tối đa 50 ảnh):',
+                        L10nService().translate('collage_upload_max_50'),
                         style: SLTheme.quicksand(
                             fontWeight: FontWeight.w700,
                             color: _dialogPaperInk,
@@ -931,15 +926,15 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                               const Icon(Icons.cloud_upload,
                                   color: _dialogPaperRoseDeep, size: 24),
                               SLSpacing.h4,
-                              Text('Chạm để chọn ảnh',
+                              Text(L10nService().translate('collage_tap_select_photos'),
                                   style: SLTheme.quicksand(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                       color: _dialogPaperMuted)),
                               Text(
                                 _deviceFiles.isEmpty
-                                    ? 'Chưa chọn ảnh nào'
-                                    : 'Đã chọn ${_deviceFiles.length} ảnh',
+                                    ? L10nService().translate('collage_no_photos_chosen')
+                                    : L10nService().format('collage_selected_photo_count', {'count': _deviceFiles.length}),
                                 style: SLTheme.quicksand(
                                     fontSize: 10, color: _dialogPaperMuted),
                               ),
@@ -950,7 +945,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                     ],
                     SLSpacing.h16,
                     Text(
-                      'Chọn kiểu khung:',
+                      L10nService().translate('collage_choose_frame'),
                       style: SLTheme.quicksand(
                           fontWeight: FontWeight.w700,
                           color: _dialogPaperInk,
@@ -961,25 +956,25 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _buildStyleOption('grid', Icons.grid_on, 'Lưới đều'),
+                          _buildStyleOption('grid', Icons.grid_on, L10nService().translate('collage_style_even_grid')),
                           SLSpacing.w8,
                           _buildStyleOption(
-                              'masonry', Icons.view_quilt, 'So le'),
+                              'masonry', Icons.view_quilt, L10nService().translate('collage_style_masonry')),
                           SLSpacing.w8,
                           _buildStyleOption(
-                              'polaroid', Icons.photo_library, 'Ảnh giấy'),
+                              'polaroid', Icons.photo_library, L10nService().translate('collage_style_polaroid')),
                           SLSpacing.w8,
                           _buildStyleOption('scatter',
-                              Icons.auto_awesome_mosaic, 'Bay tự do'),
+                              Icons.auto_awesome_mosaic, L10nService().translate('collage_style_scatter')),
                           SLSpacing.w8,
                           _buildStyleOption(
-                              'heart', Icons.favorite, 'Trái tim'),
+                              'heart', Icons.favorite, L10nService().translate('collage_style_heart')),
                         ],
                       ),
                     ),
                     SLSpacing.h16,
                     Text(
-                      'Tiêu đề (tuỳ chọn):',
+                      L10nService().translate('collage_optional_title'),
                       style: SLTheme.quicksand(
                           fontWeight: FontWeight.w700,
                           color: _dialogPaperInk,
@@ -989,7 +984,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                     TextField(
                       controller: _titleCtrl,
                       decoration: InputDecoration(
-                        hintText: 'VD: Những ngày thật đẹp ❤️',
+                        hintText: L10nService().translate('collage_title_hint'),
                         hintStyle: SLTheme.quicksand(
                             color: Colors.grey[400], fontSize: 14),
                         contentPadding: const EdgeInsets.symmetric(
@@ -1035,7 +1030,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                           strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.auto_awesome),
               label: Text(
-                _isGenerating ? 'Đang tạo...' : 'Tạo Collage',
+                _isGenerating ? L10nService().translate('collage_generating') : L10nService().translate('collage_create'),
                 style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800, fontSize: 16),
               ),
@@ -1050,7 +1045,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                 shape: RoundedRectangleBorder(
                     borderRadius: _paperRadius(flipped: true)),
               ),
-              child: Text('Đóng',
+              child: Text(L10nService().translate('core_close'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w700)),
             ),
           ],
@@ -1138,7 +1133,7 @@ class _DialogStylePreset {
   final Color accent;
   final Color background;
 
-  const _DialogStylePreset({
+  _DialogStylePreset({
     required this.id,
     required this.label,
     required this.subtitle,

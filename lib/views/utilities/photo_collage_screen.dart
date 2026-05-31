@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -29,7 +30,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
   int _selectedLayout = 1;
   int _selectedTemplate = 0;
   final TextEditingController _captionController = TextEditingController(
-    text: 'Một ngày đáng nhớ của chúng mình',
+    text: L10nService().translate('util_mtngyngnhc_02e59f'),
   );
   final int _maxImages = 9;
   double _aspectRatio = 1.0;
@@ -77,9 +78,9 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Lần lưu ảnh ghép trước đã bị gián đoạn.'),
+          content: Text(context.tr('util_lnlunhghpt_34a810')),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('util_thli_4dffdf'),
             onPressed: () {
               unawaited(_retryPendingSaveToHouseAlbum());
             },
@@ -142,7 +143,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
   Future<void> _pickImages() async {
     final remaining = _maxImages - _images.length;
     if (remaining <= 0) {
-      _showToast('Bạn đã chọn đủ $_maxImages ảnh cho khung ghép này.');
+      _showToast(L10nService().format('util_photo_collage_max_selected', {'count': _maxImages}));
       return;
     }
 
@@ -166,7 +167,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
         AppErrorMapper.resolve(
           e,
           fallbackMessage:
-              'Chưa thể chọn ảnh lúc này. Hãy kiểm tra quyền thư viện rồi thử lại.',
+              context.tr('util_chathchnnh_f9d997'),
         ).message,
       );
     } finally {
@@ -186,6 +187,10 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
   }
 
   Future<void> _saveToHouseAlbum() async {
+    final msgNoHouse = context.tr('util_bncnvonhtr_519b99');
+    final msgNullBytes = context.tr('util_khngtocnhg_e2243c');
+    final msgSaveOk = context.tr('util_lunhghpvoa_a85ea2');
+    final msgSaveFail = context.tr('util_chathlunhg_08ea91');
     final canProceed = await CollageLimitService().checkLimitAndAskAd(context);
     if (!canProceed) return;
 
@@ -193,7 +198,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
     try {
       final houseId = await _houseService.getCurrentHouseId();
       if (houseId == null || houseId.isEmpty) {
-        _showToast('Bạn cần vào nhà trước khi lưu ảnh ghép.');
+        _showToast(msgNoHouse);
         return;
       }
       final pendingKey = await _pendingUploadKey();
@@ -213,7 +218,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       }
       final bytes = await _captureCollageBytes();
       if (bytes == null || bytes.isEmpty) {
-        _showToast('Không tạo được ảnh ghép để lưu.');
+        _showToast(msgNullBytes);
         return;
       }
 
@@ -230,7 +235,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       if (pendingKey != null) {
         await PendingUploadService.instance.clear(pendingKey);
       }
-      _showToast('Đã lưu ảnh ghép vào album của nhà.');
+      _showToast(msgSaveOk);
     } catch (e) {
       final pendingKey = await _pendingUploadKey();
       if (pendingKey != null) {
@@ -239,8 +244,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              'Chưa thể lưu ảnh ghép lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+          fallbackMessage: msgSaveFail,
         ).message,
       );
     } finally {
@@ -249,6 +253,9 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
   }
 
   Future<void> _shareCollage() async {
+    final msgNullBytes = context.tr('util_khngtocnhg_4fa46b');
+    final msgShareText = context.tr('util_ghpnhknimt_d2729c');
+    final msgShareFail = context.tr('util_chathchias_d986c3');
     final canProceed = await CollageLimitService().checkLimitAndAskAd(context);
     if (!canProceed) return;
 
@@ -256,14 +263,14 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
     try {
       final bytes = await _captureCollageBytes();
       if (bytes == null || bytes.isEmpty) {
-        _showToast('Không tạo được ảnh ghép để chia sẻ.');
+        _showToast(msgNullBytes);
         return;
       }
       final fileName =
           'soullocket-collage-${DateTime.now().millisecondsSinceEpoch}.png';
       await SharePlus.instance.share(
         ShareParams(
-          text: 'Ghép ảnh kỷ niệm từ SoulLocket',
+          text: msgShareText,
           files: [
             XFile.fromData(bytes, mimeType: 'image/png'),
           ],
@@ -276,8 +283,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              'Chưa thể chia sẻ ảnh ghép lúc này. Hãy thử lại sau.',
+          fallbackMessage: msgShareFail,
         ).message,
       );
     } finally {
@@ -292,7 +298,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
 
   void _shuffleLayout() {
     if (_images.length < 2) {
-      _showToast('Chọn ít nhất 2 ảnh để xáo trộn bố cục.');
+      _showToast(context.tr('util_chntnht2nh_9da6e1'));
       return;
     }
     setState(() {
@@ -327,7 +333,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
       backgroundColor: const Color(0xFFFFF7FB),
       appBar: AppBar(
         title: Text(
-          'Ghép Ảnh Kỷ Niệm',
+          context.tr('util_ghpnhknim_10219c'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             color: const Color(0xFF1E293B),
@@ -339,12 +345,12 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
         actions: [
           if (_images.isNotEmpty) ...[
             IconButton(
-              tooltip: 'Tự làm đẹp',
+              tooltip: context.tr('util_tlmp_3e1962'),
               onPressed: _shuffleLayout,
               icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFD81B60)),
             ),
             IconButton(
-              tooltip: 'Xóa ảnh',
+              tooltip: context.tr('util_xanh_0b98d1'),
               onPressed: _clearImages,
               icon: const Icon(Icons.delete_sweep_rounded, color: Colors.red),
             ),
@@ -390,7 +396,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
                               )
                             : const Icon(Icons.add_photo_alternate_rounded),
                         label: Text(
-                          _images.isEmpty ? 'Chọn ảnh' : 'Thêm ảnh',
+                          _images.isEmpty ? context.tr('util_chnnh_719c35') : context.tr('util_thmnh_f63081'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                           ),
@@ -422,7 +428,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
                               )
                             : const Icon(Icons.cloud_upload_rounded),
                         label: Text(
-                          'Lưu vào nhà',
+                          context.tr('util_luvonh_236d12'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                           ),
@@ -456,7 +462,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
                           )
                         : const Icon(Icons.ios_share_rounded),
                     label: Text(
-                      'Lưu / Chia sẻ ảnh ghép',
+                      context.tr('util_luchiasnhg_eddefe'),
                       style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                     ),
                     style: FilledButton.styleFrom(
@@ -542,7 +548,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
         decoration: InputDecoration(
           counterText: '',
           prefixIcon: const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60)),
-          hintText: 'Viết caption cho kỷ niệm...',
+          hintText: context.tr('util_vitcaption_4fe853'),
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -580,7 +586,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
               if (_images.length >= layout) {
                 setState(() => _selectedLayout = layout);
               } else {
-                _showToast('Bạn cần ít nhất $layout ảnh cho bố cục này.');
+                _showToast(L10nService().format('util_photo_collage_need_layout_count', {'count': layout}));
               }
             },
             child: Container(
@@ -605,7 +611,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
                     : [],
               ),
               child: Text(
-                '$layout ảnh',
+                L10nService().format('util_photo_collage_layout_count', {'count': layout}),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w900,
                   color: selected ? Colors.white : const Color(0xFF64748B),
@@ -693,7 +699,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Memory Collage',
+            context.tr('util_photo_collage_canvas_title'),
             style: SLTheme.quicksand(
               fontSize: 17,
               fontWeight: FontWeight.w900,
@@ -702,7 +708,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
           ),
           SLSpacing.h8,
           Text(
-            'Tự sắp ảnh theo bố cục đẹp nhất. Bấm ✨ để xáo trộn và làm mới khung ghép.',
+            context.tr('util_tspnhtheob_c8e274'),
             style: SLTheme.quicksand(
               fontSize: 12.5,
               height: 1.6,
@@ -771,7 +777,7 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
             ),
             SLSpacing.h12,
             Text(
-              'Chưa có ảnh nào\nChọn ảnh để app tự ghép bố cục đẹp',
+              context.tr('util_photo_collage_empty_canvas'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 color: Colors.grey[500],

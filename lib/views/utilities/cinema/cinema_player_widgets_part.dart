@@ -177,7 +177,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    'Kéo để đặt lại vị trí tiêu đề',
+                                    context.tr('util_kotlivtrti_d5db0d'),
                                     style: SLTheme.quicksand(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.w700,
@@ -204,11 +204,11 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
   Widget _buildVideoControls(Color accent) {
     final exportAvailable = _videoExportService.isSupported;
     final statusText = _isAdjustingTitlePosition
-        ? 'Kéo khối tiêu đề tới vị trí bạn muốn rồi bấm Xong vị trí.'
+        ? context.tr('util_kokhitiuti_9b7acb')
         : (_videoStatus ??
             (exportAvailable
                 ? null
-                : 'Tính năng xuất video đang tạm bảo trì. Bạn vẫn có thể xem reel ảnh bình thường.'));
+                : context.tr('util_tnhnngxutv_f2e071')));
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -229,19 +229,19 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                     ? Icons.check_rounded
                     : Icons.open_with_rounded,
                 label:
-                    _isAdjustingTitlePosition ? 'Xong vị trí' : 'Kéo tiêu đề',
+                    _isAdjustingTitlePosition ? context.tr('util_xongvtr_ff01dd') : context.tr('util_kotiu_d73736'),
                 onTap: _toggleTitleAdjustment,
                 accent: accent,
               ),
               _buildControlChip(
                 icon: Icons.edit_rounded,
-                label: 'Sửa tiêu đề',
+                label: context.tr('util_satiu_44665e'),
                 onTap: _editTitle,
                 accent: accent,
               ),
               _buildControlChip(
                 icon: Icons.movie_creation_outlined,
-                label: _hasFreshExport ? 'Tạo lại video' : 'Tạo video',
+                label: _hasFreshExport ? context.tr('util_tolivideo_5701c9') : context.tr('util_tovideo_db7d4b'),
                 onTap:
                     !exportAvailable || _isExportingVideo ? null : _createVideo,
                 accent: accent,
@@ -249,7 +249,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
               ),
               _buildControlChip(
                 icon: Icons.download_rounded,
-                label: _isSavingVideo ? 'Đang lưu...' : 'Tải xuống',
+                label: _isSavingVideo ? context.tr('util_anglu_4d30b6') : context.tr('util_tixung_d129df'),
                 onTap: exportAvailable && _hasFreshExport && !_isSavingVideo
                     ? _saveVideoToDevice
                     : null,
@@ -257,7 +257,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
               ),
               _buildControlChip(
                 icon: Icons.share_rounded,
-                label: 'Chia sẻ',
+                label: context.tr('util_chias_569031'),
                 onTap: exportAvailable && _hasFreshExport ? _shareVideo : null,
                 accent: accent,
               ),
@@ -326,7 +326,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Cài đặt video kỷ niệm',
+                            context.tr('util_citvideokn_7e51af'),
                             style: SLTheme.quicksand(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
@@ -370,7 +370,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Chất lượng video',
+            context.tr('util_chtlngvide_8d7e09'),
             style: SLTheme.quicksand(
               fontSize: 11,
               fontWeight: FontWeight.w700,

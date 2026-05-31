@@ -123,6 +123,11 @@ struct CoupleWidgetProvider: TimelineProvider {
 struct SoulLocketWidgetBundle: WidgetBundle {
     var body: some Widget {
         WidgetCoupleProvider()
+        #if canImport(ActivityKit)
+        if #available(iOS 16.1, *) {
+            SoulLocketLiveActivity()
+        }
+        #endif
     }
 }
 

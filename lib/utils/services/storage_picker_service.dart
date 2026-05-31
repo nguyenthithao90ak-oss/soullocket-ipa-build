@@ -48,7 +48,7 @@ class StoragePickerService {
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
       try {
-        final result = await FilePicker.platform.pickFiles(
+        final result = await FilePicker.pickFiles(
           type: FileType.custom,
           allowMultiple: false,
           allowedExtensions: storageMusicPickerExtensions,
@@ -64,7 +64,7 @@ class StoragePickerService {
     }
 
     return _guardedPicker(() async {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowMultiple: false,
         allowedExtensions: storageMusicPickerExtensions,
@@ -81,7 +81,7 @@ class StoragePickerService {
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
       try {
-        final result = await FilePicker.platform.pickFiles(
+        final result = await FilePicker.pickFiles(
           type: FileType.image,
           allowMultiple: false,
           withData: true,
@@ -114,7 +114,7 @@ class StoragePickerService {
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
       try {
-        final result = await FilePicker.platform.pickFiles(
+        final result = await FilePicker.pickFiles(
           type: FileType.image,
           allowMultiple: true,
           withData: true,

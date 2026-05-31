@@ -74,7 +74,8 @@ class NotificationService {
     }
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      final androidStatus = await app_permission.Permission.notification.request();
+      final androidStatus =
+          await app_permission.Permission.notification.request();
       if (!androidStatus.isGranted) return false;
     }
 
@@ -116,9 +117,9 @@ class NotificationService {
     final task = () async {
       try {
         await _localNotif
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(_channel);
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
+            ?.createNotificationChannel(_channel);
 
         const AndroidInitializationSettings androidSettings =
             AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -154,8 +155,8 @@ class NotificationService {
             _fcm.onTokenRefresh.listen(_onTokenRefresh);
         _foregroundSubscription ??=
             FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-        _messageOpenedSubscription ??=
-            FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
+        _messageOpenedSubscription ??= FirebaseMessaging.onMessageOpenedApp
+            .listen(_handleMessageOpenedApp);
 
         if (!_didCheckInitialMessage) {
           final initialMessage = await _fcm.getInitialMessage();
@@ -168,7 +169,8 @@ class NotificationService {
         _isInitialized = true;
         await syncDailySleepReminder();
       } catch (error) {
-        debugPrint('NotificationService initialize error: ${AppErrorMapper.resolve(
+        debugPrint(
+            'NotificationService initialize error: ${AppErrorMapper.resolve(
           error,
           fallbackMessage: 'Không thể khởi tạo thông báo lúc này.',
         ).message}');
@@ -498,7 +500,8 @@ class NotificationService {
         'status': 'pending',
       });
     } catch (e) {
-      debugPrint('Failed to queue partner notification: ${AppErrorMapper.resolve(
+      debugPrint(
+          'Failed to queue partner notification: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể xếp hàng thông báo cho đối tác.',
       ).message}');
@@ -640,7 +643,7 @@ class NotificationService {
 
     try {
       tzdata.initializeTimeZones();
-      final rawTimeZone = await FlutterTimezone.getLocalTimezone();
+      final rawTimeZone = (await FlutterTimezone.getLocalTimezone()).identifier;
       final normalizedTimeZone = _normalizeTimeZoneName(rawTimeZone);
       tz.setLocalLocation(tz.getLocation(normalizedTimeZone));
       _timeZoneReady = true;
@@ -743,6 +746,10 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    if (!(prefs.getBool('il_smart_reminder_love_note') ?? true)) return;
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -851,6 +858,10 @@ class NotificationService {
 
   /// Gửi thông báo "Ngày này năm xưa"
   Future<void> sendOnThisDayNotification(String houseId, int years) async {
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    if (!(prefs.getBool('il_smart_reminder_diary') ?? true)) return;
+
     await sendPartnerNotification(
       houseId: houseId,
       title: '📸 Ngày này năm xưa',
@@ -878,6 +889,10 @@ class NotificationService {
   /// Kiểm tra và hiển thị thông báo hộp thư tương lai đến ngày
   Future<void> checkTimeCapsules(String houseId) async {
     try {
+      final prefs = OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
+      if (!(prefs.getBool('il_smart_reminder_capsule') ?? true)) return;
+
       final snap = await FirebaseDatabase.instance
           .ref('houses/$houseId/time_capsules')
           .get();
@@ -902,8 +917,6 @@ class NotificationService {
         if (now.year == unlockDate.year &&
             now.month == unlockDate.month &&
             now.day == unlockDate.day) {
-          final prefs = OfflineCacheService.getPrefsSync() ??
-              await SharedPreferences.getInstance();
           final key = 'capsule_notified_${capsule['id']}';
 
           if (!(prefs.getBool(key) ?? false)) {
@@ -950,6 +963,10 @@ class NotificationService {
 
   Future<void> checkAnniversaryReminder(
       String houseId, DateTime coupleDate) async {
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    if (!(prefs.getBool('il_notif_anniversary') ?? true)) return;
+
     final now = DateTime.now();
     var thisYearDate = DateTime(now.year, coupleDate.month, coupleDate.day);
     if (thisYearDate.isBefore(DateTime(now.year, now.month, now.day))) {

@@ -1,4 +1,4 @@
-part of '../settings_tab.dart';
+﻿part of '../settings_tab.dart';
 
 const Duration _countdownAdUnlockWindow = Duration(days: 7);
 const List<String> _countdownPremiumStyleKeys = <String>[
@@ -14,6 +14,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('il_show_weather', _showWeather);
     await prefs.setBool('il_show_status', _showStatus);
+    await prefs.setBool('il_home_show_house_name', _homeShowHouseName);
+    await prefs.setBool('il_home_show_timer', _homeShowTimer);
 
     final houseId = _houseId?.trim();
     if (houseId == null || houseId.isEmpty) {
@@ -34,6 +36,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       await _dbRef.child('houses/$houseId/settings').update({
         'showWeather': _showWeather,
         'showStatus': _showStatus,
+        'homeShowHouseName': _homeShowHouseName,
         'homeShowTimer': _homeShowTimer,
         'updatedAt': ServerValue.timestamp,
       });
@@ -228,11 +231,11 @@ extension _SettingsTabPersistence on _SettingsTabState {
             );
           }
         } else {
-          _showToast('Hãy thiết lập mã PIN trước đã nhé.', success: false);
+          _showToast(context.tr('home_hythitlpmp_44a093'), success: false);
           return;
         }
         if (!_lockScopes.values.any((value) => value)) {
-          _showToast('Hãy chọn ít nhất 1 phạm vi cần khóa.', success: false);
+          _showToast(context.tr('home_hychntnht1_54215e'), success: false);
           return;
         }
       }
@@ -292,13 +295,13 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
       if (!mounted) return;
       _showToast(
-        'Đã lưu cài đặt bảo mật trên thiết bị này!',
+        context.tr('home_lucitbomtt_c60175'),
         success: true,
       );
     } catch (e) {
       if (!mounted) return;
       _showToast(
-        'Không thể lưu cài đặt bảo mật trên thiết bị này: $e',
+        context.tr('home_khngthluci_eb591a'),
         success: false,
       );
     }
@@ -367,10 +370,18 @@ extension _SettingsTabPersistence on _SettingsTabState {
       _notifChat = prefs.getBool('il_notif_chat') ?? true;
       _notifFriend = prefs.getBool('il_notif_friend') ?? true;
       _notifHeart = prefs.getBool('il_notif_heart') ?? true;
+      _smartDiaryReminder = prefs.getBool('il_smart_reminder_diary') ?? true;
+      _smartCapsuleReminder =
+          prefs.getBool('il_smart_reminder_capsule') ?? true;
+      _smartLoveNoteReminder =
+          prefs.getBool('il_smart_reminder_love_note') ?? true;
       _touchSound = prefs.getBool('il_touch_sound') ?? true;
       _confettiFx = prefs.getBool('il_confetti_fx') ?? true;
       _showWeather = prefs.getBool('il_show_weather') ?? true;
       _showStatus = prefs.getBool('il_show_status') ?? true;
+      _homeShowHouseName =
+          prefs.getBool('il_home_show_house_name') ?? _homeShowHouseName;
+      _homeShowTimer = prefs.getBool('il_home_show_timer') ?? _homeShowTimer;
       if ((_houseId ?? '').trim().isEmpty) {
         _autoReplyCtrl.text = localGreetingQuote;
         if (localLoveUnit.isNotEmpty) {
@@ -482,7 +493,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
         await prefs.setStringList('il_unlocked_countdown_styles', const []);
       }
     }
-
   }
 
   bool _hasActiveCountdownAdUnlock() {
@@ -534,6 +544,11 @@ extension _SettingsTabPersistence on _SettingsTabState {
   }
 
   Future<void> _saveThemeSettings({bool silent = false}) async {
+    final missingDataMsg = context.tr('home_thiudliugi_e5d4ed');
+    final notDirtyMsg = context.tr('home_giaodinhin_c0fb51');
+    final successMsg = context.tr('home_lugiaodint_742be7');
+    final errorMsg = context.tr('home_khngthlugi_4e7f1d');
+
     final houseId = _houseId?.trim();
     if (houseId != null &&
         houseId.isNotEmpty &&
@@ -568,14 +583,15 @@ extension _SettingsTabPersistence on _SettingsTabState {
         fontKey.isEmpty ||
         homeBlockToneKey.isEmpty ||
         graphicsQualityKey.isEmpty) {
-      if (!silent) _showToast('Thiếu dữ liệu giao diện để lưu', success: false);
+      if (!silent) {
+        _showToast(missingDataMsg, success: false);
+      }
       return;
     }
 
     if (!_isThemeDraftDirty(ui) && _houseId == null) {
       if (!silent) {
-        _showToast('Giao diện hiện tại đã được lưu trên thiết bị này',
-            success: false);
+        _showToast(notDirtyMsg, success: false);
       }
       return;
     }
@@ -658,10 +674,15 @@ extension _SettingsTabPersistence on _SettingsTabState {
         _draftGraphicsQualityKey = graphicsQualityKey;
         _draftCustomBackgroundUrl = customBackgroundUrl;
         _draftTransparentMode = transparentMode;
+        // Force home/settings surfaces to re-evaluate style immediately.
+        _showSettingsSyncBanner = false;
       });
-      if (!silent) {
+
+      // Trigger notifier assignment to ensure listeners redraw even when
+      // copyWith values are same as current saved state edge-cases.
+      UiPrefs.notifier.value = UiPrefs.notifier.value.copyWith();
         _showToast(
-          'Đã lưu giao diện trên thiết bị này!',
+          successMsg,
           success: true,
         );
       }
@@ -669,7 +690,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       if (!mounted) return;
       if (!silent) {
         _showToast(
-          'Không thể lưu giao diện trên thiết bị này: $e',
+          errorMsg,
           success: false,
         );
       }
@@ -695,10 +716,10 @@ extension _SettingsTabPersistence on _SettingsTabState {
 //       await prefs.setBool('il_show_weather', _showWeather);
 //       await prefs.setBool('il_show_status', _showStatus);
 //       await prefs.setString('il_auto_reply_text', _autoReplyCtrl.text.trim());
-//       if (!silent) _showToast('Đã lưu cài đặt nâng cao!', success: true);
+//       if (!silent) _showToast(context.tr('home_lucitnngca_14ab51'), success: true);
 //     } catch (e) {
 //       if (!silent) {
-//         _showToast('Không thể lưu cài đặt nâng cao: $e', success: false);
+//         _showToast('KhÃ´ng thá»ƒ lÆ°u cÃ i Ä‘áº·t nÃ¢ng cao: $e', success: false);
 //       }
 //     } finally {
 //       if (mounted) {
@@ -711,12 +732,20 @@ extension _SettingsTabPersistence on _SettingsTabState {
     final user = _auth.currentUser;
     if (user == null) return;
 
+    final vipPlanSettingLabel = context.tr('home_thngtinhs_283d9c');
+    final activeLabel = context.tr('home_anghotng_cfaecd');
+    final basicAccountLabel = context.tr('home_tikhonbasi_5bd48d');
+    final nonVipExpiryLabel = context.tr('home_gicbnangho_ce2f95');
+    final freePlanLabel = context.tr('home_giminph_5edaf7');
+    final inactiveVipExpiryLabel = context.tr('home_chakchhot_27fec1');
+    final activatedByPartnerLabel = context.tr('home_kchhotchon_c1a2d2');
+
     if (!AppConfig.isPurchaseEnabled) {
       if (mounted) {
         setState(() {
           _isVipActive = false;
-          _vipPlanLabel = 'Tài khoản Basic';
-          _vipExpiryLabel = 'Gói cơ bản đang hoạt động';
+          _vipPlanLabel = vipPlanSettingLabel;
+          _vipExpiryLabel = activeLabel;
           _vipPlanCode = '';
           _isLifetimeVip = false;
         });
@@ -734,11 +763,12 @@ extension _SettingsTabPersistence on _SettingsTabState {
       final vipActive = access.isVip;
       final planCode = access.planId;
       final isLifetimeVip = access.isLifetime;
-      final planLabel =
-          vipActive ? _labelForVipPlan(planCode) : 'Tài khoản Basic';
+      final planLabel = vipActive
+          ? _labelForVipPlan(planCode)
+          : basicAccountLabel;
       final expiryLabel = vipActive
           ? _formatVipExpiry(access.expiresAtMs)
-          : 'Gói cơ bản đang hoạt động';
+          : nonVipExpiryLabel;
 
       if (mounted) {
         setState(() {
@@ -753,8 +783,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
     } catch (_) {}
 
     bool vipActive = false;
-    String planLabel = 'Gói miễn phí';
-    String expiryLabel = 'Chưa kích hoạt';
+    String planLabel = freePlanLabel;
+    String expiryLabel = inactiveVipExpiryLabel;
 
     try {
       final userVipSnap = await _dbRef
@@ -779,8 +809,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
           vipActive = vip['isVip'] == true;
           planLabel = _labelForVipPlan(vip['plan']?.toString());
-          expiryLabel =
-              vipActive ? 'Đã kích hoạt cho ngôi nhà' : 'Chưa kích hoạt';
+          expiryLabel = vipActive
+              ? activatedByPartnerLabel
+              : inactiveVipExpiryLabel;
         }
         if (!vipActive) {
           final legacyProSnap = await _dbRef
@@ -825,7 +856,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       case 'legacy_pro':
         return 'SoulLocket PRO';
       case '':
-        return 'Tài khoản Basic';
+        return context.tr('home_tikhonbasi_5bd48d');
       default:
         return 'SoulLocket PRO';
     }
@@ -845,7 +876,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
       case VipProduct.lifetimeLegacy:
         return context.tr('vip_lifetime');
       default:
-        return raw == null || raw.isEmpty ? 'Gói miễn phí' : raw;
+        return raw == null || raw.isEmpty
+            ? context.tr('home_giminph_5edaf7')
+            : raw;
     }
   }
 
@@ -861,7 +894,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     if (quickDiff.isNegative) {
       final expiredDate =
           '${quickDt.day.toString().padLeft(2, '0')}/${quickDt.month.toString().padLeft(2, '0')}/${quickDt.year}';
-      return 'Đã hết hạn vào $expiredDate';
+      return 'ÄÃ£ háº¿t háº¡n vÃ o $expiredDate';
     }
 
     final daysLeft = quickDiff.inDays;
@@ -870,18 +903,18 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
     if (daysLeft > 0) {
       return hoursLeft > 0
-          ? 'Còn lại: $daysLeft ngày $hoursLeft giờ'
-          : 'Còn lại: $daysLeft ngày';
+          ? 'CÃ²n láº¡i: $daysLeft ngÃ y $hoursLeft giá»'
+          : 'CÃ²n láº¡i: $daysLeft ngÃ y';
     }
     if (hoursLeft > 0) {
       return minutesLeft > 0
-          ? 'Còn lại: $hoursLeft giờ $minutesLeft phút'
-          : 'Còn lại: $hoursLeft giờ';
+          ? 'CÃ²n láº¡i: $hoursLeft giá» $minutesLeft phÃºt'
+          : 'CÃ²n láº¡i: $hoursLeft giá»';
     }
     if (minutesLeft > 0) {
-      return 'Còn lại: $minutesLeft phút';
+      return 'CÃ²n láº¡i: $minutesLeft phÃºt';
     }
-    return 'Sắp hết hạn hôm nay';
+    return context.tr('home_sphthnhmna_470d6c');
 
     // ignore: dead_code
     int? ts;
@@ -901,28 +934,33 @@ extension _SettingsTabPersistence on _SettingsTabState {
         '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
 
     if (difference.isNegative) {
-      return 'Đã hết hạn vào: $formattedDate';
+      return 'ÄÃ£ háº¿t háº¡n vÃ o: $formattedDate';
     } else {
       final daysLeft = difference.inDays;
       final hoursLeft = difference.inHours % 24;
       if (daysLeft > 0) {
-        return 'Còn lại: $daysLeft ngày (Hạn: $formattedDate)';
+        return 'CÃ²n láº¡i: $daysLeft ngÃ y (Háº¡n: $formattedDate)';
       } else if (hoursLeft > 0) {
-        return 'Còn lại: $hoursLeft giờ (Hạn hôm nay)';
+        return 'CÃ²n láº¡i: $hoursLeft giá» (Háº¡n hÃ´m nay)';
       } else {
-        return 'Sắp hết hạn (Hạn hôm nay)';
+        return context.tr('home_sphthnhnhm_1ffe67');
       }
     }
   }
 
   Future<void> _restoreVipPurchases() async {
+    final noVipFoundMsg = context.tr('home_thitbnycha_99bee3');
+    final activeVipMsg = context.tr('vip_active_msg');
+    final restoreSuccessMsg = context.tr('restore_vip_success');
+    final noPackageMsg = context.tr('err_no_vip_package');
+    final fallbackErrorMsg = context.tr('home_chathlmmit_9a10be');
+
     setState(() => _isRestoringVip = true);
     try {
       final wasVipActive = _isVipActive;
       final restored = await PurchaseService().restorePurchases();
       if (!restored) {
-        _showToast('Thiết bị này chưa hỗ trợ khôi phục mua hàng',
-            success: false);
+        _showToast(noVipFoundMsg, success: false);
       } else {
         bool vipDetected = false;
         for (var attempt = 0; attempt < 6; attempt++) {
@@ -938,14 +976,14 @@ extension _SettingsTabPersistence on _SettingsTabState {
           if (!mounted) return;
           _showToast(
             wasVipActive
-                ? context.tr('vip_active_msg')
-                : context.tr('restore_vip_success'),
+                ? activeVipMsg
+                : restoreSuccessMsg,
             success: true,
           );
         } else {
           if (!mounted) return;
           _showToast(
-            context.tr('err_no_vip_package'),
+            noPackageMsg,
             success: false,
           );
         }
@@ -955,8 +993,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              'Chưa thể khôi phục gói PRO lúc này. Hãy kiểm tra tài khoản cửa hàng và thử lại.',
+          fallbackMessage: fallbackErrorMsg,
         ).message,
         success: false,
       );
@@ -1065,7 +1102,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
                 .trim();
         _secondaryEmail = secondaryEmail;
         _securityQuestion = question;
-        _housePin = hasHousePinConfigured ? '••••' : '';
+        _housePin = hasHousePinConfigured ? 'â€¢â€¢â€¢â€¢' : '';
         _hasRecoveryAnswer = recoveryAnswerHash.isNotEmpty;
         _googleLinked = linkedGoogle;
         _passwordLinked = linkedPassword;
@@ -1084,28 +1121,32 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
   Future<void> _saveSecondaryEmail() async {
     if (_houseId == null) return;
+    final logInReq = context.tr('home_bncnngnhpl_1c2e72');
+    final enterEmailReq = context.tr('home_hynhpemail_7509cc');
+    final invalidEmailErr = context.tr('home_emailphkhn_2e049e');
+    final duplicateEmailErr = context.tr('home_emailphkhn_ca4585');
+
     if (!await _ensureCanModifySharedInfo()) return;
     final currentUser = _auth.currentUser;
     if (currentUser == null) {
-      _showToast('Bạn cần đăng nhập lại trước khi lưu email phụ',
-          success: false);
+      _showToast(logInReq, success: false);
       return;
     }
     final value = _secondaryEmailCtrl.text.trim();
     if (value.isEmpty) {
-      _showToast('Hãy nhập email phụ trước khi lưu', success: false);
+      _showToast(enterEmailReq, success: false);
       return;
     }
 
     final normalized = value.toLowerCase();
     if (!_looksLikeSettingsEmail(normalized)) {
-      _showToast('Email phụ không hợp lệ', success: false);
+      _showToast(invalidEmailErr, success: false);
       return;
     }
 
     if (!_isSupportedSettingsEmail(normalized)) {
       _showToast(
-          'Hệ thống chỉ hỗ trợ sử dụng các loại email: ${_settingsSupportedEmailDomainsLabel()}',
+          'Há»‡ thá»‘ng chá»‰ há»— trá»£ sá»­ dá»¥ng cÃ¡c loáº¡i email: ${_settingsSupportedEmailDomainsLabel()}',
           success: false);
       return;
     }
@@ -1113,7 +1154,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     final mainEmail =
         (_auth.currentUser?.email ?? _securityEmail).trim().toLowerCase();
     if (normalized == mainEmail) {
-      _showToast('Email phụ không được trùng với email chính', success: false);
+      _showToast(duplicateEmailErr, success: false);
       return;
     }
 
@@ -1124,8 +1165,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
         _showToast(
           AppErrorMapper.resolve(
             e,
-            fallbackMessage:
-                'Email phụ này chưa thể dùng để đăng nhập. Hãy kiểm tra email hoặc chọn email khác.',
+            fallbackMessage: context.tr('home_emailphnyc_cef5da'),
           ).message,
           success: false,
         );
@@ -1146,7 +1186,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       if (!mounted) return;
       final success = await showSettingsEmailOtpDialog(
         context: context,
-        title: 'Xác thực email phụ',
+        title: context.tr('home_xcthcemail_292ed5'),
         email: normalized,
         sendCode: () => _authService.sendOtpEmail(normalized),
         verifyCode: (otpCode) =>
@@ -1165,16 +1205,14 @@ extension _SettingsTabPersistence on _SettingsTabState {
           });
           if (mounted) {
             setState(() => _secondaryEmail = normalized);
-            _showToast('Đã xác thực và lưu email phụ thành công!',
-                success: true);
+            _showToast(context.tr('home_xcthcvluem_038a4a'), success: true);
           }
         } catch (e) {
           if (mounted) {
             _showToast(
               AppErrorMapper.resolve(
                 e,
-                fallbackMessage:
-                    'Email đã xác thực nhưng chưa lưu được. Hãy kiểm tra kết nối rồi bấm lưu lại.',
+                fallbackMessage: context.tr('home_emailxcthc_875a96'),
               ).message,
               success: false,
             );
@@ -1186,8 +1224,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
         _showToast(
           AppErrorMapper.resolve(
             e,
-            fallbackMessage:
-                'Chưa thể gửi mã xác nhận lúc này. Hãy kiểm tra email và thử lại sau ít phút.',
+            fallbackMessage: context.tr('home_chathgimxc_947d2b'),
           ).message,
           success: false,
         );
@@ -1204,7 +1241,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
 //     });
 //     if (mounted) {
 //       setState(() => _secondaryEmail = value);
-//       _showToast('Đã lưu email phụ!', success: true);
+//       _showToast(context.tr('home_luemailph_7e403a'), success: true);
 //     }
 //   }
 
@@ -1237,7 +1274,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     });
     if (mounted) {
       setState(() {
-        _housePin = '••••';
+        _housePin = 'â€¢â€¢â€¢â€¢';
         _housePinCtrl.clear();
         _showHousePin = false;
       });
@@ -1336,7 +1373,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
 //         _hasRecoveryAnswer = true;
 //         _recoveryAnswerCtrl.clear();
 //       });
-//       _showToast('Đã cập nhật câu hỏi bảo mật!', success: true);
+//       _showToast(context.tr('home_cpnhtcuhib_120aaf'), success: true);
 //     }
 //   }
 
@@ -1360,7 +1397,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
 //       });
 //       if (mounted) _showToast(context.tr('saved_info'), success: true);
 //     } catch (e) {
-//       if (mounted) _showToast('Lỗi lưu: $e', success: false);
+//       if (mounted) _showToast('Lá»—i lÆ°u: $e', success: false);
 //     }
 //   }
 
@@ -1381,6 +1418,10 @@ extension _SettingsTabPersistence on _SettingsTabState {
       await prefs.setBool('il_notif_chat', _notifChat);
       await prefs.setBool('il_notif_friend', _notifFriend);
       await prefs.setBool('il_notif_heart', _notifHeart);
+      await prefs.setBool('il_smart_reminder_diary', _smartDiaryReminder);
+      await prefs.setBool('il_smart_reminder_capsule', _smartCapsuleReminder);
+      await prefs.setBool(
+          'il_smart_reminder_love_note', _smartLoveNoteReminder);
       await prefs.setBool('il_touch_sound', _touchSound);
       await prefs.setBool('il_confetti_fx', _confettiFx);
       await prefs.setBool('il_show_weather', _showWeather);
@@ -1403,6 +1444,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
           'notifChat': _notifChat,
           'notifFriend': _notifFriend,
           'notifHeart': _notifHeart,
+          'smartReminderDiary': _smartDiaryReminder,
+          'smartReminderCapsule': _smartCapsuleReminder,
+          'smartReminderLoveNote': _smartLoveNoteReminder,
           'touchSound': _touchSound,
           'confettiFx': _confettiFx,
           'showWeather': _showWeather,
@@ -1429,8 +1473,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
           AppErrorMapper.resolve(
             e,
             fallbackMessage: localSaved
-                ? 'Đã lưu trên máy nhưng chưa đồng bộ lên đám mây. Hãy kiểm tra kết nối rồi lưu lại.'
-                : 'Chưa thể lưu cài đặt lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+                ? context.tr('home_lutrnmynhn_5551e4')
+                : context.tr('home_chathlucit_535775'),
           ).message,
           success: false,
         );
@@ -1459,7 +1503,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       dobU2: _dobU2,
       greetingQuote: _autoReplyCtrl.text.trim(),
       dayUnit: _loveUnitCtrl.text.trim().isEmpty
-          ? 'ngày yêu'
+          ? context.tr('home_ngyyu_722b21')
           : _loveUnitCtrl.text.trim(),
       relationshipMode: _relationshipMode,
       homeShowHouseName: _homeShowHouseName,
@@ -1494,7 +1538,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
         const renameCooldownMs = 7 * 24 * 60 * 60 * 1000;
         if ((now - lastUpdate) < renameCooldownMs) {
           _showToast(
-            'Bạn chỉ có thể đổi tên nhà sau 7 ngày kể từ lần đổi cuối.',
+            context.tr('home_bnchcthitn_17fe89'),
             success: false,
           );
           return false;

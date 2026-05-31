@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -101,16 +102,17 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
   String _scannerErrorText(MobileScannerException error) {
     switch (error.errorCode) {
       case MobileScannerErrorCode.permissionDenied:
-        return 'Camera đang bị từ chối quyền. Hãy cấp quyền camera hoặc dùng Upload ảnh QR / nhập ID nhà.';
+        return context.tr('relationship_cameraangb_10b95e');
       case MobileScannerErrorCode.unsupported:
-        return 'Thiết bị này không hỗ trợ camera quét QR. Bạn vẫn có thể upload ảnh QR hoặc nhập ID nhà.';
+        return context.tr('relationship_thitbnykhn_8e3b31');
       default:
-        return 'Camera QR đang gặp lỗi. Bạn vẫn có thể upload ảnh QR hoặc nhập ID nhà ở dưới.';
+        return context.tr('relationship_cameraqran_130dfd');
     }
   }
 
   Future<void> _startScanner({bool silent = false}) async {
     if (!mounted || _tabController.index != 1) return;
+    final msgCameraFail = context.tr('relationship_khngthmcam_f1b8b3');
     try {
       await _scannerCtrl.start();
     } on MobileScannerException catch (error) {
@@ -125,8 +127,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
         _showSnack(text, backgroundColor: const Color(0xFFD81B60));
       }
     } catch (_) {
-      const text =
-          'Không thể mở camera quét QR lúc này. Bạn vẫn có thể upload ảnh QR hoặc nhập ID nhà ở dưới.';
+      final text = msgCameraFail;
       if (!mounted) return;
       setState(() {
         _joinError = text;
@@ -165,14 +166,14 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
   Future<void> _handleValue(String raw, {required String source}) async {
     final value = raw.trim();
     if (value.isEmpty) {
-      _setError('Bạn cần nhập ID nhà hoặc chọn một ảnh QR hợp lệ trước đã.');
+      _setError(context.tr('relationship_bncnnhpidn_2e0bbf'));
       return;
     }
 
     final payloadKind = QRPayloadCodec.detectKind(value);
     if (payloadKind == QRPayloadKind.login) {
       _setError(
-        'Đây là QR đăng nhập, không phải QR ghép đôi. Hãy nhờ người ấy mở đúng QR nhà để quét.',
+        context.tr('relationship_ylqrngnhpk_40b3b8'),
         scannedValue: value,
       );
       return;
@@ -180,7 +181,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
 
     if (payloadKind == QRPayloadKind.community) {
       _setError(
-        'Đây là QR cộng đồng để ghé thăm, không phải QR ghép đôi. Hãy nhờ người ấy mở đúng QR nhà để quét.',
+        context.tr('relationship_ylqrcngngg_af5cca'),
         scannedValue: value,
       );
       return;
@@ -189,7 +190,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
     final targetHouseId = QRPayloadCodec.extractHouseId(value);
     if (targetHouseId == null || targetHouseId.isEmpty) {
       _setError(
-        'Mã này chưa đọc ra được ID nhà hợp lệ. Bạn thử quét lại, upload ảnh QR khác hoặc nhập ID nhà ở dưới.',
+        context.tr('relationship_mnychacrac_e7b941'),
         scannedValue: value,
       );
       return;
@@ -197,7 +198,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
 
     if (targetHouseId == widget.houseId.trim()) {
       _setError(
-        'Đây là chính nhà của bạn rồi. Hãy dùng QR hoặc ID của người ấy.',
+        context.tr('relationship_ylchnhnhca_0a8067'),
         scannedValue: targetHouseId,
       );
       return;
@@ -208,7 +209,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
       _scanned = targetHouseId;
       _joinError = null;
       _statusText = source == 'camera'
-          ? 'Đã đọc được QR nhà. Ứng dụng đang thử ghép đôi.'
+          ? context.tr('relationship_ccqrnhngdn_a2faca')
           : 'Đã nhận ID nhà từ $source. Ứng dụng đang thử ghép đôi.';
       _isJoining = true;
     });
@@ -218,11 +219,11 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
       if (!mounted) return;
       if (result.success) {
         setState(() {
-          _statusText = 'Ghép đôi thành công. Hai bạn đã vào cùng một nhà.';
+          _statusText = context.tr('relationship_ghpithnhcn_835245');
           _isJoining = false;
         });
         _showSnack(
-          '❤️ Ghép đôi thành công! Hai bạn đã vào cùng một nhà.',
+          context.tr('relationship_ghpithnhcn_767848'),
           backgroundColor: const Color(0xFFD81B60),
         );
         await Future.delayed(const Duration(seconds: 2));
@@ -238,7 +239,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
         AppErrorMapper.resolve(
           error,
           fallbackMessage:
-              'Không ghép đôi được: hãy kiểm tra mã nhà, trạng thái ghép đôi hoặc kết nối mạng.',
+              context.tr('relationship_khngghpich_72dc50'),
         ).message,
         scannedValue: targetHouseId,
       );
@@ -248,10 +249,14 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
   Future<void> _pickQrImageFromGallery() async {
     if (_isJoining || _isAnalyzingImage) return;
     FocusScope.of(context).unfocus();
+    final msgAnalyzing = context.tr('relationship_angcnhqrtt_a50fdb');
+    final msgNoQr = context.tr('relationship_nhnychacra_b77482');
+    final msgQrSource = context.tr('relationship_nhqr_288f50');
+    final msgAnalyzeFail = context.tr('relationship_khngccnhqr_dc8453');
     setState(() {
       _isAnalyzingImage = true;
       _joinError = null;
-      _statusText = 'Đang đọc ảnh QR từ thư viện...';
+      _statusText = msgAnalyzing;
     });
 
     try {
@@ -269,20 +274,17 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
               .firstWhere((item) => item.isNotEmpty, orElse: () => '') ??
           '';
       if (raw.isEmpty) {
-        _setError(
-          'Ảnh này chưa đọc ra được mã QR hợp lệ. Bạn thử ảnh khác hoặc nhập ID nhà ở dưới.',
-        );
+        _setError(msgNoQr);
         return;
       }
-      await _handleValue(raw, source: 'ảnh QR');
+      await _handleValue(raw, source: msgQrSource);
     } on MobileScannerException catch (error) {
       _setError(_scannerErrorText(error));
     } catch (error) {
       _setError(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage:
-              'Không đọc được ảnh QR: hãy thử ảnh rõ hơn hoặc nhập ID nhà bên dưới.',
+          fallbackMessage: msgAnalyzeFail,
         ).message,
       );
     } finally {
@@ -300,7 +302,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
         backgroundColor: const Color(0xFFFFF5F8),
         elevation: 0,
         title: Text(
-          'KẾT NỐI VỚI NGƯỜI ẤY',
+          context.tr('relationship_ktnivingiy_5bb8af'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             color: const Color(0xFFD81B60),
@@ -313,9 +315,9 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
           indicatorColor: const Color(0xFFD81B60),
           labelColor: const Color(0xFFD81B60),
           unselectedLabelColor: Colors.grey,
-          tabs: const [
-            Tab(text: 'Mã QR nhà'),
-            Tab(text: 'Quét mã QR'),
+          tabs: [
+            Tab(text: context.tr('relationship_mqrnh_99a331')),
+            Tab(text: context.tr('relationship_qutmqr_5c2829')),
           ],
         ),
       ),
@@ -345,7 +347,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
             child: Column(
               children: [
                 Text(
-                  'Đưa mã QR này cho người ấy quét',
+                  context.tr('relationship_amqrnychon_0cffa8'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     fontSize: 18,
@@ -368,7 +370,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                 ),
                 SLSpacing.h8,
                 Text(
-                  'Đây là QR nhà để ghép đôi, không phải QR đăng nhập.',
+                  context.tr('relationship_ylqrnhghpi_3b13c4'),
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     color: const Color(0xFF9B5B71),
@@ -384,7 +386,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                     shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
                   ),
                   child: Text(
-                    'Sao chép mã nhà',
+                    context.tr('relationship_saochpmnh_039efa'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   ),
                 ),
@@ -401,7 +403,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
               border: Border.all(color: Colors.grey.shade200),
             ),
             child: Text(
-              'Người ấy có thể quét QR, upload ảnh QR hoặc nhập tay mã nhà này để ghép đôi.',
+              context.tr('relationship_ngiycthqut_f245e2'),
               style: SLTheme.quicksand(
                 color: const Color(0xFF6B4450),
                 fontWeight: FontWeight.w700,
@@ -454,23 +456,25 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                   children: [
                     IconButton(
                       onPressed: () async {
+                        final msgSwitchFail = context.tr('relationship_khngthicam_8bf16f');
                         try {
                           await _scannerCtrl.switchCamera();
                         } catch (_) {
-                          _setError('Không thể đổi camera trên thiết bị này.');
+                          _setError(msgSwitchFail);
                         }
                       },
                       icon: const Icon(Icons.cameraswitch, color: Colors.white),
                     ),
                     IconButton(
                       onPressed: () async {
+                        final msgTorchFail = context.tr('relationship_thitbnykhn_df24cd');
                         try {
                           await _scannerCtrl.toggleTorch();
                           if (mounted) {
                             setState(() => _isTorchOn = !_isTorchOn);
                           }
                         } catch (_) {
-                          _setError('Thiết bị này không hỗ trợ đèn flash.');
+                          _setError(msgTorchFail);
                         }
                       },
                       icon: Icon(
@@ -505,12 +509,12 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                         ? null
                         : () => unawaited(_pickQrImageFromGallery()),
                     icon: const Icon(Icons.photo_library_rounded),
-                    label: const Text('Upload ảnh QR'),
+                    label: Text(context.tr('relationship_uploadnhqr_5cba41')),
                   ),
                   OutlinedButton.icon(
                     onPressed: () => unawaited(_restartScanner()),
                     icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Quét lại camera'),
+                    label: Text(context.tr('relationship_qutlicamer_1828af')),
                   ),
                 ],
               ),
@@ -520,9 +524,9 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                 textInputAction: TextInputAction.done,
                 onChanged: (_) => setState(() {}),
                 onSubmitted: (_) => unawaited(
-                    _handleValue(_manualCtrl.text, source: 'nhập tay')),
+                    _handleValue(_manualCtrl.text, source: context.tr('relationship_nhptay_d6a84b'))),
                 decoration: InputDecoration(
-                  hintText: 'VD: abc123xyz hoặc QR nhà đã copy',
+                  hintText: context.tr('relationship_vdabc123xy_28686a'),
                   filled: true,
                   fillColor: Colors.white,
                   prefixIcon: const Icon(Icons.house_rounded),
@@ -546,7 +550,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                 onPressed: _isJoining
                     ? null
                     : () => unawaited(
-                          _handleValue(_manualCtrl.text, source: 'nhập tay'),
+                          _handleValue(_manualCtrl.text, source: context.tr('relationship_nhptay_d6a84b')),
                         ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD81B60),
@@ -554,7 +558,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                   shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
                 ),
                 child: Text(
-                  _isJoining ? 'Đang ghép đôi...' : 'Xác nhận ghép đôi',
+                  _isJoining ? context.tr('relationship_angghpi_3711a2') : context.tr('relationship_xcnhnghpi_e13bce'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                 ),
               ),
@@ -578,7 +582,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Mã vừa nhận',
+            context.tr('relationship_mvanhn_170b30'),
             style: SLTheme.quicksand(
               color: Colors.white,
               fontWeight: FontWeight.w900,
@@ -586,7 +590,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
           ),
           SLSpacing.h8,
           Text(
-            _scanned ?? 'Chưa quét được mã nào',
+            _scanned ?? context.tr('relationship_chaqutcmno_22f72b'),
             style: SLTheme.quicksand(
               color: Colors.white,
               fontWeight: FontWeight.w800,

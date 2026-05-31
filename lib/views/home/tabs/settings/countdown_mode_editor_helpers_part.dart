@@ -97,14 +97,14 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFDF6FA)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFF6D4E2)),
         boxShadow: [
           BoxShadow(
@@ -120,15 +120,15 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
           Row(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 34,
+                height: 34,
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFE6F0),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: const Color(0xFFD81B60), size: 20),
+                child: Icon(icon, color: const Color(0xFFD81B60), size: 17),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +136,7 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                     Text(
                       title,
                       style: SLTheme.quicksand(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w900,
                         color: const Color(0xFFD81B60),
                       ),
@@ -226,12 +226,12 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
       if (validationError != null) return validationError;
       final parsed = parseInput(raw.trim());
       if (parsed == null) {
-        return 'Ngày không hợp lệ.';
+        return context.tr('home_ngykhnghpl_b660fe');
       }
       if (!inRange(parsed)) {
         return 'Ngày phải trong khoảng ${DateInputUtils.formatDisplayDate(minDate)} - ${DateInputUtils.formatDisplayDate(maxDate)}.';
       }
-      return 'Định dạng chưa đúng.';
+      return context.tr('home_nhdngchang_9fbba2');
     }
 
     try {
@@ -280,7 +280,7 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
 
               return AlertDialog(
                 title: Text(
-                  'Chọn ngày',
+                  context.tr('home_chnngy_d2cce5'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFFD81B60),
@@ -316,9 +316,9 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                         );
                       },
                       decoration: InputDecoration(
-                        labelText: 'Nhập ngày',
-                        hintText: 'ngày/tháng/năm',
-                        helperText: 'Đang nhập ngày/tháng/năm',
+                        labelText: context.tr('home_nhpngy_91932a'),
+                        hintText: context.tr('home_ngythngnm_a697d0'),
+                        helperText: context.tr('home_angnhpngyt_377d85'),
                         errorText: errorText,
                         prefixIcon: const Icon(
                           Icons.calendar_month_rounded,
@@ -334,11 +334,11 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: const Text('Hủy'),
+                    child: Text(context.tr('home_hy_1e4050')),
                   ),
                   TextButton(
                     onPressed: () => unawaited(pickFromCalendar()),
-                    child: const Text('Chọn lịch'),
+                    child: Text(context.tr('home_chnlch_e1fe3f')),
                   ),
                   ElevatedButton(
                     onPressed: submit,

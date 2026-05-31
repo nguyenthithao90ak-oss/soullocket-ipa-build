@@ -27,7 +27,6 @@ class AuthPanelShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = L10nService();
-    final isVietnamese = l10n.locale.languageCode == 'vi';
     final panelGradient = isLoginTab
         ? const [
             Color(0xFFFFFCFA),
@@ -159,9 +158,7 @@ class AuthPanelShell extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      isVietnamese
-                          ? 'Trung tâm trợ giúp & Hướng dẫn'
-                          : 'Help Center & Guide',
+                      l10n.translate('auth_help_center_guide'),
                       style: SLTheme.quicksand(
                         fontSize: 12.5,
                         color: SLColors.textSecond,
@@ -177,7 +174,7 @@ class AuthPanelShell extends StatelessWidget {
                         final buttons = [
                           _AuthHelpButton(
                             icon: Icons.menu_book_rounded,
-                            label: isVietnamese ? 'Hướng Dẫn' : 'Guide',
+                            label: l10n.translate('auth_guide_short'),
                             onTap: onOpenGuide,
                             isGuide: true,
                             expanded: !stackButtons,
@@ -185,7 +182,7 @@ class AuthPanelShell extends StatelessWidget {
                           ),
                           _AuthHelpButton(
                             icon: Icons.headset_mic_rounded,
-                            label: isVietnamese ? 'Liên Hệ' : 'Contact',
+                            label: l10n.translate('auth_contact_short'),
                             onTap: onOpenContact,
                             isGuide: false,
                             expanded: !stackButtons,

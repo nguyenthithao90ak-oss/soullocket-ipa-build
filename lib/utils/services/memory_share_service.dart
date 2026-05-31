@@ -2,11 +2,16 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../core/constants/app_config.dart';
+import 'admob_service.dart';
+
 const Duration _memoryShareAppCheckRetryDelay = Duration(milliseconds: 350);
 
 class MemoryLimits {
   const MemoryLimits({
     required this.shareMaxItems,
+    required this.shareFreeMaxItems,
+    required this.shareProMaxItems,
     required this.shareDefaultTtlDays,
     required this.shareMaxTtlDays,
     required this.imageFreeDailyLimit,
@@ -19,11 +24,23 @@ class MemoryLimits {
       fallbackMemoryLimits.shareMaxTtlDays,
     ).clamp(1, 365).toInt();
 
+    final shareFreeMaxItems = _readLimitInt(
+      data['shareFreeMaxItems'],
+      fallbackMemoryLimits.shareFreeMaxItems,
+    ).clamp(1, 500).toInt();
+
+    final shareProMaxItems = _readLimitInt(
+      data['shareProMaxItems'],
+      fallbackMemoryLimits.shareProMaxItems,
+    ).clamp(1, 1000).toInt();
+
     return MemoryLimits(
       shareMaxItems: _readLimitInt(
         data['shareMaxItems'],
         fallbackMemoryLimits.shareMaxItems,
-      ).clamp(1, 100).toInt(),
+      ).clamp(1, 1000).toInt(),
+      shareFreeMaxItems: shareFreeMaxItems,
+      shareProMaxItems: shareProMaxItems,
       shareDefaultTtlDays: _readLimitInt(
         data['shareDefaultTtlDays'],
         fallbackMemoryLimits.shareDefaultTtlDays,
@@ -41,6 +58,8 @@ class MemoryLimits {
   }
 
   final int shareMaxItems;
+  final int shareFreeMaxItems;
+  final int shareProMaxItems;
   final int shareDefaultTtlDays;
   final int shareMaxTtlDays;
   final int imageFreeDailyLimit;
@@ -49,6 +68,8 @@ class MemoryLimits {
 
 const MemoryLimits fallbackMemoryLimits = MemoryLimits(
   shareMaxItems: 24,
+  shareFreeMaxItems: 50,
+  shareProMaxItems: 200,
   shareDefaultTtlDays: 7,
   shareMaxTtlDays: 183,
   imageFreeDailyLimit: 10,
@@ -117,14 +138,18 @@ class MemoryShareService {
     }
 
     final limits = await fetchLimits();
-    if (photos.length > limits.shareMaxItems) {
-      throw Exception('Mỗi liên kết chỉ hỗ trợ tối đa ${limits.shareMaxItems} ảnh.');
+    final isPro = await AdMobService().isProUser();
+    final maxItems = isPro ? limits.shareProMaxItems : limits.shareFreeMaxItems;
+    if (photos.length > maxItems) {
+      throw Exception(
+          'Mỗi liên kết chỉ hỗ trợ tối đa $maxItems ảnh đối với tài khoản ${isPro ? 'PRO' : 'thường'}.');
     }
-    final safePhotos = _sanitizePhotos(photos, limits.shareMaxItems);
+    final safePhotos = _sanitizePhotos(photos, maxItems);
     if (safePhotos.isEmpty) {
       throw Exception('Chưa có ảnh hợp lệ để tạo liên kết.');
     }
-    final resolvedExpiryDays = expiryDays.clamp(1, limits.shareMaxTtlDays).toInt();
+    final resolvedExpiryDays =
+        expiryDays.clamp(1, limits.shareMaxTtlDays).toInt();
 
     final response = await _callWithAuthAndAppCheckRetry(() {
       final callable = _functions.httpsCallable('createMemoryShareLink');
@@ -201,7 +226,13 @@ class MemoryShareService {
   }) {
     final keys = preferPreview
         ? const ['previewUrl', 'thumbUrl', 'thumbnailUrl', 'url', 'downloadUrl']
-        : const ['url', 'downloadUrl', 'previewUrl', 'thumbUrl', 'thumbnailUrl'];
+        : const [
+            'url',
+            'downloadUrl',
+            'previewUrl',
+            'thumbUrl',
+            'thumbnailUrl'
+          ];
     for (final key in keys) {
       final value = photo[key]?.toString().trim() ?? '';
       if (_isShareableUrl(value)) {
@@ -223,8 +254,10 @@ class MemoryShareService {
     if (serverUrl.isNotEmpty) {
       return serverUrl;
     }
-    return 'https://soullocket.web.app/'
-        'memory-share?token=${Uri.encodeQueryComponent(token)}';
+    return AppConfig.webUri(
+      'memory-share',
+      queryParameters: <String, String>{'token': token},
+    ).toString();
   }
 
   Future<bool> _warmUpAuthToken({bool forceRefresh = false}) async {

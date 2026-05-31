@@ -34,7 +34,7 @@ class _SingleMatchTopBar extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Ghép ngẫu nhiên, gọi nhanh và giữ lịch sử riêng cho single mode',
+                  context.tr('match_ghpngunhin_f1cd41'),
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     fontSize: 12,
@@ -236,7 +236,7 @@ class _SingleMatchLoadErrorCard extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Không tải được Single Match',
+                context.tr('match_khngticsin_d7088f'),
                 style: SLTheme.quicksand(
                   fontSize: 21,
                   fontWeight: FontWeight.w900,
@@ -245,7 +245,7 @@ class _SingleMatchLoadErrorCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                loadError ?? 'Có lỗi không xác định.',
+                loadError ?? context.tr('match_clikhngxcn_3e7572'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 13,
@@ -266,7 +266,7 @@ class _SingleMatchLoadErrorCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(18),
                   ),
                 ),
-                child: const Text('Tải lại'),
+                child: Text(context.tr('match_tili_13be6c')),
               ),
             ],
           ),

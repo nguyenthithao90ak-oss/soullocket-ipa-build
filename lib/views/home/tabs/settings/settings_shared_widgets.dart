@@ -34,7 +34,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
 
     final String message = !_isAppLockEnabled
         ? 'App chưa bật khóa bảo vệ. Bạn nên bật khóa app để phần Cài đặt an toàn hơn.'
-        : 'Sinh trắc học chưa được bật. Bạn có thể thêm vân tay hoặc Face ID để xác thực nhanh và an toàn hơn.';
+        : context.tr('home_sinhtrchcc_9d6c56');
 
     _markSecurityWarningShownThisSession();
 
@@ -77,7 +77,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                       child: Padding(
                         padding: EdgeInsets.only(left: stacked ? 0 : 8),
                         child: Text(
-                          'Bỏ qua',
+                          context.tr('home_bqua_a3b533'),
                           style: SLTheme.quicksand(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -87,7 +87,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                       ),
                     );
                     final title = Text(
-                      'CẢNH BÁO BẢO MẬT',
+                      context.tr('home_cnhbobomt_a092b6'),
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
@@ -257,11 +257,13 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required Color border,
     required Color textColor,
     required VoidCallback onTap,
+    Key? key,
     List<IconData> accentIcons = const [],
     String? badgeText,
     Widget? footer,
   }) {
     return GestureDetector(
+      key: key,
       onTap: onTap,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -281,7 +283,8 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: border.withValues(alpha: 0.45), width: 1.5),
+              border:
+                  Border.all(color: border.withValues(alpha: 0.45), width: 1.5),
               boxShadow: [
                 BoxShadow(
                   color: textColor.withValues(alpha: 0.15),
@@ -481,7 +484,8 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                       decoration: BoxDecoration(
                         color: borderColor.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: borderColor.withValues(alpha: 0.2)),
+                        border: Border.all(
+                            color: borderColor.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -490,7 +494,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                               size: 16, color: borderColor),
                           const SizedBox(width: 6),
                           Text(
-                            'QUAY LẠI',
+                            context.tr('home_quayli_69043b'),
                             style: SLTheme.quicksand(
                               fontSize: 11,
                               fontWeight: FontWeight.w900,
@@ -640,7 +644,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required VoidCallback onTap,
   }) {
     final effectiveLabel = icon == Icons.heart_broken
-        ? (_isBreakupBusy ? 'Đang xử lý yêu cầu...' : _breakupActionLabel)
+        ? (_isBreakupBusy ? context.tr('home_angxlyucu_0b316c') : _breakupActionLabel)
         : label;
     const baseSurface = Color(0xFF343A45);
     return GestureDetector(
@@ -651,14 +655,17 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color.alphaBlend(gradient.first.withValues(alpha: 0.12), baseSurface),
-              Color.alphaBlend(gradient.last.withValues(alpha: 0.18), baseSurface),
+              Color.alphaBlend(
+                  gradient.first.withValues(alpha: 0.12), baseSurface),
+              Color.alphaBlend(
+                  gradient.last.withValues(alpha: 0.18), baseSurface),
             ],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: textColor.withValues(alpha: 0.32), width: 1.1),
+          border:
+              Border.all(color: textColor.withValues(alpha: 0.32), width: 1.1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.18),
@@ -722,6 +729,98 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPendingAccountDeletionCard() {
+    if (_pendingAccountDeletionAtMs <= 0) return const SizedBox.shrink();
+    final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final isMine = _pendingAccountDeletionUid == currentUid;
+    final dateLabel =
+        _formatPendingAccountDeletionDate(_pendingAccountDeletionAtMs);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF5F5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFFCDD2)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFB71C1C).withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.schedule_rounded,
+                  color: Color(0xFFC62828), size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  isMine ? context.tr('home_tikhonangc_66e7e3') : context.tr('home_nhangcyucu_460ec8'),
+                  style: SLTheme.quicksand(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFFC62828),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Dự kiến xóa: $dateLabel. ${isMine ? 'Bạn có thể hoàn tác trước thời điểm này.' : context.tr('home_chtikhongi_3eca08')}',
+            style: SLTheme.quicksand(
+              fontSize: 11.8,
+              fontWeight: FontWeight.w700,
+              height: 1.35,
+              color: const Color(0xFF6B2B2B),
+            ),
+          ),
+          if (isMine) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () async {
+                  try {
+                    SLNotice.showInfo(context, context.tr('home_anghontc_b7c262'));
+                    await _authService.undoScheduledDeletion();
+                    if (!mounted) return;
+                    setState(() {
+                      _pendingAccountDeletionAtMs = 0;
+                      _pendingAccountDeletionUid = '';
+                    });
+                    SLNotice.showSuccess(context, context.tr('home_hontcxathn_58b732'));
+                  } catch (e) {
+                    if (!mounted) return;
+                    SLNotice.showError(
+                      context,
+                      AppErrorMapper.resolve(
+                        e,
+                        fallbackMessage:
+                            context.tr('home_chathhontc_cd8493'),
+                      ).message,
+                    );
+                  }
+                },
+                icon: const Icon(Icons.undo_rounded, size: 16),
+                label: Text(
+                  context.tr('home_hontc_96ce27'),
+                  style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -812,7 +911,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     final tileBorder = color.withValues(alpha: 0.22);
 
     return GestureDetector(
-      onTap: onTap ?? () => _showToast('Đang mở...'),
+      onTap: onTap ?? () => _showToast(context.tr('home_angm_1441cf')),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),

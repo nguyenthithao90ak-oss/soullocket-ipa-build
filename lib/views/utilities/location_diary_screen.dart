@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import '../../core/sl_theme.dart';
 import '../../services/activity_history_service.dart';
 import '../../utils/app_error_mapper.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import '../../core/fast_backdrop_filter.dart';
 
 class LocationDiaryScreen extends StatefulWidget {
   final String houseId;
@@ -84,7 +85,7 @@ class _LocationDiaryScreenState extends State<LocationDiaryScreen> {
       _noteController.clear();
       FocusScope.of(context).unfocus();
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã Check-in thành công! 📍')));
+          SnackBar(content: Text(context.tr('util_checkinthn_1b08ac'))));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +94,7 @@ class _LocationDiaryScreenState extends State<LocationDiaryScreen> {
               AppErrorMapper.resolve(
                 e,
                 fallbackMessage:
-                    'Chưa thể thêm check-in lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+                    context.tr('util_chaththmch_a86d6b'),
               ).message,
             ),
           ),
@@ -103,21 +104,25 @@ class _LocationDiaryScreenState extends State<LocationDiaryScreen> {
   }
 
   Future<void> _deleteCheckin(String id) async {
+    final labelAction = context.tr('util_xamtchecki_789eeb');
+    final labelTitle = context.tr('util_xacheckin_8bc452');
+    final labelSource = context.tr('util_nhtkaim_dae673');
     try {
       final ref = _dbRef.child('houses/${widget.houseId}/checkin/$id');
       final snapshot = await ref.get();
+      if (!mounted) return;
       if (snapshot.exists && snapshot.value is Map) {
         final data = Map<String, dynamic>.from(snapshot.value as Map);
         await ActivityHistoryService.instance.add(
-          'đã xóa một check-in',
+          labelAction,
           houseId: widget.houseId,
-          title: 'Đã xóa check-in',
+          title: labelTitle,
           subtitle: data['place']?.toString() ?? '',
           action: 'delete',
           module: 'location_diary',
           entityType: 'checkin',
           entityId: id,
-          sourceLabel: 'Nhật ký địa điểm',
+          sourceLabel: labelSource,
           restorePath: 'houses/${widget.houseId}/checkin/$id',
           restorePayload: data,
         );
@@ -131,7 +136,7 @@ class _LocationDiaryScreenState extends State<LocationDiaryScreen> {
             AppErrorMapper.resolve(
               e,
               fallbackMessage:
-                  'Chưa thể xóa check-in lúc này. Hãy thử lại sau ít phút.',
+                  context.tr('util_chathxache_6c37ac'),
             ).message,
           ),
         ),
@@ -145,7 +150,7 @@ class _LocationDiaryScreenState extends State<LocationDiaryScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'NHẬT KÝ ĐỊA ĐIỂM',
+          context.tr('util_nhtkaim_80b9bf'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -202,17 +207,17 @@ class _LocationDiaryScreenState extends State<LocationDiaryScreen> {
       child: Column(
         children: [
           Text(
-            'Lưu lại những nơi hai bạn đã cùng nhau đi qua. 👣',
+            context.tr('util_lulinhngni_129fba'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
                 color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
           ),
           SLSpacing.h20,
-          _buildTextField(_placeController, 'Tên địa điểm (VD: Hồ Gươm)...',
+          _buildTextField(_placeController, context.tr('util_tnaimvdhgm_501856'),
               Icons.location_on),
           SLSpacing.h8,
           _buildTextField(
-              _noteController, 'Ghi chú kỷ niệm (tuỳ chọn)...', Icons.notes,
+              _noteController, context.tr('util_ghichknimt_6caeba'), Icons.notes,
               maxLines: 2),
           SLSpacing.h16,
           SizedBox(
@@ -274,7 +279,7 @@ class _LocationDiaryScreenState extends State<LocationDiaryScreen> {
   Widget _buildCheckinList() {
     return _checkins.isEmpty
         ? Center(
-            child: Text('Chưa có địa điểm check-in nào.',
+            child: Text(context.tr('util_chacaimche_357ea7'),
                 style: SLTheme.quicksand(
                     color: Colors.white70, fontWeight: FontWeight.w600)))
         : ListView.builder(

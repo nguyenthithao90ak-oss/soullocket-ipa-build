@@ -9,10 +9,12 @@ import 'package:flutter/gestures.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/services/offline_cache_service.dart';
 
+import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/device_manager_service.dart';
@@ -34,9 +36,7 @@ import '../relationship/couple_connect_screen.dart';
 import '../relationship/video_call_screen.dart';
 import '../utilities/calendar_screen.dart';
 import 'love_insights_screen.dart';
-import 'screens/document_viewer_screen.dart';
 import '../ui_prefs.dart';
-import '../../utils/app_error_mapper.dart';
 import 'tabs/community_tab.dart';
 import 'tabs/diary_tab.dart';
 import 'tabs/game_tab.dart';
@@ -44,8 +44,10 @@ import 'tabs/main_home_tab.dart';
 import 'tabs/settings_tab.dart' show SettingsTab;
 import 'tabs/update_tab.dart';
 import 'tabs/utilities_tab.dart';
-import '../../utils/services/offline_cache_service.dart';
+import '../../utils/services/widget_service.dart';
 import '../../utils/sl_notice.dart';
+import '../../utils/app_error_mapper.dart';
+import '../../widgets/first_setup_spotlight_guide.dart';
 
 part 'widgets/home_shell/home_screen_sync_flows.dart';
 part 'widgets/home_shell/home_screen_notice_flows.dart';
@@ -382,6 +384,12 @@ class _HomeScreenState extends State<HomeScreen>
   late final PageController _pageController;
   DateTime? _lastExitAttemptAt;
   bool _isUserTabSwiping = false;
+  final GlobalKey _firstGuideHomeHeroKey = GlobalKey();
+  final GlobalKey _firstGuideSettingsKey = GlobalKey();
+  final GlobalKey _firstGuideBottomNavKey = GlobalKey();
+  final GlobalKey _firstGuideDiaryTabKey = GlobalKey();
+  final GlobalKey _firstGuideUtilitiesTabKey = GlobalKey();
+  final GlobalKey _firstGuideUpdateTabKey = GlobalKey();
 
   late AnimationController _musicController;
 
@@ -478,6 +486,7 @@ class _HomeScreenState extends State<HomeScreen>
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       unawaited(_consumePendingWidgetAction());
+      unawaited(WidgetService.checkAndProcessPendingWidgetActions());
       unawaited(_prewarmShellMedia());
       _startupTasksTimer = Timer(_homeStartupTaskDelay, () {
         if (!mounted) return;
@@ -721,26 +730,31 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted || incoming == null) {
       return;
     }
-    final callerName =
-        (incoming['callerName'] ?? incoming['callerId'] ?? 'Người gọi')
-            .toString()
-            .trim();
+    final callerName = (incoming['callerName'] ??
+            incoming['callerId'] ??
+            context.tr('home_ngigi_f1117f'))
+        .toString()
+        .trim();
     final accepted = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Cuộc gọi đến'),
+        title: Text(context.tr('home_cucgin_eff0b9')),
         content: Text(
-          '${callerName.isEmpty ? 'Người gọi' : callerName} đang gọi cho bạn.',
+          L10nService().format('home_incoming_call_from', {
+            'name': callerName.isEmpty
+                ? context.tr('home_ngigi_f1117f')
+                : callerName
+          }),
         ),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Từ chối'),
+            child: Text(context.tr('home_tchi_2119d8')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Nghe máy'),
+            child: Text(context.tr('home_nghemy_e08606')),
           ),
         ],
       ),
@@ -761,7 +775,9 @@ class _HomeScreenState extends State<HomeScreen>
     final callerHouseId =
         (incoming['houseId'] ?? incoming['callerId'] ?? '').toString().trim();
     final callerName =
-        (incoming['callerName'] ?? 'Người gọi').toString().trim();
+        (incoming['callerName'] ?? context.tr('home_ngigi_f1117f'))
+            .toString()
+            .trim();
     if (roomId.isEmpty || callerHouseId.isEmpty) {
       return;
     }
@@ -770,11 +786,12 @@ class _HomeScreenState extends State<HomeScreen>
       return;
     }
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => VideoCallScreen(
           houseId: myHouseId,
           targetHouseId: callerHouseId,
-          targetName: callerName.isEmpty ? 'Người gọi' : callerName,
+          targetName:
+              callerName.isEmpty ? context.tr('home_ngigi_f1117f') : callerName,
           targetAvatarUrl: incoming['callerAvatar']?.toString(),
           isVideo: incoming['isVideo'] == true,
           roomId: roomId,
@@ -889,7 +906,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
 
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => LoveInsightsScreen(
           houseId: houseId,
           nameU1: settings.nameU1,
@@ -909,22 +926,24 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     final settings = await _houseSettingsService.fetchSettings(houseId);
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     final role = prefs.getString('il_role') ?? 'user1';
     final myName = role == 'user2'
         ? (settings?.nameU2.trim().isNotEmpty == true
             ? settings!.nameU2.trim()
-            : 'Người ấy')
+            : context.tr('home_ngiy_5bab37'))
         : (settings?.nameU1.trim().isNotEmpty == true
             ? settings!.nameU1.trim()
-            : 'Bạn');
+            : context.tr('home_bn_1fd75b'));
 
-    final resolvedMyName =
-        myName.replaceAll('Người ấy', 'Người ấy').replaceAll('Bạn', 'Bạn');
+    final resolvedMyName = myName
+        .replaceAll(
+            context.tr('home_ngiy_5bab37'), context.tr('home_ngiy_5bab37'))
+        .replaceAll(context.tr('home_bn_1fd75b'), context.tr('home_bn_1fd75b'));
 
     if (!mounted) return;
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) =>
             CalendarScreen(houseId: houseId, myName: resolvedMyName),
       ),
@@ -957,6 +976,7 @@ class _HomeScreenState extends State<HomeScreen>
       }
     } else if (state == AppLifecycleState.resumed) {
       unawaited(_syncNotificationBadgeListener(forceRestart: true));
+      unawaited(WidgetService.checkAndProcessPendingWidgetActions());
       _syncMusicAnimationState();
       _checkScheduleNotifs();
       unawaited(_maybeShowBreakupEntryNotice());
@@ -993,12 +1013,12 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _openPinnedCountdownModeIfNeeded() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     if (prefs.getBool(_countdownPinnedLaunchPrefsKey) != true) return;
     if (!mounted) return;
     await Navigator.push(
       context,
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => const SettingsTab(autoOpenCountdownMode: true),
       ),
     );
@@ -1055,7 +1075,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _hydrateNavCollapsed() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     final collapsed = prefs.getBool(_navCollapsedPrefsKey) ?? false;
     if (!mounted) return;
     setState(() => _navCollapsed = collapsed);
@@ -1066,7 +1086,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (mounted) {
       setState(() => _navCollapsed = value);
     }
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     await prefs.setBool(_navCollapsedPrefsKey, value);
   }
 
@@ -1087,7 +1107,7 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() => _navHiddenUntilRestart = true);
     SLNotice.showInfo(
       context,
-      'Đã ẩn thanh tab. Mở lại màn hình hoặc vào lại app để hiện lại.',
+      context.tr('home_nthanhtabm_68ae53'),
     );
   }
 

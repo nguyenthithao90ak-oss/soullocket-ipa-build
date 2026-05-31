@@ -64,11 +64,13 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       final memoriesFuture = _dbRef
           .child('houses/$houseId/memories')
           .limitToLast(_widgetDiaryFetchLimit)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 4));
       final diaryFuture = _dbRef
           .child('houses/$houseId/diary')
           .limitToLast(_widgetDiaryFetchLimit)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 4));
 
       final snapshots = await Future.wait([memoriesFuture, diaryFuture]);
       final merged = <({int order, String url})>[
@@ -103,10 +105,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         prefs.getBool('il_widget_show_diary_$accountKey') ??
             prefs.getBool('il_widget_show_diary') ??
             true;
-    final heartAnimated =
-        prefs.getBool('il_widget_heart_animated_$accountKey') ??
-            prefs.getBool('il_widget_heart_animated') ??
-            true;
+    // Always pin heart style (no random animation) on app entry.
+    final heartAnimated = false;
     final displayMode = WidgetService.normalizeWidgetDisplayMode(
       showDiaryOnWidget: showDiaryOnWidget,
       heartAnimated: heartAnimated,
@@ -122,9 +122,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       ),
       showDiaryOnWidget: displayMode.showDiaryOnWidget,
       heartAnimated: displayMode.heartAnimated,
-      heartStyleKey: prefs.getString('il_widget_heart_style_$accountKey') ??
-          prefs.getString('il_widget_heart_style') ??
-          '❤️',
+      // Force fixed default heart style (5th item) on app entry.
+      heartStyleKey: '❤️',
       heartColorKey: prefs.getString('il_widget_heart_color_$accountKey') ??
           prefs.getString('il_widget_heart_color') ??
           'rose',
@@ -151,9 +150,9 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
     final nextSettingsKey = _buildWidgetSettingsSyncKeyImpl(nextSettings);
     final pendingSettings = _pendingWidgetSettings;
     if (pendingSettings != null) {
-      final pendingSettingsKey = _buildWidgetSettingsSyncKeyImpl(pendingSettings);
-      final alreadyCoversRequest =
-          pendingSettingsKey == nextSettingsKey &&
+      final pendingSettingsKey =
+          _buildWidgetSettingsSyncKeyImpl(pendingSettings);
+      final alreadyCoversRequest = pendingSettingsKey == nextSettingsKey &&
           (_pendingWidgetSyncIncludeDiaryMedia || !includeDiaryMedia);
       if (alreadyCoversRequest) {
         return;
@@ -215,15 +214,16 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       }
       final startDate = settings['startDate']?.toString();
       final days = _calculateLoveDays(startDate);
-      final unit = (settings['dayUnit']?.toString().trim().isNotEmpty ?? false)
-          ? settings['dayUnit'].toString().trim()
-          : 'Ngày';
+      final unit = _resolveCountdownLabel(
+        settings['dayUnit']?.toString(),
+        L10nService().translate('home_ngy_b9474a'),
+      );
       final nameU1 = (settings['nameU1']?.toString().trim().isNotEmpty ?? false)
           ? settings['nameU1'].toString().trim()
-          : 'Bạn';
+          : L10nService().translate('home_bn_1fd75b');
       final nameU2 = (settings['nameU2']?.toString().trim().isNotEmpty ?? false)
           ? settings['nameU2'].toString().trim()
-          : 'Người ấy';
+          : L10nService().translate('home_ngiy_5bab37');
 
       final configuredBucket = AppConfig.firebaseStorageBucket.trim();
       final defaultMaleAvatarUrl = configuredBucket.isEmpty
@@ -241,8 +241,10 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
 
       final status1Text = _presenceStatusText('user1');
       final status2Text = _presenceStatusText('user2');
-      final isOnline1 = _isPresenceDataOnlineForRole('user1', _presenceForRole('user1'));
-      final isOnline2 = _isPresenceDataOnlineForRole('user2', _presenceForRole('user2'));
+      final isOnline1 =
+          _isPresenceDataOnlineForRole('user1', _presenceForRole('user1'));
+      final isOnline2 =
+          _isPresenceDataOnlineForRole('user2', _presenceForRole('user2'));
 
       final w1 = _widgetLocationTextForRole('user1');
       final w2 = _widgetLocationTextForRole('user2');

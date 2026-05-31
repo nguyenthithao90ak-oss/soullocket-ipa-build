@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../widgets/soul_locket_brand_mark.dart';
@@ -98,7 +99,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Đang mở ngôi nhà của bạn',
+                            context.tr('app_entry_angmnginhc_763d46'),
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               fontSize: 14,
@@ -129,7 +130,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                     child: child,
                   ),
                   child: Text(
-                    'Kết nối an toàn và khôi phục dữ liệu gần nhất',
+                    context.tr('app_entry_ktniantonv_c00306'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       fontSize: 12,

@@ -3,13 +3,149 @@
 part of '../../collage_maker_screen.dart';
 
 extension _CollageControlsPanel on _CollageMakerScreenState {
+  Widget _buildQuickPresetSelector() {
+    final presets = <Map<String, Object>>[
+      {
+        'label': 'TikTok',
+        'hint': '9:16',
+        'style': 'story',
+        'aspect': '9:16',
+        'icon': Icons.smart_display_rounded,
+      },
+      {
+        'label': 'Feed 4 ảnh',
+        'hint': '4:5',
+        'style': 'grid',
+        'aspect': '4:5',
+        'icon': Icons.grid_view_rounded,
+      },
+      {
+        'label': 'Album',
+        'hint': '1:1',
+        'style': 'polaroid',
+        'aspect': '1:1',
+        'icon': Icons.photo_album_rounded,
+      },
+      {
+        'label': 'Poster',
+        'hint': '16:9',
+        'style': 'poster',
+        'aspect': '16:9',
+        'icon': Icons.wallpaper_rounded,
+      },
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      decoration: _paperPanelDecoration(
+        color: const Color(0xFFFFF8F2),
+        borderColor: const Color(0xFFDCC9B8),
+        flipped: true,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Mẫu nhanh',
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w800,
+              color: _paperInk,
+              fontSize: 14,
+            ),
+          ),
+          SLSpacing.h8,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: presets.map((preset) {
+                final style = preset['style']! as String;
+                final aspect = preset['aspect']! as String;
+                final selected =
+                    _selectedStyle == style && _selectedAspectRatio == aspect;
+                final icon = preset['icon']! as IconData;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      setState(() {
+                        _selectedStyle = style;
+                        _selectedAspectRatio = aspect;
+                        _generatedCollageBytes = null;
+                        _hasFullQualityRender = false;
+                      });
+                      if (_getFilteredUrls().isNotEmpty) {
+                        _generateCollage(
+                          bypassDebounce: true,
+                          randomizeLayout: true,
+                        );
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: 112,
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? const Color(0xFFF2E4DA)
+                            : Colors.white.withValues(alpha: 0.74),
+                        borderRadius: _paperRadius(flipped: !selected),
+                        border: Border.all(
+                          color: selected ? _paperRoseDeep : _paperLine,
+                          width: selected ? 2 : 1.2,
+                        ),
+                        boxShadow: _paperShadow(
+                          selected ? _paperRoseDeep : _paperCocoa,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            icon,
+                            size: 22,
+                            color: selected ? _paperRoseDeep : _paperMuted,
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            preset['label']! as String,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: SLTheme.quicksand(
+                              fontSize: 12.6,
+                              fontWeight: FontWeight.w900,
+                              color: selected ? _paperRoseDeep : _paperInk,
+                            ),
+                          ),
+                          const SizedBox(height: 1),
+                          Text(
+                            preset['hint']! as String,
+                            style: SLTheme.quicksand(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: _paperMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(growable: false),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAspectRatioSelector() {
     final compact = MediaQuery.sizeOf(context).width < 380;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Tỷ lệ ảnh xuất:',
+          context.tr('util_tlnhxut_31dcdb'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w700,
             color: _paperInk,
@@ -111,7 +247,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
         ),
         SLSpacing.h8,
         Text(
-          'Xuất nhanh cho story, feed, vuông hoặc khung ngang.',
+          context.tr('util_xutnhanhch_311e76'),
           style: SLTheme.quicksand(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
@@ -137,7 +273,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Sticker trang trí:',
+          context.tr('util_stickertra_1dac20'),
           style: SLTheme.quicksand(
               fontWeight: FontWeight.w700, color: _paperInk, fontSize: 15),
         ),
@@ -236,7 +372,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                 color: _paperRoseDeep,
               ),
               label: Text(
-                _showAllStickerOptions ? 'Thu gọn' : 'Xem thêm',
+                _showAllStickerOptions ? context.tr('util_thugn_5d7176') : context.tr('util_xemthm_129410'),
                 style: SLTheme.quicksand(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
@@ -253,7 +389,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
         ],
         SLSpacing.h8,
         Text(
-          'Có thể chọn nhiều sticker để rải quanh ảnh ghép.',
+          context.tr('util_cthchnnhiu_8eee2d'),
           style: SLTheme.quicksand(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
@@ -280,7 +416,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
             children: [
               Expanded(
                 child: Text(
-                  'Kích thước ảnh trong collage',
+                  context.tr('util_kchthcnhtr_93d00b'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     color: _paperInk,
@@ -315,7 +451,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
             },
           ),
           Text(
-            'Kéo để ảnh nhỏ hoặc lớn hơn trong bố cục.',
+            context.tr('util_konhnhhocl_c9c2e0'),
             style: SLTheme.quicksand(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
@@ -424,7 +560,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Nền ảnh ghép:',
+          context.tr('util_nnnhghp_2dfd7a'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w700,
             color: _paperInk,
@@ -521,7 +657,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
         ),
         SLSpacing.h8,
         Text(
-          'Mặc định dùng nền hiện tại. Các nền còn lại sẽ thay thế hoàn toàn nền cũ.',
+          context.tr('util_mcnhdngnnh_8f83dd'),
           style: SLTheme.quicksand(
             fontSize: 12.2,
             fontWeight: FontWeight.w600,
@@ -643,7 +779,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                     child: SizedBox(
                       width: double.infinity,
                       child: _buildSourceModeButton(
-                        label: 'Kỷ niệm',
+                        label: context.tr('util_knim_4f6aeb'),
                         selected: _isFromMemory,
                         flipped: false,
                         accent: _paperRoseDeep,
@@ -656,7 +792,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                     child: SizedBox(
                       width: double.infinity,
                       child: _buildSourceModeButton(
-                        label: 'Tự chọn',
+                        label: context.tr('util_tchn_0513f1'),
                         selected: !_isFromMemory,
                         flipped: true,
                         accent: _paperMistDeep,

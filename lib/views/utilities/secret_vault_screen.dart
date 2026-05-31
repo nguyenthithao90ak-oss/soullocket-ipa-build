@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -9,18 +10,18 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soullocket_app/utils/services/purchase_service.dart';
-import 'package:soullocket_app/utils/services/pending_upload_service.dart';
-import 'package:soullocket_app/utils/services/storage_service.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../../utils/services/purchase_service.dart';
+import '../../utils/services/pending_upload_service.dart';
+import '../../utils/services/storage_service.dart';
+import '../../utils/app_error_mapper.dart';
 import 'dart:ui' as ui;
 import '../../services/activity_history_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/connectivity_service.dart';
 import '../../services/encryption_service.dart';
 import '../../services/secret_vault_reset_service.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
+import '../../core/fast_backdrop_filter.dart';
+import '../../core/sl_theme.dart';
 import '../home/tabs/settings/security/security_otp_dialogs.dart';
 
 part 'secret_vault/secret_vault_reset_flow.dart';
@@ -62,7 +63,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   bool _isPreparingVault = false;
   bool _hasRecoveryCode = false;
   SecretVaultResetRequestInfo? _pendingResetRequest;
-  String _encStatusMsg = 'Đang chờ mở khóa kho mật...';
+  String _encStatusMsg = L10nService().translate('util_angchmkhak_2777b3');
   bool _hasMorePhotos = false;
   bool _isLoadingMorePhotos = false;
   int? _oldestLoadedPhotoTs;
@@ -145,9 +146,9 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Lần upload Kho bí mật trước đã bị gián đoạn.'),
+          content: Text(context.tr('util_lnuploadkh_6efff4')),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('util_thli_4dffdf'),
             onPressed: () {
               unawaited(_retryPendingVaultUpload());
             },
@@ -166,8 +167,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       await _clearPendingVaultUploadRecord(_pendingVaultUploadKey);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không còn ảnh cũ để thử lại upload Kho bí mật.'),
+          SnackBar(
+            content: Text(context.tr('util_khngcnnhct_6c1d76')),
           ),
         );
       }
@@ -214,7 +215,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             .timeout(_vaultPrepareTimeout);
         setState(() {
           _encryptionReady = true;
-          _encStatusMsg = '🔐 Kho mật đang mở';
+          _encStatusMsg = context.tr('util_khomtangm_5f209b');
           _hasRecoveryCode = hasRecoveryCode;
         });
         _loadPhotos();
@@ -233,7 +234,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           setState(() {
             _encryptionReady = false;
             _isPreparingVault = false;
-            _encStatusMsg = 'Đã hủy mở kho mật.';
+            _encStatusMsg = context.tr('util_hymkhomt_ddffe1');
           });
         }
         return;
@@ -244,7 +245,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         if (!mounted || recoveryCode == null) return;
         setState(() {
           _encryptionReady = false;
-          _encStatusMsg = 'Đang xác thực mã khôi phục...';
+          _encStatusMsg = context.tr('util_angxcthcmk_ba443e');
         });
         await _enc
             .unlockHouseKeyWithRecoveryCode(widget.houseId, recoveryCode)
@@ -252,7 +253,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         if (!mounted) return;
         setState(() {
           _encryptionReady = true;
-          _encStatusMsg = '🔐 Kho mật đã mở bằng mã khôi phục';
+          _encStatusMsg = context.tr('util_khomtmbngm_cd1d8d');
           _hasRecoveryCode = true;
         });
         _loadPhotos();
@@ -262,7 +263,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
 
       setState(() {
         _encryptionReady = false;
-        _encStatusMsg = 'Đang xử lý khóa...';
+        _encStatusMsg = context.tr('util_angxlkha_922e10');
       });
 
       await _enc
@@ -276,16 +277,16 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         setState(() {
           _encryptionReady = true;
           _encStatusMsg = hasSetup
-              ? '🔐 Kho mật đã mở thành công'
-              : '🔐 Đã thiết lập Kho mật thành công';
+              ? context.tr('util_khomtmthnh_0e31d1')
+              : context.tr('util_thitlpkhom_cf352c');
           _hasRecoveryCode = true;
         });
         if (recoveryCode != null && mounted) {
           await _showGeneratedRecoveryCodeDialog(
             recoveryCode,
-            title: 'Mã khôi phục mới',
+            title: context.tr('util_mkhiphcmi_44cc09'),
             message:
-                'Lưu mã này ở nơi an toàn. Máy mới có thể dùng mã này để mở kho mật nếu quên passphrase.',
+                context.tr('util_lumnyniant_6e9a93'),
           );
         }
       }
@@ -295,7 +296,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       if (mounted) {
         setState(() {
           _encryptionReady = false;
-          _encStatusMsg = 'Thao tác mở kho quá lâu. Vui lòng thử lại.';
+          _encStatusMsg = context.tr('util_thaotcmkho_721330');
         });
       }
     } catch (e) {
@@ -316,6 +317,10 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
 
   void _loadPhotos() {
     _photosSub?.cancel();
+    final legacyPasswordRequiredText =
+        context.tr('util_cnnhpmtkhu_b5f391');
+    final legacyMigrationText = context.tr('util_cnidungccn_44f5ff');
+    final loadFailedText = context.tr('util_khngthtikh_150eff');
     final query = _dbRef
         .child('houses/${widget.houseId}/private_secure')
         .orderByChild('ts')
@@ -343,7 +348,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     item['caption'].toString(),
                   );
                   item['caption_plain'] = decrypted;
-                  if (decrypted == '[Cần nhập mật khẩu để xem nội dung cũ]') {
+                  if (decrypted == legacyPasswordRequiredText) {
                     needsLegacyMigrationLocal = true;
                   }
                 } catch (_) {
@@ -356,8 +361,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           );
 
           if (needsLegacyMigrationLocal && mounted) {
-            setState(() => _encStatusMsg =
-                'Có nội dung cũ cần chuyển đổi. Vui lòng thử khóa bằng mật khẩu Web.');
+            setState(() => _encStatusMsg = legacyMigrationText);
           }
 
           loaded.sort(
@@ -387,7 +391,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         debugPrint(
           'Secret vault listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải kho mật.',
+            fallbackMessage: loadFailedText,
           ).message}',
         );
         if (!mounted) {
@@ -402,6 +406,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     if (_isLoadingMorePhotos || !_hasMorePhotos) {
       return;
     }
+    final legacyPasswordRequiredText =
+        context.tr('util_cnnhpmtkhu_b5f391');
     setState(() {
       _isLoadingMorePhotos = true;
     });
@@ -458,7 +464,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 item['caption'].toString(),
               );
               item['caption_plain'] = decrypted;
-              if (decrypted == '[Cần nhập mật khẩu để xem nội dung cũ]') {
+              if (decrypted == legacyPasswordRequiredText) {
                 needsLegacyMigrationLocal = true;
               }
             } catch (_) {
@@ -476,7 +482,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       }
       if (needsLegacyMigrationLocal) {
         _encStatusMsg =
-            'Có nội dung cũ cần chuyển đổi. Vui lòng thử khóa bằng mật khẩu Web.';
+            context.tr('util_cnidungccn_44f5ff');
       }
       final existingIds = _photos.map((item) => item['id']).toSet();
       final mergedMore = loadedMore
@@ -509,7 +515,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   }) async {
     if (!_encryptionReady) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng mở khóa kho mật trước.')),
+        SnackBar(content: Text(context.tr('util_vuilngmkha_19eeeb'))),
       );
       return;
     }
@@ -530,9 +536,9 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     if (enforceLocalDailyLimit && uploadedToday >= dailyLimit) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(isPro
-              ? 'Đã đạt giới hạn $dailyLimit ảnh/ngày của gói PRO.'
-              : 'Đã đạt giới hạn $dailyLimit ảnh/ngày. Nâng cấp PRO để đăng nhiều hơn!'),
+          content: Text(
+            'Đã đạt giới hạn $dailyLimit ảnh/ngày.',
+          ),
           backgroundColor: SLColors.danger,
         ));
       }
@@ -594,7 +600,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             backgroundColor: SLColors.darkBgCard,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text('Thêm ghi chú (tùy chọn)',
+            title: Text(context.tr('util_thmghichty_5651be'),
                 style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800, color: Colors.white)),
             content: Column(
@@ -604,7 +610,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   controller: captionCtrl,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'Mô tả khoảnh khắc này...',
+                    hintText: context.tr('util_mtkhonhkhc_52663c'),
                     hintStyle: const TextStyle(color: Colors.white38),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -640,7 +646,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                           setLocalState(() => dontAskAgain = !dontAskAgain);
                         },
                         child: Text(
-                          'Không hỏi lại trong 2 giờ',
+                          context.tr('util_khnghilitr_e3bf9f'),
                           style: SLTheme.quicksand(
                               color: Colors.white70, fontSize: 13),
                         ),
@@ -661,7 +667,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     }
                     Navigator.pop(ctx, '');
                   },
-                  child: Text('BỎ QUA',
+                  child: Text(context.tr('util_bqua_874b71'),
                       style: SLTheme.quicksand(color: Colors.white38))),
               TextButton(
                   onPressed: () {
@@ -673,7 +679,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     }
                     Navigator.pop(ctx, captionCtrl.text.trim());
                   },
-                  child: Text('THÊM',
+                  child: Text(context.tr('util_thm_56ef2c'),
                       style: SLTheme.quicksand(color: SLColors.danger))),
             ],
           ),
@@ -729,9 +735,9 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-                'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.')));
+                context.tr('util_chathhontt_de09e4'))));
       }
     } finally {
       if (mounted) {
@@ -746,20 +752,24 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       return;
     }
 
+    final restorePayload = Map<String, dynamic>.from(photo)
+      ..remove('id')
+      ..remove('url');
+
     await ActivityHistoryService.instance.add(
-      'đã xóa một ảnh riêng tư',
+      context.tr('util_xamtnhring_66ec90'),
       houseId: widget.houseId,
-      title: 'Đã xóa ảnh riêng tư',
-      subtitle: photo['caption']?.toString() ?? '',
+      title: context.tr('util_xanhringt_8778f3'),
+      subtitle: '',
       action: 'delete',
       module: 'secret_vault',
       entityType: 'secret_photo',
       entityId: id,
-      sourceLabel: 'Kho bí mật',
-      previewUrl: photo['url']?.toString() ?? '',
-      previewType: 'image',
+      sourceLabel: context.tr('util_khobmt_e05057'),
+      previewUrl: '',
+      previewType: 'private',
       restorePath: 'houses/${widget.houseId}/private_secure/$id',
-      restorePayload: Map<String, dynamic>.from(photo)..remove('id'),
+      restorePayload: restorePayload,
     );
 
     final storagePath = photo['storagePath']?.toString() ?? '';
@@ -792,7 +802,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
-            hasSetup ? 'Mở khóa kho mật' : 'Thiết lập kho mật',
+            hasSetup ? context.tr('util_mkhakhomt_421171') : context.tr('util_thitlpkhom_792656'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w800,
               color: Colors.white,
@@ -806,8 +816,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               children: [
                 Text(
                   hasSetup
-                      ? 'Nhập mật khẩu kho mật hoặc mật khẩu nhà đã đặt trước đó để mở khóa.'
-                      : 'Tạo mật khẩu kho mật. Khóa chỉ được tạo trên thiết bị và không lưu dạng rõ trên hệ thống.',
+                      ? context.tr('util_nhpmtkhukh_e4639a')
+                      : context.tr('util_tomtkhukho_e3de4f'),
                   style: SLTheme.quicksand(color: Colors.white70),
                 ),
                 const SizedBox(height: 16),
@@ -816,7 +826,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   obscureText: obscurePass,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'Mật khẩu tối thiểu 8 ký tự',
+                    hintText: context.tr('util_mtkhutithi_d4f304'),
                     hintStyle: const TextStyle(color: Colors.white38),
                     suffixIcon: IconButton(
                       onPressed: () =>
@@ -847,7 +857,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     obscureText: obscureConfirm,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Nhập lại mật khẩu',
+                      hintText: context.tr('util_nhplimtkhu_eee7a7'),
                       hintStyle: const TextStyle(color: Colors.white38),
                       suffixIcon: IconButton(
                         onPressed: () => setLocalState(
@@ -883,14 +893,14 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               TextButton(
                 onPressed: () => Navigator.pop(ctx, _recoveryAction),
                 child: Text(
-                  'Dùng mã khôi phục',
+                  context.tr('util_dngmkhiphc_698038'),
                   style: SLTheme.quicksand(color: SLColors.info),
                 ),
               ),
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(
-                'ĐÓNG',
+                context.tr('util_ng_aecc61'),
                 style: SLTheme.quicksand(color: Colors.white38),
               ),
             ),
@@ -900,16 +910,16 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 final confirm = confirmCtrl.text.trim();
                 if (passphrase.length < 8) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Mật khẩu kho mật phải từ 8 ký tự.'),
+                    SnackBar(
+                      content: Text(context.tr('util_mtkhukhomt_e98699')),
                     ),
                   );
                   return;
                 }
                 if (!hasSetup && passphrase != confirm) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Mật khẩu nhập lại chưa khớp.'),
+                    SnackBar(
+                      content: Text(context.tr('util_mtkhunhpli_f31f82')),
                     ),
                   );
                   return;
@@ -917,7 +927,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 Navigator.pop(ctx, passphrase);
               },
               child: Text(
-                hasSetup ? 'MỞ KHÓA' : 'THIẾT LẬP',
+                hasSetup ? context.tr('util_mkha_e16936') : context.tr('util_thitlp_486746'),
                 style: SLTheme.quicksand(color: SLColors.danger),
               ),
             ),
@@ -936,7 +946,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         backgroundColor: SLColors.darkBgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Nhập mã khôi phục',
+          context.tr('util_nhpmkhiphc_44a271'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             color: Colors.white,
@@ -958,14 +968,14 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Đóng',
+              context.tr('util_ng_f63d1e'),
               style: SLTheme.quicksand(color: Colors.white38),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
             child: Text(
-              'Mở kho',
+              context.tr('util_mkho_68a790'),
               style: SLTheme.quicksand(color: SLColors.danger),
             ),
           ),
@@ -1029,18 +1039,18 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               await Clipboard.setData(ClipboardData(text: recoveryCode));
               if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Đã sao chép mã khôi phục.')),
+                SnackBar(content: Text(context.tr('util_saochpmkhi_b1f0e5'))),
               );
             },
             child: Text(
-              'Sao chép',
+              context.tr('util_saochp_cbfba9'),
               style: SLTheme.quicksand(color: Colors.white70),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Tôi đã lưu',
+              context.tr('util_tilu_7a1601'),
               style: SLTheme.quicksand(color: SLColors.danger),
             ),
           ),
@@ -1057,8 +1067,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       setState(() => _hasRecoveryCode = true);
       await _showGeneratedRecoveryCodeDialog(
         recoveryCode,
-        title: 'Mã khôi phục đã đổi',
-        message: 'Mã cũ sẽ hết hiệu lực. Hãy lưu mã mới này trước khi thoát.',
+        title: context.tr('util_mkhiphci_dcdad7'),
+        message: context.tr('util_mcshthiulc_6de8b6'),
       );
     } catch (e) {
       if (!mounted) return;
@@ -1068,7 +1078,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             AppErrorMapper.resolve(
               e,
               fallbackMessage:
-                  'Chưa thể tạo lại mã khôi phục lúc này. Hãy thử lại sau ít phút.',
+                  context.tr('util_chathtolim_b5c569'),
             ).message,
           ),
         ),
@@ -1101,19 +1111,18 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 _hasPendingReset
                     ? Icons.undo_rounded
                     : Icons.delete_forever_rounded,
-                color:
-                    _hasPendingReset ? SLColors.warning : SLColors.danger,
+                color: _hasPendingReset ? SLColors.warning : SLColors.danger,
               ),
               title: Text(
                 _hasPendingReset
-                    ? 'Thu hồi yêu cầu reset'
-                    : 'Reset Kho ảnh mật',
+                    ? context.tr('util_thuhiyucur_db8240')
+                    : context.tr('util_resetkhonh_c48d2d'),
                 style: SLTheme.quicksand(color: Colors.white),
               ),
               subtitle: Text(
                 _hasPendingReset
                     ? 'Kho sẽ bị xoá lúc ${_formatResetSchedule(_pendingResetRequest?.scheduledAt ?? 0)} nếu không thu hồi.'
-                    : 'Xác nhận qua email chính, chờ 24 giờ rồi xoá toàn bộ dữ liệu Kho ảnh mật.',
+                    : context.tr('util_xcnhnquaem_043f1a'),
                 style: SLTheme.quicksand(color: Colors.white54),
               ),
               onTap: () {
@@ -1127,7 +1136,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.lock_reset, color: Colors.white),
-              title: Text('Đổi mật khẩu',
+              title: Text(context.tr('util_imtkhu_ff6fe7'),
                   style: SLTheme.quicksand(color: Colors.white)),
               onTap: () {
                 Navigator.pop(ctx);
@@ -1137,27 +1146,27 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             ListTile(
               leading: const Icon(Icons.key_rounded, color: SLColors.infoLight),
               title: Text(
-                _hasRecoveryCode ? 'Tạo lại mã khôi phục' : 'Tạo mã khôi phục',
+                _hasRecoveryCode ? context.tr('util_tolimkhiph_6a2c38') : context.tr('util_tomkhiphc_67ed4c'),
                 style: SLTheme.quicksand(color: Colors.white),
               ),
               subtitle: Text(
                 _hasRecoveryCode
-                    ? 'Máy mới có thể dùng mã này để mở kho mật.'
-                    : 'Nên tạo để tránh mất quyền mở vault khi đổi máy.',
+                    ? context.tr('util_mymicthdng_fa5403')
+                    : context.tr('util_nntotrnhmt_9b80a1'),
                 style: SLTheme.quicksand(color: Colors.white54),
               ),
               onTap: _handleRegenerateRecoveryCode,
             ),
             ListTile(
               leading: const Icon(Icons.logout, color: SLColors.warning),
-              title: Text('Khóa lại kho mật',
+              title: Text(context.tr('util_khalikhomt_c053ec'),
                   style: SLTheme.quicksand(color: SLColors.warning)),
               onTap: () {
                 Navigator.pop(ctx);
                 _enc.clearCache(widget.houseId);
                 setState(() {
                   _encryptionReady = false;
-                  _encStatusMsg = 'Đã khóa kho mật';
+                  _encStatusMsg = context.tr('util_khakhomt_86fa56');
                   _photos = []; // Xóa ảnh trên UI
                 });
               },
@@ -1194,7 +1203,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           scrollable: true,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Đổi mật khẩu',
+          title: Text(context.tr('util_imtkhu_ff6fe7'),
               style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800, color: Colors.white)),
           content: ConstrainedBox(
@@ -1208,7 +1217,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   obscureText: obscureOld,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Mật khẩu cũ',
+                    labelText: context.tr('util_mtkhuc_36b0a2'),
                     labelStyle: const TextStyle(color: Colors.white70),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -1227,7 +1236,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   obscureText: obscureNew,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Mật khẩu mới',
+                    labelText: context.tr('util_mtkhumi_ccef95'),
                     labelStyle: const TextStyle(color: Colors.white70),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -1246,7 +1255,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   obscureText: obscureNew,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Nhập lại mật khẩu mới',
+                    labelText: context.tr('util_nhplimtkhu_82a9a4'),
                     labelStyle: const TextStyle(color: Colors.white70),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -1261,7 +1270,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                         Navigator.pop(ctx);
                         _showVaultResetInfoDialog(isWithin12Hours);
                       },
-                      child: Text('Tôi đã quên mật khẩu?',
+                      child: Text(context.tr('util_tiqunmtkhu_e343b1'),
                           style: SLTheme.quicksand(
                               color: SLColors.info,
                               decoration: TextDecoration.underline)),
@@ -1275,7 +1284,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child:
-                  Text('Hủy', style: SLTheme.quicksand(color: Colors.white38)),
+                  Text(context.tr('util_hy_1e4050'), style: SLTheme.quicksand(color: Colors.white38)),
             ),
             TextButton(
               onPressed: () async {
@@ -1285,19 +1294,19 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
 
                 if (oldPass.isEmpty || newPass.isEmpty) return;
                 if (newPass.length < 8) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Mật khẩu mới phải từ 8 ký tự.')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(context.tr('util_mtkhumiphi_0da717'))));
                   return;
                 }
                 if (newPass != confirm) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Mật khẩu mới chưa khớp.')));
+                      SnackBar(content: Text(context.tr('util_mtkhumicha_83d367'))));
                   return;
                 }
 
                 setState(() {
                   _encryptionReady = false;
-                  _encStatusMsg = 'Đang đổi mật khẩu và mã hóa lại dữ liệu...';
+                  _encStatusMsg = context.tr('util_angimtkhuv_db04a3');
                 });
                 Navigator.pop(ctx);
 
@@ -1308,18 +1317,18 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   if (mounted) {
                     setState(() {
                       _encryptionReady = true;
-                      _encStatusMsg = 'Đã đổi mật khẩu thành công';
+                      _encStatusMsg = context.tr('util_imtkhuthnh_82a076');
                       _hasRecoveryCode = true;
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Đã đổi mật khẩu thành công!'),
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(context.tr('util_imtkhuthnh_e54dc2')),
                         backgroundColor: SLColors.success));
                     if (recoveryCode != null) {
                       await _showGeneratedRecoveryCodeDialog(
                         recoveryCode,
-                        title: 'Mã khôi phục mới',
+                        title: context.tr('util_mkhiphcmi_44cc09'),
                         message:
-                            'Mật khẩu đã đổi nên mã khôi phục cũ không còn dùng được. Hãy lưu mã mới này.',
+                            context.tr('util_mtkhuinnmk_e727c7'),
                       );
                     }
                   }
@@ -1327,16 +1336,16 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   if (mounted) {
                     setState(() {
                       _encryptionReady = true;
-                      _encStatusMsg = '🔐 Kho mật đã mở';
+                      _encStatusMsg = context.tr('util_khomtm_a6c43e');
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text(
-                            'Mật khẩu cũ chưa đúng. Bạn kiểm tra lại rồi thử lại nhé.'),
+                            context.tr('util_mtkhucchan_decb9b')),
                         backgroundColor: SLColors.danger));
                   }
                 }
               },
-              child: Text('ĐỔI MẬT KHẨU',
+              child: Text(context.tr('util_imtkhu_82844c'),
                   style: SLTheme.quicksand(color: SLColors.danger)),
             ),
           ],
@@ -1352,7 +1361,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         backgroundColor: SLColors.darkBgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          _hasPendingReset ? 'Yêu cầu reset đang chờ' : 'Reset Kho ảnh mật',
+          _hasPendingReset ? context.tr('util_yucureseta_74986f') : context.tr('util_resetkhonh_c48d2d'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.bold,
             color: _hasPendingReset ? SLColors.warning : SLColors.danger,
@@ -1360,18 +1369,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         ),
         content: Text(
           _hasPendingReset
-              ? 'Kho ảnh mật đã được lên lịch xóa vào ${_formatResetSchedule(_pendingResetRequest?.scheduledAt ?? 0)}. '
-                  'Trong thời gian chờ, cả hai người trong nhà đều có thể thu hồi yêu cầu này để giữ lại dữ liệu.'
-              : 'Reset Kho ảnh mật sẽ xóa toàn bộ ảnh, ghi chú mã hóa và khóa hiện tại sau 24 giờ. '
-                  'Bạn phải xác nhận bằng OTP gửi về email chính.'
-                  '${isWithin12Hours ? '\n\nDù bạn vừa đổi mật khẩu gần đây, hệ thống vẫn áp dụng thời gian chờ đủ 1 ngày trước khi xoá dữ liệu.' : ''}',
+              ? 'Kho ảnh mật đã được lên lịch xóa vào ${_formatResetSchedule(_pendingResetRequest?.scheduledAt ?? 0)}. ${context.tr('util_trongthigi_6645aa')}'
+              : '${context.tr('util_resetkhonh_d0b294')}${context.tr('util_bnphixcnhn_b3fe0e')}${isWithin12Hours ? '\n\nDù bạn vừa đổi mật khẩu gần đây, hệ thống vẫn áp dụng thời gian chờ đủ 1 ngày trước khi xoá dữ liệu.' : ''}',
           style: SLTheme.quicksand(color: Colors.white70, height: 1.45),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Huỷ',
+              context.tr('util_hu_9daba0'),
               style: SLTheme.quicksand(color: Colors.white38),
             ),
           ),
@@ -1385,10 +1391,9 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               }
             },
             child: Text(
-              _hasPendingReset ? 'Thu hồi yêu cầu' : 'Xác nhận qua email',
+              _hasPendingReset ? context.tr('util_thuhiyucu_cc5144') : context.tr('util_xcnhnquaem_645252'),
               style: SLTheme.quicksand(
-                color:
-                    _hasPendingReset ? SLColors.warning : SLColors.danger,
+                color: _hasPendingReset ? SLColors.warning : SLColors.danger,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1405,25 +1410,25 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: SLColors.darkBgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Khôi phục kho mật',
+        title: Text(context.tr('util_khiphckhom_4fc524'),
             style: SLTheme.quicksand(
                 fontWeight: FontWeight.bold, color: SLColors.danger)),
         content: Text(
             isWithin12Hours
-                ? 'Vì bạn thiết lập mật khẩu trong vòng 12 giờ qua, bạn có thể tạo mật khẩu mới mà không bị mất ảnh hiện tại.'
+                ? context.tr('util_vbnthitlpm_b25608')
                 : 'Vì kho này dùng mã hóa đầu cuối, nếu bạn quên mật khẩu thì toàn bộ ảnh bí mật cũ sẽ bị xóa vĩnh viễn và không thể khôi phục.\n\nBạn có chắc chắn muốn xóa kho mật cũ để tạo lại mật khẩu mới không?',
             style: SLTheme.quicksand(color: Colors.white70)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
               child:
-                  Text('Hủy', style: SLTheme.quicksand(color: Colors.white38))),
+                  Text(context.tr('util_hy_1e4050'), style: SLTheme.quicksand(color: Colors.white38))),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
               setState(() {
                 _encryptionReady = false;
-                _encStatusMsg = 'Đang xử lý khôi phục...';
+                _encStatusMsg = context.tr('util_angxlkhiph_5f7957');
               });
               try {
                 if (isWithin12Hours) {
@@ -1431,25 +1436,25 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   if (mounted) {
                     setState(() {
                       _encStatusMsg =
-                          'Kho mật đã được reset (giữ nguyên dữ liệu).';
+                          context.tr('util_khomtcrese_b11161');
                       _hasRecoveryCode = false;
                       // Không clear _photos, giữ nguyên dữ liệu trên UI
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text(
-                            'Đã reset mật khẩu. Hãy thiết lập mật khẩu mới.'),
+                            context.tr('util_resetmtkhu_02f484')),
                         backgroundColor: SLColors.success));
                   }
                 } else {
                   await _enc.resetVault(widget.houseId);
                   if (mounted) {
                     setState(() {
-                      _encStatusMsg = 'Kho mật đã được reset (đã xóa dữ liệu).';
+                      _encStatusMsg = context.tr('util_khomtcrese_aee917');
                       _photos = [];
                       _hasRecoveryCode = false;
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Đã xóa kho mật cũ. Hãy thiết lập lại.'),
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(context.tr('util_xakhomtchy_906978')),
                         backgroundColor: SLColors.warning));
                   }
                 }
@@ -1459,12 +1464,12 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               } catch (e) {
                 if (mounted) {
                   setState(() {
-                    _encStatusMsg = 'Lỗi xử lý kho mật';
+                    _encStatusMsg = context.tr('util_lixlkhomt_6c14b7');
                   });
                 }
               }
             },
-            child: Text(isWithin12Hours ? 'Tiếp tục' : 'Xóa và tạo lại',
+            child: Text(isWithin12Hours ? context.tr('util_tiptc_555f1f') : context.tr('util_xavtoli_90b1ee'),
                 style: SLTheme.quicksand(
                     color: SLColors.danger, fontWeight: FontWeight.bold)),
           ),
@@ -1479,7 +1484,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'KHO ẢNH BÍ MẬT',
+          context.tr('util_khonhbmt_359a5b'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             fontSize: 18,

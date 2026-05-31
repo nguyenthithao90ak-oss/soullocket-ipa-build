@@ -85,12 +85,19 @@ class GiftMakerService {
   }) async {
     final uid = _auth.currentUser?.uid;
 
+    final normalizedHouseId = houseId.trim();
+    final normalizedSenderName = senderName.trim();
+    final normalizedMessage = message.trim();
+    final normalizedImageUrl = imageUrl?.trim() ?? '';
+    final normalizedToHouseId = toHouseId?.trim() ?? '';
+    if (normalizedHouseId.isEmpty || normalizedMessage.isEmpty) return null;
+
     final giftData = {
-      'fromHouseId': houseId,
-      'fromName': senderName,
-      'toHouseId': toHouseId ?? '',
-      'msg': message,
-      'imageUrl': imageUrl ?? '',
+      'fromHouseId': normalizedHouseId,
+      'fromName': normalizedSenderName,
+      'toHouseId': normalizedToHouseId,
+      'msg': normalizedMessage,
+      'imageUrl': normalizedImageUrl,
       'ts': ServerValue.timestamp,
       'status': 'new',
       'giftType': _giftTypeToString(giftType),
@@ -99,7 +106,7 @@ class GiftMakerService {
 
     try {
       // Lưu trong house của người gửi
-      final ref = _db.ref('houses/$houseId/gift_links').push();
+      final ref = _db.ref('houses/$normalizedHouseId/gift_links').push();
       await ref.set(giftData);
       final giftId = ref.key;
       if (giftId == null || giftId.isEmpty) {
@@ -120,9 +127,9 @@ class GiftMakerService {
       }
 
       // Nếu gửi cho người khác, lưu thêm vào house người nhận
-      if (toHouseId != null && toHouseId.isNotEmpty) {
+      if (normalizedToHouseId.isNotEmpty) {
         try {
-          await _db.ref('houses/$toHouseId/received_gifts/$giftId').set({
+          await _db.ref('houses/$normalizedToHouseId/received_gifts/$giftId').set({
             ...giftData,
             'giftId': giftId,
             'status': 'pending',
@@ -140,11 +147,11 @@ class GiftMakerService {
         try {
           await _db.ref('gift_feed_sender/$uid').push().set({
             'giftId': giftId,
-            'fromHouseId': houseId,
-            'fromName': senderName,
-            'preview': message.length > 80
-                ? '${message.substring(0, 80)}...'
-                : message,
+            'fromHouseId': normalizedHouseId,
+            'fromName': normalizedSenderName,
+            'preview': normalizedMessage.length > 80
+                ? '${normalizedMessage.substring(0, 80)}...'
+                : normalizedMessage,
             'ts': ServerValue.timestamp,
             'giftType': _giftTypeToString(giftType),
             'direction': 'sent',
@@ -177,16 +184,21 @@ class GiftMakerService {
     required String giftId,
   }) async {
     try {
+      final normalizedHouseId = houseId.trim();
+      final normalizedGiftId = giftId.trim();
+      if (normalizedGiftId.isEmpty) return null;
       // Thử lấy từ house của người gửi
-      var snap = await _db.ref('houses/$houseId/gift_links/$giftId').get();
+      var snap = normalizedHouseId.isEmpty
+          ? await _db.ref('gift_links/$normalizedGiftId').get()
+          : await _db.ref('houses/$normalizedHouseId/gift_links/$normalizedGiftId').get();
       if (!snap.exists) {
         // Thử lấy từ gift_links global
-        snap = await _db.ref('gift_links/$giftId').get();
+        snap = await _db.ref('gift_links/$normalizedGiftId').get();
       }
-      if (!snap.exists) return null;
+      if (!snap.exists || snap.value is! Map) return null;
 
       final data = Map<String, dynamic>.from(snap.value as Map);
-      data['giftId'] = giftId;
+      data['giftId'] = normalizedGiftId;
       return GiftData.fromMap(data);
     } catch (e) {
       debugPrint('Error getting gift: ${AppErrorMapper.resolve(
@@ -204,14 +216,16 @@ class GiftMakerService {
     String? receiverHouseId,
     GiftData? fallbackGift,
   }) async {
+    final normalizedGiftId = giftId.trim();
+    if (normalizedGiftId.isEmpty) return fallbackGift;
     final paths = <String>[
       if (senderHouseId != null && senderHouseId.trim().isNotEmpty)
-        'houses/${senderHouseId.trim()}/gift_links/$giftId',
+        'houses/${senderHouseId.trim()}/gift_links/$normalizedGiftId',
       if (receiverHouseId != null && receiverHouseId.trim().isNotEmpty)
-        'houses/${receiverHouseId.trim()}/received_gifts/$giftId',
+        'houses/${receiverHouseId.trim()}/received_gifts/$normalizedGiftId',
       if (receiverHouseId != null && receiverHouseId.trim().isNotEmpty)
-        'houses/${receiverHouseId.trim()}/gift_links/$giftId',
-      'gift_links/$giftId',
+        'houses/${receiverHouseId.trim()}/gift_links/$normalizedGiftId',
+      'gift_links/$normalizedGiftId',
     ];
 
     for (final path in paths) {
@@ -220,7 +234,7 @@ class GiftMakerService {
         if (!snap.exists || snap.value is! Map) continue;
 
         final data = Map<String, dynamic>.from(snap.value as Map);
-        data['giftId'] = giftId;
+        data['giftId'] = normalizedGiftId;
         data['imageUrl'] ??= data['img'] ?? '';
         data['msg'] ??= data['message'] ?? '';
         data['status'] ??= 'new';
@@ -237,14 +251,18 @@ class GiftMakerService {
   }
 
   Stream<List<GiftData>> streamReceivedGifts(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<List<GiftData>>.value(const <GiftData>[]);
+    }
     return _db
-        .ref('houses/$houseId/received_gifts')
+        .ref('houses/$normalizedHouseId/received_gifts')
         .orderByChild('ts')
         .onValue
         .map((event) {
-      if (!event.snapshot.exists) return <GiftData>[];
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return <GiftData>[];
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-      return data.entries.map((e) {
+      return data.entries.where((e) => e.value is Map).map((e) {
         final map = Map<String, dynamic>.from(e.value as Map);
         map['giftId'] = e.key.toString();
         return GiftData.fromMap(map);
@@ -255,15 +273,19 @@ class GiftMakerService {
 
   /// Stream quà đã tạo (lịch sử của người gửi)
   Stream<List<GiftData>> streamSentGifts(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<List<GiftData>>.value(const <GiftData>[]);
+    }
     return _db
-        .ref('houses/$houseId/gift_links')
+        .ref('houses/$normalizedHouseId/gift_links')
         .orderByChild('ts')
         .limitToLast(30)
         .onValue
         .map((event) {
-      if (!event.snapshot.exists) return <GiftData>[];
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return <GiftData>[];
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-      return data.entries.map((e) {
+      return data.entries.where((e) => e.value is Map).map((e) {
         final map = Map<String, dynamic>.from(e.value as Map);
         map['giftId'] = e.key.toString();
         return GiftData.fromMap(map);
@@ -281,10 +303,14 @@ class GiftMakerService {
     required String giftId,
     String? senderHouseId,
   }) async {
+    final normalizedReceiverHouseId = receiverHouseId.trim();
+    final normalizedGiftId = giftId.trim();
+    if (normalizedReceiverHouseId.isEmpty || normalizedGiftId.isEmpty) return;
     String openedGiftLabel = 'món quà bất ngờ';
     try {
-      final existing =
-          await _db.ref('houses/$receiverHouseId/received_gifts/$giftId').get();
+      final existing = await _db
+          .ref('houses/$normalizedReceiverHouseId/received_gifts/$normalizedGiftId')
+          .get();
       if (existing.exists && existing.value is Map) {
         final data = Map<dynamic, dynamic>.from(existing.value as Map);
         if ((data['status'] ?? '').toString().trim().toLowerCase() ==
@@ -300,16 +326,16 @@ class GiftMakerService {
 
     const openedAt = ServerValue.timestamp;
     final updates = <String, Object?>{
-      'houses/$receiverHouseId/received_gifts/$giftId/status': 'opened',
-      'houses/$receiverHouseId/received_gifts/$giftId/openedAt': openedAt,
-      'gift_links/$giftId/status': 'opened',
-      'gift_links/$giftId/openedAt': openedAt,
+      'houses/$normalizedReceiverHouseId/received_gifts/$normalizedGiftId/status': 'opened',
+      'houses/$normalizedReceiverHouseId/received_gifts/$normalizedGiftId/openedAt': openedAt,
+      'gift_links/$normalizedGiftId/status': 'opened',
+      'gift_links/$normalizedGiftId/openedAt': openedAt,
     };
 
     if (senderHouseId != null && senderHouseId.trim().isNotEmpty) {
       final senderId = senderHouseId.trim();
-      updates['houses/$senderId/gift_links/$giftId/status'] = 'opened';
-      updates['houses/$senderId/gift_links/$giftId/openedAt'] = openedAt;
+      updates['houses/$senderId/gift_links/$normalizedGiftId/status'] = 'opened';
+      updates['houses/$senderId/gift_links/$normalizedGiftId/openedAt'] = openedAt;
     }
 
     await _db.ref().update(updates);
@@ -317,7 +343,7 @@ class GiftMakerService {
       final role = await _resolvedActivityRole();
       await ActivityHistoryService.instance.add(
         'đã mở $openedGiftLabel',
-        houseId: receiverHouseId,
+        houseId: normalizedReceiverHouseId,
         role: role,
       );
     } catch (_) {}
@@ -512,8 +538,11 @@ class GiftMakerService {
     required String giftId,
   }) async {
     try {
-      await _db.ref('houses/$houseId/gift_links/$giftId').remove();
-      await _db.ref('gift_links/$giftId').remove();
+      final normalizedHouseId = houseId.trim();
+      final normalizedGiftId = giftId.trim();
+      if (normalizedHouseId.isEmpty || normalizedGiftId.isEmpty) return;
+      await _db.ref('houses/$normalizedHouseId/gift_links/$normalizedGiftId').remove();
+      await _db.ref('gift_links/$normalizedGiftId').remove();
 
       final uid = _auth.currentUser?.uid;
       if (uid != null) {
@@ -521,7 +550,7 @@ class GiftMakerService {
           final feedSnap = await _db
               .ref('gift_feed_sender/$uid')
               .orderByChild('giftId')
-              .equalTo(giftId)
+              .equalTo(normalizedGiftId)
               .get();
           if (feedSnap.exists && feedSnap.value is Map) {
             final data = Map<dynamic, dynamic>.from(feedSnap.value as Map);
@@ -579,13 +608,18 @@ class GiftData {
       toHouseId: map['toHouseId']?.toString() ?? '',
       message: map['msg']?.toString() ?? '',
       imageUrl: map['imageUrl']?.toString() ?? '',
-      ts: (map['ts'] as num?)?.toInt() ?? 0,
+      ts: _asTimestamp(map['ts']),
       status: map['status']?.toString() ?? 'new',
       giftType: GiftMakerService.giftTypeFromString(
           map['giftType']?.toString() ?? 'gift_box'),
       features: map['features'] is Map
           ? Map<String, dynamic>.from(map['features'] as Map)
-          : {},
+          : <String, dynamic>{},
     );
+  }
+
+  static int _asTimestamp(Object? value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../services/l10n_service.dart';
 import '../core/sl_theme.dart';
 
 class LegacyWebUi {
@@ -494,7 +495,7 @@ class LegacyWebUi {
     if (isAccount) {
       return _LegacyNoticeStyle(
         title: title ??
-            (success ? 'Trạng thái tài khoản' : 'Cần kiểm tra tài khoản'),
+            (success ? L10nService().translate('legacy_account_status') : L10nService().translate('legacy_account_check_needed')),
         icon: icon ?? Icons.manage_accounts_rounded,
         iconTint: const Color(0xFF7C4DFF),
         borderColor: const Color(0xFFB39DDB),
@@ -510,7 +511,7 @@ class LegacyWebUi {
 
     if (isSecurity) {
       return _LegacyNoticeStyle(
-        title: title ?? (success ? 'Bảo mật đã cập nhật' : 'Cảnh báo bảo mật'),
+        title: title ?? (success ? L10nService().translate('legacy_security_updated') : L10nService().translate('legacy_security_warning')),
         icon: icon ?? Icons.verified_user_rounded,
         iconTint: const Color(0xFFEF6C00),
         borderColor: const Color(0xFFFFCC80),
@@ -526,7 +527,7 @@ class LegacyWebUi {
 
     if (isSave) {
       return _LegacyNoticeStyle(
-        title: title ?? (success ? 'Đã lưu thành công' : 'Chưa thể lưu'),
+        title: title ?? (success ? L10nService().translate('legacy_saved_success') : L10nService().translate('legacy_save_failed')),
         icon: icon ??
             (success ? Icons.auto_awesome_rounded : Icons.warning_rounded),
         iconTint: success ? const Color(0xFFD81B60) : const Color(0xFFE53935),
@@ -541,7 +542,7 @@ class LegacyWebUi {
     }
 
     return _LegacyNoticeStyle(
-      title: title ?? (success ? 'Thao tác hoàn tất' : 'Đã có lỗi xảy ra'),
+      title: title ?? (success ? L10nService().translate('legacy_action_done') : L10nService().translate('legacy_error_occurred')),
       icon:
           icon ?? (success ? Icons.check_circle_rounded : Icons.error_rounded),
       iconTint: success ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F),
@@ -577,7 +578,7 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
   if (isAccount) {
     return _LegacyNoticeStyle(
       title: title ??
-          (success ? 'Trạng thái tài khoản' : 'Cần kiểm tra tài khoản'),
+          (success ? L10nService().translate('legacy_account_status') : L10nService().translate('legacy_account_check_needed')),
       icon: icon ?? Icons.manage_accounts_rounded,
       iconTint: SLColors.accentPurpleDark,
       borderColor: SLColors.accentPurple,
@@ -593,7 +594,7 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
 
   if (isSecurity) {
     return _LegacyNoticeStyle(
-      title: title ?? (success ? 'Bảo mật đã cập nhật' : 'Cảnh báo bảo mật'),
+      title: title ?? (success ? L10nService().translate('legacy_security_updated') : L10nService().translate('legacy_security_warning')),
       icon: icon ?? Icons.verified_user_rounded,
       iconTint: const Color(0xFFBF7A17),
       borderColor: const Color(0xFFE9C98C),
@@ -609,7 +610,7 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
 
   if (isSave) {
     return _LegacyNoticeStyle(
-      title: title ?? (success ? 'Đã lưu thành công' : 'Chưa thể lưu'),
+      title: title ?? (success ? L10nService().translate('legacy_saved_success') : L10nService().translate('legacy_save_failed')),
       icon: icon ??
           (success ? Icons.auto_awesome_rounded : Icons.warning_rounded),
       iconTint: success ? SLColors.primary : SLColors.danger,
@@ -631,7 +632,7 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
   }
 
   return _LegacyNoticeStyle(
-    title: title ?? (success ? 'Thao tác hoàn tất' : 'Đã có lỗi xảy ra'),
+    title: title ?? (success ? L10nService().translate('legacy_action_done') : L10nService().translate('legacy_error_occurred')),
     icon: icon ?? (success ? Icons.check_circle_rounded : Icons.error_rounded),
     iconTint: success ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F),
     borderColor: success ? const Color(0xFFA5D6A7) : const Color(0xFFEF9A9A),

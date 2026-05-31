@@ -19,7 +19,7 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
                 phase: 0.4,
               ),
             _InsightBubbleSpec(
-              label: isSingle ? 'HOẠT ĐỘNG' : 'LOVE',
+              label: isSingle ? L10nService().translate('home_hotng_faccd7') : 'LOVE',
               value: insight.loveScore,
               color: const Color(0xFFD81B60),
               phase: 1.7,
@@ -54,7 +54,7 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
                 SLSpacing.w8,
                 Flexible(
                   child: Text(
-                    isSingle ? 'Thống Kê Cá Nhân' : 'CHỈ SỐ HẠNH PHÚC',
+                    isSingle ? L10nService().translate('home_thngkcnhn_e82ba1') : L10nService().translate('home_chshnhphc_243d83'),
                     maxLines: 1,
                     overflow: TextOverflow.visible,
                     style: SLTheme.quicksand(
@@ -84,8 +84,8 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
                 ),
                 child: Text(
                   isSingle
-                      ? 'Thống kê sẽ hiện khi bạn có thêm hoạt động trong app.'
-                      : 'Chỉ số sẽ hiện khi hai bạn có thêm tương tác trong nhà.',
+                      ? L10nService().translate('home_thngkshink_2cfa0a')
+                      : L10nService().translate('home_chsshinkhi_2113ba'),
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     color: const Color(0xFFD81B60),

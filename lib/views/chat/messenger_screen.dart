@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/services/offline_cache_service.dart';
 
 import '../../models/group_chat_room.dart';
 import '../../services/presence_service.dart';
@@ -18,6 +18,7 @@ import 'chat_detail_screen.dart';
 import 'chat_message_preview.dart';
 import 'group_chat_screen.dart';
 import '../../core/sl_theme.dart';
+import '../../core/sl_route.dart';
 
 part 'messenger/messenger_search_filter_part.dart';
 part 'messenger/messenger_room_list_part.dart';
@@ -51,6 +52,12 @@ class _MessengerScreenState extends State<MessengerScreen>
   StreamSubscription<DatabaseEvent>? _internalPartnerPresenceSub;
   StreamSubscription<ChatRoomMeta>? _internalRoomMetaSub;
   StreamSubscription<List<GroupChatRoom>>? _groupRoomsSub;
+
+  Timer? _friendsRealtimeDebounce;
+  Timer? _internalPartnerPresenceDebounce;
+  Timer? _internalRoomMetaDebounce;
+  final Map<String, Timer> _friendPresenceDebounce = {};
+  final Map<String, Timer> _friendRoomMetaDebounce = {};
   final Map<String, StreamSubscription<DatabaseEvent>> _presenceSubs = {};
   final Map<String, StreamSubscription<ChatRoomMeta>> _roomMetaSubs = {};
   final Map<String, Map<dynamic, dynamic>?> _presenceByFriendId = {};
@@ -68,6 +75,7 @@ class _MessengerScreenState extends State<MessengerScreen>
   bool _isGroupRoomsLoaded = false;
   bool _isBootstrapping = true;
   static const Duration _friendRealtimeReleaseDelay = Duration(seconds: 18);
+  static const Duration _realtimeUiDebounce = Duration(milliseconds: 140);
   static const int _friendRealtimeWarmupCount = 3;
   static const ChatMessagePreviewLabels _lastMessagePreviewLabels =
       ChatMessagePreviewLabels(
@@ -104,8 +112,9 @@ class _MessengerScreenState extends State<MessengerScreen>
   String get _partnerRole => _myRole == 'user2' ? 'user1' : 'user2';
 
   Future<void> _loadMyRole() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
+    if (!mounted) return;
     setState(() {
       _myRole = role;
     });
@@ -168,30 +177,33 @@ class _MessengerScreenState extends State<MessengerScreen>
     _friendsSub?.cancel();
     _friendsSub = _dbRef.child('friends/$_myHouseId').onValue.listen(
       (event) {
-        if (!mounted) return;
+        _friendsRealtimeDebounce?.cancel();
+        _friendsRealtimeDebounce = Timer(_realtimeUiDebounce, () {
+          if (!mounted) return;
 
-        final data = event.snapshot.value as Map<dynamic, dynamic>? ?? {};
-        final ids = <String>[];
+          final data = event.snapshot.value as Map<dynamic, dynamic>? ?? {};
+          final ids = <String>[];
 
-        data.forEach((key, value) {
-          final friendId = key.toString();
-          ids.add(friendId);
+          data.forEach((key, value) {
+            final friendId = key.toString();
+            ids.add(friendId);
+          });
+
+          if (_sameStringList(_friends, ids)) {
+            return;
+          }
+
+          setState(() {
+            _friends = ids;
+            _friendIdsSet
+              ..clear()
+              ..addAll(ids);
+            _sortedFriendsDirty = true;
+          });
+          _pruneRemovedFriendRealtime(ids);
+          _warmupFriendRealtime(ids);
+          _loadHousesInfo(ids);
         });
-
-        if (_sameStringList(_friends, ids)) {
-          return;
-        }
-
-        setState(() {
-          _friends = ids;
-          _friendIdsSet
-            ..clear()
-            ..addAll(ids);
-          _sortedFriendsDirty = true;
-        });
-        _pruneRemovedFriendRealtime(ids);
-        _warmupFriendRealtime(ids);
-        _loadHousesInfo(ids);
       },
       onError: (Object error) {
         debugPrint(
@@ -249,9 +261,13 @@ class _MessengerScreenState extends State<MessengerScreen>
         if (_samePresence(_internalPartnerPresence, presence)) {
           return;
         }
-        if (!mounted) return;
-        setState(() {
-          _internalPartnerPresence = presence;
+
+        _internalPartnerPresenceDebounce?.cancel();
+        _internalPartnerPresenceDebounce = Timer(_realtimeUiDebounce, () {
+          if (!mounted) return;
+          setState(() {
+            _internalPartnerPresence = presence;
+          });
         });
       },
       onError: (Object error) {
@@ -269,9 +285,13 @@ class _MessengerScreenState extends State<MessengerScreen>
         if (_internalPartnerRoomMeta.sameAs(meta)) {
           return;
         }
-        if (!mounted) return;
-        setState(() {
-          _internalPartnerRoomMeta = meta;
+
+        _internalRoomMetaDebounce?.cancel();
+        _internalRoomMetaDebounce = Timer(_realtimeUiDebounce, () {
+          if (!mounted) return;
+          setState(() {
+            _internalPartnerRoomMeta = meta;
+          });
         });
       },
       onError: (Object error) {
@@ -386,9 +406,13 @@ class _MessengerScreenState extends State<MessengerScreen>
           if (_samePresence(_presenceByFriendId[friendId], presence)) {
             return;
           }
-          if (!mounted) return;
-          setState(() {
-            _presenceByFriendId[friendId] = presence;
+
+          _friendPresenceDebounce[friendId]?.cancel();
+          _friendPresenceDebounce[friendId] = Timer(_realtimeUiDebounce, () {
+            if (!mounted) return;
+            setState(() {
+              _presenceByFriendId[friendId] = presence;
+            });
           });
         },
         onError: (Object error) {
@@ -419,12 +443,16 @@ class _MessengerScreenState extends State<MessengerScreen>
           }
           final shouldResort =
               _lastMessageTsFromMeta(current) != _lastMessageTsFromMeta(meta);
-          if (!mounted) return;
-          setState(() {
-            _roomMetaByFriendId[friendId] = meta;
-            if (shouldResort) {
-              _sortedFriendsDirty = true;
-            }
+
+          _friendRoomMetaDebounce[friendId]?.cancel();
+          _friendRoomMetaDebounce[friendId] = Timer(_realtimeUiDebounce, () {
+            if (!mounted) return;
+            setState(() {
+              _roomMetaByFriendId[friendId] = meta;
+              if (shouldResort) {
+                _sortedFriendsDirty = true;
+              }
+            });
           });
         },
         onError: (Object error) {
@@ -440,6 +468,8 @@ class _MessengerScreenState extends State<MessengerScreen>
   }
 
   void _stopFriendRealtime(String friendId, {bool dropCache = false}) {
+    _friendPresenceDebounce.remove(friendId)?.cancel();
+    _friendRoomMetaDebounce.remove(friendId)?.cancel();
     _presenceSubs.remove(friendId)?.cancel();
     _roomMetaSubs.remove(friendId)?.cancel();
     if (dropCache) {
@@ -835,7 +865,7 @@ class _MessengerScreenState extends State<MessengerScreen>
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     final raw = prefs.getString(_groupDraftPrefsKey(houseId)) ?? '';
     final nextGroups = <_ChatGroupDraft>[];
 
@@ -882,7 +912,7 @@ class _MessengerScreenState extends State<MessengerScreen>
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     final encoded =
         jsonEncode(_groupDrafts.map((group) => group.toJson()).toList());
     await prefs.setString(_groupDraftPrefsKey(houseId), encoded);
@@ -994,15 +1024,31 @@ class _MessengerScreenState extends State<MessengerScreen>
   @override
   void dispose() {
     _searchDebounce?.cancel();
+    _friendsRealtimeDebounce?.cancel();
+    _internalPartnerPresenceDebounce?.cancel();
+    _internalRoomMetaDebounce?.cancel();
+
     _friendsSub?.cancel();
     _internalPartnerPresenceSub?.cancel();
     _internalRoomMetaSub?.cancel();
     _groupRoomsSub?.cancel();
+
+    for (final timer in _friendPresenceDebounce.values) {
+      timer.cancel();
+    }
+    _friendPresenceDebounce.clear();
+
+    for (final timer in _friendRoomMetaDebounce.values) {
+      timer.cancel();
+    }
+    _friendRoomMetaDebounce.clear();
+
     for (final timer in _friendRealtimeReleaseTimers.values) {
       timer.cancel();
     }
     _friendRealtimeReleaseTimers.clear();
     _activeRealtimeFriendIds.clear();
+
     for (final sub in _presenceSubs.values) {
       sub.cancel();
     }
@@ -1011,6 +1057,7 @@ class _MessengerScreenState extends State<MessengerScreen>
     }
     _presenceSubs.clear();
     _roomMetaSubs.clear();
+
     _tabController.dispose();
     _searchCtrl.dispose();
     super.dispose();
@@ -1042,15 +1089,13 @@ class _MessengerScreenState extends State<MessengerScreen>
 
   void _openChatDetail(
       String targetHouseId, String targetName, String targetAvatar) {
-    Navigator.push(
+    slPush(
       context,
-      MaterialPageRoute(
-        builder: (context) => ChatDetailScreen(
-          myHouseId: _myHouseId!,
-          targetHouseId: targetHouseId,
-          targetName: targetName,
-          targetAvatar: targetAvatar,
-        ),
+      ChatDetailScreen(
+        myHouseId: _myHouseId!,
+        targetHouseId: targetHouseId,
+        targetName: targetName,
+        targetAvatar: targetAvatar,
       ),
     );
   }
@@ -1061,18 +1106,16 @@ class _MessengerScreenState extends State<MessengerScreen>
       return;
     }
 
-    Navigator.push(
+    slPush(
       context,
-      MaterialPageRoute(
-        builder: (context) => ChatDetailScreen(
-          myHouseId: houseId,
-          targetHouseId: houseId,
-          targetName: _internalPartnerName(),
-          targetAvatar: _internalPartnerAvatar(),
-          isInternal: true,
-          currentRole: _myRole,
-          targetRole: _partnerRole,
-        ),
+      ChatDetailScreen(
+        myHouseId: houseId,
+        targetHouseId: houseId,
+        targetName: _internalPartnerName(),
+        targetAvatar: _internalPartnerAvatar(),
+        isInternal: true,
+        currentRole: _myRole,
+        targetRole: _partnerRole,
       ),
     );
   }
@@ -1083,13 +1126,11 @@ class _MessengerScreenState extends State<MessengerScreen>
       return;
     }
 
-    Navigator.push(
+    slPush(
       context,
-      MaterialPageRoute(
-        builder: (context) => GroupChatScreen(
-          myHouseId: houseId,
-          initialRoom: _findGroupRoomById(group.id) ?? group,
-        ),
+      GroupChatScreen(
+        myHouseId: houseId,
+        initialRoom: _findGroupRoomById(group.id) ?? group,
       ),
     );
   }

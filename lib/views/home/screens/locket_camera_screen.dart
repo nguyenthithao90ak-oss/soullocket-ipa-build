@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/app_error_mapper.dart';
@@ -25,6 +26,7 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
   }
 
   Future<void> _initCamera() async {
+    final msgInitErr = context.tr('home_khngthkhin_e72ec1');
     try {
       _cameras = await availableCameras();
       if (_cameras.isEmpty) return;
@@ -38,12 +40,13 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
     } catch (e) {
       debugPrint('Error init camera: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể khởi động camera lúc này.',
+        fallbackMessage: msgInitErr,
       ).message}');
     }
   }
 
   Future<void> _startCamera(CameraDescription camera) async {
+    final msgCamErr = context.tr('home_khngthkhit_ea1e9f');
     final controller = CameraController(
       camera,
       ResolutionPreset.high,
@@ -62,7 +65,7 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
     } catch (e) {
       debugPrint('Camera init error: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể khởi tạo camera lúc này.',
+        fallbackMessage: msgCamErr,
       ).message}');
     }
   }
@@ -92,13 +95,14 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
         nextMode = FlashMode.off;
     }
 
+    final msgFlashErr = context.tr('home_khngthinfl_852b13');
     try {
       await _controller!.setFlashMode(nextMode);
       setState(() => _flashMode = nextMode);
     } catch (e) {
       debugPrint('Flash error: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể đổi đèn flash lúc này.',
+        fallbackMessage: msgFlashErr,
       ).message}');
     }
   }
@@ -107,6 +111,7 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
     if (_controller == null || !_controller!.value.isInitialized) return;
     if (_controller!.value.isTakingPicture) return;
 
+    final msgTakePicErr = context.tr('home_khngthchpn_6e4276');
     try {
       final image = await _controller!.takePicture();
       if (mounted) {
@@ -115,7 +120,7 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
     } catch (e) {
       debugPrint('Take picture error: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể chụp ảnh lúc này.',
+        fallbackMessage: msgTakePicErr,
       ).message}');
     }
   }

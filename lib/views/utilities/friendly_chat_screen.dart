@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,11 +27,11 @@ class FriendlyChatScreen extends StatefulWidget {
 }
 
 class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
-  static const List<String> _reportReasons = <String>[
-    'Nội dung không phù hợp',
-    'Trả lời sai hoặc gây hiểu nhầm',
-    'Có thông tin nhạy cảm',
-    'Lý do khác',
+  static final List<String> _reportReasons = <String>[
+    L10nService().translate('util_nidungkhng_493873'),
+    L10nService().translate('util_trlisaihoc_6d9fe3'),
+    L10nService().translate('util_cthngtinnh_31da21'),
+    L10nService().translate('util_ldokhc_bc525f'),
   ];
   static const int _localHistoryMaxMessages = 80;
   static const Duration _localHistoryTtl = Duration(days: 3);
@@ -40,9 +41,9 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
   final _aiService = AiCounselorService();
   final Set<int> _reportingIndexes = <int>{};
   final List<_FriendlyChatMessage> _messages = <_FriendlyChatMessage>[
-    const _FriendlyChatMessage(
+    _FriendlyChatMessage(
       text:
-          'Chào bạn, mình là Chat thân thiện. Bạn có thể hỏi một câu ngắn, mình sẽ trả lời dễ hiểu và nhẹ nhàng.',
+          L10nService().translate('util_chobnmnhlc_032510'),
       isUser: false,
     ),
   ];
@@ -237,7 +238,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Báo cáo câu trả lời AI',
+                        context.tr('util_bococutrli_dceda5'),
                         style: SLTheme.quicksand(
                           color: const Color(0xFF243042),
                           fontWeight: FontWeight.w900,
@@ -299,8 +300,8 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       SnackBar(
         content: Text(
           ok
-              ? 'Đã gửi báo cáo câu trả lời AI.'
-              : 'Chưa thể gửi báo cáo lúc này. Bạn thử lại sau.',
+              ? context.tr('util_gibococutr_6abf91')
+              : context.tr('util_chathgiboc_627f2d'),
         ),
       ),
     );
@@ -312,14 +313,14 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã sao chép tin nhắn.')),
+      SnackBar(content: Text(context.tr('util_saochptinn_259ed4'))),
     );
   }
 
   Future<void> _copyAllMessages() async {
     final lines = _messages
         .where((message) => message.createdAt > 0)
-        .map((message) => '${message.isUser ? 'Bạn' : 'SoulLocket AI'}: '
+        .map((message) => '${message.isUser ? context.tr('util_bn_1fd75b') : 'SoulLocket AI'}: '
             '${message.text.trim()}')
         .where((line) => line.trim().isNotEmpty)
         .join('\n\n');
@@ -331,7 +332,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã sao chép đoạn chat.')),
+      SnackBar(content: Text(context.tr('util_saochponch_7b55fc'))),
     );
   }
 
@@ -367,7 +368,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
               ListTile(
                 leading: const Icon(Icons.copy_rounded),
                 title: Text(
-                  'Sao chép',
+                  context.tr('util_saochp_cbfba9'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                 ),
                 onTap: () => Navigator.of(sheetContext).pop('copy'),
@@ -384,10 +385,10 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
                   ),
                   title: Text(
                     isReporting
-                        ? 'Đang gửi...'
+                        ? context.tr('util_anggi_6b22c8')
                         : message.reported
-                            ? 'Đã báo cáo'
-                            : 'Báo cáo AI',
+                            ? context.tr('util_boco_0f64d2')
+                            : context.tr('util_bocoai_2b42b4'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                   ),
                   onTap: canReport
@@ -437,7 +438,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     final reply = await _aiService
         .callTextGeneration(
           prompt,
-          'Bạn là Chat thân thiện của SoulLocket. Trả lời bằng tiếng Việt tự nhiên, ấm áp, đủ ý, không máy móc và không phán xét. Nếu người dùng buồn, an ủi nhẹ nhàng, có thể nhắc về hạnh phúc/tình yêu nếu phù hợp, nhưng không lặp lại cùng một mẫu câu. Không hỏi mật khẩu, OTP, khóa API hoặc dữ liệu bí mật. Không yêu cầu gửi ảnh, tải ảnh hoặc chụp màn hình. Vẫn được hướng dẫn vị trí nút/mục mật khẩu, quên mật khẩu hoặc bảo mật trong app, nhưng không xem, lấy, đoán, nói lại hoặc đổi hộ mật khẩu.',
+          context.tr('util_bnlchatthn_ad4114'),
           memoryScope: 'friendly_chat',
           memoryText: text,
         )
@@ -476,9 +477,9 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
   String _buildPrompt(String text) {
     final name = widget.myName?.trim();
     return [
-      if (name != null && name.isNotEmpty) 'Tên hiển thị: $name',
-      'Tin nhắn người dùng: $text',
-      'Hãy trả lời tự nhiên trong 3 đến 7 câu khi cần đủ ý. Nếu người dùng chỉ buồn hoặc cần tâm sự, ưu tiên an ủi ấm áp, không phán xét và không lặp lại máy móc. Chỉ khuyên liên hệ người thật hoặc dịch vụ khẩn cấp khi có dấu hiệu nguy hiểm rõ ràng.',
+      if (name != null && name.isNotEmpty) L10nService().format('util_chat_prompt_display_name', {'name': name}),
+      L10nService().format('util_chat_prompt_user_message', {'text': text}),
+      context.tr('util_hytrlitnhi_5313dd'),
     ].join('\n');
   }
 
@@ -542,7 +543,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
             const _BotLoveAvatar(size: 34),
             const SizedBox(width: 10),
             Text(
-              'Chat thân thiện',
+              context.tr('util_chatthnthi_c39699'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w900,
                 color: const Color(0xFF243042),
@@ -552,7 +553,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Sao chép đoạn chat',
+            tooltip: context.tr('util_saochponch_67739c'),
             onPressed: _copyAllMessages,
             icon: const Icon(Icons.copy_all_rounded),
           ),
@@ -583,7 +584,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
                 color: const Color(0xFF243042),
               ),
               decoration: InputDecoration(
-                hintText: 'Nhập điều bạn muốn hỏi...',
+                hintText: context.tr('util_nhpiubnmun_30266b'),
                 hintStyle: SLTheme.quicksand(
                   color: const Color(0xFF9AA4B2),
                   fontWeight: FontWeight.w700,
@@ -720,7 +721,7 @@ class _AiDisclosureCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Tin nhắn có thể được gửi tới dịch vụ AI để tạo phản hồi. Lịch sử hiển thị tối đa 80 tin gần nhất trong 3 ngày. Không gửi mật khẩu, OTP, API key hoặc thông tin nhạy cảm.',
+              context.tr('util_tinnhncthc_aeaabb'),
               style: SLTheme.quicksand(
                 color: const Color(0xFF5E6A7D),
                 fontSize: 12,
@@ -786,7 +787,7 @@ class _TypingBubbleState extends State<_TypingBubble>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Đang soạn',
+                  context.tr('util_angson_6c571a'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     color: const Color(0xFF7A8598),

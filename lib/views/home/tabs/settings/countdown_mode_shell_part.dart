@@ -52,21 +52,21 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
 
   String _topLabel(UiPrefsState uiState) {
     if (_isSingleMode) {
-      return _limitLabel(uiState.countdownTopLabel, 'TUỔI CỦA TÔI');
+      return _limitLabel(uiState.countdownTopLabel, L10nService().translate('home_tuicati_5c654c'));
     }
     return _limitLabel(
       uiState.countdownTopLabel,
-      _limitLabel(fallbackTopLabel, 'BÊN NHAU'),
+      _limitLabel(fallbackTopLabel, L10nService().translate('home_bnnhau_d90054')),
     );
   }
 
   String _bottomLabel(UiPrefsState uiState) {
     if (_isSingleMode) {
-      return _limitLabel(uiState.countdownBottomLabel, 'NGÀY TUỔI');
+      return _limitLabel(uiState.countdownBottomLabel, L10nService().translate('home_ngytui_22bed4'));
     }
     return _limitLabel(
       uiState.countdownBottomLabel,
-      _limitLabel(fallbackBottomLabel, 'NGÀY'),
+      _limitLabel(fallbackBottomLabel, L10nService().translate('home_ngy_48e4b0')),
     );
   }
 
@@ -113,9 +113,9 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
 
   String _caption(BuildContext context, DateTime? anchorDate) {
     if (anchorDate == null) {
-      return context.tr('countdown_mode_no_date_desc');
+      return L10nService().translate('countdown_mode_no_date_desc');
     }
-    return context.tr('countdown_mode_since').replaceFirst(
+    return L10nService().translate('countdown_mode_since').replaceFirst(
           '{date}',
           DateInputUtils.formatDisplayDate(anchorDate),
         );
@@ -217,7 +217,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                           top: 8,
                           right: 18,
                           child: PopupMenuButton<_CountdownModeMenuAction>(
-                            tooltip: context.tr('settings'),
+                            tooltip: L10nService().translate('settings'),
                             color: Colors.white,
                             surfaceTintColor: Colors.white,
                             shape: RoundedRectangleBorder(
@@ -232,14 +232,14 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                 child: _CountdownModeMenuRow(
                                   icon: Icons.palette_outlined,
                                   label:
-                                      context.tr('countdown_mode_appearance'),
+                                      L10nService().translate('countdown_mode_appearance'),
                                 ),
                               ),
                               PopupMenuItem(
                                 value: _CountdownModeMenuAction.exit,
                                 child: _CountdownModeMenuRow(
                                   icon: Icons.close_rounded,
-                                  label: context.tr('countdown_mode_exit'),
+                                  label: L10nService().translate('countdown_mode_exit'),
                                 ),
                               ),
                             ],
@@ -322,12 +322,12 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                         _CountdownModeAvatarCard(
                                           isSingleMode: _isSingleMode,
                                           leftName: nameU1.trim().isEmpty
-                                              ? 'Bạn'
+                                              ? L10nService().translate('home_bn_1fd75b')
                                               : nameU1.trim(),
                                           rightName: _isSingleMode
-                                              ? 'Người ấy'
+                                              ? L10nService().translate('home_ngiy_5bab37')
                                               : (nameU2.trim().isEmpty
-                                                  ? 'Người ấy'
+                                                  ? L10nService().translate('home_ngiy_5bab37')
                                                   : nameU2.trim()),
                                           leftAvatarUrl: avatarUrl1,
                                           rightAvatarUrl:
@@ -400,7 +400,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
     if (selected != null) {
       return selected.displayName;
     }
-    return widget.rightName.trim().isEmpty ? 'Chọn bạn' : widget.rightName;
+    return widget.rightName.trim().isEmpty ? L10nService().translate('home_chnbn_ba8971') : widget.rightName;
   }
 
   String get _displayRightAvatarUrl {
@@ -467,7 +467,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
         (await _houseService.getCurrentHouseId())?.trim() ?? '';
 
     if (currentHouseId.isEmpty) {
-      _showHint('Chưa xác định được nhà hiện tại để chọn bạn.');
+      _showHint(L10nService().translate('home_chaxcnhcnh_04b381'));
       return null;
     }
 
@@ -516,7 +516,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                           children: [
                             Expanded(
                               child: Text(
-                                'Chọn không gian bạn bè',
+                                L10nService().translate('home_chnkhnggia_68d5e3'),
                                 style: SLTheme.quicksand(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
@@ -535,7 +535,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Chọn một người bạn để vào nhanh không gian của họ.',
+                          L10nService().translate('home_chnmtngibn_13721c'),
                           textAlign: TextAlign.center,
                           style: SLTheme.quicksand(
                             fontSize: 12.5,
@@ -554,7 +554,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             child: Text(
-                              'Bạn chưa có bạn bè để ghép. Kết bạn trước rồi quay lại chọn không gian.',
+                              L10nService().translate('home_bnchacbnbg_34d6ac'),
                               textAlign: TextAlign.center,
                               style: SLTheme.quicksand(
                                 fontSize: 13,
@@ -631,7 +631,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
           ? settings.houseAvatar.trim()
           : settings.avtUser1.trim();
       final subtitle =
-          settings.isCouple ? 'Không gian đôi' : 'Không gian cá nhân';
+          settings.isCouple ? L10nService().translate('home_khnggiani_534bb6') : L10nService().translate('home_khnggiancn_36c9f9');
 
       targets.add(
         _CountdownModeFriendTarget(
@@ -674,7 +674,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Ghép không gian bạn bè',
+                L10nService().translate('home_ghpkhnggia_ecd541'),
                 style: SLTheme.textStyleForKey(
                   widget.fontKey,
                   fontSize: 14,
@@ -695,7 +695,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                   ),
                 ),
                 child: Text(
-                  'Đã chọn',
+                  L10nService().translate('home_chn_59a9e8'),
                   style: SLTheme.textStyleForKey(
                     widget.fontKey,
                     fontSize: 10,
@@ -744,7 +744,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                       )
                     : const Icon(Icons.person_search_rounded, size: 18),
                 label: Text(
-                  _selectedFriend == null ? 'Chọn người' : 'Đổi người',
+                  _selectedFriend == null ? L10nService().translate('home_chnngi_34ef59') : L10nService().translate('home_ingi_3a22c1'),
                   style: SLTheme.textStyleForKey(
                     widget.fontKey,
                     fontWeight: FontWeight.w900,
@@ -768,7 +768,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                   ),
                   icon: const Icon(Icons.north_east_rounded, size: 18),
                   label: Text(
-                    'Vào không gian',
+                    L10nService().translate('home_vokhnggian_c03ae2'),
                     style: SLTheme.textStyleForKey(
                       widget.fontKey,
                       fontWeight: FontWeight.w900,
@@ -783,7 +783,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
         const SizedBox(height: 10),
         Text(
           _selectedFriend == null
-              ? 'Khung bên phải được tối ưu để chọn không gian của một người bạn cụ thể. Chọn người rồi mở thẳng vào profile/không gian của họ.'
+              ? L10nService().translate('home_khungbnphi_61a4e8')
               : 'Đã ghép với ${_selectedFriend!.displayName}. Bạn có thể đổi người hoặc vào ngay không gian của họ.',
           textAlign: TextAlign.center,
           style: SLTheme.textStyleForKey(

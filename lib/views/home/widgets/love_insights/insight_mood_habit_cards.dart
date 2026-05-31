@@ -12,7 +12,7 @@ extension _InsightMoodHabitCardsExt on _LoveInsightsScreenState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSmallHeader('Nhịp hoạt động'),
+          _buildSmallHeader(L10nService().translate('home_nhphotng_4917b2')),
           SLSpacing.h12,
           Row(
             children: [
@@ -69,10 +69,10 @@ extension _InsightMoodHabitCardsExt on _LoveInsightsScreenState {
         children: [
           _buildCardTitle(
             icon: Icons.auto_awesome_rounded,
-            title: _isSingle ? 'Góc định hướng' : 'Góc tư vấn yêu thương',
+            title: _isSingle ? L10nService().translate('home_gcnhhng_699bdb') : L10nService().translate('home_gctvnyuthn_897317'),
             subtitle: _isSingle
-                ? 'Đọc từ nhịp sinh hoạt hiện tại của bạn'
-                : 'Dựa trên nhịp yêu, hoạt động và sự cân bằng của hai người',
+                ? L10nService().translate('home_ctnhpsinhh_fdf44b')
+                : L10nService().translate('home_datrnnhpyu_d7b4a7'),
             accent: const Color(0xFFD81B60),
           ),
           SLSpacing.h12,

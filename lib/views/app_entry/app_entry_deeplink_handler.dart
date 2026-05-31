@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../services/deeplink_service.dart';
 import '../../services/gift_maker_service.dart';
@@ -96,9 +97,13 @@ class AppEntryDeeplinkHandler {
             ? fallbackGift!.giftId
             : null);
     if (giftId == null || giftId.isEmpty) {
-      showSnackBar('Liên kết quà không hợp lệ.');
+      showSnackBar(context.tr('app_entry_linktqukhn_ddc522'));
       return true;
     }
+    final msgCannotResolveHouse = context.tr('app_entry_khngthxcnh_91e6bc');
+    final msgGiftNotFound = context.tr('app_entry_mnqukhngtn_ffd5ae');
+    final msgLinkMissingHouse = context.tr('app_entry_linkquthiu_5b74f3');
+    final msgOpenFail = context.tr('app_entry_khngthmmnq_a33292');
 
     String? currentHouseId;
     try {
@@ -106,7 +111,7 @@ class AppEntryDeeplinkHandler {
     } catch (e) {
       debugPrint('Could not resolve current house before opening gift: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể xác định nhà hiện tại trước khi mở quà.',
+        fallbackMessage: msgCannotResolveHouse,
       ).message}');
     }
 
@@ -131,8 +136,8 @@ class AppEntryDeeplinkHandler {
       if (resolvedGift == null) {
         showSnackBar(
           hasCurrentHouse
-              ? 'Món quà không tồn tại hoặc đã bị xóa.'
-              : 'Link quà thiếu dữ liệu mở nhanh. Hãy đăng nhập rồi mở lại link.',
+              ? msgGiftNotFound
+              : msgLinkMissingHouse,
         );
         return true;
       }
@@ -155,9 +160,9 @@ class AppEntryDeeplinkHandler {
     } catch (e) {
       debugPrint('Error opening gift from link: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể mở món quà từ liên kết này.',
+        fallbackMessage: msgOpenFail,
       ).message}');
-      showSnackBar('Không thể mở món quà từ liên kết này.');
+      showSnackBar(msgOpenFail);
     }
 
     return true;
@@ -172,6 +177,7 @@ class AppEntryDeeplinkHandler {
         !DeeplinkService.isSupportedLoveCardUri(loveCardUri)) {
       return false;
     }
+    final msgNotFound = context.tr('app_entry_linktthipk_810b8f');
 
     var payload = LoveCardLinkService.payloadFromUri(loveCardUri);
     if (payload == null) {
@@ -183,7 +189,7 @@ class AppEntryDeeplinkHandler {
       }
     }
     if (payload == null) {
-      showSnackBar('Liên kết thiệp không hợp lệ hoặc đã thiếu dữ liệu.');
+      showSnackBar(msgNotFound);
       return true;
     }
 

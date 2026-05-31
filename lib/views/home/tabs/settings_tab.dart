@@ -22,6 +22,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/sl_theme.dart';
+import '../../../core/sl_route.dart';
 import '../../../services/house_settings_service.dart';
 import '../../../services/location_service.dart';
 import '../../../services/music_service.dart';
@@ -73,13 +74,16 @@ import '../../../services/presence_service.dart';
 import '../../../services/security_flow_guard.dart';
 import '../../../services/admob_service.dart';
 import '../../../services/breakup_service.dart';
+import '../../../services/critical_data_sync_service.dart';
 import '../../../services/house_service.dart';
 import '../../../services/military_lock_service.dart';
 import '../../../services/push_notification_helper.dart';
 import '../../../services/qr_payload_codec.dart';
 import '../../../services/sound_service.dart';
+import '../../../services/utility_service.dart';
 import 'settings/controllers/settings_security_controller.dart';
 import 'settings/security/security_otp_dialogs.dart';
+import '../../../widgets/first_setup_spotlight_guide.dart';
 import '../../../widgets/legacy_web_ui.dart';
 import '../../../widgets/pin_pad_setup_modal.dart';
 import '../../../services/widget_service.dart';
@@ -159,6 +163,21 @@ const List<String> _widgetHeartStyleKeys = <String>[
   '💘',
   '❤️‍🩹',
   '💓',
+  '💗',
+  '💖',
+  '💝',
+  '💌',
+  '💋',
+  '🫶',
+  '🫀',
+  '💫💗',
+  '♡✦',
+  '✧♥︎',
+  '❥∞',
+  'ღ♡',
+  '☾♡',
+  '♡🪽',
+  '✦💘',
 ];
 const String _defaultWidgetHeartStyleKey = '❤️';
 
@@ -204,48 +223,78 @@ String _normalizeWidgetHeartStyleKey(String? value) {
 String _widgetHeartStyleLabel(String emoji) {
   switch (emoji) {
     case '🤍':
-      return '🤍 Tim trắng';
+      return L10nService().translate('home_timtrng_7d893d');
     case '🤎':
-      return '🤎 Tim nâu';
+      return L10nService().translate('home_timnu_c4ace1');
     case '♥️':
-      return '♥️ Tim cổ điển';
+      return L10nService().translate('home_timcin_e8ae03');
     case '❣️':
-      return '❣️ Tim nhấn mạnh';
+      return L10nService().translate('home_timnhnmnh_8b5a59');
     case '❤️':
-      return '❤️ Tim đỏ';
+      return L10nService().translate('home_tim_a30d1c');
     case '💞':
-      return '💞 Tim xoay đôi';
+      return L10nService().translate('home_timxoayi_376711');
     case '🖤':
-      return '🖤 Tim đen';
+      return L10nService().translate('home_timen_cb49d1');
     case '💟':
-      return '💟 Tim viền';
+      return L10nService().translate('home_timvin_0cd61a');
     case '❤️‍🔥':
-      return '❤️‍🔥 Tim rực cháy';
+      return L10nService().translate('home_timrcchy_747dfe');
     case '🩷':
-      return '🩷 Tim hồng';
+      return L10nService().translate('home_timhng_5b8551');
     case '🩶':
-      return '🩶 Tim xám';
+      return L10nService().translate('home_timxm_ea7800');
     case '🩵':
       return '🩵 Tim xanh';
     case '💘':
-      return '💘 Tim mũi tên';
+      return L10nService().translate('home_timmitn_55f029');
     case '❤️‍🩹':
-      return '❤️‍🩹 Tim chữa lành';
+      return L10nService().translate('home_timchalnh_0adb4b');
     case '💓':
+      return L10nService().translate('home_timp_211e69');
+    case '💗':
+      return L10nService().translate('home_timlndn_2b76d8');
+    case '💖':
+      return L10nService().translate('home_timlplnh_87b42a');
+    case '💝':
+      return L10nService().translate('home_timqutng_f0b62a');
+    case '💌':
+      return L10nService().translate('home_thtnh_cfc9f2');
+    case '💋':
+      return L10nService().translate('home_duhn_916bb0');
+    case '🫶':
+      return L10nService().translate('home_taytritim_38304a');
+    case '🫀':
+      return L10nService().translate('home_nhptimtht_c0a3b1');
+    case '💫💗':
+      return L10nService().translate('home_timsaobng_7d08bd');
+    case '♡✦':
+      return L10nService().translate('home_timtinht_f81e7c');
+    case '✧♥︎':
+      return L10nService().translate('home_timphal_79efa3');
+    case '❥∞':
+      return L10nService().translate('home_timvcc_c7663f');
+    case 'ღ♡':
+      return L10nService().translate('home_timctch_e60fcf');
+    case '☾♡':
+      return L10nService().translate('home_timnhtrng_b9226f');
+    case '♡🪽':
+      return L10nService().translate('home_timthinthn_5e0898');
+    case '✦💘':
     default:
-      return '💓 Tim đập';
+      return L10nService().translate('home_mitnsao_b0531f');
   }
 }
 
 String _widgetPreviewSizeLabel(String key) {
   switch (key) {
     case 'small':
-      return 'Nhỏ';
+      return L10nService().translate('home_nh_4c0e81');
     case 'large':
-      return 'Lớn';
+      return L10nService().translate('home_ln_41d05f');
     case 'medium':
     default:
-      return 'Vừa';
+      return L10nService().translate('home_va_74ffe0');
   }
 }
 
@@ -262,28 +311,28 @@ String _widgetStyleLabel(String key) {
 String _widgetDiaryLayoutLabel(String key) {
   switch (key) {
     case 'duo':
-      return '2 ảnh đôi';
+      return L10nService().translate('home_2nhi_804ddf');
     case 'grid':
-      return 'Collage 4 ảnh';
+      return L10nService().translate('home_collage4nh_f50ff1');
     case 'single':
     default:
-      return '1 ảnh lớn';
+      return L10nService().translate('home_1nhln_ddf1d8');
   }
 }
 
 String _widgetSeasonModeLabel(String key) {
   switch (key) {
     case 'none':
-      return 'Tắt hiệu ứng dịp';
+      return L10nService().translate('home_tthiungdp_d11975');
     case 'valentine':
       return 'Valentine';
     case 'anniversary':
-      return 'Kỷ niệm yêu';
+      return L10nService().translate('home_knimyu_5b8036');
     case 'birthday':
-      return 'Sinh nhật';
+      return L10nService().translate('home_sinhnht_71c600');
     case 'auto':
     default:
-      return 'Tự động';
+      return L10nService().translate('home_tng_0d5a90');
   }
 }
 
@@ -344,12 +393,14 @@ class _SettingsBackgroundLayer extends StatelessWidget {
 class SettingsTab extends StatefulWidget {
   final bool embedded;
   final bool autoOpenCountdownMode;
+  final bool showGuideOnOpen;
   final Future<void> Function()? onReplayFirstSetupGuide;
 
   const SettingsTab({
     super.key,
     this.embedded = false,
     this.autoOpenCountdownMode = false,
+    this.showGuideOnOpen = false,
     this.onReplayFirstSetupGuide,
   });
 
@@ -389,22 +440,30 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       SettingsRelationshipWatcher();
 
   String? _houseId;
-  String _houseName = 'Ngôi Nhà Tình Yêu';
+  String _houseName = L10nService().translate('home_nginhtnhyu_dbebce');
   bool _homeShowHouseName = false;
   bool _homeShowTimer = false;
   String _loveDate = '';
-  String _nameU1 = 'Bạn Nam';
-  String _nameU2 = 'Bạn Nữ';
+  String _nameU1 = L10nService().translate('home_bnnam_123ef2');
+  String _nameU2 = L10nService().translate('home_bnn_babaec');
   String _avatarUrl1 = '';
   String _avatarUrl2 = '';
   String _dobU1 = '';
   String _dobU2 = '';
-  String _loveUnit = 'ngày yêu';
+  String _loveUnit = L10nService().translate('home_ngyyu_722b21');
   String _relationshipMode = 'single';
+  bool _isLanguageListExpanded = false;
   bool _isCoupleConnected = false;
   bool _isLoading = false;
   bool _isBootstrappingSettings = true;
   bool _showSettingsSyncBanner = false;
+  bool _isCheckingBackupStatus = false;
+  bool _isManualBackupSyncing = false;
+  bool _isRestoringSettingsBackup = false;
+  bool _hasSettingsCloudBackup = false;
+  DateTime? _settingsCloudBackupAt;
+  DateTime? _settingsLocalBackupAt;
+  String _settingsBackupStatusError = '';
   bool _isSecurityLocked = false;
   bool _isCheckingSecurityLock = true;
   bool _isDevicePending = false;
@@ -426,6 +485,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _notifChat = true;
   bool _notifFriend = true;
   bool _notifHeart = true;
+  bool _smartDiaryReminder = true;
+  bool _smartCapsuleReminder = true;
+  bool _smartLoveNoteReminder = true;
   bool _touchSound = true;
   bool _confettiFx = true;
   bool _showWeather = true;
@@ -444,21 +506,32 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _hasPendingEmailVerification = false;
   int _emailVerifyWaitSeconds = 0;
   Timer? _emailVerifyTimer;
+  bool _didShowGuideOnOpen = false;
+  final GlobalKey _accountGuideKey = GlobalKey();
+  final GlobalKey _securityGuideKey = GlobalKey();
+  final GlobalKey _themeGuideKey = GlobalKey();
+  final GlobalKey _widgetGuideKey = GlobalKey();
+  final GlobalKey _countdownGuideKey = GlobalKey();
+  final GlobalKey _dataGuideKey = GlobalKey();
+  final GlobalKey _supportGuideKey = GlobalKey();
   final GlobalKey _vipPanelKey = GlobalKey();
-  String _vipPlanLabel = 'Gói miễn phí';
-  String _vipExpiryLabel = 'Chưa kích hoạt';
+  String _vipPlanLabel = L10nService().translate('home_giminph_5edaf7');
+  String _vipExpiryLabel = L10nService().translate('home_chakchhot_27fec1');
   String _vipPlanCode = '';
   bool _isLifetimeVip = false;
   String _securityEmail = '';
   String _secondaryEmail = '';
   String _securityQuestion = '';
   String _activeRoleKey = 'user1';
-  String _selectedSecurityQuestion = 'Ngày sinh của bạn?';
+  String _selectedSecurityQuestion =
+      L10nService().translate('home_ngysinhcab_82062b');
   String _housePin = '';
   String _bgMusicUrl = '';
   String _bgMusicTitle = '';
   String _bgMusicType = 'audio';
   BreakupRequestData? _breakupRequest;
+  int _pendingAccountDeletionAtMs = 0;
+  String _pendingAccountDeletionUid = '';
   String? _draftThemeKey;
   String? _draftEffectKey;
   double? _draftAvatarSizePx;
@@ -485,12 +558,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   Timer? _settingsSyncBannerDelayTimer;
   Timer? _settingsSyncBannerHideTimer;
   final ValueNotifier<int> _widgetPreviewTickNotifier = ValueNotifier<int>(0);
-  final List<String> _securityQuestions = const [
-    'Ngày sinh của bạn?',
-    'Con vật đầu tiên bạn nuôi?',
-    'Tên giáo viên chủ nhiệm lớp 1?',
-    'Nơi lần đầu tiên hai bạn gặp nhau?',
-    'Món ăn yêu thích nhất của bạn?',
+  final List<String> _securityQuestions = [
+    L10nService().translate('home_ngysinhcab_82062b'),
+    L10nService().translate('home_convtutinb_658f22'),
+    L10nService().translate('home_tngiovinch_4e1a34'),
+    L10nService().translate('home_nilnutinha_433e60'),
+    L10nService().translate('home_mnnyuthchn_25e124'),
   ];
 
   // App Lock variables
@@ -567,8 +640,10 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       if (!mounted) return;
       unawaited(_checkSecurityScopeLockReal());
       unawaited(_restorePendingEmailVerificationState());
-      unawaited(
-          _fetchSettingsData().then((_) => _maybeAutoOpenCountdownMode()));
+      unawaited(_fetchSettingsData().then((_) async {
+        await _maybeShowSettingsGuideOnOpen();
+        await _maybeAutoOpenCountdownMode();
+      }));
       unawaited(_loadAppLockSettings());
       unawaited(_loadLocalSettings());
       unawaited(_initVipServices());
@@ -585,6 +660,80 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     }
     _didAutoOpenCountdownMode = true;
     await _openCountdownMode();
+  }
+
+  Future<void> _maybeShowSettingsGuideOnOpen() async {
+    if (!widget.showGuideOnOpen || _didShowGuideOnOpen || !mounted) {
+      return;
+    }
+    final houseId = (_houseId ?? '').trim();
+    if (houseId.isEmpty) {
+      return;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final guidePrefsKey = 'il_settings_setup_guide_seen_$houseId';
+    if (prefs.getString(guidePrefsKey) == '1') {
+      return;
+    }
+    _didShowGuideOnOpen = true;
+    await prefs.setString(guidePrefsKey, '1');
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    if (!mounted) return;
+
+    await FirstSetupSpotlightGuide.show(
+      context,
+      steps: [
+        FirstSetupSpotlightStep(
+          targetKey: _accountGuideKey,
+          title: L10nService().translate('home_tikhonvthn_2521e3'),
+          description: L10nService().translate('home_qunltnnhtn_e09121'),
+          icon: Icons.manage_accounts_rounded,
+          color: const Color(0xFFF1B42A),
+        ),
+        FirstSetupSpotlightStep(
+          targetKey: _securityGuideKey,
+          title: L10nService().translate('home_bomtvxcmin_0ad4a8'),
+          description: L10nService().translate('home_kimtratrng_f23b01'),
+          icon: Icons.shield_rounded,
+          color: const Color(0xFFD63F67),
+        ),
+        FirstSetupSpotlightStep(
+          targetKey: _themeGuideKey,
+          title: L10nService().translate('home_giaodintra_f6bf4a'),
+          description: L10nService().translate('home_tychnhchnh_99bdd7'),
+          icon: Icons.palette_rounded,
+          color: const Color(0xFF2A73D9),
+        ),
+        FirstSetupSpotlightStep(
+          targetKey: _widgetGuideKey,
+          title: L10nService().translate('home_widgetmnhn_e51604'),
+          description: L10nService().translate('home_thitlpwidg_da3a5c'),
+          icon: Icons.widgets_rounded,
+          color: const Color(0xFF0D7D81),
+        ),
+        FirstSetupSpotlightStep(
+          targetKey: _countdownGuideKey,
+          title: L10nService().translate('home_khnggianmn_5b94a7'),
+          description: L10nService().translate('home_chnhgiaodi_5dfb72'),
+          icon: Icons.timelapse_rounded,
+          color: const Color(0xFFB85A2B),
+        ),
+        FirstSetupSpotlightStep(
+          targetKey: _dataGuideKey,
+          title: L10nService().translate('home_dliuhthng_59a15f'),
+          description: L10nService().translate('home_qunlthngbo_ae24f2'),
+          icon: Icons.hub_rounded,
+          color: const Color(0xFF1565C0),
+        ),
+        FirstSetupSpotlightStep(
+          targetKey: _supportGuideKey,
+          title: L10nService().translate('home_htrvphpl_5ab721'),
+          description: L10nService().translate('home_mtrungtmht_085e44'),
+          icon: Icons.support_agent_rounded,
+          color: const Color(0xFF6A46C6),
+        ),
+      ],
+    );
   }
 
   void _startWidgetPreviewTicker() {
@@ -694,11 +843,13 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   Future<void> _addCustomAnniversary() async {
     final eventName = _anniversaryNameCtrl.text.trim();
     if (_houseId == null || _houseId!.trim().isEmpty) {
-      _showToast('Hãy vào nhà trước khi thêm kỷ niệm.', success: false);
+      _showToast(L10nService().translate('home_hyvonhtrck_f42333'),
+          success: false);
       return;
     }
     if (eventName.isEmpty) {
-      _showToast(context.tr('err_enter_event_name'), success: false);
+      _showToast(L10nService().translate('err_enter_event_name'),
+          success: false);
       return;
     }
     final dateValidationError = DateInputUtils.validationError(
@@ -718,7 +869,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
           lastYear: 2100,
         );
     if (typedAnniversaryDate == null) {
-      _showToast(context.tr('err_select_event_date'), success: false);
+      _showToast(L10nService().translate('err_select_event_date'),
+          success: false);
       return;
     }
 
@@ -736,13 +888,13 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
         _draftAnniversaryDate = null;
         _anniversaryDateErrorText = null;
       });
-      _showToast(context.tr('event_added_success'), success: true);
+      _showToast(L10nService().translate('event_added_success'), success: true);
     } catch (e) {
       if (!mounted) return;
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage: context.tr('err_add_event'),
+          fallbackMessage: L10nService().translate('err_add_event'),
         ).message,
         success: false,
       );
@@ -759,19 +911,19 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   Future<void> _deleteCustomAnniversary(UpcomingEvent event) async {
     final eventId = _extractCustomEventId(event);
     if (eventId == null || _houseId == null || _houseId!.trim().isEmpty) {
-      _showToast(context.tr('err_delete_event'), success: false);
+      _showToast(L10nService().translate('err_delete_event'), success: false);
       return;
     }
 
     final confirmed = await SLNotice.showConfirmDialog(
       context,
-      title: context.tr('theme_event_delete_title'),
+      title: L10nService().translate('theme_event_delete_title'),
       message: L10nService().format(
         'theme_event_delete_message',
         {'name': event.title},
       ),
-      confirmText: 'Xóa',
-      cancelText: 'Hủy',
+      confirmText: L10nService().translate('home_xa_4ed187'),
+      cancelText: L10nService().translate('home_hy_1e4050'),
       isDanger: true,
     );
 
@@ -784,13 +936,14 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     try {
       await _scheduleNotifService.deleteCustomEvent(_houseId!, eventId);
       if (!mounted) return;
-      _showToast(context.tr('event_deleted_success'), success: true);
+      _showToast(L10nService().translate('event_deleted_success'),
+          success: true);
     } catch (e) {
       if (!mounted) return;
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage: context.tr('err_delete_event'),
+          fallbackMessage: L10nService().translate('err_delete_event'),
         ).message,
         success: false,
       );
@@ -856,23 +1009,23 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _themeTitleForKey(String themeKey) {
     switch (themeKey) {
       case 'theme-night':
-        return context.tr('theme_night_vi');
+        return L10nService().translate('theme_night_vi');
       case 'theme-dark':
-        return context.tr('theme_dark_vi');
+        return L10nService().translate('theme_dark_vi');
       case 'theme-true-black':
-        return 'OLED True Black (Tiết kiệm pin)';
+        return L10nService().translate('home_oledtruebl_ca7703');
       case 'theme-mystic-dark':
-        return context.tr('theme_mystic_dark_vi');
+        return L10nService().translate('theme_mystic_dark_vi');
       case 'theme-ocean':
-        return context.tr('theme_ocean_vi');
+        return L10nService().translate('theme_ocean_vi');
       case 'theme-sunset':
-        return context.tr('theme_sunset_vi');
+        return L10nService().translate('theme_sunset_vi');
       case 'theme-crazy-party':
-        return context.tr('theme_crazy_party_vi');
+        return L10nService().translate('theme_crazy_party_vi');
       case 'theme-pink-glow':
-        return context.tr('theme_pink_glow_vi');
+        return L10nService().translate('theme_pink_glow_vi');
       default:
-        return context.tr('theme_default_pink_vi');
+        return L10nService().translate('theme_default_pink_vi');
     }
   }
 
@@ -910,7 +1063,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
             ),
             const SizedBox(height: 14),
             Text(
-              'Thiết Bị Đang Chờ Duyệt',
+              L10nService().translate('home_thitbangch_1e00c8'),
               style: SLTheme.quicksand(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
@@ -950,7 +1103,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Hướng dẫn để được duyệt:',
+                      L10nService().translate('home_hngdncduyt_35af24'),
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
@@ -961,17 +1114,17 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
                   const SizedBox(height: 10),
                   _buildStepRow(
                     '1',
-                    'Mở SoulLocket trên thiết bị cũ (đã dùng lâu) của bạn.',
+                    L10nService().translate('home_msoullocke_b59902'),
                   ),
                   const SizedBox(height: 6),
                   _buildStepRow(
                     '2',
-                    'Vào Cài đặt → Bảo mật → Quản lý thiết bị.',
+                    L10nService().translate('home_vocitbomtq_b29ae5'),
                   ),
                   const SizedBox(height: 6),
                   _buildStepRow(
                     '3',
-                    'Tìm thiết bị này trong danh sách và nhấn "Duyệt".',
+                    'Tìm thiết bị này trong danh sách và nhấn ${L10nService().translate('home_duyt_a4db4d')}.',
                   ),
                   const SizedBox(height: 6),
                   _buildStepRow(
@@ -979,14 +1132,14 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
                     _formatManagedPendingUnlockDate(_devicePendingUnlockAtMs)
                             .isNotEmpty
                         ? 'Nếu không có thiết bị cũ, hãy đợi đến ${_formatManagedPendingUnlockDate(_devicePendingUnlockAtMs)} để thiết bị tự được tin cậy và có thể đăng nhập/chỉnh sửa bình thường.'
-                        : 'Nếu không có thiết bị cũ, ứng dụng sẽ hiển thị thời điểm tự được tin cậy ngay khi hệ thống trả về.',
+                        : L10nService().translate('home_nukhngcthi_6bcda1'),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 18),
             _buildGradientBtn(
-              label: 'Quay lại Cài đặt chung',
+              label: L10nService().translate('home_quaylicitc_3d387a'),
               gradient: const [Color(0xFFFF6F91), Color(0xFFD81B60)],
               onTap: () {
                 if (Navigator.canPop(context)) {
@@ -996,7 +1149,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
             ),
             const SizedBox(height: 10),
             _buildGradientBtn(
-              label: '💬 Yêu cầu hỗ trợ',
+              label: L10nService().translate('home_yucuhtr_60da9e'),
               gradient: const [Color(0xFF7B61FF), Color(0xFF5C4DCC)],
               onTap: () async {
                 await _openSupportContact();
@@ -1018,7 +1171,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
                 size: 18,
               ),
               label: Text(
-                'Đăng xuất',
+                L10nService().translate('home_ngxut_0b3c82'),
                 style: SLTheme.quicksand(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
@@ -1093,7 +1246,7 @@ class _PromptEmailDialogWidgetState extends State<_PromptEmailDialogWidget> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(context.tr('cancel')),
+          child: Text(L10nService().translate('cancel')),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, _controller.text.trim()),
@@ -1101,7 +1254,7 @@ class _PromptEmailDialogWidgetState extends State<_PromptEmailDialogWidget> {
             backgroundColor: const Color(0xFFD81B60),
             foregroundColor: Colors.white,
           ),
-          child: Text(context.tr('continue_action')),
+          child: Text(L10nService().translate('continue_action')),
         ),
       ],
     );

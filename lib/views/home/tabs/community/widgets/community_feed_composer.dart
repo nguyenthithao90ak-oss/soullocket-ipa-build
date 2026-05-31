@@ -44,7 +44,7 @@ class _FeedComposer extends StatelessWidget {
                     Expanded(
                       child: Text(
                         _ct(
-                          'Chia sẻ điều gì với cộng đồng?',
+                          context.tr('home_chiasiugvi_73b3ea'),
                           'What do you want to share with the community?',
                         ),
                         maxLines: 1,

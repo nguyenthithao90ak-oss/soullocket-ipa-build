@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'package:soullocket_app/utils/services/activity_history_service.dart';
-import 'package:soullocket_app/utils/services/diary_service.dart';
-import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:soullocket_app/views/home/tabs/diary/controllers/diary_feed_controller.dart';
+import '../../../../../utils/app_error_mapper.dart';
+import '../../../../../utils/services/activity_history_service.dart';
+import '../../../../../utils/services/diary_service.dart';
+import '../../../../../utils/services/l10n_service.dart';
+import 'diary_feed_controller.dart';
 
 class DiaryComposerController {
   final TextEditingController textController = TextEditingController();
@@ -14,27 +14,27 @@ class DiaryComposerController {
   List<Map<String, dynamic>> get moods => <Map<String, dynamic>>[
         {
           'icon': '😍',
-          'label': L10nService().translate('Vui vẻ'),
+          'label': L10nService().translate(L10nService().translate('home_vuiv_2d8b13')),
           'color': const Color(0xFFFF4B72),
         },
         {
           'icon': '💖',
-          'label': L10nService().translate('Hạnh phúc'),
+          'label': L10nService().translate(L10nService().translate('home_hnhphc_2a902f')),
           'color': const Color(0xFFD81B60),
         },
         {
           'icon': '🤩',
-          'label': L10nService().translate('Hứng khởi'),
+          'label': L10nService().translate(L10nService().translate('home_hngkhi_eef2c4')),
           'color': const Color(0xFFFF8F00),
         },
         {
           'icon': '🤒',
-          'label': L10nService().translate('Ốm'),
+          'label': L10nService().translate(L10nService().translate('home_m_6872a7')),
           'color': const Color(0xFF43A047),
         },
         {
           'icon': '🌧️',
-          'label': L10nService().translate('Ư sầu'),
+          'label': L10nService().translate(L10nService().translate('home_su_9a7d8d')),
           'color': const Color(0xFF546E7A),
         },
       ];
@@ -53,7 +53,7 @@ class DiaryComposerController {
 
     if (content.isEmpty) {
       showSnackBar(
-        L10nService().translate('Viết nội dung tâm sự trước đã!'),
+        L10nService().translate(L10nService().translate('home_vitnidungt_62c71e')),
         backgroundColor: const Color(0xFFEF6C57),
       );
       return;
@@ -65,7 +65,7 @@ class DiaryComposerController {
       if (user == null) {
         showSnackBar(
           L10nService()
-              .translate('Phiên đăng nhập chưa sẵn sàng. Vui lòng thử lại.'),
+              .translate(L10nService().translate('home_phinngnhpc_f6ac90')),
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -74,7 +74,7 @@ class DiaryComposerController {
       final houseId = await feedController.resolveHouseId();
       if (houseId == null) {
         showSnackBar(
-          L10nService().translate('Chưa tìm thấy mã nhà để lưu bài viết.'),
+          L10nService().translate(L10nService().translate('home_chatmthymn_54ac3c')),
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -97,14 +97,14 @@ class DiaryComposerController {
       if (tempId.startsWith('offline_')) {
         showSnackBar(
           L10nService().translate(
-            'Đã lưu nháp! Bài viết sẽ tự động đăng khi có mạng.',
+            L10nService().translate('home_lunhpbivit_aa16c6'),
           ),
           backgroundColor: const Color(0xFFF39C12),
         );
       } else {
-        showSnackBar(L10nService().translate('Đã đăng tâm sự mới!'));
+        showSnackBar(L10nService().translate(L10nService().translate('home_ngtmsmi_f60808')));
         ActivityHistoryService.instance.add(
-          'đã viết một nhật ký mới',
+          L10nService().translate('home_vitmtnhtkm_2ae1bc'),
           houseId: houseId,
           role: authorRole,
           isPrivate: false,
@@ -115,7 +115,7 @@ class DiaryComposerController {
         AppErrorMapper.resolve(
           e,
           fallbackMessage:
-              L10nService().translate('Không thể đăng bài lúc này.'),
+              L10nService().translate(L10nService().translate('home_khngthngbi_6d6c5a')),
         ).message,
         backgroundColor: const Color(0xFFE53935),
       );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../widgets/community_settings_components.dart';
 
@@ -47,9 +48,9 @@ class CommunitySettingsPrivacySection extends StatelessWidget {
     return CommunitySettingsSectionCard(
       icon: Icons.lock_outline_rounded,
       accent: const Color(0xFF4C7EF3),
-      title: 'Quyền riêng tư hồ sơ',
+      title: context.tr('comm_quynringth_b64d5f'),
       subtitle:
-          'Kiểm soát người ngoài nhìn thấy gì khi mở hồ sơ, mục yêu thích và các khoảnh khắc nổi bật.',
+          context.tr('comm_kimsotngin_40b662'),
       children: [
         CommunitySettingsStatusOverview(
           items: [
@@ -70,115 +71,115 @@ class CommunitySettingsPrivacySection extends StatelessWidget {
             ),
             CommunitySettingsStatusChipData(
               icon: Icons.visibility_outlined,
-              label: hideLikeCount ? 'Ẩn lượt tim' : 'Hiện lượt tim',
+              label: hideLikeCount ? context.tr('comm_nlttim_8595c3') : context.tr('comm_hinlttim_952193'),
               active: !hideLikeCount,
             ),
           ],
         ),
         const SizedBox(height: 12),
-        const CommunitySettingsSubsectionTitle(
-          title: 'Những gì người khác được nhìn thấy',
+        CommunitySettingsSubsectionTitle(
+          title: context.tr('comm_nhnggngikh_5200a5'),
         ),
         const SizedBox(height: 10),
         CommunitySettingsDropdownCard(
-          title: 'Quyền riêng tư hồ sơ',
-          subtitle: 'Chọn ai có thể xem toàn bộ hồ sơ cộng đồng của nhà bạn.',
+          title: context.tr('comm_quynringth_b64d5f'),
+          subtitle: context.tr('comm_chnaicthxe_5b94ae'),
           value: privacy,
-          items: const [
+          items: [
             DropdownMenuItem(
               value: 'public',
-              child: Text('Công khai cho mọi người'),
+              child: Text(context.tr('comm_cngkhaicho_d9d2de')),
             ),
             DropdownMenuItem(
               value: 'friends',
-              child: Text('Chỉ bạn bè'),
+              child: Text(context.tr('comm_chbnb_824805')),
             ),
             DropdownMenuItem(
               value: 'private',
-              child: Text('Chỉ hai người trong nhà'),
+              child: Text(context.tr('comm_chhaingitr_2acb90')),
             ),
           ],
           onChanged: onPrivacyChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsDropdownCard(
-          title: 'Hiển thị mục Yêu thích',
+          title: context.tr('comm_hinthmcyut_1eeb26'),
           subtitle:
-              'Quy định người khác có thấy danh sách bài bạn đã thích hay không.',
+              context.tr('comm_quynhngikh_fa3de0'),
           value: likedVisibility,
-          items: const [
+          items: [
             DropdownMenuItem(
               value: 'private',
-              child: Text('Ẩn với người khác'),
+              child: Text(context.tr('comm_nvingikhc_b7c7fa')),
             ),
             DropdownMenuItem(
               value: 'public',
-              child: Text('Cho phép xem'),
+              child: Text(context.tr('comm_chophpxem_acb88c')),
             ),
           ],
           onChanged: onLikedVisibilityChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsDropdownCard(
-          title: 'Hiển thị mục Khoảnh khắc',
+          title: context.tr('comm_hinthmckho_a0ecfe'),
           subtitle:
-              'Chọn mức công khai cho album khoảnh khắc và kỷ niệm nổi bật.',
+              context.tr('comm_chnmccngkh_bff15b'),
           value: locketVisibility,
-          items: const [
+          items: [
             DropdownMenuItem(
               value: 'private',
-              child: Text('Ẩn với người khác'),
+              child: Text(context.tr('comm_nvingikhc_b7c7fa')),
             ),
             DropdownMenuItem(
               value: 'public',
-              child: Text('Cho phép xem'),
+              child: Text(context.tr('comm_chophpxem_acb88c')),
             ),
           ],
           onChanged: onLocketVisibilityChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsDropdownCard(
-          title: 'Thứ tự kỷ niệm nổi bật',
+          title: context.tr('comm_thtknimnib_2903b3'),
           subtitle:
-              'Kiểm soát cách các bài được ưu tiên khi xuất hiện trên hồ sơ.',
+              context.tr('comm_kimsotcchc_071c0a'),
           value: highlightSort,
-          items: const [
+          items: [
             DropdownMenuItem(
               value: 'date_desc',
-              child: Text('Mới nhất lên đầu'),
+              child: Text(context.tr('comm_minhtlnu_e9f8eb')),
             ),
             DropdownMenuItem(
               value: 'likes_desc',
-              child: Text('Nhiều tim lên đầu'),
+              child: Text(context.tr('comm_nhiutimlnu_4593bc')),
             ),
             DropdownMenuItem(
               value: 'manual',
-              child: Text('Tự chọn thủ công'),
+              child: Text(context.tr('comm_tchnthcng_52db0b')),
             ),
           ],
           onChanged: onHighlightSortChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsToggleCard(
-          title: 'Cho phép người khác lưu ảnh hoặc video',
+          title: context.tr('comm_chophpngik_32f691'),
           subtitle:
-              'Tắt nếu bạn không muốn nội dung bị tải xuống trực tiếp từ hồ sơ.',
+              context.tr('comm_ttnubnkhng_5e25ac'),
           value: allowDownload,
           onChanged: onAllowDownloadChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsToggleCard(
-          title: 'Hiển thị ngày tạo nhà trên hồ sơ',
+          title: context.tr('comm_hinthngyto_f1da41'),
           subtitle:
-              'Giữ bật nếu muốn hồ sơ có chiều sâu và rõ hành trình của hai bạn.',
+              context.tr('comm_gibtnumunh_d64bed'),
           value: showCreationDate,
           onChanged: onShowCreationDateChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsToggleCard(
-          title: 'Ẩn số lượt tim trên bài viết',
+          title: context.tr('comm_nslttimtrn_131b0b'),
           subtitle:
-              'Dùng khi bạn muốn feed gọn hơn và bớt tập trung vào số liệu tương tác.',
+              context.tr('comm_dngkhibnmu_fe4181'),
           value: hideLikeCount,
           onChanged: onHideLikeCountChanged,
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../core/sl_theme.dart';
 import '../../../../utils/services/utility_service.dart';
@@ -27,7 +28,7 @@ class UtilitiesHubShortcuts extends StatelessWidget {
       children: [
         if (pinnedApps.isNotEmpty) ...[
           _ShortcutGroup(
-            title: 'Đã ghim',
+            title: context.tr('home_ghim_4be667'),
             icon: Icons.push_pin_rounded,
             apps: pinnedApps,
             onTap: onShortcutTap,
@@ -37,7 +38,7 @@ class UtilitiesHubShortcuts extends StatelessWidget {
         ],
         if (recentApps.isNotEmpty)
           _ShortcutGroup(
-            title: 'Gần đây',
+            title: context.tr('home_gny_a3ae09'),
             icon: Icons.history_rounded,
             apps: recentApps,
             onTap: onShortcutTap,
@@ -70,14 +71,14 @@ class _ShortcutGroup extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, size: 15, color: const Color(0xFFD81B60)),
+            Icon(icon, size: 15, color: SLColors.primary),
             const SizedBox(width: 6),
             Text(
               title,
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
-                color: const Color(0xFFD81B60),
+                color: SLColors.primary,
                 letterSpacing: 0.1,
               ),
             ),
@@ -137,7 +138,7 @@ class _ShortcutIconButton extends StatelessWidget {
         };
     final colors = List<Color>.from(config['colors'] as List);
     final iconData = config['icon'] as IconData? ?? app.icon;
-    final iconColor = config['iconColor'] as Color? ?? Colors.white;
+    final iconColor = config['iconColor'] as Color? ?? SLColors.textInverse;
 
     return Material(
       color: Colors.transparent,
@@ -186,7 +187,7 @@ class _ShortcutChip extends StatelessWidget {
         };
     final colors = List<Color>.from(config['colors'] as List);
     final iconData = config['icon'] as IconData? ?? app.icon;
-    final iconColor = config['iconColor'] as Color? ?? Colors.white;
+    final iconColor = config['iconColor'] as Color? ?? SLColors.textInverse;
 
     return Material(
       color: Colors.transparent,
@@ -236,7 +237,7 @@ class _ShortcutChip extends StatelessWidget {
                 style: SLTheme.quicksand(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF5A2A3F),
+                  color: SLColors.textPrimary,
                 ),
               ),
             ],

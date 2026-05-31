@@ -61,7 +61,7 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                     ),
                     SLSpacing.h16,
                     Text(
-                      'Thêm trang kỷ niệm mới',
+                      context.tr('util_thmtrangkn_d61f27'),
                       style: SLTheme.quicksand(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
@@ -71,21 +71,21 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                     SLSpacing.h16,
                     _DiaryInput(
                       controller: titleCtrl,
-                      label: 'Tiêu đề',
-                      hintText: 'Ví dụ: Buổi tối xem phim cùng nhau',
+                      label: context.tr('util_tiu_ae4b89'),
+                      hintText: context.tr('util_vdbuitixem_e09d54'),
                     ),
                     SLSpacing.h12,
                     _DiaryInput(
                       controller: memoryCtrl,
-                      label: 'Kỷ niệm',
-                      hintText: 'Viết vài dòng đáng nhớ...',
+                      label: context.tr('util_knim_4f6aeb'),
+                      hintText: context.tr('util_vitvidngng_a01427'),
                       maxLines: 4,
                     ),
                     SLSpacing.h12,
                     _DiaryInput(
                       controller: promptCtrl,
                       label: 'Prompt',
-                      hintText: 'Một câu hỏi để gợi nhớ sâu hơn',
+                      hintText: context.tr('util_mtcuhiginh_cd66f6'),
                       maxLines: 2,
                     ),
                     SLSpacing.h16,
@@ -95,6 +95,7 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                         onPressed: _isSaving
                             ? null
                             : () async {
+                                final fallbackPrompt = context.tr('util_hythmmtchi_6eddec');
                                 final navigator = Navigator.of(sheetContext);
                                 final title = titleCtrl.text.trim();
                                 final memory = memoryCtrl.text.trim();
@@ -130,7 +131,7 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                                       if (imageUrl.isNotEmpty)
                                         'imageUrl': imageUrl,
                                       'prompt': prompt.isEmpty
-                                          ? 'Hãy thêm một chi tiết nhỏ để ghi nhớ lâu hơn.'
+                                          ? fallbackPrompt
                                           : prompt,
                                     },
                                   );
@@ -168,7 +169,7 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                           ),
                         ),
                         child: Text(
-                          _isSaving ? 'Đang lưu...' : 'Lưu vào sổ tay',
+                          _isSaving ? context.tr('util_anglu_4d30b6') : context.tr('util_luvostay_0f0952'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w800,
                             fontSize: 14,
@@ -236,7 +237,7 @@ class _DiaryImagePickerTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    image == null ? 'Ảnh đính kèm' : 'Đã chọn ảnh',
+                    image == null ? context.tr('util_nhnhkm_035065') : context.tr('util_chnnh_d05e7e'),
                     style: SLTheme.quicksand(
                       fontSize: 13,
                       fontWeight: FontWeight.w900,
@@ -246,8 +247,8 @@ class _DiaryImagePickerTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     image == null
-                        ? 'Chọn ảnh từ máy, app sẽ tự upload'
-                        : 'Ảnh sẽ hiện nhỏ trong trang, bấm để xem rõ',
+                        ? context.tr('util_chnnhtmyap_ffd3d5')
+                        : context.tr('util_nhshinnhtr_778db1'),
                     style: SLTheme.quicksand(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,

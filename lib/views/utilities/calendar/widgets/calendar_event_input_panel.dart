@@ -1,8 +1,9 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../../../core/fast_backdrop_filter.dart';
+import '../../../../core/sl_theme.dart';
 
 import 'calendar_info_pill.dart';
 
@@ -70,7 +71,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Thêm kế hoạch mới',
+                            context.tr('util_thmkhochmi_89a3cf'),
                             style: SLTheme.quicksand(
                               fontSize: compact ? 15 : 16,
                               fontWeight: FontWeight.w900,
@@ -79,7 +80,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                           ),
                           SLSpacing.h4,
                           Text(
-                            'Viết rõ giờ hẹn, việc cần chuẩn bị hoặc điều cả hai cần nhớ cho ngày này.',
+                            context.tr('util_vitrgihnvi_101585'),
                             style: SLTheme.quicksand(
                               fontSize: compact ? 11.5 : 12,
                               fontWeight: FontWeight.w700,
@@ -111,7 +112,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                     ),
                     decoration: InputDecoration(
                       hintText:
-                          'Ví dụ: 19:30 gọi video, mua bánh nhỏ, chuẩn bị quà và viết lời nhắn...',
+                          context.tr('util_vd1930givi_57624e'),
                       hintStyle: SLTheme.quicksand(
                         color: SLTheme.textMuted,
                         fontWeight: FontWeight.w600,
@@ -128,7 +129,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                   children: [
                     CalendarInfoPill(
                       icon: Icons.notifications_none_rounded,
-                      label: 'Nhắc trước 1 ngày',
+                      label: context.tr('util_nhctrc1ngy_09c55a'),
                       accent: accent,
                       compact: compact,
                     ),
@@ -157,7 +158,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                     ),
                     icon: const Icon(Icons.add_task_rounded, size: 20),
                     label: Text(
-                      'Thêm vào lịch đi chơi',
+                      context.tr('util_thmvolchic_6b3138'),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: compact ? 13 : 14,

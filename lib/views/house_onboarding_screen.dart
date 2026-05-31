@@ -11,6 +11,7 @@ import '../services/l10n_service.dart';
 import '../services/auth_service.dart';
 import '../services/house_service.dart';
 import '../utils/app_error_mapper.dart';
+import '../utils/services/offline_cache_service.dart';
 import '../utils/flexible_date_input.dart';
 import 'app_entry.dart';
 import 'app_entry/widgets/loading_scaffold.dart';
@@ -927,7 +928,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       if (!mounted) return;
       final resolvedHouseName = houseName;
 
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await OfflineCacheService.getPrefs();
       await prefs.setString('il_user_name', myDisplayName);
       await prefs.setString('il_role', myRole);
       await prefs.setString('il_house_id', createdHouseId);

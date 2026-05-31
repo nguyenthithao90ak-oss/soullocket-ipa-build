@@ -23,153 +23,153 @@ class TarotCard {
   });
 }
 
-const List<TarotCard> _allCards = [
+final List<TarotCard> _allCards = [
   TarotCard(
       name: 'The Fool',
       symbol: '🪁',
-      uprightMeaning: 'Một khởi đầu mới đầy bản năng và tự do.',
-      reversedMeaning: 'Sự vội vàng hoặc nỗi sợ bắt đầu đang làm lệch nhịp.'),
+      uprightMeaning: L10nService().translate('util_mtkhiumiyb_69a121'),
+      reversedMeaning: L10nService().translate('util_svivnghocn_831dbf')),
   TarotCard(
       name: 'The Magician',
       symbol: '✨',
       uprightMeaning:
-          'Bạn có khả năng biến điều mình muốn thành hành động rõ ràng.',
-      reversedMeaning: 'Năng lượng đang bị phân tán hoặc dùng sai chỗ.'),
+          L10nService().translate('util_bnckhnngbi_222433'),
+      reversedMeaning: L10nService().translate('util_nnglngangb_eb5169')),
   TarotCard(
       name: 'The High Priestess',
       symbol: '🔮',
       uprightMeaning:
-          'Trực giác rất mạnh, có điều gì đó đang được cảm hơn là nói.',
-      reversedMeaning: 'Bạn đang bỏ qua trực giác hoặc che giấu cảm xúc thật.'),
+          L10nService().translate('util_trcgicrtmn_b7f63e'),
+      reversedMeaning: L10nService().translate('util_bnangbquat_917c34')),
   TarotCard(
       name: 'The Empress',
       symbol: '🌷',
-      uprightMeaning: 'Năng lượng nuôi dưỡng, dịu dàng và cảm xúc nở ra.',
+      uprightMeaning: L10nService().translate('util_nnglngnuid_fe7eee'),
       reversedMeaning:
-          'Sự chăm sóc đang mất cân bằng hoặc trở nên quá lệ thuộc.'),
+          L10nService().translate('util_schmscangm_1aee7f')),
   TarotCard(
       name: 'The Emperor',
       symbol: '🛡️',
       uprightMeaning:
-          'Sự rõ ràng, ranh giới và mong muốn ổn định đang lên tiếng.',
+          L10nService().translate('util_srrngranhg_ff9c12'),
       reversedMeaning:
-          'Kiểm soát quá tay hoặc cứng nhắc đang làm cảm xúc nghẹt lại.'),
+          L10nService().translate('util_kimsotquta_562f9a')),
   TarotCard(
       name: 'The Lovers',
       symbol: '💞',
       uprightMeaning:
-          'Tình cảm, lựa chọn bằng tim và sự đồng điệu đang rất rõ.',
+          L10nService().translate('util_tnhcmlachn_c55c2e'),
       reversedMeaning:
-          'Mất cân bằng hoặc do dự trong một lựa chọn cảm xúc quan trọng.'),
+          L10nService().translate('util_mtcnbnghoc_8bd0c6')),
   TarotCard(
       name: 'The Chariot',
       symbol: '🏹',
-      uprightMeaning: 'Cảm xúc muốn tiến lên và không muốn đứng yên nữa.',
-      reversedMeaning: 'Bạn đang cố đẩy quá nhanh hoặc bị giằng co nội tâm.'),
+      uprightMeaning: L10nService().translate('util_cmxcmuntin_80677b'),
+      reversedMeaning: L10nService().translate('util_bnangcyqun_df95ab')),
   TarotCard(
       name: 'Strength',
       symbol: '🦁',
       uprightMeaning:
-          'Sự dịu mà mạnh, biết giữ tim bình tĩnh trước sóng cảm xúc.',
-      reversedMeaning: 'Bất an đang làm bạn nghi ngờ chính trái tim mình.'),
+          L10nService().translate('util_sdummnhbit_22f465'),
+      reversedMeaning: L10nService().translate('util_btananglmb_fb948e')),
   TarotCard(
       name: 'The Hermit',
       symbol: '🕯️',
-      uprightMeaning: 'Bạn cần một quãng lùi để hiểu mình thật sự muốn gì.',
-      reversedMeaning: 'Sự khép lại đang dài hơn mức cần thiết.'),
+      uprightMeaning: L10nService().translate('util_bncnmtqung_fa6015'),
+      reversedMeaning: L10nService().translate('util_skhpliangd_9eaa01')),
   TarotCard(
       name: 'Wheel of Fortune',
       symbol: '🎡',
-      uprightMeaning: 'Một bước ngoặt cảm xúc đang đến rất gần.',
-      reversedMeaning: 'Bạn đang chống lại sự thay đổi vốn cần xảy ra.'),
+      uprightMeaning: L10nService().translate('util_mtbcngotcm_4d6d49'),
+      reversedMeaning: L10nService().translate('util_bnangchngl_04ea64')),
   TarotCard(
       name: 'Justice',
       symbol: '⚖️',
-      uprightMeaning: 'Mọi thứ đòi hỏi sự thẳng thắn và công bằng cảm xúc.',
-      reversedMeaning: 'Một phía đang né trách nhiệm hoặc nói chưa thật.'),
+      uprightMeaning: L10nService().translate('util_mithihisth_9be6af'),
+      reversedMeaning: L10nService().translate('util_mtphaangnt_ea389e')),
   TarotCard(
       name: 'The Hanged Man',
       symbol: '🪞',
-      uprightMeaning: 'Cần đổi góc nhìn để hiểu câu chuyện này sâu hơn.',
-      reversedMeaning: 'Sự chần chừ đang kéo dài quá lâu.'),
+      uprightMeaning: L10nService().translate('util_cnigcnhnhi_f3f101'),
+      reversedMeaning: L10nService().translate('util_schnchangk_fa687f')),
   TarotCard(
       name: 'Death',
       symbol: '🦋',
       uprightMeaning:
-          'Một lớp cảm xúc cũ đang khép lại để nhường chỗ cho điều thật hơn.',
-      reversedMeaning: 'Bạn đang níu một điều đã hết đúng nhịp.'),
+          L10nService().translate('util_mtlpcmxcca_f51277'),
+      reversedMeaning: L10nService().translate('util_bnangnumti_7d7304')),
   TarotCard(
       name: 'Temperance',
       symbol: '🍷',
-      uprightMeaning: 'Cân bằng, chữa lành và nhịp yêu đều đang được mời vào.',
-      reversedMeaning: 'Cảm xúc đang lệch nhịp và cần được điều chỉnh.'),
+      uprightMeaning: L10nService().translate('util_cnbngchaln_889b06'),
+      reversedMeaning: L10nService().translate('util_cmxcanglch_213be8')),
   TarotCard(
       name: 'The Devil',
       symbol: '⛓️',
       uprightMeaning:
-          'Sự ám ảnh, dính mắc hoặc thói quen yêu chưa lành đang hiện rõ.',
-      reversedMeaning: 'Bạn đang có cơ hội gỡ một sợi trói cảm xúc cũ.'),
+          L10nService().translate('util_smnhdnhmch_b6b4b3'),
+      reversedMeaning: L10nService().translate('util_bnangcchig_3dfb60')),
   TarotCard(
       name: 'The Tower',
       symbol: '⚡',
-      uprightMeaning: 'Một sự thật mạnh có thể làm bạn thức tỉnh rất nhanh.',
-      reversedMeaning: 'Bạn đang trì hoãn thay đổi cần thiết.'),
+      uprightMeaning: L10nService().translate('util_mtsthtmnhc_132ccc'),
+      reversedMeaning: L10nService().translate('util_bnangtrhon_c9bc90')),
   TarotCard(
       name: 'The Star',
       symbol: '⭐',
-      uprightMeaning: 'Hy vọng, chữa lành và một đường sáng vẫn còn.',
-      reversedMeaning: 'Bạn cần tin lại vào điều xứng đáng với mình.'),
+      uprightMeaning: L10nService().translate('util_hyvngchaln_c66c59'),
+      reversedMeaning: L10nService().translate('util_bncntinliv_18533e')),
   TarotCard(
       name: 'The Moon',
       symbol: '🌙',
-      uprightMeaning: 'Nỗi sợ, mơ hồ và trực giác đang đan vào nhau.',
-      reversedMeaning: 'Sương mù đang dần tan, sự thật bắt đầu hiện ra.'),
+      uprightMeaning: L10nService().translate('util_nismhvtrcg_5f74a0'),
+      reversedMeaning: L10nService().translate('util_sngmangdnt_488841')),
   TarotCard(
       name: 'The Sun',
       symbol: '🌞',
-      uprightMeaning: 'Sự sáng rõ, ấm áp và cảm xúc có thật đang nở ra.',
+      uprightMeaning: L10nService().translate('util_ssngrmpvcm_2cea33'),
       reversedMeaning:
-          'Niềm vui đang bị che bởi cái tôi hoặc kỳ vọng quá cao.'),
+          L10nService().translate('util_nimvuiangb_a50170')),
   TarotCard(
       name: 'Judgement',
       symbol: '🎺',
-      uprightMeaning: 'Một lời gọi thức tỉnh trái tim đang vang lên.',
-      reversedMeaning: 'Bạn đang chần chừ trước điều mình vốn đã biết.'),
+      uprightMeaning: L10nService().translate('util_mtligithct_36f5b0'),
+      reversedMeaning: L10nService().translate('util_bnangchnch_327f10')),
   TarotCard(
       name: 'The World',
       symbol: '🌍',
-      uprightMeaning: 'Một vòng cảm xúc trọn vẹn đang đến gần.',
-      reversedMeaning: 'Có điều gì đó còn dang dở cần được khép lại.'),
+      uprightMeaning: L10nService().translate('util_mtvngcmxct_4bf877'),
+      reversedMeaning: L10nService().translate('util_ciugcndang_f50965')),
   TarotCard(
       name: 'Ace of Cups',
       symbol: '💗',
-      uprightMeaning: 'Cảm xúc mới, dịu và chân thật đang mở ra.',
-      reversedMeaning: 'Cảm xúc bị nén hoặc chưa dám cho chảy ra.'),
+      uprightMeaning: L10nService().translate('util_cmxcmiduvc_5d5c8d'),
+      reversedMeaning: L10nService().translate('util_cmxcbnnhoc_ef2f5b')),
   TarotCard(
       name: 'Two of Cups',
       symbol: '🥂',
-      uprightMeaning: 'Sự đồng điệu và kết nối hai chiều rất rõ.',
-      reversedMeaning: 'Lệch nhịp cảm xúc hoặc thiếu đáp lại tương xứng.'),
+      uprightMeaning: L10nService().translate('util_sngiuvktni_afbc3d'),
+      reversedMeaning: L10nService().translate('util_lchnhpcmxc_c7d730')),
   TarotCard(
       name: 'Three of Swords',
       symbol: '💔',
-      uprightMeaning: 'Nỗi đau cũ hoặc vết thương chưa gọi tên đang lên mặt.',
-      reversedMeaning: 'Giai đoạn hồi phục đã bắt đầu nhưng vẫn cần dịu dàng.'),
+      uprightMeaning: L10nService().translate('util_niauchocvt_9875c5'),
+      reversedMeaning: L10nService().translate('util_giaionhiph_904415')),
   TarotCard(
       name: 'Ten of Cups',
       symbol: '🌈',
-      uprightMeaning: 'Năng lượng viên mãn, ấm nhà và gắn kết sâu.',
-      reversedMeaning: 'Bức tranh đẹp đang bị vướng bởi kỳ vọng chưa nói ra.'),
+      uprightMeaning: L10nService().translate('util_nnglngvinm_345e6a'),
+      reversedMeaning: L10nService().translate('util_bctranhpan_75390f')),
   TarotCard(
       name: 'Queen of Cups',
       symbol: '👑',
-      uprightMeaning: 'Trái tim rất nhạy và biết yêu bằng sự thấu cảm.',
-      reversedMeaning: 'Bạn đang ôm cảm xúc quá nhiều mà chưa nói hết.'),
+      uprightMeaning: L10nService().translate('util_tritimrtnh_62a4d2'),
+      reversedMeaning: L10nService().translate('util_bnangmcmxc_76d380')),
   TarotCard(
       name: 'Knight of Wands',
       symbol: '🔥',
-      uprightMeaning: 'Năng lượng đam mê, chủ động và muốn tiến rất nhanh.',
-      reversedMeaning: 'Sự bốc đồng có thể làm cảm xúc mất ổn định.'),
+      uprightMeaning: L10nService().translate('util_nnglngammc_24d8a1'),
+      reversedMeaning: L10nService().translate('util_sbcngcthlm_7a75e1')),
 ];
 
 class PickedCard {
@@ -326,7 +326,7 @@ class _TarotScreenState extends State<TarotScreen>
           final slot = _selectedSpread.slots[index];
           return TarotReadingSelection(
             slotId: slot.id,
-            label: context.tr(slot.labelKey),
+            label: L10nService().translate(slot.labelKey),
             cardName: picked.card.name,
             isReversed: picked.isReversed,
             baseMeaning: picked.isReversed
@@ -344,7 +344,7 @@ class _TarotScreenState extends State<TarotScreen>
       if (!mounted || session != _analysisSession) return;
       setState(() {
         _isAnalyzingReading = false;
-        _analysisError = context.tr('tarot_analysis_failed');
+        _analysisError = L10nService().translate('tarot_analysis_failed');
       });
     }
   }
@@ -372,7 +372,7 @@ class _TarotScreenState extends State<TarotScreen>
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          context.tr('tarot_title'),
+          L10nService().translate('tarot_title'),
           style: SLTheme.quicksand(
             color: Colors.white,
             fontWeight: FontWeight.w900,
@@ -447,8 +447,8 @@ class _TarotScreenState extends State<TarotScreen>
                         ),
                         child: Text(
                           _pickedCards.isEmpty
-                              ? context.tr('tarot_pick_button')
-                              : context.tr('tarot_pick_again'),
+                              ? L10nService().translate('tarot_pick_button')
+                              : L10nService().translate('tarot_pick_again'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: compact ? 14 : 16,
@@ -579,7 +579,7 @@ class _TarotScreenState extends State<TarotScreen>
                 color: const Color(0x22FFFFFF),
               ),
               child: Text(
-                context.tr('tarot_header_badge'),
+                L10nService().translate('tarot_header_badge'),
                 style: SLTheme.quicksand(
                   color: const Color(0xFFFFD4E4),
                   fontWeight: FontWeight.w800,
@@ -589,7 +589,7 @@ class _TarotScreenState extends State<TarotScreen>
             ),
             SizedBox(height: compact ? 8 : 12),
             Text(
-              context.tr('tarot_header_title'),
+              L10nService().translate('tarot_header_title'),
               style: SLTheme.quicksand(
                 fontSize: compact ? 18.5 : 24,
                 color: Colors.white,
@@ -599,7 +599,7 @@ class _TarotScreenState extends State<TarotScreen>
             ),
             SizedBox(height: compact ? 7 : 10),
             Text(
-              context.tr('tarot_header_desc'),
+              L10nService().translate('tarot_header_desc'),
               style: SLTheme.quicksand(
                 color: Colors.white.withValues(alpha: 0.78),
                 fontWeight: FontWeight.w600,
@@ -646,7 +646,7 @@ class _TarotScreenState extends State<TarotScreen>
               SizedBox(height: compact ? 12 : 16),
               if (_isProfileLoading)
                 Text(
-                  context.tr('tarot_profile_loading'),
+                  L10nService().translate('tarot_profile_loading'),
                   style: SLTheme.quicksand(
                     color: Colors.white.withValues(alpha: 0.72),
                     fontWeight: FontWeight.w700,
@@ -672,7 +672,7 @@ class _TarotScreenState extends State<TarotScreen>
                       ),
                     if (profile.compatibilityScore != null)
                       _profileChip(
-                        '${context.tr('tarot_chip_compatibility')} ${profile.compatibilityScore}%',
+                        '${L10nService().translate('tarot_chip_compatibility')} ${profile.compatibilityScore}%',
                         const Color(0xFFFFB347),
                       ),
                     if (profile.maturityLabel.isNotEmpty)
@@ -703,7 +703,7 @@ class _TarotScreenState extends State<TarotScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              context.tr('tarot_select_spread'),
+              L10nService().translate('tarot_select_spread'),
               style: SLTheme.quicksand(
                 color: Colors.white,
                 fontWeight: FontWeight.w900,
@@ -756,7 +756,7 @@ class _TarotScreenState extends State<TarotScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                context.tr(spread.badgeKey),
+                                L10nService().translate(spread.badgeKey),
                                 style: SLTheme.quicksand(
                                   color: selected
                                       ? Colors.white
@@ -767,7 +767,7 @@ class _TarotScreenState extends State<TarotScreen>
                               ),
                               SizedBox(height: compact ? 18 : 22),
                               Text(
-                                context.tr(spread.titleKey),
+                                L10nService().translate(spread.titleKey),
                                 style: SLTheme.quicksand(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
@@ -777,7 +777,7 @@ class _TarotScreenState extends State<TarotScreen>
                               ),
                               SizedBox(height: compact ? 6 : 8),
                               Text(
-                                context.tr(spread.subtitleKey),
+                                L10nService().translate(spread.subtitleKey),
                                 maxLines: compact ? null : 3,
                                 overflow:
                                     compact ? null : TextOverflow.ellipsis,
@@ -790,7 +790,7 @@ class _TarotScreenState extends State<TarotScreen>
                               ),
                               SizedBox(height: compact ? 8 : 10),
                               Text(
-                                '${spread.slots.length} ${context.tr('tarot_card_unit')}',
+                                '${spread.slots.length} ${L10nService().translate('tarot_card_unit')}',
                                 style: SLTheme.quicksand(
                                   color: Colors.white.withValues(alpha: 0.78),
                                   fontWeight: FontWeight.w800,
@@ -839,7 +839,7 @@ class _TarotScreenState extends State<TarotScreen>
                   ),
               SizedBox(height: compact ? 14 : 18),
               Text(
-                context.tr('tarot_empty_title'),
+                L10nService().translate('tarot_empty_title'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   color: Colors.white,
@@ -849,7 +849,7 @@ class _TarotScreenState extends State<TarotScreen>
               ),
               SizedBox(height: compact ? 8 : 10),
               Text(
-                context.tr('tarot_empty_desc'),
+                L10nService().translate('tarot_empty_desc'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   color: Colors.white.withValues(alpha: 0.72),
@@ -900,7 +900,7 @@ class _TarotScreenState extends State<TarotScreen>
               ),
               SizedBox(height: compact ? 20 : 26),
               Text(
-                context.tr('tarot_shuffling'),
+                L10nService().translate('tarot_shuffling'),
                 style: SLTheme.quicksand(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
@@ -930,7 +930,7 @@ class _TarotScreenState extends State<TarotScreen>
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                context.tr('tarot_reading_loading'),
+                L10nService().translate('tarot_reading_loading'),
                 style: SLTheme.quicksand(
                   color: Colors.white.withValues(alpha: 0.82),
                   fontWeight: FontWeight.w700,
@@ -1170,7 +1170,7 @@ class _TarotScreenState extends State<TarotScreen>
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          context.tr(slot.labelKey),
+                          L10nService().translate(slot.labelKey),
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -1183,7 +1183,7 @@ class _TarotScreenState extends State<TarotScreen>
                       ),
                       SizedBox(height: compact ? 12 : 14),
                       Text(
-                        context.tr('tarot_tap_to_open'),
+                        L10nService().translate('tarot_tap_to_open'),
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
                           color: Colors.white.withValues(alpha: 0.66),
@@ -1217,8 +1217,8 @@ class _TarotScreenState extends State<TarotScreen>
         final radius = _panelRadiusFor(constraints.maxWidth);
         final panelWidth = (constraints.maxWidth * 0.30).clamp(104.0, 120.0);
         final orientationLabel = pickedCard.isReversed
-            ? context.tr('tarot_reversed')
-            : context.tr('tarot_upright');
+            ? L10nService().translate('tarot_reversed')
+            : L10nService().translate('tarot_upright');
         final panel = Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -1352,7 +1352,7 @@ class _TarotScreenState extends State<TarotScreen>
                     maxWidth: stacked ? constraints.maxWidth - 28 : 220,
                   ),
                   child: _profileChip(
-                    context.tr(slot.labelKey),
+                    L10nService().translate(slot.labelKey),
                     const Color(0xFF6B5BFF),
                   ),
                 ),

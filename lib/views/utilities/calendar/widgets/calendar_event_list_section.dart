@@ -2,10 +2,10 @@ import 'dart:ui' as ui;
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
-
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../../../core/fast_backdrop_filter.dart';
+import '../../../../core/sl_theme.dart';
+import '../../../../utils/app_error_mapper.dart';
 import 'calendar_event_state_card.dart';
 import 'calendar_event_tile.dart';
 
@@ -84,7 +84,7 @@ class CalendarEventListSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Chi tiết trong ngày',
+                            context.tr('util_chitittron_c25501'),
                             style: SLTheme.quicksand(
                               fontSize: compact ? 15 : 16,
                               fontWeight: FontWeight.w900,
@@ -140,7 +140,7 @@ class CalendarEventListSection extends StatelessWidget {
                     if (snapshot.hasError) {
                       return CalendarEventStateCard(
                         icon: Icons.error_outline_rounded,
-                        title: 'Không tải được lịch của ngày này',
+                        title: context.tr('util_khngticlch_ccbfe5'),
                         description:
                             AppErrorMapper.resolve(snapshot.error).message,
                         color: const Color(0xFFE46A7A),
@@ -151,9 +151,9 @@ class CalendarEventListSection extends StatelessWidget {
                         snapshot.data?.snapshot.value == null) {
                       return CalendarEventStateCard(
                         icon: Icons.event_busy_rounded,
-                        title: 'Ngày này chưa có kế hoạch nào',
+                        title: context.tr('util_ngynychack_2d6ef4'),
                         description:
-                            'Thử thêm một lịch hẹn, việc cần làm hoặc mốc quan trọng để cả hai dễ theo dõi hơn.',
+                            context.tr('util_ththmmtlch_d99e48'),
                         color: accent,
                       );
                     }

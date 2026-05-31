@@ -53,17 +53,17 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
   _CinemaReelBadge _buildBadge(LoveInsightTimelineEntry milestone) {
     final lowerTitle = milestone.title.toLowerCase();
     final shortLabel = milestone.title
-        .replaceFirst(RegExp(r'^kỷ niệm\s*', caseSensitive: false), '')
+        .replaceFirst(RegExp(r'kỷ niệm\s*', caseSensitive: false), '')
         .trim();
 
-    if (lowerTitle.contains('ngày')) {
+    if (lowerTitle.contains(context.tr('util_ngy_41ec10'))) {
       return _CinemaReelBadge(
         icon: Icons.favorite_rounded,
         label: shortLabel.isEmpty ? milestone.title : shortLabel,
         accent: const Color(0xFFFF6FA5),
       );
     }
-    if (lowerTitle.contains('năm')) {
+    if (lowerTitle.contains(context.tr('util_nm_923e10'))) {
       return _CinemaReelBadge(
         icon: Icons.workspace_premium_rounded,
         label: shortLabel.isEmpty ? milestone.title : shortLabel,
@@ -108,9 +108,9 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
 
   int _milestonePriority(LoveInsightTimelineEntry entry) {
     final title = entry.title.toLowerCase();
-    if (title.contains('ngày')) return 3;
-    if (title.contains('năm')) return 2;
-    if (title.contains('tháng')) return 1;
+    if (title.contains(context.tr('util_ngy_41ec10'))) return 3;
+    if (title.contains(context.tr('util_nm_923e10'))) return 2;
+    if (title.contains(context.tr('util_thng_59900e'))) return 1;
     return 0;
   }
 

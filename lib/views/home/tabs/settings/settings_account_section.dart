@@ -3,6 +3,26 @@ part of '../settings_tab.dart';
 const Color _settingsAccountAccentColor = Color(0xFFD81B60);
 const Color _settingsAccountPurpleTextColor = Color(0xFF7A6A86);
 
+const List<({String code, String badge, String title})> _settingsLanguageOptions = [
+  (code: 'vi', badge: 'VN', title: 'Tiếng Việt'),
+  (code: 'en', badge: 'US', title: 'English'),
+  (code: 'zh', badge: 'CN', title: '中文 (简体)'),
+  (code: 'zh-TW', badge: 'TW', title: '中文 (繁體)'),
+  (code: 'ja', badge: 'JP', title: '日本語'),
+  (code: 'ko', badge: 'KR', title: '한국어'),
+  (code: 'th', badge: 'TH', title: 'ภาษาไทย'),
+  (code: 'id', badge: 'ID', title: 'Bahasa Indonesia'),
+  (code: 'es', badge: 'ES', title: 'Español'),
+  (code: 'pt', badge: 'PT', title: 'Português'),
+  (code: 'fr', badge: 'FR', title: 'Français'),
+  (code: 'de', badge: 'DE', title: 'Deutsch'),
+  (code: 'it', badge: 'IT', title: 'Italiano'),
+  (code: 'ru', badge: 'RU', title: 'Русский'),
+  (code: 'hi', badge: 'IN', title: 'हिन्दी'),
+  (code: 'tr', badge: 'TR', title: 'Türkçe'),
+  (code: 'ar', badge: 'SA', title: 'العربية'),
+];
+
 extension _SettingsTabAccountSection on _SettingsTabState {
   String _displayFlexibleDate(String raw) {
     if (raw.trim().isEmpty) return '';
@@ -141,8 +161,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           TextSelection.collapsed(offset: ctrl.text.length);
                     },
                     decoration: InputDecoration(
-                      hintText: 'ngày/tháng/năm',
-                      helperText: 'Đang nhập ngày/tháng/năm',
+                      hintText: context.tr('home_ngythngnm_03da5a'),
+                      helperText: context.tr('home_angnhpngyt_a0800e'),
                       errorText: errorText,
                       prefixIcon: const Icon(
                         Icons.calendar_month_rounded,
@@ -160,11 +180,11 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Hủy'),
+                  child: Text(context.tr('home_hy_db69db')),
                 ),
                 TextButton(
                   onPressed: pickCalendar,
-                  child: const Text('Chọn lịch'),
+                  child: Text(context.tr('home_chnlch_fdb0dc')),
                 ),
                 ElevatedButton(
                   onPressed: submit,
@@ -231,14 +251,22 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       },
       onToggleShowHouseName: (value) {
         setState(() => _homeShowHouseName = value);
+        unawaited(_persistHomeDisplayPrefsQuickly());
       },
       onToggleShowTimer: (value) {
         setState(() => _homeShowTimer = value);
+        unawaited(_persistHomeDisplayPrefsQuickly());
       },
     );
   }
 
   Future<void> _saveIdentityPanel() async {
+    final msgMissingNameU2 = context.tr('err_enter_name2');
+    final msgMissingNameU1 = context.tr('err_enter_name1');
+    final msgCannotRename = context.tr('home_bnchcthitn_f7a437');
+    final msgSaved = context.tr('saved_info');
+    final msgSaveFailed = context.tr('home_chathluthn_5f8b76');
+
     final draft = _buildAccountIdentityDraft();
     if (draft.houseId.isEmpty) return;
     if (!await _ensureCanModifySharedInfo()) return;
@@ -248,8 +276,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     if (validationError != null) {
       _showToast(
         validationError == 'missing_name_u2'
-            ? context.tr('err_enter_name2')
-            : context.tr('err_enter_name1'),
+            ? msgMissingNameU2
+            : msgMissingNameU1,
         success: false,
       );
       return;
@@ -261,7 +289,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     );
     if (!canRenameHouse) {
       _showToast(
-        'Bạn chỉ có thể đổi tên nhà sau 7 ngày kể từ lần đổi cuối.',
+        msgCannotRename,
         success: false,
       );
       return;
@@ -289,14 +317,14 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       });
       await NotificationService().syncDailySleepReminder();
       if (!mounted) return;
-      _showToast(context.tr('saved_info'), success: true);
+      _showToast(msgSaved, success: true);
     } catch (e) {
       if (!mounted) return;
       _showToast(
         AppErrorMapper.resolve(
           e,
           fallbackMessage:
-              'Chưa thể lưu thông tin hồ sơ lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+              msgSaveFailed,
         ).message,
         success: false,
       );
@@ -411,14 +439,14 @@ extension _SettingsTabAccountSection on _SettingsTabState {
   Future<void> _changePrimaryEmailV2() async {
     final user = _auth.currentUser;
     if (user != null && user.emailVerified) {
-      _showToast('Email đã được xác minh nên không thể thay đổi.',
+      _showToast(context.tr('home_emailcxcmi_a00309'),
           success: false);
       return;
     }
 
     final currentEmail = user?.email?.trim().toLowerCase() ?? '';
     if (user == null || currentEmail.isEmpty) {
-      _showToast('Không tìm thấy email chính để thay đổi', success: false);
+      _showToast(context.tr('home_khngtmthye_23f45c'), success: false);
       return;
     }
 
@@ -449,7 +477,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     }
 
     _showToast(
-      'Đổi email chính bằng mã 6 số chưa được bật. Không dùng link xác minh để tránh nhầm lẫn.',
+      context.tr('home_iemailchnh_ffbf0b'),
       success: false,
     );
   }
@@ -483,7 +511,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
         AppErrorMapper.resolve(
           e,
           fallbackMessage:
-              'Chưa thể cập nhật ngày lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+              context.tr('home_chathcpnht_e7d7c3'),
         ).message,
         success: false,
       );
@@ -497,33 +525,39 @@ extension _SettingsTabAccountSection on _SettingsTabState {
   }
 
   String _accountTierTitle() {
-    return _isVipActive ? 'Tài khoản PRO' : 'Tài khoản Basic';
+    if (!AppConfig.isPurchaseEnabled) return context.tr('home_tikhon_864cc3');
+    return _isVipActive ? context.tr('home_tikhonutin_c3c8b9') : context.tr('home_tikhonbasi_28d4a1');
   }
 
   String _accountTierSubtitle() {
-    if (!_isVipActive) return 'Gói cơ bản';
+    if (!AppConfig.isPurchaseEnabled) return context.tr('home_thngtinhs_ee5e18');
+    if (!_isVipActive) return context.tr('home_gicbn_1a2d12');
     if (_isLifetimeVip) return context.tr('vip_lifetime');
     return _vipPlanLabel;
   }
 
   String _accountTierTimeLabel() {
-    if (!_isVipActive) return 'Không giới hạn thời gian';
-    if (_isLifetimeVip) return 'Không giới hạn thời gian';
+    if (!AppConfig.isPurchaseEnabled) return context.tr('home_anghotng_07818d');
+    if (!_isVipActive) return context.tr('home_khnggiihnt_6c6ab0');
+    if (_isLifetimeVip) return context.tr('home_khnggiihnt_6c6ab0');
     return _vipExpiryLabel;
   }
 
   String _accountMemoryLimitLabel() {
+    if (!AppConfig.isPurchaseEnabled) return context.tr('home_khoknimcnh_0f4166');
     if (_isVipActive) {
-      return _isLifetimeVip ? '1000 ảnh Kỷ niệm' : '500 ảnh Kỷ niệm';
+      return _isLifetimeVip ? context.tr('home_1000nhknim_df7663') : context.tr('home_500nhknim_a4e0af');
     }
-    return '365 ảnh Kỷ niệm';
+    return context.tr('home_365nhknim_57d20f');
   }
 
   Widget _buildVipPanel({bool hideBackButton = false}) {
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'vip',
-      title: context.tr('account_vip_plan'),
+      title: AppConfig.isPurchaseEnabled
+          ? context.tr('account_vip_plan')
+          : context.tr('home_thngtintik_f57634'),
       borderColor: const Color(0xFFffb300),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -578,7 +612,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                         ),
                       ),
                       child: Text(
-                        _isVipActive ? 'PRO' : 'BASIC',
+                        AppConfig.isPurchaseEnabled
+                            ? (_isVipActive ? context.tr('home_utin_52f79f') : 'BASIC')
+                            : context.tr('home_hs_aaa132'),
                         style: SLTextStyles.quicksand(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
@@ -615,7 +651,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Thời hạn',
+                              context.tr('home_thihn_2493a0'),
                               style: SLTextStyles.quicksand(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
@@ -649,7 +685,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Kho Kỷ niệm',
+                              context.tr('home_khoknim_c6067c'),
                               style: SLTextStyles.quicksand(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
@@ -682,7 +718,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               children: [
                 Expanded(
                   child: _buildGradientBtn(
-                    label: 'Mua / Xem gói PRO',
+                    label: context.tr('home_xemquynli_aac3d9'),
                     gradient: const [Color(0xFFffc107), Color(0xFFff9800)],
                     textColor: Colors.black87,
                     onTap: () {
@@ -699,7 +735,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 SLSpacing.w8,
                 Expanded(
                   child: _buildGradientBtn(
-                    label: _isRestoringVip ? 'ĐANG KHÔI PHỤC...' : 'Khôi phục',
+                    label: _isRestoringVip ? context.tr('home_angkhiphc_944cf4') : context.tr('home_khiphc_efda66'),
                     gradient: const [Color(0xFF424242), Color(0xFF212121)],
                     onTap: _isRestoringVip ? () {} : _restoreVipPurchases,
                   ),
@@ -766,7 +802,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               ),
             ),
           ),
-          _buildLabel('${context.tr('house_name')} (Không bắt buộc)'),
+          _buildLabel('${context.tr('house_name')} (${context.tr('home_khngbtbuc_0a1fee')})'),
           _buildInput(_houseNameCtrl, context.tr('house_name_hint'),
               maxLength: 30),
           Container(
@@ -916,9 +952,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
   }
 
   Widget _buildLanguagePanel({bool hideBackButton = false}) {
-    final lang = L10nService().locale.languageCode;
+    final lang = L10nService().localeCode;
     final hint = lang == 'vi'
-        ? 'Áp dụng ngay cho toàn bộ ứng dụng.'
+        ? context.tr('home_pdngngaych_18f97b')
         : 'Applies instantly to the whole app.';
 
     return _buildPanel(
@@ -947,20 +983,80 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 width: 1.2,
               ),
             ),
-            child: Column(
-              children: [
-                _buildLanguageOption(
-                  code: 'vi',
-                  badge: 'VN',
-                  title: context.tr('lang_vi'),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                alignment: Alignment.topCenter,
+                child: Column(
+                  children: [
+                    if (!_isLanguageListExpanded)
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _isLanguageListExpanded = true;
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 38,
+                                  height: 30,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: const Color(0xFFB79AD9)),
+                                  ),
+                                  child: Text(
+                                    _settingsLanguageOptions.firstWhere((o) => o.code == lang, orElse: () => _settingsLanguageOptions.first).badge,
+                                    style: SLTheme.quicksand(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF5C4A78),
+                                      letterSpacing: 0.4,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _settingsLanguageOptions.firstWhere((o) => o.code == lang, orElse: () => _settingsLanguageOptions.first).title,
+                                    style: SLTheme.quicksand(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFF2B2238),
+                                    ),
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: Color(0xFF5C4A78),
+                                  size: 24,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      for (final option in _settingsLanguageOptions) ...[
+                        _buildLanguageOption(
+                          code: option.code,
+                          badge: option.badge,
+                          title: option.title,
+                        ),
+                        if (option.code != _settingsLanguageOptions.last.code)
+                          const Divider(height: 1),
+                      ],
+                  ],
                 ),
-                const Divider(height: 1),
-                _buildLanguageOption(
-                  code: 'en',
-                  badge: 'US',
-                  title: context.tr('lang_en'),
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -973,13 +1069,18 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     required String badge,
     required String title,
   }) {
-    final isSelected = L10nService().locale.languageCode == code;
+    final isSelected = L10nService().localeCode == code;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
-        onTap: () => _applyLanguage(code),
+        onTap: () {
+          _applyLanguage(code);
+          setState(() {
+            _isLanguageListExpanded = false;
+          });
+        },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
           child: Row(
@@ -1030,3 +1131,4 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     );
   }
 }
+

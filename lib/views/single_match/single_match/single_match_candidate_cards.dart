@@ -56,7 +56,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  'Top match hôm nay',
+                  context.tr('match_topmatchhm_627788'),
                   style: SLTheme.quicksand(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
@@ -141,7 +141,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                     Text(
                       scored.previewText.isNotEmpty
                           ? scored.previewText
-                          : 'Hồ sơ này chưa viết intro riêng, nhưng điểm match vẫn khá ổn để thử gọi một cuộc ngắn.',
+                          : context.tr('match_hsnychavit_4cf5c5'),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(
@@ -185,8 +185,8 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   icon: const Icon(Icons.shuffle_rounded),
-                  label: const Text(
-                    'Ghép ngẫu nhiên',
+                  label: Text(
+                    context.tr('match_ghpngunhin_1ee82f'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -209,7 +209,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                         )
                       : const Icon(Icons.call_rounded),
                   label: Text(
-                    callingThisCard ? 'Đang gọi...' : 'Gọi thoại',
+                    callingThisCard ? context.tr('match_anggi_fc34f1') : context.tr('match_githoi_ad3e35'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -227,8 +227,8 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                     foregroundColor: Colors.white,
                   ),
                   icon: const Icon(Icons.person_search_rounded),
-                  label: const Text(
-                    'Xem hồ sơ',
+                  label: Text(
+                    context.tr('match_xemhs_586b32'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -284,7 +284,7 @@ class _SingleMatchStatStrip extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: _StatTile(
-            label: 'Đã gọi',
+            label: context.tr('match_gi_4f3cf0'),
             value: '$callCount',
             icon: Icons.call_rounded,
             color: const Color(0xFF5B8DEF),
@@ -293,7 +293,7 @@ class _SingleMatchStatStrip extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: _StatTile(
-            label: 'Đã lướt qua',
+            label: context.tr('match_ltqua_a653f5'),
             value: '$skipCount',
             icon: Icons.swipe_left_rounded,
             color: const Color(0xFF18B67A),
@@ -302,7 +302,7 @@ class _SingleMatchStatStrip extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: _StatTile(
-            label: 'Điểm TB',
+            label: context.tr('match_imtb_74dd5d'),
             value: avgScore <= 0 ? '--' : avgScore.toStringAsFixed(0),
             icon: Icons.insights_rounded,
             color: const Color(0xFF8A61FF),
@@ -412,7 +412,7 @@ class _SingleMatchCandidateCard extends StatelessWidget {
                         candidate.intro.trim().isNotEmpty
                             ? candidate.intro
                             : (candidate.bio.trim().isEmpty
-                                ? 'Hồ sơ chưa có intro riêng.'
+                                ? context.tr('match_hschacintr_ecc784')
                                 : candidate.bio),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -469,8 +469,8 @@ class _SingleMatchCandidateCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: callingThisCard ? null : onSkip,
                     icon: const Icon(Icons.swipe_left_rounded, size: 18),
-                    label: const Text(
-                      'Bỏ qua',
+                    label: Text(
+                      context.tr('match_bqua_a3b533'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -481,8 +481,8 @@ class _SingleMatchCandidateCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onOpenProfile,
                     icon: const Icon(Icons.person_search_rounded, size: 18),
-                    label: const Text(
-                      'Hồ sơ',
+                    label: Text(
+                      context.tr('match_hs_be0945'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -502,8 +502,8 @@ class _SingleMatchCandidateCard extends StatelessWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.call_rounded, size: 18),
-                    label: const Text(
-                      'Gọi',
+                    label: Text(
+                      context.tr('match_gi_7c0807'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

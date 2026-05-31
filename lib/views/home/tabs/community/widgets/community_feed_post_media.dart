@@ -202,7 +202,7 @@ class _FeedVideoPreview extends StatelessWidget {
                 SLSpacing.h8,
                 Text(
                   _ct(
-                    'Bài viết có video đính kèm',
+                    context.tr('home_bivitcvide_9dd50b'),
                     'This post has an attached video',
                   ),
                   style: SLTheme.quicksand(

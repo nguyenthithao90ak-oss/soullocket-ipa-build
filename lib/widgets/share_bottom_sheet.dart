@@ -4,12 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:soullocket_app/models/group_chat_room.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'package:soullocket_app/utils/services/chat_service.dart';
-import 'package:soullocket_app/utils/services/group_chat_service.dart';
-import 'package:soullocket_app/utils/services/social_service.dart';
+import '../models/group_chat_room.dart';
+import '../utils/app_error_mapper.dart';
+import '../utils/services/chat_service.dart';
+import '../utils/services/group_chat_service.dart';
+import '../utils/services/social_service.dart';
 import '../core/sl_theme.dart';
+import '../services/l10n_service.dart';
 
 class ShareBottomSheet extends StatefulWidget {
   final String myHouseId;
@@ -104,7 +105,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
             .child('houses/$friendId/settings')
             .get()
             .timeout(const Duration(seconds: 6));
-        String name = 'Ngôi nhà $friendId';
+        String name = L10nService().format('share_house_name_fallback', {'id': friendId});
         String avatar = '';
 
         if (houseSnap.exists) {
@@ -184,7 +185,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       _buildFeedbackSnackBar(
-        message: 'Đã sao chép nội dung.',
+        message: L10nService().translate('share_copied'),
         icon: Icons.check_circle_rounded,
         accentColor: const Color(0xFF0F9D58),
       ),
@@ -193,7 +194,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
 
   String _composeShareMessage() {
     final lines = <String>[
-      'Mình vừa chia sẻ một nội dung từ Cộng đồng:',
+      L10nService().translate('share_message_prefix'),
       widget.contentToShare.trim(),
       if (widget.shareUrl.trim().isNotEmpty) widget.shareUrl.trim(),
     ];
@@ -220,7 +221,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         _buildFeedbackSnackBar(
-          message: 'Đã gửi nội dung chia sẻ.',
+          message: L10nService().translate('share_sent'),
           icon: Icons.send_rounded,
           accentColor: const Color(0xFFD81B60),
         ),
@@ -231,8 +232,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
         _buildFeedbackSnackBar(
           message: AppErrorMapper.resolve(
             e,
-            fallbackMessage:
-                'Chưa thể gửi nội dung chia sẻ lúc này. Bạn thử lại sau.',
+            fallbackMessage: L10nService().translate('share_send_failed'),
           ).message,
           icon: Icons.error_outline_rounded,
           accentColor: const Color(0xFFDC2626),
@@ -270,7 +270,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         _buildFeedbackSnackBar(
-          message: 'Đã gửi nội dung chia sẻ vào nhóm.',
+          message: L10nService().translate('share_sent_group'),
           icon: Icons.groups_rounded,
           accentColor: const Color(0xFF7C3AED),
         ),
@@ -281,7 +281,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
         _buildFeedbackSnackBar(
           message: AppErrorMapper.resolve(
             e,
-            fallbackMessage: 'Chưa thể gửi vào nhóm lúc này. Bạn thử lại sau.',
+            fallbackMessage: L10nService().translate('share_send_group_failed'),
           ).message,
           icon: Icons.error_outline_rounded,
           accentColor: const Color(0xFFDC2626),
@@ -426,7 +426,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Chia sẻ tinh tế',
+                                L10nService().translate('share_sheet_title'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: SLTheme.quicksand(
@@ -440,7 +440,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               ),
                               SizedBox(height: SLResponsive.dp(3, screenWidth)),
                               Text(
-                                'Gửi nhanh vào nhà chung, nhóm riêng hoặc ứng dụng ngoài.',
+                                L10nService().translate('share_sheet_subtitle'),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: SLTheme.quicksand(
@@ -483,8 +483,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             vertical: SLResponsive.dp(8, screenWidth),
                           ),
                           child: _buildSectionHeader(
-                            title: 'Gửi đến',
-                            subtitle: 'Bạn bè trò chuyện gần đây',
+                            title: L10nService().translate('share_send_to'),
+                            subtitle: L10nService().translate('share_recent_friends'),
                             compact: compact,
                             screenWidth: screenWidth,
                           ),
@@ -563,9 +563,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             child: _buildEmptyStateCard(
                               compact: compact,
                               icon: Icons.people_alt_rounded,
-                              title: 'Chưa có bạn bè để chia sẻ',
-                              subtitle:
-                                  'Khi có cuộc trò chuyện phù hợp, mục này sẽ hiện ngay ở đây.',
+                              title: L10nService().translate('share_no_friends_title'),
+                              subtitle: L10nService().translate('share_no_friends_subtitle'),
                               screenWidth: screenWidth,
                             ),
                           )
@@ -616,8 +615,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             vertical: SLResponsive.dp(8, screenWidth),
                           ),
                           child: _buildSectionHeader(
-                            title: 'Gửi vào nhóm',
-                            subtitle: 'Nhóm bạn vẫn còn là thành viên',
+                            title: L10nService().translate('share_send_to_group'),
+                            subtitle: L10nService().translate('share_groups_member'),
                             compact: compact,
                             screenWidth: screenWidth,
                           ),
@@ -633,9 +632,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             child: _buildEmptyStateCard(
                               compact: compact,
                               icon: Icons.groups_rounded,
-                              title: 'Chưa có nhóm phù hợp để chia sẻ',
-                              subtitle:
-                                  'Chỉ các nhóm còn quyền tham gia mới xuất hiện trong danh sách này.',
+                              title: L10nService().translate('share_no_groups_title'),
+                              subtitle: L10nService().translate('share_no_groups_subtitle'),
                               screenWidth: screenWidth,
                             ),
                           )
@@ -687,8 +685,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           vertical: SLResponsive.dp(8, screenWidth),
                         ),
                         child: _buildSectionHeader(
-                          title: 'Chia sẻ qua',
-                          subtitle: 'Ứng dụng bên ngoài và sao chép nhanh',
+                          title: L10nService().translate('share_via'),
+                          subtitle: L10nService().translate('share_external_copy'),
                           compact: compact,
                           screenWidth: screenWidth,
                         ),
@@ -714,7 +712,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             ),
                             _buildExternalShareItem(
                               icon: Icons.copy_all_rounded,
-                              label: 'Sao chép',
+                              label: L10nService().translate('core_copy'),
                               color: Colors.blueGrey,
                               onTap: _copyToClipboard,
                               compact: compact,
@@ -722,7 +720,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             ),
                             _buildExternalShareItem(
                               icon: Icons.share_rounded,
-                              label: 'Khác',
+                              label: L10nService().translate('core_other'),
                               color: Colors.grey,
                               onTap: _shareToExternal,
                               compact: compact,

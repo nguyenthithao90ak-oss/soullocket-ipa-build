@@ -231,19 +231,21 @@ class CountdownSpaceService {
       };
 
       await requestRef.set(payload);
-      await PushNotificationHelper.push(
-        toHouseId: normalizedToHouseId,
-        type: 'countdown_space_request',
-        from: normalizedFromHouseId,
-        fromId: normalizedFromHouseId,
-        fromLabel: normalizedFromHouseName,
-        title: 'Yêu cầu ghép nối không gian đếm',
-        msg: '$normalizedFromHouseName muốn ghép nối không gian đếm với bạn.',
-        extra: <String, dynamic>{
-          'requestId': requestId,
-          'spaceId': spaceId,
-        },
-      );
+      try {
+        await PushNotificationHelper.push(
+          toHouseId: normalizedToHouseId,
+          type: 'countdown_space_request',
+          from: normalizedFromHouseId,
+          fromId: normalizedFromHouseId,
+          fromLabel: normalizedFromHouseName,
+          title: 'Yêu cầu ghép nối không gian đếm',
+          msg: '$normalizedFromHouseName muốn ghép nối không gian đếm với bạn.',
+          extra: <String, dynamic>{
+            'requestId': requestId,
+            'spaceId': spaceId,
+          },
+        );
+      } catch (_) {}
 
       return CountdownSpaceRequestResult(
         success: true,
@@ -281,9 +283,19 @@ class CountdownSpaceService {
       }
 
       final spaceId = finalRequest.spaceId;
+      final parts = spaceId.split('_');
+      if (parts.length < 2) {
+        return const CountdownSpaceRequestResult(
+          success: false,
+          message: 'Không xác định được không gian ghép nối.',
+        );
+      }
 
       final updates = <String, dynamic>{};
       updates['countdown_spaces/$spaceId'] = {
+        'spaceId': spaceId,
+        'houseA': parts[0],
+        'houseB': parts[1],
         'status': 'active',
         'updatedAt': ServerValue.timestamp,
         'snapshot': finalRequest.snapshot,
@@ -293,19 +305,20 @@ class CountdownSpaceService {
 
       await _db.ref().update(updates);
 
-      await PushNotificationHelper.push(
-        toHouseId: finalRequest.fromHouseId,
-        type: 'countdown_space_accepted',
-        from: finalRequest.toHouseId,
-        fromId: finalRequest.toHouseId,
-        fromLabel: myHouseName,
-        title: 'Yêu cầu ghép nối được chấp nhận',
-        msg: '$myHouseName đã chấp nhận ghép nối không gian đếm với bạn.',
-        extra: <String, dynamic>{
-          'spaceId': spaceId,
-        },
-      );
-
+      try {
+        await PushNotificationHelper.push(
+          toHouseId: finalRequest.fromHouseId,
+          type: 'countdown_space_accepted',
+          from: finalRequest.toHouseId,
+          fromId: finalRequest.toHouseId,
+          fromLabel: myHouseName,
+          title: 'Yêu cầu ghép nối được chấp nhận',
+          msg: '$myHouseName đã chấp nhận ghép nối không gian đếm với bạn.',
+          extra: <String, dynamic>{
+            'spaceId': spaceId,
+          },
+        );
+      } catch (_) {}
 
       return const CountdownSpaceRequestResult(
         success: true,
@@ -321,7 +334,14 @@ class CountdownSpaceService {
 
   Future<CountdownSpaceRequestResult> rejectRequest(String requestId) async {
     try {
-      await _db.ref('countdown_space_requests/$requestId').update({
+      final normalizedRequestId = requestId.trim();
+      if (normalizedRequestId.isEmpty) {
+        return const CountdownSpaceRequestResult(
+          success: false,
+          message: 'Không xác định được yêu cầu ghép nối.',
+        );
+      }
+      await _db.ref('countdown_space_requests/$normalizedRequestId').update({
         'status': 'rejected',
       });
       return const CountdownSpaceRequestResult(
@@ -338,7 +358,14 @@ class CountdownSpaceService {
 
   Future<CountdownSpaceRequestResult> cancelRequest(String requestId) async {
     try {
-      await _db.ref('countdown_space_requests/$requestId').remove();
+      final normalizedRequestId = requestId.trim();
+      if (normalizedRequestId.isEmpty) {
+        return const CountdownSpaceRequestResult(
+          success: false,
+          message: 'Không xác định được yêu cầu ghép nối.',
+        );
+      }
+      await _db.ref('countdown_space_requests/$normalizedRequestId').remove();
       return const CountdownSpaceRequestResult(
         success: true,
         message: 'Đã hủy yêu cầu ghép nối.',
@@ -355,14 +382,18 @@ class CountdownSpaceService {
     required String spaceId,
     required Map<String, dynamic> snapshot,
   }) async {
-    await _db.ref('countdown_spaces/$spaceId').update({
+    final normalizedSpaceId = spaceId.trim();
+    if (normalizedSpaceId.isEmpty) return;
+    await _db.ref('countdown_spaces/$normalizedSpaceId').update({
       'snapshot': _sanitizeSnapshot(snapshot),
       'updatedAt': ServerValue.timestamp,
     });
   }
 
   Future<void> requestDeleteSpace(String spaceId) async {
-    await _db.ref('countdown_spaces/$spaceId').update({
+    final normalizedSpaceId = spaceId.trim();
+    if (normalizedSpaceId.isEmpty) return;
+    await _db.ref('countdown_spaces/$normalizedSpaceId').update({
       'status': 'deleted',
       'updatedAt': ServerValue.timestamp,
     });
@@ -418,7 +449,7 @@ class CountdownSpaceService {
       final list = <CountdownSpace>[];
       raw.forEach((key, value) {
         final data = _toMap(value);
-        if (data['status'] == 'active' && key.contains(hId)) {
+        if (data['status'] == 'active' && _spaceContainsHouse(key, hId)) {
           list.add(CountdownSpace.fromMap(key, data));
         }
       });
@@ -451,7 +482,9 @@ class CountdownSpaceService {
     required String fromHouseId,
     required Map<String, dynamic> snapshot,
   }) async {
-    await _db.ref('countdown_space_requests/$requestId').update({
+    final normalizedRequestId = requestId.trim();
+    if (normalizedRequestId.isEmpty) return;
+    await _db.ref('countdown_space_requests/$normalizedRequestId').update({
       'snapshot': _sanitizeSnapshot(snapshot),
     });
   }
@@ -461,7 +494,10 @@ class CountdownSpaceService {
     required String otherHouseId,
     required Map<String, dynamic> snapshot,
   }) async {
-    final spaceId = pairKeyFor(selfHouseId, otherHouseId);
+    final normalizedSelfHouseId = selfHouseId.trim();
+    final normalizedOtherHouseId = otherHouseId.trim();
+    if (normalizedSelfHouseId.isEmpty || normalizedOtherHouseId.isEmpty) return;
+    final spaceId = pairKeyFor(normalizedSelfHouseId, normalizedOtherHouseId);
     await updateSnapshot(spaceId: spaceId, snapshot: snapshot);
   }
 
@@ -473,9 +509,19 @@ class CountdownSpaceService {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
       final deleteAt = now + (15 * 24 * 60 * 60 * 1000); // 15 days
+      final parts = spaceId.split('_');
+      if (parts.length < 2) {
+        return const CountdownSpaceRequestResult(
+          success: false,
+          message: 'Không xác định được không gian cần xóa.',
+        );
+      }
       await _db.ref('countdown_space_delete_requests/$spaceId').set({
         'spaceId': spaceId,
+        'houseA': parts[0],
+        'houseB': parts[1],
         'requestedBy': currentHouseId,
+        'requestedByHouseId': currentHouseId,
         'requestedAt': now,
         'deleteAt': deleteAt,
         'status': 'pending',
@@ -556,7 +602,7 @@ class CountdownSpaceService {
       final raw = _toMap(event.snapshot.value);
       final list = <CountdownSpaceDeleteRequestInfo>[];
       raw.forEach((key, value) {
-        if (key.contains(hId)) {
+        if (_spaceContainsHouse(key, hId)) {
           list.add(CountdownSpaceDeleteRequestInfo.fromMap(key, _toMap(value)));
         }
       });
@@ -576,7 +622,7 @@ class CountdownSpaceService {
     final raw = _toMap(snap.value);
     final list = <CountdownSpace>[];
     raw.forEach((key, value) {
-      if (key.contains(hId)) {
+      if (_spaceContainsHouse(key, hId)) {
         list.add(CountdownSpace.fromMap(key, _toMap(value)));
       }
     });
@@ -621,6 +667,12 @@ class CountdownSpaceService {
       }
     }
     return result;
+  }
+
+  bool _spaceContainsHouse(String spaceId, String houseId) {
+    final hId = houseId.trim();
+    if (hId.isEmpty) return false;
+    return spaceId.split('_').any((part) => part.trim() == hId);
   }
 
   Map<String, dynamic> _sanitizeSnapshot(Map<String, dynamic> raw) {

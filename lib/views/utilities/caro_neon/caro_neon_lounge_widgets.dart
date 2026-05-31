@@ -102,8 +102,8 @@ class _SceneTabs extends StatelessWidget {
         children: [
           Expanded(
             child: _SceneTabChip(
-              label: 'Sảnh',
-              caption: 'Bắt đầu ở giữa',
+              label: context.tr('util_snh_1fd8ba'),
+              caption: context.tr('util_btugia_0fb847'),
               icon: Icons.motion_photos_on_rounded,
               color: const Color(0xFFFF8BB8),
               selected: sceneTab == _CaroSceneTab.lounge,
@@ -113,8 +113,8 @@ class _SceneTabs extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: _SceneTabChip(
-              label: 'Bàn đấu',
-              caption: 'Tab đánh riêng',
+              label: context.tr('util_bnu_78c3ce'),
+              caption: context.tr('util_tabnhring_61bd1a'),
               icon: Icons.grid_view_rounded,
               color: const Color(0xFF4EDBFF),
               selected: sceneTab == _CaroSceneTab.arena,

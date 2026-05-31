@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import '../../core/sl_theme.dart';
@@ -24,7 +25,8 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   late Stream<DatabaseEvent> _notesStream;
 
   String _selectedColor = 'yellow';
-  String _selectedTag = 'Tình yêu';
+  String _selectedTag = L10nService().translate('util_tnhyu_2814db');
+  String _noteFilter = 'all';
 
   final Map<String, Color> _colors = {
     'yellow': const Color(0xFFFFF9C4),
@@ -35,11 +37,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   };
 
   final List<String> _tags = [
-    'Tình yêu',
-    'Công việc',
-    'Mua sắm',
-    'Ý tưởng',
-    'Quan trọng'
+    L10nService().translate('util_tnhyu_2814db'),
+    L10nService().translate('util_cngvic_7086cb'),
+    L10nService().translate('util_muasm_5176f4'),
+    L10nService().translate('util_tng_af71f6'),
+    L10nService().translate('util_quantrng_edade9')
   ];
 
   @override
@@ -77,7 +79,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     if (!mounted) return;
     final role = prefs.getString('il_role') ?? 'user1';
     ActivityHistoryService.instance.add(
-      'đã thêm một ghi chú mới',
+      context.tr('util_thmmtghich_99f963'),
       houseId: widget.houseId,
       role: role,
     );
@@ -100,21 +102,24 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
 
   void _deleteNote(String key) {
     final existing = _dbRef.child('houses/${widget.houseId}/note/$key');
+    final deleteMessage = context.tr('util_xamtghich_c9693c');
+    final deleteTitle = context.tr('util_xaghich_b9f90d');
+    final sourceLabel = context.tr('util_ghichchung_7f58a6');
     existing.get().then((snapshot) async {
       if (!snapshot.exists || snapshot.value is! Map) {
         return;
       }
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       await ActivityHistoryService.instance.add(
-        'đã xóa một ghi chú',
+        deleteMessage,
         houseId: widget.houseId,
-        title: 'Đã xóa ghi chú',
+        title: deleteTitle,
         subtitle: data['c']?.toString() ?? '',
         action: 'delete',
         module: 'shared_notes',
         entityType: 'note',
         entityId: key,
-        sourceLabel: 'Ghi chú chung',
+        sourceLabel: sourceLabel,
         restorePath: 'houses/${widget.houseId}/note/$key',
         restorePayload: data,
       );
@@ -132,7 +137,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, 'Ghi chú chung'),
+      appBar: SLTheme.appBar(context, context.tr('util_ghichchung_7f58a6')),
       body: SLTheme.softCanvasBackdrop(
         baseColor: const Color(0xFFFFFBF8),
         accentColor: const Color(0xFFF59EBA),
@@ -183,7 +188,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Ghi chú mới',
+                      context.tr('util_ghichmi_32891e'),
                       style: SLTheme.quicksand(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
@@ -192,7 +197,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                     ),
                     SLSpacing.h4,
                     Text(
-                      'Viết nhanh điều hai bạn cần nhớ cùng nhau.',
+                      context.tr('util_vitnhanhiu_e9a17b'),
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -225,7 +230,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                       fontWeight: FontWeight.w800,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Nhập nội dung ghi chú...',
+                      hintText: context.tr('util_nhpnidungg_490e77'),
                       hintStyle: SLTheme.quicksand(
                         color: SLTheme.textMuted,
                         fontWeight: FontWeight.w700,
@@ -352,8 +357,8 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
             child: Center(
               child: SLTheme.emptyStatePanel(
                 icon: Icons.error_outline_rounded,
-                title: 'Không tải được ghi chú',
-                subtitle: 'Không tải được ghi chú lúc này. Hãy thử lại sau.',
+                title: context.tr('util_khngticghi_6ec1a3'),
+                subtitle: context.tr('util_khngticghi_9e46d9'),
                 accentColor: SLColors.danger,
               ),
             ),
@@ -366,9 +371,9 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
             child: Center(
               child: SLTheme.emptyStatePanel(
                 icon: Icons.note_alt_rounded,
-                title: 'Chưa có ghi chú nào',
+                title: context.tr('util_chacghichn_ae5e3a'),
                 subtitle:
-                    'Hãy để lại một dòng nhắc nhỏ để cả hai cùng nhìn thấy.',
+                    context.tr('util_hylimtdngn_6a0e81'),
                 accentColor: const Color(0xFFF59EBA),
               ),
             ),
@@ -396,18 +401,44 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
 
         final int doneCount =
             items.where((item) => item['done'] == true).length;
+        final int pinnedCount =
+            items.where((item) => item['pinned'] == true).length;
+        final int pendingCount = items.length - doneCount;
+        final visibleItems = items.where((item) {
+          switch (_noteFilter) {
+            case 'pinned':
+              return item['pinned'] == true;
+            case 'pending':
+              return item['done'] != true;
+            default:
+              return true;
+          }
+        }).toList();
 
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-          itemCount: items.length + 1,
+          itemCount: visibleItems.length + (visibleItems.isEmpty ? 2 : 1),
           separatorBuilder: (_, __) => SLSpacing.h12,
           itemBuilder: (context, index) {
             if (index == 0) {
               return _buildNotesSummary(
-                  totalCount: items.length, doneCount: doneCount);
+                totalCount: items.length,
+                doneCount: doneCount,
+                pinnedCount: pinnedCount,
+                pendingCount: pendingCount,
+              );
             }
 
-            final item = items[index - 1];
+            if (visibleItems.isEmpty) {
+              return SLTheme.emptyStatePanel(
+                icon: Icons.filter_alt_off_rounded,
+                title: 'Chưa có ghi chú phù hợp',
+                subtitle: 'Đổi bộ lọc để xem các ghi chú khác.',
+                accentColor: const Color(0xFFF59EBA),
+              );
+            }
+
+            final item = visibleItems[index - 1];
             final colorKey = item['color'] as String? ?? 'yellow';
             final bgColor = _colors[colorKey] ?? _colors['yellow']!;
             final isDone = item['done'] == true;
@@ -428,63 +459,151 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   Widget _buildNotesSummary({
     required int totalCount,
     required int doneCount,
+    required int pinnedCount,
+    required int pendingCount,
   }) {
+    final progress = totalCount == 0 ? 0.0 : doneCount / totalCount;
     return SLTheme.softPanel(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       borderColor: const Color(0xFFF4B5C8).withValues(alpha: 0.46),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: <Color>[
-                  const Color(0xFFF59EBA).withValues(alpha: 0.22),
-                  Colors.white.withValues(alpha: 0.94),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          Row(
+            children: <Widget>[
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: <Color>[
+                      const Color(0xFFF59EBA).withValues(alpha: 0.22),
+                      Colors.white.withValues(alpha: 0.94),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border.all(
+                    color: const Color(0xFFF4B5C8).withValues(alpha: 0.44),
+                  ),
+                ),
+                child: const Icon(Icons.auto_stories_rounded,
+                    color: Color(0xFFD95C8A), size: 28),
               ),
-              border:
-                  Border.all(color: const Color(0xFFF4B5C8).withValues(alpha: 0.44)),
-            ),
-            child: const Icon(Icons.auto_stories_rounded,
-                color: Color(0xFFD95C8A), size: 28),
-          ),
-          SLSpacing.w12,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  'Bảng ghi nhớ của hai bạn',
-                  style: SLTheme.quicksand(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.textPrimary,
-                  ),
+              SLSpacing.w12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      context.tr('util_bngghinhca_95fd5f'),
+                      style: SLTheme.quicksand(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: SLColors.textPrimary,
+                      ),
+                    ),
+                    SLSpacing.h4,
+                    Text(
+                      'Đã hoàn thành $doneCount / $totalCount ghi chú.',
+                      style: SLTheme.quicksand(
+                        fontSize: 12.2,
+                        fontWeight: FontWeight.w700,
+                        color: SLColors.textSecond,
+                      ),
+                    ),
+                  ],
                 ),
-                SLSpacing.h4,
-                Text(
-                  'Đã hoàn thành $doneCount / $totalCount ghi chú.',
-                  style: SLTheme.quicksand(
-                    fontSize: 12.2,
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textSecond,
-                  ),
-                ),
-              ],
+              ),
+              SLSpacing.w12,
+              SLTheme.chip('$totalCount mục', const Color(0xFFD95C8A)),
+            ],
+          ),
+          SLSpacing.h12,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              minHeight: 7,
+              backgroundColor: const Color(0xFFFFEDF4),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(Color(0xFFD95C8A)),
             ),
           ),
-          SLSpacing.w12,
-          SLTheme.chip('$totalCount mục', const Color(0xFFD95C8A)),
+          SLSpacing.h12,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              _buildNoteFilterChip(
+                label: 'Tất cả',
+                value: 'all',
+                count: totalCount,
+                icon: Icons.notes_rounded,
+              ),
+              _buildNoteFilterChip(
+                label: 'Đã ghim',
+                value: 'pinned',
+                count: pinnedCount,
+                icon: Icons.push_pin_rounded,
+              ),
+              _buildNoteFilterChip(
+                label: 'Chưa xong',
+                value: 'pending',
+                count: pendingCount,
+                icon: Icons.pending_actions_rounded,
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
+  Widget _buildNoteFilterChip({
+    required String label,
+    required String value,
+    required int count,
+    required IconData icon,
+  }) {
+    final selected = _noteFilter == value;
+    return GestureDetector(
+      onTap: () => setState(() => _noteFilter = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFFFEDF4) : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected
+                ? const Color(0xFFD95C8A)
+                : const Color(0xFFF2CDD7),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              icon,
+              size: 14,
+              color: selected ? const Color(0xFFD95C8A) : SLTheme.textMuted,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              '$label ($count)',
+              style: SLTheme.quicksand(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: selected ? const Color(0xFFD95C8A) : SLColors.textSecond,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   Widget _buildNoteCard({
     required Map<String, dynamic> item,
     required Color bgColor,
@@ -561,7 +680,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                                 size: 13, color: Color(0xFFD95C8A)),
                             const SizedBox(width: 4),
                             Text(
-                              'Đã ghim',
+                              context.tr('util_ghim_4be667'),
                               style: SLTheme.quicksand(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w900,
@@ -581,7 +700,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                           border: Border.all(color: const Color(0xFFBFE2CB)),
                         ),
                         child: Text(
-                          'Hoàn thành',
+                          context.tr('util_honthnh_eb889c'),
                           style: SLTheme.quicksand(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w900,

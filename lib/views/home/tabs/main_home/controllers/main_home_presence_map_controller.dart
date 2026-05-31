@@ -113,9 +113,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
 /*
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    const ghostThreshold = 12 * 3600 * 1000; // 12 hours
+    const ghostThreshold = 12 * 3600 * 1000;
 
-    // Nếu có ít nhất 1 session đang kết nối và chưa quá cũ
     final sessions = data['sessions'];
     if (sessions is Map && sessions.isNotEmpty) {
       for (final value in sessions.values) {
@@ -127,7 +126,6 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     }
 
     final status = data['status']?.toString();
-    // Fallback cho app phiên bản cũ
     if (status == 'online') {
       final lastSeen = _readEpochMs(data['lastSeen']) ?? now;
       if ((now - lastSeen) < ghostThreshold) {
@@ -140,15 +138,12 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     if (!_showStatus) return '';
     final data = _presenceForRole(role);
     if (_isCurrentForegroundRole(role)) {
-      return 'Đang hoạt động';
+      return context.tr('home_anghotng_cfaecd');
     }
     final relMode =
         _houseSettings?['relationshipMode']?.toString().trim() ?? 'single';
     if (relMode != 'single' && role != _currentRole && data == null) {
-      if (!_hasLoadedPresenceSnapshot) {
-        return 'Đang cập nhật...';
-      }
-      return 'Chưa từng mở app';
+      return context.tr('home_chatngmapp_e085d0');
     }
     return PresenceService.formatStatusLabel(
       data,
@@ -268,9 +263,9 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     final rawFlag = weather['isRain'];
     if (rawFlag is bool) return rawFlag;
     final condition = weather['cond']?.toString().toLowerCase() ?? '';
-    return condition.contains('mưa') ||
-        condition.contains('bão') ||
-        condition.contains('dông');
+    return condition.contains(context.tr('home_ma_38e202')) ||
+        condition.contains(context.tr('home_bo_ca7ab1')) ||
+        condition.contains(context.tr('home_dng_c94712'));
   }
 
   bool _weatherMatchesCold(Map<String, dynamic>? weather) {
@@ -377,20 +372,20 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   }) {
     final options = type == 'hot'
         ? <String>[
-            'Bên bạn đang nóng ghê đó, đi tắm cho mát rồi uống thêm nước nha.',
-            'Nhiệt độ bên kia cao quá trời, kiếm chỗ mát ngồi chút đi nè.',
-            'Trời này mà không uống nước là mình méc đó, lo hạ nhiệt liền nha.',
-            'Má ơi bên bạn nóng muốn chảy pin rồi, nghỉ chút với uống nước đi.',
-            'Cảnh báo dễ thương: người yêu của mình đang ở vùng siêu nóng, nhớ làm mát ngay.',
-            'Nóng vậy là phải tự thưởng ly nước mát rồi đó, đừng lì nha.',
+            context.tr('home_bnbnangnng_0bc538'),
+            context.tr('home_nhitbnkiac_26ffcf'),
+            context.tr('home_trinymkhng_e4a732'),
+            context.tr('home_mibnbnnngm_514584'),
+            context.tr('home_cnhbodthng_6e0684'),
+            context.tr('home_nngvylphit_882dfb'),
           ]
         : <String>[
-            'Bên bạn đang rất lạnh đó, mặc ấm thêm chút cho mình yên tâm nha.',
-            'Trời lạnh ghê rồi, nhớ khoác áo vào kẻo mình lo suốt đó.',
-            'Nhiệt độ xuống thấp rồi nè, ôm chăn hoặc ôm áo ấm ngay đi nha.',
-            'Bên kia lạnh quá đó, giữ ấm tay chân trước khi thành cục đá nha.',
-            'Cảnh báo rét dễ thương: người yêu của mình cần được ủ ấm ngay lập tức.',
-            'Lạnh kiểu này nhớ mặc ấm kỹ vào, đừng để mình phải nhắc thêm lần nữa nha.',
+            context.tr('home_bnbnangrtl_c4a8fc'),
+            context.tr('home_trilnhghri_e581f2'),
+            context.tr('home_nhitxungth_b9038b'),
+            context.tr('home_bnkialnhqu_fed2a5'),
+            context.tr('home_cnhbortdth_8cc7b9'),
+            context.tr('home_lnhkiunynh_10b3eb'),
           ];
     final lastMessage = prefs.getString(
       'il_weather_care_last_msg_${_houseId ?? ''}_${_currentRole}_$type',
@@ -422,35 +417,35 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
 
   String _weatherLabelFromCode(int code, {double? temp}) {
     if (temp != null && temp < 15) {
-      if (code >= 61 && code <= 67) return 'Mưa lạnh';
-      if (code >= 71 && code <= 77) return 'Tuyết lạnh';
-      if (code == 85 || code == 86) return 'Tuyết rơi';
-      if (code == 45 || code == 48) return 'Sương lạnh';
-      if (code == 3) return 'Mây lạnh';
-      if (code == 1 || code == 2) return 'Lạnh có nắng';
-      if (code == 0) return 'Nắng lạnh';
+      if (code >= 61 && code <= 67) return context.tr('home_malnh_ebbbe7');
+      if (code >= 71 && code <= 77) return context.tr('home_tuytlnh_cf0a54');
+      if (code == 85 || code == 86) return context.tr('home_tuytri_28f697');
+      if (code == 45 || code == 48) return context.tr('home_snglnh_9b1852');
+      if (code == 3) return context.tr('home_mylnh_0d749e');
+      if (code == 1 || code == 2) return context.tr('home_lnhcnng_3b3c3b');
+      if (code == 0) return context.tr('home_nnglnh_09b54a');
     }
 
-    if (code == 0) return 'Nắng';
-    if (code == 1) return 'Nắng nhẹ';
-    if (code == 2) return 'Nắng mây';
-    if (code == 3) return 'Nhiều mây';
-    if (code == 45 || code == 48) return 'Sương mù';
-    if (code >= 51 && code <= 53) return 'Mưa phùn';
-    if (code >= 54 && code <= 55) return 'Mưa phùn nặng';
-    if (code >= 56 && code <= 57) return 'Mưa phùn lạnh';
-    if (code >= 61 && code <= 63) return 'Mưa vừa';
-    if (code >= 64 && code <= 65) return 'Mưa to';
-    if (code >= 66 && code <= 67) return 'Mưa rét';
-    if (code >= 71 && code <= 73) return 'Tuyết';
-    if (code >= 74 && code <= 77) return 'Tuyết dày';
-    if (code == 80) return 'Mưa rào nhẹ';
-    if (code == 81) return 'Mưa rào';
-    if (code == 82) return 'Mưa rào to';
-    if (code == 85 || code == 86) return 'Tuyết rơi';
-    if (code == 95) return 'Dông';
-    if (code == 96 || code == 99) return 'Dông bão';
-    return 'Âm u';
+    if (code == 0) return context.tr('home_nng_e07b37');
+    if (code == 1) return context.tr('home_nngnh_c22e13');
+    if (code == 2) return context.tr('home_nngmy_a24fd5');
+    if (code == 3) return context.tr('home_nhiumy_c6b818');
+    if (code == 45 || code == 48) return context.tr('home_sngm_4ee050');
+    if (code >= 51 && code <= 53) return context.tr('home_maphn_66d1d7');
+    if (code >= 54 && code <= 55) return context.tr('home_maphnnng_056627');
+    if (code >= 56 && code <= 57) return context.tr('home_maphnlnh_814e0a');
+    if (code >= 61 && code <= 63) return context.tr('home_mava_d90411');
+    if (code >= 64 && code <= 65) return context.tr('home_mato_e8af54');
+    if (code >= 66 && code <= 67) return context.tr('home_mart_0e4130');
+    if (code >= 71 && code <= 73) return context.tr('home_tuyt_dae70c');
+    if (code >= 74 && code <= 77) return context.tr('home_tuytdy_371f68');
+    if (code == 80) return context.tr('home_maronh_b054a5');
+    if (code == 81) return context.tr('home_maro_d5d5c5');
+    if (code == 82) return context.tr('home_maroto_15ae5e');
+    if (code == 85 || code == 86) return context.tr('home_tuytri_28f697');
+    if (code == 95) return context.tr('home_dng_c363ff');
+    if (code == 96 || code == 99) return context.tr('home_dngbo_616b69');
+    return context.tr('home_mu_8b685f');
   }
 
   String _weatherVisualIcon({required int code, double? temp}) {
@@ -484,7 +479,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         .map((item) => item.trim())
         .where((item) => item.isNotEmpty)
         .toList();
-    if (parts.isEmpty) return 'Vị trí hiện tại';
+    if (parts.isEmpty) return context.tr('home_vtrhinti_f5956d');
     if (parts.length == 1) return parts.first;
     return '${parts.first}, ${parts[1]}';
   }
@@ -597,7 +592,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         'temp': temp,
         'cond': cond,
         'code': weatherCode,
-        'isRain': cond.contains('Mưa') || cond.contains('Dông'),
+        'isRain': cond.contains(context.tr('home_ma_a464da')) ||
+            cond.contains(context.tr('home_dng_c363ff')),
         'isCold': temp < 20,
         'isHot': temp > 32,
         'lastUpdate': DateTime.now().millisecondsSinceEpoch,
@@ -653,7 +649,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         if (hasLocationPermission && isLocationServiceEnabled) {
           final position = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(
-              accuracy: kIsWeb ? LocationAccuracy.medium : LocationAccuracy.high,
+              accuracy:
+                  kIsWeb ? LocationAccuracy.medium : LocationAccuracy.high,
             ),
           );
           lat = position.latitude;
@@ -689,11 +686,10 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
           if (shouldShow && mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text(
-                    'Vị trí đã tắt, nhiệt độ mặc định tại TP.HCM. Bật GPS để cập nhật chính xác nhé!'),
+                content: Text(context.tr('home_vtrttnhitm_906e2c')),
                 behavior: SnackBarBehavior.floating,
                 action: SnackBarAction(
-                  label: 'Bật ngay',
+                  label: context.tr('home_btngay_5ebb69'),
                   onPressed: () async {
                     final granted = await _locationService.requestPermission(
                       context: context,
@@ -826,20 +822,20 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         final myHasHistory = myPoint?['hasHistory'] == true;
         final partnerHasHistory = partnerPoint?['hasHistory'] == true;
 
-        var nextDistance = 'Đang định vị...';
+        var nextDistance = context.tr('home_angnhv_ea3669');
         String? nextAlert = isSingle
-            ? 'Bật vị trí để bản đồ hiển thị vị trí hiện tại của bạn.'
-            : 'Bật vị trí để theo dõi khoảng cách của hai bạn.';
+            ? context.tr('home_btvtrbnhin_5f5891')
+            : context.tr('home_btvtrtheod_b09bba');
 
         if (isSingle) {
           if (myPoint != null && myLive) {
-            nextDistance = 'Đang chia sẻ';
-            nextAlert = 'Bấm để xem vị trí hiện tại của bạn trên bản đồ.';
+            nextDistance = context.tr('home_angchias_51b41c');
+            nextAlert = context.tr('home_bmxemvtrhi_e4d474');
           } else if (myPoint != null || myHasHistory) {
-            nextDistance = 'Vị trí đã lưu';
-            nextAlert = 'Bản đồ đang hiển thị vị trí cuối cùng đã lưu của bạn.';
+            nextDistance = context.tr('home_vtrlu_7f955b');
+            nextAlert = context.tr('home_bnanghinth_652b9f');
           } else {
-            nextDistance = 'Chưa bật vị trí';
+            nextDistance = context.tr('home_chabtvtr_5f7a9a');
           }
         } else if (myLive &&
             partnerLive &&
@@ -851,19 +847,17 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
             ll.LatLng(partnerPoint['lt']!, partnerPoint['lg']!),
           );
           nextDistance = _formatDistanceMeters(meters);
-          nextAlert = 'Bấm để xem bản đồ đầy đủ của hai bạn.';
+          nextAlert = context.tr('home_bmxembnyca_b88207');
         } else if (!partnerHasHistory) {
-          nextDistance = 'Người ấy chưa bật';
-          nextAlert =
-              'Người ấy chưa bật vị trí nên bản đồ không hiện vị trí của họ.';
+          nextDistance = context.tr('home_ngiychabt_4fbd8d');
+          nextAlert = context.tr('home_ngiychabtv_a26a9a');
         } else if (!myHasHistory) {
-          nextDistance = 'Bạn chưa bật';
+          nextDistance = context.tr('home_bnchabt_4d6ead');
           nextAlert =
-              'Bạn chưa bật vị trí. Mở bản đồ và bấm "Bật vị trí" để chia sẻ.';
+              'Bạn chưa bật vị trí. Mở bản đồ và bấm ${context.tr('home_btvtr_4d948b')} để chia sẻ.';
         } else if (!myLive || !partnerLive) {
-          nextDistance = 'Vị trí cuối đã lưu';
-          nextAlert =
-              'Cập nhật vị trí đang tạm dừng ở một người. Bản đồ sẽ hiển thị vị trí cuối cùng đã lưu.';
+          nextDistance = context.tr('home_vtrcuilu_b4c8ee');
+          nextAlert = context.tr('home_cpnhtvtran_6aea3c');
         }
 
         if (!mounted) return;
@@ -876,13 +870,13 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         debugPrint(
           'Home GPS preview listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải dữ liệu vị trí lúc này.',
+            fallbackMessage: context.tr('home_khngthtidl_d524ab'),
           ).message}',
         );
         if (!mounted) return;
         _updateHomeMapPreview(
-          distanceText: 'Đang định vị...',
-          alertText: 'Không thể tải dữ liệu vị trí lúc này.',
+          distanceText: context.tr('home_angnhv_ea3669'),
+          alertText: context.tr('home_khngthtidl_d524ab'),
         );
       },
     );
@@ -896,8 +890,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     if (!hasPermission) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Vui lòng cấp quyền vị trí để xem bản đồ.')),
+          SnackBar(content: Text(context.tr('home_vuilngcpqu_f78dc3'))),
         );
       }
       return;

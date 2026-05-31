@@ -38,7 +38,8 @@ class BleOfflineService {
 
   /// Quét tìm thiết bị có phát đúng chuỗi mã hoá (houseId_hashed)
   Future<void> scanForLoverDevice(String hashedHouseId) async {
-    if (!_isBleSupported) return;
+    final normalizedHashedHouseId = hashedHouseId.trim();
+    if (!_isBleSupported || normalizedHashedHouseId.isEmpty) return;
 
     // Quét các thiết bị BLE xung quanh phát tín hiệu trùng HouseID
     // Mô phỏng tìm thấy sau 3 giây...
@@ -51,9 +52,10 @@ class BleOfflineService {
 
   /// Truyền một chuỗi dữ liệu siêu nhỏ (Tối đa 20 Bytes / Gói tin) qua sóng BLE
   Future<void> sendOfflinePing(String action, int data) async {
-    if (!_isConnected) return;
+    final normalizedAction = action.trim();
+    if (!_isConnected || normalizedAction.isEmpty) return;
 
-    final payload = jsonEncode({'a': action, 'd': data});
+    final payload = jsonEncode({'a': normalizedAction, 'd': data});
     final bytes = utf8.encode(payload);
 
     if (bytes.length > 20) {
@@ -62,17 +64,20 @@ class BleOfflineService {
 
     // Đẩy qua kênh gửi BLE tới thiết bị kia
     debugPrint(
-        "💌 [BleOfflineService] Bắn tín hiệu BLE thành công: \$action = \$data");
+        "💌 [BleOfflineService] Bắn tín hiệu BLE thành công: $normalizedAction = $data");
   }
 
   /// Gửi phím tắt Emoji (❤️, 🥺) từ Apple Watch / ĐT không mạng
   Future<void> sendEmojiBite(String emoji) async {
-    await sendOfflinePing('emoji', emoji.codeUnits.first);
+    final normalizedEmoji = emoji.trim();
+    if (normalizedEmoji.isEmpty) return;
+    await sendOfflinePing('emoji', normalizedEmoji.runes.first);
   }
 
   /// Gửi xung nhịp tim trực tiếp
   Future<void> sendHeartbeat(int bpm) async {
-    await sendOfflinePing('bpm', bpm);
+    if (bpm <= 0) return;
+    await sendOfflinePing('bpm', bpm.clamp(1, 240));
   }
 
   /// Rút ăng-ten, tắt thiết bị phát

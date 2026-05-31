@@ -3,11 +3,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
-import 'package:soullocket_app/utils/services/admob_service.dart';
-import 'package:soullocket_app/utils/services/daily_quest_service.dart';
+import '../../utils/services/admob_service.dart';
+import '../../utils/services/daily_quest_service.dart';
+import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/security_service.dart';
 import '../../utils/app_error_mapper.dart';
@@ -34,52 +36,53 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
   Map<String, bool> _checkinDays = {};
   bool _checkedInToday = false;
+  bool _isCheckinLoaded = false;
   int _streak = 0;
 
   // Daily ad limit tracking
   int _dailyAdCount = 0;
   final int _dailyAdLimit = AdMobService.dailyRewardedAdLimit;
 
-  static const List<_RewardPlan> _plans = [
+  static final List<_RewardPlan> _plans = [
     _RewardPlan(
       id: 'pro_12h',
-      title: 'Gói 12 giờ',
-      subtitle: 'Tăng nhanh thời gian PRO',
+      title: L10nService().translate('util_gi12gi_9c0202'),
+      subtitle: L10nService().translate('util_tngnhanhth_1c7acb'),
       icon: '12h',
       points: 300,
-      duration: Duration(hours: 12),
+      duration: const Duration(hours: 12),
     ),
     _RewardPlan(
       id: 'pro_1d',
-      title: 'Gói 1 ngày',
-      subtitle: 'Dùng cho dịp đặc biệt',
+      title: L10nService().translate('util_gi1ngy_a2dd38'),
+      subtitle: L10nService().translate('util_dngchodpcb_e94421'),
       icon: '1d',
       points: 500,
-      duration: Duration(days: 1),
+      duration: const Duration(days: 1),
     ),
     _RewardPlan(
       id: 'pro_3d',
-      title: 'Gói 3 ngày',
-      subtitle: 'Cuối tuần ngọt ngào hơn',
+      title: L10nService().translate('util_gi3ngy_5c09fc'),
+      subtitle: L10nService().translate('util_cuitunngtn_9e3793'),
       icon: '3d',
       points: 1000,
-      duration: Duration(days: 3),
+      duration: const Duration(days: 3),
     ),
     _RewardPlan(
       id: 'pro_7d',
-      title: 'Gói 7 ngày',
-      subtitle: 'Một tuần mở full trải nghiệm',
+      title: L10nService().translate('util_gi7ngy_c8c2d1'),
+      subtitle: L10nService().translate('util_mttunmfull_fdb897'),
       icon: '7d',
       points: 2000,
-      duration: Duration(days: 7),
+      duration: const Duration(days: 7),
     ),
     _RewardPlan(
       id: 'pro_30d',
-      title: 'Gói 1 tháng',
-      subtitle: 'Lựa chọn tiết kiệm nhất',
+      title: L10nService().translate('util_gi1thng_1e6ebe'),
+      subtitle: L10nService().translate('util_lachntitki_ad5ee5'),
       icon: '30d',
       points: 5000,
-      duration: Duration(days: 30),
+      duration: const Duration(days: 30),
     ),
   ];
 
@@ -126,18 +129,27 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         final rawData = event.snapshot.value;
         final data = rawData is Map ? Map<dynamic, dynamic>.from(rawData) : {};
         if (mounted) {
-          setState(() {
-            _checkinDays = _parseCheckinDays(data);
-            _checkedInToday = _checkinDays[_todayKey()] == true;
-            _streak = _calculateStreak(_checkinDays);
-          });
+          final nextDays = _parseCheckinDays(data);
+          final nextCheckedInToday = nextDays[_todayKey()] == true;
+          final nextStreak = _calculateStreak(nextDays);
+          if (!_isCheckinLoaded ||
+              _checkedInToday != nextCheckedInToday ||
+              _streak != nextStreak ||
+              !_sameCheckinDays(_checkinDays, nextDays)) {
+            setState(() {
+              _checkinDays = nextDays;
+              _checkedInToday = nextCheckedInToday;
+              _streak = nextStreak;
+              _isCheckinLoaded = true;
+            });
+          }
         }
       },
       onError: (Object error) {
         debugPrint(
           'Reward check-in listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể theo dõi điểm danh.',
+            fallbackMessage: L10nService().translate('util_khngththeo_fed732'),
           ).message}',
         );
       },
@@ -157,6 +169,14 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       }
     });
     return days;
+  }
+
+  bool _sameCheckinDays(Map<String, bool> a, Map<String, bool> b) {
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      if (b[entry.key] != entry.value) return false;
+    }
+    return true;
   }
 
   int _calculateStreak(Map<String, bool> dayMap) {
@@ -190,9 +210,10 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
     if (_checkedInToday) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hôm nay bạn đã điểm danh rồi! ✅')),
+        SnackBar(
+            content: Text(L10nService().translate('util_hmnaybnimd_35fac7'))),
       );
-      // Continue to the ad flow and let the reward server decide eligibility.
+      return;
     }
 
     if (_auth.currentUser == null) return;
@@ -226,8 +247,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       if (result.alreadyClaimed) {
         _markCheckedInToday();
         scaffoldMessenger.showSnackBar(
-          const SnackBar(
-            content: Text('Hôm nay bạn đã điểm danh rồi! ✅'),
+          SnackBar(
+            content: Text(L10nService().translate('util_hmnaybnimd_35fac7')),
             backgroundColor: Colors.green,
           ),
         );
@@ -235,6 +256,43 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       }
 
       if (!result.ok) {
+        if (kDebugMode &&
+            (result.networkIssue ||
+                result.appCheckIssue ||
+                result.endpointMissing)) {
+          final user = _auth.currentUser;
+          if (user != null) {
+            final today = _todayKey();
+            try {
+              await _dbRef.update({
+                'users/${user.uid}/points': ServerValue.increment(50),
+                'users/${user.uid}/checkinDays/$today': true,
+              });
+              if (!mounted) return;
+              _markCheckedInToday();
+              scaffoldMessenger.showSnackBar(
+                SnackBar(
+                  content:
+                      Text(L10nService().translate('util_imdanhdebu_ef8981')),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            } catch (error) {
+              debugPrint(
+                'Debug check-in fallback write failed: ${AppErrorMapper.resolve(error).message}',
+              );
+              if (!mounted) return;
+              scaffoldMessenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    L10nService().translate('util_bndebugcha_3d3468'),
+                  ),
+                ),
+              );
+            }
+            return;
+          }
+        }
         scaffoldMessenger.showSnackBar(
           SnackBar(content: Text(_checkinFailureMessage(result))),
         );
@@ -243,8 +301,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
       _markCheckedInToday();
       scaffoldMessenger.showSnackBar(
-        const SnackBar(
-          content: Text('Điểm danh thành công! +50 điểm ✨'),
+        SnackBar(
+          content: Text(L10nService().translate('util_imdanhthnh_93f64e')),
           backgroundColor: Colors.green,
         ),
       );
@@ -257,62 +315,60 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
   String _checkinFailureMessage(RewardClaimResult result) {
     if (result.endpointMissing) {
-      return 'Máy chủ điểm danh chưa sẵn sàng. Thử lại sau ít phút nhé.';
+      return L10nService().translate('util_mychimdanh_13bd22');
     }
     if (result.unauthenticated) {
-      return 'Phiên đăng nhập hết hạn. Hãy đăng xuất và đăng nhập lại để tiếp tục.';
+      return L10nService().translate('util_phinngnhph_d65516');
     }
     if (result.appCheckIssue) {
       if (kDebugMode) {
-        return 'Thiết bị test chưa qua App Check (${result.error}). '
-            'Nếu đang chạy bản debug, hãy thêm debug token của máy vào Firebase App Check rồi thử lại.';
+        return 'Thiết bị test chưa qua App Check (${result.error}). ${L10nService().translate('util_nuangchybn_c52bf0')}';
       }
-      return 'Thiết bị chưa sẵn sàng để nhận thưởng. Hãy chờ vài giây rồi thử lại.';
+      return L10nService().translate('util_thitbchasn_1e1378');
     }
     if (result.rateLimited) {
-      return 'Bạn điểm danh hơi nhanh, thử lại sau ít phút nhé.';
+      return L10nService().translate('util_bnimdanhhi_302b12');
     }
     if (result.networkIssue) {
-      return 'Không thể kết nối máy chủ điểm danh. Kiểm tra mạng và thử lại nhé.';
+      return L10nService().translate('util_khngthktni_12d6d1');
     }
-    return 'Điểm danh chưa thành công, vui lòng thử lại.';
+    return L10nService().translate('util_imdanhchat_39e77b');
   }
 
   String _rewardedAdFailureMessage(RewardClaimResult result) {
     if (result.endpointMissing) {
-      return 'Máy chủ thưởng quảng cáo chưa sẵn sàng. Thử lại sau ít phút nhé.';
+      return L10nService().translate('util_mychthngqu_15402b');
     }
     if (result.unauthenticated) {
-      return 'Phiên đăng nhập hết hạn. Hãy đăng nhập lại rồi thử tiếp.';
+      return L10nService().translate('util_phinngnhph_c11b0a');
     }
     if (result.appCheckIssue) {
       if (kDebugMode) {
-        return 'Máy test chưa được Firebase App Check cho phép (${result.error}). '
-            'Thêm debug token của thiết bị vào Firebase rồi thử lại.';
+        return 'Máy test chưa được Firebase App Check cho phép (${result.error}). ${L10nService().translate('util_thmdebugto_3b76d4')}';
       }
-      return 'Thiết bị chưa sẵn sàng để nhận thưởng. Hãy chờ vài giây rồi thử lại.';
+      return L10nService().translate('util_thitbchasn_1e1378');
     }
     if (result.rateLimited) {
-      return 'Máy chủ đang giới hạn lần nhận thưởng. Hãy chờ ít phút rồi thử lại.';
+      return L10nService().translate('util_mychanggii_968084');
     }
     if (result.networkIssue) {
-      return 'Không kết nối được máy chủ nhận thưởng. Kiểm tra mạng rồi thử lại.';
+      return L10nService().translate('util_khngktnicm_805f8a');
     }
     switch (result.error) {
       case 'rewarded_ad_temporarily_disabled':
       case 'rewarded_ad_disabled':
       case 'source_disabled':
-        return 'Điểm thưởng từ quảng cáo đang tạm tắt trên máy chủ.';
+        return L10nService().translate('util_imthngtqun_f6049f');
       case 'already_claimed':
       case 'duplicate_claim':
       case 'replay_detected':
-        return 'Lượt xem này đã được ghi nhận trước đó.';
+        return L10nService().translate('util_ltxemnycgh_1d8b7c');
       case 'invalid_source':
       case 'invalid_nonce':
       case 'invalid_proof':
-        return 'Máy chủ từ chối yêu cầu nhận điểm cho lượt quảng cáo này.';
+        return L10nService().translate('util_mychtchiyu_4cbf86');
       default:
-        return 'Máy chủ chưa xác nhận điểm cho lượt xem này.';
+        return L10nService().translate('util_mychchaxcn_47b243');
     }
   }
 
@@ -415,11 +471,12 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       return;
     }
 
-    if (proUntil > DateTime.now().millisecondsSinceEpoch) {
+    if (AppConfig.isPurchaseEnabled &&
+        proUntil > DateTime.now().millisecondsSinceEpoch) {
       scaffoldMessenger.showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            '👑 Tài khoản PRO hãy dùng Điểm Danh 7 Ngày để nhận 50 điểm mỗi ngày.',
+            L10nService().translate('util_hydngimdan_c203ca'),
           ),
         ),
       );
@@ -428,9 +485,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
     if (_dailyAdCount >= _dailyAdLimit) {
       scaffoldMessenger.showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Bạn đã chạm mốc lượt xem hôm nay. Nếu tiếp tục xem, hệ thống sẽ kiểm tra lại trước khi cộng điểm.',
+            L10nService().translate('util_bnchmmcltx_bdf8ba'),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -487,8 +544,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       } else {
         if (!mounted) return;
         scaffoldMessenger.showSnackBar(
-          const SnackBar(
-              content: Text('Không tải được quảng cáo, thử lại sau.')),
+          SnackBar(
+              content: Text(L10nService().translate('util_khngticqun_ce9d80'))),
         );
       }
     } finally {
@@ -541,7 +598,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   ),
                   SLSpacing.h16,
                   Text(
-                    'Quảng cáo mô phỏng trên web',
+                    L10nService().translate('util_qungcomphn_198acc'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       fontSize: 18,
@@ -552,8 +609,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   SLSpacing.h8,
                   Text(
                     canClose
-                        ? 'Bạn đã xem đủ thời gian. Bấm nút bên dưới để nhận điểm.'
-                        : 'Video sẽ mở thưởng sau ít giây nữa.',
+                        ? L10nService().translate('util_bnxemthigi_1e583b')
+                        : L10nService().translate('util_videosmthn_f06a76'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       fontSize: 13,
@@ -580,7 +637,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                       child: Text(
                         canClose
                             ? 'Đóng & Nhận ${AdMobService.rewardedMainPoints} điểm'
-                            : 'Đợi hoàn tất',
+                            : L10nService().translate('util_ihontt_4d59a1'),
                         style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                       ),
                     ),
@@ -597,6 +654,14 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
   Future<void> _redeemPlan(_RewardPlan plan) async {
     if (_isRedeeming) return;
+    if (!AppConfig.isPurchaseEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gói nâng cấp chưa khả dụng trên phiên bản này.'),
+        ),
+      );
+      return;
+    }
 
     setState(() => _isRedeeming = true);
     try {
@@ -681,20 +746,20 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       case 'not_enough_points':
         return 'Bạn không đủ điểm để đổi ${plan.title}.';
       case 'points_sync_retry':
-        return 'Điểm vừa được đồng bộ lại. Hãy bấm đổi lại thêm một lần.';
+        return L10nService().translate('util_imvacngbli_8a0f32');
       case 'house_not_found':
       case 'house_mismatch':
       case 'forbidden':
-        return 'Dữ liệu ngôi nhà chưa đồng bộ. Hãy mở lại app rồi thử lại.';
+        return L10nService().translate('util_dliunginhc_bf4d03');
       case 'missing_app_check':
       case 'invalid_app_check':
-        return 'Xác thực thiết bị chưa sẵn sàng. Hãy chờ vài giây rồi thử lại.';
+        return L10nService().translate('util_xcthcthitb_e94ae1');
       case 'network_error':
       case 'network_timeout':
       case 'reward_server_unavailable':
-        return 'Không kết nối được máy chủ đổi điểm. Hãy thử lại sau.';
+        return L10nService().translate('util_khngktnicm_155696');
       case 'invalid_plan':
-        return 'Gói đổi điểm không hợp lệ. Hãy cập nhật ứng dụng.';
+        return L10nService().translate('util_giiimkhngh_64e725');
       default:
         return 'Không thể đổi ${plan.title} lúc này. Hãy thử lại.';
     }
@@ -706,7 +771,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       extendBodyBehindAppBar: false,
       appBar: SLTheme.appBar(
         context,
-        'CỬA HÀNG VẬT PHẨM',
+        L10nService().translate('util_cahngvtphm_a6a4f6'),
         actions: [
           StreamBuilder<int>(
             stream: _pointsStream,
@@ -758,8 +823,10 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                       _buildCheckinSection(),
                       SLSpacing.h20,
                       _buildStatusCard(points, proUntil),
-                      SLSpacing.h16,
-                      _buildProRedeemSection(points),
+                      if (AppConfig.isPurchaseEnabled) ...[
+                        SLSpacing.h16,
+                        _buildProRedeemSection(points),
+                      ],
                       SLSpacing.h20,
                       _buildDailyQuestsCard(),
                       if (kIsWeb)
@@ -771,7 +838,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                             border: Border.all(color: SLTheme.glassBorderThin),
                           ),
                           child: Text(
-                            'Trên localhost web, app dùng quảng cáo mô phỏng 5 giây để bạn test luồng nhận điểm. Trên Android/iOS sẽ dùng Rewarded Ad thật.',
+                            L10nService().translate('util_trnlocalho_b7eee3'),
                             style: SLTheme.quicksand(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -867,7 +934,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
   }
 
   Widget _buildStatusCard(int points, int proUntil) {
-    final isPro = proUntil > DateTime.now().millisecondsSinceEpoch;
+    final isPro = AppConfig.isPurchaseEnabled &&
+        proUntil > DateTime.now().millisecondsSinceEpoch;
     return Container(
       padding: SLSpacing.all16,
       decoration: BoxDecoration(
@@ -899,7 +967,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Điểm & Quyền lợi',
+                    Text(L10nService().translate('util_imquynli_2a770a'),
                         style: SLTheme.quicksand(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
@@ -907,7 +975,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                     Text(
                       isPro
                           ? 'PRO đang hoạt động đến ${_formatDateTime(proUntil)}'
-                          : 'Bạn đang ở gói thường, có thể xem quảng cáo hoặc đổi điểm.',
+                          : L10nService().translate('util_bnanggithn_6ed061'),
                       style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -924,15 +992,15 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
             children: [
               Expanded(
                 child: _buildMiniStat(
-                  'Điểm hiện có',
+                  L10nService().translate('util_imhinc_915e21'),
                   '${_formatPointAmount(points)} điểm',
                 ),
               ),
               SLSpacing.w8,
               Expanded(
                 child: _buildMiniStat(
-                  'Trạng thái',
-                  isPro ? 'PRO' : 'Thường',
+                  L10nService().translate('util_trngthi_0fbc27'),
+                  isPro ? 'PRO' : L10nService().translate('util_thng_c10b85'),
                   accent: isPro ? const Color(0xFF8E24AA) : SLTheme.primary,
                 ),
               ),
@@ -969,7 +1037,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
   }
 
   Widget _buildWatchAdCard(int proUntil) {
-    final isPro = proUntil > DateTime.now().millisecondsSinceEpoch;
+    final isPro = AppConfig.isPurchaseEnabled &&
+        proUntil > DateTime.now().millisecondsSinceEpoch;
     final isLimitReached = _dailyAdCount >= _dailyAdLimit;
 
     return Container(
@@ -996,16 +1065,21 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Xem Video Nhận Điểm',
+                      Text(L10nService().translate('util_xemvideonh_dd1fb1'),
                           style: SLTheme.quicksand(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                               color: SLTheme.textMain)),
                       Text(
                           isPro
-                              ? 'Tài khoản PRO không cộng điểm qua quảng cáo thủ công. Hãy dùng Điểm Danh 7 Ngày.'
+                              ? (AppConfig.isPurchaseEnabled
+                                  ? L10nService()
+                                      .translate('util_tikhonnykh_357e73')
+                                  : L10nService()
+                                      .translate('util_tikhonnykh_357e73'))
                               : isLimitReached
-                                  ? 'Bạn đã đạt giới hạn ngày hôm nay. Quay lại vào ngày mai! 📅'
+                                  ? L10nService()
+                                      .translate('util_bntgiihnng_fd08ae')
                                   : 'Mỗi video +${AdMobService.rewardedMainPoints} điểm thưởng.',
                           style: SLTheme.quicksand(
                               color: SLTheme.textMuted,
@@ -1017,9 +1091,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   label: isPro
                       ? 'PRO'
                       : isLimitReached
-                          ? 'Hôm nay đủ rồi'
+                          ? L10nService().translate('util_hmnayri_46d3f2')
                           : _isWatchingAd
-                              ? 'Đang mở'
+                              ? L10nService().translate('util_angm_112640')
                               : 'Xem ngay',
                   onPressed: isPro || _isWatchingAd || isLimitReached
                       ? () {}
@@ -1096,7 +1170,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Gói đổi điểm PRO',
+                        L10nService().translate('util_giiimpro_28acbc'),
                         style: SLTheme.quicksand(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
@@ -1105,7 +1179,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                       ),
                       SLSpacing.h4,
                       Text(
-                        'Đổi điểm lấy 12 giờ, 1 ngày, 3 ngày, 7 ngày hoặc 1 tháng PRO.',
+                        L10nService().translate('util_iimly12gi1_6f15ee'),
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -1175,7 +1249,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Điểm Danh Hàng Ngày',
+                    Text(L10nService().translate('util_imdanhhngn_d32a8b'),
                         style: SLTheme.quicksand(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -1183,7 +1257,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                     Text(
                         _checkedInToday
                             ? 'Bạn đã điểm danh hôm nay! ✨\nChuỗi hiện tại: $_streak ngày'
-                            : 'Điểm danh ngay để nhận +50 điểm.',
+                            : L10nService().translate('util_imdanhngay_da87d4'),
                         style: SLTheme.quicksand(
                             color: SLTheme.textMuted,
                             fontSize: 12,
@@ -1194,7 +1268,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
             ],
           ),
           SLSpacing.h16,
-          Text('LỊCH SỬ 7 NGÀY',
+          Text(L10nService().translate('util_lchs7ngy_03e02e'),
               style: SLTheme.quicksand(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -1253,8 +1327,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed:
-                  (_checkedInToday || _isCheckingIn) ? null : _executeCheckin,
+              onPressed: (!_isCheckinLoaded || _checkedInToday || _isCheckingIn)
+                  ? null
+                  : _executeCheckin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: SLTheme.primary,
                 disabledBackgroundColor:
@@ -1273,7 +1348,11 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                       ),
                     )
                   : Text(
-                      _checkedInToday ? 'ĐÃ ĐIỂM DANH' : 'BẤM ĐIỂM DANH',
+                      !_isCheckinLoaded
+                          ? L10nService().translate('util_angtiimdan_3fdaf8')
+                          : _checkedInToday
+                              ? L10nService().translate('util_imdanh_682dd9')
+                              : L10nService().translate('util_bmimdanh_d15143'),
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
@@ -1315,14 +1394,13 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('NHIỆM VỤ HÀNG NGÀY',
+            Text(L10nService().translate('util_nhimvhngng_beafae'),
                 style: SLTheme.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: SLTheme.textMain)),
             SLSpacing.h8,
-            Text(
-                'Hoàn thành các nhiệm vụ dưới đây để nhận thêm điểm thưởng mỗi ngày.',
+            Text(L10nService().translate('util_honthnhccn_0999c5'),
                 style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -1342,7 +1420,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   SLSpacing.w8,
                   Expanded(
                     child: Text(
-                      'Lưu ý: Cả 2 phải làm cùng nhau mới được tính điểm nhé!',
+                      L10nService().translate('util_luc2philmc_8df71e'),
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -1408,7 +1486,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                                   color: SLColors.warningGold
                                       .withValues(alpha: 0.5)),
                             ),
-                            child: Text('+${q['points']} Điểm',
+                            child: Text(
+                                '+${q['points']} ${L10nService().translate('util_im_4e6ac8')}',
                                 style: SLTheme.quicksand(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
@@ -1435,7 +1514,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                               ),
                               child: Text(
                                   (q['done'] as bool)
-                                      ? 'Hoàn thành'
+                                      ? L10nService()
+                                          .translate('util_honthnh_eb889c')
                                       : (q['progress'] as String),
                                   style: SLTheme.quicksand(
                                       fontSize: 12,
@@ -1575,7 +1655,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                       ),
                     ),
                     Text(
-                      affordable ? 'Đủ điểm' : 'Thiếu $missingPointText điểm',
+                      affordable
+                          ? L10nService().translate('util_im_e5cb90')
+                          : 'Thiếu $missingPointText điểm',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(

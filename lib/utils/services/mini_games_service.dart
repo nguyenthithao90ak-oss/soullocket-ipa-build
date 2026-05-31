@@ -36,8 +36,10 @@ class MiniGamesService {
 
   /// Set câu hỏi mới
   Future<void> nextWhoIsQuestion(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
     final q = (List<String>.from(_whoIsQuestions)..shuffle()).first;
-    await _db.ref('houses/$houseId/game_whois').update({
+    await _db.ref('houses/$normalizedHouseId/game_whois').update({
       'question': q,
       'ans_u1': null,
       'ans_u2': null,
@@ -50,11 +52,21 @@ class MiniGamesService {
     required String myRole, // 'u1' or 'u2'
     required String answer,
   }) async {
-    await _db.ref('houses/$houseId/game_whois/ans_$myRole').set(answer);
+    final normalizedHouseId = houseId.trim();
+    final normalizedRole = myRole.trim();
+    final normalizedAnswer = answer.trim();
+    if (normalizedHouseId.isEmpty ||
+        (normalizedRole != 'u1' && normalizedRole != 'u2') ||
+        normalizedAnswer.isEmpty) {
+      return null;
+    }
+    await _db
+        .ref('houses/$normalizedHouseId/game_whois/ans_$normalizedRole')
+        .set(normalizedAnswer);
 
     // Kiểm tra xem đã đủ 2 người trả lời chưa
-    final snap = await _db.ref('houses/$houseId/game_whois').get();
-    if (!snap.exists) return null;
+    final snap = await _db.ref('houses/$normalizedHouseId/game_whois').get();
+    if (!snap.exists || snap.value is! Map) return null;
 
     final data = Map<String, dynamic>.from(snap.value as Map);
     final a1 = data['ans_u1']?.toString();
@@ -65,8 +77,8 @@ class MiniGamesService {
 
       // Tự xoá câu trả lời sau 3 giây (nhưng Flutter có thể tự quản lý state này)
       Future.delayed(const Duration(seconds: 3), () {
-        _db.ref('houses/$houseId/game_whois/ans_u1').remove();
-        _db.ref('houses/$houseId/game_whois/ans_u2').remove();
+        _db.ref('houses/$normalizedHouseId/game_whois/ans_u1').remove();
+        _db.ref('houses/$normalizedHouseId/game_whois/ans_u2').remove();
       });
 
       return WhoIsResult(isMatch: isMatch, a1: a1, a2: a2);
@@ -77,8 +89,12 @@ class MiniGamesService {
 
   /// Stream state game realtime
   Stream<WhoIsState> streamWhoIsState(String houseId) {
-    return _db.ref('houses/$houseId/game_whois').onValue.map((event) {
-      if (!event.snapshot.exists) return WhoIsState(question: '');
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return Stream<WhoIsState>.value(WhoIsState(question: ''));
+    return _db.ref('houses/$normalizedHouseId/game_whois').onValue.map((event) {
+      if (!event.snapshot.exists || event.snapshot.value is! Map) {
+        return WhoIsState(question: '');
+      }
       final data = Map<String, dynamic>.from(event.snapshot.value as Map);
       return WhoIsState(
         question: data['question']?.toString() ?? '',
@@ -97,9 +113,12 @@ class MiniGamesService {
     required String askerName,
     required String question,
   }) async {
-    await _db.ref('houses/$houseId/quiz').push().set({
-      'q': question,
-      'asker': askerName,
+    final normalizedHouseId = houseId.trim();
+    final normalizedQuestion = question.trim();
+    if (normalizedHouseId.isEmpty || normalizedQuestion.isEmpty) return;
+    await _db.ref('houses/$normalizedHouseId/quiz').push().set({
+      'q': normalizedQuestion,
+      'asker': askerName.trim(),
       'a1': '',
       'a2': '',
       'ts': ServerValue.timestamp,
@@ -112,28 +131,42 @@ class MiniGamesService {
     required String myRole, // 'user1' or 'user2'
     required String answer,
   }) async {
-    final field = myRole == 'user1' ? 'a1' : 'a2';
-    await _db.ref('houses/$houseId/quiz/$quizId').update({field: answer});
+    final normalizedHouseId = houseId.trim();
+    final normalizedQuizId = quizId.trim();
+    final normalizedAnswer = answer.trim();
+    final normalizedRole = myRole.trim();
+    if (normalizedHouseId.isEmpty ||
+        normalizedQuizId.isEmpty ||
+        (normalizedRole != 'user1' && normalizedRole != 'user2')) {
+      return;
+    }
+    final field = normalizedRole == 'user1' ? 'a1' : 'a2';
+    await _db
+        .ref('houses/$normalizedHouseId/quiz/$normalizedQuizId')
+        .update({field: normalizedAnswer});
   }
 
   Stream<List<QuizData>> streamQuizzes(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return Stream<List<QuizData>>.value(const []);
     return _db
-        .ref('houses/$houseId/quiz')
+        .ref('houses/$normalizedHouseId/quiz')
         .orderByChild('ts')
         .onValue
         .map((event) {
-      if (!event.snapshot.exists) return [];
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return [];
       final map = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       final now = DateTime.now().millisecondsSinceEpoch;
 
       final res = <QuizData>[];
       map.forEach((k, v) {
-        final data = Map<String, dynamic>.from(v as Map);
-        final ts = (data['ts'] as num?)?.toInt() ?? 0;
+        if (v is! Map) return;
+        final data = Map<String, dynamic>.from(v);
+        final ts = _asTimestamp(data['ts']);
 
         // Auto remove items older than 24h
         if (now - ts > 86400000) {
-          _db.ref('houses/$houseId/quiz/$k').remove();
+          _db.ref('houses/$normalizedHouseId/quiz/$k').remove();
           return;
         }
         data['id'] = k.toString();
@@ -155,14 +188,23 @@ class MiniGamesService {
     required String buyerName,
     required int currentPoints,
   }) async {
-    if (currentPoints < cost) return false;
+    final normalizedHouseId = houseId.trim();
+    final normalizedItemName = itemName.trim();
+    final normalizedBuyerName = buyerName.trim();
+    if (normalizedHouseId.isEmpty ||
+        normalizedItemName.isEmpty ||
+        normalizedBuyerName.isEmpty ||
+        cost <= 0 ||
+        currentPoints < cost) {
+      return false;
+    }
 
     // Trừ điểm và lưu lịch sử đổi đồ
-    await _db.ref('houses/$houseId').runTransaction((currentData) {
-      if (currentData == null) return Transaction.abort();
+    await _db.ref('houses/$normalizedHouseId').runTransaction((currentData) {
+      if (currentData is! Map) return Transaction.abort();
 
-      final data = Map<String, dynamic>.from(currentData as Map);
-      int pts = (data['points'] as num?)?.toInt() ?? 0;
+      final data = Map<String, dynamic>.from(currentData);
+      int pts = _asTimestamp(data['points']);
       if (pts < cost) return Transaction.abort();
 
       data['points'] = pts - cost;
@@ -170,15 +212,19 @@ class MiniGamesService {
     });
 
     // Lưu vào store history
-    await _db.ref('houses/$houseId/store').push().set({
-      'it': itemName,
+    await _db.ref('houses/$normalizedHouseId/store').push().set({
+      'it': normalizedItemName,
       'c': cost,
-      'a': buyerName,
+      'a': normalizedBuyerName,
       'ts': ServerValue.timestamp,
       'time': DateTime.now().toIso8601String(),
     });
 
     return true;
+  }
+  int _asTimestamp(Object? value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }
 
@@ -224,7 +270,12 @@ class QuizData {
           map['a1']?.toString().isEmpty ?? true ? null : map['a1']?.toString(),
       ansU2:
           map['a2']?.toString().isEmpty ?? true ? null : map['a2']?.toString(),
-      ts: (map['ts'] as num?)?.toInt() ?? 0,
+      ts: _asTimestamp(map['ts']),
     );
   }
+}
+
+int _asTimestamp(Object? value) {
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? 0;
 }

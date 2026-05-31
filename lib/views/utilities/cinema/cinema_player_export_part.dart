@@ -8,25 +8,25 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
     if (!_videoExportService.isSupported) {
       _commitState(() {
         _videoStatus =
-            'Tính năng xuất video đang tạm bảo trì. Bạn vẫn có thể xem reel ảnh bình thường.';
+            L10nService().translate('util_tnhnngxutv_f2e071');
         _videoProgress = null;
         _isExportingVideo = false;
       });
       _showPlayerSnack(
-        'Tính năng xuất video đang tạm bảo trì.',
+        L10nService().translate('util_tnhnngxutv_92e231'),
         backgroundColor: const Color(0xFF8E6E1F),
       );
       return;
     }
     if (_hasFreshExport) {
-      _showPlayerSnack('Video hiện tại đã sẵn sàng để tải xuống.');
+      _showPlayerSnack(L10nService().translate('util_videohinti_434dff'));
       return;
     }
 
     _commitState(() {
       _isExportingVideo = true;
       _videoProgress = 0.02;
-      _videoStatus = 'Đang chuẩn bị video kỷ niệm...';
+      _videoStatus = L10nService().translate('util_angchunbvi_171fe7');
     });
 
     try {
@@ -69,11 +69,11 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
         _isExportingVideo = false;
         _videoProgress = 1;
         _videoStatus =
-            'Video MP4 đã sẵn sàng. Bạn có thể tải xuống hoặc chia sẻ ngay.';
+            L10nService().translate('util_videomp4sn_1777d9');
         _exportedVideoPath = result.outputPath;
         _exportedVideoSignature = _currentExportSignature;
       });
-      _showPlayerSnack('Đã tạo video kỷ niệm thành công.');
+      _showPlayerSnack(L10nService().translate('util_tovideokni_675ed2'));
     } catch (error) {
       if (!mounted) {
         return;
@@ -95,7 +95,7 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
     final exportPath = _exportedVideoPath;
     if (!_hasFreshExport || exportPath == null) {
       _showPlayerSnack(
-        'Hãy tạo video trước khi tải xuống.',
+        L10nService().translate('util_hytovideot_5211b1'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -107,7 +107,7 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
     final granted = await _ensureGalleryPermission();
     if (!granted) {
       _showPlayerSnack(
-        'Chưa có quyền lưu video vào thiết bị.',
+        L10nService().translate('util_chacquynlu_1a12c3'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -126,7 +126,7 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
         throw Exception(
           message != null && message.isNotEmpty
               ? message
-              : 'Không thể lưu video vào thiết bị.',
+              : L10nService().translate('util_khngthluvi_ba4f4c'),
         );
       }
 
@@ -134,9 +134,9 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
         return;
       }
       _commitState(() {
-        _videoStatus = 'Video đã được lưu vào máy.';
+        _videoStatus = L10nService().translate('util_videocluvo_10067f');
       });
-      _showPlayerSnack('Đã tải video kỷ niệm về máy.');
+      _showPlayerSnack(L10nService().translate('util_tivideokni_cab08d'));
     } catch (error) {
       _showPlayerSnack(
         _normalizeError(error),
@@ -153,7 +153,7 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
     final exportPath = _exportedVideoPath;
     if (!_hasFreshExport || exportPath == null) {
       _showPlayerSnack(
-        'Hãy tạo video trước khi chia sẻ.',
+        L10nService().translate('util_hytovideot_f43c15'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;

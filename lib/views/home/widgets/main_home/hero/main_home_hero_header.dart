@@ -4,11 +4,13 @@ class _MainHomeHeroHeader extends StatelessWidget {
   final _MainHomeTabState state;
   final bool isSingle;
   final VoidCallback? onOpenSettings;
+  final GlobalKey? firstGuideSettingsKey;
 
   const _MainHomeHeroHeader({
     required this.state,
     required this.isSingle,
     this.onOpenSettings,
+    this.firstGuideSettingsKey,
   });
 
   @override
@@ -34,6 +36,7 @@ class _MainHomeHeroHeader extends StatelessWidget {
                     curve: Curves.easeOutCubic,
                     scale: hideButton ? 0.92 : 1,
                     child: state._buildHeaderButton(
+                      key: firstGuideSettingsKey,
                       icon: Icons.settings_rounded,
                       color: SLTheme.primary,
                       onLongPress: state._hideSettingsButtonForSession,
@@ -41,7 +44,9 @@ class _MainHomeHeroHeader extends StatelessWidget {
                           () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const SettingsTab(),
+                                  builder: (_) => const SettingsTab(
+                                    showGuideOnOpen: true,
+                                  ),
                                 ),
                               ),
                     ),

@@ -20,11 +20,11 @@ class _MainHomeHeroCounters extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              state._buildTimeCell(timeDetail['h']!, 'GIỜ'),
+              state._buildTimeCell(timeDetail['h']!, context.tr('home_gi_770f40')),
               SLSpacing.w8,
-              state._buildTimeCell(timeDetail['m']!, 'PHÚT'),
+              state._buildTimeCell(timeDetail['m']!, context.tr('home_pht_06b001')),
               SLSpacing.w8,
-              state._buildTimeCell(timeDetail['s']!, 'GIÂY'),
+              state._buildTimeCell(timeDetail['s']!, context.tr('home_giy_392758')),
             ],
           ),
         );

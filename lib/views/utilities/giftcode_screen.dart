@@ -1,8 +1,9 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import '../../core/fast_backdrop_filter.dart';
 
 import '../../core/sl_theme.dart';
 import '../../services/giftcode_service.dart';
@@ -31,7 +32,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
     final code = _codeController.text.trim().toUpperCase();
     if (code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập mã giftcode')),
+        SnackBar(content: Text(context.tr('util_vuilngnhpm_473b65'))),
       );
       return;
     }
@@ -75,7 +76,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'MÃ QUÀ TẶNG',
+          context.tr('util_mqutng_d30beb'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -156,7 +157,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
               ),
               SLSpacing.h24,
               Text(
-                'NHẬP MÃ QUÀ TẶNG',
+                context.tr('util_nhpmqutng_72acdf'),
                 style: SLTheme.quicksand(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
@@ -165,7 +166,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
               ),
               SLSpacing.h8,
               Text(
-                'Nhận các ưu đãi đặc biệt hoặc quà tặng PRO từ hệ thống.',
+                context.tr('util_nhnccuicbi_da7259'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   color: Colors.white70,
@@ -202,7 +203,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
                     letterSpacing: 2,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'MÃ GIFTCODE',
+                    hintText: context.tr('util_mgiftcode_43bfb7'),
                     hintStyle: SLTheme.quicksand(
                       color: const Color(0xFFB55A73),
                       fontWeight: FontWeight.w700,
@@ -236,7 +237,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
                           ),
                         )
                       : Text(
-                          'NHẬN QUÀ NGAY',
+                          context.tr('util_nhnqungay_bc7e41'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w800,
                             color: const Color(0xFFFF416C),

@@ -102,6 +102,10 @@ class AdMobService {
   static const int _autoInterstitialRetryMinutes = 15;
   static const int _autoMandatoryRewardedChancePercent = 40;
   static const int _appOpenMaxPerDay = 3;
+  static const List<String> _debugTestDeviceIds = <String>[
+    'D9B28AB8E1553E4F327420FC9896415C',
+    '370D8C7AC6D4262893C393843B5727CA',
+  ];
   final HouseService _houseService = HouseService();
   final ConsentService _consentService = ConsentService();
   final Random _random = Random();
@@ -111,51 +115,80 @@ class AdMobService {
   // Release mode → ID thật từ AdMob Console của bạn
 
   // ANDROID
-  static String _androidRewardedMainId = 'ca-app-pub-6165771694697009/3441513253';
-  static String _androidRewardedCheckinId = 'ca-app-pub-6165771694697009/9710840883';
-  static String _androidRewardedSoulGameId = 'ca-app-pub-6165771694697009/5113438527';
+  static String _androidRewardedMainId =
+      'ca-app-pub-6165771694697009/3441513253';
+  static String _androidRewardedCheckinId =
+      'ca-app-pub-6165771694697009/9710840883';
+  static String _androidRewardedSoulGameId =
+      'ca-app-pub-6165771694697009/5113438527';
   static String _androidBannerId = 'ca-app-pub-6165771694697009/5949757521';
-  static String _androidInterstitialId = 'ca-app-pub-6165771694697009/6283299015';
+  static String _androidInterstitialId =
+      'ca-app-pub-6165771694697009/6283299015';
   static String _androidAppOpenId = 'ca-app-pub-6165771694697009/3305781889';
 
   // IOS
   static String _iosRewardedMainId = 'ca-app-pub-6165771694697009/8781411712';
-  static String _iosRewardedCheckinId = 'ca-app-pub-6165771694697009/8342428018';
-  static String _iosRewardedSoulGameId = 'ca-app-pub-6165771694697009/5716264675';
+  static String _iosRewardedCheckinId =
+      'ca-app-pub-6165771694697009/8342428018';
+  static String _iosRewardedSoulGameId =
+      'ca-app-pub-6165771694697009/5716264675';
   static String _iosBannerId = 'ca-app-pub-6165771694697009/6458500706';
   static String _iosInterstitialId = 'ca-app-pub-6165771694697009/1798124404';
   static String _iosAppOpenId = 'ca-app-pub-6165771694697009/7141026983';
 
   static String get rewardedMainId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    if (kDebugMode) {
+      return Platform.isIOS
+          ? 'ca-app-pub-3940256099942544/1712485313'
+          : 'ca-app-pub-3940256099942544/5224354917';
+    }
     return Platform.isIOS ? _iosRewardedMainId : _androidRewardedMainId;
   }
 
   static String get rewardedCheckinId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    if (kDebugMode) {
+      return Platform.isIOS
+          ? 'ca-app-pub-3940256099942544/1712485313'
+          : 'ca-app-pub-3940256099942544/5224354917';
+    }
     return Platform.isIOS ? _iosRewardedCheckinId : _androidRewardedCheckinId;
   }
 
   static String get rewardedSoulGameId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    if (kDebugMode) {
+      return Platform.isIOS
+          ? 'ca-app-pub-3940256099942544/1712485313'
+          : 'ca-app-pub-3940256099942544/5224354917';
+    }
     return Platform.isIOS ? _iosRewardedSoulGameId : _androidRewardedSoulGameId;
   }
 
   static String get bannerId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/2934735716' : 'ca-app-pub-3940256099942544/6300978111';
+    if (kDebugMode) {
+      return Platform.isIOS
+          ? 'ca-app-pub-3940256099942544/2934735716'
+          : 'ca-app-pub-3940256099942544/6300978111';
+    }
     return Platform.isIOS ? _iosBannerId : _androidBannerId;
   }
 
   static String get interstitialId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/4411468910' : 'ca-app-pub-3940256099942544/1033173712';
+    if (kDebugMode) {
+      return Platform.isIOS
+          ? 'ca-app-pub-3940256099942544/4411468910'
+          : 'ca-app-pub-3940256099942544/1033173712';
+    }
     return Platform.isIOS ? _iosInterstitialId : _androidInterstitialId;
   }
 
   static String get appOpenId {
-    if (kDebugMode) return Platform.isIOS ? 'ca-app-pub-3940256099942544/5575463023' : 'ca-app-pub-3940256099942544/9257395921';
+    if (kDebugMode) {
+      return Platform.isIOS
+          ? 'ca-app-pub-3940256099942544/5575463023'
+          : 'ca-app-pub-3940256099942544/9257395921';
+    }
     return Platform.isIOS ? _iosAppOpenId : _androidAppOpenId;
   }
-
 
   // ─── REWARDED AD (CHÍNH) ─────────────────────────────────────
   RewardedAd? _rewardedAd;
@@ -207,6 +240,7 @@ class AdMobService {
       ),
     );
 
+    var consentUpdateFailed = false;
     try {
       final consentCompleter = Completer<void>();
       ConsentInformation.instance.requestConsentInfoUpdate(
@@ -230,6 +264,7 @@ class AdMobService {
           }
         },
         (FormError error) {
+          consentUpdateFailed = true;
           final errorInfo = AppErrorMapper.resolve(
             error,
             fallbackMessage: 'Không thể xử lý đồng ý quảng cáo lúc này.',
@@ -242,6 +277,7 @@ class AdMobService {
       );
       await consentCompleter.future;
     } catch (e) {
+      consentUpdateFailed = true;
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể xử lý đồng ý quảng cáo lúc này.',
@@ -250,8 +286,15 @@ class AdMobService {
     }
 
     try {
-      if (!await ConsentInformation.instance.canRequestAds()) {
+      final canRequestAds = await ConsentInformation.instance.canRequestAds();
+      if (!canRequestAds && !kDebugMode) {
         return;
+      }
+      if (!canRequestAds && kDebugMode) {
+        debugPrint(
+          'AdMobService: debug continues ads init after UMP canRequestAds=false '
+          '(consentUpdateFailed=$consentUpdateFailed).',
+        );
       }
 
       // Đồng bộ ID Quảng cáo từ Firebase nhằm loại bỏ HardCode Source
@@ -262,19 +305,43 @@ class AdMobService {
             .timeout(const Duration(seconds: 4));
         if (snap.exists && snap.value is Map) {
           final map = Map<dynamic, dynamic>.from(snap.value as Map);
-            if (map['rewardedMainId'] != null) _androidRewardedMainId = map['rewardedMainId'].toString();
-            if (map['rewardedCheckinId'] != null) _androidRewardedCheckinId = map['rewardedCheckinId'].toString();
-            if (map['rewardedSoulGameId'] != null) _androidRewardedSoulGameId = map['rewardedSoulGameId'].toString();
-            if (map['bannerId'] != null) _androidBannerId = map['bannerId'].toString();
-            if (map['interstitialId'] != null) _androidInterstitialId = map['interstitialId'].toString();
-            if (map['appOpenId'] != null) _androidAppOpenId = map['appOpenId'].toString();
+          if (map['rewardedMainId'] != null) {
+            _androidRewardedMainId = map['rewardedMainId'].toString();
+          }
+          if (map['rewardedCheckinId'] != null) {
+            _androidRewardedCheckinId = map['rewardedCheckinId'].toString();
+          }
+          if (map['rewardedSoulGameId'] != null) {
+            _androidRewardedSoulGameId = map['rewardedSoulGameId'].toString();
+          }
+          if (map['bannerId'] != null) {
+            _androidBannerId = map['bannerId'].toString();
+          }
+          if (map['interstitialId'] != null) {
+            _androidInterstitialId = map['interstitialId'].toString();
+          }
+          if (map['appOpenId'] != null) {
+            _androidAppOpenId = map['appOpenId'].toString();
+          }
 
-            if (map['ios_rewardedMainId'] != null) _iosRewardedMainId = map['ios_rewardedMainId'].toString();
-            if (map['ios_rewardedCheckinId'] != null) _iosRewardedCheckinId = map['ios_rewardedCheckinId'].toString();
-            if (map['ios_rewardedSoulGameId'] != null) _iosRewardedSoulGameId = map['ios_rewardedSoulGameId'].toString();
-            if (map['ios_bannerId'] != null) _iosBannerId = map['ios_bannerId'].toString();
-            if (map['ios_interstitialId'] != null) _iosInterstitialId = map['ios_interstitialId'].toString();
-            if (map['ios_appOpenId'] != null) _iosAppOpenId = map['ios_appOpenId'].toString();
+          if (map['ios_rewardedMainId'] != null) {
+            _iosRewardedMainId = map['ios_rewardedMainId'].toString();
+          }
+          if (map['ios_rewardedCheckinId'] != null) {
+            _iosRewardedCheckinId = map['ios_rewardedCheckinId'].toString();
+          }
+          if (map['ios_rewardedSoulGameId'] != null) {
+            _iosRewardedSoulGameId = map['ios_rewardedSoulGameId'].toString();
+          }
+          if (map['ios_bannerId'] != null) {
+            _iosBannerId = map['ios_bannerId'].toString();
+          }
+          if (map['ios_interstitialId'] != null) {
+            _iosInterstitialId = map['ios_interstitialId'].toString();
+          }
+          if (map['ios_appOpenId'] != null) {
+            _iosAppOpenId = map['ios_appOpenId'].toString();
+          }
         }
       } catch (e) {
         final errorInfo = AppErrorMapper.resolve(
@@ -284,6 +351,11 @@ class AdMobService {
         debugPrint('Failed to sync AdMob IDs: ${errorInfo.message}');
       }
 
+      if (kDebugMode) {
+        await MobileAds.instance.updateRequestConfiguration(
+          RequestConfiguration(testDeviceIds: _debugTestDeviceIds),
+        );
+      }
       await MobileAds.instance.initialize();
       _sdkInitialized = true;
       _loadRewardedAd();
@@ -308,6 +380,7 @@ class AdMobService {
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
+          debugPrint('AdMobService: rewarded main loaded.');
           _rewardedAd = ad;
           _isRewardedAdLoading = false;
         },
@@ -316,7 +389,8 @@ class AdMobService {
             error,
             fallbackMessage: 'Quảng cáo thưởng chính chưa tải được.',
           );
-          debugPrint('AdMobService: rewarded main failed to load: ${errorInfo.message}');
+          debugPrint(
+              'AdMobService: rewarded main failed to load: ${errorInfo.message}');
           _rewardedAd = null;
           _isRewardedAdLoading = false;
         },
@@ -335,6 +409,7 @@ class AdMobService {
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
+          debugPrint('AdMobService: rewarded soul game loaded.');
           _soulGameRewardedAd = ad;
           _isSoulGameRewardedAdLoading = false;
         },
@@ -343,7 +418,8 @@ class AdMobService {
             error,
             fallbackMessage: 'Quảng cáo thưởng Soul Game chưa tải được.',
           );
-          debugPrint('AdMobService: rewarded soul game failed to load: ${errorInfo.message}');
+          debugPrint(
+              'AdMobService: rewarded soul game failed to load: ${errorInfo.message}');
           _soulGameRewardedAd = null;
           _isSoulGameRewardedAdLoading = false;
         },
@@ -386,7 +462,8 @@ class AdMobService {
             error,
             fallbackMessage: 'Quảng cáo App Open chưa tải được.',
           );
-          debugPrint('AdMobService: app open failed to load: ${errorInfo.message}');
+          debugPrint(
+              'AdMobService: app open failed to load: ${errorInfo.message}');
           _appOpenAd = null;
           _isAppOpenLoading = false;
           if (!completer.isCompleted) {
@@ -565,24 +642,39 @@ class AdMobService {
   static const int _rewardedCooldownMs = 45000; // 45 seconds
 
   /// Hiển thị quảng cáo rewarded. Trả về true nếu user xem đủ.
-  Future<bool> showRewardedAd() async {
+  Future<bool> showRewardedAd({
+    bool ignoreCooldown = false,
+    Duration loadTimeout = const Duration(seconds: 5),
+  }) async {
     if (kIsWeb) return false;
-    if (await isProUser()) return false;
+    if (await isProUser()) {
+      debugPrint('AdMobService: rewarded skipped because user is Pro.');
+      return false;
+    }
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    if (nowMs - _lastRewardedShownMs < _rewardedCooldownMs) {
+    if (!ignoreCooldown && nowMs - _lastRewardedShownMs < _rewardedCooldownMs) {
       debugPrint('AdMobService: Xem quảng cáo quá nhanh, đang chờ cooldown.');
       return false; // Chưa qua cooldown
     }
 
     await initialize();
-    if (!_sdkInitialized) return false;
+    if (!_sdkInitialized) {
+      debugPrint(
+          'AdMobService: rewarded skipped because SDK is not initialized.');
+      return false;
+    }
     if (_rewardedAd == null) {
       _loadRewardedAd();
-      for (var i = 0; i < 8 && _rewardedAd == null; i++) {
+      final maxWaitMs = loadTimeout.inMilliseconds.clamp(0, 15000);
+      final attempts = (maxWaitMs / 250).ceil().clamp(1, 60);
+      debugPrint(
+          'AdMobService: waiting for rewarded ad, timeout=${maxWaitMs}ms.');
+      for (var i = 0; i < attempts && _rewardedAd == null; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 250));
       }
       if (_rewardedAd == null) {
+        debugPrint('AdMobService: rewarded skipped because ad is not loaded.');
         return false;
       }
     }
@@ -591,10 +683,12 @@ class AdMobService {
     AppLifecyclePresenceGuard.arm();
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
+        debugPrint('AdMobService: rewarded showed.');
         _lastRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
         _lastFullscreenAdShownMs = _lastRewardedShownMs;
       },
       onAdDismissedFullScreenContent: (ad) {
+        debugPrint('AdMobService: rewarded dismissed.');
         ad.dispose();
         _rewardedAd = null;
         _loadRewardedAd();
@@ -602,6 +696,12 @@ class AdMobService {
         if (!completer.isCompleted) completer.complete(false);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
+        final errorInfo = AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể hiển thị quảng cáo thưởng.',
+        );
+        debugPrint(
+            'AdMobService: rewarded failed to show: ${errorInfo.message}');
         ad.dispose();
         _rewardedAd = null;
         _loadRewardedAd();
@@ -610,12 +710,26 @@ class AdMobService {
       },
     );
 
-    _rewardedAd!.setImmersiveMode(true);
-    _rewardedAd!.show(
-      onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-        if (!completer.isCompleted) completer.complete(true);
-      },
-    );
+    try {
+      _rewardedAd!.setImmersiveMode(true);
+      _rewardedAd!.show(
+        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+          debugPrint('AdMobService: rewarded earned.');
+          if (!completer.isCompleted) completer.complete(true);
+        },
+      );
+    } catch (error) {
+      final errorInfo = AppErrorMapper.resolve(
+        error,
+        fallbackMessage: 'Không thể mở quảng cáo thưởng.',
+      );
+      debugPrint('AdMobService: rewarded show exception: ${errorInfo.message}');
+      _rewardedAd?.dispose();
+      _rewardedAd = null;
+      _loadRewardedAd();
+      AppLifecyclePresenceGuard.settle();
+      if (!completer.isCompleted) completer.complete(false);
+    }
 
     return completer.future.timeout(
       const Duration(seconds: 12),
@@ -672,12 +786,20 @@ class AdMobService {
       },
     );
 
-    _soulGameRewardedAd!.setImmersiveMode(true);
-    _soulGameRewardedAd!.show(
-      onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-        if (!completer.isCompleted) completer.complete(true);
-      },
-    );
+    try {
+      _soulGameRewardedAd!.setImmersiveMode(true);
+      _soulGameRewardedAd!.show(
+        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+          if (!completer.isCompleted) completer.complete(true);
+        },
+      );
+    } catch (_) {
+      _soulGameRewardedAd?.dispose();
+      _soulGameRewardedAd = null;
+      _loadSoulGameRewardedAd();
+      AppLifecyclePresenceGuard.settle();
+      if (!completer.isCompleted) completer.complete(false);
+    }
 
     return completer.future.timeout(
       const Duration(seconds: 12),
@@ -693,7 +815,8 @@ class AdMobService {
     if (kIsWeb) return null;
     await initialize();
     if (!_sdkInitialized) {
-      debugPrint('AdMobService: banner skipped because SDK is not initialized.');
+      debugPrint(
+          'AdMobService: banner skipped because SDK is not initialized.');
       return null;
     }
     if (await isProUser()) return null; // No banner for PRO users
@@ -716,7 +839,8 @@ class AdMobService {
             error,
             fallbackMessage: 'Banner quảng cáo chưa tải được.',
           );
-          debugPrint('AdMobService: banner failed to load: ${errorInfo.message}');
+          debugPrint(
+              'AdMobService: banner failed to load: ${errorInfo.message}');
           ad.dispose();
           if (!completer.isCompleted) {
             completer.complete(null);
@@ -755,7 +879,8 @@ class AdMobService {
             error,
             fallbackMessage: 'Interstitial quảng cáo chưa tải được.',
           );
-          debugPrint('AdMobService: interstitial failed to load: ${errorInfo.message}');
+          debugPrint(
+              'AdMobService: interstitial failed to load: ${errorInfo.message}');
           _interstitialAd = null;
         },
       ),
@@ -815,7 +940,7 @@ class AdMobService {
     }
 
     _autoInterstitialSchedulerEnabled = true;
-    await _setNextAutoInterstitialAt(_generateNextAutoInterstitialAt());
+    await _ensureNextAutoInterstitialAt();
     await _scheduleAutoInterstitialTimer();
   }
 
@@ -844,7 +969,7 @@ class AdMobService {
     _autoInterstitialTimer = null;
     if (clearPersisted) {
       final prefs = OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
+          await SharedPreferences.getInstance();
       await prefs.remove(_autoInterstitialNextAtPrefsKey);
     }
   }
@@ -989,6 +1114,11 @@ class AdMobService {
   }
 
   Stream<int> streamCurrentProUntil() async* {
+    if (!AppConfig.isPurchaseEnabled) {
+      yield 0;
+      return;
+    }
+
     final houseId = await _houseService.getCurrentHouseId();
     if (houseId == null || houseId.isEmpty) {
       yield 0;
@@ -1007,8 +1137,9 @@ class AdMobService {
 
   Future<Map<String, dynamic>?> _postAuthenticatedJson(
     String endpoint,
-    Map<String, dynamic> body,
-  ) async {
+    Map<String, dynamic> body, {
+    bool requireAppCheck = true,
+  }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return {'ok': false, 'error': 'unauthenticated'};
@@ -1027,7 +1158,10 @@ class AdMobService {
     }
 
     Future<http.Response> postWithToken(String idToken) {
-      return AppCheckHttpHeaders.withRequiredToken(
+      final appCheckHeaders = requireAppCheck
+          ? AppCheckHttpHeaders.withRequiredToken
+          : AppCheckHttpHeaders.withOptionalToken;
+      return appCheckHeaders(
         {
           'Content-Type': 'application/json; charset=utf-8',
           'Authorization': 'Bearer $idToken',
@@ -1052,7 +1186,8 @@ class AdMobService {
         tokenError,
         fallbackMessage: 'Không thể lấy token xác thực quảng cáo.',
       );
-      debugPrint('Failed to get Firebase ID token (checkin): ${errorInfo.message}');
+      debugPrint(
+          'Failed to get Firebase ID token (checkin): ${errorInfo.message}');
       return {'ok': false, 'error': 'network_error'};
     }
     if (idToken.isEmpty) {
@@ -1220,7 +1355,11 @@ class AdMobService {
         'questId': questId.trim(),
     };
 
-    final res = await _postAuthenticatedJson(AppConfig.rewardGrantUrl, payload);
+    final res = await _postAuthenticatedJson(
+      AppConfig.rewardGrantUrl,
+      payload,
+      requireAppCheck: source != 'daily_checkin',
+    );
 
     return res;
   }
@@ -1308,6 +1447,9 @@ class AdMobService {
   Future<RewardClaimResult> redeemProPlan({
     required String planId,
   }) async {
+    if (!AppConfig.isPurchaseEnabled) {
+      return const RewardClaimResult(ok: false, error: 'purchase_disabled');
+    }
     if (planId.trim().isEmpty) {
       return const RewardClaimResult(ok: false, error: 'invalid_plan');
     }

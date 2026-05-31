@@ -1,12 +1,15 @@
 part of '../../main_home_tab.dart';
 
 extension _MainHomeHeaderButtonExt on _MainHomeTabState {
-  Widget _buildHeaderButton(
-      {required IconData icon,
-      required Color color,
-      required VoidCallback onTap,
-      VoidCallback? onLongPress}) {
+  Widget _buildHeaderButton({
+    Key? key,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    VoidCallback? onLongPress,
+  }) {
     return GestureDetector(
+      key: key,
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(

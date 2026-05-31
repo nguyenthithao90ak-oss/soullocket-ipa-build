@@ -14,27 +14,40 @@ class MemoryLaneService {
   /// Lấy toàn bộ dữ liệu quan trọng để gen Timeline
   Future<List<Map<String, dynamic>>> fetchUnifiedTimeline(
       String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return [];
     List<Map<String, dynamic>> timeline = [];
 
     // 1. Phách từ Nhật ký (Diary)
-    final diarySnap = await _db.ref('houses/$houseId/diary').get();
+    final diarySnap = await _db.ref('houses/$normalizedHouseId/diary').get();
     if (diarySnap.exists) {
       final data = Map<dynamic, dynamic>.from(diarySnap.value as Map);
-      data.forEach((k, v) =>
-          timeline.add({...Map<String, dynamic>.from(v), 'type': 'diary'}));
+      data.forEach((k, v) {
+        if (v is Map) {
+          timeline.add({...Map<String, dynamic>.from(v), 'type': 'diary'});
+        }
+      });
     }
 
     // 2. Phách từ Album ảnh (Album)
-    final albumSnap = await _db.ref('houses/$houseId/album').get();
+    final albumSnap = await _db.ref('houses/$normalizedHouseId/album').get();
     if (albumSnap.exists) {
       final data = Map<dynamic, dynamic>.from(albumSnap.value as Map);
-      data.forEach((k, v) =>
-          timeline.add({...Map<String, dynamic>.from(v), 'type': 'photo'}));
+      data.forEach((k, v) {
+        if (v is Map) {
+          timeline.add({...Map<String, dynamic>.from(v), 'type': 'photo'});
+        }
+      });
     }
 
     // Sắp xếp theo thời gian
     timeline
-        .sort((a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
+        .sort((a, b) => _asTimestamp(b['ts']).compareTo(_asTimestamp(a['ts'])));
     return timeline;
+  }
+
+  int _asTimestamp(Object? value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

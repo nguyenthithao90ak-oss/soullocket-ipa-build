@@ -102,19 +102,19 @@ extension _CinemaScreenStateHelpersPart on _CinemaScreenState {
   }
 
   String _formatLongDate(DateTime date) {
-    const months = <String>[
-      'tháng 1',
-      'tháng 2',
-      'tháng 3',
-      'tháng 4',
-      'tháng 5',
-      'tháng 6',
-      'tháng 7',
-      'tháng 8',
-      'tháng 9',
-      'tháng 10',
-      'tháng 11',
-      'tháng 12',
+    final months = <String>[
+      L10nService().translate('util_thng1_db2569'),
+      L10nService().translate('util_thng2_afb937'),
+      L10nService().translate('util_thng3_b426e8'),
+      L10nService().translate('util_thng4_a41472'),
+      L10nService().translate('util_thng5_421305'),
+      L10nService().translate('util_thng6_09ac20'),
+      L10nService().translate('util_thng7_736c97'),
+      L10nService().translate('util_thng8_7c30f4'),
+      L10nService().translate('util_thng9_b91fa1'),
+      L10nService().translate('util_thng10_592fc9'),
+      L10nService().translate('util_thng11_1bfbf7'),
+      L10nService().translate('util_thng12_8dffb8'),
     ];
     return '${date.day} ${months[date.month - 1]}, ${date.year}';
   }

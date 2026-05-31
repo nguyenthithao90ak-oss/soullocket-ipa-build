@@ -10,6 +10,12 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
   static const int _communityUsageWindowMs = 24 * 60 * 60 * 1000;
 
   void _listenToCommunityMaintenance() {
+    final maintenanceFallback = _ct(
+      context.tr('home_tnhnngmngx_a56b2f'),
+      'The community feature is temporarily closed for an upgrade.',
+    );
+    final errorFallback = context.tr('home_khngthtitr_091925');
+
     _communityMaintenanceSub?.cancel();
     _communityMaintenanceSub = _dbRef.child('sys_settings').onValue.listen(
       (event) {
@@ -17,10 +23,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
         final map = settings is Map
             ? settings.map((key, value) => MapEntry(key.toString(), value))
             : const <String, dynamic>{};
-        final fallbackMessage = _ct(
-          'Tính năng mạng xã hội tạm thời đóng để nâng cấp.',
-          'The community feature is temporarily closed for an upgrade.',
-        );
+        final fallbackMessage = maintenanceFallback;
         final nextMaintenance = map['community_maintenance_mode'] == true;
         final nextMessage =
             map['community_maintenance_msg']?.toString().trim() ?? '';
@@ -48,7 +51,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
         debugPrint(
           'Community maintenance listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải trạng thái cộng đồng.',
+            fallbackMessage: errorFallback,
           ).message}',
         );
       },
@@ -246,6 +249,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
   }
 
   Future<Map<String, dynamic>?> _pickRandomCommunityBreakPost() async {
+    final anniversaryMsg = context.tr('home_ngngynynmt_16b9cc');
     final houseId = (_houseId ?? '').trim();
     if (houseId.isEmpty) {
       return null;
@@ -323,11 +327,11 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
       'isDeletedAuthor': false,
       'content': yearsAgo <= 1
           ? _ct(
-              'Đúng ngày này năm trước hai bạn đã lưu lại khoảnh khắc này trong nhật ký.',
+              anniversaryMsg,
               'On this exact day last year, you saved this memory in your diary.',
             )
           : _ct(
-              'Đúng ngày này $yearsAgo năm trước hai bạn đã lưu lại khoảnh khắc này trong nhật ký.',
+              L10nService().format('home_memory_years_ago', {'years': yearsAgo}),
               'On this exact day $yearsAgo years ago, you saved this memory in your diary.',
             ),
     };
@@ -352,9 +356,9 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
         (post['isDeletedAuthor']?.toString() == 'true') ||
         (post['houseId'] ?? '').toString().trim().isEmpty;
     final authorName = isDeletedAuthor
-        ? _ct('Khoảnh khắc được lưu lại', 'Saved moment')
+        ? _ct(context.tr('home_khonhkhccl_6f79f9'), 'Saved moment')
         : isAnon
-            ? _ct('Khoảnh khắc ẩn danh', 'Anonymous moment')
+            ? _ct(context.tr('home_khonhkhcnd_f34507'), 'Anonymous moment')
             : (post['houseName']?.toString().trim().isNotEmpty ?? false)
                 ? post['houseName'].toString().trim()
                 : _defaultHouseName;
@@ -362,7 +366,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
     final helperText = previewText.isNotEmpty
         ? previewText
         : _ct(
-            'Dừng mắt vài giây với một tấm ảnh dễ thương từ cộng đồng nhé.',
+            context.tr('home_dngmtvigiy_87a237'),
             'Pause for a few seconds with a cute photo from the community.',
           );
 
@@ -420,7 +424,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
                           children: [
                             Text(
                               _ct(
-                                'Kỷ niệm hôm nay của hai bạn',
+                                context.tr('home_knimhmnayc_d3f63f'),
                                 'Your anniversary memory today',
                               ),
                               style: SLTheme.quicksand(
@@ -505,7 +509,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
                         ),
                       ),
                       child: Text(
-                        _ct('Tiếp tục lướt', 'Continue browsing'),
+                        _ct(context.tr('home_tiptclt_7afbbc'), 'Continue browsing'),
                         style: SLTheme.quicksand(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
@@ -552,7 +556,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
         SnackBar(
           content: Text(
             _ct(
-              'Quảng cáo chưa sẵn sàng hoặc đã bị bỏ qua. Mình sẽ thử lại sau.',
+              context.tr('home_qungcochas_1bacaa'),
               'The ad was not ready or was dismissed. It will try again later.',
             ),
           ),
@@ -568,6 +572,9 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
   }
 
   Future<void> _init() async {
+    final friendsErrorFallback = context.tr('home_khngthtida_063ede');
+    final blockedErrorFallback = context.tr('home_khngthtida_87cfa9');
+
     _cancelFeedFilterSubscriptions();
     _updateState(() {
       _isLoading = true;
@@ -677,7 +684,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
           debugPrint(
             'Community friends listener failed: ${AppErrorMapper.resolve(
               error,
-              fallbackMessage: 'Không thể tải danh sách bạn bè.',
+              fallbackMessage: friendsErrorFallback,
             ).message}',
           );
         },
@@ -700,7 +707,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
           debugPrint(
             'Community blocked-users listener failed: ${AppErrorMapper.resolve(
               error,
-              fallbackMessage: 'Không thể tải danh sách chặn.',
+              fallbackMessage: blockedErrorFallback,
             ).message}',
           );
         },
@@ -750,6 +757,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
   }
 
   void _syncRealtimeFeedSubscription({bool forceRestart = false}) {
+    final errorFallback = context.tr('home_clixyra_775791');
     if (!widget.isActive) {
       _feedSub?.cancel();
       _feedSub = null;
@@ -787,7 +795,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
         debugPrint(
           '[CommunityTab] Error loading unified feed: ${AppErrorMapper.resolve(
             e,
-            fallbackMessage: 'Đã có lỗi xảy ra',
+            fallbackMessage: errorFallback,
           ).message}',
         );
         _updateState(() => _isLoading = false);
@@ -796,6 +804,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
   }
 
   Future<void> _loadMoreFeed({bool reset = false}) async {
+    final errorFallback = context.tr('home_clixyra_775791');
     if (_isCommunityPreviewFeed(_currentFeedType)) {
       _updateState(() {
         _isLoading = false;
@@ -836,7 +845,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
       debugPrint(
         '[CommunityTab] Error loading feed page: ${AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Đã có lỗi xảy ra',
+          fallbackMessage: errorFallback,
         ).message}',
       );
     } finally {
@@ -1333,7 +1342,6 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
   bool _canSeeByPrivacy(Map<String, dynamic> post) {
     final hid = _houseId;
     final postHouseId = (post['houseId'] ?? '').toString();
-    // Đã sửa: dùng đúng field 'privacy' thay vì 'visibility'
     final privacy =
         (post['privacy'] ?? post['visibility'] ?? 'public').toString();
 
@@ -1379,7 +1387,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
       final isLocket = p['isLocket'] == true || p['is_locket'] == true;
 
       if (_currentFeedType == 'mine') {
-        // Nếu là tab "Trang cá nhân" ở feed, ta có thể ẩn locket đi để lưu riêng ở Profile
+        // Nếu là tab context.tr('home_trangcnhn_554200') ở feed, ta có thể ẩn locket đi để lưu riêng ở Profile
         if (isLocket) return false;
         return hid != null && postHouseId == hid;
       }
@@ -1475,10 +1483,10 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
 
   String _feedLabel() {
     if (_currentFeedType == 'mine') {
-      return _ct('Trang cá nhân', 'Profile');
+      return _ct(context.tr('home_trangcnhn_554200'), 'Profile');
     }
     if (_currentFeedType == 'locket') {
-      return _ct('Khoảnh Khắc', 'Moments');
+      return _ct(context.tr('home_khonhkhc_cc3973'), 'Moments');
     }
     return _communityFeedLabel(_currentFeedType);
   }
@@ -1555,19 +1563,19 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
               _buildFeedOption(ctx,
                   value: 'foryou',
                   icon: Icons.explore_rounded,
-                  label: _ct('Dành Cho Bạn', 'For You')),
+                  label: _ct(context.tr('home_dnhchobn_ad2f6f'), 'For You')),
               _buildFeedOption(ctx,
                   value: 'locket',
                   icon: Icons.camera_alt_rounded,
-                  label: _ct('Khoảnh Khắc (Locket)', 'Moments (Locket)')),
+                  label: _ct(context.tr('home_khonhkhclo_385edf'), 'Moments (Locket)')),
               _buildFeedOption(ctx,
                   value: 'global',
                   icon: Icons.public,
-                  label: _ct('Toàn Cầu', 'Global')),
+                  label: _ct(context.tr('home_toncu_bd85e4'), 'Global')),
               _buildFeedOption(ctx,
                   value: 'friends',
                   icon: Icons.people,
-                  label: _ct('Bạn Bè', 'Friends')),
+                  label: _ct(context.tr('home_bnb_d45c5b'), 'Friends')),
               _buildFeedOption(ctx,
                   value: 'hot',
                   icon: Icons.local_fire_department,

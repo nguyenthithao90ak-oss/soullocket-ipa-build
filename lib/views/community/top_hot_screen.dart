@@ -2,6 +2,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
 import '../../services/house_service.dart';
@@ -30,7 +31,12 @@ class _TopHotScreenState extends State<TopHotScreen>
   List<_HouseEntry> _sorted = [];
 
   static const _periods = ['day', 'week', 'month', 'year'];
-  static const _periodLabels = ['Ngày', 'Tuần', 'Tháng', 'Năm'];
+  static final _periodLabels = [
+    L10nService().translate('comm_ngy_b9474a'),
+    L10nService().translate('comm_tun_c54621'),
+    L10nService().translate('comm_thng_570330'),
+    L10nService().translate('comm_nm_d1301c'),
+  ];
 
   @override
   void initState() {
@@ -319,13 +325,13 @@ class _TopHotScreenState extends State<TopHotScreen>
   String _labelForPeriod(String period) {
     switch (period) {
       case 'week':
-        return 'tuần';
+        return context.tr('comm_tun_3e01ac');
       case 'month':
-        return 'tháng';
+        return context.tr('comm_thng_59900e');
       case 'year':
-        return 'năm';
+        return context.tr('comm_nm_923e10');
       default:
-        return 'ngày';
+        return context.tr('comm_ngy_41ec10');
     }
   }
 
@@ -479,7 +485,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                     ),
                     SLSpacing.h16,
                     Text(
-                      'Đang tải bảng xếp hạng…',
+                      context.tr('comm_angtibngxp_f19b2e'),
                       style: SLTheme.quicksand(
                         color: const Color(0xFF8B5E6C),
                         fontWeight: FontWeight.w700,
@@ -604,7 +610,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                                   ),
                                 ),
                                 if (isSelf)
-                                  _chip('Bạn', const Color(0xFF16A34A)),
+                                  _chip(context.tr('comm_bn_1fd75b'), Color(0xFF16A34A)),
                                 _currentPeriodBadge(entry),
                               ],
                             ),
@@ -612,7 +618,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                             Text(
                               entry.bio.isNotEmpty
                                   ? entry.bio
-                                  : 'Chưa thêm tiểu sử.',
+                                  : context.tr('comm_chathmtius_0ede4b'),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: SLTheme.quicksand(
@@ -677,7 +683,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                             ),
                             SLSpacing.h4,
                             Text(
-                              'lửa',
+                              context.tr('comm_la_67f0e2'),
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 11,
@@ -834,7 +840,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                                     : const Color(0xFF1E293B),
                               ),
                             ),
-                            if (isSelf) _chip('Bạn', const Color(0xFF16A34A)),
+                            if (isSelf) _chip(context.tr('comm_bn_1fd75b'), Color(0xFF16A34A)),
                             if (entry.adminTick)
                               const Icon(
                                 Icons.local_fire_department_rounded,
@@ -879,7 +885,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                       if (entry.hotScore > 0)
                         _chip('HOT ${entry.hotScore}', const Color(0xFFD81B60)),
                       if (index == 0)
-                        _chip('QUÁN QUÂN', const Color(0xFFFF7B00),
+                        _chip(context.tr('comm_qunqun_1b53f8'), Color(0xFFFF7B00),
                             isGold: true),
                     ],
                   ),
@@ -1072,7 +1078,7 @@ class _TopHotScreenState extends State<TopHotScreen>
           const Text('🔥', style: TextStyle(fontSize: 58)),
           SLSpacing.h12,
           Text(
-            'Chưa có dữ liệu xếp hạng',
+            context.tr('comm_chacdliuxp_afecdc'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w900,
               fontSize: 17,
@@ -1081,7 +1087,7 @@ class _TopHotScreenState extends State<TopHotScreen>
           ),
           SLSpacing.h8,
           Text(
-            'Khi các nhà bắt đầu nhận tim và lửa, bảng TOP HOT sẽ xuất hiện tại đây.',
+            context.tr('comm_khiccnhbtu_a6da85'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w700,
@@ -1148,7 +1154,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Nội Quy TOP HOT',
+                          context.tr('comm_niquytopho_629576'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: 18,
@@ -1156,7 +1162,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                           ),
                         ),
                         Text(
-                          'Cập nhật tự động theo thời gian thực',
+                          context.tr('comm_cpnhttngth_44330b'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w700,
                             fontSize: 12.5,
@@ -1174,13 +1180,13 @@ class _TopHotScreenState extends State<TopHotScreen>
               ),
               SLSpacing.h12,
               ...[
-                '🥇 Top 1 nhận cúp vàng và tick vàng nổi bật.',
-                '🥈 Top 2 nhận cúp bạc và tick bạc.',
-                '🥉 Top 3 nhận cúp đồng và tick đồng.',
-                '🔥 Tick đỏ là đặc quyền admin cấp riêng và không reset theo kỳ.',
-                '📉 Mỗi tháng hệ thống giảm 15% độ hot để làm mới cuộc đua.',
-                '📊 Mỗi mục hiển thị thanh tiến độ và mức độ hot thấp, vừa, cao.',
-                '🛡️ Mỗi 3 tháng reset tick xếp hạng theo chính sách hiện hành.',
+                context.tr('comm_top1nhncpv_8e9a68'),
+                context.tr('comm_top2nhncpb_20b79d'),
+                context.tr('comm_top3nhncpn_e24132'),
+                context.tr('comm_ticklcquyn_e7c99a'),
+                context.tr('comm_mithnghthn_6a3298'),
+                context.tr('comm_mimchintht_fa11a0'),
+                context.tr('comm_mi3thngres_71ddd9'),
               ].map(
                 (rule) => Container(
                   width: double.infinity,

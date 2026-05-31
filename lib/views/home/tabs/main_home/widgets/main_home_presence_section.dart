@@ -24,33 +24,12 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
     final showDecorGlow = !effectProfile.performanceMode;
     final decorGlowEnabled = DateTime.now().millisecondsSinceEpoch < 0;
 
-    return Container(
-      margin: EdgeInsets.zero,
+    return Padding(
       padding: EdgeInsets.fromLTRB(
         20,
         compactMetaLayout ? 18 : 24,
         20,
         compactMetaLayout ? 14 : 20,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          colors: [
-            Color(0x33FFFFFF),
-            Color(0x22FFD8E7),
-            Color(0x26322544),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF291521).withValues(alpha: 0.14),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -259,15 +238,14 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (zodiacEmoji != '✦' && zodiacEmoji.isNotEmpty)
-                _buildModernZodiacBadge(zodiacEmoji, zodiacName),
-              if (zodiacEmoji != '✦' &&
-                  zodiacEmoji.isNotEmpty &&
-                  hasAge &&
-                  displayAge.isNotEmpty)
-                const SizedBox(width: 6),
-              if (hasAge && displayAge.isNotEmpty)
-                _buildModernAgeBadge(displayAge, isUser1),
+              if ((zodiacEmoji != '✦' && zodiacEmoji.isNotEmpty) ||
+                  (hasAge && displayAge.isNotEmpty))
+                _buildModernBirthZodiacPill(
+                  zodiacEmoji: zodiacEmoji,
+                  zodiacName: zodiacName,
+                  age: displayAge,
+                  isUser1: isUser1,
+                ),
             ],
           ),
         ),
@@ -320,7 +298,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.72),
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.8)),
                   ),
                   child: Text(
                     weatherText,
@@ -339,74 +318,66 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
     );
   }
 
-  Widget _buildModernZodiacBadge(String emoji, String name) {
-    // Xác định màu sắc dựa trên nguyên tố của cung
-    final detail = ZodiacUtils.zodiacDetails[name];
+  Widget _buildModernBirthZodiacPill({
+    required String zodiacEmoji,
+    required String zodiacName,
+    required String age,
+    required bool isUser1,
+  }) {
+    final detail = ZodiacUtils.zodiacDetails[zodiacName];
     final element = detail?['element']?.toString() ?? '';
+    final hasZodiac = zodiacEmoji != '✦' && zodiacEmoji.isNotEmpty;
+    final hasAge = age.isNotEmpty;
 
     Color baseColor;
-    if (element.contains('Lửa')) {
-      baseColor = const Color(0xFFFF5252);
-    } else if (element.contains('Nước')) {
-      baseColor = const Color(0xFF448AFF);
-    } else if (element.contains('Đất')) {
-      baseColor = const Color(0xFF81C784);
-    } else if (element.contains('Khí')) {
-      baseColor = const Color(0xFFAB47BC);
+    if (element.contains(context.tr('home_la_70bc13'))) {
+      baseColor = const Color(0xFFFF6B6B);
+    } else if (element.contains(context.tr('home_nc_0faef8'))) {
+      baseColor = const Color(0xFF4EA8FF);
+    } else if (element.contains(context.tr('home_t_0796d2'))) {
+      baseColor = const Color(0xFF6DD58C);
+    } else if (element.contains(context.tr('home_kh_e5d7dd'))) {
+      baseColor = const Color(0xFFB56CFF);
     } else {
-      baseColor = const Color(0xFFFF9800);
+      baseColor = _profileAccentGradient(isUser1).last;
     }
 
     return Container(
-      width: 26,
-      height: 26,
-      alignment: Alignment.center,
+      height: 24,
+      padding: const EdgeInsets.symmetric(horizontal: 7),
       decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
+        color: Colors.white.withValues(alpha: 0.86),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: baseColor.withValues(alpha: 0.34), width: 1),
         boxShadow: [
           BoxShadow(
-            color: baseColor.withValues(alpha: 0.4),
+            color: baseColor.withValues(alpha: 0.18),
             blurRadius: 8,
-            spreadRadius: 1,
-          ),
-        ],
-        border: Border.all(color: baseColor.withValues(alpha: 0.5), width: 1.5),
-      ),
-      child: Text(
-        emoji,
-        style: const TextStyle(fontSize: 14),
-      ),
-    );
-  }
-
-  Widget _buildModernAgeBadge(String age, bool isUser1) {
-    final gradient = _profileAccentGradient(isUser1);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [gradient[0], gradient[1]],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: gradient.last.withValues(alpha: 0.3),
-            blurRadius: 6,
             offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Text(
-        age,
-        style: SLTheme.quicksand(
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
-          color: Colors.white,
-          letterSpacing: 0.5,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (hasZodiac) ...[
+            Text(
+              zodiacEmoji,
+              style: const TextStyle(fontSize: 12, height: 1),
+            ),
+            if (hasAge) const SizedBox(width: 4),
+          ],
+          if (hasAge)
+            Text(
+              age,
+              style: SLTheme.quicksand(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: baseColor,
+                height: 1,
+              ),
+            ),
+        ],
       ),
     );
   }

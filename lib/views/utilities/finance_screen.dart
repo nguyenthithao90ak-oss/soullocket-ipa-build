@@ -35,7 +35,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       TextEditingController(text: '2');
 
   String _transactionType = 'out';
-  String _category = '🍜 Ăn uống';
+  String _category = L10nService().translate('util_nung_ee6149');
   int _totalBalance = 0, _totalIn = 0, _totalOut = 0;
 
   Map<String, dynamic>? _budgetPlan;
@@ -47,17 +47,17 @@ class _FinanceScreenState extends State<FinanceScreen> {
   StreamSubscription<DatabaseEvent>? _savingsGoalSub;
 
   final List<String> _categories = [
-    '🍜 Ăn uống',
-    '🎬 Giải trí',
-    '🎁 Quà cáp',
-    '💒 Hẹn hò',
-    '🏠 Sinh hoạt',
-    '✈️ Du lịch',
-    '💊 Thuốc men',
-    '📦 Khác'
+    L10nService().translate('util_nung_ee6149'),
+    L10nService().translate('util_giitr_79b00e'),
+    L10nService().translate('util_qucp_f4e023'),
+    L10nService().translate('util_hnh_94d189'),
+    L10nService().translate('util_sinhhot_f4ce1b'),
+    L10nService().translate('util_dulch_c7cc56'),
+    L10nService().translate('util_thucmen_ba87cf'),
+    L10nService().translate('util_khc_dd4bad')
   ];
   final _fmt =
-      NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0);
+      NumberFormat.currency(locale: 'vi_VN', symbol: L10nService().translate('util_txt_b5407d'), decimalDigits: 0);
 
   @override
   void initState() {
@@ -144,19 +144,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Xóa Quỹ? 🧨',
+        title: Text(context.tr('util_xaqu_086ff0'),
             style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
-        content: Text('Bạn có chắc chắn muốn xóa mục tiêu quỹ chung này?',
+        content: Text(context.tr('util_bncchcchnm_fd1095'),
             style: SLTheme.quicksand(fontWeight: FontWeight.w600)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+              onPressed: () => Navigator.pop(ctx), child: Text(context.tr('util_hy_1e4050'))),
           TextButton(
             onPressed: () {
               _dbRef.child('houses/${widget.houseId}/savings_goal').remove();
               Navigator.pop(ctx);
             },
-            child: Text(L10nService().translate('Xóa'),
+            child: Text(L10nService().translate(context.tr('util_xa_4ed187')),
                 style: const TextStyle(color: Colors.red)),
           ),
         ],
@@ -168,19 +168,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Xóa kế hoạch? 🧨',
+        title: Text(context.tr('util_xakhoch_ba0a75'),
             style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
-        content: Text('Bạn có chắc chắn muốn xóa kế hoạch chi tiêu hiện tại?',
+        content: Text(context.tr('util_bncchcchnm_ed97cc'),
             style: SLTheme.quicksand(fontWeight: FontWeight.w600)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+              onPressed: () => Navigator.pop(ctx), child: Text(context.tr('util_hy_1e4050'))),
           TextButton(
             onPressed: () {
               _dbRef.child('houses/${widget.houseId}/finance_plan').remove();
               Navigator.pop(ctx);
             },
-            child: Text(L10nService().translate('Xóa'),
+            child: Text(L10nService().translate(context.tr('util_xa_4ed187')),
                 style: const TextStyle(color: Colors.red)),
           ),
         ],
@@ -193,7 +193,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final amount = int.tryParse(amountText);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Nhập số tiền hợp lệ!',
+        content: Text(context.tr('util_nhpstinhpl_99919c'),
             style: SLTheme.quicksand(fontWeight: FontWeight.w700)),
         backgroundColor: SLTheme.primary,
         shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
@@ -240,7 +240,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               scrollable: true,
-              title: Text('Chia Tiền (Split Bill) 🍕',
+              title: Text(context.tr('util_chiatinspl_820857'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
               content: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -258,8 +258,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.next,
                         autofocus: true,
-                        decoration: const InputDecoration(
-                            labelText: 'Tổng số tiền (VND)'),
+                        decoration: InputDecoration(
+                            labelText: context.tr('util_tngstinvnd_59805c')),
                         scrollPadding: const EdgeInsets.only(bottom: 24),
                         onChanged: (_) => setDialogState(() {}),
                         onSubmitted: (_) =>
@@ -271,7 +271,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.done,
                         decoration:
-                            const InputDecoration(labelText: 'Số người chia'),
+                            InputDecoration(labelText: context.tr('util_sngichia_91ed4e')),
                         scrollPadding: const EdgeInsets.only(bottom: 24),
                         onChanged: (_) => setDialogState(() {}),
                         onSubmitted: (_) =>
@@ -287,7 +287,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                             borderRadius: SLRadius.mdAll,
                           ),
                           child: Text(
-                            'Mỗi người trả:\n${_fmt.format(splitResult)}',
+                            L10nService().format('util_finance_each_pays', {'amount': _fmt.format(splitResult)}),
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               color: SLTheme.primary,
@@ -303,7 +303,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Đóng')),
+                    child: Text(context.tr('util_ng_f63d1e'))),
               ],
             );
           },
@@ -348,7 +348,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           IconButton(
             icon: const Icon(Icons.calculate_outlined, color: SLTheme.textMain),
             onPressed: _showSplitBillDialog,
-            tooltip: 'Chia Tiền',
+            tooltip: context.tr('util_chiatin_4685f5'),
           ),
         ],
       ),
@@ -371,7 +371,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         child: SLTheme.primaryButton(
-          label: '➕ Lập kế hoạch chi tiêu',
+          label: context.tr('util_lpkhochchi_bc03dd'),
           onPressed: _showPlanDialog,
         ),
       );
@@ -384,13 +384,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final startTime = DateTime.fromMillisecondsSinceEpoch(createdAt);
     final endTime = startTime.add(Duration(days: days));
     final now = DateTime.now();
-
-    // Tính số ngày đã qua và còn lại
     final passedDays = now.difference(startTime).inDays;
     final remainingDays = days - passedDays;
     final isExpired = now.isAfter(endTime);
-
-    // Tính tiến độ chi tiêu
     final double percent =
         target > 0 ? (_totalOut / target).clamp(0.0, 1.0) : 0.0;
     final isOverBudget = _totalOut > target;
@@ -426,7 +422,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                       style: const TextStyle(fontSize: 20)),
                   SLSpacing.w8,
                   Text(
-                    isOverBudget ? 'VƯỢT NGÂN SÁCH!' : 'KẾ HOẠCH CHI TIÊU',
+                    isOverBudget ? context.tr('util_vtngnsch_937fb7') : context.tr('util_khochchiti_f81032'),
                     style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: 12,
@@ -460,14 +456,14 @@ class _FinanceScreenState extends State<FinanceScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Đã dùng: ${_fmt.format(_totalOut)}',
+                L10nService().format('util_finance_used_amount', {'amount': _fmt.format(_totalOut)}),
                 style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                     color: SLTheme.textMain),
               ),
               Text(
-                'Mục tiêu: ${_fmt.format(target)}',
+                L10nService().format('util_finance_target_amount', {'amount': _fmt.format(target)}),
                 style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     fontSize: 13,
@@ -494,8 +490,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
               SLSpacing.w8,
               Text(
                 isExpired
-                    ? 'Đã kết thúc kế hoạch'
-                    : 'Còn lại $remainingDays/$days ngày',
+                    ? context.tr('util_ktthckhoch_635af9')
+                    : L10nService().format('util_finance_days_left', {'remaining': remainingDays, 'days': days}),
                 style: SLTheme.quicksand(
                     color: Colors.blueGrey,
                     fontWeight: FontWeight.w700,
@@ -504,7 +500,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               const Spacer(),
               if (!isExpired && !isOverBudget)
                 Text(
-                  'Có thể tiêu thêm: ${_fmt.format(((target - _totalOut) / (remainingDays > 0 ? remainingDays : 1)).floor())}/ngày',
+                  L10nService().format('util_finance_can_spend_more_daily', {'amount': _fmt.format(((target - _totalOut) / (remainingDays > 0 ? remainingDays : 1)).floor())}),
                   style: SLTheme.quicksand(
                       color: Colors.green[700],
                       fontWeight: FontWeight.w800,
@@ -522,18 +518,18 @@ class _FinanceScreenState extends State<FinanceScreen> {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         child: SLTheme.primaryButton(
-          label: '🎯 Tạo Quỹ Cưới / Quỹ Du Lịch',
+          label: context.tr('util_toquciqudu_2385ab'),
           onPressed: _showSavingsGoalDialog,
         ),
       );
     }
 
     final target = _savingsGoal!['targetAmount'] as int? ?? 0;
-    final name = _savingsGoal!['name'] as String? ?? 'Quỹ Chung';
+    final name = _savingsGoal!['name'] as String? ?? context.tr('util_quchung_1cd93f');
 
     // Tính số tiền đã tiết kiệm được
     // Trong trường hợp này, ta có thể tính từ số tiền thu nhập (in) trừ đi một số khoản,
-    // hoặc có thể tính đơn giản bằng tổng số tiền thu nhập (in) hoặc tạo danh mục 'Tiết kiệm'.
+    // hoặc có thể tính đơn giản bằng tổng số tiền thu nhập (in) hoặc tạo danh mục context.tr('util_titkim_595e8b').
     // Ở đây ta dùng _totalBalance làm số tiền hiện có trong quỹ, nếu quỹ chung là tài khoản chính.
     // Hoặc ta tính tổng thu (hoặc chi cho danh mục Tiết kiệm).
     // Để đơn giản, ta dùng _totalBalance để so sánh với mục tiêu quỹ.
@@ -603,14 +599,14 @@ class _FinanceScreenState extends State<FinanceScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Đã có: ${_fmt.format(currentSaved)}',
+                L10nService().format('util_finance_saved_amount', {'amount': _fmt.format(currentSaved)}),
                 style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                     color: SLTheme.textMain),
               ),
               Text(
-                'Mục tiêu: ${_fmt.format(target)}',
+                L10nService().format('util_finance_target_amount', {'amount': _fmt.format(target)}),
                 style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     fontSize: 13,
@@ -636,8 +632,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
               SLSpacing.w8,
               Text(
                 isReached
-                    ? '🎉 Đã đạt mục tiêu!'
-                    : 'Đạt ${(percent * 100).toStringAsFixed(1)}%',
+                    ? context.tr('util_tmctiu_d4d469')
+                    : L10nService().format('util_finance_goal_percent', {'percent': (percent * 100).toStringAsFixed(1)}),
                 style: SLTheme.quicksand(
                     color: Colors.amber[800],
                     fontWeight: FontWeight.w800,
@@ -655,32 +651,32 @@ class _FinanceScreenState extends State<FinanceScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-        title: Text('Tạo Quỹ Mới 💍',
+        title: Text(context.tr('util_toqumi_e38258'),
             style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(
             controller: _savingsGoalNameController,
-            decoration: const InputDecoration(
-                labelText: 'Tên Quỹ (vd: Quỹ Cưới, Du Lịch)'),
+            decoration: InputDecoration(
+                labelText: context.tr('util_tnquvdquci_811553')),
           ),
           SLSpacing.h8,
           TextField(
             controller: _savingsGoalAmountController,
             keyboardType: TextInputType.number,
             decoration:
-                const InputDecoration(labelText: 'Số tiền mục tiêu (VND)'),
+                InputDecoration(labelText: context.tr('util_stinmctiuv_e1bc2d')),
           ),
         ]),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+              onPressed: () => Navigator.pop(ctx), child: Text(context.tr('util_hy_1e4050'))),
           ElevatedButton(
             onPressed: _saveSavingsGoal,
             style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber[700],
                 shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll)),
-            child: const Text('Lưu Quỹ',
-                style: TextStyle(
+            child: Text(context.tr('util_luqu_163328'),
+                style: const TextStyle(
                     color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
@@ -700,7 +696,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final Map<String, double> categoryTotals = {};
     double totalOut = 0;
     for (var t in outTransactions) {
-      final cat = t['category']?.toString() ?? 'Khác';
+      final cat = t['category']?.toString() ?? context.tr('util_khc_06c1f8');
       final amt = (t['amount'] as num?)?.toDouble() ?? 0.0;
       categoryTotals[cat] = (categoryTotals[cat] ?? 0) + amt;
       totalOut += amt;
@@ -752,7 +748,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Phân tích chi tiêu 📊',
+          Text(context.tr('util_phntchchit_1737cd'),
               style: SLTheme.quicksand(
                   color: SLTheme.textMain,
                   fontWeight: FontWeight.w900,
@@ -820,33 +816,33 @@ class _FinanceScreenState extends State<FinanceScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-        title: Text('Lập Kế Hoạch 🗓️',
+        title: Text(context.tr('util_lpkhoch_eb08e6'),
             style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(
             controller: _goalAmountController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                labelText: 'Tổng ngân sách dự kiến (VND)'),
+            decoration: InputDecoration(
+                labelText: context.tr('util_tngngnschd_7447b3')),
           ),
           SLSpacing.h8,
           TextField(
             controller: _goalDaysController,
             keyboardType: TextInputType.number,
             decoration:
-                const InputDecoration(labelText: 'Số ngày áp dụng (vd: 30)'),
+                InputDecoration(labelText: context.tr('util_sngypdngvd_78fb41')),
           ),
         ]),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+              onPressed: () => Navigator.pop(ctx), child: Text(context.tr('util_hy_1e4050'))),
           ElevatedButton(
             onPressed: _saveBudgetPlan,
             style: ElevatedButton.styleFrom(
                 backgroundColor: SLTheme.primary,
                 shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll)),
-            child: const Text('Lưu Kế Hoạch',
-                style: TextStyle(color: Colors.white)),
+            child: Text(context.tr('util_lukhoch_f05771'),
+                style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -884,7 +880,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   fontWeight: FontWeight.w900)),
         ),
         SLSpacing.h16,
-        // Thu/Chi thanh bar đôi
         Row(children: [
           _balanceMiniBar('💚 ${context.tr('income')}', _totalIn, Colors.green,
               const Color(0xFF2E7D32)),
@@ -1022,7 +1017,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               fontWeight: FontWeight.w700,
               fontSize: 16),
           decoration: InputDecoration(
-            hintText: '${context.tr('note')} (tùy chọn)...',
+            hintText: context.tr('util_tychn_9aa32e'),
             hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
             prefixIcon: Icon(Icons.notes,
                 color: SLTheme.primary.withValues(alpha: 0.6), size: 20),
@@ -1126,7 +1121,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           return SliverToBoxAdapter(
             child: Center(
               child: Text(
-                'Lỗi tải giao dịch: ${AppErrorMapper.resolve(snapshot.error).message}',
+                L10nService().format('util_finance_load_tx_error', {'error': AppErrorMapper.resolve(snapshot.error).message}),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                     color: SLTheme.textMain, fontWeight: FontWeight.w700),
@@ -1149,7 +1144,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     style: TextStyle(fontSize: 50),
                     textScaler: TextScaler.linear(1.0)),
                 SLSpacing.h8,
-                Text('Chưa có giao dịch nào.\nHãy thêm thu/chi đầu tiên!',
+                Text(context.tr('util_finance_empty_transactions'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                         color: SLTheme.textMain,
@@ -1191,7 +1186,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     item['category']?.toString().split(' ').first ??
                         (isIncome ? '💚' : '❤️');
 
-                // Clone .list-item từ Web gốc
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: SLSpacing.all16,
@@ -1213,7 +1207,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     ],
                   ),
                   child: Row(children: [
-                    // Category icon circle
                     Container(
                       width: 46,
                       height: 46,
@@ -1241,7 +1234,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                             children: [
                           Text(
                               item['category'] ??
-                                  (isIncome ? 'Thu nhập' : 'Chi tiêu'),
+                                  (isIncome ? context.tr('util_thunhp_63c92e') : context.tr('util_chitiu_fbc1f6')),
                               style: SLTheme.quicksand(
                                   color: SLTheme.textMain,
                                   fontWeight: FontWeight.w800,

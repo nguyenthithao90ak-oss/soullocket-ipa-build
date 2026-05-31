@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart'
-    show kDebugMode, TargetPlatform, defaultTargetPlatform;
+    show kDebugMode, kIsWeb, TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -63,15 +63,25 @@ class UtilityService {
   static bool isCoupleOnly(String id) => _coupleOnlyIds.contains(id);
 
   static bool isUtilityVisibleInCurrentBuild(String id) {
-    if (!kDebugMode && defaultTargetPlatform == TargetPlatform.iOS) {
+    if (!kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.iOS &&
+        id == 'vault') {
+      return false;
+    }
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       if (id == 'giftcode') return false;
+      if (id == 'store') return false;
     }
     return kDebugMode || !_debugOnlyIds.contains(id);
   }
 
   static bool isUtilityAllowed(String id, String? relationshipMode) {
+    final normalizedId = id.trim();
+    if (normalizedId.isEmpty || !isUtilityVisibleInCurrentBuild(normalizedId)) {
+      return false;
+    }
     final mode = normalizeRelationshipMode(relationshipMode);
-    if (mode == 'single' && isCoupleOnly(id)) return false;
+    if (mode == 'single' && isCoupleOnly(normalizedId)) return false;
     return true;
   }
 
@@ -283,13 +293,22 @@ class UtilityService {
     return order;
   }
 
+  bool _sameStringList(List<String> left, List<String> right) {
+    if (left.length != right.length) return false;
+    for (var i = 0; i < left.length; i += 1) {
+      if (left[i] != right[i]) return false;
+    }
+    return true;
+  }
+
   Future<List<String>> getCustomOrder() async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final stored = prefs.getStringList(_customOrderPrefKey) ?? const <String>[];
-    final order = _completeOrder(stored);
-    if (stored.isNotEmpty && order.length != stored.length) {
-      await prefs.setStringList(_customOrderPrefKey, _sanitizeAppIds(stored));
+    final sanitized = _sanitizeAppIds(stored);
+    final order = _completeOrder(sanitized);
+    if (stored.isNotEmpty && !_sameStringList(stored, sanitized)) {
+      await prefs.setStringList(_customOrderPrefKey, sanitized);
     }
     return order;
   }
@@ -386,4 +405,3 @@ class UtilityService {
         .toList(growable: false);
   }
 }
-

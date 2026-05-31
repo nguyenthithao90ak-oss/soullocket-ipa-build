@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 // lib/models/chat_message.dart
 class ChatMessage {
   final String id;
@@ -112,11 +113,11 @@ class ChatMessage {
   String get imageDisplayText {
     final normalizedDeletedReason = deletedReason?.trim().toLowerCase() ?? '';
     if (normalizedDeletedReason == 'ttl_expired' || isExpiredImage) {
-      return 'Ảnh đã bị xóa sau 15 ngày';
+      return L10nService().translate('chat_image_deleted_15_days');
     }
     if (isImage && normalizedImageStatus != 'active') {
       final fallback = text.trim();
-      return fallback.isEmpty ? 'Ảnh không còn khả dụng' : fallback;
+      return fallback.isEmpty ? L10nService().translate('chat_image_unavailable') : fallback;
     }
     return text.trim();
   }

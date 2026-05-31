@@ -23,10 +23,10 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
 
   String _pinChangeHelperText() {
     if (_lockConfiguredAtMs == null || _lockConfiguredAtMs! <= 0) {
-      return 'Đổi hoặc tắt PIN sẽ cần xác thực mã PIN hiện tại.';
+      return context.tr('home_ihocttpins_406280');
     }
 
-    return 'Đổi hoặc tắt PIN luôn cần xác thực mã PIN hiện tại để bảo vệ khu riêng tư.';
+    return context.tr('home_ihocttpinl_79d857');
   }
 
   Future<void> _handlePinChangeRequested() async {
@@ -123,11 +123,11 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
             );
           }
         } else {
-          _showToast('Hãy thiết lập mã PIN trước đã nhé.', success: false);
+          _showToast(context.tr('home_hythitlpmp_44a093'), success: false);
           return;
         }
         if (!_lockScopes.values.any((value) => value)) {
-          _showToast('Hãy chọn ít nhất 1 phạm vi cần khóa.', success: false);
+          _showToast(context.tr('home_hychntnht1_54215e'), success: false);
           return;
         }
       }
@@ -187,7 +187,7 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
 
       if (!mounted) return;
       _showToast(
-        'Đã lưu cài đặt bảo mật trên thiết bị này!',
+        context.tr('home_lucitbomtt_c60175'),
         success: true,
       );
     } catch (e) {
@@ -312,7 +312,7 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
 //         if (!willEnable &&
 //             _isAppLockEnabled &&
 //             _lockScopes.values.where((value) => value).length <= 1) {
-//           _showToast('Khóa app cần ít nhất 1 phạm vi được bật.',
+//           _showToast(context.tr('home_khaappcntn_50990c'),
 //               success: false);
 //           return;
 //         }
@@ -368,14 +368,14 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
     final firstPin = await PinPadSetupModal.show(
       context,
       title: context.tr('setup_pin'),
-      subtitle: 'Nhập 4-8 chữ số để khóa ứng dụng.',
+      subtitle: context.tr('home_nhp48chskh_0eed44'),
     );
 
     if (firstPin == null || !mounted) return;
 
     final confirmedPin = await PinPadSetupModal.show(
       context,
-      title: 'Xác nhận mã PIN',
+      title: context.tr('home_xcnhnmpin_666ebf'),
       subtitle: context.tr('reenter_pin_confirm'),
       isConfirming: true,
       firstPin: firstPin,

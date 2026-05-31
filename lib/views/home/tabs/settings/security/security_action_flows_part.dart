@@ -29,7 +29,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       debugPrint(
         '_ensureCanModifySharedInfo failed: ${AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Đã có lỗi xảy ra',
+          fallbackMessage: context.tr('home_clixyra_775791'),
         ).message}',
       );
       return true;
@@ -51,7 +51,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       if (result.isPendingDevice) {
         if (showToast) {
           _showToast(
-            'Thiết bị đang chờ duyệt. Mục bảo mật sẽ khả dụng sau 12 giờ.',
+            context.tr('home_thitbangch_25cf69'),
             success: false,
           );
         }
@@ -62,7 +62,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       debugPrint(
         '_ensureCanModifySecurityInfo failed: ${AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Đã có lỗi xảy ra',
+          fallbackMessage: context.tr('home_clixyra_775791'),
         ).message}',
       );
       return true;
@@ -90,7 +90,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       debugPrint(
         'security scope unlock failed: ${AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Đã có lỗi xảy ra',
+          fallbackMessage: context.tr('home_clixyra_775791'),
         ).message}',
       );
       if (!mounted) return;
@@ -145,20 +145,29 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   }
 
   Future<void> _sendVerificationEmail() async {
+    final noUserEmailErr = context.tr('home_khngtmthye_956ed5');
+    final emailVerifiedMsg = context.tr('home_emailnycxc_23cf77');
+    final stepUpContinueLabel = context.tr('home_tiptcgim_6c653a');
+    final limitCountErr = context.tr('home_bngiqu5lnh_d51781');
+    final waitMinText = context.tr('home_vigiy_b169c3');
+    final otpDialogTitle = context.tr('home_xcthcemail_18b8e3');
+    final successMsg = context.tr('home_xcthcemail_2f9c1a');
+    final fallbackErrMsg = context.tr('home_chathgimxc_6fa0ef');
+
     try {
       await _auth.currentUser?.reload();
     } catch (_) {}
 
     final user = _auth.currentUser;
     if (user == null || user.email == null) {
-      _showToast('Không tìm thấy email để xác thực', success: false);
+      _showToast(noUserEmailErr, success: false);
       return;
     }
     if (user.emailVerified) {
       if (mounted) {
         setState(() => _isMainEmailVerified = true);
       }
-      _showToast('Email này đã được xác thực rồi', success: true);
+      _showToast(emailVerifiedMsg, success: true);
       return;
     }
 
@@ -168,7 +177,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       context,
       action: SensitiveActionType.verifyPrimaryEmail,
       houseId: _houseId,
-      continueLabel: 'Tiếp tục gửi mã',
+      continueLabel: stepUpContinueLabel,
     );
     if (!canContinue) {
       return;
@@ -191,7 +200,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
       if (count >= 5) {
         _showToast(
-            'Bạn đã gửi quá 5 lần hôm nay. Vui lòng thử lại vào ngày mai.',
+            limitCountErr,
             success: false);
         return;
       }
@@ -202,7 +211,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
           final waitMins =
               _SettingsTabState._emailVerifyResendCooldownSeconds ~/ 60 -
                   (diff / 60000).floor();
-          final waitText = waitMins > 0 ? '$waitMins phút' : 'vài giây';
+          final waitText = waitMins > 0 ? '$waitMins phút' : waitMinText;
           _showToast('Vui lòng đợi $waitText nữa trước khi gửi lại.',
               success: false);
           return;
@@ -228,7 +237,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       if (!mounted || !context.mounted) return;
       final success = await _showManagedSettingsEmailOtpDialog(
         context: context,
-        title: 'Xác thực email chính',
+        title: otpDialogTitle,
         email: normalizedEmail,
         sendCode: () async {
           await _authService.sendOtpEmail(normalizedEmail);
@@ -243,7 +252,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         await user.reload();
         await _clearPendingEmailVerificationState();
         setState(() => _isMainEmailVerified = true);
-        _showToast('Đã xác thực email chính thành công!', success: true);
+        _showToast(successMsg, success: true);
       } else {
         setState(() => _hasPendingEmailVerification = true);
       }
@@ -252,8 +261,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         _showToast(
           AppErrorMapper.resolve(
             e,
-            fallbackMessage:
-                'Chưa thể gửi mã xác thực email lúc này. Hãy kiểm tra email và kết nối mạng rồi thử lại.',
+            fallbackMessage: fallbackErrMsg,
           ).message,
           success: false,
         );
@@ -348,6 +356,11 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     bool showSuccessToast = true,
     bool showPendingToast = true,
   }) async {
+    final successMsg = context.tr('home_emailcxcth_eaa26d');
+    final pendingMsg = context.tr('home_emailchacx_ea8f95');
+    final defaultErrorMsg = context.tr('home_khngthkimt_1e513e');
+    final fallbackErrMsg = context.tr('home_chathkimtr_737830');
+
     if (_isRefreshingEmailVerification) {
       return;
     }
@@ -378,7 +391,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       if (isVerified) {
         await _clearPendingEmailVerificationState();
         if (showSuccessToast) {
-          _showToast('Email đã được xác thực thành công.', success: true);
+          _showToast(successMsg, success: true);
         }
         return;
       }
@@ -386,21 +399,20 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       await _restorePendingEmailVerificationState();
       if (showPendingToast) {
         _showToast(
-          'Email chưa được xác thực. Hãy bấm xác thực và nhập mã 6 số được gửi qua email.',
+          pendingMsg,
           success: false,
         );
       }
     } on FirebaseAuthException catch (e) {
       _showToast(
-        e.message ?? 'Không thể kiểm tra trạng thái xác thực email.',
+        e.message ?? defaultErrorMsg,
         success: false,
       );
     } catch (e) {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              'Chưa thể kiểm tra trạng thái xác thực email lúc này. Hãy thử lại sau ít phút.',
+          fallbackMessage: fallbackErrMsg,
         ).message,
         success: false,
       );
@@ -425,11 +437,11 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Text(
-          'Thiết lập quyền cần thiết',
+          context.tr('home_thitlpquyn_07f936'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
-          'Ứng dụng sẽ lần lượt hỏi quyền GPS, Camera, Mic và Thông báo. Bạn có thể cho phép hoặc từ chối từng quyền; các quyền này chỉ dùng cho định vị, gọi video, quét mã và nhắc nhở khi bạn dùng tính năng tương ứng.',
+          context.tr('home_ngdngslnlt_3d164a'),
           style: SLTheme.quicksand(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -439,11 +451,11 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Để sau'),
+            child: Text(context.tr('home_sau_8a3721')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Tiếp tục'),
+            child: Text(context.tr('home_tiptc_555f1f')),
           ),
         ],
       ),
@@ -475,11 +487,13 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Text(
-          'Cần bật trong cài đặt máy',
+          context.tr('home_cnbttrongc_def85d'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
-          'Các quyền ${permissions.join(', ')} đang bị chặn ở mức hệ thống. Bạn có muốn mở cài đặt ứng dụng để bật lại không?',
+          L10nService().format('home_permissions_need_manual_enable', {
+            'permissions': permissions.join(', '),
+          }),
           style: SLTheme.quicksand(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -493,7 +507,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Mở cài đặt'),
+            child: Text(context.tr('home_mcit_a2573b')),
           ),
         ],
       ),
@@ -504,6 +518,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   }
 
   Future<void> _requestAllPermissions() async {
+    final notifLabel = context.tr('home_thngbo_fa0565');
+    final fallbackErrMsg = context.tr('home_chathcpquy_7b52a2');
+
     final approved = await _confirmPermissionGrant();
     if (!approved) return;
     if (!mounted) return;
@@ -556,7 +573,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         statuses['Mic'] = true;
       }
 
-      statuses['Thông báo'] =
+      statuses[notifLabel] =
           await NotificationService().requestPermissionAndInit();
 
       final grantedCount = statuses.values.where((it) => it).length;
@@ -576,7 +593,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         AppErrorMapper.resolve(
           e,
           fallbackMessage:
-              'Chưa thể cấp quyền lúc này. Hãy mở Cài đặt máy và kiểm tra quyền ứng dụng.',
+              fallbackErrMsg,
         ).message,
         success: false,
       );
@@ -586,7 +603,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   }
 
   String _maskPin(String value) {
-    if (value.isEmpty) return 'Chưa thiết lập';
+    if (value.isEmpty) return context.tr('home_chathitlp_bf65d4');
     if (_showHousePin) return value;
     return List.filled(value.length, '•').join();
   }
@@ -600,7 +617,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   }
 
   bool _isBirthQuestion(String question) {
-    return question.trim().toLowerCase() == 'ngày sinh của bạn?';
+    return question.trim().toLowerCase() == context.tr('home_ngysinhcab_9bdbf2');
   }
 
   Future<String?> _promptEmailDialog({
@@ -653,6 +670,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   }
 
   Future<void> _swapUserRole() async {
+    final fallbackErrMsg = context.tr('home_clixyra_775791');
     final houseId = _houseId?.trim();
     if (houseId != null &&
         houseId.isNotEmpty &&
@@ -679,7 +697,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         debugPrint(
           'swap role presence cleanup failed: ${AppErrorMapper.resolve(
             e,
-            fallbackMessage: 'Đã có lỗi xảy ra',
+            fallbackMessage: fallbackErrMsg,
           ).message}',
         );
       }
@@ -712,7 +730,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       onWarnStepUp: () => _authenticateLockSettingsChange(
         requireExistingLock: _isAppLockEnabled && _storedLockSecret.isNotEmpty,
       ),
-      continueLabel: 'Xác minh rồi liên kết',
+      continueLabel: context.tr('home_xcminhrili_0c5739'),
     );
     if (!canContinue) return;
     if (!await _ensureCanModifySecurityInfo()) return;
@@ -724,8 +742,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       if (!mounted) return;
       _showToast(
         _googleLinked
-            ? 'Tài khoản đã liên kết Google.'
-            : 'Đã liên kết Google thành công!',
+            ? context.tr('home_tikhonlink_ba5d97')
+            : context.tr('home_linktgoogl_e89c63'),
         success: true,
       );
     } catch (e) {
@@ -734,7 +752,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         AppErrorMapper.resolve(
           e,
           fallbackMessage:
-              'Chưa thể liên kết Google lúc này. Hãy kiểm tra tài khoản và thử lại.',
+              context.tr('home_chathlinkt_9871a1'),
         ).message,
         success: false,
       );
@@ -744,34 +762,46 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   }
 
   Future<void> _changeHousePassword() async {
+    final passwordRequiredMsg = _passwordLinked
+        ? context.tr('home_vuilngnhpm_4a048d')
+        : context.tr('home_vuilngnhpm_4d42a3');
+    final oldPasswordRequiredMsg = context.tr('home_vuilngnhpm_4a048d');
+    final tooShortMsg = _passwordLinked
+        ? context.tr('home_mtkhumiphi_e5ab0b')
+        : context.tr('home_mtkhutolnu_052ae9');
+    final noUserEmailMsg = context.tr('home_khngtmthyt_105054');
+    final confirmStepUpLabel = context.tr('home_ngxutthitb_7e13ea');
+    final logOutOthersMsg = context.tr('home_nuimtkhubn_1068bf');
+    final donNotRevokeMsg = context.tr('home_khngchimtk_825316');
+    final stepUpContinueLabel = context.tr('home_xcminhrii_30e41b');
+    final unsupportedAccountMsg = context.tr('home_tikhonhint_0a9a3c');
+    final createPasswordSuccessMsg = context.tr('home_tomtkhungn_8265d4');
+    final defaultCreatePasswordErr = context.tr('home_khngthtomt_b6e7be');
+    final fallbackCreatePasswordErr = context.tr('home_chathtomtk_8676ac');
+    final changePasswordSuccessLogOutMsg = context.tr('home_imtkhuthnh_77e9e9');
+    final changePasswordSuccessMsg = context.tr('home_imtkhuthnh_028bd0');
+    final wrongPasswordErr = context.tr('home_mtkhuckhng_9b166f');
+    final defaultChangePasswordErr = context.tr('home_khngthimtk_ef6603');
+    final fallbackChangePasswordErr = context.tr('home_chathimtkh_32be96');
+
     final newPass = _newPassCtrl.text.trim();
     final oldPass = _oldPassCtrl.text.trim();
     if (newPass.isEmpty) {
-      _showToast(
-        _passwordLinked
-            ? 'Vui lòng nhập đủ mật khẩu cũ và mới'
-            : 'Vui lòng nhập mật khẩu muốn tạo',
-        success: false,
-      );
+      _showToast(passwordRequiredMsg, success: false);
       return;
     }
     if (_passwordLinked && oldPass.isEmpty) {
-      _showToast('Vui lòng nhập đủ mật khẩu cũ và mới', success: false);
+      _showToast(oldPasswordRequiredMsg, success: false);
       return;
     }
     if (newPass.length < 6) {
-      _showToast(
-        _passwordLinked
-            ? 'Mật khẩu mới phải ít nhất 6 ký tự'
-            : 'Mật khẩu tạo lần đầu phải ít nhất 6 ký tự',
-        success: false,
-      );
+      _showToast(tooShortMsg, success: false);
       return;
     }
 
     final user = _auth.currentUser;
     if (user == null || user.email == null) {
-      _showToast('Không tìm thấy tài khoản', success: false);
+      _showToast(noUserEmailMsg, success: false);
       return;
     }
 
@@ -783,21 +813,21 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
               borderRadius: BorderRadius.circular(22),
             ),
             title: Text(
-              'Đăng xuất thiết bị khác?',
+              confirmStepUpLabel,
               style: SLTheme.quicksand(fontWeight: FontWeight.w900),
             ),
             content: Text(
-              'Nếu đổi mật khẩu, bạn có thể chọn đăng xuất toàn bộ các thiết bị đã đăng nhập hiện có. Thiết bị đang dùng để đổi mật khẩu sẽ được giữ lại, còn các thiết bị khác sẽ bị buộc đăng nhập lại.',
+              logOutOthersMsg,
               style: SLTheme.quicksand(height: 1.45),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Không, chỉ đổi mật khẩu'),
+                child: Text(donNotRevokeMsg),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Có, đăng xuất tất cả thiết bị khác'),
+                child: Text(context.tr('home_cngxutttct_a48045')),
               ),
             ],
           ),
@@ -813,7 +843,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       onWarnStepUp: () => _authenticateLockSettingsChange(
         requireExistingLock: _isAppLockEnabled && _storedLockSecret.isNotEmpty,
       ),
-      continueLabel: 'Xác minh rồi đổi',
+      continueLabel: stepUpContinueLabel,
     );
     if (!canContinue) return;
     if (!await _ensureCanModifySecurityInfo()) return;
@@ -821,7 +851,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     if (!_passwordLinked) {
       if ((user.email ?? '').trim().isEmpty) {
         _showToast(
-          'Tài khoản hiện tại chưa có email nên chưa thể tạo mật khẩu đăng nhập.',
+          unsupportedAccountMsg,
           success: false,
         );
         return;
@@ -835,20 +865,19 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         if (!mounted) return;
         setState(() => _showPasswordEditor = false);
         _showToast(
-          'Đã tạo mật khẩu đăng nhập thành công. Từ lần sau bạn có thể đăng nhập bằng email và mật khẩu này.',
+          createPasswordSuccessMsg,
           success: true,
         );
       } on FirebaseAuthException catch (e) {
         _showToast(
-          e.message ?? 'Không thể tạo mật khẩu đăng nhập',
+          e.message ?? defaultCreatePasswordErr,
           success: false,
         );
       } catch (e) {
         _showToast(
           AppErrorMapper.resolve(
             e,
-            fallbackMessage:
-                'Chưa thể tạo mật khẩu đăng nhập lúc này. Hãy thử lại với mật khẩu khác.',
+            fallbackMessage: fallbackCreatePasswordErr,
           ).message,
           success: false,
         );
@@ -872,22 +901,21 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       setState(() => _showPasswordEditor = false);
       _showToast(
         logoutOtherDevices
-            ? 'Đổi mật khẩu thành công. Các thiết bị khác sẽ phải đăng nhập lại.'
-            : 'Đổi mật khẩu thành công!',
+            ? changePasswordSuccessLogOutMsg
+            : changePasswordSuccessMsg,
         success: true,
       );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
-        _showToast('Mật khẩu cũ không đúng', success: false);
+        _showToast(wrongPasswordErr, success: false);
       } else {
-        _showToast(e.message ?? 'Không thể đổi mật khẩu', success: false);
+        _showToast(e.message ?? defaultChangePasswordErr, success: false);
       }
     } catch (e) {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              'Chưa thể đổi mật khẩu lúc này. Hãy kiểm tra mật khẩu cũ và thử lại.',
+          fallbackMessage: fallbackChangePasswordErr,
         ).message,
         success: false,
       );
@@ -897,7 +925,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   Future<void> _sendPasswordResetLink() async {
     final email = _auth.currentUser?.email?.trim();
     if (email == null || email.isEmpty) {
-      _showToast('Không tìm thấy email để gửi mã đặt lại mật khẩu',
+      _showToast(context.tr('home_khngtmthye_1f3420'),
           success: false);
       return;
     }
@@ -931,14 +959,14 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       _newPassCtrl.clear();
       if (!mounted) return;
       setState(() => _showPasswordEditor = false);
-      _showToast('Đổi mật khẩu thành công!', success: true);
+      _showToast(context.tr('home_imtkhuthnh_028bd0'), success: true);
     } catch (e) {
       if (mounted) {
         _showToast(
           AppErrorMapper.resolve(
             e,
             fallbackMessage:
-                'Mật khẩu đã đổi nhưng màn hình chưa kịp cập nhật. Hãy thoát vào lại phần Cài đặt.',
+                context.tr('home_mtkhuinhng_454b1b'),
           ).message,
           success: false,
         );

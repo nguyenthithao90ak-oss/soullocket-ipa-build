@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import '../../services/ai_analytics_service.dart';
 import '../../core/sl_theme.dart';
 
@@ -41,14 +42,14 @@ class _LoveAnalyticsScreenState extends State<LoveAnalyticsScreen> {
     }
 
     final score = _loveData?['loveScore'] as int? ?? 50;
-    final status = _loveData?['status'] as String? ?? 'Chưa rỏ ràng';
+    final status = _loveData?['status'] as String? ?? context.tr('util_charrng_9b508e');
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF5F8),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFFF5F8),
         elevation: 0,
-        title: Text('Nhật Ký Tình Yêu (AI)',
+        title: Text(context.tr('util_nhtktnhyua_8eea1f'),
             style: SLTheme.quicksand(
                 fontWeight: FontWeight.w900, color: const Color(0xFFD81B60))),
         iconTheme: const IconThemeData(color: Color(0xFFD81B60)),
@@ -71,11 +72,11 @@ class _LoveAnalyticsScreenState extends State<LoveAnalyticsScreen> {
               ),
             ),
             SLSpacing.gapH(40),
-            _buildStatCard('Tổng nhật ký',
+            _buildStatCard(context.tr('util_tngnhtk_dd139d'),
                 _loveData?['totalDiaries']?.toString() ?? '0', Colors.blue),
-            _buildStatCard('Tin buồn / Cãi nhau',
+            _buildStatCard(context.tr('util_tinbuncinh_1559c2'),
                 _loveData?['negative']?.toString() ?? '0', Colors.red),
-            _buildStatCard('Tin vui / Hạnh phúc',
+            _buildStatCard(context.tr('util_tinvuihnhp_bb3ef6'),
                 _loveData?['positive']?.toString() ?? '0', Colors.green),
           ],
         ),
@@ -108,7 +109,7 @@ class _LoveAnalyticsScreenState extends State<LoveAnalyticsScreen> {
                     fontSize: 54,
                     fontWeight: FontWeight.w900,
                     color: scoreColor)),
-            Text('Điểm',
+            Text(context.tr('util_im_559d58'),
                 style: SLTheme.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

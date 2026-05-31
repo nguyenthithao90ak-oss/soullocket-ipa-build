@@ -63,15 +63,134 @@ class _CommunityFeedErrorState extends StatelessWidget {
   }
 }
 
-class _CommunityFeedLoadingState extends StatelessWidget {
+class _CommunityFeedLoadingState extends StatefulWidget {
   const _CommunityFeedLoadingState();
 
   @override
+  State<_CommunityFeedLoadingState> createState() =>
+      _CommunityFeedLoadingStateState();
+}
+
+class _CommunityFeedLoadingStateState extends State<_CommunityFeedLoadingState>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _shimmerCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shimmerCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.only(top: 50),
-        child: CircularProgressIndicator(color: Color(0xFFD81B60)),
+    return AnimatedBuilder(
+      animation: _shimmerCtrl,
+      builder: (_, __) => Column(
+        children: [
+          _SkeletonPostCard(shimmer: _shimmerCtrl.value),
+          _SkeletonPostCard(shimmer: _shimmerCtrl.value),
+          _SkeletonPostCard(shimmer: _shimmerCtrl.value),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonPostCard extends StatelessWidget {
+  final double shimmer;
+  const _SkeletonPostCard({required this.shimmer});
+
+  static const Color _base = Color(0xFFECECEC);
+  static const Color _highlight = Color(0xFFF8F8F8);
+
+  Widget _block({
+    double width = double.infinity,
+    double height = 13,
+    double radius = 8,
+  }) {
+    final double shift = shimmer * 3 - 1.5;
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        gradient: LinearGradient(
+          begin: Alignment(shift - 1, 0),
+          end: Alignment(shift + 1, 0),
+          colors: const [_base, _highlight, _base],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+            blurRadius: 18,
+            spreadRadius: -8,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: avatar + tên
+          Row(
+            children: [
+              _block(width: 42, height: 42, radius: 21),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _block(width: 130, height: 13),
+                    const SizedBox(height: 7),
+                    _block(width: 80, height: 10),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Nội dung text
+          _block(),
+          const SizedBox(height: 7),
+          _block(),
+          const SizedBox(height: 7),
+          _block(width: 200),
+          const SizedBox(height: 16),
+          // Ảnh placeholder
+          _block(height: 170, radius: 16),
+          const SizedBox(height: 16),
+          // Action bar
+          Row(
+            children: [
+              _block(width: 64, height: 30, radius: 15),
+              const SizedBox(width: 8),
+              _block(width: 64, height: 30, radius: 15),
+              const SizedBox(width: 8),
+              _block(width: 64, height: 30, radius: 15),
+            ],
+          ),
+        ],
       ),
     );
   }

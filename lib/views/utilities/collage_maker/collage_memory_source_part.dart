@@ -200,9 +200,9 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
       ?..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: const Text('Đã bỏ ảnh này khỏi bộ ghép hiện tại.'),
+          content: Text(context.tr('util_bnhnykhibg_66c578')),
           action: SnackBarAction(
-            label: 'Hoàn tác',
+            label: context.tr('util_hontc_96ce27'),
             onPressed: () {
               if (!mounted) return;
               setState(() {

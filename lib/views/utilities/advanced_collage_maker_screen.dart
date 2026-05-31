@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -268,8 +269,8 @@ class _AdvancedCollageMakerScreenState
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Chưa thể tạo ảnh ghép lúc này. Vui lòng thử lại.')),
+        SnackBar(
+            content: Text(context.tr('util_chathtonhg_5a21ae'))),
       );
     } finally {
       if (mounted) {

@@ -42,9 +42,12 @@ class AILoveAnalyticsService {
 
   /// Phân tích dữ liệu nhật ký của 1 cắp đôi trong 30 ngày qua
   Future<Map<String, dynamic>> analyzeMonthlyMood(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return _emptyResult();
     // Pull only the most recent diary entries to avoid scanning the entire history.
-    final snap = await _db.ref('houses/$houseId/diaries').limitToLast(30).get();
-    if (!snap.exists) return _emptyResult();
+    final snap =
+        await _db.ref('houses/$normalizedHouseId/diaries').limitToLast(30).get();
+    if (!snap.exists || snap.value is! Map) return _emptyResult();
 
     final data = Map<String, dynamic>.from(snap.value as Map);
 
@@ -54,6 +57,10 @@ class AILoveAnalyticsService {
 
     // Lặp qua tất cả nhật ký
     data.forEach((key, value) {
+      if (value is! Map) {
+        neutralCount++;
+        return;
+      }
       final content = (value['content'] ?? '').toString().toLowerCase();
 
       int posScore = 0;
@@ -75,7 +82,7 @@ class AILoveAnalyticsService {
       }
     });
 
-    final total = data.length;
+    final total = positiveCount + negativeCount + neutralCount;
     // Tính điểm 0-100 (tối thiểu 50 nếu không có gì đặc biệt)
     final loveScore = 50 + (positiveCount * 5) - (negativeCount * 5);
 
@@ -85,7 +92,7 @@ class AILoveAnalyticsService {
       'negative': negativeCount,
       'neutral': neutralCount,
       'loveScore': loveScore.clamp(0, 100), // Không vượt quá 100 hoặc dưới 0
-      'status': _getLoveStatus(loveScore.clamp(0, 100)),
+      'status': _getLoveStatus((loveScore.clamp(0, 100) as num).toInt()),
     };
   }
 

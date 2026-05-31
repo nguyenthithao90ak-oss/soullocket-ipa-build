@@ -49,7 +49,7 @@ class _CountdownSpaceRenameDialogState
     return AlertDialog(
       backgroundColor: const Color(0xFF101A2B),
       title: Text(
-        'Đặt tên không gian',
+        context.tr('home_ttnkhnggia_9d2bdf'),
         style: SLTheme.quicksand(
           fontWeight: FontWeight.w900,
           color: Colors.white,
@@ -65,19 +65,19 @@ class _CountdownSpaceRenameDialogState
           fontWeight: FontWeight.w800,
         ),
         decoration: widget.decorationBuilder(
-          label: 'Tên hiển thị',
-          hint: 'Ví dụ: Không gian của hai đứa',
+          label: context.tr('home_tnhinth_6cccad'),
+          hint: context.tr('home_vdkhnggian_d6db2a'),
         ),
         onSubmitted: (_) => _close(_controller.text.trim()),
       ),
       actions: [
         TextButton(
           onPressed: _close,
-          child: const Text('Hủy'),
+          child: Text(context.tr('home_hy_1e4050')),
         ),
         ElevatedButton(
           onPressed: () => _close(_controller.text.trim()),
-          child: const Text('Lưu'),
+          child: Text(context.tr('home_lu_49fac1')),
         ),
       ],
     );
@@ -166,7 +166,7 @@ class _CountdownSpaceAddDialogState extends State<_CountdownSpaceAddDialog> {
     return AlertDialog(
       backgroundColor: const Color(0xFF101A2B),
       title: Text(
-        'Ghép nối không gian',
+        context.tr('home_ghpnikhngg_860e28'),
         style: SLTheme.quicksand(
           fontWeight: FontWeight.w900,
           color: Colors.white,
@@ -185,11 +185,11 @@ class _CountdownSpaceAddDialogState extends State<_CountdownSpaceAddDialog> {
         ),
         decoration: widget
             .decorationBuilder(
-              label: 'Mã nhà / @username / link',
-              hint: 'Nhập mã nhà, @username hoặc link của người kia',
+              label: context.tr('home_mnhusernam_02a809'),
+              hint: context.tr('home_nhpmnhuser_66bbe7'),
             )
             .copyWith(
-              helperText: 'Ví dụ: NH_ABC123, @ten_nha hoặc link',
+              helperText: context.tr('home_vdnhabc123_4640df'),
               errorText: _errorText.isEmpty ? null : _errorText,
             ),
         onChanged: (_) {
@@ -205,7 +205,7 @@ class _CountdownSpaceAddDialogState extends State<_CountdownSpaceAddDialog> {
       actions: [
         TextButton(
           onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('Hủy'),
+          child: Text(context.tr('home_hy_1e4050')),
         ),
         ElevatedButton(
           onPressed: _isSubmitting ? null : () => unawaited(_submit()),
@@ -215,7 +215,7 @@ class _CountdownSpaceAddDialogState extends State<_CountdownSpaceAddDialog> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Gửi yêu cầu'),
+              : Text(context.tr('home_giyucu_576885')),
         ),
       ],
     );

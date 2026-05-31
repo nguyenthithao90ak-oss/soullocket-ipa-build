@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -144,21 +145,21 @@ class _MoodScreenState extends State<MoodScreen> {
     String hint;
 
     if (score >= 86) {
-      text = 'Rất hợp';
+      text = context.tr('util_rthp_c60cf7');
       color = Colors.greenAccent;
-      hint = 'Hôm nay 2 bạn đang khá đồng điệu.';
+      hint = context.tr('util_hmnay2bnan_3da364');
     } else if (score >= 70) {
-      text = 'Khá hợp';
+      text = context.tr('util_khhp_71b3ed');
       color = Colors.blueAccent;
-      hint = 'Hôm nay 2 bạn đang khá đồng điệu.';
+      hint = context.tr('util_hmnay2bnan_3da364');
     } else if (score >= 52) {
-      text = 'Bình thường';
+      text = context.tr('util_bnhthng_d22d95');
       color = Colors.orangeAccent;
-      hint = 'Hãy hỏi nhau một câu nhẹ nhàng để hiểu hơn.';
+      hint = context.tr('util_hyhinhaumt_aff242');
     } else {
-      text = 'Cần quan tâm';
+      text = context.tr('util_cnquantm_347220');
       color = Colors.redAccent;
-      hint = 'Một người có thể đang mệt/khó chịu. Nhắn một câu quan tâm nhé.';
+      hint = context.tr('util_mtngicthan_0d4d17');
     }
 
     return {'score': score, 'text': text, 'color': color, 'hint': hint};
@@ -176,7 +177,7 @@ class _MoodScreenState extends State<MoodScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, 'TÂM TRẠNG HÔM NAY 🎭'),
+      appBar: SLTheme.appBar(context, context.tr('util_tmtrnghmna_a95380')),
       body: SLTheme.background(
         child: SafeArea(
           child: Column(
@@ -190,7 +191,7 @@ class _MoodScreenState extends State<MoodScreen> {
                         child: Column(
                           children: [
                             Text(
-                              'Cả 2 cùng chọn emoji tâm trạng. Hệ thống tự phân tích tương hợp.',
+                              context.tr('util_c2cngchnem_b22d8e'),
                               textAlign: TextAlign.center,
                               style: SLTheme.quicksand(
                                   color: SLTheme.textMain,
@@ -200,10 +201,10 @@ class _MoodScreenState extends State<MoodScreen> {
                             SLSpacing.h24,
                             Row(
                               children: [
-                                _buildMoodAvatar('Bạn', _myMood?['e'],
+                                _buildMoodAvatar(context.tr('util_bn_1fd75b'), _myMood?['e'],
                                     _formatTime(_myMood?['ts'])),
                                 SLSpacing.w20,
-                                _buildMoodAvatar('Người ấy', _otherMood?['e'],
+                                _buildMoodAvatar(context.tr('util_ngiy_5bab37'), _otherMood?['e'],
                                     _formatTime(_otherMood?['ts'])),
                               ],
                             ),
@@ -252,7 +253,7 @@ class _MoodScreenState extends State<MoodScreen> {
                       if (compat.isEmpty)
                         _buildGlassContainer(
                           child: Text(
-                            'Chờ cả 2 người chọn tâm trạng để phân tích tương hợp.',
+                            context.tr('util_chc2ngichn_2bb78e'),
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                                 color: SLTheme.textLight,
@@ -275,7 +276,7 @@ class _MoodScreenState extends State<MoodScreen> {
                                           fontWeight: FontWeight.w800,
                                           fontSize: 16),
                                       children: [
-                                        const TextSpan(text: 'Tương hợp: '),
+                                        TextSpan(text: context.tr('util_tnghp_0cd24e')),
                                         TextSpan(
                                             text: compat['text'],
                                             style: TextStyle(
@@ -305,7 +306,7 @@ class _MoodScreenState extends State<MoodScreen> {
                               ),
                               SLSpacing.h16,
                               Text(
-                                'Gợi ý: ${compat['hint']}',
+                                L10nService().format('util_mood_hint', {'hint': compat['hint']}),
                                 style: SLTheme.quicksand(
                                     color: SLTheme.textMuted,
                                     fontSize: 13,

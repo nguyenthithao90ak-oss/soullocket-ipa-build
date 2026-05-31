@@ -95,10 +95,6 @@ class StorageDeleteHelper {
         e,
         fallbackMessage: 'Không thể xóa tệp từ URL.',
       ).message}');
-      debugPrint('Lỗi không thể xóa ảnh: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể xóa ảnh.',
-      ).message}');
       return false;
     }
   }

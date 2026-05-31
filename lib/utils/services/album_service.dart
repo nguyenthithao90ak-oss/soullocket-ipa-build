@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/album_item.dart';
+import '../core/constants/app_config.dart';
 import 'daily_quest_service.dart';
 import 'offline_cache_service.dart';
 import 'purchase_service.dart';
@@ -460,7 +461,9 @@ class UploadGuardResult {
         errorTitle: 'Hết lượt hôm nay',
         errorMessage: isPro
             ? 'Bạn đã dùng hết $limit lượt tải ảnh hôm nay. Đợi sau 00h nhé!'
-            : 'Bạn đã dùng hết $limit lượt hôm nay. Nâng cấp PRO để tải 30 ảnh/ngày!',
+            : AppConfig.isPurchaseEnabled
+                ? 'Bạn đã dùng hết $limit lượt hôm nay. Nâng cấp PRO để tải 30 ảnh/ngày!'
+                : 'Bạn đã dùng hết $limit lượt hôm nay. Đợi sau 00h nhé!',
       );
 
   factory UploadGuardResult.exceedsRemaining(int remaining) =>

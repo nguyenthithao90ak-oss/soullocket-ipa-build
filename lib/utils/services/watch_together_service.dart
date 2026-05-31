@@ -25,6 +25,11 @@ class WatchTogetherService {
   final _db = FirebaseDatabase.instance;
   final _auth = FirebaseAuth.instance;
 
+  String _normalizeVideoType(String value) {
+    final normalized = value.trim().toLowerCase();
+    return normalized == 'direct' ? 'direct' : 'youtube';
+  }
+
   // ─────────────────────────────────────────────────────────────
   // 1. TẠO / THAM GIA PHÒNG XEM
   // ─────────────────────────────────────────────────────────────
@@ -40,20 +45,25 @@ class WatchTogetherService {
     String? updatedByName,
   }) async {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
+    final normalizedHouseId = houseId.trim();
+    final normalizedVideoUrl = videoUrl.trim();
+    if (uid == null || normalizedHouseId.isEmpty || normalizedVideoUrl.isEmpty) {
+      return;
+    }
 
-    await _db.ref('houses/$houseId/movie_sync').set({
-      'videoUrl': videoUrl,
-      'videoTitle': videoTitle,
-      'videoType': videoType,
+    await _db.ref('houses/$normalizedHouseId/movie_sync').set({
+      'videoUrl': normalizedVideoUrl,
+      'videoTitle': videoTitle.trim(),
+      'videoType': _normalizeVideoType(videoType),
       'isPlaying': false,
       'positionSec': 0.0,
       'createdBy': uid,
       'updatedBy': uid,
-      'updatedByName': updatedByName ?? '',
-      if (inviteId != null && inviteId.isNotEmpty) 'inviteId': inviteId,
-      if (originClientId != null && originClientId.isNotEmpty)
-        'originClientId': originClientId,
+      'updatedByName': updatedByName?.trim() ?? '',
+      if (inviteId != null && inviteId.trim().isNotEmpty)
+        'inviteId': inviteId.trim(),
+      if (originClientId != null && originClientId.trim().isNotEmpty)
+        'originClientId': originClientId.trim(),
       'lastUpdatedAt': ServerValue.timestamp,
       'sessionActive': true,
     });
@@ -61,7 +71,9 @@ class WatchTogetherService {
 
   /// Huỷ phòng xem (host thoát)
   Future<void> endSession(String houseId) async {
-    await _db.ref('houses/$houseId/movie_sync').update({
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
+    await _db.ref('houses/$normalizedHouseId/movie_sync').update({
       'sessionActive': false,
       'isPlaying': false,
     });
@@ -80,17 +92,21 @@ class WatchTogetherService {
     String? originClientId,
     String? updatedByName,
   }) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
     final uid = _auth.currentUser?.uid;
     final updates = <String, dynamic>{
       'isPlaying': isPlaying,
-      'positionSec': positionSec,
-      if (durationSec != null) 'durationSec': durationSec,
+      'positionSec': positionSec.isNegative ? 0.0 : positionSec,
+      if (durationSec != null) 'durationSec': durationSec.isNegative ? 0.0 : durationSec,
       if (uid != null) 'updatedBy': uid,
-      if (updatedByName != null) 'updatedByName': updatedByName,
-      if (originClientId != null) 'originClientId': originClientId,
+      if (updatedByName != null && updatedByName.trim().isNotEmpty)
+        'updatedByName': updatedByName.trim(),
+      if (originClientId != null && originClientId.trim().isNotEmpty)
+        'originClientId': originClientId.trim(),
       'lastUpdatedAt': ServerValue.timestamp,
     };
-    await _db.ref('houses/$houseId/movie_sync').update(updates);
+    await _db.ref('houses/$normalizedHouseId/movie_sync').update(updates);
   }
 
   /// Tua video đến vị trí mới (Seek) — người kia tự tua theo
@@ -100,12 +116,16 @@ class WatchTogetherService {
     String? originClientId,
     String? updatedByName,
   }) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
     final uid = _auth.currentUser?.uid;
-    await _db.ref('houses/$houseId/movie_sync').update({
-      'positionSec': positionSec,
+    await _db.ref('houses/$normalizedHouseId/movie_sync').update({
+      'positionSec': positionSec.isNegative ? 0.0 : positionSec,
       if (uid != null) 'updatedBy': uid,
-      if (updatedByName != null) 'updatedByName': updatedByName,
-      if (originClientId != null) 'originClientId': originClientId,
+      if (updatedByName != null && updatedByName.trim().isNotEmpty)
+        'updatedByName': updatedByName.trim(),
+      if (originClientId != null && originClientId.trim().isNotEmpty)
+        'originClientId': originClientId.trim(),
       'seekedAt': ServerValue.timestamp,
     });
   }
@@ -117,10 +137,13 @@ class WatchTogetherService {
     String videoTitle = '',
     String videoType = 'youtube',
   }) async {
-    await _db.ref('houses/$houseId/movie_sync').update({
-      'videoUrl': videoUrl,
-      'videoTitle': videoTitle,
-      'videoType': videoType,
+    final normalizedHouseId = houseId.trim();
+    final normalizedVideoUrl = videoUrl.trim();
+    if (normalizedHouseId.isEmpty || normalizedVideoUrl.isEmpty) return;
+    await _db.ref('houses/$normalizedHouseId/movie_sync').update({
+      'videoUrl': normalizedVideoUrl,
+      'videoTitle': videoTitle.trim(),
+      'videoType': _normalizeVideoType(videoType),
       'isPlaying': false,
       'positionSec': 0.0,
       'lastUpdatedAt': ServerValue.timestamp,
@@ -139,9 +162,13 @@ class WatchTogetherService {
     required String videoUrl,
   }) async {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) return null;
+    final normalizedHouseId = houseId.trim();
+    final normalizedVideoUrl = videoUrl.trim();
+    if (uid == null || normalizedHouseId.isEmpty || normalizedVideoUrl.isEmpty) {
+      return null;
+    }
 
-    final inviteRef = _db.ref('houses/$houseId/cinema_invites').push();
+    final inviteRef = _db.ref('houses/$normalizedHouseId/cinema_invites').push();
     final inviteId = inviteRef.key;
     if (inviteId == null) return null;
 
@@ -149,9 +176,9 @@ class WatchTogetherService {
         videoTitle.trim().isEmpty ? 'phim đang chiếu' : videoTitle;
     await inviteRef.set({
       'fromUid': uid,
-      'fromName': senderName,
+      'fromName': senderName.trim(),
       'videoTitle': safeTitle,
-      'videoUrl': videoUrl,
+      'videoUrl': normalizedVideoUrl,
       'status': 'pending',
       'createdAt': ServerValue.timestamp,
       'updatedAt': ServerValue.timestamp,
@@ -159,18 +186,18 @@ class WatchTogetherService {
 
     try {
       await _db.ref('notification_queue').push().set({
-        'houseId': houseId,
-        'house_id': houseId,
+        'houseId': normalizedHouseId,
+        'house_id': normalizedHouseId,
         'sender_uid': uid,
-        'title': '$senderName mời bạn vào rạp phim',
+        'title': '${senderName.trim()} mời bạn vào rạp phim',
         'body': 'Chấp nhận để xem "$safeTitle" cùng nhau.',
         'data': {
           'screen': 'cinema',
           'type': 'cinema_invite',
-          'houseId': houseId,
-          'targetHouseId': houseId,
+          'houseId': normalizedHouseId,
+          'targetHouseId': normalizedHouseId,
           'inviteId': inviteId,
-          'url': videoUrl,
+          'url': normalizedVideoUrl,
           'title': safeTitle,
         },
         'timestamp': ServerValue.timestamp,
@@ -192,20 +219,28 @@ class WatchTogetherService {
     required String accepterName,
   }) async {
     final uid = _auth.currentUser?.uid;
-    if (uid == null || inviteId.trim().isEmpty) return;
+    final normalizedHouseId = houseId.trim();
+    final normalizedInviteId = inviteId.trim();
+    if (uid == null || normalizedHouseId.isEmpty || normalizedInviteId.isEmpty) {
+      return;
+    }
 
-    await _db.ref('houses/$houseId/cinema_invites/$inviteId').update({
+    await _db.ref('houses/$normalizedHouseId/cinema_invites/$normalizedInviteId').update({
       'status': 'accepted',
       'acceptedByUid': uid,
-      'acceptedByName': accepterName,
+      'acceptedByName': accepterName.trim(),
       'acceptedAt': ServerValue.timestamp,
       'updatedAt': ServerValue.timestamp,
     });
   }
 
   Stream<MovieSyncState?> listenToSession(String houseId) {
-    return _db.ref('houses/$houseId/movie_sync').onValue.map((event) {
-      if (!event.snapshot.exists) return null;
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<MovieSyncState?>.value(null);
+    }
+    return _db.ref('houses/$normalizedHouseId/movie_sync').onValue.map((event) {
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return null;
       final data = Map<String, dynamic>.from(event.snapshot.value as Map);
       return MovieSyncState.fromMap(data);
     });
@@ -222,11 +257,15 @@ class WatchTogetherService {
     String color = '#FFFFFF',
   }) async {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
+    final normalizedHouseId = houseId.trim();
+    final normalizedMessage = message.trim();
+    if (uid == null || normalizedHouseId.isEmpty || normalizedMessage.isEmpty) {
+      return;
+    }
 
-    await _db.ref('houses/$houseId/movie_chat').push().set({
-      'text': message,
-      'color': color,
+    await _db.ref('houses/$normalizedHouseId/movie_chat').push().set({
+      'text': normalizedMessage,
+      'color': color.trim().isEmpty ? '#FFFFFF' : color.trim(),
       'fromUid': uid,
       'createdAt': ServerValue.timestamp,
     });
@@ -234,13 +273,17 @@ class WatchTogetherService {
 
   /// Stream danmaku mới nhất (UI vẽ bay qua màn hình)
   Stream<DanmakuMessage?> listenToDanmaku(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<DanmakuMessage?>.value(null);
+    }
     return _db
-        .ref('houses/$houseId/movie_chat')
+        .ref('houses/$normalizedHouseId/movie_chat')
         .orderByChild('createdAt')
         .limitToLast(1)
         .onChildAdded
         .map((event) {
-      if (!event.snapshot.exists) return null;
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return null;
       final data = Map<String, dynamic>.from(event.snapshot.value as Map);
       data['id'] = event.snapshot.key ?? '';
       return DanmakuMessage.fromMap(data);
@@ -249,18 +292,20 @@ class WatchTogetherService {
 
   /// Xóa danmaku cũ hơn 10 phút (tránh tích tụ rác Firebase)
   Future<void> cleanOldDanmaku(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
     final cutoff = DateTime.now()
         .subtract(const Duration(minutes: 10))
         .millisecondsSinceEpoch;
     final snap = await _db
-        .ref('houses/$houseId/movie_chat')
+        .ref('houses/$normalizedHouseId/movie_chat')
         .orderByChild('createdAt')
         .endAt(cutoff)
         .get();
-    if (!snap.exists) return;
+    if (!snap.exists || snap.value is! Map) return;
     final data = Map<dynamic, dynamic>.from(snap.value as Map);
     for (final key in data.keys) {
-      await _db.ref('houses/$houseId/movie_chat/$key').remove();
+      await _db.ref('houses/$normalizedHouseId/movie_chat/$key').remove();
     }
   }
 }
@@ -300,8 +345,8 @@ class MovieSyncState {
       videoTitle: map['videoTitle']?.toString() ?? '',
       videoType: map['videoType']?.toString() ?? 'youtube',
       isPlaying: map['isPlaying'] == true,
-      positionSec: (map['positionSec'] as num?)?.toDouble() ?? 0.0,
-      durationSec: (map['durationSec'] as num?)?.toDouble() ?? 0.0,
+      positionSec: ((map['positionSec'] as num?)?.toDouble() ?? 0.0).clamp(0.0, double.infinity),
+      durationSec: ((map['durationSec'] as num?)?.toDouble() ?? 0.0).clamp(0.0, double.infinity),
       sessionActive: map['sessionActive'] == true,
       lastUpdatedAt: (map['lastUpdatedAt'] as num?)?.toInt() ?? 0,
       originClientId: map['originClientId']?.toString() ?? '',
@@ -332,7 +377,12 @@ class DanmakuMessage {
       text: map['text']?.toString() ?? '',
       color: map['color']?.toString() ?? '#FFFFFF',
       fromUid: map['fromUid']?.toString() ?? '',
-      createdAt: (map['createdAt'] as num?)?.toInt() ?? 0,
+      createdAt: _asTimestamp(map['createdAt']),
     );
   }
+}
+
+int _asTimestamp(Object? value) {
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? 0;
 }

@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:ui' as ui;
 import '../../core/sl_theme.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
-import 'package:soullocket_app/services/notification_service.dart';
+import '../../core/fast_backdrop_filter.dart';
+import '../../services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/activity_history_service.dart';
 
@@ -81,7 +83,7 @@ class _HabitScreenState extends State<HabitScreen> {
     if (!mounted) return;
     final role = prefs.getString('il_role') ?? 'user1';
     ActivityHistoryService.instance.add(
-      'đã tạo một thói quen mới',
+      context.tr('util_tomtthique_a49546'),
       houseId: widget.houseId,
       role: role,
     );
@@ -121,28 +123,47 @@ class _HabitScreenState extends State<HabitScreen> {
     return '${d.day}-${d.month}-${d.year}';
   }
 
+  int _calculateHabitStreak(Map<dynamic, dynamic> completedMap) {
+    int streak = 0;
+    DateTime checkDate = DateTime.now();
+    while (true) {
+      final key = _formatDateKey(checkDate);
+      if (completedMap[key] == true) {
+        streak++;
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else {
+        if (streak == 0 &&
+            _formatDateKey(checkDate) == _formatDateKey(DateTime.now())) {
+          checkDate = checkDate.subtract(const Duration(days: 1));
+          if (completedMap[_formatDateKey(checkDate)] == true) {
+            streak++;
+            checkDate = checkDate.subtract(const Duration(days: 1));
+            continue;
+          }
+        }
+        break;
+      }
+    }
+    return streak;
+  }
+
   void _showHabitInfo() {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          'Theo dõi thói quen hoạt động thế nào?',
+          context.tr('util_theodithiq_5cf852'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
-          '• Nhập tên thói quen rồi bấm + để tạo.\n'
-          '• Bấm biểu tượng đồng hồ nếu muốn đặt giờ nhắc.\n'
-          '• Nếu có đặt giờ, app sẽ gửi nhắc nhở trong ngày khi tới khoảng 30 phút trước giờ đã chọn trở đi.\n'
-          '• Mỗi thói quen chỉ nhắc 1 lần mỗi ngày, lưu bằng last_reminded_date.\n'
-          '• Bấm từng ô ngày để đánh dấu đã làm hoặc bỏ đánh dấu.\n'
-          '• Chuỗi ngày được tính theo các ngày đã hoàn thành gần nhất.',
+          context.tr('util_habit_help_body'),
           style: SLTheme.quicksand(height: 1.45),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu'),
+            child: Text(context.tr('util_hiu_93c4c0')),
           ),
         ],
       ),
@@ -155,13 +176,26 @@ class _HabitScreenState extends State<HabitScreen> {
     super.dispose();
   }
 
+  String _habitMetaLabel(Map<dynamic, dynamic> item) {
+    final creator = item['creator']?.toString();
+    final time = item['time']?.toString();
+    final parts = <String>[];
+    if (creator != null && creator.isNotEmpty) {
+      parts.add(L10nService().format('util_habit_created_by', {'name': creator}));
+    }
+    if (time != null && time.isNotEmpty) {
+      parts.add('⏰ $time');
+    }
+    return parts.join(' • ');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'THEO DÕI THÓI QUEN',
+          context.tr('util_theodithiq_362d99'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -187,7 +221,7 @@ class _HabitScreenState extends State<HabitScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Giới thiệu theo dõi thói quen',
+            tooltip: context.tr('util_giithiuthe_3c2cfe'),
             icon: const Icon(Icons.info_outline_rounded,
                 color: Colors.white, size: 22),
             onPressed: _showHabitInfo,
@@ -244,7 +278,7 @@ class _HabitScreenState extends State<HabitScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Thói quen mới (VD: Chạy bộ)...',
+                      hintText: context.tr('util_thiquenmiv_24be39'),
                       hintStyle: SLTheme.quicksand(
                         color: const Color(0xFFB55A73),
                       ),
@@ -301,6 +335,114 @@ class _HabitScreenState extends State<HabitScreen> {
     );
   }
 
+  Widget _buildHabitSummary({
+    required List<Map<String, dynamic>> items,
+    required List<DateTime> last7Days,
+    required String todayKey,
+  }) {
+    int doneToday = 0;
+    int weekDone = 0;
+    int bestStreak = 0;
+
+    for (final item in items) {
+      final completedMap = item['completed_dates'] != null
+          ? Map<dynamic, dynamic>.from(item['completed_dates'])
+          : <dynamic, dynamic>{};
+      if (completedMap[todayKey] == true) {
+        doneToday++;
+      }
+      for (final day in last7Days) {
+        if (completedMap[_formatDateKey(day)] == true) {
+          weekDone++;
+        }
+      }
+      bestStreak = max(bestStreak, _calculateHabitStreak(completedMap));
+    }
+
+    final weekTarget = items.length * last7Days.length;
+    final weekProgress = weekTarget == 0 ? 0.0 : weekDone / weekTarget;
+    final badge = weekProgress >= 0.85
+        ? 'Tuần rất đều'
+        : weekProgress >= 0.5
+            ? 'Đang giữ nhịp'
+            : 'Cần nhắc thêm';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.24),
+        borderRadius: SLRadius.xlAll,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.32)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  borderRadius: SLRadius.lgAll,
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: const Icon(Icons.emoji_events_rounded,
+                    color: Colors.amberAccent, size: 23),
+              ),
+              SLSpacing.w12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      badge,
+                      style: SLTheme.quicksand(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SLSpacing.h4,
+                    Text(
+                      'Hôm nay $doneToday/${items.length} • Streak tốt nhất $bestStreak ngày',
+                      style: SLTheme.quicksand(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SLSpacing.h12,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: weekProgress.clamp(0.0, 1.0),
+              minHeight: 7,
+              backgroundColor: Colors.white.withValues(alpha: 0.16),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
+            ),
+          ),
+          SLSpacing.h8,
+          Text(
+            'Tiến độ 7 ngày: $weekDone/$weekTarget lượt check-in.',
+            style: SLTheme.quicksand(
+              color: Colors.white70,
+              fontWeight: FontWeight.w700,
+              fontSize: 11.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHabitsList() {
     return StreamBuilder(
       stream: _habitsStream,
@@ -308,7 +450,7 @@ class _HabitScreenState extends State<HabitScreen> {
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              'Không tải được thói quen lúc này. Hãy thử lại sau.',
+              context.tr('util_khngticthi_a88c58'),
               style: SLTheme.quicksand(
                   color: Colors.white70, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
@@ -319,7 +461,7 @@ class _HabitScreenState extends State<HabitScreen> {
         if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
           return Center(
             child: Text(
-              'Chưa có thói quen nào',
+              context.tr('util_chacthique_191171'),
               style: SLTheme.quicksand(
                   color: Colors.white70, fontWeight: FontWeight.w600),
             ),
@@ -380,34 +522,22 @@ class _HabitScreenState extends State<HabitScreen> {
 
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: items.length,
+          itemCount: items.length + 1,
           itemBuilder: (context, index) {
-            final item = items[index];
+            if (index == 0) {
+              return _buildHabitSummary(
+                items: items.cast<Map<String, dynamic>>(),
+                last7Days: last7Days,
+                todayKey: todayKey,
+              );
+            }
+
+            final item = items[index - 1];
             final completedMap = item['completed_dates'] != null
                 ? Map<dynamic, dynamic>.from(item['completed_dates'])
                 : {};
 
-            int streak = 0;
-            DateTime checkDate = DateTime.now();
-            while (true) {
-              final key = _formatDateKey(checkDate);
-              if (completedMap[key] == true) {
-                streak++;
-                checkDate = checkDate.subtract(const Duration(days: 1));
-              } else {
-                if (streak == 0 &&
-                    _formatDateKey(checkDate) ==
-                        _formatDateKey(DateTime.now())) {
-                  checkDate = checkDate.subtract(const Duration(days: 1));
-                  if (completedMap[_formatDateKey(checkDate)] == true) {
-                    streak++;
-                    checkDate = checkDate.subtract(const Duration(days: 1));
-                    continue;
-                  }
-                }
-                break;
-              }
-            }
+            final streak = _calculateHabitStreak(completedMap);
 
             return Container(
               margin: const EdgeInsets.only(bottom: 20),
@@ -442,7 +572,7 @@ class _HabitScreenState extends State<HabitScreen> {
                                   Padding(
                                     padding: const EdgeInsets.only(top: 4.0),
                                     child: Text(
-                                      '${item['creator'] != null ? 'Tạo bởi: ${item['creator']}' : ''}${item['creator'] != null && item['time'] != null ? ' • ' : ''}${item['time'] != null ? '⏰ ${item['time']}' : ''}',
+                                      _habitMetaLabel(item),
                                       style: SLTheme.quicksand(
                                           color: Colors.white70,
                                           fontWeight: FontWeight.w600,
@@ -465,7 +595,7 @@ class _HabitScreenState extends State<HabitScreen> {
                                     color: Colors.orangeAccent, size: 16),
                                 SLSpacing.w4,
                                 Text(
-                                  '$streak ngày',
+                                  L10nService().format('util_habit_streak_days', {'count': streak}),
                                   style: SLTheme.quicksand(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w800,

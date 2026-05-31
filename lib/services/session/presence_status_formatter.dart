@@ -1,13 +1,14 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 class PresenceStatusFormatter {
   const PresenceStatusFormatter();
 
-  String onlineLabel() => 'Đang hoạt động';
+  String onlineLabel() => L10nService().translate('core_presence_online');
 
-  String neverConnectedLabel() => 'Chưa mở app';
+  String neverConnectedLabel() => L10nService().translate('core_presence_never_connected');
 
-  String disconnectedLabel() => 'Mất kết nối';
+  String disconnectedLabel() => L10nService().translate('core_presence_disconnected');
 
-  String justDisconnectedLabel() => 'Vừa thoát';
+  String justDisconnectedLabel() => L10nService().translate('core_presence_just_disconnected');
 
   String formatLastSeen(int? lastSeenMs) {
     if (lastSeenMs == null) return neverConnectedLabel();
@@ -16,10 +17,10 @@ class PresenceStatusFormatter {
     );
 
     if (diff.inSeconds < 60) return justDisconnectedLabel();
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    if (diff.inDays == 1) return 'Hôm qua';
-    if (diff.inDays < 30) return '${diff.inDays} ngày trước';
-    return 'Lâu rồi';
+    if (diff.inMinutes < 60) return L10nService().format('core_presence_minutes_ago', {'count': diff.inMinutes});
+    if (diff.inHours < 24) return L10nService().format('core_presence_hours_ago', {'count': diff.inHours});
+    if (diff.inDays == 1) return L10nService().translate('core_presence_yesterday');
+    if (diff.inDays < 30) return L10nService().format('core_presence_days_ago', {'count': diff.inDays});
+    return L10nService().translate('core_presence_long_ago');
   }
 }

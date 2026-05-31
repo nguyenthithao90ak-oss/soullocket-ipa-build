@@ -12,34 +12,51 @@ class LoveWeatherService {
 
   final _db = FirebaseDatabase.instance;
 
+  static const _validWeatherTypes = {
+    'sunny',
+    'rainy',
+    'snowy',
+    'stormy',
+    'hearts',
+  };
+
   /// Cập nhật thời tiết dựa trên logic AI hoặc trạng thái cặp đôi
   /// types: 'sunny', 'rainy', 'snowy', 'stormy', 'hearts'
   Future<void> updateWeather(String houseId, String weatherType) async {
-    await _db.ref('houses/$houseId/weather').set({
-      'type': weatherType,
+    final normalizedHouseId = houseId.trim();
+    final normalizedWeatherType = weatherType.trim().toLowerCase();
+    if (normalizedHouseId.isEmpty || !_validWeatherTypes.contains(normalizedWeatherType)) {
+      return;
+    }
+    await _db.ref('houses/$normalizedHouseId/weather').set({
+      'type': normalizedWeatherType,
       'updatedAt': ServerValue.timestamp,
     });
   }
 
   /// Trae sẽ dùng Stream này để trigger hiệu ứng Particle toàn App
   Stream<String> listenToWeather(String houseId) {
-    return _db.ref('houses/$houseId/weather/type').onValue.map((event) {
-      return event.snapshot.value?.toString() ?? 'sunny';
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return Stream<String>.value('sunny');
+    return _db.ref('houses/$normalizedHouseId/weather/type').onValue.map((event) {
+      final value = event.snapshot.value?.toString().trim().toLowerCase() ?? '';
+      return _validWeatherTypes.contains(value) ? value : 'sunny';
     });
   }
 
   /// Tự động phân tích tâm trạng (Mock logic cho AI)
   Future<void> analyzeAndApplyWeather(String houseId, double loveScore) async {
+    final score = loveScore.isNaN ? 0.0 : loveScore.clamp(0.0, 100.0);
     String weather;
-    if (loveScore > 90) {
+    if (score > 90) {
       weather = 'hearts'; // Mưa tim lãng mạn
-    } else if (loveScore > 70) {
+    } else if (score > 70) {
       weather = 'sunny'; // Nắng ấm
-    } else if (loveScore > 40) {
+    } else if (score > 40) {
       weather = 'rainy'; // Mưa buồn
     } else {
       weather = 'stormy'; // Bão bùng sấm sét
     }
-    await updateWeather(houseId, weather);
+    await updateWeather(houseId.trim(), weather);
   }
 }

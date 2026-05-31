@@ -12,24 +12,24 @@ import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soullocket_app/core/constants/app_config.dart';
-import 'package:soullocket_app/utils/services/private_media_url_service.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
-import 'package:soullocket_app/services/map_pin_limit_service.dart';
-import 'package:soullocket_app/utils/services/activity_history_service.dart';
-import 'package:soullocket_app/utils/services/album_service.dart';
-import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:soullocket_app/utils/services/notification_service.dart';
-import 'package:soullocket_app/utils/services/offline_cache_service.dart';
-import 'package:soullocket_app/utils/services/purchase_service.dart';
-import 'package:soullocket_app/utils/services/security_service.dart';
-import 'package:soullocket_app/utils/services/storage_service.dart';
-import 'package:soullocket_app/views/home/tabs/diary/controllers/diary_feed_controller.dart';
-import 'package:soullocket_app/views/home/tabs/diary/controllers/diary_guard_controller.dart';
-import 'package:soullocket_app/views/ui_prefs.dart';
-import 'package:soullocket_app/widgets/cute_loading_indicator.dart';
+import '../../../../../core/constants/app_config.dart';
+import '../../../../../utils/services/private_media_url_service.dart';
+import '../../../../../core/sl_theme.dart';
+import '../../../../../../services/map_pin_limit_service.dart';
+import '../../../../../utils/services/activity_history_service.dart';
+import '../../../../../utils/services/album_service.dart';
+import '../../../../../utils/services/l10n_service.dart';
+import '../../../../../utils/services/notification_service.dart';
+import '../../../../../utils/services/offline_cache_service.dart';
+import '../../../../../utils/services/purchase_service.dart';
+import '../../../../../utils/services/security_service.dart';
+import '../../../../../utils/services/storage_service.dart';
+import 'diary_feed_controller.dart';
+import 'diary_guard_controller.dart';
+import '../../../../ui_prefs.dart';
+import '../../../../../../widgets/cute_loading_indicator.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../../../../../utils/app_error_mapper.dart';
 
 typedef DiaryMemoryFlattenedItem = ({
   bool isHeader,
@@ -37,6 +37,7 @@ typedef DiaryMemoryFlattenedItem = ({
   String? dateString,
   int? totalPhotos,
   List<Map<String, dynamic>>? photosRow,
+  List<Map<String, dynamic>>? groupPhotos,
   List<Map<String, String>> highlights,
 });
 
@@ -110,7 +111,7 @@ class DiaryMemoryController extends ChangeNotifier {
       !_isUploadingMemories && _pendingUploadPaths.isNotEmpty;
   String get pendingUploadMessage =>
       _pendingUploadMessage ??
-      'Lần upload Kỷ niệm trước đã bị gián đoạn. Bạn có thể thử lại.';
+      L10nService().translate('home_lnuploadkn_c9bdf8');
 
   int get _memoryCacheLimit =>
       kIsWeb ? _webMemoryCacheLimit : _appMemoryCacheLimit;
@@ -265,8 +266,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
       _setPendingUploadState(
         recoverablePaths,
-        message:
-            'Lần upload Kỷ niệm trước đã bị gián đoạn. Bạn có thể thử lại.',
+        message: L10nService().translate('home_lnuploadkn_c9bdf8'),
       );
     } catch (_) {
       await _clearPendingUploadState();
@@ -374,6 +374,31 @@ class DiaryMemoryController extends ChangeNotifier {
     notifyListeners();
   }
 
+  int selectAllVisibleMemories() {
+    final photos =
+        _preparedMemoryFeed?.photos ?? const <Map<String, dynamic>>[];
+    if (photos.isEmpty) {
+      return 0;
+    }
+
+    for (final photo in photos) {
+      final id = photo['id'] as String?;
+      if (id == null || id.isEmpty) {
+        continue;
+      }
+      _selectedMemories[id] = photo;
+    }
+
+    if (_selectedMemories.isEmpty) {
+      return 0;
+    }
+
+    _isSelectionMode = true;
+    _notifySelectionChanged();
+    notifyListeners();
+    return _selectedMemories.length;
+  }
+
   void exitSelectionMode() {
     _exitSelectionMode(notify: true);
   }
@@ -450,12 +475,17 @@ class DiaryMemoryController extends ChangeNotifier {
         _memoriesQuery == null ||
         _memoriesStream == null) {
       _cachedHouseIdForMemories = normalizedHouseId;
-      unawaited(_storageService.cleanupExpiredMemoryTrashIfNeeded(normalizedHouseId));
+      unawaited(
+          _storageService.cleanupExpiredMemoryTrashIfNeeded(normalizedHouseId));
       _memoriesQuery = _dbRef
           .child('houses/$normalizedHouseId/memories')
           .orderByChild('ts')
           .limitToLast(_memoryQueryLimit);
-      _memoriesStream = _memoriesQuery!.onValue;
+      _memoriesStream = _memoriesQuery!.onValue.handleError((Object error) {
+        debugPrint(
+          '[DiaryMemory] memories stream failed: ${AppErrorMapper.resolve(error).message}',
+        );
+      });
     }
     return _memoriesStream;
   }
@@ -570,7 +600,7 @@ class DiaryMemoryController extends ChangeNotifier {
     } catch (e) {
       final message = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể tải liên kết ảnh kỷ niệm.',
+        fallbackMessage: L10nService().translate('home_khngthtili_5b2994'),
       ).message;
       debugPrint(
         '[DiaryMemory] signed url refresh failed id=$memoryId message=$message',
@@ -579,11 +609,12 @@ class DiaryMemoryController extends ChangeNotifier {
   }
 
   void _normalizeMemoryPhotoUrl(Map<String, dynamic> item) {
-    final fallbackUrl = item['downloadUrl']?.toString().trim().isNotEmpty == true
-        ? item['downloadUrl'].toString().trim()
-        : item['previewUrl']?.toString().trim().isNotEmpty == true
-            ? item['previewUrl'].toString().trim()
-            : item['thumbUrl']?.toString().trim() ?? '';
+    final fallbackUrl =
+        item['downloadUrl']?.toString().trim().isNotEmpty == true
+            ? item['downloadUrl'].toString().trim()
+            : item['previewUrl']?.toString().trim().isNotEmpty == true
+                ? item['previewUrl'].toString().trim()
+                : item['thumbUrl']?.toString().trim() ?? '';
     if (fallbackUrl.isEmpty) {
       return;
     }
@@ -680,6 +711,7 @@ class DiaryMemoryController extends ChangeNotifier {
         dateString: dateString,
         totalPhotos: group.items.length,
         photosRow: null,
+        groupPhotos: List<Map<String, dynamic>>.from(group.items),
         highlights: highlights,
       ));
 
@@ -691,6 +723,7 @@ class DiaryMemoryController extends ChangeNotifier {
           dateString: null,
           totalPhotos: null,
           photosRow: group.items.sublist(i, end),
+          groupPhotos: null,
           highlights: const <Map<String, String>>[],
         ));
       }
@@ -760,6 +793,63 @@ class DiaryMemoryController extends ChangeNotifier {
     return prepared;
   }
 
+  Future<void> updateMemoryGroupDate({
+    required String houseId,
+    required DateTime selectedDate,
+    required List<Map<String, dynamic>> photos,
+  }) async {
+    final normalizedHouseId = _normalizeHouseId(houseId);
+    if (normalizedHouseId == null || photos.isEmpty) {
+      return;
+    }
+
+    final updates = <String, dynamic>{};
+    final dateKey = DateFormat('yyyy-MM-dd').format(selectedDate);
+    final editedAt = DateTime.now().millisecondsSinceEpoch;
+
+    for (final photo in photos) {
+      final memoryId = photo['id']?.toString().trim() ?? '';
+      if (memoryId.isEmpty) {
+        continue;
+      }
+      final oldTs = _readCacheTs(photo);
+      final oldDate = oldTs > 0
+          ? DateTime.fromMillisecondsSinceEpoch(oldTs)
+          : DateTime.now();
+      final nextDate = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        oldDate.hour,
+        oldDate.minute,
+        oldDate.second,
+        oldDate.millisecond,
+        oldDate.microsecond,
+      );
+      final nextTs = nextDate.millisecondsSinceEpoch;
+      final path = 'houses/$normalizedHouseId/memories/$memoryId';
+      updates['$path/ts'] = nextTs;
+      updates['$path/timestamp'] = nextTs;
+      updates['$path/date'] = nextTs;
+      updates['$path/dateKey'] = dateKey;
+      updates['$path/albumDateEditedAt'] = editedAt;
+
+      photo['ts'] = nextTs;
+      photo['timestamp'] = nextTs;
+      photo['date'] = nextTs;
+      photo['dateKey'] = dateKey;
+    }
+
+    if (updates.isEmpty) {
+      return;
+    }
+
+    await _dbRef.update(updates);
+    _clearPreparedMemoryFeedCache();
+    await OfflineCacheService.saveCache('memories_$normalizedHouseId', null);
+    notifyListeners();
+  }
+
   Future<void> _logDeletedMemoriesToActivityHistory({
     required String houseId,
     required List<dynamic> deletedItems,
@@ -769,7 +859,8 @@ class DiaryMemoryController extends ChangeNotifier {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final role = prefs.getString('il_role')?.trim() == 'user2' ? 'user2' : 'user1';
+    final role =
+        prefs.getString('il_role')?.trim() == 'user2' ? 'user2' : 'user1';
 
     for (final raw in deletedItems) {
       if (raw is! Map) {
@@ -780,8 +871,9 @@ class DiaryMemoryController extends ChangeNotifier {
       if (memoryId.isEmpty) {
         continue;
       }
-      final previewUrl =
-          item['previewUrl']?.toString().trim() ?? item['url']?.toString().trim() ?? '';
+      final previewUrl = item['previewUrl']?.toString().trim() ??
+          item['url']?.toString().trim() ??
+          '';
       final title = item['title']?.toString().trim() ?? '';
       final purgeAt = (item['purgeAt'] as num?)?.toInt() ?? 0;
       final restorePayload = item['restorePayload'] is Map
@@ -789,16 +881,16 @@ class DiaryMemoryController extends ChangeNotifier {
           : <String, dynamic>{};
 
       await ActivityHistoryService.instance.add(
-        'đã xóa ảnh nhật ký kỷ niệm',
+        L10nService().translate('home_xanhnhtkkn_97c2ce'),
         houseId: houseId,
         role: role,
-        title: 'Đã xóa ảnh kỷ niệm',
+        title: L10nService().translate('home_xanhknim_638af9'),
         subtitle: title,
         action: 'delete',
         module: 'diary_memory',
         entityType: 'memory_image',
         entityId: memoryId,
-        sourceLabel: 'Nhật ký kỷ niệm',
+        sourceLabel: L10nService().translate('home_nhtkknim_23444a'),
         previewUrl: previewUrl,
         previewType: 'image',
         restorePath: 'houses/$houseId/memories_trash/$memoryId',
@@ -829,13 +921,15 @@ class DiaryMemoryController extends ChangeNotifier {
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
-          L10nService().translate('Bạn có chắc muốn xóa những ảnh đã chọn?'),
+          L10nService()
+              .translate(L10nService().translate('home_bncchcmunx_09bf02')),
           style: SLTheme.quicksand(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(L10nService().translate('Hủy')),
+            child: Text(L10nService()
+                .translate(L10nService().translate('home_hy_1e4050'))),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -843,7 +937,8 @@ class DiaryMemoryController extends ChangeNotifier {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(L10nService().translate('Xóa')),
+            child: Text(L10nService()
+                .translate(L10nService().translate('home_xa_4ed187'))),
           ),
         ],
       ),
@@ -862,7 +957,6 @@ class DiaryMemoryController extends ChangeNotifier {
     );
 
     try {
-      final updatesCount = _selectedMemories.length;
       final result = await _storageService.moveMemoryImagesToTrash(
         houseId: houseId,
         memoryIds: _selectedMemories.keys.toList(),
@@ -880,9 +974,9 @@ class DiaryMemoryController extends ChangeNotifier {
       }
       _dismissCurrentDialog(context);
       showSnackBar(
-        '${L10nService().format('diary_deleted_memories', {
-          'count': updatesCount,
-        })} Bạn có 3 ngày để khôi phục từ lịch sử hoạt động.',
+        L10nService().format('diary_deleted_memories', {
+          'count': result['deletedCount'] ?? _selectedMemories.length,
+        }),
       );
       notifyListeners();
     } catch (e) {
@@ -890,7 +984,7 @@ class DiaryMemoryController extends ChangeNotifier {
       final isNotFound = errorText.contains('firebase_functions/not-found') ||
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
-          errorText.contains('Không tìm thấy ảnh Kỷ niệm cần xóa');
+          errorText.contains(L10nService().translate('home_khngtmthyn_b3a1a6'));
       if (isNotFound) {
         final now = DateTime.now().millisecondsSinceEpoch;
         final purgeAt = now + const Duration(days: 3).inMilliseconds;
@@ -899,7 +993,8 @@ class DiaryMemoryController extends ChangeNotifier {
         for (final memoryId in _selectedMemories.keys) {
           final normalizedId = memoryId.trim();
           if (normalizedId.isEmpty) continue;
-          final memoryRef = _dbRef.child('houses/$houseId/memories/$normalizedId');
+          final memoryRef =
+              _dbRef.child('houses/$houseId/memories/$normalizedId');
           final snap = await memoryRef.get();
           if (!snap.exists || snap.value is! Map) continue;
           final payload = Map<String, dynamic>.from(snap.value as Map);
@@ -931,9 +1026,9 @@ class DiaryMemoryController extends ChangeNotifier {
           }
           _dismissCurrentDialog(context);
           showSnackBar(
-            '${L10nService().format('diary_deleted_memories', {
+            L10nService().format('diary_deleted_memories', {
               'count': deletedItems.length,
-            })} Bạn có 3 ngày để khôi phục từ lịch sử hoạt động.',
+            }),
           );
           notifyListeners();
           return;
@@ -978,7 +1073,7 @@ class DiaryMemoryController extends ChangeNotifier {
         }
         _dismissCurrentDialog(context);
         showSnackBar(
-          'Chưa có quyền lưu ảnh vào album.',
+          L10nService().translate('home_chacquynlu_10faf8'),
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -1023,7 +1118,7 @@ class DiaryMemoryController extends ChangeNotifier {
         notifyListeners();
       } else {
         showSnackBar(
-          'Không thể tải ảnh.',
+          L10nService().translate('home_khngthtinh_98b32d'),
           backgroundColor: const Color(0xFFE53935),
         );
       }
@@ -1063,7 +1158,7 @@ class DiaryMemoryController extends ChangeNotifier {
         }
         _dismissCurrentDialog(context);
         showSnackBar(
-          'Chưa có quyền lưu ảnh vào album.',
+          L10nService().translate('home_chacquynlu_10faf8'),
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -1092,7 +1187,7 @@ class DiaryMemoryController extends ChangeNotifier {
         }
         _dismissCurrentDialog(context);
         showSnackBar(
-          'Không thể tải ảnh.',
+          L10nService().translate('home_khngthtinh_98b32d'),
           backgroundColor: const Color(0xFFE53935),
         );
       }
@@ -1122,18 +1217,19 @@ class DiaryMemoryController extends ChangeNotifier {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
         title: Text(
-          L10nService().translate('Xóa kỷ niệm?'),
+          L10nService()
+              .translate(L10nService().translate('home_xaknim_bdb86a')),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
           L10nService()
-              .translate('Bạn có chắc muốn chuyển ảnh này vào thùng rác?'),
+              .translate(L10nService().translate('home_bncchcmunc_c47262')),
           style: SLTheme.quicksand(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
+            child: Text(L10nService().translate('home_hy_1e4050')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -1141,7 +1237,8 @@ class DiaryMemoryController extends ChangeNotifier {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(L10nService().translate('Xóa')),
+            child: Text(L10nService()
+                .translate(L10nService().translate('home_xa_4ed187'))),
           ),
         ],
       ),
@@ -1155,7 +1252,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
     try {
       if (memoryId.isEmpty) {
-        throw Exception('Thiếu id ảnh Kỷ niệm.');
+        throw Exception(L10nService().translate('home_thiuidnhkn_bda329'));
       }
 
       final result = await _storageService.moveMemoryImagesToTrash(
@@ -1170,7 +1267,7 @@ class DiaryMemoryController extends ChangeNotifier {
       );
       showSnackBar(
         L10nService().translate(
-          'Ảnh đã được chuyển vào thùng rác. Bạn có 3 ngày để khôi phục.',
+          L10nService().translate('home_nhcchuynvo_37366f'),
         ),
       );
       notifyListeners();
@@ -1179,7 +1276,7 @@ class DiaryMemoryController extends ChangeNotifier {
       final isNotFound = errorText.contains('firebase_functions/not-found') ||
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
-          errorText.contains('Không tìm thấy ảnh Kỷ niệm cần xóa');
+          errorText.contains(L10nService().translate('home_khngtmthyn_b3a1a6'));
       if (isNotFound && memoryId.isNotEmpty) {
         final now = DateTime.now().millisecondsSinceEpoch;
         final purgeAt = now + const Duration(days: 3).inMilliseconds;
@@ -1210,7 +1307,7 @@ class DiaryMemoryController extends ChangeNotifier {
           );
           showSnackBar(
             L10nService().translate(
-              'Ảnh đã được chuyển vào thùng rác. Bạn có 3 ngày để khôi phục.',
+              L10nService().translate('home_nhcchuynvo_37366f'),
             ),
           );
           notifyListeners();
@@ -1243,7 +1340,7 @@ class DiaryMemoryController extends ChangeNotifier {
       );
       final sessionId = upload?.sessionId?.trim() ?? '';
       if (upload == null || sessionId.isEmpty) {
-        return 'Không thể tạo phiên tải ảnh.';
+        return L10nService().translate('home_khngthtoph_b49958');
       }
 
       Map<String, dynamic>? finalized;
@@ -1262,22 +1359,25 @@ class DiaryMemoryController extends ChangeNotifier {
           break;
         } catch (error) {
           lastError = error;
-          
+
           final errStr = error.toString().toLowerCase();
-          final isUnauthenticated = errStr.contains('unauthenticated') || errStr.contains('401');
-          
+          final isUnauthenticated =
+              errStr.contains('unauthenticated') || errStr.contains('401');
+
           if (isUnauthenticated) {
-             try {
-               final user = FirebaseAuth.instance.currentUser;
-               if (user != null) {
-                 await user.getIdToken(true);
-                 debugPrint('Refreshed token after unauthenticated error in finalize.');
-               }
-             } catch (_) {}
+            try {
+              final user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                await user.getIdToken(true);
+                debugPrint(
+                    'Refreshed token after unauthenticated error in finalize.');
+              }
+            } catch (_) {}
           }
 
           if (attempt < 2) {
-            await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+            await Future<void>.delayed(
+                Duration(milliseconds: 500 * (attempt + 1)));
             continue;
           }
         }
@@ -1293,7 +1393,7 @@ class DiaryMemoryController extends ChangeNotifier {
         debugPrint('Lỗi finalize ảnh kỷ niệm: $lastError');
         return AppErrorMapper.resolve(lastError).message;
       }
-      return 'Không nhận được phản hồi hợp lệ từ máy chủ.';
+      return L10nService().translate('home_khngnhncph_6fe2dc');
     } catch (e) {
       debugPrint(
         'Lỗi tải ảnh kỷ niệm: ${AppErrorMapper.resolve(e).message}',
@@ -1339,7 +1439,7 @@ class DiaryMemoryController extends ChangeNotifier {
     if (images.isEmpty) {
       await _clearPendingUploadState();
       showSnackBar(
-        'Không còn ảnh Kỷ niệm tạm để thử lại.',
+        L10nService().translate('home_khngcnnhkn_155889'),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -1411,8 +1511,10 @@ class DiaryMemoryController extends ChangeNotifier {
       showSnackBar(
         L10nService().translate(
           vipAccess.isVip
-              ? 'Bạn đã đạt giới hạn đăng 30 ảnh kỷ niệm hôm nay. Hãy quay lại vào ngày mai nhé!'
-              : 'Tài khoản thường chỉ đăng được 10 ảnh/ngày. Hãy nâng cấp PRO hoặc thử lại vào ngày mai!',
+              ? L10nService().translate('home_bntgiihnng_7baf22')
+              : AppConfig.isPurchaseEnabled
+                  ? L10nService().translate('home_tikhonthng_5aa69a')
+                  : L10nService().translate('home_bntgiihnng_0f0c9d'),
         ),
         backgroundColor: const Color(0xFFE53935),
       );
@@ -1454,8 +1556,8 @@ class DiaryMemoryController extends ChangeNotifier {
           houseId: houseId,
           paths: recoverablePaths,
           message: presetImages == null
-              ? 'Nếu app bị tắt giữa chừng, bạn có thể thử lại upload Kỷ niệm.'
-              : 'Đang thử lại ảnh Kỷ niệm chưa tải xong.',
+              ? L10nService().translate('home_nuappbttgi_9e97ec')
+              : L10nService().translate('home_angthlinhk_871c53'),
         );
       } else if (presetImages != null) {
         await _clearPendingUploadState();
@@ -1489,7 +1591,7 @@ class DiaryMemoryController extends ChangeNotifier {
       if (user == null) {
         showSnackBar(
           L10nService()
-              .translate('Phiên đăng nhập chưa sẵn sàng. Vui lòng thử lại.'),
+              .translate(L10nService().translate('home_phinngnhpc_f6ac90')),
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -1571,7 +1673,8 @@ class DiaryMemoryController extends ChangeNotifier {
       if (uploadedCount > 0) {
         await NotificationService().sendPartnerNotification(
           houseId: houseId,
-          title: L10nService().translate('📸 Kỷ niệm mới!'),
+          title: L10nService()
+              .translate(L10nService().translate('home_knimmi_e43fdc')),
           body: L10nService().format('diary_partner_new_memory', {
             'author': authorName,
             'count': uploadedCount,
@@ -1636,8 +1739,6 @@ class DiaryMemoryController extends ChangeNotifier {
       _notifyIfActive();
     }
   }
-
-
 
   Future<void> _saveMemoryBytesToGallery(
     Uint8List bytes, {

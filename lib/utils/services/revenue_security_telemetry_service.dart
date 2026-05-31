@@ -67,16 +67,30 @@ class RevenueSecurityTelemetryService {
   }) async {
     if (_disabledForSession) return;
 
+    final normalizedType = type.trim();
+    final normalizedReason = reason.trim();
+    final normalizedSeverity = severity.trim().isEmpty ? 'medium' : severity.trim();
+    final normalizedUid = uid?.trim();
+    if (normalizedType.isEmpty || normalizedReason.isEmpty) return;
+
+    final sanitizedExtra = <String, Object?>{};
+    extra.forEach((key, value) {
+      final normalizedKey = key.trim();
+      if (normalizedKey.isNotEmpty && value != null) {
+        sanitizedExtra[normalizedKey] = value;
+      }
+    });
+
     await FirebaseDatabase.instance
         .ref('admin_system/revenue_security_events')
         .push()
         .set({
       'ts': ServerValue.timestamp,
-      if (uid != null && uid.isNotEmpty) 'uid': uid,
-      'type': type,
-      'reason': reason,
-      'severity': severity,
-      if (extra.isNotEmpty) 'extra': extra,
+      if (normalizedUid != null && normalizedUid.isNotEmpty) 'uid': normalizedUid,
+      'type': normalizedType,
+      'reason': normalizedReason,
+      'severity': normalizedSeverity,
+      if (sanitizedExtra.isNotEmpty) 'extra': sanitizedExtra,
     });
   }
 

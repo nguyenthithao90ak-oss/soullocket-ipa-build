@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -11,7 +12,7 @@ import '../../utils/app_error_mapper.dart';
 import '../../services/time_capsule_service.dart';
 import '../../services/storage_service.dart';
 import '../../core/sl_theme.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import '../../core/fast_backdrop_filter.dart';
 
 class CapsuleScreen extends StatefulWidget {
   final String houseId;
@@ -83,9 +84,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Lần chôn khoảnh khắc trước đã bị gián đoạn.'),
+          content: Text(context.tr('util_lnchnkhonh_9b7b2c')),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('util_thli_4dffdf'),
             onPressed: () {
               unawaited(_retryPendingUpload());
             },
@@ -153,22 +154,22 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     final title = _titleController.text.trim();
 
     if (widget.houseId.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Chưa tìm thấy nhà chung. Bạn vào lại ứng dụng rồi thử lại.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(context.tr('util_chatmthynh_da24d0'))));
       return;
     }
 
     if (content.isEmpty || _unlockDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bạn chọn ngày mở và viết nội dung thư nhé.')));
+          SnackBar(content: Text(context.tr('util_bnchnngymv_4173b0'))));
       return;
     }
 
     if (_selectedImage != null &&
         !await File(_selectedImage!.path).exists()) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Ảnh đã chọn không còn sẵn sàng. Bạn chọn lại ảnh rồi thử tiếp.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(context.tr('util_nhchnkhngc_321118'))));
       return;
     }
 
@@ -213,12 +214,12 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       FocusScope.of(context).unfocus();
 
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã khóa hộp thư tương lai! 🚀')));
+          SnackBar(content: Text(context.tr('util_khahpthtng_4043ab'))));
     } catch (e) {
       if (mounted) {
         final errorInfo = AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Chưa thể lưu khoảnh khắc lúc này. Bạn thử lại sau.',
+          fallbackMessage: context.tr('util_chathlukho_774aa4'),
         );
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(errorInfo.message)));
@@ -239,9 +240,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       initialDate: _unlockDate ?? now.add(const Duration(days: 1)),
       firstDate: now,
       lastDate: DateTime(now.year + 10),
-      helpText: 'Chọn ngày mở thư',
-      cancelText: 'Hủy',
-      confirmText: 'Chọn ngày này',
+      helpText: context.tr('util_chnngymth_6eec01'),
+      cancelText: context.tr('util_hy_1e4050'),
+      confirmText: context.tr('util_chnngyny_91b75a'),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -300,7 +301,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                           textScaler: TextScaler.linear(1.0)),
                       SLSpacing.h16,
                       Text(
-                        'HỘP THƯ TƯƠNG LAI',
+                        context.tr('util_hpthtnglai_31f728'),
                         style: SLTheme.quicksand(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -321,14 +322,14 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                                '📬 TỪ: ${updated['sender_uid'] == 'me' ? 'Tôi' : 'Người ấy'}',
+                                L10nService().format('util_capsule_from', {'sender': updated['sender_uid'] == 'me' ? context.tr('util_ti_a843eb') : context.tr('util_ngiy_5bab37')}),
                                 style: SLTheme.quicksand(
                                     fontWeight: FontWeight.w800,
                                     color: _textPrimary,
                                     fontSize: 13)),
                             SLSpacing.h4,
                             Text(
-                                '📅 Ngày mở: ${DateFormat('dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(updated['unlock_time_ms'] ?? 0))}',
+                                L10nService().format('util_capsule_open_date', {'date': DateFormat('dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(updated['unlock_time_ms'] ?? 0))}),
                                 style: SLTheme.quicksand(
                                     color: _textMuted,
                                     fontSize: 11,
@@ -393,7 +394,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                             shape: RoundedRectangleBorder(
                                 borderRadius: SLRadius.lgAll),
                           ),
-                          child: Text('ĐÓNG',
+                          child: Text(context.tr('util_ng_aecc61'),
                               style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w800,
                                   color: Colors.white)),
@@ -411,7 +412,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       if (mounted) {
         final errorInfo = AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Chưa thể mở hộp thư lúc này. Bạn thử lại sau.',
+          fallbackMessage: context.tr('util_chathmhpth_c3a6c5'),
         );
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(errorInfo.message)));
@@ -426,7 +427,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'HỘP THƯ VƯỢT THỜI GIAN',
+          context.tr('util_hpthvtthig_72f391'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -534,7 +535,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Gửi một lá thư cho tương lai',
+                            context.tr('util_gimtlthcho_a87e43'),
                             style: SLTheme.quicksand(
                               color: _textPrimary,
                               fontSize: 16,
@@ -542,7 +543,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                             ),
                           ),
                           Text(
-                            'Chọn ảnh, ngày mở và khóa lại cho đúng thời điểm.',
+                            context.tr('util_chnnhngymv_9ffe9f'),
                             style: SLTheme.quicksand(
                               color: _textMuted,
                               fontSize: 12,
@@ -556,11 +557,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                 ),
                 SLSpacing.h16,
                 _buildTextField(
-                    _titleController, 'Tiêu đề thư...', Icons.title),
+                    _titleController, context.tr('util_tiuth_e1af07'), Icons.title),
                 SLSpacing.h10,
                 _buildTextField(
                   _contentController,
-                  'Nội dung bức thư gửi tương lai...',
+                  context.tr('util_nidungbcth_c1342b'),
                   Icons.edit_note,
                   maxLines: 4,
                 ),
@@ -600,7 +601,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                           )
                         : const Icon(Icons.lock_clock_rounded),
                     label: Text(
-                      _isUploading ? 'ĐANG KHÓA THƯ...' : 'KHÓA THƯ VÀO TƯƠNG LAI',
+                      _isUploading ? context.tr('util_angkhath_ab590c') : context.tr('util_khathvotng_8d8f0b'),
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
@@ -674,7 +675,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                         SLSpacing.gapW(6),
                         Expanded(
                           child: Text(
-                            'Đã chọn ảnh',
+                            context.tr('util_chnnh_d05e7e'),
                             style: SLTheme.quicksand(
                               color: Colors.white,
                               fontWeight: FontWeight.w900,
@@ -689,7 +690,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                             borderRadius: SLRadius.pillAll,
                           ),
                           child: Text(
-                            'Đổi',
+                            context.tr('util_i_d94813'),
                             style: SLTheme.quicksand(
                               color: Colors.white,
                               fontWeight: FontWeight.w900,
@@ -718,7 +719,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   ),
                   SLSpacing.h10,
                   Text(
-                    'Chọn ảnh',
+                    context.tr('util_chnnh_719c35'),
                     style: SLTheme.quicksand(
                       color: _textPrimary,
                       fontWeight: FontWeight.w900,
@@ -727,7 +728,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   ),
                   SLSpacing.h4,
                   Text(
-                    'Kỷ niệm đính kèm',
+                    context.tr('util_knimnhkm_583184'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       color: _textMuted,
@@ -833,7 +834,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       borderRadius: SLRadius.pillAll,
                     ),
                     child: Text(
-                      'Đổi',
+                      context.tr('util_i_d94813'),
                       style: SLTheme.quicksand(
                         color: const Color(0xFF5B2B6F),
                         fontWeight: FontWeight.w900,
@@ -845,7 +846,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             ),
             const Spacer(),
             Text(
-              hasDate ? DateFormat('dd/MM/yyyy').format(_unlockDate!) : 'Chọn ngày mở',
+              hasDate ? DateFormat('dd/MM/yyyy').format(_unlockDate!) : context.tr('util_chnngym_02d57f'),
               style: SLTheme.quicksand(
                 color: hasDate ? const Color(0xFF5B2B6F) : _textPrimary,
                 fontWeight: FontWeight.w900,
@@ -855,8 +856,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             SLSpacing.h4,
             Text(
               hasDate
-                  ? 'Còn khoảng $daysLeft ngày nữa'
-                  : 'Khi tới ngày này mới mở được thư',
+                  ? L10nService().format('util_capsule_days_left', {'days': daysLeft})
+                  : context.tr('util_khitingyny_6a6df1'),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: SLTheme.quicksand(
@@ -877,7 +878,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     return _capsules.isEmpty
         ? Center(
             child: Text(
-              'Chưa có hộp thư nào kỷ niệm.',
+              context.tr('util_chachpthno_00896c'),
               style: SLTheme.quicksand(
                 color: _textSecondary,
                 fontWeight: FontWeight.w600,
@@ -917,7 +918,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Mở: ${DateFormat('dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(unlockDate))}',
+                                L10nService().format('util_capsule_open_short', {'date': DateFormat('dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(unlockDate))}),
                                 style: SLTheme.quicksand(
                                     color: Colors.white70,
                                     fontSize: 11,
@@ -933,7 +934,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                   borderRadius: SLRadius.smAll,
                                 ),
                                 child: Text(
-                                  isOpen ? 'ĐÃ MỞ' : 'ĐANG KHÓA',
+                                  isOpen ? context.tr('util_m_7b4530') : context.tr('util_angkha_d004dc'),
                                   style: SLTheme.quicksand(
                                     color: isOpen
                                         ? Colors.greenAccent
@@ -958,7 +959,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                             )
                           else
                             Text(
-                              'Nội dung sẽ mở đúng ngày đã hẹn...',
+                              context.tr('util_nidungsmng_ea25c0'),
                               style: SLTheme.quicksand(
                                   color: Colors.white38,
                                   fontSize: 13,
@@ -985,7 +986,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  'MỞ THƯ',
+                                  context.tr('util_mth_e6d950'),
                                   style: SLTheme.quicksand(
                                     fontWeight: FontWeight.w800,
                                     color:

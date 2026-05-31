@@ -1,9 +1,10 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import '../../services/love_tree_service.dart';
 import '../../core/sl_theme.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import '../../core/fast_backdrop_filter.dart';
 
 class LoveTreeScreen extends StatefulWidget {
   final String houseId;
@@ -49,11 +50,11 @@ class _LoveTreeScreenState extends State<LoveTreeScreen>
   }
 
   String _stateText(int health) {
-    if (health >= 85) return 'Nở hoa rực rỡ';
-    if (health >= 65) return 'Xanh tốt';
-    if (health >= 40) return 'Đang lớn dần';
-    if (health >= 20) return 'Hơi thiếu chăm sóc';
-    return 'Đang héo úa';
+    if (health >= 85) return context.tr('util_nhoarcr_1ca686');
+    if (health >= 65) return context.tr('util_xanhtt_f746d7');
+    if (health >= 40) return context.tr('util_anglndn_943370');
+    if (health >= 20) return context.tr('util_hithiuchms_32b348');
+    return context.tr('util_anghoa_a3732c');
   }
 
   Future<void> _nurture({required int water, required int fertilizer}) async {
@@ -71,7 +72,7 @@ class _LoveTreeScreenState extends State<LoveTreeScreen>
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'NUÔI CÂY TÌNH YÊU',
+          context.tr('util_nuicytnhyu_56c0a3'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -130,7 +131,7 @@ class _LoveTreeScreenState extends State<LoveTreeScreen>
                           ),
                           SLSpacing.h8,
                           Text(
-                            'Sức khỏe cây: $health/100',
+                            L10nService().format('util_love_tree_health', {'health': health}),
                             style: SLTheme.quicksand(
                               color: Colors.white70,
                               fontWeight: FontWeight.w700,
@@ -182,7 +183,7 @@ class _LoveTreeScreenState extends State<LoveTreeScreen>
                             icon: const Icon(Icons.water_drop,
                                 color: Colors.white),
                             label: Text(
-                              'Tưới nước',
+                              context.tr('util_tinc_8dabf3'),
                               style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w800),
                             ),
@@ -203,7 +204,7 @@ class _LoveTreeScreenState extends State<LoveTreeScreen>
                                 : () => _nurture(water: 4, fertilizer: 10),
                             icon: const Icon(Icons.spa, color: Colors.white),
                             label: Text(
-                              'Bón phân',
+                              context.tr('util_bnphn_7a3758'),
                               style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w800),
                             ),
@@ -220,7 +221,7 @@ class _LoveTreeScreenState extends State<LoveTreeScreen>
                     ),
                     SLSpacing.h8,
                     Text(
-                      'Chạm vào cây để tưới nhanh +2 sức khỏe',
+                      context.tr('util_chmvocytin_7ef896'),
                       style: SLTheme.quicksand(
                         color: Colors.white70,
                         fontWeight: FontWeight.w700,

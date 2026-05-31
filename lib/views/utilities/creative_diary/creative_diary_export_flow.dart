@@ -91,7 +91,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(false),
                   child: Text(
-                    'Để sau',
+                    context.tr('util_sau_8a3721'),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w800,
                       color: SLColors.textSecondary,
@@ -102,7 +102,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
                   onPressed: () => Navigator.of(dialogContext).pop(true),
                   icon: const Icon(Icons.play_circle_fill_rounded),
                   label: Text(
-                    'Xem quảng cáo',
+                    context.tr('util_xemqungco_3eab07'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                   ),
                   style: FilledButton.styleFrom(
@@ -135,13 +135,14 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     }
 
     _showSnack(
-      'Bạn cần xem hết quảng cáo để lưu ảnh. Nếu quảng cáo chưa tải xong, hãy thử lại sau.',
+      context.tr('util_bncnxemhtq_4cfa2f'),
       backgroundColor: const Color(0xFFE53935),
     );
     return false;
   }
 
   Future<RenderRepaintBoundary> _waitForExportBoundary() async {
+    final errNoRepaint = context.tr('util_khngthdngt_7fda2c');
     for (var attempt = 0; attempt < 8; attempt++) {
       await WidgetsBinding.instance.endOfFrame;
       final boundary = _exportBoundaryKey.currentContext?.findRenderObject()
@@ -152,13 +153,14 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       await Future<void>.delayed(const Duration(milliseconds: 24));
     }
 
-    throw StateError('Không thể dựng trang sổ để lưu.');
+    throw StateError(errNoRepaint);
   }
 
   Future<Uint8List> _captureExportPage(
     _DiaryPageData page,
     int index,
   ) async {
+    final errExportFailed = context.tr('util_khngthxutn_15afa3');
     final pixelRatio = math.min(
       WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio *
           1.6,
@@ -177,7 +179,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     try {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
-        throw StateError('Không thể xuất ảnh từ trang sổ.');
+        throw StateError(errExportFailed);
       }
       return byteData.buffer.asUint8List();
     } finally {
@@ -190,6 +192,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     required int index,
     required String batchStamp,
   }) async {
+    final errSaveFailed = context.tr('util_khngthlutr_e91f80');
     final result = await VisionGallerySaver.saveImage(
       bytes,
       quality: 100,
@@ -204,7 +207,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       throw Exception(
         message != null && message.isNotEmpty
             ? message
-            : 'Không thể lưu trang sổ vào máy.',
+            : errSaveFailed,
       );
     }
   }
@@ -213,9 +216,17 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     if (_isLoading || _isExportingNotebook) {
       return;
     }
+    final emptyNotebookErr = context.tr('util_staychactr_734626');
+    final permissionDeniedErr = context.tr('util_chacquynlu_b6c143');
+    final confirmAdTitle = context.tr('util_lustayvmy_2f6c33');
+    final confirmAdMsg = context.tr('util_bncnxem1qu_9a56aa');
+    final preparingLog = context.tr('util_angchunblu_4a896d');
+    final detailLog = context.tr('util_mitrangscl_408b1f');
+    final fallbackExportErr = context.tr('util_khngthlust_5bf617');
+
     if (_pages.isEmpty) {
       _showSnack(
-        'Sổ tay chưa có trang nào để lưu.',
+        emptyNotebookErr,
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -224,15 +235,15 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     final granted = await _guardController.ensureGalleryPermission(context);
     if (!granted) {
       _showSnack(
-        'Chưa có quyền lưu ảnh vào thiết bị.',
+        permissionDeniedErr,
         backgroundColor: const Color(0xFFE53935),
       );
       return;
     }
     final unlocked = await _confirmRewardedSave(
-      title: 'Lưu sổ tay về máy',
+      title: confirmAdTitle,
       message:
-          'Bạn cần xem 1 quảng cáo ngắn để lưu toàn bộ ảnh kỷ niệm trong sổ tay về thiết bị.',
+          confirmAdMsg,
     );
     if (!unlocked) {
       return;
@@ -244,8 +255,8 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
 
     setState(() {
       _isExportingNotebook = true;
-      _exportStatus = 'Đang chuẩn bị lưu sổ tay...';
-      _exportDetail = 'Mỗi trang sẽ được lưu thành một ảnh đầy đủ.';
+      _exportStatus = preparingLog;
+      _exportDetail = detailLog;
     });
 
     try {
@@ -289,7 +300,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
         return;
       }
 
-      throw lastError ?? StateError('Không thể lưu sổ tay về máy.');
+      throw lastError ?? StateError(fallbackExportErr);
     } catch (error) {
       if (!mounted) {
         return;
@@ -315,9 +326,15 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     if (_isLoading || _isExportingNotebook) {
       return;
     }
+    final emptyNotebookErr = context.tr('util_staychactr_734626');
+    final permissionDeniedErr = context.tr('util_chacquynlu_b6c143');
+    final confirmAdTitle = context.tr('util_lunhknim_ebdd93');
+    final confirmAdMsg = context.tr('util_bncnxem1qu_3efd64');
+    final detailLog = context.tr('util_chtrangang_df85ea');
+
     if (_pages.isEmpty) {
       _showSnack(
-        'Sổ tay chưa có trang nào để lưu.',
+        emptyNotebookErr,
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -328,15 +345,15 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     final granted = await _guardController.ensureGalleryPermission(context);
     if (!granted) {
       _showSnack(
-        'Chưa có quyền lưu ảnh vào thiết bị.',
+        permissionDeniedErr,
         backgroundColor: const Color(0xFFE53935),
       );
       return;
     }
     final unlocked = await _confirmRewardedSave(
-      title: 'Lưu ảnh kỷ niệm',
+      title: confirmAdTitle,
       message:
-          'Bạn cần xem 1 quảng cáo ngắn để lưu ảnh của trang kỷ niệm này về thiết bị.',
+          confirmAdMsg,
     );
     if (!unlocked) {
       return;
@@ -348,7 +365,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       _isExportingNotebook = true;
       _exportStatus =
           'Đang chuẩn bị lưu trang ${index + 1}/${_pages.length}...';
-      _exportDetail = 'Chỉ trang đang xem sẽ được lưu thành một ảnh đầy đủ.';
+      _exportDetail = detailLog;
     });
 
     try {

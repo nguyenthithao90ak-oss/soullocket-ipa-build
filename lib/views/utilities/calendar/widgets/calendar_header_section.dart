@@ -1,8 +1,9 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../../../core/fast_backdrop_filter.dart';
+import '../../../../core/sl_theme.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarHeaderSection extends StatelessWidget {
@@ -92,7 +93,7 @@ class CalendarHeaderSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Lịch đi chơi',
+                            context.tr('util_lchichi_3eb020'),
                             style: SLTheme.quicksand(
                               color: Colors.white,
                               fontWeight: FontWeight.w900,
@@ -101,7 +102,7 @@ class CalendarHeaderSection extends StatelessWidget {
                           ),
                           SLSpacing.h4,
                           Text(
-                            'Chạm vào ngày bất kỳ để xem chi tiết, thêm kế hoạch và theo dõi các mốc quan trọng.',
+                            context.tr('util_chmvongybt_98a4c5'),
                             style: SLTheme.quicksand(
                               color: Colors.white.withValues(alpha: 0.82),
                               fontWeight: FontWeight.w600,
@@ -121,9 +122,9 @@ class CalendarHeaderSection extends StatelessWidget {
                   focusedDay: focusedDay,
                   calendarFormat: calendarFormat,
                   startingDayOfWeek: StartingDayOfWeek.monday,
-                  availableCalendarFormats: const {
-                    CalendarFormat.month: 'Tháng',
-                    CalendarFormat.twoWeeks: '2 tuần',
+                  availableCalendarFormats: {
+                    CalendarFormat.month: context.tr('util_thng_570330'),
+                    CalendarFormat.twoWeeks: context.tr('util_2tun_9917c0'),
                   },
                   eventLoader: eventLoader,
                   selectedDayPredicate: (day) => isSameDay(selectedDay, day),

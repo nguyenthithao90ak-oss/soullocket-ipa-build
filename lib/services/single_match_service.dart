@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
@@ -132,7 +133,7 @@ class SingleMatchService {
         debugPrint(
             '[SingleMatch] load fallback profiles failed: ${AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể tải hồ sơ dự phòng cho Single Match.',
+          fallbackMessage: L10nService().translate('err_single_match_load_fallback_failed'),
         ).message}');
         emitMergedCandidates();
       }
@@ -150,7 +151,7 @@ class SingleMatchService {
             debugPrint(
                 '[SingleMatch] profile index stream failed: ${AppErrorMapper.resolve(
               error,
-              fallbackMessage: 'Luồng chỉ mục hồ sơ Single Match bị lỗi.',
+              fallbackMessage: L10nService().translate('err_single_match_profile_index_stream_failed'),
             ).message}');
             emitMergedCandidates();
           },
@@ -272,7 +273,7 @@ class SingleMatchService {
             debugPrint(
                 '[SingleMatch] history stream failed: ${AppErrorMapper.resolve(
               error,
-              fallbackMessage: 'Luồng lịch sử Single Match bị lỗi.',
+              fallbackMessage: L10nService().translate('err_single_match_history_stream_failed'),
             ).message}');
             if (!controller.isClosed) {
               controller.add(const <SingleMatchHistoryEntry>[]);

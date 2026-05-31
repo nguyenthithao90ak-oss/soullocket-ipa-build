@@ -3,10 +3,10 @@ part of '../../collage_maker_screen.dart';
 extension _CollageIntroPanel on _CollageMakerScreenState {
   // ignore: unused_element
   Widget _buildIntroTagRow() {
-    const labels = <String>[
-      'Huy hiệu sticker',
-      'Giấy ghi chú',
-      'Đổ bóng mềm',
+    final labels = <String>[
+      context.tr('util_huyhiustic_c17a85'),
+      context.tr('util_giyghich_1aafe3'),
+      context.tr('util_bngmm_1e42a6'),
     ];
 
     return Padding(

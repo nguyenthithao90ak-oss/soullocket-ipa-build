@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../core/sl_theme.dart';
 
@@ -89,12 +90,12 @@ class BlockedScaffold extends StatelessWidget {
                           if (onSignOut != null)
                             OutlinedButton(
                               onPressed: onSignOut,
-                              child: const Text('Đăng xuất'),
+                              child: Text(context.tr('app_entry_ngxut_0b3c82')),
                             ),
                           if (onAppeal != null)
                             ElevatedButton(
                               onPressed: onAppeal,
-                              child: const Text('Kháng nghị'),
+                              child: Text(context.tr('app_entry_khngngh_ac8a56')),
                             ),
                         ],
                       ),

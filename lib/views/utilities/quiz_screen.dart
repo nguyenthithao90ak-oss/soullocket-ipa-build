@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
@@ -33,32 +34,36 @@ class _QuizScreenState extends State<QuizScreen> {
   final Random _random = Random();
 
   String _myRole = 'user1';
-  String _user1Name = 'Bạn 1';
-  String _user2Name = 'Người ấy';
+  String _user1Name = L10nService().translate('util_bn1_5dba10');
+  String _user2Name = L10nService().translate('util_ngiy_5bab37');
   bool _loadingMeta = true;
 
-  static const List<String> _quizSuggestions = [
-    'Kỷ niệm đầu tiên của tụi mình là gì?',
-    'Điều nhỏ nhất khiến bạn cảm thấy được yêu là gì?',
-    'Chuyến đi nào bạn muốn đi cùng người ấy nhất?',
-    'Một thói quen của người ấy mà bạn thấy dễ thương?',
-    'Nếu được chọn 1 buổi hẹn tối nay, bạn muốn làm gì?',
-    'Câu nào bạn muốn nghe từ người ấy nhiều hơn?',
+  static const List<String> _quizSuggestionKeys = [
+    'util_knimutinca_1012c6',
+    'util_iunhnhtkhi_bd3c6c',
+    'util_chuyninobn_a81e71',
+    'util_mtthiquenc_31be76',
+    'util_nucchn1bui_cee5c0',
+    'util_cunobnmunn_ed3028',
   ];
 
-  static const List<String> _whoIsSuggestions = [
-    'Ai hay dỗi hơn?',
-    'Ai ăn nhiều hơn?',
-    'Ai ngủ nướng hơn?',
-    'Ai lãng mạn hơn?',
-    'Ai hay quên hơn?',
-    'Ai nấu ăn ngon hơn?',
-    'Ai bừa bộn hơn?',
-    'Ai chi tiêu tiết kiệm hơn?',
-    'Ai hay ghen hơn?',
-    'Ai chủ động làm quen trước?',
+  static const List<String> _whoIsSuggestionKeys = [
+    'util_aihaydihn_01b35e',
+    'util_ainnhiuhn_f1224d',
+    'util_aingnnghn_5c9bac',
+    'util_ailngmnhn_306fb5',
+    'util_aihayqunhn_e040dd',
+    'util_ainunngonh_a7a83c',
+    'util_aibabnhn_21d249',
+    'util_aichitiuti_84ec6d',
+    'util_aihayghenh_7be2cf',
+    'util_aichnglmqu_788376',
   ];
 
+  List<String> get _quizSuggestions =>
+      _quizSuggestionKeys.map(context.tr).toList(growable: false);
+  List<String> get _whoIsSuggestions =>
+      _whoIsSuggestionKeys.map(context.tr).toList(growable: false);
   String get _myDisplayName => _myRole == 'user1' ? _user1Name : _user2Name;
   String get _partnerDisplayName =>
       _myRole == 'user1' ? _user2Name : _user1Name;
@@ -83,6 +88,9 @@ class _QuizScreenState extends State<QuizScreen> {
       return;
     }
 
+    final fallbackName1 = context.tr('util_bn1_5dba10');
+    final fallbackName2 = context.tr('util_ngiy_5bab37');
+
     try {
       final settingsSnap =
           await _dbRef.child('houses/${widget.houseId}/settings').get();
@@ -99,9 +107,9 @@ class _QuizScreenState extends State<QuizScreen> {
         }
 
         _user1Name =
-            (data['nameU1'] ?? data['user1Name'] ?? 'Bạn 1').toString();
+            (data['nameU1'] ?? data['user1Name'] ?? fallbackName1).toString();
         _user2Name =
-            (data['nameU2'] ?? data['user2Name'] ?? 'Người ấy').toString();
+            (data['nameU2'] ?? data['user2Name'] ?? fallbackName2).toString();
       }
     } catch (_) {}
 
@@ -121,7 +129,7 @@ class _QuizScreenState extends State<QuizScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Đã gửi câu hỏi cho $_partnerDisplayName.',
+          L10nService().format('util_quiz_sent_to_partner', {'name': _partnerDisplayName}),
           style: SLTheme.quicksand(fontWeight: FontWeight.w700),
         ),
         behavior: SnackBarBehavior.floating,
@@ -156,7 +164,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   String _formatTimestamp(int timestamp) {
-    if (timestamp <= 0) return 'Vừa xong';
+    if (timestamp <= 0) return context.tr('util_vaxong_e92d16');
     return DateFormat('dd/MM • HH:mm').format(
       DateTime.fromMillisecondsSinceEpoch(timestamp),
     );
@@ -187,7 +195,7 @@ class _QuizScreenState extends State<QuizScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Trả lời thử thách',
+                  context.tr('util_trliththch_00f60a'),
                   style: SLTheme.quicksand(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -209,7 +217,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   maxLines: 3,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
-                    hintText: 'Viết câu trả lời của bạn...',
+                    hintText: context.tr('util_vitcutrlic_bc7f98'),
                     filled: true,
                     fillColor: const Color(0xFFFFF4F8),
                     border: OutlineInputBorder(
@@ -224,7 +232,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Hủy'),
+                        child: Text(context.tr('util_hy_1e4050')),
                       ),
                     ),
                     SLSpacing.w12,
@@ -236,7 +244,7 @@ class _QuizScreenState extends State<QuizScreen> {
                           backgroundColor: const Color(0xFFD81B60),
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('Gửi đáp án'),
+                        child: Text(context.tr('util_gipn_42d1ba')),
                       ),
                     ),
                   ],
@@ -263,7 +271,7 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, 'THỬ THÁCH HIỂU NHAU'),
+      appBar: SLTheme.appBar(context, context.tr('util_ththchhiun_9996bd')),
       body: SLTheme.background(
         child: SafeArea(
           child: _loadingMeta
@@ -299,9 +307,9 @@ class _QuizScreenState extends State<QuizScreen> {
                             labelStyle: SLTheme.quicksand(
                               fontWeight: FontWeight.w900,
                             ),
-                            tabs: const [
-                              Tab(text: 'Quiz đôi'),
-                              Tab(text: 'Ai là người...'),
+                            tabs: [
+                              Tab(text: context.tr('util_quizi_da26a6')),
+                              Tab(text: context.tr('util_ailngi_d95f19')),
                             ],
                           ),
                         ),
@@ -367,7 +375,7 @@ class _QuizScreenState extends State<QuizScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Quiz đôi và game đo độ hiểu nhau',
+                  context.tr('util_quizivgame_de1d93'),
                   style: SLTheme.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -376,7 +384,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
                 SLSpacing.h4,
                 Text(
-                  'Một tab cho Quiz đôi, một tab cho Ai là người...',
+                  context.tr('util_mttabchoqu_27ac4a'),
                   style: SLTheme.quicksand(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
@@ -397,9 +405,9 @@ class _QuizScreenState extends State<QuizScreen> {
       children: [
         _buildComposerCard(
           controller: _quizController,
-          title: 'Đặt câu hỏi cho $_partnerDisplayName',
-          hint: 'Ví dụ: Mình muốn cùng nhau làm gì cuối tuần này?',
-          actionLabel: 'Gửi câu hỏi',
+          title: L10nService().format('util_quiz_ask_partner_title', {'name': _partnerDisplayName}),
+          hint: context.tr('util_vdmnhmuncn_9bd9fb'),
+          actionLabel: context.tr('util_gicuhi_ab5892'),
           suggestions: _quizSuggestions,
           onSubmit: _createQuiz,
         ),
@@ -417,9 +425,9 @@ class _QuizScreenState extends State<QuizScreen> {
               if (items.isEmpty) {
                 return _buildEmptyState(
                   icon: Icons.chat_bubble_outline_rounded,
-                  title: 'Chưa có câu hỏi nào',
+                  title: context.tr('util_chaccuhino_a7da39'),
                   subtitle:
-                      'Tạo một thử thách đầu tiên để bắt đầu chơi cùng người ấy.',
+                      context.tr('util_tomtththch_36e8a7'),
                 );
               }
 
@@ -461,9 +469,9 @@ class _QuizScreenState extends State<QuizScreen> {
               children: [
                 _buildComposerCard(
                   controller: _whoIsController,
-                  title: 'Tạo câu hỏi "Ai là người..."',
-                  hint: 'Ví dụ: Ai hay quên ngày kỷ niệm hơn?',
-                  actionLabel: 'Mở câu hỏi',
+                  title: context.tr('util_quiz_create_whois_title'),
+                  hint: context.tr('util_vdaihayqun_be48bb'),
+                  actionLabel: context.tr('util_mcuhi_464db0'),
                   suggestions: _whoIsSuggestions,
                   onSubmit: _setWhoIsQuestion,
                 ),
@@ -472,7 +480,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _startRandomWhoIsQuestion,
                     icon: const Icon(Icons.casino_rounded),
-                    label: const Text('Ra câu hỏi ngẫu nhiên'),
+                    label: Text(context.tr('util_racuhingun_cc1437')),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(50),
                       foregroundColor: const Color(0xFFD81B60),
@@ -483,9 +491,9 @@ class _QuizScreenState extends State<QuizScreen> {
                 SLSpacing.h16,
                 _buildEmptyState(
                   icon: Icons.favorite_border_rounded,
-                  title: 'Chưa có ván Ai là người...',
+                  title: context.tr('util_chacvnailn_09f96d'),
                   subtitle:
-                      'Mở một câu hỏi mới để xem hai bạn có đồng ý về cùng một người không.',
+                      context.tr('util_mmtcuhimix_c10515'),
                 ),
               ],
             ),
@@ -509,7 +517,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Câu hỏi đang mở',
+                      context.tr('util_cuhiangm_1e1876'),
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w900,
@@ -530,7 +538,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     if (asker.isNotEmpty) ...[
                       SLSpacing.h8,
                       Text(
-                        'Mở bởi $asker',
+                        L10nService().format('util_quiz_opened_by', {'name': asker}),
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -556,7 +564,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _startRandomWhoIsQuestion,
                       icon: const Icon(Icons.shuffle_rounded),
-                      label: const Text('Đổi ngẫu nhiên'),
+                      label: Text(context.tr('util_ingunhin_986b0c')),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFD81B60),
                         side: const BorderSide(color: Color(0xFFFFCFE0)),
@@ -571,7 +579,7 @@ class _QuizScreenState extends State<QuizScreen> {
                           .child('houses/${widget.houseId}/game_whois')
                           .remove(),
                       icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('Kết thúc ván'),
+                      label: Text(context.tr('util_ktthcvn_18d5e2')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFD81B60),
                         foregroundColor: Colors.white,
@@ -726,7 +734,7 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
           SLSpacing.h8,
           Text(
-            'Hỏi bởi ${quiz.asker}',
+            L10nService().format('util_quiz_asked_by', {'name': quiz.asker}),
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -760,7 +768,7 @@ class _QuizScreenState extends State<QuizScreen> {
             ElevatedButton.icon(
               onPressed: () => _answerQuiz(quiz),
               icon: const Icon(Icons.edit_rounded),
-              label: const Text('Trả lời ngay'),
+              label: Text(context.tr('util_trlingay_87f952')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD81B60),
                 foregroundColor: Colors.white,
@@ -779,8 +787,8 @@ class _QuizScreenState extends State<QuizScreen> {
               ),
               child: Text(
                 isMatch
-                    ? 'Ăn ý rồi đó. Hai bạn đang nghĩ rất gần nhau.'
-                    : 'Lệch một chút, nhưng đó lại là cớ để hiểu nhau thêm.',
+                    ? context.tr('util_nrihaibnan_baf48e')
+                    : context.tr('util_lchmtchtnh_388c8e'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
                   color: isMatch
@@ -843,7 +851,7 @@ class _QuizScreenState extends State<QuizScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Đáp án của bạn',
+            context.tr('util_pncabn_c97bdb'),
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w800,
@@ -860,7 +868,7 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
           SLSpacing.h8,
           Text(
-            'Đang chờ $_partnerDisplayName trả lời để mở kết quả.',
+            L10nService().format('util_quiz_waiting_partner_result', {'name': _partnerDisplayName}),
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -885,7 +893,7 @@ class _QuizScreenState extends State<QuizScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Bạn chọn ai?',
+            context.tr('util_bnchnai_b5c236'),
             style: SLTheme.quicksand(
               fontSize: 16,
               fontWeight: FontWeight.w900,
@@ -941,7 +949,7 @@ class _QuizScreenState extends State<QuizScreen> {
           const CircularProgressIndicator(color: Color(0xFFD81B60)),
           SLSpacing.h16,
           Text(
-            'Bạn đã khóa lựa chọn: $myAnswer',
+            L10nService().format('util_quiz_locked_answer', {'answer': myAnswer}),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 18,
@@ -951,7 +959,7 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
           SLSpacing.h8,
           Text(
-            'Đang chờ $_partnerDisplayName chọn đáp án của họ.',
+            L10nService().format('util_quiz_waiting_partner_answer', {'name': _partnerDisplayName}),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w700,
@@ -988,7 +996,7 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
           SLSpacing.h12,
           Text(
-            sameAnswer ? 'Ăn ý quá trời' : 'Mỗi người nghĩ một kiểu',
+            sameAnswer ? context.tr('util_nqutri_ebcca6') : context.tr('util_minginghmt_ed8233'),
             style: SLTheme.quicksand(
               fontSize: 22,
               fontWeight: FontWeight.w900,

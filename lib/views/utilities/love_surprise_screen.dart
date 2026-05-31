@@ -1,8 +1,9 @@
 // ignore: avoid_web_libraries_in_flutter
-import 'package:soullocket_app/utils/web_helpers.dart';
+import '../../utils/web_helpers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 // ignore: depend_on_referenced_packages
@@ -64,9 +65,9 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
     final granted = await PermissionHelper.requestAllWithDisclosure(
       context,
       [Permission.camera],
-      title: 'Cho phép Camera',
+      title: context.tr('util_chophpcame_4e6a7a'),
       disclosure:
-          'Tính năng Bất ngờ 3D cần Camera để nhận diện cử chỉ tay. Ứng dụng chỉ xin quyền sau khi bạn đồng ý ở đây.',
+          context.tr('util_tnhnngbtng_cd452c'),
     );
 
     if (!mounted) return;
@@ -90,18 +91,18 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-        title: const Text('Cho phép Camera'),
-        content: const Text(
-          'Tính năng Bất ngờ 3D cần Camera để nhận diện cử chỉ tay. Ứng dụng chỉ xin quyền sau khi bạn đồng ý ở đây.',
+        title: Text(context.tr('util_chophpcame_4e6a7a')),
+        content: Text(
+          context.tr('util_tnhnngbtng_cd452c'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Để sau'),
+            child: Text(context.tr('util_sau_8a3721')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Tiếp tục'),
+            child: Text(context.tr('util_tiptc_555f1f')),
           ),
         ],
       ),
@@ -132,6 +133,7 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
   }
 
   void _initWebView() async {
+    final errFallback = context.tr('util_khngthtitr_27cecf');
     try {
       if (kIsWeb) {
         _webIframeUrl =
@@ -210,7 +212,7 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
     } catch (e) {
       debugPrint("Lỗi load HTML: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể tải trải nghiệm 3D lúc này.',
+        fallbackMessage: errFallback,
       ).message}");
       if (mounted) {
         setState(() {
@@ -252,10 +254,10 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
                           size: 36,
                         ),
                         SLSpacing.h12,
-                        const Text(
-                          'Cần quyền Camera để mở trải nghiệm 3D.',
+                        Text(
+                          context.tr('util_cnquyncame_93ab68'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
                             fontSize: 16,
@@ -264,8 +266,8 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
                         SLSpacing.h8,
                         Text(
                           _permissionDenied
-                              ? 'Bạn chưa cấp đủ quyền nên màn hình chưa tự tải tiếp.'
-                              : 'Quyền sẽ chỉ được xin khi bạn bấm tiếp tục.',
+                              ? context.tr('util_bnchacpquy_baadfd')
+                              : context.tr('util_quynschcxi_8badae'),
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white70,
@@ -275,7 +277,7 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
                         SLSpacing.h16,
                         FilledButton(
                           onPressed: _requestPermissionsAndInit,
-                          child: const Text('Cấp quyền ngay'),
+                          child: Text(context.tr('util_cpquynngay_9d73e5')),
                         ),
                         if (_permissionDenied) ...[
                           SLSpacing.h8,
@@ -285,7 +287,7 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
                                 openAppSettings,
                               );
                             },
-                            child: const Text('Mở cài đặt ứng dụng'),
+                            child: Text(context.tr('util_mcitngdng_12ea88')),
                           ),
                         ],
                       ],
@@ -326,7 +328,7 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
                           valueListenable: _progressVN,
                           builder: (context, value, _) {
                             return Text(
-                              'Đang tải 3D... ${(value * 100).toInt()}%',
+                              L10nService().format('util_loading_3d_percent', {'percent': (value * 100).toInt()}),
                               style: const TextStyle(
                                 color: Color(0xFFd4af37),
                                 fontWeight: FontWeight.bold,

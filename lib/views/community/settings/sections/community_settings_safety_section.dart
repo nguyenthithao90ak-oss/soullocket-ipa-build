@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../widgets/community_settings_components.dart';
 
@@ -25,52 +26,52 @@ class CommunitySettingsSafetySection extends StatelessWidget {
     return CommunitySettingsSectionCard(
       icon: Icons.verified_user_outlined,
       accent: const Color(0xFFE57A2E),
-      title: 'An toàn và chống làm phiền',
+      title: context.tr('comm_antonvchng_dc11f5'),
       subtitle:
-          'Các thiết lập để feed sạch hơn, ít quấy rối hơn và giảm nhiễu từ cộng đồng khi cần nghỉ.',
+          context.tr('comm_ccthitlpfe_234e48'),
       children: [
         CommunitySettingsStatusOverview(
           items: [
             CommunitySettingsStatusChipData(
               icon: Icons.filter_alt_rounded,
-              label: keywordFilter ? 'Lọc từ khóa bật' : 'Lọc từ khóa tắt',
+              label: keywordFilter ? context.tr('comm_lctkhabt_55780c') : context.tr('comm_lctkhatt_c797fa'),
               active: keywordFilter,
             ),
             CommunitySettingsStatusChipData(
               icon: Icons.wifi_tethering_off_rounded,
               label: hideActiveStatus
-                  ? 'Ẩn trạng thái online'
-                  : 'Hiện trạng thái online',
+                  ? context.tr('comm_ntrngthion_d94d8d')
+                  : context.tr('comm_hintrngthi_f702b4'),
               active: hideActiveStatus,
             ),
             CommunitySettingsStatusChipData(
               icon: Icons.do_not_disturb_on_total_silence_rounded,
-              label: dndMode ? 'Đang chống làm phiền' : 'Thông báo bình thường',
+              label: dndMode ? context.tr('comm_angchnglmp_5444a2') : context.tr('comm_thngbobnht_d0d7e0'),
               active: dndMode,
             ),
           ],
         ),
         const SizedBox(height: 12),
         CommunitySettingsToggleCard(
-          title: 'Lọc từ khóa nhạy cảm',
+          title: context.tr('comm_lctkhanhyc_2c5c16'),
           subtitle:
-              'Ẩn bớt nội dung và bình luận dễ gây khó chịu trong cộng đồng.',
+              context.tr('comm_nbtnidungv_bcfa8b'),
           value: keywordFilter,
           onChanged: onKeywordFilterChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsToggleCard(
-          title: 'Ẩn trạng thái hoạt động',
+          title: context.tr('comm_ntrngthiho_423be3'),
           subtitle:
-              'Người khác sẽ khó biết khi nào nhà bạn đang online hoặc đang xem cộng đồng.',
+              context.tr('comm_ngikhcskhb_94a1ec'),
           value: hideActiveStatus,
           onChanged: onHideActiveStatusChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsToggleCard(
-          title: 'Chế độ chống làm phiền',
+          title: context.tr('comm_chchnglmph_0be573'),
           subtitle:
-              'Tạm giảm bớt thông báo cộng đồng để giữ không gian riêng và tập trung.',
+              context.tr('comm_tmgimbtthn_aa2552'),
           value: dndMode,
           onChanged: onDndModeChanged,
         ),

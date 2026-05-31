@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/sl_theme.dart';
@@ -179,7 +180,7 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
                         icon: const Icon(Icons.arrow_back_ios_new,
                             color: Colors.white)),
                     Expanded(
-                        child: Text('Cùng Nghe Nhạc 🎶',
+                        child: Text(context.tr('util_cngnghenhc_d14587'),
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                                 color: Colors.white,
@@ -232,8 +233,8 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
               SLSpacing.gapH(30),
               Text(
                 hasTracks
-                    ? (track!['title']?.toString() ?? 'Chưa có bài hát')
-                    : 'Chưa có bài hát chung',
+                    ? (track!['title']?.toString() ?? context.tr('util_chacbiht_26528f'))
+                    : context.tr('util_chacbihtch_1c5d59'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                     color: Colors.white,
@@ -245,8 +246,8 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
                 hasTracks
                     ? (track!['a']?.toString().isNotEmpty == true
                         ? 'Thêm bởi ${track['a']}'
-                        : 'Playlist đôi')
-                    : 'Hãy thêm bài hát trong mục Bài Hát đôi',
+                        : context.tr('util_playlisti_673ad0'))
+                    : context.tr('util_hythmbihtt_d0aa1b'),
                 style: SLTheme.quicksand(
                     color: Colors.white60,
                     fontWeight: FontWeight.w600,
@@ -363,7 +364,7 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('🔴 Đang phát cùng người ấy • Realtime',
+                  Text(context.tr('util_angphtcngn_f81828'),
                       style: SLTheme.quicksand(
                           color: Colors.pinkAccent,
                           fontSize: 12,
@@ -374,7 +375,7 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
                       onTap: () =>
                           _openTrackLink(track!['link']?.toString() ?? ''),
                       child: Text(
-                        'MỞ LINK',
+                        context.tr('util_mlink_e24a24'),
                         style: SLTheme.quicksand(
                           color: Colors.white,
                           fontSize: 12,
@@ -507,7 +508,7 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        track['title']?.toString() ?? 'Bài hát chưa đặt tên',
+                        track['title']?.toString() ?? context.tr('util_bihtchattn_615bee'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
@@ -520,7 +521,7 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
                       Text(
                         track['a']?.toString().isNotEmpty == true
                             ? 'Thêm bởi ${track['a']}'
-                            : 'Playlist đôi',
+                            : context.tr('util_playlisti_673ad0'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
@@ -546,7 +547,7 @@ class _SharedPlaylistScreenState extends State<SharedPlaylistScreen>
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 28),
         child: Text(
-          'Chưa có bài hát chung nào để đồng bộ. Hãy thêm bài hát trong mục Bài Hát đôi rồi quay lại đây để nghe cùng nhau.',
+          context.tr('util_chacbihtch_8c49d3'),
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(
             color: Colors.white70,

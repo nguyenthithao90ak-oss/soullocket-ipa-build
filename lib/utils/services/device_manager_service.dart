@@ -103,6 +103,10 @@ class DeviceManagerService {
     return _consentService.isSecurityDeviceSignalsAllowed();
   }
 
+  Future<void> setSecurityDeviceSignalsAllowed(bool value) async {
+    await _consentService.setSecurityDeviceSignalsAllowed(value);
+  }
+
   Future<String> getCurrentDeviceIdentifier() async {
     final deviceInfo = await _getDeviceInfo();
     return deviceInfo['deviceId'] ?? 'unknown';
@@ -260,6 +264,7 @@ class DeviceManagerService {
 
     if (await _registerCurrentDeviceWithFunction()) {
       startRealtimeTracking();
+      return;
     }
 
     final uid = _auth.currentUser?.uid;
@@ -340,7 +345,8 @@ class DeviceManagerService {
         }
       }
     } catch (e) {
-      debugPrint('registerCurrentDevice IP fetch error: ${AppErrorMapper.resolve(
+      debugPrint(
+          'registerCurrentDevice IP fetch error: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể lấy dữ liệu mạng thiết bị.',
       ).message}');
@@ -426,12 +432,12 @@ class DeviceManagerService {
         // Nếu trùng model + platform với một máy TỪNG ĐƯỢC DUYỆT trong ngôi nhà này -> Tự duyệt luôn.
         bool looksLikeKnownDevice = false;
         String matchedDeviceId = '';
-        
+
         for (final dev in existingDevices) {
           final isApproved = dev['status']?.toString() == 'approved';
           final modelMatches = dev['model'] == deviceInfo['model'];
           final platformMatches = dev['platform'] == deviceInfo['platform'];
-          
+
           // Ưu tiên khớp cả OS, nhưng nếu OS khác (do update) mà Model+Platform khớp thì vẫn tin cậy
           if (isApproved && modelMatches && platformMatches) {
             looksLikeKnownDevice = true;
@@ -443,9 +449,11 @@ class DeviceManagerService {
         if (looksLikeKnownDevice) {
           // Máy quen (cùng loại đã từng được duyệt), cho vào luôn không cần chờ 12h
           updateData['status'] = 'approved';
-          updateData['is_admin'] = false; // Mặc định không cho quyền admin ngay, nhưng cho vào app
+          updateData['is_admin'] =
+              false; // Mặc định không cho quyền admin ngay, nhưng cho vào app
           updateData['approved_reason'] = 'smart_match_known_model';
-          debugPrint('Smart Detection: Device matched with previously approved device $matchedDeviceId');
+          debugPrint(
+              'Smart Detection: Device matched with previously approved device $matchedDeviceId');
         } else if (isSuspiciousSpoof) {
           // Bất kể là thiết bị thứ 1 hay thứ 10, nếu đáng ngờ thì khóa chờ duyệt ngay lập tức
           updateData['status'] = 'pending';
@@ -501,7 +509,8 @@ class DeviceManagerService {
             'status': 'pending',
           });
         } catch (e) {
-          debugPrint('Failed to queue new device notification: ${AppErrorMapper.resolve(
+          debugPrint(
+              'Failed to queue new device notification: ${AppErrorMapper.resolve(
             e,
             fallbackMessage: 'Không thể tạo thông báo thiết bị mới.',
           ).message}');
@@ -544,10 +553,12 @@ class DeviceManagerService {
       });
       return true;
     } on FirebaseFunctionsException catch (e) {
-      debugPrint('registerCurrentDeviceSecure fallback to legacy DB write: ${e.code}');
+      debugPrint(
+          'registerCurrentDeviceSecure fallback to legacy DB write: ${e.code}');
       return false;
     } catch (e) {
-      debugPrint('registerCurrentDeviceSecure fallback to legacy DB write: ${AppErrorMapper.resolve(
+      debugPrint(
+          'registerCurrentDeviceSecure fallback to legacy DB write: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể đăng ký thiết bị qua máy chủ bảo mật.',
       ).message}');
@@ -612,7 +623,8 @@ class DeviceManagerService {
           (ipData['region'] ?? ipData['regionName'])?.toString() ?? '';
       final country =
           (ipData['country'] ?? ipData['country_name'])?.toString() ?? '';
-      final locParts = [city, region, country].where((e) => e.isNotEmpty).toList();
+      final locParts =
+          [city, region, country].where((e) => e.isNotEmpty).toList();
       if (locParts.isNotEmpty) {
         location = locParts.join(', ');
       }
@@ -623,7 +635,8 @@ class DeviceManagerService {
       'location': location,
       'city': ipData['city']?.toString() ?? '',
       'region': (ipData['region'] ?? ipData['regionName'])?.toString() ?? '',
-      'country': (ipData['country'] ?? ipData['country_name'])?.toString() ?? '',
+      'country':
+          (ipData['country'] ?? ipData['country_name'])?.toString() ?? '',
       'timezone': ipData['timezone']?.toString() ?? '',
       'latitude': (ipData['latitude'] ?? ipData['lat'])?.toString() ?? '',
       'longitude': (ipData['longitude'] ?? ipData['lon'])?.toString() ?? '',
@@ -681,7 +694,7 @@ class DeviceManagerService {
         if (hasSeenExists) {
           stopRealtimeTracking();
           final prefs = OfflineCacheService.getPrefsSync() ??
-                await SharedPreferences.getInstance();
+              await SharedPreferences.getInstance();
           await prefs.setString('il_kick_reason',
               'Thiết bị của bạn đã bị xóa khỏi nhà. Bạn sẽ không thể đăng nhập lại trong 1 giờ tới.');
           await _forceSignOutWithLocalSessionClear();
@@ -697,7 +710,7 @@ class DeviceManagerService {
 
   Future<void> _forceSignOutWithLocalSessionClear() async {
     final prefs = OfflineCacheService.getPrefsSync() ??
-                await SharedPreferences.getInstance();
+        await SharedPreferences.getInstance();
     await prefs.remove(_prefHouseId);
     await prefs.remove(_prefAuthUid);
     await prefs.remove('il_role');
@@ -804,11 +817,13 @@ class DeviceManagerService {
               final ageMs = DateTime.now().millisecondsSinceEpoch - firstSeen;
               if (ageMs >= pendingAutoTrustDelay.inMilliseconds) {
                 device['status'] = 'approved';
-                _db.ref('houses/$houseId/security/devices/${e.key}').update({
-                  'status': 'approved',
-                  'approved_at': ServerValue.timestamp,
-                  'approved_reason': 'auto_after_12_hours',
-                });
+                unawaited(
+                  _db.ref('houses/$houseId/security/devices/${e.key}').update({
+                    'status': 'approved',
+                    'approved_at': ServerValue.timestamp,
+                    'approved_reason': 'auto_after_12_hours',
+                  }).catchError((_) {}),
+                );
               }
             }
           }
@@ -830,11 +845,12 @@ class DeviceManagerService {
       merged[id] = device;
     }
 
-    final devices = merged.values.toList(growable: false)..sort((a, b) {
-      final aTs = (a['last_seen'] as num?)?.toInt() ?? 0;
-      final bTs = (b['last_seen'] as num?)?.toInt() ?? 0;
-      return bTs.compareTo(aTs);
-    });
+    final devices = merged.values.toList(growable: false)
+      ..sort((a, b) {
+        final aTs = (a['last_seen'] as num?)?.toInt() ?? 0;
+        final bTs = (b['last_seen'] as num?)?.toInt() ?? 0;
+        return bTs.compareTo(aTs);
+      });
 
     return devices.isEmpty ? (functionDevices ?? []) : devices;
   }
@@ -856,7 +872,8 @@ class DeviceManagerService {
       debugPrint('getDeviceListSecure fallback to legacy DB read: ${e.code}');
       return null;
     } catch (e) {
-      debugPrint('getDeviceListSecure fallback to legacy DB read: ${AppErrorMapper.resolve(
+      debugPrint(
+          'getDeviceListSecure fallback to legacy DB read: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể tải danh sách thiết bị bảo mật.',
       ).message}');
@@ -927,7 +944,8 @@ class DeviceManagerService {
     });
   }
 
-  Future<bool> _callDeviceActionFunction(String functionName, String deviceId) async {
+  Future<bool> _callDeviceActionFunction(
+      String functionName, String deviceId) async {
     try {
       final currentDeviceId = await getCurrentDeviceIdentifier();
       final callable = _functions.httpsCallable(functionName);
@@ -940,9 +958,11 @@ class DeviceManagerService {
       debugPrint('$functionName fallback to legacy DB write: ${e.code}');
       return false;
     } catch (e) {
-      debugPrint('Device action fallback to legacy DB write: ${AppErrorMapper.resolve(
+      debugPrint(
+          'Device action fallback to legacy DB write: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể xử lý thao tác thiết bị qua máy chủ bảo mật.',
+        fallbackMessage:
+            'Không thể xử lý thao tác thiết bị qua máy chủ bảo mật.',
       ).message}');
       return false;
     }

@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
+import '../core/constants/app_config.dart';
 import 'security_service.dart';
 
 enum GiftcodeError {
@@ -40,23 +43,49 @@ class GiftcodeService {
     required String houseId,
     required String code,
   }) async {
+    if (!kIsWeb && (Platform.isIOS || Platform.isMacOS)) {
+      return GiftcodeResult(
+        success: false,
+        error: GiftcodeError.permissionDenied,
+        message: 'Giftcode không khả dụng trên iOS. Vui lòng sử dụng thanh toán trong ứng dụng.',
+      );
+    }
+
+    final normalizedHouseId = houseId.trim();
     final sanitized = code.trim().toUpperCase();
+    if (normalizedHouseId.isEmpty) {
+      return GiftcodeResult(
+        success: false,
+        error: GiftcodeError.invalidCode,
+        message: 'Không xác định được nhà để nhận mã quà tặng.',
+      );
+    }
     if (sanitized.isEmpty) {
       return GiftcodeResult(
         success: false,
         message: 'Vui lòng nhập mã quà tặng!',
       );
     }
+    if (!AppConfig.isPurchaseEnabled) {
+      return GiftcodeResult(
+        success: false,
+        error: GiftcodeError.permissionDenied,
+        message: 'Giftcode chưa khả dụng trên phiên bản này.',
+      );
+    }
 
     try {
       final deviceId = await _securityService.getDeviceId();
       final requestPayload = {
-        'houseId': houseId,
+        'houseId': normalizedHouseId,
         'code': sanitized,
         'deviceId': deviceId,
       };
       final callable = _functions.httpsCallable('redeemGiftcode');
       final response = await callable.call(requestPayload);
+      if (response.data is! Map) {
+        throw Exception('Phản hồi mã quà tặng không hợp lệ.');
+      }
       final payload = Map<String, dynamic>.from(response.data as Map);
       final days = (payload['daysAdded'] as num?)?.toInt();
 
@@ -73,10 +102,13 @@ class GiftcodeService {
           final deviceId = await _securityService.getDeviceId();
           final callable = _functions.httpsCallable('redeemGiftcodeAdminDebug');
           final response = await callable.call({
-            'houseId': houseId,
+            'houseId': normalizedHouseId,
             'code': sanitized,
             'deviceId': deviceId,
           });
+          if (response.data is! Map) {
+            throw Exception('Phản hồi mã quà tặng không hợp lệ.');
+          }
           final payload = Map<String, dynamic>.from(response.data as Map);
           final days = (payload['daysAdded'] as num?)?.toInt();
 
@@ -122,13 +154,19 @@ class GiftcodeService {
   }
 
   Future<bool> isVip(String houseId) async {
-    final snap = await _db.ref('houses/$houseId/proUntil').get();
+    if (!AppConfig.isPurchaseEnabled) return false;
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return false;
+    final snap = await _db.ref('houses/$normalizedHouseId/proUntil').get();
     final proUntil = (snap.value as num?)?.toInt() ?? 0;
     return proUntil > DateTime.now().millisecondsSinceEpoch;
   }
 
   Stream<DateTime?> streamVipExpiry(String houseId) {
-    return _db.ref('houses/$houseId/proUntil').onValue.map((event) {
+    if (!AppConfig.isPurchaseEnabled) return Stream<DateTime?>.value(null);
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return Stream<DateTime?>.value(null);
+    return _db.ref('houses/$normalizedHouseId/proUntil').onValue.map((event) {
       final val = (event.snapshot.value as num?)?.toInt() ?? 0;
       if (val == 0) return null;
       return DateTime.fromMillisecondsSinceEpoch(val);

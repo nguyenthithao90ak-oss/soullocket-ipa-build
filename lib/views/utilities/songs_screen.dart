@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/sl_theme.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import '../../core/fast_backdrop_filter.dart';
 
 class SongsScreen extends StatefulWidget {
   final String houseId;
@@ -85,7 +86,7 @@ class _SongsScreenState extends State<SongsScreen> {
 
     if (title.isEmpty || link.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nhập tên bài hát và link.')));
+          SnackBar(content: Text(context.tr('util_nhptnbihtv_10e97f'))));
       return;
     }
 
@@ -112,7 +113,7 @@ class _SongsScreenState extends State<SongsScreen> {
     FocusScope.of(context).unfocus();
     if (mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Đã lưu bài hát! ✨')));
+          .showSnackBar(SnackBar(content: Text(context.tr('util_lubiht_50fa83'))));
     }
   }
 
@@ -138,7 +139,7 @@ class _SongsScreenState extends State<SongsScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Chưa thể mở link này. Bạn kiểm tra lại đường dẫn nhé.')));
+            SnackBar(content: Text(context.tr('util_chathmlink_42e3cb'))));
       }
     }
   }
@@ -166,7 +167,7 @@ class _SongsScreenState extends State<SongsScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'BÀI HÁT ĐÔI MÌNH',
+          context.tr('util_bihtimnh_28711e'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -224,12 +225,12 @@ class _SongsScreenState extends State<SongsScreen> {
       child: Column(
         children: [
           _buildTextField(
-              _titleController, 'Tên bài hát (VD: Perfect)', Icons.music_note),
+              _titleController, context.tr('util_tnbihtvdpe_28f4a6'), Icons.music_note),
           SLSpacing.h8,
           _buildTextField(_linkController, 'Link audio', Icons.link),
           SLSpacing.h8,
           _buildTextField(
-              _noteController, 'Ghi chú kỷ niệm (tuỳ chọn)...', Icons.notes,
+              _noteController, context.tr('util_ghichknimt_6caeba'), Icons.notes,
               maxLines: 2),
           SLSpacing.h16,
           SizedBox(
@@ -243,7 +244,7 @@ class _SongsScreenState extends State<SongsScreen> {
               ),
               onPressed: _addSong,
               child: Text(
-                'LƯU BÀI HÁT',
+                context.tr('util_lubiht_262042'),
                 style: SLTheme.quicksand(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -306,7 +307,7 @@ class _SongsScreenState extends State<SongsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bài hát chủ đề',
+                  context.tr('util_bihtch_82a698'),
                   style: SLTheme.quicksand(
                       color: Colors.white70,
                       fontWeight: FontWeight.w700,
@@ -348,7 +349,7 @@ class _SongsScreenState extends State<SongsScreen> {
     return _songs.isEmpty
         ? Center(
             child: Text(
-              'Chưa có bài hát nào kỷ niệm.',
+              context.tr('util_chacbihtno_1a5789'),
               style: SLTheme.quicksand(
                   color: Colors.white70, fontWeight: FontWeight.w600),
             ),

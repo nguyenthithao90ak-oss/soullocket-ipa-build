@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:soullocket_app/views/ui_prefs.dart';
@@ -444,99 +445,99 @@ class SLShadow {
 /// ─── Main Theme Class ─────────────────────────────────────────
 class SLTheme {
   static const String defaultFontKey = 'quicksand';
-  static const List<SLFontOption> fontOptions = [
+  static List<SLFontOption> get fontOptions => [
     SLFontOption(
       key: defaultFontKey,
-      label: 'Quicksand (Gốc)',
-      sampleText: 'Yêu nhau 1000 ngày',
+      label: L10nService().translate('core_theme_font_quicksand'),
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'nunito',
       label: 'Nunito',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'comfortaa',
       label: 'Comfortaa',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'playfair',
       label: 'Playfair Display',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'beVietnam',
       label: 'Be Vietnam Pro',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'patrickHand',
       label: 'Patrick Hand',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'dancingScript',
       label: 'Dancing Script',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'caveat',
       label: 'Caveat',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'lora',
       label: 'Lora',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
   ];
 
-  static const List<SLFontOption> cleanFontOptions = [
+  static List<SLFontOption> get cleanFontOptions => [
     SLFontOption(
       key: defaultFontKey,
-      label: 'Quicksand (Gốc)',
-      sampleText: 'Yêu nhau 1000 ngày',
+      label: L10nService().translate('core_theme_font_quicksand'),
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'nunito',
       label: 'Nunito',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'comfortaa',
       label: 'Comfortaa',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'playfair',
       label: 'Playfair Display',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'beVietnam',
       label: 'Be Vietnam Pro',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'patrickHand',
       label: 'Patrick Hand',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'dancingScript',
       label: 'Dancing Script',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'caveat',
       label: 'Caveat',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
     SLFontOption(
       key: 'lora',
       label: 'Lora',
-      sampleText: 'Yêu nhau 1000 ngày',
+      sampleText: L10nService().translate('core_theme_font_sample'),
     ),
   ];
 
@@ -552,30 +553,26 @@ class SLTheme {
   }
 
   static TextTheme textThemeForKey(String? fontKey, TextTheme base) {
-    try {
-      switch (normalizeFontKey(fontKey)) {
-        case 'patrickHand':
-          return GoogleFonts.patrickHandTextTheme(base);
-        case 'dancingScript':
-          return GoogleFonts.dancingScriptTextTheme(base);
-        case 'caveat':
-          return GoogleFonts.caveatTextTheme(base);
-        case 'lora':
-          return GoogleFonts.loraTextTheme(base);
-        case 'nunito':
-          return GoogleFonts.nunitoTextTheme(base);
-        case 'comfortaa':
-          return GoogleFonts.comfortaaTextTheme(base);
-        case 'playfair':
-          return GoogleFonts.playfairDisplayTextTheme(base);
-        case 'beVietnam':
-          return GoogleFonts.beVietnamProTextTheme(base);
-        case defaultFontKey:
-        default:
-          return GoogleFonts.quicksandTextTheme(base);
-      }
-    } catch (_) {
-      return base;
+    switch (normalizeFontKey(fontKey)) {
+      case 'patrickHand':
+        return GoogleFonts.patrickHandTextTheme(base);
+      case 'dancingScript':
+        return GoogleFonts.dancingScriptTextTheme(base);
+      case 'caveat':
+        return GoogleFonts.caveatTextTheme(base);
+      case 'lora':
+        return GoogleFonts.loraTextTheme(base);
+      case 'nunito':
+        return GoogleFonts.nunitoTextTheme(base);
+      case 'comfortaa':
+        return GoogleFonts.comfortaaTextTheme(base);
+      case 'playfair':
+        return GoogleFonts.playfairDisplayTextTheme(base);
+      case 'beVietnam':
+        return GoogleFonts.beVietnamProTextTheme(base);
+      case defaultFontKey:
+      default:
+        return GoogleFonts.quicksandTextTheme(base);
     }
   }
 
@@ -622,30 +619,26 @@ class SLTheme {
       decorationThickness: decorationThickness,
     ).merge(textStyle);
 
-    try {
-      switch (normalizeFontKey(fontKey)) {
-        case 'patrickHand':
-          return GoogleFonts.patrickHand(textStyle: baseStyle);
-        case 'dancingScript':
-          return GoogleFonts.dancingScript(textStyle: baseStyle);
-        case 'caveat':
-          return GoogleFonts.caveat(textStyle: baseStyle);
-        case 'lora':
-          return GoogleFonts.lora(textStyle: baseStyle);
-        case 'nunito':
-          return GoogleFonts.nunito(textStyle: baseStyle);
-        case 'comfortaa':
-          return GoogleFonts.comfortaa(textStyle: baseStyle);
-        case 'playfair':
-          return GoogleFonts.playfairDisplay(textStyle: baseStyle);
-        case 'beVietnam':
-          return GoogleFonts.beVietnamPro(textStyle: baseStyle);
-        case defaultFontKey:
-        default:
-          return GoogleFonts.quicksand(textStyle: baseStyle);
-      }
-    } catch (_) {
-      return baseStyle;
+    switch (normalizeFontKey(fontKey)) {
+      case 'patrickHand':
+        return GoogleFonts.patrickHand(textStyle: baseStyle);
+      case 'dancingScript':
+        return GoogleFonts.dancingScript(textStyle: baseStyle);
+      case 'caveat':
+        return GoogleFonts.caveat(textStyle: baseStyle);
+      case 'lora':
+        return GoogleFonts.lora(textStyle: baseStyle);
+      case 'nunito':
+        return GoogleFonts.nunito(textStyle: baseStyle);
+      case 'comfortaa':
+        return GoogleFonts.comfortaa(textStyle: baseStyle);
+      case 'playfair':
+        return GoogleFonts.playfairDisplay(textStyle: baseStyle);
+      case 'beVietnam':
+        return GoogleFonts.beVietnamPro(textStyle: baseStyle);
+      case defaultFontKey:
+      default:
+        return GoogleFonts.quicksand(textStyle: baseStyle);
     }
   }
 

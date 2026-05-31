@@ -7,10 +7,10 @@ extension _MainHomeRelationshipActionExt on _MainHomeTabState {
   }) {
     final interactionType = _centerInteractionType(isSingle: isSingle);
     final title = switch (interactionType) {
-      'connect' => 'Kết nối',
-      'hot' => 'Nhắc uống nước',
-      'warmth' => 'Nhắc mặc ấm',
-      _ => 'Gửi nỗi nhớ',
+      'connect' => L10nService().translate('home_ktni_74e82a'),
+      'hot' => L10nService().translate('home_nhcungnc_4aa0e3'),
+      'warmth' => L10nService().translate('home_nhcmcm_205105'),
+      _ => L10nService().translate('home_gininh_89da08'),
     };
     final icon = switch (interactionType) {
       'connect' => Icons.qr_code_rounded,

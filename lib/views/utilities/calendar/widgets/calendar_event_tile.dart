@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../../../core/sl_theme.dart';
 
 class CalendarEventTile extends StatelessWidget {
   final Color accent;
@@ -71,7 +72,7 @@ class CalendarEventTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        title.isEmpty ? 'Chưa có tiêu đề' : title,
+                        title.isEmpty ? context.tr('util_chactiu_3f4360') : title,
                         style: SLTheme.quicksand(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
@@ -110,7 +111,7 @@ class CalendarEventTile extends StatelessWidget {
                       icon: Icons.person_rounded,
                       label: author?.isNotEmpty == true
                           ? 'Tạo bởi $author'
-                          : 'Chưa rõ người tạo',
+                          : context.tr('util_charngito_c3640d'),
                     ),
                     _CalendarEventMetaChip(
                       icon: Icons.schedule_rounded,

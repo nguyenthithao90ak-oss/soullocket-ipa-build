@@ -4,6 +4,7 @@ part of '../../home_screen.dart';
 
 extension _HomeScreenShellSyncFlows on _HomeScreenState {
   Future<void> _checkScheduleNotifs() async {
+    final msgFail = context.tr('home_chathkimtr_425245');
     final houseId = await _houseService.getCurrentHouseId();
     if (houseId == null || houseId.isEmpty) return;
     try {
@@ -32,7 +33,7 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
     } catch (e) {
       debugPrint('Failed to check schedule notifs: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể kiểm tra thông báo lịch lúc này.',
+        fallbackMessage: msgFail,
       ).message}');
     }
   }
@@ -47,29 +48,29 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: Text('Cảnh báo hệ thống',
+        title: Text(context.tr('home_cnhbohthng_21e9b4'),
             style: SLTheme.quicksand(
                 color: SLColors.danger, fontWeight: FontWeight.bold)),
         content: Text(
           isMe
-              ? 'Tài khoản của bạn đang trong thời gian chờ xóa vĩnh viễn vào lúc:\n$dateStr\n\nTrong thời gian này, bạn có thể nhấn "Hoàn tác" để lấy lại quyền và dữ liệu.'
-              : 'Người ấy đã thiết lập yêu cầu xóa tài khoản. Hệ thống sẽ xóa toàn bộ dữ liệu vào lúc:\n$dateStr\n\nChỉ người yêu cầu xóa mới có thể vào Cài đặt để "Hoàn tác".',
+              ? 'Tài khoản của bạn đang trong thời gian chờ xóa vĩnh viễn vào lúc:\n$dateStr\n\nTrong thời gian này, bạn có thể nhấn ${context.tr('home_hontc_96ce27')} để lấy lại quyền và dữ liệu.'
+              : 'Người ấy đã thiết lập yêu cầu xóa tài khoản. Hệ thống sẽ xóa toàn bộ dữ liệu vào lúc:\n$dateStr\n\nChỉ người yêu cầu xóa mới có thể vào Cài đặt để ${context.tr('home_hontc_96ce27')}.',
           style: SLTheme.quicksand(height: 1.4),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Đã hiểu', style: SLTheme.quicksand()),
+            child: Text(context.tr('home_hiu_93c4c0'), style: SLTheme.quicksand()),
           ),
           if (isMe)
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(ctx).pop();
                 try {
-                  SLNotice.showInfo(context, 'Đang hoàn tác...');
+                  SLNotice.showInfo(context, context.tr('home_anghontc_b7c262'));
                   await AuthService().undoScheduledDeletion();
                   if (!mounted) return;
-                  SLNotice.showSuccess(context, 'Hoàn tác xóa thành công!');
+                  SLNotice.showSuccess(context, context.tr('home_hontcxathn_58b732'));
                 } catch (e) {
                   if (!mounted) return;
                   SLNotice.showError(
@@ -77,7 +78,7 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
                     AppErrorMapper.resolve(
                       e,
                       fallbackMessage:
-                          'Chưa thể hoàn tác xóa tài khoản lúc này. Hãy thử lại sau.',
+                          context.tr('home_chathhontc_5110fb'),
                     ).message,
                   );
                 }
@@ -85,7 +86,7 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
               style: ElevatedButton.styleFrom(
                   backgroundColor: SLColors.primaryActive,
                   foregroundColor: Colors.white),
-              child: Text('Hoàn tác ngay',
+              child: Text(context.tr('home_hontcngay_811434'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.bold)),
             ),
         ],

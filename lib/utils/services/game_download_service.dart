@@ -12,11 +12,23 @@ class GameAssetInfo {
   final String gameId;
   final List<String> relativePaths;
   final String storagePath;
+  final String downloadSizeLabel;
 
   const GameAssetInfo({
     required this.gameId,
     required this.relativePaths,
     required this.storagePath,
+    required this.downloadSizeLabel,
+  });
+}
+
+class GameDownloadDisclosure {
+  final String sizeLabel;
+  final int fileCount;
+
+  const GameDownloadDisclosure({
+    required this.sizeLabel,
+    required this.fileCount,
   });
 }
 
@@ -37,6 +49,7 @@ class GameDownloadService extends ChangeNotifier {
     'soul_block': const GameAssetInfo(
       gameId: 'soul_block',
       storagePath: 'game_assets/soul_block',
+      downloadSizeLabel: 'khoảng 2 MB',
       relativePaths: [
         'soul_block_bgm.mp3',
         'big_win.mp3',
@@ -47,6 +60,7 @@ class GameDownloadService extends ChangeNotifier {
     'soul_rhythm': const GameAssetInfo(
       gameId: 'soul_rhythm',
       storagePath: 'game_assets/soul_rhythm',
+      downloadSizeLabel: 'khoảng 12 MB',
       relativePaths: [
         'AxelF_CrazyFrog_Tutorial.mp3',
         '2PhutHon_Phao_tutorial.mp3',
@@ -57,9 +71,22 @@ class GameDownloadService extends ChangeNotifier {
     'caro_neon': const GameAssetInfo(
       gameId: 'caro_neon',
       storagePath: '',
+      downloadSizeLabel: '0 MB',
       relativePaths: [],
     ),
   };
+
+  GameDownloadDisclosure disclosureFor(String gameId) {
+    final config = _gameConfigs[gameId];
+    if (config == null || config.relativePaths.isEmpty) {
+      return const GameDownloadDisclosure(sizeLabel: '0 MB', fileCount: 0);
+    }
+    return GameDownloadDisclosure(
+      sizeLabel: config.downloadSizeLabel,
+      fileCount: config.relativePaths.length,
+    );
+  }
+
   Future<String> getLocalPath(String gameId, String fileName) async {
     final directory = await getApplicationDocumentsDirectory();
     return '${directory.path}/games/$gameId/$fileName';
@@ -148,15 +175,19 @@ class GameDownloadService extends ChangeNotifier {
           final fullStoragePath = '${config.storagePath}/$fileName';
           String remoteUrl;
           try {
-            remoteUrl = await FirebaseStorage.instance.ref(fullStoragePath).getDownloadURL();
+            remoteUrl = await FirebaseStorage.instance
+                .ref(fullStoragePath)
+                .getDownloadURL();
           } catch (storageError) {
             final errStr = storageError.toString().toLowerCase();
             if (errStr.contains('object-not-found')) {
-              debugPrint('Game asset missing on Storage, fallback to bundled asset: $fullStoragePath');
+              debugPrint(
+                  'Game asset missing on Storage, fallback to bundled asset: $fullStoragePath');
               downloadedFiles++;
               continue;
             }
-            if (errStr.contains('unauthorized') || errStr.contains('permission-denied')) {
+            if (errStr.contains('unauthorized') ||
+                errStr.contains('permission-denied')) {
               throw 'Lỗi phân quyền: Bạn cần cập nhật Storage Rules trên Firebase Console để cho phép đọc thư mục game_assets.';
             }
             rethrow;
@@ -168,7 +199,8 @@ class GameDownloadService extends ChangeNotifier {
             onReceiveProgress: (received, total) {
               if (total != -1) {
                 double fileProgress = received / total;
-                _downloadProgress[gameId] = (downloadedFiles + fileProgress) / totalFiles;
+                _downloadProgress[gameId] =
+                    (downloadedFiles + fileProgress) / totalFiles;
                 notifyListeners();
               }
             },

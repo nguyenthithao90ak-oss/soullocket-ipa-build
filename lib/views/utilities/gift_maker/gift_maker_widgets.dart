@@ -5,7 +5,7 @@ class _GiftBackdropPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final dotPaint = Paint()..color = Colors.white.withValues(alpha: 0.06);
+    final dotPaint = Paint()..color = Colors.white.withValues(alpha: 0.12);
     const spacing = 34.0;
 
     for (double y = -spacing; y <= size.height + spacing; y += spacing) {
@@ -16,7 +16,7 @@ class _GiftBackdropPainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color = const Color(0xFFFF5D8F).withValues(alpha: 0.07)
+      ..color = const Color(0xFFFF4F93).withValues(alpha: 0.10)
       ..strokeWidth = 1;
 
     for (double x = -size.height; x <= size.width; x += 180) {
@@ -26,6 +26,22 @@ class _GiftBackdropPainter extends CustomPainter {
         linePaint,
       );
     }
+
+    final glowPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFFFF7AB8).withValues(alpha: 0.16),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCircle(
+        center: Offset(size.width * 0.16, size.height * 0.18),
+        radius: size.width * 0.52,
+      ));
+    canvas.drawCircle(
+      Offset(size.width * 0.16, size.height * 0.18),
+      size.width * 0.52,
+      glowPaint,
+    );
   }
 
   @override

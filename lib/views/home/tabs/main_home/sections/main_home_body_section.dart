@@ -31,7 +31,7 @@ class _MainHomeBodySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color(0xFF1F1A45),
       body: _ModernHomeBody(
         state: state,
         isSingle: viewData.isSingle,

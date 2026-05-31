@@ -11,10 +11,10 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
           _buildCardTitle(
             icon: Icons.wifi_off_rounded,
             title:
-                _isSingle ? 'Nhịp online gần đây' : 'Trạng thái online gần đây',
+                _isSingle ? L10nService().translate('home_nhponlineg_42a0ba') : L10nService().translate('home_trngthionl_e20b34'),
             subtitle: _isSingle
-                ? 'Đo số ngày bạn đã rời app hoặc hoạt động thưa hơn bình thường'
-                : 'Nếu một người vắng mặt quá lâu, điểm yêu thương sẽ giảm nhẹ',
+                ? L10nService().translate('home_osngybnria_cb6f93')
+                : L10nService().translate('home_numtngivng_9f01d2'),
           ),
           SLSpacing.h16,
           if (_isSingle)
@@ -85,10 +85,10 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
           SLSpacing.h4,
           Text(
             value <= 0.6
-                ? 'Đang giữ nhịp ổn'
+                ? L10nService().translate('home_angginhpn_697a9b')
                 : value <= 2
-                    ? 'Có dấu hiệu vắng nhẹ'
-                    : 'Nên ghé app thường hơn',
+                    ? L10nService().translate('home_cduhiuvngn_c47464')
+                    : L10nService().translate('home_nnghappthn_c0748e'),
             style: SLTheme.quicksand(
               fontSize: 11,
               fontWeight: FontWeight.w800,
@@ -112,9 +112,9 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
         children: [
           _buildCardTitle(
             icon: Icons.balance_rounded,
-            title: 'Đóng góp cho tình yêu',
+            title: L10nService().translate('home_nggpchotnh_b78922'),
             subtitle:
-                'Tính theo nhật ký, album, cảm xúc tích cực và lượt tương tác',
+                L10nService().translate('home_tnhtheonht_08e94d'),
           ),
           SLSpacing.h16,
           Row(
@@ -174,7 +174,7 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
           ),
           SLSpacing.h12,
           Text(
-            'Nếu một bên đang thấp hơn nhiều, chỉ cần thêm vài kỷ niệm nhỏ hoặc ghé xem nhật ký của nhau thường hơn là thanh này sẽ cân lại rất nhanh.',
+            L10nService().translate('home_numtbnangt_32b73c'),
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w800,
@@ -228,15 +228,15 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
         children: [
           _buildCardTitle(
             icon: Icons.self_improvement_rounded,
-            title: 'Thói quen của bạn',
-            subtitle: 'Phân tích từ nhịp ghi chép và cách bạn lưu giữ kỷ niệm',
+            title: L10nService().translate('home_thiquencab_8114d9'),
+            subtitle: L10nService().translate('home_phntchtnhp_774d24'),
           ),
           SLSpacing.h16,
           Row(
             children: [
               Expanded(
                 child: _buildMiniMetric(
-                  label: 'Hoạt động/ngày',
+                  label: L10nService().translate('home_hotngngy_0b53ec'),
                   value: insight.interactionRate.toStringAsFixed(1),
                   color: const Color(0xFFF59E0B),
                 ),
@@ -244,7 +244,7 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
               SLSpacing.w12,
               Expanded(
                 child: _buildMiniMetric(
-                  label: 'Yêu thích',
+                  label: L10nService().translate('home_yuthch_2958ea'),
                   value: _favoriteActivityLabel(insight),
                   color: const Color(0xFF8B5CF6),
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/services/export_service.dart';
@@ -30,7 +31,7 @@ class DiaryAccessLockedView extends StatelessWidget {
                 ),
                 SLSpacing.h24,
                 Text(
-                  'NHẬT KÝ RIÊNG TƯ',
+                  context.tr('home_nhtkringt_e0cba8'),
                   style: SLTheme.quicksand(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -39,7 +40,7 @@ class DiaryAccessLockedView extends StatelessWidget {
                 ),
                 SLSpacing.h12,
                 Text(
-                  'Mở khóa để xem những tâm sự và kỷ niệm chỉ thuộc về hai bạn.',
+                  context.tr('home_mkhaxemnhn_77ff5c'),
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     fontSize: 14,
@@ -48,7 +49,7 @@ class DiaryAccessLockedView extends StatelessWidget {
                 ),
                 SLSpacing.gapH(32),
                 SLTheme.primaryButton(
-                  text: 'MỞ KHÓA NGAY',
+                  text: context.tr('home_mkhangay_0a4b1a'),
                   onPressed: onUnlock,
                 ),
               ],
@@ -93,7 +94,7 @@ class DiaryHeaderSection extends StatelessWidget {
                   colors: [SLColors.primary, SLColors.secondary],
                 ).createShader(bounds),
                 child: Text(
-                  'DIARY & MEMORIES',
+                  context.tr('diary_memories_title').toUpperCase(),
                   style: SLTheme.quicksand(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -157,10 +158,11 @@ class DiaryExportMenuButton extends StatelessWidget {
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: Colors.white.withValues(alpha: 0.82), width: 1.2),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.82), width: 1.2),
       ),
       child: IconButton(
-        tooltip: 'Xuất HTML',
+        tooltip: context.tr('home_xuthtml_c57dd1'),
         padding: EdgeInsets.zero,
         icon: const Icon(
           Icons.ios_share_rounded,
@@ -174,8 +176,8 @@ class DiaryExportMenuButton extends StatelessWidget {
               return;
             }
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Chưa có mã nhà để xuất dữ liệu.'),
+              SnackBar(
+                content: Text(context.tr('home_chacmnhxut_151ec7')),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -192,9 +194,8 @@ class DiaryExportMenuButton extends StatelessWidget {
               return;
             }
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content:
-                    Text('Chưa thể xuất dữ liệu lúc này. Vui lòng thử lại.'),
+              SnackBar(
+                content: Text(context.tr('home_chathxutdl_223d08')),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -246,7 +247,7 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
           Expanded(
             child: DiaryTabBtn(
               id: 'memory',
-              label: 'KỶ NIỆM',
+              label: context.tr('home_knim_262759'),
               icon: Icons.photo_library_rounded,
               active: currentTab == 'memory',
               palette: _paletteForSection('memory'),
@@ -261,7 +262,7 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
           Expanded(
             child: DiaryTabBtn(
               id: 'diary',
-              label: 'TÂM SỰ',
+              label: context.tr('home_tms_f029b6'),
               icon: Icons.auto_awesome_rounded,
               active: currentTab == 'diary',
               palette: _paletteForSection('diary'),
@@ -303,14 +304,14 @@ class DiaryHouseSetupCard extends StatelessWidget {
       border: Border.all(color: borderColor, width: 1.4),
       boxShadow: [
         BoxShadow(
-          color:
-              const Color(0xFFFF73A6).withValues(alpha: strongShadow ? 0.18 : 0.11),
+          color: const Color(0xFFFF73A6)
+              .withValues(alpha: strongShadow ? 0.18 : 0.11),
           blurRadius: strongShadow ? 28 : 18,
           offset: const Offset(0, 10),
         ),
         BoxShadow(
-          color:
-              const Color(0xFF6BC6FF).withValues(alpha: strongShadow ? 0.12 : 0.08),
+          color: const Color(0xFF6BC6FF)
+              .withValues(alpha: strongShadow ? 0.12 : 0.08),
           blurRadius: strongShadow ? 22 : 16,
           offset: const Offset(0, 6),
         ),
@@ -360,7 +361,7 @@ class DiaryHouseSetupCard extends StatelessWidget {
           FilledButton.icon(
             onPressed: () => onRetry(),
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Thử lại'),
+            label: Text(context.tr('home_thli_4dffdf')),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFD81B60),
               foregroundColor: Colors.white,
@@ -425,7 +426,7 @@ class DiaryPostsEmptyStateCard extends StatelessWidget {
           const Text('💌', style: TextStyle(fontSize: 42)),
           SLSpacing.h12,
           Text(
-            'Chưa có tâm sự nào...',
+            context.tr('home_chactmsno_a4ad4d'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: const Color(0xFF6F7B90),
@@ -435,7 +436,7 @@ class DiaryPostsEmptyStateCard extends StatelessWidget {
           ),
           SLSpacing.h8,
           Text(
-            'Viết dòng cảm xúc đầu tiên của bạn ở khung phía trên nhé.',
+            context.tr('home_vitdngcmxc_6ac761'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: const Color(0xFF8A97A9),
@@ -469,7 +470,7 @@ class DiaryMemoryEmptyStateCard extends StatelessWidget {
             ),
             SLSpacing.h24,
             Text(
-              'Chưa có kỷ niệm nào',
+              context.tr('home_chacknimno_c1df72'),
               style: SLTheme.quicksand(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
@@ -478,7 +479,7 @@ class DiaryMemoryEmptyStateCard extends StatelessWidget {
             ),
             SLSpacing.h8,
             Text(
-              'Bắt đầu lưu giữ khoảnh khắc đầu tiên của hai bạn.',
+              context.tr('home_btulugikho_acb3de'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 12,
@@ -496,6 +497,7 @@ class DiaryMemoryEmptyStateCard extends StatelessWidget {
 class DiarySelectionBottomBar extends StatelessWidget {
   final int selectedCount;
   final VoidCallback onExit;
+  final VoidCallback onSelectAll;
   final VoidCallback onSave;
   final VoidCallback onShare;
   final VoidCallback onDelete;
@@ -504,6 +506,7 @@ class DiarySelectionBottomBar extends StatelessWidget {
     super.key,
     required this.selectedCount,
     required this.onExit,
+    required this.onSelectAll,
     required this.onSave,
     required this.onShare,
     required this.onDelete,
@@ -531,15 +534,53 @@ class DiarySelectionBottomBar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          Expanded(
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: SLColors.textPrimary,
+                  ),
+                  iconSize: 22,
+                  onPressed: onExit,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 40,
+                    height: 40,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    L10nService().format(
+                      'diary_selected_photos_count',
+                      {'count': selectedCount},
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      color: SLColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
                 icon: const Icon(
-                  Icons.close_rounded,
-                  color: SLColors.textPrimary,
+                  Icons.select_all_rounded,
+                  color: Color(0xFF38A169),
                 ),
+                tooltip: context.tr('util_chnttc_2969f7'),
                 iconSize: 22,
-                onPressed: onExit,
+                onPressed: onSelectAll,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints.tightFor(
                   width: 40,
@@ -547,19 +588,6 @@ class DiarySelectionBottomBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                'Đã chọn $selectedCount ảnh',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                  color: SLColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Row(
-            children: [
               IconButton(
                 icon: const Icon(
                   Icons.download_rounded,
@@ -579,7 +607,7 @@ class DiarySelectionBottomBar extends StatelessWidget {
                   Icons.link_rounded,
                   color: Color(0xFF5C71D8),
                 ),
-                tooltip: 'Tạo liên kết',
+                tooltip: context.tr('home_tolinkt_af40c0'),
                 iconSize: 22,
                 onPressed: onShare,
                 padding: EdgeInsets.zero,

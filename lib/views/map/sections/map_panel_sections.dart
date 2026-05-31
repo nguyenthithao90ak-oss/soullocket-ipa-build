@@ -10,10 +10,10 @@ extension _MapPanelSectionsExt on _MapScreenState {
             ? const Color(0xFFF59E0B)
             : _kMapTextMuted;
     final label = hasAnyLive
-        ? 'Đang trực tiếp'
+        ? context.tr('map_angtrctip_5ad65a')
         : hasAnyHistory
-            ? 'Vị trí gần nhất'
-            : 'Chưa có dữ liệu';
+            ? context.tr('map_vtrgnnht_b0d47a')
+            : context.tr('map_chacdliu_08e970');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -300,8 +300,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
                               Expanded(
                                 child: Text(
                                   _isSingleRelationship
-                                      ? 'Tổng quan vị trí'
-                                      : 'Tổng quan di chuyển',
+                                      ? context.tr('map_tngquanvtr_d8954d')
+                                      : context.tr('map_tngquandic_6b8ec0'),
                                   style: SLTheme.quicksand(
                                     fontSize: 15.5,
                                     fontWeight: FontWeight.w900,
@@ -315,7 +315,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                           SLSpacing.h4,
                           Text(
                             uiSnap.isFetchingRoute && !_isSingleRelationship
-                                ? 'Đang cập nhật quãng đường từ dữ liệu mới nhất...'
+                                ? context.tr('map_angcpnhtqu_4552d8')
                                 : uiSnap.mapInsightText,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -337,7 +337,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       ? [
                           Expanded(
                             child: _buildMetricTile(
-                              label: 'Trạng thái',
+                              label: context.tr('map_trngthi_0fbc27'),
                               value: uiSnap.distanceText,
                               accent: _kMapPinkDeep,
                             ),
@@ -346,7 +346,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       : [
                           Expanded(
                             child: _buildMetricTile(
-                              label: 'Khoảng cách',
+                              label: context.tr('map_khongcch_540478'),
                               value: uiSnap.distanceText,
                               accent: _kMapPinkDeep,
                             ),
@@ -354,7 +354,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                           SLSpacing.w8,
                           Expanded(
                             child: _buildMetricTile(
-                              label: 'Quãng đường',
+                              label: context.tr('map_qungng_20de01'),
                               value: uiSnap.routeDistanceText,
                               accent: _kMapBlue,
                             ),
@@ -362,7 +362,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                           SLSpacing.w8,
                           Expanded(
                             child: _buildMetricTile(
-                              label: 'Thời gian',
+                              label: context.tr('map_thigian_84864f'),
                               value: uiSnap.etaText,
                               accent: const Color(0xFF8B5CF6),
                             ),
@@ -403,8 +403,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                 children: [
                                   Text(
                                     showGpsAction
-                                        ? 'GPS của bạn đang tắt'
-                                        : 'Lưu ý bản đồ',
+                                        ? context.tr('map_gpscabnang_c7f5e2')
+                                        : context.tr('map_lubn_5eaf5e'),
                                     style: SLTheme.quicksand(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.w900,
@@ -433,7 +433,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                 ? null
                                 : () => _bootstrapLocationTracking(),
                             icon: const Icon(Icons.my_location_rounded, size: 16),
-                            label: const Text('Bật GPS của bạn'),
+                            label: Text(context.tr('map_btgpscabn_122e9b')),
                           ),
                         ],
                       ],
@@ -484,7 +484,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Cấu hình GPS',
+                                    context.tr('map_cuhnhgps_1db812'),
                                     style: SLTheme.quicksand(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w900,
@@ -521,7 +521,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                               onPressed: () => _bootstrapLocationTracking(),
                               icon: const Icon(Icons.gps_fixed_rounded, size: 18),
                               label: Text(
-                                'BẬT CẬP NHẬT GPS NGAY',
+                                context.tr('map_btcpnhtgps_66414d'),
                                 style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
                               ),
                             ),
@@ -650,10 +650,10 @@ extension _MapPanelSectionsExt on _MapScreenState {
     required bool hasHistory,
   }) {
     final statusText = isLive
-        ? 'GPS đang bật'
+        ? context.tr('map_gpsangbt_1f3553')
         : hasHistory
-            ? 'Vị trí cuối'
-            : 'Chưa bật GPS';
+            ? context.tr('map_vtrcui_93fc06')
+            : context.tr('map_chabtgps_aa3568');
     final statusColor = isLive
         ? const Color(0xFF22C55E)
         : hasHistory
@@ -828,7 +828,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
           _buildSectionTitle(
             icon: Icons.route_rounded,
             accent: _kMapBlue,
-            title: 'Lịch sử di chuyển',
+            title: context.tr('map_lchsdichuy_2cc14d'),
           ),
           SLSpacing.h12,
           Row(
@@ -845,7 +845,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                     SLSpacing.w8,
                     Expanded(
                       child: _buildMetricTile(
-                        label: 'Điểm',
+                        label: context.tr('map_im_559d58'),
                         value: '${_historyBundle.totalPoints}',
                         accent: const Color(0xFF7C3AED),
                       ),
@@ -872,7 +872,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                     SLSpacing.w8,
                     Expanded(
                       child: _buildMetricTile(
-                        label: 'Điểm',
+                        label: context.tr('map_im_559d58'),
                         value: '${_historyBundle.totalPoints}',
                         accent: const Color(0xFF7C3AED),
                       ),
@@ -884,10 +884,10 @@ extension _MapPanelSectionsExt on _MapScreenState {
             _buildInlineEmptyState(
               icon: Icons.route_rounded,
               accent: _kMapBlue,
-              title: 'Chưa có lộ trình hôm nay',
+              title: context.tr('map_chacltrnhh_5732db'),
               subtitle: _isSingleRelationship
-                  ? 'Bật GPS và di chuyển để bản đồ tự lưu lại từng điểm của bạn.'
-                  : 'Khi cả hai bật GPS, lộ trình trong ngày sẽ hiện ở đây.',
+                  ? context.tr('map_btgpsvdich_53ab60')
+                  : context.tr('map_khichaibtg_168803'),
             )
           else
             Text(
@@ -920,7 +920,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
           _buildSectionTitle(
             icon: Icons.push_pin_rounded,
             accent: _kMapPinkDeep,
-            title: 'Kỷ niệm và check-in',
+            title: context.tr('map_knimvcheck_7146ae'),
           ),
           SLSpacing.h8,
           Row(
@@ -945,7 +945,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
           if (_memories.isNotEmpty) ...[
             SLSpacing.h12,
             Text(
-              'Ghim kỷ niệm gần đây',
+              context.tr('map_ghimknimgn_1d990b'),
               style: SLTheme.quicksand(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w900,
@@ -972,7 +972,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
           if (_checkins.isNotEmpty) ...[
             SLSpacing.h12,
             Text(
-              'Check-in mới nhất',
+              context.tr('map_checkinmin_312cc4'),
               style: SLTheme.quicksand(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w900,
@@ -998,10 +998,10 @@ extension _MapPanelSectionsExt on _MapScreenState {
             _buildInlineEmptyState(
               icon: Icons.add_location_alt_rounded,
               accent: _kMapPinkDeep,
-              title: 'Chưa có địa điểm nào',
+              title: context.tr('map_chacaimno_bc9233'),
               subtitle:
-                  'Tạo check-in đầu tiên để ghim một nơi đáng nhớ lên bản đồ.',
-              actionLabel: 'Tạo check-in',
+                  context.tr('map_tocheckinu_d971fe'),
+              actionLabel: context.tr('map_tocheckin_6fcea2'),
               onTap: _showCheckinSheetDialog,
             ),
           ],

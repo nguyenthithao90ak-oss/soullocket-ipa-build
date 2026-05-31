@@ -3,7 +3,7 @@ part of '../map_screen.dart';
 extension _MapDetailDialogsExt on _MapScreenState {
   Future<void> _maybeShowFirstMapNotice() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await OfflineCacheService.getPrefs();
       final houseScope =
           widget.houseId.trim().isEmpty ? 'global' : widget.houseId.trim();
       final seenKey = 'il_map_first_notice_seen_$houseScope';
@@ -73,7 +73,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                               ),
                             ),
                             child: Text(
-                              'LƯU Ý KHI XEM BẢN ĐỒ',
+                              context.tr('map_lukhixembn_40f4a7'),
                               style: SLTheme.quicksand(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w900,
@@ -84,7 +84,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                           ),
                           SLSpacing.h8,
                           Text(
-                            'Bản đồ hiện phù hợp để theo dõi và xem giải trí',
+                            context.tr('map_bnhinphhpt_f90135'),
                             style: SLTheme.quicksand(
                               fontSize: 19,
                               fontWeight: FontWeight.w900,
@@ -99,7 +99,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Một vài dữ liệu trên bản đồ có thể chưa chính xác tuyệt đối. Màn này đang được hoàn thiện dần để ổn định hơn theo thời gian.',
+                  context.tr('map_mtvidliutr_0da4d7'),
                   style: SLTheme.quicksand(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
@@ -111,25 +111,25 @@ extension _MapDetailDialogsExt on _MapScreenState {
                 _buildMapIntroNoticeItem(
                   icon: Icons.celebration_rounded,
                   color: const Color(0xFFE11D48),
-                  title: 'Chủ yếu để xem vui và tham khảo',
+                  title: context.tr('map_chyuxemvui_26c6ff'),
                   message:
-                      'Không nên dùng màn này cho định vị chính xác, di chuyển quan trọng hoặc các quyết định cần độ đúng tuyệt đối.',
+                      context.tr('map_khngnndngm_a1ac9c'),
                 ),
                 SLSpacing.h8,
                 _buildMapIntroNoticeItem(
                   icon: Icons.gps_not_fixed_rounded,
                   color: const Color(0xFF2563EB),
-                  title: 'Vị trí có thể có sai số',
+                  title: context.tr('map_vtrcthcsai_88f9c9'),
                   message:
-                      'Sai lệch có thể đến từ GPS, mạng, thiết bị, pin, quyền vị trí hoặc khi một trong hai bạn đang tắt chia sẻ vị trí hay chạy nền.',
+                      context.tr('map_sailchcthn_086273'),
                 ),
                 SLSpacing.h8,
                 _buildMapIntroNoticeItem(
                   icon: Icons.construction_rounded,
                   color: const Color(0xFFCA8A04),
-                  title: 'Dự án vẫn đang phát triển',
+                  title: context.tr('map_dnvnangpht_a15ba6'),
                   message:
-                      'Khoảng cách, thời gian, lộ trình, check-in và lịch sử di chuyển sẽ còn được tối ưu thêm ở các bản cập nhật sau.',
+                      context.tr('map_khongcchth_122c13'),
                 ),
                 const SizedBox(height: 10),
                 Container(
@@ -144,7 +144,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                     border: Border.all(color: const Color(0xFFFFDEC9)),
                   ),
                   child: Text(
-                    'Chúc hai bạn xem vui vẻ. Nếu thấy vị trí hoặc lộ trình chưa đúng, cứ tiếp tục góp ý để bản đồ hoàn thiện hơn nhé.',
+                    context.tr('map_chchaibnxe_d4d9a9'),
                     style: SLTheme.quicksand(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w800,
@@ -159,7 +159,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                   child: FilledButton.icon(
                     onPressed: () => Navigator.pop(ctx),
                     icon: const Icon(Icons.favorite_rounded),
-                    label: const Text('Đã hiểu'),
+                    label: Text(context.tr('map_hiu_93c4c0')),
                     style: FilledButton.styleFrom(
                       backgroundColor: _kMapPinkDeep,
                       foregroundColor: Colors.white,
@@ -333,7 +333,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
               _buildMetaLine(
                 Icons.schedule_rounded,
                 checkin.ts == null
-                    ? 'Không rõ thời gian'
+                    ? context.tr('map_khngrthigi_3a8077')
                     : _formatFullDate(checkin.ts!),
               ),
               if (checkin.author.trim().isNotEmpty)
@@ -420,7 +420,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
               _buildMetaLine(
                 Icons.schedule_rounded,
                 memory.ts == null
-                    ? 'Không rõ thời gian'
+                    ? context.tr('map_khngrthigi_3a8077')
                     : _formatFullDate(memory.ts!),
               ),
               if (memory.author.trim().isNotEmpty)

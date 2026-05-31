@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 import '../../core/sl_theme.dart';
@@ -119,36 +120,36 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
             ),
             selectedIconTheme: const IconThemeData(color: Color(0xFFFF4B91)),
             unselectedIconTheme: const IconThemeData(color: Color(0xFF9AA8C4)),
-            destinations: const [
+            destinations: [
               NavigationRailDestination(
-                icon: Icon(Icons.dashboard_rounded),
-                label: Text('Tổng quan'),
+                icon: const Icon(Icons.dashboard_rounded),
+                label: Text(context.tr('admin_tngquan_09c0fd')),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.people_alt_rounded),
-                label: Text('Nhà & Users'),
+                icon: const Icon(Icons.people_alt_rounded),
+                label: Text(context.tr('admin_nhusers_ee6459')),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.content_paste_search_rounded),
-                label: Text('Nội dung'),
+                icon: const Icon(Icons.content_paste_search_rounded),
+                label: Text(context.tr('admin_nidung_ee7ca5')),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.card_giftcard_rounded),
-                label: Text('Phần thưởng'),
+                icon: const Icon(Icons.card_giftcard_rounded),
+                label: Text(context.tr('admin_phnthng_060774')),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.payment_rounded),
-                label: Text('Thanh toán'),
+                icon: const Icon(Icons.payment_rounded),
+                label: Text(context.tr('admin_thanhton_d555e4')),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.security_rounded),
-                label: Text('Chống lạm dụng'),
+                icon: const Icon(Icons.security_rounded),
+                label: Text(context.tr('admin_chnglmdng_a289dc')),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.settings_applications_rounded),
-                label: Text('Cấu hình & TB'),
+                icon: const Icon(Icons.settings_applications_rounded),
+                label: Text(context.tr('admin_cuhnhtb_f67357')),
               ),
-              NavigationRailDestination(
+              const NavigationRailDestination(
                 icon: Icon(Icons.history_rounded),
                 label: Text('Audit Logs'),
               ),
@@ -203,7 +204,7 @@ class AdminAccessDenied extends StatelessWidget {
                   ),
                   SLSpacing.h16,
                   Text(
-                    'Tài khoản chưa có quyền admin',
+                    context.tr('admin_tikhonchac_cf5bb6'),
                     style: SLTheme.quicksand(
                       color: Colors.white,
                       fontSize: 26,
@@ -212,7 +213,7 @@ class AdminAccessDenied extends StatelessWidget {
                   ),
                   SLSpacing.h12,
                   Text(
-                    '${user.email ?? 'Tài khoản hiện tại'} đăng nhập thành công nhưng chưa có custom claim admin hợp lệ.',
+                    '${user.email ?? context.tr('admin_tikhonhint_4c8a88')} đăng nhập thành công nhưng chưa có custom claim admin hợp lệ.',
                     style: SLTheme.quicksand(
                       color: const Color(0xFFB7C1D6),
                       fontSize: 14,
@@ -236,7 +237,7 @@ class AdminAccessDenied extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        'Đăng xuất',
+                        context.tr('admin_ngxut_0b3c82'),
                         style: SLTheme.quicksand(
                           color: Colors.white,
                           fontSize: 15,

@@ -82,7 +82,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
         _spaceChromeVisible = false;
       });
       await _saveLocalSettings();
-      _showMessage('Đã lưu không gian đếm.');
+      if (mounted) _showMessage('Đã lưu không gian đếm.');
       return;
     }
 
@@ -459,7 +459,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
         _avatarUrl2 = result.avatarUrl2;
       });
       await _saveLocalSettings();
-      _showMessage('Đã lưu không gian đếm.');
+      if (mounted) _showMessage('Đã lưu không gian đếm.');
       return;
     }
 

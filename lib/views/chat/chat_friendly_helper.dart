@@ -1,59 +1,61 @@
 import 'dart:math';
 
+import '../../services/l10n_service.dart';
+
 class ChatFriendlyHelper {
-  static const List<String> greetings = [
-    'Chào bạn nhé! Chúc bạn một ngày thật tuyệt vời! 🌟',
-    'Hí chào bạn! Rất vui được gặp lại bạn. 👋',
-    'Chào bạn! SoulLocket luôn ở đây cùng bạn nè. ✨',
-    'Chào buổi sáng/trưa/tối tốt lành nhé bạn yêu! 🌈',
-    'Hello! Chúc bạn luôn ngập tràn niềm vui và hạnh phúc. ❤️',
+  static List<String> get greetings => [
+    L10nService().translate('chat_friendly_00'),
+    L10nService().translate('chat_friendly_01'),
+    L10nService().translate('chat_friendly_02'),
+    L10nService().translate('chat_friendly_03'),
+    L10nService().translate('chat_friendly_04'),
   ];
 
-  static const List<String> wishes = [
-    'Chúc bạn luôn xinh đẹp, yêu đời và gặp nhiều may mắn! 🍀',
-    'Mong mọi điều tốt đẹp nhất sẽ đến với bạn trong hôm nay. 🌻',
-    'Chúc bạn có những phút giây thật thư giãn và ý nghĩa. ☕',
-    'Mãi rạng rỡ và tự tin như thế này nhé! 🌸',
-    'Chúc bạn ngủ ngon và có những giấc mơ thật đẹp. 🌙',
+  static List<String> get wishes => [
+    L10nService().translate('chat_friendly_05'),
+    L10nService().translate('chat_friendly_06'),
+    L10nService().translate('chat_friendly_07'),
+    L10nService().translate('chat_friendly_08'),
+    L10nService().translate('chat_friendly_09'),
   ];
 
-  static const List<String> encouragements = [
-    'Bạn đang làm rất tốt rồi, cố gắng lên nhé! 💪',
-    'Mọi chuyện rồi sẽ ổn thôi, đừng lo lắng quá nha. 🤗',
-    'Hãy luôn tin tưởng vào bản thân mình, bạn tuyệt vời lắm! 💎',
-    'Đừng quên dành thời gian yêu thương chính mình nhé. ❤️',
-    'Cố gắng một chút nữa thôi, thành công đang đợi bạn phía trước. 🚀',
+  static List<String> get encouragements => [
+    L10nService().translate('chat_friendly_10'),
+    L10nService().translate('chat_friendly_11'),
+    L10nService().translate('chat_friendly_12'),
+    L10nService().translate('chat_friendly_13'),
+    L10nService().translate('chat_friendly_14'),
   ];
 
-  static const List<String> offlineResponses = [
-    'Hiện tại mình đang offline, nhưng đừng lo, mình vẫn luôn quan tâm bạn! 🧸',
-    'Kết nối hơi gián đoạn một chút, nhưng tình cảm của mình vẫn đầy đủ nè. 📶❤️',
-    'Mạng hơi yếu nhưng lời chúc của mình dành cho bạn vẫn cực mạnh nha! ✨',
-    'Dù mất kết nối, nhưng mình vẫn muốn gửi tới bạn một cái ôm thật ấm. 🫂',
-    'Chờ một lát mạng ổn định lại rồi chúng mình tiếp tục trò chuyện nhé! ⏳',
+  static List<String> get offlineResponses => [
+    L10nService().translate('chat_friendly_15'),
+    L10nService().translate('chat_friendly_16'),
+    L10nService().translate('chat_friendly_17'),
+    L10nService().translate('chat_friendly_18'),
+    L10nService().translate('chat_friendly_19'),
   ];
 
-  static const Map<String, List<String>> qaPairs = {
+  static Map<String, List<String>> get qaPairs => {
     'mật khẩu|pass': [
-      'Để bảo vệ bạn, mình không thể xem hay đổi mật khẩu giúp bạn được. Bạn vào mục "Cài đặt" -> "Bảo mật" để tự quản lý nhé! 🔒',
-      'Bạn muốn đổi mật khẩu à? Hãy vào phần thiết lập Bảo mật trong app để thực hiện an toàn nhất nha. 🛡️',
+      L10nService().translate('chat_friendly_20'),
+      L10nService().translate('chat_friendly_21'),
     ],
     'buồn|chán|mệt': [
-      'Mình ở đây nghe bạn tâm sự nè. Hít một hơi thật sâu, mọi chuyện rồi sẽ ổn thôi mà. 🤗',
-      'Đừng buồn nữa nha, bạn tuyệt vời hơn bạn nghĩ nhiều đó. Gửi tới bạn một cái ôm thật chặt! 🫂',
-      'Nếu mệt quá thì nghỉ ngơi một chút nhé. SoulLocket luôn là nơi bình yên dành cho bạn. ✨',
+      L10nService().translate('chat_friendly_22'),
+      L10nService().translate('chat_friendly_23'),
+      L10nService().translate('chat_friendly_24'),
     ],
     'yêu|thích': [
-      'Tình yêu là điều kỳ diệu nhất thế gian. Mong bạn và người ấy luôn hạnh phúc bên nhau! ❤️',
-      'Yêu thương chính mình cũng quan trọng lắm đó. Hãy luôn rạng rỡ như thế nhé! 🌸',
+      L10nService().translate('chat_friendly_25'),
+      L10nService().translate('chat_friendly_26'),
     ],
     'tên|là ai': [
-      'Mình là Trợ lý thân thiện của SoulLocket, rất vui được bầu bạn cùng bạn! 🤖💖',
-      'Bạn cứ gọi mình là bạn đồng hành nhé, mình luôn ở đây để lắng nghe bạn. ✨',
+      L10nService().translate('chat_friendly_27'),
+      L10nService().translate('chat_friendly_28'),
     ],
     'định vị|bản đồ|vị trí': [
-      'Tính năng Bản đồ giúp bạn và người ấy luôn thấy nhau. Đừng quên cấp quyền vị trí để hoạt động chính xác nha! 📍',
-      'Bạn có thể ghim những kỷ niệm đẹp trên bản đồ để lưu giữ khoảnh khắc của hai người đó. 🗺️✨',
+      L10nService().translate('chat_friendly_29'),
+      L10nService().translate('chat_friendly_30'),
     ],
   };
 

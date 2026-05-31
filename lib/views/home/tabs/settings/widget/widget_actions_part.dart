@@ -51,20 +51,20 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
 
   Future<void> _openPremiumStoreFromWidgetPanel() async {
     if (!AppConfig.isPurchaseEnabled) {
-      _showToast('Gói PRO đang tạm ẩn trong bản review.', success: false);
+      _showToast(context.tr('home_mcnyangtmn_fdd99c'), success: false);
       return;
     }
 
     final houseId = _houseId?.trim();
     if (houseId == null || houseId.isEmpty) {
-      _showToast('Hãy vào nhà trước khi mở gói PRO.', success: false);
+      _showToast(context.tr('home_hyvonhtrck_c33334'), success: false);
       return;
     }
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => PremiumStoreScreen(
           houseId: houseId,
-          myName: _nameU1.trim().isEmpty ? 'Bạn' : _nameU1.trim(),
+          myName: _nameU1.trim().isEmpty ? context.tr('home_bn_1fd75b') : _nameU1.trim(),
         ),
       ),
     );
@@ -73,8 +73,15 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
 
   Future<void> _handleWidgetThemeChanged(String value) async {
     if (value == 'premium' && !_isVipActive) {
+      if (!AppConfig.isPurchaseEnabled) {
+        _showToast(
+          context.tr('home_lachnnyang_d9f089'),
+          success: false,
+        );
+        return;
+      }
       _showToast(
-        'Nền Aurora PRO chỉ mở cho tài khoản PRO.',
+        context.tr('home_lachnnycha_2b9ddb'),
         success: false,
       );
       await _openPremiumStoreFromWidgetPanel();

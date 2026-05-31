@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -35,23 +36,23 @@ class GiftMakerScreen extends StatefulWidget {
   List<Color> _giftColors(GiftType type) {
     switch (type) {
       case GiftType.giftBox:
-        return const [Color(0xFFFF4F64), Color(0xFFFF879D)];
+        return const [Color(0xFFFF2D75), Color(0xFFFF7A9E)];
       case GiftType.loveLetter:
-        return const [Color(0xFFFF5C78), Color(0xFFFFA46A)];
+        return const [Color(0xFFFF3D8E), Color(0xFFFFB15E)];
       case GiftType.surpriseEgg:
-        return const [Color(0xFF53B54E), Color(0xFFA7E163)];
+        return const [Color(0xFF20C997), Color(0xFFC7F464)];
       case GiftType.bubbleWrap:
-        return const [Color(0xFF94A3B8), Color(0xFFCBD5E1)];
+        return const [Color(0xFF7C8CF8), Color(0xFFC4B5FD)];
       case GiftType.scratchReveal:
-        return const [Color(0xFFF6D11A), Color(0xFFFFE58A)];
+        return const [Color(0xFFFFC700), Color(0xFFFFF0A3)];
       case GiftType.happyBirthday:
-        return const [Color(0xFF6C5CE7), Color(0xFFA78BFA)];
+        return const [Color(0xFF7C3AED), Color(0xFFFF6EC7)];
       case GiftType.yourHeart:
-        return const [Color(0xFFFF6FA8), Color(0xFFFFA7D1)];
+        return const [Color(0xFFFF1F70), Color(0xFFFF9DD4)];
       case GiftType.lovelyTurkey:
-        return const [Color(0xFFF57901), Color(0xFFFFB14A)];
+        return const [Color(0xFFFF7A1A), Color(0xFFFFD166)];
       case GiftType.moonWish:
-        return const [Color(0xFF4753D6), Color(0xFF93A7FF)];
+        return const [Color(0xFF4F46E5), Color(0xFF6EE7F9)];
     }
   }
 
@@ -68,23 +69,23 @@ class GiftMakerScreen extends StatefulWidget {
   String _giftTeaser(GiftType type) {
     switch (type) {
       case GiftType.giftBox:
-        return 'Chạm nhiều lần để mở lời nhắn cuối.';
+        return L10nService().translate('util_chmnhiulnm_bd465c');
       case GiftType.loveLetter:
-        return 'Phong thư riêng, mở ra nhẹ nhàng hơn.';
+        return L10nService().translate('util_phongthrin_55547c');
       case GiftType.surpriseEgg:
-        return 'Bóc từng lớp để mở ra bất ngờ bên trong.';
+        return L10nService().translate('util_bctnglpmra_7bf20a');
       case GiftType.bubbleWrap:
-        return 'Bóp hết bong bóng rồi mới mở được quà.';
+        return L10nService().translate('util_bphtbongbn_dc14ac');
       case GiftType.scratchReveal:
-        return 'Cào lớp phủ để lộ món quà bên dưới.';
+        return L10nService().translate('util_colpphlmnq_574521');
       case GiftType.happyBirthday:
-        return 'Một kiểu quà rực rỡ cho dịp chúc mừng.';
+        return L10nService().translate('util_mtkiuqurcr_103840');
       case GiftType.yourHeart:
-        return 'Một nhịp tim lớn cho lời nhắn thật rõ ràng.';
+        return L10nService().translate('util_mtnhptimln_3d6763');
       case GiftType.lovelyTurkey:
-        return 'Vui nhộn, ấm áp và hợp không khí mùa lễ.';
+        return L10nService().translate('util_vuinhnmpvh_58c9ec');
       case GiftType.moonWish:
-        return 'Dịu dàng hơn, hợp lời chúc đêm muộn.';
+        return L10nService().translate('util_dudnghnhpl_f12824');
     }
   }
 
@@ -109,9 +110,14 @@ class GiftMakerScreen extends StatefulWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.24),
-            blurRadius: 28,
-            offset: const Offset(0, 18),
+            color: colors.first.withValues(alpha: 0.32),
+            blurRadius: 34,
+            offset: const Offset(0, 20),
+          ),
+          BoxShadow(
+            color: const Color(0xFF17192E).withValues(alpha: 0.20),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -129,7 +135,7 @@ class GiftMakerScreen extends StatefulWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  'Gợi ý kiểu trình bày',
+                  context.tr('util_gikiutrnhb_90c66b'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
@@ -138,7 +144,7 @@ class GiftMakerScreen extends StatefulWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                'Tạo quà theo kiểu full màn hình.',
+                context.tr('util_toqutheoki_254ac4'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w900,
                   fontSize: wide ? 30 : 24,
@@ -148,7 +154,7 @@ class GiftMakerScreen extends StatefulWidget {
               ),
               SLSpacing.h10,
               Text(
-                'Giữ cách mở quà như cũ, nhưng phần nhìn nổi bật hơn và xem trước ngay trên đầu màn.',
+                context.tr('util_gicchmqunh_ae3147'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w700,
                   color: Colors.white.withValues(alpha: 0.82),
@@ -255,11 +261,13 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   bool _isCreating = false;
   String? _lastGiftId;
   File? _selectedImage;
+  List<GiftData> _sentGiftCache = const <GiftData>[];
   bool _didPromptPendingUploadRetry = false;
 
   String get _pendingUploadKey => '$_pendingUploadKeyPrefix${widget.houseId}';
 
   Future<void> _pickImage() async {
+    final msgPickFail = context.tr('util_chathchnnh_f9d997');
     try {
       final picker = ImagePicker();
       final picked = await AppLifecyclePresenceGuard.guard(
@@ -276,7 +284,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         AppErrorMapper.resolve(
           e,
           fallbackMessage:
-              'Chưa thể chọn ảnh lúc này. Hãy kiểm tra quyền thư viện rồi thử lại.',
+              msgPickFail,
         ).message,
       );
     }
@@ -286,7 +294,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   void initState() {
     super.initState();
     _senderCtrl.text =
-        widget.myName.trim().isNotEmpty ? widget.myName.trim() : 'Người thương';
+        widget.myName.trim().isNotEmpty ? widget.myName.trim() : context.tr('util_ngithng_ec713c');
     _refreshGiftStreams();
     unawaited(_promptPendingUploadRetryIfNeeded());
   }
@@ -300,8 +308,16 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   }
 
   void _refreshGiftStreams() {
-    _sentGiftsStream =
-        _giftService.streamSentGifts(widget.houseId).asBroadcastStream();
+    _sentGiftCache = const <GiftData>[];
+    _sentGiftsStream = _giftService.streamSentGifts(widget.houseId).map((list) {
+      _sentGiftCache = list;
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() {});
+        });
+      }
+      return list;
+    }).asBroadcastStream();
   }
 
   @override
@@ -326,9 +342,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Lần tạo quà trước đã bị gián đoạn.'),
+          content: Text(context.tr('util_lntoqutrcb_38d6f5')),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('util_thli_4dffdf'),
             onPressed: () {
               unawaited(_retryPendingGiftCreation());
             },
@@ -365,11 +381,14 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   }
 
   Future<void> _createGift() async {
+    final msgInputRequired = context.tr('util_cnnhptnngi_738968');
+    final msgUploadFail = context.tr('util_chathtinhl_b6e8f8');
+    final msgCreateFail = context.tr('util_khngtocmnq_a320c7');
     final sender = _senderCtrl.text.trim();
     final message = _messageCtrl.text.trim();
 
     if (sender.isEmpty || message.isEmpty) {
-      _showSnack('Cần nhập tên người gửi và nội dung món quà.');
+      _showSnack(msgInputRequired);
       return;
     }
 
@@ -395,7 +414,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
           AppErrorMapper.resolve(
             e,
             fallbackMessage:
-                'Chưa thể tải ảnh lên lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+                msgUploadFail,
           ).message,
         );
       }
@@ -418,7 +437,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
     });
 
     if (giftId == null || giftId.isEmpty) {
-      _showSnack('Không tạo được món quà. Vui lòng thử lại.');
+      _showSnack(msgCreateFail);
       return;
     }
     await PendingUploadService.instance.clear(_pendingUploadKey);
@@ -499,7 +518,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                           ),
                           const SizedBox(height: 14),
                           Text(
-                            'Quà đã sẵn sàng',
+                            context.tr('util_qusnsng_476d65'),
                             style: SLTheme.quicksand(
                               fontWeight: FontWeight.w900,
                               fontSize: 21,
@@ -527,7 +546,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Món quà đã được lưu vào ngôi nhà hiện tại. Link riêng đã tạo xong để bạn gửi lại nhanh.',
+                        context.tr('util_mnqucluvon_c2e89b'),
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w700,
                           height: 1.55,
@@ -548,8 +567,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                               width: 38,
                               height: 38,
                               decoration: BoxDecoration(
-                                color:
-                                    const Color(0xFFD81B60).withValues(alpha: 0.10),
+                                color: const Color(0xFFD81B60)
+                                    .withValues(alpha: 0.10),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: const Icon(
@@ -561,7 +580,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                             SLSpacing.w10,
                             Expanded(
                               child: Text(
-                                'Copy link để gửi ngay, hoặc xem thử hiệu ứng mở quà trước.',
+                                context.tr('util_copylinkgi_1ecca9'),
                                 style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w800,
                                   height: 1.4,
@@ -588,7 +607,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                                 );
                                 if (!mounted) return;
                                 navigator.pop();
-                                _showSnack('Đã copy link quà: $giftId');
+                                _showSnack(L10nService().format('util_gift_link_copied', {'id': giftId}));
                               },
                               icon: const Icon(Icons.link_rounded),
                               style: OutlinedButton.styleFrom(
@@ -629,7 +648,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                                 ),
                               ),
                               label: Text(
-                                'Xem thử',
+                                context.tr('util_xemth_003938'),
                                 style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w900,
                                 ),
@@ -662,7 +681,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                             ),
                           ),
                           label: Text(
-                            'Mở Web Quà Tặng',
+                            context.tr('util_mwebqutng_fce331'),
                             style: SLTheme.quicksand(
                               fontWeight: FontWeight.w900,
                             ),
@@ -705,9 +724,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
     );
   }
 
-  String _formatTime(int ts) {
-    if (ts <= 0) return 'Vừa xong';
-    return DateFormat('HH:mm - dd/MM').format(
+  String _formatCreatedAt(int ts) {
+    if (ts <= 0) return L10nService().translate('util_vato_4adb0d');
+    return DateFormat('HH:mm - dd/MM/yyyy').format(
       DateTime.fromMillisecondsSinceEpoch(ts),
     );
   }
@@ -717,7 +736,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xFFFFF1F7),
+        backgroundColor: const Color(0xFFFFF7FB),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
@@ -729,9 +748,10 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFFFF8AB3),
-                  Color(0xFFFFC2D8),
-                  Color(0xFFFFE3AF),
+                  Color(0xFFFF5DA2),
+                  Color(0xFFFF9EB6),
+                  Color(0xFFFFD28A),
+                  Color(0xFFFFF1C8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -739,7 +759,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
             ),
           ),
           title: Text(
-            'Tặng Quà',
+            context.tr('util_tngqu_511367'),
             style: SLTheme.quicksand(fontWeight: FontWeight.w900),
           ),
           bottom: PreferredSize(
@@ -751,7 +771,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.18)),
                 ),
                 child: TabBar(
                   dividerColor: Colors.transparent,
@@ -766,9 +787,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                   labelStyle: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   unselectedLabelStyle:
                       SLTheme.quicksand(fontWeight: FontWeight.w700),
-                  tabs: const [
-                    Tab(text: 'Tạo quà'),
-                    Tab(text: 'Đã gửi'),
+                  tabs: [
+                    Tab(text: context.tr('util_toqu_d72b1a')),
+                    Tab(text: context.tr('util_to_1a51f8')),
                   ],
                 ),
               ),
@@ -782,9 +803,10 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0xFFFFF1F7),
-                      Color(0xFFFFDCEB),
-                      Color(0xFFFFF0C7),
+                      Color(0xFFFFF8FC),
+                      Color(0xFFFFE6F1),
+                      Color(0xFFFFF3D5),
+                      Color(0xFFF5EEFF),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -807,9 +829,10 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Color(0xFFFFFCFE),
-                          Color(0xFFFFF5FA),
-                          Color(0xFFFFF9E8),
+                          Color(0xFFFFFDFF),
+                          Color(0xFFFFF4FA),
+                          Color(0xFFFFF7E6),
+                          Color(0xFFF9F2FF),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -824,8 +847,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                         _buildCreateTab(),
                         _buildHistoryTab(
                           stream: _sentGiftsStream,
-                          emptyTitle: 'Bạn chưa tạo quà nào',
-                          emptySubtitle: 'Quà bạn đã tạo sẽ hiện ở đây.',
+                          initialData: _sentGiftCache,
+                          emptyTitle: context.tr('util_bnchatoqun_50163a'),
+                          emptySubtitle: context.tr('util_qubntoshin_2306ba'),
                           markOpened: false,
                         ),
                       ],
@@ -879,7 +903,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Chọn kiểu quà',
+                context.tr('util_chnkiuqu_9354f3'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w900,
                   fontSize: 22,
@@ -888,7 +912,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                '9 kiểu quà với cách mở và cảm giác khác nhau.',
+                context.tr('util_9kiuquvicc_e6b9ec'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF6B7280),
@@ -938,14 +962,14 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Nội dung quà',
+                    context.tr('util_nidungqu_bf27a4'),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 18,
                     ),
                   ),
                   Text(
-                    'Kiểu: ${GiftMakerService.giftLabel(_selectedType)}',
+                    L10nService().format('util_gift_type_label', {'type': GiftMakerService.giftLabel(_selectedType)}),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFFD81B60),
@@ -972,15 +996,15 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         _buildEditHeroCard(colors),
         const SizedBox(height: 18),
         _sectionCard(
-          title: 'Thông tin gửi quà',
-          subtitle: 'Viết những lời ngọt ngào nhất gửi đến người ấy nhé.',
+          title: context.tr('util_thngtingiq_1d5fa0'),
+          subtitle: context.tr('util_vitnhnglin_7b452f'),
           child: Column(
             children: [
               TextField(
                 controller: _senderCtrl,
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                 decoration: _inputDecoration(
-                  'Tên người gửi',
+                  context.tr('util_tnngigi_cbd3e4'),
                   Icons.badge_rounded,
                 ),
               ),
@@ -990,7 +1014,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 maxLines: 6,
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                 decoration: _inputDecoration(
-                  'Viết lời nhắn thật dịu dàng...',
+                  context.tr('util_vitlinhnth_980059'),
                   Icons.favorite_rounded,
                 ),
               ),
@@ -1017,7 +1041,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                           : _senderCtrl.text.trim(),
                       toHouseId: widget.houseId,
                       message: _messageCtrl.text.trim().isEmpty
-                          ? 'Món quà thử để xem trước.'
+                          ? context.tr('util_mnquthxemt_422c1e')
                           : _messageCtrl.text.trim(),
                       imageUrl: _selectedImage?.path ?? '',
                       ts: DateTime.now().millisecondsSinceEpoch,
@@ -1038,7 +1062,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     ),
                   ),
                   label: Text(
-                    'Xem trước',
+                    context.tr('util_xemtrc_1507b5'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   ),
                 ),
@@ -1070,7 +1094,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     ),
                   )
                 : Text(
-                    'TẠO VÀ GỬI QUÀ NGAY',
+                    context.tr('util_tovgiqunga_7ecb7b'),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 15,
@@ -1098,7 +1122,12 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
           gradient: LinearGradient(
             colors: selected
                 ? [colors.first, colors.last]
-                : [Colors.white, const Color(0xFFFFF7FB)],
+                : [
+                    Colors.white.withValues(alpha: 0.96),
+                    const Color(0xFFFFF7FB).withValues(alpha: 0.98),
+                    Color.lerp(colors.last, Colors.white, 0.88) ??
+                        const Color(0xFFFFF7FB),
+                  ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -1111,11 +1140,12 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: (selected ? colors.first : Colors.black).withValues(
-                alpha: selected ? 0.24 : 0.05,
+              color: (selected ? colors.first : const Color(0xFFFF6BA6))
+                  .withValues(
+                alpha: selected ? 0.28 : 0.08,
               ),
-              blurRadius: selected ? 22 : 12,
-              offset: Offset(0, selected ? 12 : 5),
+              blurRadius: selected ? 28 : 18,
+              offset: Offset(0, selected ? 14 : 8),
             ),
           ],
         ),
@@ -1289,7 +1319,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _selectedImage != null ? 'Đã chọn ảnh' : 'Đính kèm ảnh',
+                    _selectedImage != null ? context.tr('util_chnnh_d05e7e') : context.tr('util_nhkmnh_607916'),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF374151),
@@ -1297,8 +1327,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                   ),
                   Text(
                     _selectedImage != null
-                        ? 'Ảnh sẽ hiện khi mở quà'
-                        : 'Không bắt buộc, giúp quà ý nghĩa hơn',
+                        ? context.tr('util_nhshinkhim_6e0f2e')
+                        : context.tr('util_khngbtbucg_9881a4'),
                     style: SLTheme.quicksand(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -1336,7 +1366,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
           SLSpacing.w12,
           Expanded(
             child: Text(
-              'Link quà tặng sẽ tự động được tạo sau khi lưu xong để bạn gửi cho người thương.',
+              context.tr('util_linkqutngs_30042e'),
               style: SLTheme.quicksand(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w800,
@@ -1362,9 +1392,14 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+            color: const Color(0xFFFF4F93).withValues(alpha: 0.08),
+            blurRadius: 26,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.85),
+            blurRadius: 0,
+            spreadRadius: 1,
           ),
         ],
       ),
@@ -1402,18 +1437,20 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         fontWeight: FontWeight.w700,
         fontSize: 14,
       ),
-      prefixIcon:
-          Icon(icon, color: const Color(0xFFD81B60).withValues(alpha: 0.7), size: 20),
+      prefixIcon: Icon(icon,
+          color: const Color(0xFFD81B60).withValues(alpha: 0.7), size: 20),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: const Color(0xFFE5E7EB).withValues(alpha: 0.6)),
+        borderSide:
+            BorderSide(color: const Color(0xFFE5E7EB).withValues(alpha: 0.6)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: const Color(0xFFE5E7EB).withValues(alpha: 0.6)),
+        borderSide:
+            BorderSide(color: const Color(0xFFE5E7EB).withValues(alpha: 0.6)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -1424,19 +1461,31 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
 
   Widget _buildHistoryTab({
     required Stream<List<GiftData>> stream,
+    required List<GiftData> initialData,
     required String emptyTitle,
     required String emptySubtitle,
     required bool markOpened,
   }) {
     return StreamBuilder<List<GiftData>>(
       stream: stream,
+      initialData: initialData,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFD81B60)),
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                context.tr('util_chaticdanh_4a7d79'),
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF9F1239),
+                ),
+              ),
+            ),
           );
         }
-        final list = snapshot.data!;
+        final list = snapshot.data ?? const <GiftData>[];
         if (list.isEmpty) {
           return Center(
             child: Column(
@@ -1483,7 +1532,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
 
   Widget _buildGiftHistoryTile(GiftData gift, {required bool markOpened}) {
     final colors = widget._giftColors(gift.giftType);
-    final isOpened = gift.status == 'opened';
+    final giftLink = _deeplinkService.generateGiftLink(gift);
 
     return _GiftTouchTile(
       onTap: () => _openGiftPreview(gift, markOpened: markOpened),
@@ -1542,21 +1591,45 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                           ),
                         ),
                       ),
-                      if (isOpened)
-                        const Icon(Icons.check_circle_rounded,
-                            color: Color(0xFF10B981), size: 16)
-                      else
-                        const Icon(Icons.new_releases_rounded,
-                            color: Color(0xFFD81B60), size: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFEEF6),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          context.tr('util_to_1a51f8'),
+                          style: SLTheme.quicksand(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFFD81B60),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   SLSpacing.h4,
                   Text(
-                    'Từ: ${gift.fromName} • ${_formatTime(gift.ts)}',
+                    L10nService().format('util_gift_created_date', {'date': _formatCreatedAt(gift.ts)}),
                     style: SLTheme.quicksand(
                       fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                       color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                  SLSpacing.h4,
+                  Text(
+                    giftLink,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                      color: const Color(0xFFD81B60),
                     ),
                   ),
                 ],

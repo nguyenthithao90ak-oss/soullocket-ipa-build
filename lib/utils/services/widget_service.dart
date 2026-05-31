@@ -11,6 +11,12 @@ import '../../core/constants/app_config.dart';
 import '../../utils/app_error_mapper.dart';
 import 'storage_service.dart';
 import '../utils/flexible_date_input.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'house_service.dart';
+import 'notification_service.dart';
+import 'daily_quest_service.dart';
 
 class WidgetService {
   static const String appGroupId = AppConfig.iOSAppGroupId;
@@ -268,7 +274,8 @@ class WidgetService {
     await _saveIfMissing<String>('bgTheme', 'pink');
     await _saveIfMissing<String>('widgetStyleKey', defaultWidgetStyleKey);
     await _saveIfMissing<bool>('showDiaryOnWidget', false);
-    await _saveIfMissing<bool>('heartAnimated', true);
+    // Keep widget heart fixed (no random animation) by default.
+    await _saveIfMissing<bool>('heartAnimated', false);
     await _saveIfMissing<String>('heartStyleKey', defaultHeartStyleKey);
     await _saveIfMissing<String>('heartColorKey', 'rose');
     await _saveIfMissing<String>('diaryLayoutKey', 'single');
@@ -805,4 +812,172 @@ class WidgetService {
     }
     return null;
   }
+
+  static Future<void> checkAndProcessPendingWidgetActions() async {
+    if (kIsWeb || !Platform.isIOS) return;
+    try {
+      final actionStr = await HomeWidget.getWidgetData<String>('pendingWidgetAction');
+      if (actionStr == null || actionStr.trim().isEmpty) return;
+
+      final parts = actionStr.split('_');
+      if (parts.isEmpty) return;
+      final actionType = parts[0];
+
+      final prefs = await SharedPreferences.getInstance();
+      final lastProcessedAction = prefs.getString('il_last_processed_widget_action') ?? '';
+      if (lastProcessedAction == actionStr) {
+        await HomeWidget.saveWidgetData<String>('pendingWidgetAction', '');
+        return;
+      }
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      final houseId = await HouseService().getCurrentHouseId();
+      if (houseId == null || houseId.trim().isEmpty) return;
+
+      final currentRole = prefs.getString('il_role') ?? 'user1';
+      final partnerRole = currentRole == 'user1' ? 'user2' : 'user1';
+
+      final houseData = await FirebaseDatabase.instance.ref('houses/$houseId').get();
+      if (!houseData.exists || houseData.value is! Map) return;
+
+      final data = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(houseData.value as Map));
+      final myName = (currentRole == 'user1' ? data['nameU1'] : data['nameU2'])?.toString().trim() ?? 'Bạn';
+      final partnerName = (partnerRole == 'user1' ? data['nameU1'] : data['nameU2'])?.toString().trim() ?? 'Người ấy';
+      final myAvatar = (currentRole == 'user1' ? data['avtUser1'] : data['avtUser2'])?.toString().trim() ?? '';
+
+      final String title;
+      final String body;
+      final String message;
+      final String notificationBody;
+
+      switch (actionType) {
+        case 'heart':
+        default:
+          title = '$myName gửi ngàn nỗi nhớ';
+          body = '$partnerName sẽ thấy nỗi nhớ này ngay khi online.';
+          message = 'Nhớ bạn nhiều lắm!';
+          notificationBody = 'mở app để nhận nỗi nhớ ngay nhé.';
+          break;
+      }
+
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      final payload = {
+        'type': 'miss',
+        'emoji': '❤️',
+        'from': myName,
+        'fromUid': user.uid,
+        'fromRole': currentRole,
+        'fromRoleLabel': currentRole == 'user1' ? 'User 1' : 'User 2',
+        'fromAvatar': myAvatar,
+        'toRole': partnerRole,
+        'toName': partnerName,
+        'title': title,
+        'body': body,
+        'message': message,
+        'sentAt': nowMs,
+        'ts': ServerValue.timestamp,
+      };
+
+      final dbRef = FirebaseDatabase.instance.ref();
+      final inboxRef = dbRef.child('houses/$houseId/partner_inbox/$partnerRole').push();
+      await dbRef.child('houses/$houseId/alerts').push().set(payload);
+      await inboxRef.set({
+        ...payload,
+        'timestamp': ServerValue.timestamp,
+      });
+      await dbRef.child('houses/$houseId/interactions/miss').set({
+        ...payload,
+        'timestamp': ServerValue.timestamp,
+      });
+
+      try {
+        await NotificationService().sendPartnerNotification(
+          houseId: houseId,
+          title: title,
+          body: '$partnerName $notificationBody',
+          data: {
+            'screen': 'home',
+            'type': 'partner_care',
+            'careType': 'miss',
+            'houseId': houseId,
+          },
+        );
+      } catch (_) {}
+
+      try {
+        await DailyQuestService().recordProgress('partner_interaction');
+      } catch (_) {}
+
+      await prefs.setString('il_last_processed_widget_action', actionStr);
+      await HomeWidget.saveWidgetData<String>('pendingWidgetAction', '');
+
+      debugPrint('Processed quick heart from interactive widget!');
+    } catch (e) {
+      debugPrint('Error processing pending widget actions: $e');
+    }
+  }
+
+  static Future<String?> startLiveActivity({
+    required String title,
+    required String label,
+    required DateTime endTime,
+  }) async {
+    if (kIsWeb || !Platform.isIOS) return null;
+    try {
+      final String? activityId = await _iosWidgetBridge.invokeMethod<String>(
+        'startLiveActivity',
+        <String, dynamic>{
+          'title': title,
+          'label': label,
+          'endTimeMs': endTime.millisecondsSinceEpoch.toDouble(),
+        },
+      );
+      return activityId;
+    } catch (e) {
+      debugPrint('Error starting Live Activity: $e');
+      return null;
+    }
+  }
+
+  static Future<bool> updateLiveActivity({
+    required String activityId,
+    required String label,
+    required DateTime endTime,
+  }) async {
+    if (kIsWeb || !Platform.isIOS) return false;
+    try {
+      final bool? success = await _iosWidgetBridge.invokeMethod<bool>(
+        'updateLiveActivity',
+        <String, dynamic>{
+          'activityId': activityId,
+          'label': label,
+          'endTimeMs': endTime.millisecondsSinceEpoch.toDouble(),
+        },
+      );
+      return success ?? false;
+    } catch (e) {
+      debugPrint('Error updating Live Activity: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> endLiveActivity({
+    required String activityId,
+  }) async {
+    if (kIsWeb || !Platform.isIOS) return false;
+    try {
+      final bool? success = await _iosWidgetBridge.invokeMethod<bool>(
+        'endLiveActivity',
+        <String, dynamic>{
+          'activityId': activityId,
+        },
+      );
+      return success ?? false;
+    } catch (e) {
+      debugPrint('Error ending Live Activity: $e');
+      return false;
+    }
+  }
 }
+

@@ -20,6 +20,7 @@ class _SoulPlayfieldGeometry {
   final Rect hitWindowRect;
 }
 
+
 extension _SoulRhythmPlayfield on _SoulRhythmGameState {
   _SoulPlayfieldGeometry _buildPlayfieldGeometry(
       Rect playArea, double hitLineY) {
@@ -51,40 +52,54 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
     required double tileShineBlur,
     required _SoulPlayfieldGeometry geometry,
   }) {
+    if (_useReleaseSafePlayfield) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: _buildReleaseSafeGameplayLayer(
+          bgPulse: bgPulse,
+          hitLineBlur: hitLineBlur,
+          geometry: geometry,
+        ),
+      );
+    }
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(28),
       child: Stack(
+        fit: StackFit.expand,
         children: [
-          RepaintBoundary(
-            child: _useReleaseSafePlayfield
-                ? _buildReleaseSafePlayfieldLayer(
-                    bgPulse: bgPulse,
-                    laneCount: geometry.laneCount,
-                  )
-                : _buildStaticPlayfieldLayer(
-                    bgPulse: bgPulse,
-                    laneCount: geometry.laneCount,
-                  ),
-          ),
-          RepaintBoundary(
-            child: _buildTileLayer(
-              glowBlur: tileGlowBlur,
-              glowSpread: tileGlowSpread,
-              shineBlur: tileShineBlur,
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: _buildStaticPlayfieldLayer(
+                bgPulse: bgPulse,
+                laneCount: geometry.laneCount,
+              ),
             ),
           ),
-          if (!_useReleaseSafePlayfield)
-            RepaintBoundary(
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: _buildTileLayer(
+                glowBlur: tileGlowBlur,
+                glowSpread: tileGlowSpread,
+                shineBlur: tileShineBlur,
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: RepaintBoundary(
               child: _buildBeatVisualizerLayer(
                 bgPulse: bgPulse,
                 geometry: geometry,
               ),
             ),
-          RepaintBoundary(
-            child: _buildJudgeAndEffectsLayer(
-              bgPulse: bgPulse,
-              hitLineBlur: hitLineBlur,
-              geometry: geometry,
+          ),
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: _buildJudgeAndEffectsLayer(
+                bgPulse: bgPulse,
+                hitLineBlur: hitLineBlur,
+                geometry: geometry,
+              ),
             ),
           ),
         ],
@@ -234,82 +249,166 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
     required double bgPulse,
     required int laneCount,
   }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFF14091F),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: 96,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFFF6EC7)
+                          .withValues(alpha: 0.08 + (bgPulse * 0.04)),
+                      const Color(0xFF6FE8FF)
+                          .withValues(alpha: 0.05 + (bgPulse * 0.03)),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 12,
+            height: 88,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF00E5FF)
+                          .withValues(alpha: 0.07 + (bgPulse * 0.04)),
+                      const Color(0xFFFF3D81)
+                          .withValues(alpha: 0.03 + (bgPulse * 0.02)),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Row(
+            children: List<Widget>.generate(laneCount, (index) {
+              final showDivider = index < laneCount - 1;
+              return Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withValues(alpha: index.isEven ? 0.025 : 0.016),
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.08),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    border: showDivider
+                        ? Border(
+                            right: BorderSide(
+                              color: const Color(0xFFB8F2FF).withValues(alpha: 0.18),
+                              width: 1,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReleaseSafeGameplayLayer({
+    required double bgPulse,
+    required double hitLineBlur,
+    required _SoulPlayfieldGeometry geometry,
+  }) {
     return Stack(
+      fit: StackFit.expand,
       children: [
-        const Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF14091F),
-                  Color(0xFF1C1031),
-                  Color(0xFF091427),
-                  Color(0xFF050914),
-                ],
-                stops: [0.0, 0.28, 0.7, 1.0],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: BorderRadius.all(Radius.circular(28)),
-              border: Border.fromBorderSide(
-                BorderSide(color: Color(0x14FFFFFF)),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          top: 0,
-          height: 120,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFFFF6EC7)
-                        .withValues(alpha: 0.08 + (bgPulse * 0.05)),
-                    const Color(0xFF6FE8FF)
-                        .withValues(alpha: 0.06 + (bgPulse * 0.04)),
-                    Colors.transparent,
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          left: 14,
-          right: 14,
-          bottom: 14,
-          height: 116,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF00E5FF)
-                        .withValues(alpha: 0.08 + (bgPulse * 0.05)),
-                    const Color(0xFFFF3D81)
-                        .withValues(alpha: 0.04 + (bgPulse * 0.03)),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.48, 1.0],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                ),
-              ),
-            ),
+        RepaintBoundary(
+          child: _buildReleaseSafePlayfieldLayer(
+            bgPulse: bgPulse,
+            laneCount: geometry.laneCount,
           ),
         ),
         Positioned.fill(
-          child: RepaintBoundary(
-            child: CustomPaint(
-              painter: LanePainter(laneCount: laneCount),
+          child: IgnorePointer(
+            child: Stack(
+              children: [
+                for (final tile in _tiles)
+                  if (!tile.isHit)
+                    Positioned(
+                      left: tile.x,
+                      top: tile.y,
+                      child: Container(
+                        width: tile.width,
+                        height: tile.height,
+                        decoration: BoxDecoration(
+                          color: tile.color,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.52),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                for (final ft in _floatingTexts)
+                  Positioned(
+                    left: ft.x - 50,
+                    top: ft.y,
+                    width: 100,
+                    child: IgnorePointer(
+                      child: Opacity(
+                        opacity: max(0, ft.life / ft.maxLife),
+                        child: Text(
+                          ft.text,
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            fontSize: ft.text == 'PERFECT!' ? 20 : 16,
+                            fontWeight: FontWeight.w900,
+                            color: ft.color,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
+          ),
+        ),
+        Positioned(
+          left: geometry.judgeLineRect.left,
+          width: geometry.judgeLineRect.width,
+          top: geometry.judgeLineRect.top,
+          child: RepaintBoundary(
+            child: _buildHitLine(bgPulse, hitLineBlur),
           ),
         ),
       ],
@@ -335,147 +434,145 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
         .toDouble();
     final markerCount = min(24, max(8, _gameChartEvents.length));
 
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Stack(
-          children: [
-            Positioned(
-              left: 14,
-              right: 14,
-              top: 14,
-              child: Container(
-                height: 52,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'RHYTHM DRIVE',
-                          style: SLTheme.quicksand(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white70,
-                            letterSpacing: 1.1,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${(currentLoopProgress * 100).round()}%',
-                          style: SLTheme.quicksand(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF6FE8FF),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        minHeight: 8,
-                        value: currentLoopProgress.clamp(0.0, 1.0),
-                        backgroundColor: Colors.white.withValues(alpha: 0.08),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFFFF6EC7),
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned(
+            left: 14,
+            right: 14,
+            top: 14,
+            child: Container(
+              height: 52,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'RHYTHM DRIVE',
+                        style: SLTheme.quicksand(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white70,
+                          letterSpacing: 1.1,
                         ),
                       ),
+                      const Spacer(),
+                      Text(
+                        '${(currentLoopProgress * 100).round()}%',
+                        style: SLTheme.quicksand(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF6FE8FF),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      minHeight: 8,
+                      value: currentLoopProgress.clamp(0.0, 1.0),
+                      backgroundColor: Colors.white.withValues(alpha: 0.08),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFFFF6EC7),
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: List.generate(markerCount, (index) {
-                          final isMajor = index % 4 == 0;
-                          final normalized = markerCount <= 1
-                              ? 0.0
-                              : index / (markerCount - 1);
-                          final passed = normalized <= currentLoopProgress;
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 1.5),
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 90),
-                                  height: passed
-                                      ? (isMajor ? 16 : 11)
-                                      : (isMajor ? 10 : 7),
-                                  decoration: BoxDecoration(
-                                    color: passed
-                                        ? (isMajor
-                                            ? const Color(0xFFFFC94D)
-                                            : const Color(0xFF6FE8FF))
-                                        : Colors.white.withValues(alpha: 0.18),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: List.generate(markerCount, (index) {
+                        final isMajor = index % 4 == 0;
+                        final normalized = markerCount <= 1
+                            ? 0.0
+                            : index / (markerCount - 1);
+                        final passed = normalized <= currentLoopProgress;
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 90),
+                                height: passed
+                                    ? (isMajor ? 16 : 11)
+                                    : (isMajor ? 10 : 7),
+                                decoration: BoxDecoration(
+                                  color: passed
+                                      ? (isMajor
+                                          ? const Color(0xFFFFC94D)
+                                          : const Color(0xFF6FE8FF))
+                                      : Colors.white.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(999),
                                 ),
                               ),
                             ),
-                          );
-                        }),
-                      ),
+                          ),
+                        );
+                      }),
                     ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 98,
+            height: 110,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  colors: [
+                    (strongBeat
+                            ? const Color(0xFFFFC94D)
+                            : const Color(0xFFFF6EC7))
+                        .withValues(alpha: pulseOpacity),
+                    const Color(0xFF6FE8FF).withValues(alpha: pulseOpacity * 0.76),
+                    Colors.transparent,
                   ],
+                  stops: const [0.0, 0.48, 1.0],
+                  center: const Alignment(0, 0.78),
+                  radius: 1.1,
                 ),
               ),
             ),
+          ),
+          if (!_isLowGraphics)
             Positioned(
-              left: 12,
-              right: 12,
-              bottom: 98,
-              height: 110,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    colors: [
-                      (strongBeat
-                              ? const Color(0xFFFFC94D)
-                              : const Color(0xFFFF6EC7))
-                          .withValues(alpha: pulseOpacity),
-                      const Color(0xFF6FE8FF).withValues(alpha: pulseOpacity * 0.76),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.48, 1.0],
-                    center: const Alignment(0, 0.78),
-                    radius: 1.1,
-                  ),
-                ),
-              ),
-            ),
-            if (!_isLowGraphics)
-              Positioned(
-                left: geometry.playArea.width * 0.12,
-                right: geometry.playArea.width * 0.12,
-                top: 86,
-                height: 140,
-                child: Opacity(
-                  opacity: 0.10 + (beatEnergy * (strongBeat ? 0.20 : 0.12)),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      gradient: SweepGradient(
-                        colors: [
-                          const Color(0xFFFF6EC7).withValues(alpha: 0.0),
-                          const Color(0xFFFF6EC7).withValues(alpha: 0.36),
-                          const Color(0xFF6FE8FF).withValues(alpha: 0.18),
-                          const Color(0xFFFFC94D).withValues(alpha: 0.34),
-                          const Color(0xFFFF6EC7).withValues(alpha: 0.0),
-                        ],
-                      ),
+              left: geometry.playArea.width * 0.12,
+              right: geometry.playArea.width * 0.12,
+              top: 86,
+              height: 140,
+              child: Opacity(
+                opacity: 0.10 + (beatEnergy * (strongBeat ? 0.20 : 0.12)),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    gradient: SweepGradient(
+                      colors: [
+                        const Color(0xFFFF6EC7).withValues(alpha: 0.0),
+                        const Color(0xFFFF6EC7).withValues(alpha: 0.36),
+                        const Color(0xFF6FE8FF).withValues(alpha: 0.18),
+                        const Color(0xFFFFC94D).withValues(alpha: 0.34),
+                        const Color(0xFFFF6EC7).withValues(alpha: 0.0),
+                      ],
                     ),
                   ),
                 ),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -485,183 +582,181 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
     required double glowSpread,
     required double shineBlur,
   }) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Stack(
-          children: [
-            for (final tile in _tiles)
-              if (!tile.isHit)
-                Positioned(
-                  left: tile.x,
-                  top: tile.y,
-                  child: Builder(
-                    builder: (context) {
-                      final borderRadius = BorderRadius.circular(
-                        min(24.0, max(16.0, tile.width * 0.24)),
-                      );
-                      final capHeight = min(22.0, max(14.0, tile.height * 0.16));
-                      final coreColor = Color.lerp(
-                        tile.color,
-                        Colors.black,
-                        0.14,
-                      )!;
-                      final shadowColor = Color.lerp(
-                        tile.color,
-                        Colors.black,
-                        0.36,
-                      )!;
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          for (final tile in _tiles)
+            if (!tile.isHit)
+              Positioned(
+                left: tile.x,
+                top: tile.y,
+                child: Builder(
+                  builder: (context) {
+                    final borderRadius = BorderRadius.circular(
+                      min(24.0, max(16.0, tile.width * 0.24)),
+                    );
+                    final capHeight = min(22.0, max(14.0, tile.height * 0.16));
+                    final coreColor = Color.lerp(
+                      tile.color,
+                      Colors.black,
+                      0.14,
+                    )!;
+                    final shadowColor = Color.lerp(
+                      tile.color,
+                      Colors.black,
+                      0.36,
+                    )!;
 
-                      return Container(
-                        width: tile.width,
-                        height: tile.height,
-                          decoration: BoxDecoration(
-                            borderRadius: borderRadius,
-                            gradient: LinearGradient(
-                              colors: [
-                                Color.lerp(tile.color, Colors.white, 0.52)!,
-                                coreColor,
-                                shadowColor,
-                                Colors.black.withValues(alpha: 0.45),
-                              ],
-                              stops: const [0.0, 0.18, 0.85, 1.0],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
+                    return Container(
+                      width: tile.width,
+                      height: tile.height,
+                      decoration: BoxDecoration(
+                        borderRadius: borderRadius,
+                        gradient: LinearGradient(
+                          colors: [
+                            Color.lerp(tile.color, Colors.white, 0.52)!,
+                            coreColor,
+                            shadowColor,
+                            Colors.black.withValues(alpha: 0.45),
+                          ],
+                          stops: const [0.0, 0.18, 0.85, 1.0],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: tile.color.withValues(
+                              alpha: _isLowGraphics ? 0.62 : 0.88,
                             ),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.92),
-                              width: 1.5,
-                            ),
-                          boxShadow: [
+                            blurRadius: glowBlur * 1.2,
+                            spreadRadius: glowSpread * 1.1,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            blurRadius: _isLowGraphics ? 8 : 14,
+                            offset: const Offset(0, 12),
+                          ),
+                          if (!_isLowGraphics)
                             BoxShadow(
-                              color: tile.color.withValues(
-                                alpha: _isLowGraphics ? 0.62 : 0.88,
+                              color: Colors.white.withValues(alpha: 0.16),
+                              blurRadius: shineBlur * 0.42,
+                              offset: const Offset(-2, -3),
+                            ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: borderRadius,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              top: 0,
+                              height: capHeight,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.white.withValues(alpha: 0.98),
+                                      Color.lerp(tile.color, Colors.white, 0.40)!,
+                                    ],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ),
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: Colors.white.withValues(alpha: 0.32),
+                                    ),
+                                  ),
+                                ),
                               ),
-                              blurRadius: glowBlur * 1.2,
-                              spreadRadius: glowSpread * 1.1,
                             ),
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.35),
-                              blurRadius: _isLowGraphics ? 8 : 14,
-                              offset: const Offset(0, 12),
+                            Positioned(
+                              left: tile.width * 0.12,
+                              top: capHeight + 7,
+                              bottom: 14,
+                              width: max(4.0, tile.width * 0.07),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(999),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.white.withValues(alpha: 0.72),
+                                      Colors.white.withValues(alpha: 0.08),
+                                    ],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: 8,
+                              right: 8,
+                              bottom: 8,
+                              height: tile.height * 0.24,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.20),
+                                      Colors.black.withValues(alpha: 0.42),
+                                    ],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ),
+                                ),
+                              ),
                             ),
                             if (!_isLowGraphics)
-                              BoxShadow(
-                                color: Colors.white.withValues(alpha: 0.16),
-                                blurRadius: shineBlur * 0.42,
-                                offset: const Offset(-2, -3),
+                              Positioned(
+                                top: capHeight + 12,
+                                right: 10,
+                                child: Container(
+                                  width: min(18.0, max(10.0, tile.width * 0.18)),
+                                  height: min(18.0, max(10.0, tile.width * 0.18)),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.white.withValues(alpha: 0.28),
+                                        blurRadius: shineBlur * 0.65,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
+                            Positioned.fill(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.white.withValues(alpha: 0.10),
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.10),
+                                    ],
+                                    stops: const [0.0, 0.42, 1.0],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                        child: ClipRRect(
-                          borderRadius: borderRadius,
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                top: 0,
-                                height: capHeight,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.white.withValues(alpha: 0.98),
-                                        Color.lerp(tile.color, Colors.white, 0.40)!,
-                                      ],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                    ),
-                                    border: Border(
-                                      bottom: BorderSide(
-                                        color: Colors.white.withValues(alpha: 0.32),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                left: tile.width * 0.12,
-                                top: capHeight + 7,
-                                bottom: 14,
-                                width: max(4.0, tile.width * 0.07),
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(999),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.white.withValues(alpha: 0.72),
-                                        Colors.white.withValues(alpha: 0.08),
-                                      ],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                left: 8,
-                                right: 8,
-                                bottom: 8,
-                                height: tile.height * 0.24,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(18),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.transparent,
-                                        Colors.black.withValues(alpha: 0.20),
-                                        Colors.black.withValues(alpha: 0.42),
-                                      ],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              if (!_isLowGraphics)
-                                Positioned(
-                                  top: capHeight + 12,
-                                  right: 10,
-                                  child: Container(
-                                    width: min(18.0, max(10.0, tile.width * 0.18)),
-                                    height: min(18.0, max(10.0, tile.width * 0.18)),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white.withValues(alpha: 0.18),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.white.withValues(alpha: 0.28),
-                                          blurRadius: shineBlur * 0.65,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              Positioned.fill(
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.white.withValues(alpha: 0.10),
-                                        Colors.transparent,
-                                        Colors.black.withValues(alpha: 0.10),
-                                      ],
-                                      stops: const [0.0, 0.42, 1.0],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
-          ],
-        ),
+              ),
+        ],
       ),
     );
   }

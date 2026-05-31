@@ -7,7 +7,24 @@ import '../views/ui_prefs.dart';
 import '../app_error_mapper.dart';
 import 'offline_cache_service.dart';
 
+class SettingsBackupStatus {
+  final bool hasCloudBackup;
+  final DateTime? cloudUpdatedAt;
+  final DateTime? localBackupAt;
+
+  const SettingsBackupStatus({
+    required this.hasCloudBackup,
+    required this.cloudUpdatedAt,
+    required this.localBackupAt,
+  });
+}
+
 class SettingsSyncService {
+  static const String lastBackupAtPrefKey = 'il_settings_last_cloud_backup_at';
+  static const String restoreNoticePendingPrefKey =
+      'il_settings_restore_notice_pending';
+  static const String restoreNoticeUidPrefKey =
+      'il_settings_restore_notice_uid';
   static const List<String> _legacySecretKeys = [
     'il_imgbb_api_key',
   ];
@@ -28,6 +45,7 @@ class SettingsSyncService {
   ];
   static const List<String> _legacyGlobalWidgetKeys = [
     'il_widget_theme',
+    'il_widget_style',
     'il_widget_show_diary',
     'il_widget_heart_animated',
     'il_widget_heart_style',
@@ -67,8 +85,13 @@ class SettingsSyncService {
     'il_notif_chat',
     'il_notif_friend',
     'il_notif_heart',
+    'il_smart_reminder_diary',
+    'il_smart_reminder_capsule',
+    'il_smart_reminder_love_note',
     'il_show_weather',
     'il_show_status',
+    'il_home_show_house_name',
+    'il_home_show_timer',
     'il_auto_reply_text',
     'il_greeting_quote_text',
     'il_love_unit_text',
@@ -101,10 +124,14 @@ class SettingsSyncService {
     // Also backup widget settings
     for (final key in prefs.getKeys()) {
       if (key.startsWith('il_widget_theme_') ||
+          key.startsWith('il_widget_style_') ||
           key.startsWith('il_widget_show_diary_') ||
           key.startsWith('il_widget_heart_animated_') ||
           key.startsWith('il_widget_heart_style_') ||
-          key.startsWith('il_widget_heart_color_')) {
+          key.startsWith('il_widget_heart_color_') ||
+          key.startsWith('il_widget_preview_size_') ||
+          key.startsWith('il_widget_diary_layout_') ||
+          key.startsWith('il_widget_season_mode_')) {
         final value = prefs.get(key);
         if (value != null) {
           settings[key] = value;
@@ -131,8 +158,13 @@ class SettingsSyncService {
       'il_notif_chat',
       'il_notif_friend',
       'il_notif_heart',
+      'il_smart_reminder_diary',
+      'il_smart_reminder_capsule',
+      'il_smart_reminder_love_note',
       'il_show_weather',
       'il_show_status',
+      'il_home_show_house_name',
+      'il_home_show_timer',
       'il_auto_reply_text',
     ]) {
       final value = prefs.get(key);
@@ -149,13 +181,55 @@ class SettingsSyncService {
             houseBackup,
           );
     }
+
+    await prefs.setString(
+      lastBackupAtPrefKey,
+      DateTime.now().toIso8601String(),
+    );
+  }
+
+  Future<SettingsBackupStatus> getBackupStatus() async {
+    final user = _auth.currentUser;
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    final localBackupAt =
+        DateTime.tryParse(prefs.getString(lastBackupAtPrefKey) ?? '');
+
+    if (user == null) {
+      return SettingsBackupStatus(
+        hasCloudBackup: false,
+        cloudUpdatedAt: null,
+        localBackupAt: localBackupAt,
+      );
+    }
+
+    final snapshot = await _db.child('users/${user.uid}/settings/_meta').get();
+    DateTime? cloudUpdatedAt;
+    if (snapshot.exists && snapshot.value is Map) {
+      final meta = Map<dynamic, dynamic>.from(snapshot.value as Map);
+      final rawUpdatedAt = meta['updatedAt'];
+      final updatedAtMs = rawUpdatedAt is int
+          ? rawUpdatedAt
+          : int.tryParse(rawUpdatedAt?.toString() ?? '');
+      if (updatedAtMs != null && updatedAtMs > 0) {
+        cloudUpdatedAt = DateTime.fromMillisecondsSinceEpoch(updatedAtMs);
+      }
+    }
+
+    return SettingsBackupStatus(
+      hasCloudBackup: snapshot.exists,
+      cloudUpdatedAt: cloudUpdatedAt,
+      localBackupAt: localBackupAt,
+    );
   }
 
   Future<void> restoreSettingsFromCloud(String uid) async {
     try {
       final snapshot = await _db.child('users/$uid/settings').get();
       final prefs = OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
+          await SharedPreferences.getInstance();
+      final hadLocalBackupMarker =
+          (prefs.getString(lastBackupAtPrefKey) ?? '').isNotEmpty;
       await _purgeLegacySensitivePrefs(prefs);
       await _clearLocalSyncedSettingsFromPrefs(
         prefs,
@@ -165,6 +239,7 @@ class SettingsSyncService {
       if (snapshot.exists && snapshot.value != null) {
         final settings = Map<String, dynamic>.from(snapshot.value as Map);
         final legacyRemovals = <String, dynamic>{};
+        var restoredAnySetting = false;
 
         for (final entry in settings.entries) {
           final key = entry.key;
@@ -180,19 +255,35 @@ class SettingsSyncService {
 
           if (value is String) {
             await prefs.setString(key, value);
+            restoredAnySetting = true;
           } else if (value is bool) {
             await prefs.setBool(key, value);
+            restoredAnySetting = true;
           } else if (value is int) {
             await prefs.setInt(key, value);
+            restoredAnySetting = true;
           } else if (value is double) {
             await prefs.setDouble(key, value);
+            restoredAnySetting = true;
           } else if (value is num) {
             await prefs.setDouble(key, value.toDouble());
+            restoredAnySetting = true;
           }
         }
 
         if (legacyRemovals.isNotEmpty) {
           await _db.child('users/$uid/settings').update(legacyRemovals);
+        }
+
+        if (restoredAnySetting) {
+          await prefs.setString(
+            lastBackupAtPrefKey,
+            DateTime.now().toIso8601String(),
+          );
+          if (!hadLocalBackupMarker) {
+            await prefs.setBool(restoreNoticePendingPrefKey, true);
+            await prefs.setString(restoreNoticeUidPrefKey, uid);
+          }
         }
       }
 
@@ -205,6 +296,21 @@ class SettingsSyncService {
         fallbackMessage: 'Không thể khôi phục cài đặt.',
       ).message}');
     }
+  }
+
+  Future<bool> consumePendingRestoreNotice(String uid) async {
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    final pending = prefs.getBool(restoreNoticePendingPrefKey) ?? false;
+    final pendingUid = prefs.getString(restoreNoticeUidPrefKey);
+
+    if (!pending || pendingUid != uid) {
+      return false;
+    }
+
+    await prefs.setBool(restoreNoticePendingPrefKey, false);
+    await prefs.remove(restoreNoticeUidPrefKey);
+    return true;
   }
 
   Future<void> clearLocalSyncedSettings({

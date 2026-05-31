@@ -30,8 +30,8 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
             children: [
               Row(
                 children: [
-                  const _IntroChip(
-                    label: 'Chỉnh ảnh',
+                  _IntroChip(
+                    label: context.tr('util_chnhnh_37f4ff'),
                     fixedHeight: 32,
                   ),
                   SizedBox(width: compact ? 6 : 8),
@@ -52,7 +52,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                       border: Border.all(color: _paperLine),
                     ),
                     child: Text(
-                      hasPhotos ? '${photos.length} ảnh' : '0 ảnh',
+                      hasPhotos ? '${photos.length} ảnh' : context.tr('util_0nh_e58f05'),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w800,
                         color: _paperRoseDeep,
@@ -74,7 +74,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                     border: Border.all(color: _paperLine),
                   ),
                   child: Text(
-                    'Chưa có ảnh nào được chọn.',
+                    context.tr('util_chacnhnocc_2c3a48'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       color: _paperMuted,
@@ -85,7 +85,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                 )
               else ...[
                 Text(
-                  'Chạm để chọn ảnh, kéo để đổi vị trí và giữ để chỉnh từng khung ảnh.',
+                  context.tr('util_chmchnnhko_d94224'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
                     color: _paperMuted,
@@ -317,7 +317,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Lỗi ảnh',
+                    context.tr('util_linh_7151de'),
                     style: SLTheme.quicksand(
                       color: _paperMuted,
                       fontSize: 10.5,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../widgets/community_settings_components.dart';
 
@@ -30,12 +31,12 @@ class CommunitySettingsProfileSection extends StatelessWidget {
       CommunitySettingsQuickInfoData(
         icon: Icons.account_circle_outlined,
         title: 'Avatar',
-        value: avatarUrl.isNotEmpty ? 'Đã có ảnh' : 'Chưa có ảnh',
+        value: avatarUrl.isNotEmpty ? context.tr('comm_cnh_cb87b4') : context.tr('comm_chacnh_911bb6'),
       ),
       CommunitySettingsQuickInfoData(
         icon: Icons.wallpaper_rounded,
-        title: 'Ảnh nền',
-        value: headerImageUrl.isNotEmpty ? 'Đã có nền' : headerThemeLabel,
+        title: context.tr('comm_nhnn_a07223'),
+        value: headerImageUrl.isNotEmpty ? context.tr('comm_cnn_5d22e4') : headerThemeLabel,
       ),
       CommunitySettingsQuickInfoData(
         icon: Icons.alternate_email_rounded,
@@ -44,10 +45,10 @@ class CommunitySettingsProfileSection extends StatelessWidget {
       ),
       CommunitySettingsQuickInfoData(
         icon: Icons.auto_stories_rounded,
-        title: 'Tiểu sử',
+        title: context.tr('comm_tius_6b0498'),
         value: bioController.text.trim().isNotEmpty
-            ? 'Đã thêm mô tả'
-            : 'Chưa có mô tả',
+            ? context.tr('comm_thmmt_da2bb8')
+            : context.tr('comm_chacmt_fa50c1'),
       ),
     ];
 
@@ -55,9 +56,9 @@ class CommunitySettingsProfileSection extends StatelessWidget {
       floating: true,
       icon: Icons.account_circle_outlined,
       accent: const Color(0xFFEC5E7B),
-      title: 'Hồ sơ cộng đồng',
+      title: context.tr('comm_hscngng_3150e1'),
       subtitle:
-          'Avatar, ảnh nền, tên hiển thị, username và tiểu sử được gom chung để dễ quản lý như một hồ sơ riêng.',
+          context.tr('comm_avatarnhnn_076e5f'),
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
@@ -82,25 +83,25 @@ class CommunitySettingsProfileSection extends StatelessWidget {
         CommunitySettingsInfoBanner(
           icon: Icons.auto_awesome_rounded,
           color: const Color(0xFF6D5CF6),
-          title: 'Ảnh đại diện và ảnh nền',
+          title: context.tr('comm_nhidinvnhn_5cfaef'),
           message: avatarUrl.isNotEmpty || headerImageUrl.isNotEmpty
-              ? 'Màn này đang lấy đúng dữ liệu avatar và nền hiện có của hồ sơ cộng đồng. Muốn thay ảnh, hãy chỉnh trực tiếp ở màn hồ sơ để xem trước đúng kích thước.'
-              : 'Hồ sơ của bạn chưa đủ ảnh đại diện hoặc ảnh nền. Nên thêm ảnh ở màn hồ sơ cộng đồng để trang cá nhân nổi bật hơn.',
+              ? context.tr('comm_mnnyanglyn_838fc4')
+              : context.tr('comm_hscabnchan_8f8484'),
         ),
         const SizedBox(height: 12),
         CommunitySettingsTextFieldCard(
-          title: 'Tên nhà hiển thị',
+          title: context.tr('comm_tnnhhinth_65d2a5'),
           subtitle:
-              'Tên xuất hiện ở feed cộng đồng, visitor profile và các khu vực chia sẻ.',
+              context.tr('comm_tnxuthinfe_fd1753'),
           controller: nameController,
-          hintText: 'Ví dụ: Nhà Mây Hồng',
+          hintText: context.tr('comm_vdnhmyhng_9cc448'),
           maxLength: 30,
         ),
         const SizedBox(height: 12),
         CommunitySettingsTextFieldCard(
-          title: 'Username cộng đồng',
+          title: context.tr('comm_usernamecn_35e07f'),
           subtitle:
-              'Định danh ngắn gọn để tìm kiếm, gắn link và hiển thị dưới tên hồ sơ.',
+              context.tr('comm_nhdanhngng_65eaf8'),
           controller: usernameController,
           hintText: 'nha-cua-ban',
           prefixText: '@',
@@ -108,11 +109,11 @@ class CommunitySettingsProfileSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         CommunitySettingsTextFieldCard(
-          title: 'Tiểu sử',
+          title: context.tr('comm_tius_6b0498'),
           subtitle:
-              'Mô tả ngắn về câu chuyện, phong cách hoặc điều bạn muốn người khác biết khi ghé hồ sơ.',
+              context.tr('comm_mtngnvcuch_3d1ec8'),
           controller: bioController,
-          hintText: 'Viết một vài dòng thật dễ nhớ...',
+          hintText: context.tr('comm_vitmtvidng_d07517'),
           maxLines: 3,
           maxLength: 150,
         ),
@@ -120,7 +121,7 @@ class CommunitySettingsProfileSection extends StatelessWidget {
         CommunitySettingsInfoBanner(
           icon: Icons.warning_amber_rounded,
           color: const Color(0xFFE57A2E),
-          title: 'Quy tắc đổi tên',
+          title: context.tr('comm_quytcitn_f32bc6'),
           message: renameRuleText,
         ),
       ],

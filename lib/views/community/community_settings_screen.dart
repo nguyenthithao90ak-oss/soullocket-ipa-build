@@ -2,6 +2,7 @@
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
 import '../../services/single_match_service.dart';
@@ -246,14 +247,14 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
 
   String get _previewName => _nameController.text.trim().isNotEmpty
       ? _nameController.text.trim()
-      : 'Nhà chưa đặt tên';
+      : context.tr('comm_nhchattn_36b406');
 
   String get _previewHandle =>
       _normalizedUsername.isNotEmpty ? '@$_normalizedUsername' : '@username';
 
   String get _previewBio => _bioController.text.trim().isNotEmpty
       ? _bioController.text.trim()
-      : 'Thêm tiểu sử để hồ sơ cộng đồng nhìn rõ câu chuyện và cá tính hơn.';
+      : context.tr('comm_thmtiushsc_280b51');
 
   int get _profileCompletion {
     var score = 0;
@@ -268,46 +269,46 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
   String _privacyLabel(String value) {
     switch (value) {
       case 'friends':
-        return 'Chỉ bạn bè';
+        return context.tr('comm_chbnb_824805');
       case 'private':
-        return 'Chỉ hai người';
+        return context.tr('comm_chhaingi_cd40c3');
       case 'public':
       default:
-        return 'Công khai';
+        return context.tr('comm_cngkhai_c7e9f6');
     }
   }
 
   String _visibilityLabel(String value) {
     switch (value) {
       case 'public':
-        return 'Công khai';
+        return context.tr('comm_cngkhai_c7e9f6');
       case 'private':
       default:
-        return 'Ẩn với người khác';
+        return context.tr('comm_nvingikhc_b7c7fa');
     }
   }
 
   String _friendRequestPolicyLabel(String value) {
     switch (value) {
       case 'mutual':
-        return 'Chỉ bạn chung';
+        return context.tr('comm_chbnchung_b9c944');
       case 'none':
-        return 'Tắt lời mời';
+        return context.tr('comm_ttlimi_16e75f');
       case 'all':
       default:
-        return 'Mọi người';
+        return context.tr('comm_mingi_d524fb');
     }
   }
 
   String _commentPolicyLabel(String value) {
     switch (value) {
       case 'friends':
-        return 'Chỉ bạn bè';
+        return context.tr('comm_chbnb_824805');
       case 'none':
-        return 'Tắt bình luận';
+        return context.tr('comm_ttbnhlun_85f22c');
       case 'all':
       default:
-        return 'Mọi người';
+        return context.tr('comm_mingi_d524fb');
     }
   }
 
@@ -319,18 +320,18 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
   String _headerThemeLabel() {
     switch (_headerThemeKey) {
       case 'rose_blush':
-        return 'Hồng dịu';
+        return context.tr('comm_hngdu_c27a6e');
       case 'sunset_glow':
-        return 'Hoàng hôn';
+        return context.tr('comm_honghn_ab7dad');
       case 'ocean_breeze':
-        return 'Biển mát';
+        return context.tr('comm_binmt_f0db54');
       case 'mint_cloud':
-        return 'Mint sáng';
+        return context.tr('comm_mintsng_36f1f1');
       case 'midnight_velvet':
-        return 'Đêm êm';
+        return context.tr('comm_mm_6223f4');
       case 'soft_default':
       default:
-        return 'Mặc định';
+        return context.tr('comm_mcnh_a57a8e');
     }
   }
 
@@ -378,7 +379,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
 
   String _renameRuleText() {
     if (_lastUsernameUpdate == null) {
-      return 'Tên nhà và username có thể chỉnh ngay. Sau mỗi lần đổi, hệ thống sẽ khóa 7 ngày để hồ sơ ổn định hơn.';
+      return context.tr('comm_tnnhvusern_d683a8');
     }
 
     final nextAllowed = DateTime.fromMillisecondsSinceEpoch(
@@ -387,7 +388,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
     final remaining = nextAllowed.difference(DateTime.now());
 
     if (remaining.isNegative) {
-      return 'Bạn đã qua mốc 7 ngày. Có thể đổi tên nhà và username nếu cần.';
+      return context.tr('comm_bnquamc7ng_e9bfc6');
     }
 
     final days = remaining.inDays;
@@ -423,7 +424,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
 
     if (!_hasChanges()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chưa có thay đổi nào để lưu.')),
+        SnackBar(content: Text(context.tr('comm_chacthayin_1dd63f'))),
       );
       return;
     }
@@ -434,14 +435,14 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
 
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tên nhà không được để trống.')),
+        SnackBar(content: Text(context.tr('comm_tnnhkhngct_cc6f77'))),
       );
       return;
     }
 
     if (username.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Username không được để trống.')),
+        SnackBar(content: Text(context.tr('comm_usernamekh_262d9e'))),
       );
       return;
     }
@@ -523,13 +524,13 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
       await _dbRef.update(updates);
       if (!mounted) return;
       Navigator.of(context).pop();
-      SLNotice.showSuccess(context, 'Đã lưu cài đặt cộng đồng.');
+      SLNotice.showSuccess(context, context.tr('comm_lucitcngng_847645'));
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop();
       SLNotice.showError(
-          context, 'Chưa thể lưu cài đặt cộng đồng lúc này. Vui lòng thử lại.');
+          context, context.tr('comm_chathlucit_53c3b3'));
     }
   }
 
@@ -551,7 +552,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: SLColors.textPrimary),
         title: Text(
-          'Cài đặt cộng đồng',
+          context.tr('comm_citcngng_743323'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             color: SLColors.textPrimary,
@@ -576,7 +577,7 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
                 ),
               ),
               child: Text(
-                'Lưu',
+                context.tr('comm_lu_49fac1'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
                   fontSize: 15,

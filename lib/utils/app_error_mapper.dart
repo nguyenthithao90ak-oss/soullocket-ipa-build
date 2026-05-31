@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 enum AppErrorKind { user, network, server }
 
@@ -21,14 +22,14 @@ class AppErrorInfo {
 }
 
 class AppErrorMapper {
-  static const String defaultNetworkMessage =
-      'Không thể kết nối mạng. Vui lòng kiểm tra Wi‑Fi hoặc dữ liệu di động rồi thử lại.';
-  static const String defaultServerMessage =
-      'Máy chủ đang bận hoặc gặp sự cố. Vui lòng thử lại sau.';
-  static const String authSyncMessage =
-      'Phiên đăng nhập đã hết. Vui lòng đăng nhập lại.';
-  static const String recentLoginMessage =
-      'Phiên đăng nhập đã cũ. Vui lòng đăng nhập lại để tiếp tục.';
+  static String get defaultNetworkMessage =>
+      L10nService().translate('err_default_network');
+  static String get defaultServerMessage =>
+      L10nService().translate('err_default_server');
+  static String get authSyncMessage =>
+      L10nService().translate('err_auth_session_expired');
+  static String get recentLoginMessage =>
+      L10nService().translate('err_auth_recent_login_required');
 
   static AppErrorInfo resolve(
     dynamic error, {
@@ -47,10 +48,9 @@ class AppErrorMapper {
     }
 
     if (error is TimeoutException) {
-      return const AppErrorInfo(
+      return AppErrorInfo(
         kind: AppErrorKind.network,
-        message:
-            'Kết nối mạng quá chậm hoặc đã hết thời gian chờ. Vui lòng kiểm tra mạng rồi thử lại.',
+        message: L10nService().translate('err_network_timeout'),
       );
     }
 
@@ -88,12 +88,14 @@ class AppErrorMapper {
 
   static String cleanMessage(dynamic error) {
     final value = error?.toString() ?? '';
-    return value
+    final cleaned = value
         .replaceFirst(RegExp(r'^Exception:\s*'), '')
         .replaceFirst(RegExp(r'^Error:\s*'), '')
         .replaceFirst(RegExp(r'^\[firebase_auth\/[^\]]+\]\s*'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
+    if (cleaned.length <= 500) return cleaned;
+    return '${cleaned.substring(0, 500).trim()}…';
   }
 
   static bool shouldOfferPasswordRecovery(dynamic error) {
@@ -113,66 +115,62 @@ class AppErrorMapper {
   ) {
     switch (error.code) {
       case 'network-request-failed':
-        return const AppErrorInfo(
+        return AppErrorInfo(
           kind: AppErrorKind.network,
           message: defaultNetworkMessage,
         );
       case 'too-many-requests':
-        return const AppErrorInfo(
+        return AppErrorInfo(
           kind: AppErrorKind.user,
-          message:
-              'Bạn đã thử quá nhiều lần. Vui lòng chờ một lúc rồi thử lại.',
+          message: L10nService().translate('err_auth_too_many_requests'),
         );
       case 'user-not-found':
-        return const AppErrorInfo(
+        return AppErrorInfo(
           kind: AppErrorKind.user,
-          message:
-              'Tài khoản không tồn tại. Vui lòng kiểm tra lại email hoặc tạo tài khoản mới.',
+          message: L10nService().translate('err_auth_user_not_found'),
         );
       case 'wrong-password':
-        return const AppErrorInfo(
+        return AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Mật khẩu chưa đúng. Vui lòng kiểm tra lại hoặc thử mã khác.',
+          message: L10nService().translate('err_auth_wrong_password'),
         );
       case 'invalid-credential':
-        return const AppErrorInfo(
+        return AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Thông tin đăng nhập chưa đúng. Vui lòng kiểm tra lại.',
+          message: L10nService().translate('err_auth_invalid_credential'),
         );
       case 'invalid-email':
-        return const AppErrorInfo(
+        return AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Định dạng email không hợp lệ.',
+          message: L10nService().translate('err_auth_invalid_email'),
         );
       case 'email-already-in-use':
-        return const AppErrorInfo(
+        return AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Email này đã được sử dụng.',
+          message: L10nService().translate('err_auth_email_in_use'),
         );
       case 'weak-password':
-        return const AppErrorInfo(
+        return AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Mật khẩu hơi dễ đoán. Vui lòng nhập ít nhất 6 ký tự để an toàn hơn.',
+          message: L10nService().translate('err_auth_weak_password'),
         );
       case 'popup-closed-by-user':
-        return const AppErrorInfo(
+        return AppErrorInfo(
           kind: AppErrorKind.user,
-          message: 'Bạn đã đóng cửa sổ đăng nhập.',
+          message: L10nService().translate('err_auth_popup_closed'),
         );
       case 'popup-blocked':
       case 'cancelled-popup-request':
-        return const AppErrorInfo(
+        return AppErrorInfo(
           kind: AppErrorKind.user,
-          message:
-              'Trình duyệt đang chặn cửa sổ đăng nhập. Vui lòng cho phép popup rồi thử lại.',
+          message: L10nService().translate('err_auth_popup_blocked'),
         );
       default:
         return AppErrorInfo(
           kind: AppErrorKind.server,
           message: _normalizeServerMessage(
             cleanMessage(error.message),
-            fallbackMessage:
-                'Máy chủ xác thực đang bận hoặc gặp sự cố. Vui lòng thử lại sau.',
+            fallbackMessage: L10nService().translate('err_auth_server_busy'),
           ),
         );
     }
@@ -186,14 +184,14 @@ class AppErrorMapper {
     final message = cleanMessage(error.message);
 
     if (code == 'requires-recent-login') {
-      return const AppErrorInfo(
+      return AppErrorInfo(
         kind: AppErrorKind.user,
         message: recentLoginMessage,
       );
     }
 
     if (code == 'unauthenticated') {
-      return const AppErrorInfo(
+      return AppErrorInfo(
         kind: AppErrorKind.user,
         message: authSyncMessage,
       );
@@ -202,10 +200,9 @@ class AppErrorMapper {
     if (code == 'network-request-failed' ||
         code == 'deadline-exceeded' ||
         code == 'timed-out') {
-      return const AppErrorInfo(
+      return AppErrorInfo(
         kind: AppErrorKind.network,
-        message:
-            'Kết nối mạng quá chậm hoặc bị gián đoạn. Vui lòng kiểm tra mạng rồi thử lại.',
+        message: L10nService().translate('err_network_interrupted'),
       );
     }
 
@@ -217,10 +214,11 @@ class AppErrorMapper {
         message,
         fallbackMessage: fallbackMessage,
       );
-      if (code == 'permission-denied' && (cleanMsg.isEmpty || cleanMsg == defaultServerMessage)) {
-        return const AppErrorInfo(
+      if (code == 'permission-denied' &&
+          (cleanMsg.isEmpty || cleanMsg == defaultServerMessage)) {
+        return AppErrorInfo(
           kind: AppErrorKind.server,
-          message: 'Bạn chưa có quyền thực hiện thao tác này. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.',
+          message: L10nService().translate('err_permission_denied'),
         );
       }
       return AppErrorInfo(
@@ -324,7 +322,7 @@ class AppErrorMapper {
       return recentLoginMessage;
     }
     if (message.isEmpty) {
-      return 'Thông tin bạn nhập chưa hợp lệ. Vui lòng kiểm tra lại.';
+      return L10nService().translate('err_invalid_input');
     }
     return message;
   }
@@ -334,7 +332,7 @@ class AppErrorMapper {
     if (normalized.contains('quá thời gian') ||
         normalized.contains('timeout') ||
         normalized.contains('timed out')) {
-      return 'Kết nối mạng quá chậm hoặc đã hết thời gian chờ. Vui lòng kiểm tra mạng rồi thử lại.';
+      return L10nService().translate('err_network_timeout');
     }
     if (message.isEmpty) {
       return defaultNetworkMessage;
@@ -354,22 +352,22 @@ class AppErrorMapper {
         normalized.contains('play integrity') ||
         normalized.contains('attestation')) {
       if (kDebugMode) {
-        return 'Bản debug đang bị App Check chặn. Hãy kiểm tra debug token rồi thử lại.';
+        return L10nService().translate('err_appcheck_debug_blocked');
       }
-      return 'Thiết bị đang được xác thực bảo mật. Vui lòng chờ vài giây rồi thử lại.';
+      return L10nService().translate('err_appcheck_verifying_device');
     }
     if (normalized.contains('permission denied')) {
-      return 'Máy chủ đang chặn thao tác này. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.';
+      return L10nService().translate('err_server_blocking_action');
     }
     if (normalized.contains('api key') ||
         normalized.contains('internal error has occurred')) {
-      return 'Dịch vụ đăng nhập đang gặp sự cố hệ thống. Vui lòng thử lại sau.';
+      return L10nService().translate('err_login_service_system');
     }
     if (normalized.contains('máy chủ chưa cấu hình otp_secret') ||
         normalized.contains('máy chủ chưa được cấu hình để gửi email otp') ||
         normalized.contains('otp_secret') ||
         normalized.contains('gmail_app_password')) {
-      return 'Dịch vụ gửi mã OTP chưa sẵn sàng. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.';
+      return L10nService().translate('err_otp_service_not_ready');
     }
     if (message.isEmpty) {
       return fallbackMessage ?? defaultServerMessage;

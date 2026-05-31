@@ -237,7 +237,7 @@ extension _CountdownModeIndependentScreenStatePart
       _rebuildVisibleSpaces();
     });
     if (didCloseRemovedSpace) {
-      _showMessage('Không gian này đã bị xóa hoặc ngừng chia sẻ.');
+      _showMessage(context.tr('home_khnggianny_538f43'));
     }
   }
 
@@ -380,21 +380,21 @@ extension _CountdownModeIndependentScreenStatePart
     final defaultTopLabel = defaultSingleMode
         ? (ui.countdownTopLabel.trim().isNotEmpty
             ? ui.countdownTopLabel.trim()
-            : 'TUỔI CỦA TÔI')
+            : context.tr('home_tuicati_5c654c'))
         : (widget.fallbackTopLabel.trim().isNotEmpty
             ? widget.fallbackTopLabel.trim()
-            : 'Yêu nhau');
+            : context.tr('home_yunhau_501102'));
     final defaultBottomLabel = defaultSingleMode
         ? (ui.countdownBottomLabel.trim().isNotEmpty
             ? ui.countdownBottomLabel.trim()
-            : 'NGÀY TUỔI')
+            : context.tr('home_ngytui_22bed4'))
         : (widget.fallbackBottomLabel.trim().isNotEmpty
             ? widget.fallbackBottomLabel.trim()
-            : 'ngày');
+            : context.tr('home_ngy_41ec10'));
     final defaultNameU1 =
-        widget.nameU1.trim().isEmpty ? 'Bạn' : widget.nameU1.trim();
+        widget.nameU1.trim().isEmpty ? context.tr('home_bn_1fd75b') : widget.nameU1.trim();
     final defaultNameU2 =
-        widget.nameU2.trim().isEmpty ? 'Người ấy' : widget.nameU2.trim();
+        widget.nameU2.trim().isEmpty ? context.tr('home_ngiy_5bab37') : widget.nameU2.trim();
     final defaultThemeKey =
         ui.themeKey.trim().isEmpty ? 'theme-auto' : ui.themeKey.trim();
     final defaultStyleKey = ui.countdownStyleKey.trim().isEmpty
@@ -614,12 +614,12 @@ extension _CountdownModeIndependentScreenStatePart
       if (validationError != null) return validationError;
       final parsed = parseInput(raw.trim());
       if (parsed == null) {
-        return 'Ngày không hợp lệ.';
+        return context.tr('home_ngykhnghpl_b660fe');
       }
       if (!inRange(parsed)) {
         return 'Ngày phải trong khoảng ${DateInputUtils.formatDisplayDate(minDate)} - ${DateInputUtils.formatDisplayDate(maxDate)}.';
       }
-      return 'Định dạng chưa đúng.';
+      return context.tr('home_nhdngchang_9fbba2');
     }
 
     try {
@@ -665,7 +665,7 @@ extension _CountdownModeIndependentScreenStatePart
 
               return AlertDialog(
                 title: Text(
-                  'Chọn ngày',
+                  context.tr('home_chnngy_d2cce5'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFFD81B60),
@@ -701,9 +701,9 @@ extension _CountdownModeIndependentScreenStatePart
                         );
                       },
                       decoration: InputDecoration(
-                        labelText: 'Nhập ngày',
-                        hintText: 'ngày/tháng/năm',
-                        helperText: 'Đang nhập ngày/tháng/năm',
+                        labelText: context.tr('home_nhpngy_91932a'),
+                        hintText: context.tr('home_ngythngnm_a697d0'),
+                        helperText: context.tr('home_angnhpngyt_377d85'),
                         errorText: errorText,
                         prefixIcon: const Icon(
                           Icons.calendar_month_rounded,
@@ -719,11 +719,11 @@ extension _CountdownModeIndependentScreenStatePart
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: const Text('Hủy'),
+                    child: Text(context.tr('home_hy_1e4050')),
                   ),
                   TextButton(
                     onPressed: () => unawaited(pickFromCalendar()),
-                    child: const Text('Chọn lịch'),
+                    child: Text(context.tr('home_chnlch_e1fe3f')),
                   ),
                   ElevatedButton(
                     onPressed: submit,
@@ -753,7 +753,7 @@ extension _CountdownModeIndependentScreenStatePart
     final nextValue = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(editTopLabel ? 'Sửa chữ trên' : 'Sửa chữ dưới'),
+        title: Text(editTopLabel ? context.tr('home_sachtrn_a2d51f') : context.tr('home_sachdi_744600')),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -765,12 +765,12 @@ extension _CountdownModeIndependentScreenStatePart
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Hủy'),
+            child: Text(context.tr('home_hy_1e4050')),
           ),
           ElevatedButton(
             onPressed: () =>
                 Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: const Text('Lưu'),
+            child: Text(context.tr('home_lu_49fac1')),
           ),
         ],
       ),
@@ -813,11 +813,11 @@ extension _CountdownModeIndependentScreenStatePart
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            'Lần upload avatar không gian đếm ngày trước đã bị gián đoạn.',
+          content: Text(
+            context.tr('home_lnuploadav_949b24'),
           ),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('home_thli_4dffdf'),
             onPressed: () {
               unawaited(_retryPendingSpaceAvatarUpload());
             },
@@ -860,7 +860,7 @@ extension _CountdownModeIndependentScreenStatePart
   }) async {
     final houseId = _uploadHouseId;
     if (houseId == null) {
-      _showMessage('Không tìm thấy mã nhà để tải avatar.');
+      _showMessage(context.tr('home_khngtmthym_b7eeff'));
       return;
     }
     final role = isLeft ? 'left' : 'right';
@@ -900,7 +900,7 @@ extension _CountdownModeIndependentScreenStatePart
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (mounted) {
-          _showMessage('Không tải được avatar mới.');
+          _showMessage(context.tr('home_khngticava_73ea14'));
         }
         return;
       }
@@ -946,56 +946,6 @@ extension _CountdownModeIndependentScreenStatePart
 
   Future<void> _addSpaceByCode(String rawCode) async {
     await _addSpaceByCodeV2(rawCode);
-    return;
-    if (_isAddingSpace) return;
-    final code = rawCode.trim();
-    if (code.isEmpty) {
-      _showMessage('Bạn chưa nhập mã nhà.');
-      return;
-    }
-    if (code == _selfSpaceHouseId) {
-      _showMessage('Không thể ghép với chính nhà hiện tại.');
-      return;
-    }
-    if (_spaceHouseIds.contains(code)) {
-      _showMessage('Không gian này đã có trong danh sách.');
-      return;
-    }
-    _safeSetState(() => _isAddingSpace = true);
-    try {
-      if (_selfSpaceHouseId != 'local_self') {
-        await _countdownSpaceService.sendRequest(
-          fromHouseId: _selfSpaceHouseId,
-          fromHouseName: _nameU1,
-          toHouseId: code,
-          initialSnapshot: _snapshotToSerializedMap(
-            _spaceSnapshots[_selfSpaceHouseId] ?? _captureCurrentSnapshot(),
-          ),
-        );
-      }
-      if (!mounted) return;
-      _safeSetState(() {
-        _optimisticPendingSpaceHouseIds.add(code);
-        _spaceSnapshots[code] =
-            _spaceSnapshots[_selfSpaceHouseId] ?? _captureCurrentSnapshot();
-        _rebuildVisibleSpaces();
-      });
-      await _saveSpaceRegistry();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Đã gửi yêu cầu ghép nối. Nếu người kia chấp nhận, không gian này sẽ được liên kết.',
-          ),
-        ),
-      );
-    } catch (_) {
-      _showMessage('Không thể thêm không gian lúc này. Thử lại sau.');
-    } finally {
-      if (mounted) {
-        _safeSetState(() => _isAddingSpace = false);
-      }
-    }
   }
 
   Future<void> _showAddSpaceDialogV2() async {
@@ -1081,16 +1031,16 @@ extension _CountdownModeIndependentScreenStatePart
 
   String? _validateSpaceCodeLocally(String code) {
     if (code.isEmpty) {
-      return 'Bạn chưa nhập mã nhà, @username hoặc link.';
+      return context.tr('home_bnchanhpmn_f6c560');
     }
     if (!RegExp(r'^[A-Z0-9_-]{4,40}$').hasMatch(code)) {
       return 'Mã nhà chỉ gồm chữ, số, "_" hoặc "-". Ví dụ: NH_ABC123.';
     }
     if (_selfSpaceHouseId == 'local_self') {
-      return 'Chưa xác định được mã nhà hiện tại. Hãy vào nhà chính rồi thử lại.';
+      return context.tr('home_chaxcnhcmn_8d40ef');
     }
     if (code == _selfSpaceHouseId) {
-      return 'Không thể ghép với chính nhà hiện tại.';
+      return context.tr('home_khngthghpv_ac8b30');
     }
     if (_spaceHouseIds
         .any((existing) => _normalizeSpaceCode(existing) == code)) {
@@ -1101,10 +1051,10 @@ extension _CountdownModeIndependentScreenStatePart
 
   String? _validateSpaceLookupLocally(String value) {
     if (value.trim().isEmpty) {
-      return 'Bạn chưa nhập mã nhà, @username hoặc link.';
+      return context.tr('home_bnchanhpmn_f6c560');
     }
     if (_selfSpaceHouseId == 'local_self') {
-      return 'Chưa xác định được mã nhà hiện tại. Hãy vào nhà chính rồi thử lại.';
+      return context.tr('home_chaxcnhcmn_8d40ef');
     }
     return null;
   }
@@ -1113,10 +1063,16 @@ extension _CountdownModeIndependentScreenStatePart
     String rawCode, {
     bool showFeedback = true,
   }) async {
+    final busyMessage = context.tr('home_angxlyucut_edb2fd');
+    final notFoundMessage = context.tr('home_khngtmthyn_55dd98');
+    final selfMessage = context.tr('home_khngthghpv_ac8b30');
+    final successRequestMessage = context.tr('home_giyucughpn_d6a258');
+    final fallbackMessage = context.tr('home_khngththmk_0bb09e');
+
     if (_isAddingSpace) {
-      return const _CountdownSpaceAddResult(
+      return _CountdownSpaceAddResult(
         success: false,
-        message: 'Đang xử lý yêu cầu trước đó. Vui lòng đợi một chút.',
+        message: busyMessage,
       );
     }
 
@@ -1145,12 +1101,10 @@ extension _CountdownModeIndependentScreenStatePart
       final resolvedTargetHouseId =
           await _resolveSpaceTargetHouseId(lookupValue);
       if (resolvedTargetHouseId == null) {
-        const notFoundMessage =
-            'Không tìm thấy nhà nào khớp. Hãy thử mã nhà, @username hoặc link profile.';
         if (showFeedback) {
           _showMessage(notFoundMessage);
         }
-        return const _CountdownSpaceAddResult(
+        return _CountdownSpaceAddResult(
           success: false,
           message: notFoundMessage,
         );
@@ -1158,11 +1112,10 @@ extension _CountdownModeIndependentScreenStatePart
 
       if (resolvedTargetHouseId ==
           _normalizeResolvedSpaceHouseId(_selfSpaceHouseId)) {
-        const selfMessage = 'Không thể ghép với chính nhà hiện tại.';
         if (showFeedback) {
           _showMessage(selfMessage);
         }
-        return const _CountdownSpaceAddResult(
+        return _CountdownSpaceAddResult(
           success: false,
           message: selfMessage,
         );
@@ -1203,9 +1156,9 @@ extension _CountdownModeIndependentScreenStatePart
       }
 
       if (!mounted) {
-        return const _CountdownSpaceAddResult(
+        return _CountdownSpaceAddResult(
           success: true,
-          message: 'Đã gửi yêu cầu ghép nối.',
+          message: successRequestMessage,
         );
       }
 
@@ -1228,11 +1181,10 @@ extension _CountdownModeIndependentScreenStatePart
         message: successMessage,
       );
     } catch (_) {
-      const fallbackMessage = 'Không thể thêm không gian lúc này. Thử lại sau.';
       if (showFeedback) {
         _showMessage(fallbackMessage);
       }
-      return const _CountdownSpaceAddResult(
+      return _CountdownSpaceAddResult(
         success: false,
         message: fallbackMessage,
       );
@@ -1295,20 +1247,19 @@ extension _CountdownModeIndependentScreenStatePart
     final accepted = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Yêu cầu ghép nối'),
+        title: Text(context.tr('home_yucughpni_6a3807')),
         content: Text(
           '$senderLabel đang muốn ghép nối không gian đếm với nhà của bạn.\n\n'
-          'Mã nhà: ${request.fromHouseId}\n\n'
-          'Nếu chấp nhận, hai bên sẽ dùng chung một không gian đếm và mọi thay đổi được lưu trong không gian này sẽ được đồng bộ cho cả hai.',
+          'Mã nhà: ${request.fromHouseId}\n\n${context.tr('home_nuchpnhnha_5e7057')}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Từ chối'),
+            child: Text(context.tr('home_tchi_2119d8')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Chấp nhận'),
+            child: Text(context.tr('home_chpnhn_6ca558')),
           ),
         ],
       ),
@@ -1354,8 +1305,8 @@ extension _CountdownModeIndependentScreenStatePart
 
       _showMessage(
         accept
-            ? 'Đã chấp nhận ghép nối. Hai bên đang dùng chung một không gian đếm.'
-            : 'Đã từ chối yêu cầu ghép nối.',
+            ? context.tr('home_chpnhnghpn_3a4753')
+            : context.tr('home_tchiyucugh_13e5c2'),
       );
     } finally {
       if (mounted) {
@@ -1369,7 +1320,7 @@ extension _CountdownModeIndependentScreenStatePart
   Future<void> _requestDeleteCurrentSpace(String houseId) async {
     final sharedSpace = _sharedSpaceFor(houseId);
     if (houseId == _selfSpaceHouseId || sharedSpace == null) {
-      _showMessage('Chỉ không gian đã ghép mới có thể gửi yêu cầu xóa.');
+      _showMessage(context.tr('home_chkhnggian_13d818'));
       return;
     }
     if (_deleteRequestFor(houseId) != null) {
@@ -1380,19 +1331,18 @@ extension _CountdownModeIndependentScreenStatePart
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Gửi yêu cầu xóa'),
+        title: Text(context.tr('home_giyucuxa_d2e564')),
         content: Text(
-          'Yêu cầu này sẽ được gửi tới ${_spaceTitle(houseId)}.\n\n'
-          'Nếu bên kia xác nhận, không gian sẽ xóa ngay. Nếu chưa xác nhận, hệ thống sẽ tự xóa sau 15 ngày.',
+          'Yêu cầu này sẽ được gửi tới ${_spaceTitle(houseId)}.\n\n${context.tr('home_nubnkiaxcn_9458c0')}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Hủy'),
+            child: Text(context.tr('home_hy_1e4050')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Gửi yêu cầu'),
+            child: Text(context.tr('home_giyucu_576885')),
           ),
         ],
       ),
@@ -1415,29 +1365,28 @@ extension _CountdownModeIndependentScreenStatePart
   Future<void> _acceptDeleteCurrentSpace(String houseId) async {
     final request = _deleteRequestFor(houseId);
     if (request == null) {
-      _showMessage('Yêu cầu xóa không còn tồn tại.');
+      _showMessage(context.tr('home_yucuxakhng_da2f6d'));
       return;
     }
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Xác nhận xóa không gian'),
+        title: Text(context.tr('home_xcnhnxakhn_2ac5a7')),
         content: Text(
-          'Không gian ${_spaceTitle(houseId)} sẽ bị xóa cho cả hai bên ngay sau khi bạn xác nhận.\n\n'
-          'Nếu bạn chưa muốn xóa ngay, có thể để hệ thống tự xóa sau 15 ngày.',
+          'Không gian ${_spaceTitle(houseId)} sẽ bị xóa cho cả hai bên ngay sau khi bạn xác nhận.\n\n${context.tr('home_nubnchamun_57d743')}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Để sau'),
+            child: Text(context.tr('home_sau_8a3721')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFC62828),
             ),
-            child: const Text('Xóa ngay'),
+            child: Text(context.tr('home_xangay_dc07fa')),
           ),
         ],
       ),
@@ -1502,7 +1451,7 @@ extension _CountdownModeIndependentScreenStatePart
         (_incomingSpaceRequests[houseId.trim()]?.fromHouseName ?? '').trim();
     if (incomingLabel.isNotEmpty) return incomingLabel;
     if (houseId == _selfSpaceHouseId) {
-      return _nameU1.trim().isEmpty ? 'Không gian của tôi' : _nameU1.trim();
+      return _nameU1.trim().isEmpty ? context.tr('home_khnggianca_3f6e45') : _nameU1.trim();
     }
     return houseId.length > 14 ? '${houseId.substring(0, 14)}…' : houseId;
   }
@@ -1536,7 +1485,7 @@ extension _CountdownModeIndependentScreenStatePart
 
   String _formatSpaceDeleteDateTime(int value) {
     if (value <= 0) {
-      return 'không xác định';
+      return context.tr('home_khngxcnh_fb806e');
     }
     final dt = DateTime.fromMillisecondsSinceEpoch(value);
     final day = dt.day.toString().padLeft(2, '0');
@@ -1552,9 +1501,9 @@ extension _CountdownModeIndependentScreenStatePart
       return '';
     }
     if (request.isRequestedBy(_selfSpaceHouseId)) {
-      return 'Đang chờ xóa không gian';
+      return context.tr('home_angchxakhn_f26cbb');
     }
-    return 'Bên kia đang chờ bạn xác nhận xóa';
+    return context.tr('home_bnkiaangch_b287d3');
   }
 
   String _deleteStatusDescription(String houseId) {
@@ -1584,18 +1533,18 @@ extension _CountdownModeIndependentScreenStatePart
 
   String _spaceConnectionStatusText(String houseId) {
     if (houseId == _selfSpaceHouseId) {
-      return 'Không gian riêng';
+      return context.tr('home_khnggianri_5aa2fb');
     }
     if (_hasIncomingSpaceRequest(houseId)) {
-      return 'Chờ bạn chấp nhận';
+      return context.tr('home_chbnchpnhn_ea7846');
     }
     if (_isSharedSpace(houseId)) {
-      return 'Đã ghép nối';
+      return context.tr('home_ghpni_369328');
     }
     if (_hasPendingSpaceRequest(houseId)) {
-      return 'Đã gửi, đang chờ';
+      return context.tr('home_giangch_2628ca');
     }
-    return 'Chưa ghép nối';
+    return context.tr('home_chaghpni_70d9cc');
   }
 
   Color _spaceAccentColor(String houseId) {
@@ -1610,31 +1559,31 @@ extension _CountdownModeIndependentScreenStatePart
 
   String _spaceStatusText(String houseId) {
     if (houseId == _selfSpaceHouseId) {
-      return 'Cục bộ';
+      return context.tr('home_ccb_60e080');
     }
-    return _acceptedSpaceHouseIds.contains(houseId) ? 'Đã ghép' : 'Chờ ghép';
+    return _acceptedSpaceHouseIds.contains(houseId) ? context.tr('home_ghp_835f82') : context.tr('home_chghp_6e894c');
   }
 
   String _spaceConnectionStatusLabel(String houseId) {
     if (houseId == _selfSpaceHouseId) {
-      return 'Không gian riêng';
+      return context.tr('home_khnggianri_5aa2fb');
     }
     if (_hasDeleteRequest(houseId)) {
       final request = _deleteRequestFor(houseId)!;
       return request.isRequestedBy(_selfSpaceHouseId)
-          ? 'Đang chờ xóa'
-          : 'Chờ bạn xác nhận xóa';
+          ? context.tr('home_angchxa_313854')
+          : context.tr('home_chbnxcnhnx_2a7e54');
     }
     if (_hasIncomingSpaceRequest(houseId)) {
-      return 'Chờ bạn chấp nhận';
+      return context.tr('home_chbnchpnhn_ea7846');
     }
     if (_isSharedSpace(houseId)) {
-      return 'Đã ghép nối';
+      return context.tr('home_ghpni_369328');
     }
     if (_hasPendingSpaceRequest(houseId)) {
-      return 'Đã gửi, đang chờ';
+      return context.tr('home_giangch_2628ca');
     }
-    return 'Chưa ghép nối';
+    return context.tr('home_chaghpni_70d9cc');
   }
 
   Color _spaceAccentColorResolved(String houseId) {
@@ -1652,31 +1601,31 @@ extension _CountdownModeIndependentScreenStatePart
 
   String _topLabel() {
     return _topLabelText.trim().isEmpty
-        ? (_singleMode ? 'TUỔI CỦA TÔI' : 'Yêu nhau')
+        ? (_singleMode ? context.tr('home_tuicati_5c654c') : context.tr('home_yunhau_501102'))
         : _topLabelText.trim();
   }
 
   String _bottomLabel() {
     return _bottomLabelText.trim().isEmpty
-        ? (_singleMode ? 'NGÀY TUỔI' : 'ngày')
+        ? (_singleMode ? context.tr('home_ngytui_22bed4') : context.tr('home_ngy_41ec10'))
         : _bottomLabelText.trim();
   }
 
   String _previewTopLabel(_CountdownSpaceSnapshot snapshot) {
     return snapshot.topLabel.trim().isEmpty
-        ? (snapshot.singleMode ? 'TUỔI CỦA TÔI' : 'Yêu nhau')
+        ? (snapshot.singleMode ? context.tr('home_tuicati_5c654c') : context.tr('home_yunhau_501102'))
         : snapshot.topLabel.trim();
   }
 
   String _previewBottomLabel(_CountdownSpaceSnapshot snapshot) {
     return snapshot.bottomLabel.trim().isEmpty
-        ? (snapshot.singleMode ? 'NGÀY TUỔI' : 'ngày')
+        ? (snapshot.singleMode ? context.tr('home_ngytui_22bed4') : context.tr('home_ngy_41ec10'))
         : snapshot.bottomLabel.trim();
   }
 
   String _previewCaption(DateTime? anchorDate) {
     if (anchorDate == null) {
-      return 'Chạm vào thẻ để chọn ngày mốc riêng cho không gian này';
+      return context.tr('home_chmvothchn_6b1d87');
     }
     return 'Từ ${DateInputUtils.formatDisplayDate(anchorDate)}';
   }
@@ -1691,7 +1640,7 @@ extension _CountdownModeIndependentScreenStatePart
 
   String _caption(BuildContext context) {
     if (_anchorDate == null) {
-      return 'Chạm vào thẻ để chọn ngày mốc riêng cho không gian này';
+      return context.tr('home_chmvothchn_6b1d87');
     }
     return 'Từ ${DateInputUtils.formatDisplayDate(_anchorDate!)}';
   }

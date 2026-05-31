@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:soullocket_app/app.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -6,29 +7,25 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:soullocket_app/core/constants/app_config.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/services/connectivity_service.dart';
 import 'package:soullocket_app/services/l10n_service.dart';
 import 'package:soullocket_app/services/local_database_service.dart';
 import 'package:soullocket_app/services/music_service.dart';
-import 'package:soullocket_app/services/notification_service.dart';
 import 'package:soullocket_app/services/offline_cache_service.dart';
 import 'package:soullocket_app/services/security_service.dart';
 import 'package:soullocket_app/services/widget_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
-import 'package:soullocket_app/views/app_entry.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 
 @pragma('vm:entry-point')
@@ -42,7 +39,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   } catch (error, stackTrace) {
     debugPrint('FCM background bootstrap error: ${AppErrorMapper.resolve(
       error,
-      fallbackMessage: 'Không thể khởi tạo FCM nền lúc này.',
+      fallbackMessage: L10nService().translate('core_err_fcm_bg_init_failed'),
     ).message}');
     unawaited(ErrorLoggerService.instance.logError(
       error,
@@ -121,18 +118,18 @@ Future<void> _verifyOfficialBuildSignature() async {
 String _messageForSignatureStatus(String status) {
   switch (status) {
     case 'signature_mismatch':
-      return 'Bản cài đặt này không khớp chữ ký phát hành chính thức.';
+      return L10nService().translate('core_err_signature_mismatch');
     case 'package_info_unavailable':
-      return 'Ứng dụng không xác minh được chữ ký cài đặt trên thiết bị này.';
+      return L10nService().translate('core_err_signature_verify_failed');
     default:
-      return 'Ứng dụng phát hiện bản cài đặt hiện tại không đáng tin cậy.';
+      return L10nService().translate('core_err_install_untrusted');
   }
 }
 
 List<String> _detailsForSignatureStatus(_UnofficialBuildDetected error) {
   return [
     _messageForSignatureStatus(error.status),
-    'Hãy gỡ bản hiện tại và cài lại từ nguồn phát hành chính thức của bạn.',
+    L10nService().translate('core_err_reinstall_official'),
     if (kDebugMode) 'reasonCode=${error.reasonCode}; status=${error.status}',
   ];
 }
@@ -184,7 +181,7 @@ Future<void> _clearStaleIosAuthAfterFreshInstall() async {
     } catch (e) {
       debugPrint('Fresh install cleanup log skipped: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể ghi log dọn dẹp cài đặt mới.',
+        fallbackMessage: L10nService().translate('core_err_log_fresh_install_failed'),
       ).message}');
     }
   }
@@ -206,15 +203,16 @@ Future<void> _configureSystemUiForEdgeToEdge() async {
   }
 
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  if (defaultTargetPlatform == TargetPlatform.iOS) {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-    );
-  }
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
 }
 
 void main() {
@@ -257,7 +255,7 @@ void main() {
     PlatformDispatcher.instance.onError = (error, stackTrace) {
       final mappedError = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Lỗi nền hệ thống.',
+        fallbackMessage: L10nService().translate('core_err_system_bg'),
       );
       unawaited(ErrorLoggerService.instance.logError(
         error,
@@ -286,24 +284,25 @@ void main() {
       }
 
       await UiPrefs.ensureLoaded();
+      await L10nService().init();
       runApp(const MyApp());
       _scheduleDeferredBootstrap();
-    } on _MissingBootstrapConfig catch (error) {
+    } on _MissingBootstrapConfig {
       if (!kIsWeb) {
         FlutterNativeSplash.remove();
       }
       runApp(StartupErrorApp(
-        title: 'Thiếu cấu hình môi trường',
+        title: L10nService().translate('core_err_missing_env_title'),
         message: kDebugMode
-            ? 'Thiếu cấu hình môi trường bắt buộc.'
-            : 'Ứng dụng chưa sẵn sàng để khởi động trên thiết bị này.',
+            ? L10nService().translate('core_err_missing_env_req')
+            : L10nService().translate('core_err_app_not_ready'),
         details: [
           if (kDebugMode)
-            'Các biến chưa được truyền: ${error.missingKeys.join(', ')}',
+            L10nService().translate('core_err_missing_vars'),
           if (kDebugMode)
-            'Hãy truyền cấu hình qua CI/CD hoặc --dart-define-from-file trước khi chạy lại.',
+            L10nService().translate('core_err_pass_config_ci'),
           if (!kDebugMode)
-            'Hãy cập nhật ứng dụng hoặc cài lại bản mới nhất rồi thử lại.',
+            L10nService().translate('core_err_update_app'),
         ],
       ));
     } on _UnofficialBuildDetected catch (error) {
@@ -311,15 +310,15 @@ void main() {
         FlutterNativeSplash.remove();
       }
       runApp(StartupErrorApp(
-        title: 'Bản cài đặt không hợp lệ',
-        message: 'Ứng dụng chỉ cho phép chạy trên bản phát hành chính thức.',
+        title: L10nService().translate('core_err_invalid_install_title'),
+        message: L10nService().translate('core_err_official_release_only'),
         details: _detailsForSignatureStatus(error),
       ));
     } catch (error) {
       final bootstrapError = AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Không thể khởi động ứng dụng lúc này. Vui lòng thử lại sau.',
+            L10nService().translate('core_err_app_start_failed'),
       );
       debugPrint('Bootstrap error: ${bootstrapError.message}');
       unawaited(
@@ -336,23 +335,23 @@ void main() {
       }
       runApp(StartupErrorApp(
         title: bootstrapError.isNetworkError
-            ? 'Lỗi kết nối khi khởi động'
-            : 'Lỗi hệ thống khi khởi động',
+            ? L10nService().translate('core_err_conn_start_title')
+            : L10nService().translate('core_err_sys_start_title'),
         message: bootstrapError.isNetworkError
-            ? 'Ứng dụng chưa thể khởi động vì kết nối mạng chưa ổn định.'
-            : 'Ứng dụng chưa thể khởi động do lỗi hệ thống.',
+            ? L10nService().translate('core_err_conn_start_desc')
+            : L10nService().translate('core_err_sys_start_desc'),
         details: [
           bootstrapError.message,
           bootstrapError.isNetworkError
-              ? 'Hãy kiểm tra Wi‑Fi hoặc dữ liệu di động rồi mở lại ứng dụng.'
-              : 'Vui lòng thử lại sau. Nếu lỗi lặp lại, hãy liên hệ hỗ trợ.',
+              ? L10nService().translate('core_err_check_network')
+              : L10nService().translate('core_err_try_again_contact'),
         ],
       ));
     }
   }, (error, stackTrace) {
     final mappedError = AppErrorMapper.resolve(
       error,
-      fallbackMessage: 'Có lỗi chưa được bắt ở vùng khởi động.',
+      fallbackMessage: L10nService().translate('core_err_uncaught_start'),
     );
     debugPrint('Uncaught zone error: ${mappedError.message}');
     unawaited(ErrorLoggerService.instance.logError(
@@ -380,7 +379,7 @@ Future<void> _initializeFirebaseBootstrap() async {
   }
 
   if (Firebase.apps.isEmpty) {
-    throw StateError('Firebase chưa được khởi tạo.');
+    throw StateError(L10nService().translate('core_err_firebase_not_init'));
   }
 
   if (!kIsWeb) {
@@ -391,7 +390,7 @@ Future<void> _initializeFirebaseBootstrap() async {
     } catch (e) {
       debugPrint('Firebase persistence error: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể bật lưu đệm Firebase.',
+        fallbackMessage: L10nService().translate('core_err_firebase_cache_failed'),
       ).message}');
     }
 
@@ -420,7 +419,7 @@ Future<void> _initializeNativeFirebaseBootstrap() async {
   } catch (nativeError) {
     debugPrint('Firebase native init error: ${AppErrorMapper.resolve(
       nativeError,
-      fallbackMessage: 'Không thể khởi tạo Firebase native.',
+      fallbackMessage: L10nService().translate('core_err_firebase_native_failed'),
     ).message}');
   }
 
@@ -533,7 +532,7 @@ Future<FirebaseOptions?> _loadNativeFirebaseOptions() async {
   } catch (error) {
     debugPrint('Native Firebase options load error: ${AppErrorMapper.resolve(
       error,
-      fallbackMessage: 'Không thể đọc cấu hình Firebase native.',
+      fallbackMessage: L10nService().translate('core_err_firebase_read_config_failed'),
     ).message}');
     return null;
   }
@@ -563,7 +562,7 @@ Future<void> _initializeFirebaseAppCheck() async {
   } catch (e) {
     debugPrint('Firebase App Check init error: ${AppErrorMapper.resolve(
       e,
-      fallbackMessage: 'Không thể khởi tạo App Check.',
+      fallbackMessage: L10nService().translate('core_err_appcheck_failed'),
     ).message}');
   }
 }
@@ -633,7 +632,7 @@ void _scheduleDeferredBootstrap() {
       } catch (error, stackTrace) {
         debugPrint('Deferred bootstrap error: ${AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể chạy tác vụ khởi động nền.',
+          fallbackMessage: L10nService().translate('core_err_bg_task_failed'),
         ).message}');
         unawaited(ErrorLoggerService.instance.logError(
           error,
@@ -657,7 +656,7 @@ Future<void> _purgeDeprecatedSecretsDeferred() async {
   } catch (e) {
     debugPrint('Deprecated secrets cleanup error: ${AppErrorMapper.resolve(
       e,
-      fallbackMessage: 'Không thể dọn bí mật cũ.',
+      fallbackMessage: L10nService().translate('core_err_clean_secrets_failed'),
     ).message}');
   }
 }
@@ -668,7 +667,7 @@ Future<void> _warmUpOfflineCache() async {
   } catch (e) {
     debugPrint('Prefs init error: ${AppErrorMapper.resolve(
       e,
-      fallbackMessage: 'Không thể khởi tạo prefs.',
+      fallbackMessage: L10nService().translate('core_err_init_prefs_failed'),
     ).message}');
   }
 }
@@ -679,7 +678,7 @@ Future<void> _warmUpLocalDatabase() async {
   } catch (e) {
     debugPrint('LocalDB init error: ${AppErrorMapper.resolve(
       e,
-      fallbackMessage: 'Không thể khởi tạo cơ sở dữ liệu cục bộ.',
+      fallbackMessage: L10nService().translate('core_err_init_local_db_failed'),
     ).message}');
   }
 }
@@ -691,21 +690,12 @@ Future<void> _warmUpWidgetService() async {
   } catch (e) {
     debugPrint('Widget bootstrap error: ${AppErrorMapper.resolve(
       e,
-      fallbackMessage: 'Không thể khởi tạo widget lúc này.',
+      fallbackMessage: L10nService().translate('core_err_init_widget_failed'),
     ).message}');
   }
 }
 
 Future<void> _warmUpBackgroundServices() async {
-  try {
-    await L10nService().init();
-  } catch (e) {
-    debugPrint('L10n init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: 'Không thể khởi tạo ngôn ngữ.',
-    ).message}');
-  }
-
   unawaited(_runBackgroundWarmUpTask(
     'Music init error',
     () => MusicService().init(),
@@ -793,460 +783,4 @@ List<String> _missingFirebaseBootstrapKeys() {
       })
       .map((entry) => entry.key)
       .toList();
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final appStateListenable = Listenable.merge([
-      L10nService(),
-      UiPrefs.notifier,
-    ]);
-    final baseTextTheme = ThemeData(useMaterial3: true).textTheme;
-    return ListenableBuilder(
-      listenable: appStateListenable,
-      builder: (context, _) {
-        return MaterialApp(
-          title: 'SoulLocket',
-          navigatorKey: NotificationService.navigatorKey,
-          locale: L10nService().locale,
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [
-            Locale('vi', 'VN'),
-            Locale('en', 'US'),
-          ],
-          scrollBehavior: const SoulLocketScrollBehavior(),
-          themeAnimationDuration: const Duration(milliseconds: 160),
-          themeAnimationCurve: Curves.easeOutCubic,
-          builder: (context, child) {
-            final mediaQuery = MediaQuery.of(context);
-            final screenWidth = mediaQuery.size.width;
-            final textScaler = SLResponsive.textScalerFor(context);
-            final content = MediaQuery(
-              data: mediaQuery.copyWith(textScaler: textScaler),
-              child: L10nScope(
-                notifier: L10nService(),
-                child: child ?? const SizedBox.shrink(),
-              ),
-            );
-
-            if (kIsWeb) {
-              final maxWidth =
-                  SLResponsive.maxContentWidthForWidth(screenWidth);
-              final outerPadding =
-                  SLResponsive.horizontalPaddingForWidth(screenWidth);
-              return Container(
-                color: const Color(0xFFFDFDFD),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: outerPadding),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: maxWidth),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 30,
-                              offset: const Offset(0, 0),
-                            ),
-                          ],
-                        ),
-                        child: RepaintBoundary(
-                          child: ClipRect(child: content),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }
-            return ColoredBox(
-              color: SLColors.bgMain,
-              child: content,
-            );
-          },
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: SLColors.primary,
-              primary: SLColors.primary,
-              secondary: SLColors.secondary,
-              tertiary: SLColors.accentPurple,
-              surface: SLColors.bgCard,
-              surfaceContainerHighest: SLColors.bgSubtle,
-              error: SLColors.danger,
-            ),
-            useMaterial3: true,
-            scaffoldBackgroundColor: SLColors.bgMain,
-            canvasColor: SLColors.bgMain,
-            cardColor: SLColors.bgCard,
-            dividerColor: SLColors.border,
-            shadowColor: Colors.black.withValues(alpha: 0.08),
-            splashFactory: InkRipple.splashFactory,
-            splashColor: SLColors.primary.withValues(alpha: 0.05),
-            highlightColor: SLColors.primary.withValues(alpha: 0.02),
-            hoverColor: SLColors.primary.withValues(alpha: 0.02),
-            focusColor: SLColors.primary.withValues(alpha: 0.03),
-            textTheme: SLTypography.textTheme(baseTextTheme),
-            appBarTheme: AppBarTheme(
-              backgroundColor: SLColors.bgElevated.withValues(alpha: 0.92),
-              foregroundColor: SLColors.textPrimary,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              centerTitle: true,
-              surfaceTintColor: Colors.transparent,
-              titleTextStyle: SLTypography.titleMedium,
-            ),
-            cardTheme: CardThemeData(
-              color: SLColors.bgCard,
-              elevation: 0,
-              margin: EdgeInsets.zero,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: SLRadius.xlAll,
-                side: const BorderSide(color: SLColors.borderLight),
-              ),
-            ),
-            checkboxTheme: CheckboxThemeData(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5),
-              ),
-              side: const BorderSide(color: SLColors.border),
-              fillColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return SLColors.primary;
-                }
-                return Colors.white;
-              }),
-              checkColor: WidgetStateProperty.all(Colors.white),
-            ),
-            dropdownMenuTheme: DropdownMenuThemeData(
-              textStyle: SLTheme.quicksand(
-                color: SLColors.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-              menuStyle: MenuStyle(
-                backgroundColor: WidgetStateProperty.all(SLColors.bgElevated),
-                surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
-                shape: WidgetStateProperty.all(
-                  RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-                ),
-                side: WidgetStateProperty.all(
-                  const BorderSide(color: SLColors.borderLight),
-                ),
-              ),
-            ),
-            dividerTheme: const DividerThemeData(
-              color: SLColors.borderLight,
-              thickness: 1,
-              space: 1,
-            ),
-            dialogTheme: DialogThemeData(
-              backgroundColor: SLColors.bgElevated,
-              shape: RoundedRectangleBorder(
-                borderRadius: SLRadius.xlAll,
-              ),
-            ),
-            bottomSheetTheme: const BottomSheetThemeData(
-              backgroundColor: SLColors.bgElevated,
-              surfaceTintColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              ),
-            ),
-            inputDecorationTheme: InputDecorationTheme(
-              filled: true,
-              fillColor: SLColors.bgElevated,
-              hintStyle: SLTheme.quicksand(
-                color: SLColors.textTertiary,
-                fontWeight: FontWeight.w700,
-              ),
-              labelStyle: SLTheme.quicksand(
-                color: SLColors.textSecond,
-                fontWeight: FontWeight.w700,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: SLRadius.lgAll,
-                borderSide: const BorderSide(color: SLColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: SLRadius.lgAll,
-                borderSide:
-                    const BorderSide(color: SLColors.primary, width: 1.6),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: SLRadius.lgAll,
-                borderSide: const BorderSide(color: SLColors.danger),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: SLRadius.lgAll,
-                borderSide:
-                    const BorderSide(color: SLColors.danger, width: 1.6),
-              ),
-            ),
-            elevatedButtonTheme: ElevatedButtonThemeData(
-              style: ElevatedButton.styleFrom(
-                foregroundColor: SLColors.textInverse,
-                backgroundColor: SLColors.primary,
-                disabledForegroundColor:
-                    SLColors.textInverse.withValues(alpha: 0.7),
-                disabledBackgroundColor:
-                    SLColors.primary.withValues(alpha: 0.45),
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 14,
-                ),
-                textStyle: SLTheme.quicksand(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: SLRadius.pillAll,
-                ),
-              ),
-            ),
-            outlinedButtonTheme: OutlinedButtonThemeData(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: SLColors.textPrimary,
-                side: const BorderSide(color: SLColors.border),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 14,
-                ),
-                textStyle: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: SLRadius.pillAll,
-                ),
-              ),
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: SLColors.primary,
-                textStyle: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-            navigationBarTheme: NavigationBarThemeData(
-              backgroundColor: SLColors.bgElevated.withValues(alpha: 0.96),
-              surfaceTintColor: Colors.transparent,
-              indicatorColor: SLColors.primarySoft,
-              labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                final selected = states.contains(WidgetState.selected);
-                return SLTheme.quicksand(
-                  fontSize: 11.5,
-                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-                  color: selected ? SLColors.textPrimary : SLColors.textSecond,
-                );
-              }),
-            ),
-            snackBarTheme: SnackBarThemeData(
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-              backgroundColor: SLColors.textPrimary,
-              contentTextStyle: SLTheme.quicksand(
-                color: SLColors.textInverse,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          debugShowCheckedModeBanner: false,
-          home: const AppEntry(),
-        );
-      },
-    );
-  }
-}
-
-class StartupErrorApp extends StatelessWidget {
-  final String title;
-  final String message;
-  final List<String> details;
-
-  const StartupErrorApp({
-    super.key,
-    required this.title,
-    required this.message,
-    required this.details,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      scrollBehavior: const SoulLocketScrollBehavior(),
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: SLColors.bgSubtle,
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: Padding(
-              padding: SLSpacing.all24,
-              child: Container(
-                padding: SLSpacing.all24,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: const Color(0xFFFFD6E7)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFB83280).withValues(alpha: 0.08),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFE4F0),
-                            borderRadius: SLRadius.lgAll,
-                          ),
-                          child: const Icon(
-                            Icons.warning_amber_rounded,
-                            color: Color(0xFFD81B60),
-                            size: 32,
-                          ),
-                        ),
-                        SLSpacing.w16,
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: SLTheme.quicksand(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF3A1330),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SLSpacing.h16,
-                    Text(
-                      message,
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF6B4A5D),
-                        height: 1.5,
-                      ),
-                    ),
-                    SLSpacing.h16,
-                    ...details.map(
-                      (detail) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Padding(
-                              padding: EdgeInsets.only(top: 6),
-                              child: Icon(
-                                Icons.circle,
-                                size: 8,
-                                color: Color(0xFFD81B60),
-                              ),
-                            ),
-                            SLSpacing.w8,
-                            Expanded(
-                              child: Text(
-                                detail,
-                                style: SLTheme.quicksand(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF6B4A5D),
-                                  height: 1.45,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class SoulLocketScrollBehavior extends MaterialScrollBehavior {
-  const SoulLocketScrollBehavior();
-
-  @override
-  Set<PointerDeviceKind> get dragDevices => const {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.unknown,
-      };
-
-  @override
-  Widget buildOverscrollIndicator(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) {
-    return child;
-  }
-
-  @override
-  Widget buildScrollbar(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) {
-    return child;
-  }
-
-  @override
-  ScrollPhysics getScrollPhysics(BuildContext context) {
-    if (kIsWeb) {
-      return const ClampingScrollPhysics(
-        parent: RangeMaintainingScrollPhysics(),
-      );
-    }
-
-    switch (getPlatform(context)) {
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-        return const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        );
-      case TargetPlatform.android:
-      case TargetPlatform.fuchsia:
-      case TargetPlatform.linux:
-      case TargetPlatform.windows:
-        return const ClampingScrollPhysics(
-          parent: RangeMaintainingScrollPhysics(),
-        );
-    }
-  }
 }

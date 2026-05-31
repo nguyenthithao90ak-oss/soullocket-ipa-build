@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../services/export_service.dart';
 import '../../core/sl_theme.dart';
@@ -18,7 +19,7 @@ class DiaryExportScreen extends StatefulWidget {
 class _DiaryExportScreenState extends State<DiaryExportScreen> {
   bool _isLoading = true;
   bool _isExportingHtml = false;
-  String _houseName = 'Ngôi Nhà Tình Yêu';
+  String _houseName = L10nService().translate('util_nginhtnhyu_dbebce');
 
   @override
   void initState() {
@@ -53,9 +54,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Đã tạo file HTML, mở bảng chia sẻ để lưu hoặc gửi tiếp.',
+            context.tr('util_tofilehtml_c9a8b2'),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -63,8 +64,8 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể xuất dữ liệu lúc này. Vui lòng thử lại.'),
+        SnackBar(
+          content: Text(context.tr('util_chathxutdl_223d08')),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -86,7 +87,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: const Color(0xFFD81B60),
         title: Text(
-          'Xuất Nhật Ký',
+          context.tr('util_xutnhtk_c6feb9'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             color: const Color(0xFFD81B60),
@@ -144,7 +145,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                           ),
                           SLSpacing.h8,
                           Text(
-                            'Xuất nhật ký để lưu lại bản đẹp, gửi cho nhau, hoặc cất riêng.',
+                            context.tr('util_xutnhtklul_13b3fb'),
                             style: SLTheme.quicksand(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -156,7 +157,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                           _buildFeatureLine(
                             Icons.language_rounded,
                             'HTML',
-                            'Bản web nhẹ, mở lại nhanh trên mọi máy.',
+                            context.tr('util_bnwebnhmli_d0d399'),
                           ),
                         ],
                       ),
@@ -164,9 +165,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                     SLSpacing.h16,
                     _buildExportCard(
                       icon: Icons.language_rounded,
-                      title: 'Xuất HTML',
+                      title: context.tr('util_xuthtml_c57dd1'),
                       description:
-                          'Tạo file HTML để mở lại như một trang lưu niệm.',
+                          context.tr('util_tofilehtml_f2f8a2'),
                       colors: const [Color(0xFF5DA9FF), Color(0xFF7C4DFF)],
                       isBusy: _isExportingHtml,
                       onTap: _exportHtml,

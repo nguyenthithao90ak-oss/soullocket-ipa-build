@@ -37,7 +37,7 @@ class _LoveCardCreateView extends StatelessWidget {
                   padding:
                       EdgeInsets.symmetric(horizontal: compactWidth ? 16 : 20),
                   child: Text(
-                    'Chọn phong cách thiệp',
+                    context.tr('util_chnphongcc_682dea'),
                     style: SLTheme.quicksand(
                       color: Colors.white,
                       fontSize: 17,
@@ -64,7 +64,7 @@ class _LoveCardCreateView extends StatelessWidget {
                   padding:
                       EdgeInsets.symmetric(horizontal: compactWidth ? 16 : 20),
                   child: Text(
-                    'Sau khi gửi, app sẽ tự tạo link mới để bạn chia sẻ ngay.',
+                    context.tr('util_saukhigiap_ef330c'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       color: Colors.white.withValues(alpha: 0.68),
@@ -204,7 +204,7 @@ class _LoveCardCreateHero extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Thiệp đẹp hơn, xem ngay bằng link',
+                          context.tr('util_thipphnxem_dcbb2e'),
                           style: SLTheme.quicksand(
                             color: Colors.white,
                             fontSize: 16.5,
@@ -227,7 +227,7 @@ class _LoveCardCreateHero extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Người nhận chỉ cần mở liên kết là thấy ngay thiệp của bạn, không cần vào lại màn hình này.',
+                context.tr('util_nginhnchcn_f1d235'),
                 style: SLTheme.quicksand(
                   color: Colors.white.withValues(alpha: 0.82),
                   fontSize: 13,
@@ -236,21 +236,21 @@ class _LoveCardCreateHero extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              const Wrap(
+              Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
                   _LoveCardHeroChip(
                     icon: Icons.link_rounded,
-                    label: 'Tạo link riêng',
+                    label: context.tr('util_tolinkring_826c11'),
                   ),
                   _LoveCardHeroChip(
                     icon: Icons.visibility_rounded,
-                    label: 'Mở là xem ngay',
+                    label: context.tr('util_mlxemngay_8ada16'),
                   ),
                   _LoveCardHeroChip(
                     icon: Icons.history_rounded,
-                    label: 'Lưu lại lịch sử',
+                    label: context.tr('util_lulilchs_a160c0'),
                   ),
                 ],
               ),
@@ -280,7 +280,7 @@ class _LoveCardCreateHero extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Gửi xong app tự tạo link công khai và copy sẵn để bạn chia sẻ.',
+                        context.tr('util_gixongappt_7ad27e'),
                         style: SLTheme.quicksand(
                           color: Colors.white.withValues(alpha: 0.78),
                           fontSize: 12.5,
@@ -600,7 +600,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                       const SizedBox(height: 14),
                     ],
                     Text(
-                      'Xem trước thiệp',
+                      context.tr('util_xemtrcthip_44a482'),
                       style: SLTheme.quicksand(
                         color: Colors.white.withValues(alpha: 0.76),
                         fontSize: 13,
@@ -1131,7 +1131,7 @@ class _LoveCardComposerPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Viết nội dung thiệp',
+            context.tr('util_vitnidungt_69403f'),
             style: SLTheme.quicksand(
               color: Colors.white,
               fontSize: 18,
@@ -1149,7 +1149,7 @@ class _LoveCardComposerPanel extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _LoveCardMetaField(
-            label: 'Tên hiển thị',
+            label: context.tr('util_tnhinth_6cccad'),
             hintText: state._defaultSenderName(),
             controller: state._senderNameCtrl,
             icon: Icons.favorite_border_rounded,
@@ -1157,7 +1157,7 @@ class _LoveCardComposerPanel extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           _LoveCardMetaField(
-            label: 'Dòng ký / ghi chú',
+            label: context.tr('util_dngkghich_b5c3f9'),
             hintText: state._defaultSignatureForTheme(theme.key),
             controller: state._signatureCtrl,
             icon: Icons.auto_awesome_rounded,
@@ -1202,7 +1202,7 @@ class _LoveCardComposerPanel extends StatelessWidget {
               ),
               decoration: InputDecoration(
                 hintText:
-                    'Viết điều bạn muốn nói thật ngắn gọn nhưng đủ chạm...',
+                    context.tr('util_vitiubnmun_f241e9'),
                 hintStyle: SLTheme.quicksand(
                   color: const Color(0xFFB55A73),
                   fontWeight: FontWeight.w600,
@@ -1233,7 +1233,7 @@ class _LoveCardComposerPanel extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Mẹo: nội dung ngắn, rõ và chân thành sẽ lên thiệp đẹp hơn.',
+                  context.tr('util_monidungng_755e07'),
                   style: SLTheme.quicksand(
                     color: Colors.white.withValues(alpha: 0.72),
                     fontSize: 12,
@@ -1381,7 +1381,7 @@ class _LoveCardImageAttachmentPanel extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Thiệp sẽ kèm ảnh khi mở link',
+                            context.tr('util_thipskmnhk_d2a84e'),
                             style: SLTheme.quicksand(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
@@ -1390,7 +1390,7 @@ class _LoveCardImageAttachmentPanel extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Người nhận sẽ thấy ảnh nằm trong thiệp công khai.',
+                            context.tr('util_nginhnsthy_de894b'),
                             style: SLTheme.quicksand(
                               color: Colors.white.withValues(alpha: 0.70),
                               fontWeight: FontWeight.w600,
@@ -1432,8 +1432,8 @@ class _LoveCardImageAttachmentPanel extends StatelessWidget {
                         children: [
                           Text(
                             state._isPickingImage
-                                ? 'Đang chọn ảnh...'
-                                : 'Thêm ảnh cho thiệp',
+                                ? context.tr('util_angchnnh_aa478d')
+                                : context.tr('util_thmnhchoth_4d9184'),
                             style: SLTheme.quicksand(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
@@ -1534,8 +1534,8 @@ class _LoveCardSendAction extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(
                       state._isSending
-                          ? 'Đang tạo thiệp...'
-                          : 'Gửi thiệp và tạo link mới',
+                          ? context.tr('util_angtothip_573c10')
+                          : context.tr('util_githipvtol_f437a3'),
                       style: SLTheme.quicksand(
                         color: Color(theme.colors.first),
                         fontSize: 15,

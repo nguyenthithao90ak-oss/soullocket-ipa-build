@@ -20,7 +20,7 @@ class ManualRetryCachedImage extends StatefulWidget {
     this.width,
     this.height,
     this.backgroundColor = const Color(0xFF111827),
-    this.retryLabel = 'Thử lại',
+    this.retryLabel = 'core_retry',
   });
 
   @override
@@ -65,7 +65,7 @@ class _ManualRetryCachedImageState extends State<ManualRetryCachedImage> {
               const Icon(Icons.cloud_off_rounded, color: Colors.white70),
               SLSpacing.h8,
               Text(
-                l10n.translate('Không tải được ảnh'),
+                l10n.translate('core_image_load_failed'),
                 style: SLTheme.quicksand(
                   color: Colors.white.withValues(alpha: 0.92),
                   fontWeight: FontWeight.w800,

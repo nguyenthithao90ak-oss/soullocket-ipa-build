@@ -60,6 +60,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
   }
 
   void _listenNewDeviceNotifications(String houseId) {
+    final msgNewDeviceTitle = context.tr('home_ngnhpthitb_129d06');
+    final msgNewDeviceBody = context.tr('home_cthitbmiva_74f5d4');
     _newDeviceNotificationSubscription?.cancel();
     final listenStartedAt = DateTime.now().millisecondsSinceEpoch;
 
@@ -95,10 +97,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
 
       final title = (data['title']?.toString().trim().isNotEmpty ?? false)
           ? data['title'].toString().trim()
-          : 'Đăng nhập thiết bị mới';
+          : msgNewDeviceTitle;
       final body = (data['msg']?.toString().trim().isNotEmpty ?? false)
           ? data['msg'].toString().trim()
-          : 'Có thiết bị mới vừa đăng nhập vào tài khoản của nhà bạn.';
+          : msgNewDeviceBody;
 
       _showLatestSnackBarImpl('⚠️ $title: $body');
     });
@@ -205,13 +207,20 @@ extension _MainHomeLoadController on _MainHomeTabState {
     final nextSignature = '$distanceText|${alertText ?? ''}';
     _homeDistanceText = distanceText;
     _homeMapAlert = alertText;
-    if (_homeMapPreviewSignature == nextSignature || !mounted) {
-      _homeMapPreviewSignature = nextSignature;
+    if (_homeMapPreviewSignature == nextSignature) {
       return;
     }
 
     _homeMapPreviewSignature = nextSignature;
-    setState(() {});
+    if (!mounted) {
+      return;
+    }
+
+    _homeMapPreviewDebounce?.cancel();
+    _homeMapPreviewDebounce = Timer(const Duration(milliseconds: 140), () {
+      if (!mounted) return;
+      setState(() {});
+    });
   }
 
   dynamic _normalizeInsightSignatureValueImpl(dynamic value) {
@@ -301,6 +310,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
     bool preserveVisibleState = false,
     bool preloadOnly = false,
   }) async {
+    final msgMembersFail = L10nService().translate('home_khngthtitr_e4f662');
+    final msgPresenceFail = L10nService().translate('home_khngthtitr_2ae6b3');
+    final msgCacheSettingsFail = L10nService().translate('home_clixyra_775791');
+    final msgLoadDataFail = L10nService().translate('home_khngthtidl_7be608');
     if (!_isTabActive && !preloadOnly) {
       return;
     }
@@ -343,6 +356,17 @@ extension _MainHomeLoadController on _MainHomeTabState {
       }
       return;
     }
+
+    Future<void>.delayed(const Duration(seconds: 8), () {
+      if (isStale() || !mounted || !_isLoading || _houseSettings != null) {
+        return;
+      }
+      setState(() {
+        _houseSettings = _buildDefaultHomeSettings();
+        _isLoading = false;
+      });
+    });
+
     try {
       final prefs = OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
@@ -425,8 +449,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
         }
 
         if (_houseSettings == null) {
-          final initialSettingsSnap =
-              await _dbRef.child('houses/$houseId/settings').get();
+          final initialSettingsSnap = await _dbRef
+              .child('houses/$houseId/settings')
+              .get()
+              .timeout(const Duration(seconds: 5));
           if (isStale()) return;
           if (initialSettingsSnap.exists && initialSettingsSnap.value is Map) {
             _houseSettings = Map<String, dynamic>.from(
@@ -509,7 +535,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
             debugPrint(
               'Home members listener failed: ${AppErrorMapper.resolve(
                 error,
-                fallbackMessage: 'Không thể tải trạng thái thành viên.',
+                fallbackMessage: msgMembersFail,
               ).message}',
             );
           },
@@ -577,11 +603,23 @@ extension _MainHomeLoadController on _MainHomeTabState {
             debugPrint(
               'Home presence listener failed: ${AppErrorMapper.resolve(
                 error,
-                fallbackMessage: 'Không thể tải trạng thái hiện diện.',
+                fallbackMessage: msgPresenceFail,
               ).message}',
             );
+            if (mounted) {
+              setState(() {
+                _hasLoadedPresenceSnapshot = true;
+              });
+            }
           },
         );
+
+        Future<void>.delayed(const Duration(seconds: 6), () {
+          if (isStale() || !mounted || _hasLoadedPresenceSnapshot) return;
+          setState(() {
+            _hasLoadedPresenceSnapshot = true;
+          });
+        });
 
         _alertSubscription = _dbRef
             .child('houses/$houseId/alerts')
@@ -615,6 +653,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
             payload,
             removalPath: key == null ? null : 'houses/$houseId/alerts/$key',
           );
+        }, onError: (Object error) {
+          debugPrint('Home alerts listener failed: $error');
         });
 
         _partnerInboxSubscription = _dbRef
@@ -651,6 +691,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 ? null
                 : 'houses/$houseId/partner_inbox/$_currentRole/$key',
           );
+        }, onError: (Object error) {
+          debugPrint('Home partner inbox listener failed: $error');
         });
 
         _loveCardsSubscription = _dbRef
@@ -666,6 +708,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
           final myUid = user.uid;
 
           if (!isOpened && fromUid != myUid) {}
+        }, onError: (Object error) {
+          debugPrint('Home love cards listener failed: $error');
         });
 
         _missInteractionSubscription = _dbRef
@@ -686,6 +730,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
               }
             }
           }
+        }, onError: (Object error) {
+          debugPrint('Home miss interaction listener failed: $error');
         });
 
         _settingsSubscription = _dbRef
@@ -740,7 +786,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 debugPrint(
                   'Error saving settings to cache: ${AppErrorMapper.resolve(
                     e,
-                    fallbackMessage: 'Đã có lỗi xảy ra',
+                    fallbackMessage: msgCacheSettingsFail,
                   ).message}',
                 );
               }
@@ -793,6 +839,18 @@ extension _MainHomeLoadController on _MainHomeTabState {
           } else if (mounted) {
             setState(() => _isLoading = false);
           }
+        }, onError: (Object error) {
+          debugPrint(
+            'Home settings listener failed: ${AppErrorMapper.resolve(
+              error,
+              fallbackMessage: msgLoadDataFail,
+            ).message}',
+          );
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
         });
         return;
       }
@@ -806,6 +864,12 @@ extension _MainHomeLoadController on _MainHomeTabState {
         });
       }
     } catch (e) {
+      debugPrint(
+        'Home data load failed: ${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: msgLoadDataFail,
+        ).message}',
+      );
       if (mounted) setState(() => _isLoading = false);
     }
   }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../core/sl_theme.dart';
-import '../../utils/app_error_mapper.dart';
 
 /// ============================================================
 ///  MediaCleanupScreen — GRA (Hệ thống)
@@ -102,15 +101,7 @@ class _MediaCleanupScreenState extends State<MediaCleanupScreen>
       if (mounted) {
         setState(() => _isScanning = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppErrorMapper.resolve(
-                e,
-                fallbackMessage:
-                    'Chưa thể quét media lúc này. Hãy thử lại sau ít phút.',
-              ).message,
-            ),
-          ),
+          SnackBar(content: Text('Lỗi quét: $e')),
         );
       }
     }
@@ -176,9 +167,7 @@ class _MediaCleanupScreenState extends State<MediaCleanupScreen>
         // Cần bọc trong try/catch từng lần gọi listAll vì Firebase Storage Security Rules
         // có thể không cho phép liệt kê thư mục gốc hoặc các thư mục không hợp lệ.
         final result = await ref.listAll().catchError((e) {
-          debugPrint(
-            'Error listing storage prefix $prefix: ${AppErrorMapper.resolve(e).message}',
-          );
+          debugPrint('Error listing storage prefix $prefix: $e');
           // Không thể khởi tạo ListResult do không được expose public,
           // nên ném ra lỗi để catch block ở ngoài bắt lấy và bỏ qua thư mục này
           throw e;
@@ -204,9 +193,7 @@ class _MediaCleanupScreenState extends State<MediaCleanupScreen>
         for (final prefix2 in result.prefixes) {
           try {
             final sub = await prefix2.listAll().catchError((e) {
-              debugPrint(
-                'Error listing sub-prefix ${prefix2.fullPath}: ${AppErrorMapper.resolve(e).message}',
-              );
+              debugPrint('Error listing sub-prefix ${prefix2.fullPath}: $e');
               throw e;
             });
             for (final item in sub.items) {

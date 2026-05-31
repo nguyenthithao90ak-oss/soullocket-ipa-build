@@ -230,7 +230,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
 
   void _showComments() {
     if (!widget.post.commentsEnabled && widget.post.houseId != widget.houseId) {
-      SLNotice.showInfo(context, 'Bài viết này đang tắt bình luận.');
+      SLNotice.showInfo(context, context.tr('home_bivitnyang_350b57'));
       return;
     }
     showModalBottomSheet(
@@ -269,7 +269,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
               if (widget.post.houseId == widget.houseId)
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: Colors.red),
-                  title: Text('Xóa bài viết', style: SLTheme.quicksand()),
+                  title: Text(context.tr('home_xabivit_2c7199'),
+                      style: SLTheme.quicksand()),
                   onTap: () async {
                     Navigator.pop(context);
                     try {
@@ -278,18 +279,19 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                         requestingHouseId: widget.houseId,
                       );
                       if (!mounted || !context.mounted) return;
-                      SLNotice.showSuccess(context, 'Đã xóa bài viết.');
+                      SLNotice.showSuccess(
+                          context, context.tr('home_xabivit_55f95f'));
                     } catch (e) {
                       debugPrint(
                         'Delete post failed: ${AppErrorMapper.resolve(
                           e,
-                          fallbackMessage: 'Đã có lỗi xảy ra',
+                          fallbackMessage: context.tr('home_clixyra_775791'),
                         ).message}',
                       );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
                         context,
-                        'Chưa thể xóa bài viết lúc này. Vui lòng thử lại.',
+                        context.tr('home_chathxabiv_72f417'),
                       );
                     }
                   },
@@ -298,7 +300,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                 ListTile(
                   leading:
                       const Icon(Icons.flag_outlined, color: Colors.orange),
-                  title: Text('Báo cáo bài viết', style: SLTheme.quicksand()),
+                  title: Text(context.tr('home_bocobivit_08313a'),
+                      style: SLTheme.quicksand()),
                   onTap: () async {
                     Navigator.pop(context);
                     try {
@@ -310,36 +313,38 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                       if (!mounted || !context.mounted) return;
                       SLNotice.showSuccess(
                         context,
-                        'Đã gửi báo cáo tới quản trị viên.',
+                        context.tr('home_gibocotiqu_efe49e'),
                       );
                     } catch (e) {
                       debugPrint(
                         'Report post failed: ${AppErrorMapper.resolve(
                           e,
-                          fallbackMessage: 'Đã có lỗi xảy ra',
+                          fallbackMessage: context.tr('home_clixyra_775791'),
                         ).message}',
                       );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
                         context,
-                        'Chưa thể gửi báo cáo lúc này. Vui lòng thử lại.',
+                        context.tr('home_chathgiboc_05046c'),
                       );
                     }
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.block_rounded, color: Colors.red),
-                  title: Text('Chặn người dùng này',
+                  title: Text(context.tr('home_chnngidngn_27d0c8'),
                       style: SLTheme.quicksand(color: Colors.red)),
                   onTap: () async {
                     Navigator.pop(context);
                     final targetHouseId = widget.post.houseId;
                     if (targetHouseId.isEmpty) return;
+                    final genericErrorMessage =
+                        context.tr('home_clixyra_775791');
 
                     final ok = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        title: Text('Xác nhận chặn',
+                        title: Text(context.tr('home_xcnhnchn_ae00a6'),
                             style:
                                 SLTheme.quicksand(fontWeight: FontWeight.w900)),
                         content: Text(
@@ -348,11 +353,11 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                         actions: [
                           TextButton(
                               onPressed: () => Navigator.pop(ctx, false),
-                              child: const Text('Hủy')),
+                              child: Text(context.tr('home_hy_1e4050'))),
                           TextButton(
                               onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('Chặn',
-                                  style: TextStyle(color: Colors.red))),
+                              child: Text(context.tr('home_chn_483b6f'),
+                                  style: const TextStyle(color: Colors.red))),
                         ],
                       ),
                     );
@@ -367,19 +372,20 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                       debugPrint(
                         'Block house failed: ${AppErrorMapper.resolve(
                           e,
-                          fallbackMessage: 'Đã có lỗi xảy ra',
+                          fallbackMessage: genericErrorMessage,
                         ).message}',
                       );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
                         context,
-                        'Chưa thể chặn người dùng lúc này. Vui lòng thử lại.',
+                        context.tr('home_chathchnng_81d840'),
                       );
                       return;
                     }
 
                     if (!mounted || !context.mounted) return;
-                    SLNotice.showSuccess(context, 'Đã chặn người dùng này.');
+                    SLNotice.showSuccess(
+                        context, context.tr('home_chnngidngn_adcaff'));
                   },
                 ),
               ],
@@ -429,15 +435,22 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
             ? UiPrefs.getAutoGraphicsQuality()
             : uiState.graphicsQualityKey);
     final useLiteBackdrop = kIsWeb || graphicsQuality == 'low';
+    final mediaCacheWidth = switch (graphicsQuality) {
+      'high' => 1800,
+      'low' => 900,
+      _ => 1280,
+    };
+    final mediaFilterQuality =
+        graphicsQuality == 'low' ? FilterQuality.low : FilterQuality.medium;
 
     return Stack(
       fit: StackFit.expand,
       children: [
         CachedNetworkImage(
-          memCacheWidth: 1800,
+          memCacheWidth: mediaCacheWidth,
           imageUrl: _mediaUrl,
           fit: BoxFit.cover,
-          filterQuality: FilterQuality.high,
+          filterQuality: mediaFilterQuality,
           placeholder: (_, __) => Container(color: const Color(0xFF120716)),
           errorWidget: (_, __, ___) =>
               Container(color: const Color(0xFF120716)),
@@ -451,10 +464,10 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                 child: Opacity(
                   opacity: 0.82,
                   child: CachedNetworkImage(
-                    memCacheWidth: 1800,
+                    memCacheWidth: mediaCacheWidth,
                     imageUrl: _mediaUrl,
                     fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
+                    filterQuality: mediaFilterQuality,
                     placeholder: (_, __) =>
                         Container(color: const Color(0xFF120716)),
                     errorWidget: (_, __, ___) =>
@@ -464,22 +477,24 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
               ),
             ),
           ),
-        Positioned(
-          top: -110,
-          right: -50,
-          child: _buildAmbientOrb(
-            const [Color(0xFFFF729D), Color(0x00FF729D)],
-            220,
+        if (!useLiteBackdrop) ...[
+          Positioned(
+            top: -110,
+            right: -50,
+            child: _buildAmbientOrb(
+              const [Color(0xFFFF729D), Color(0x00FF729D)],
+              220,
+            ),
           ),
-        ),
-        Positioned(
-          bottom: 120,
-          left: -70,
-          child: _buildAmbientOrb(
-            const [Color(0xFF7BE0FF), Color(0x007BE0FF)],
-            240,
+          Positioned(
+            bottom: 120,
+            left: -70,
+            child: _buildAmbientOrb(
+              const [Color(0xFF7BE0FF), Color(0x007BE0FF)],
+              240,
+            ),
           ),
-        ),
+        ],
         Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
@@ -539,11 +554,12 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                             const Color(0xFFFFD58C).withValues(alpha: 0.24),
                           ],
                         ),
-                        border:
-                            Border.all(color: Colors.white.withValues(alpha: 0.14)),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.14)),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFF6F9F).withValues(alpha: 0.22),
+                            color:
+                                const Color(0xFFFF6F9F).withValues(alpha: 0.22),
                             blurRadius: 28,
                             offset: const Offset(0, 18),
                           ),
@@ -560,8 +576,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                           Positioned.fill(
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color:
-                                    const Color(0xFF09060A).withValues(alpha: 0.96),
+                                color: const Color(0xFF09060A)
+                                    .withValues(alpha: 0.96),
                                 borderRadius: BorderRadius.circular(26),
                               ),
                             ),
@@ -749,13 +765,13 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
         SLSpacing.h20,
         _SideAction(
           icon: Icons.share_outlined,
-          label: 'Chia sẻ',
+          label: context.tr('home_chias_569031'),
           onTap: () {},
         ),
         SLSpacing.h20,
         _SideAction(
           icon: Icons.more_horiz,
-          label: 'Thêm',
+          label: context.tr('home_thm_d9cb42'),
           onTap: _showPostOptions,
         ),
       ],

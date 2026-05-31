@@ -54,7 +54,11 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
     }
 
     for (final app in UtilityService.allApps) {
-      if (app.id == normalized) {
+      if (app.id == normalized &&
+          UtilityService.isUtilityAllowed(
+            normalized,
+            _homeToolRelationshipMode(),
+          )) {
         return normalized;
       }
     }
@@ -133,8 +137,8 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
     if (apps.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Hiện chưa có tiện ích nào khả dụng để thêm vào Home.'),
+        SnackBar(
+          content: Text(context.tr('home_hinchactin_ec5a16')),
         ),
       );
       return;
@@ -175,7 +179,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
 
     switch (toolId) {
       case 'store':
-        return const RewardStoreScreen();
+        return !kIsWeb && Platform.isIOS ? null : const RewardStoreScreen();
       case 'calculator':
         return const CalculatorScreen();
     }
@@ -219,6 +223,9 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
       case 'wheel':
         return WheelScreen(houseId: houseId);
       case 'vault':
+        if (!kIsWeb && Platform.isIOS) {
+          return null;
+        }
         return UiPrefs.notifier.value.vaultHomeEnabled
             ? _HomeEmbeddedVaultGate(houseId: houseId)
             : null;
@@ -274,7 +281,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
         decoration: _homeCardDecoration(radius: 28),
         child: Text(
-          'Tiện ích này cần dữ liệu tài khoản hoặc ngôi nhà trước khi hiển thị. Thử lại sau một chút.',
+          context.tr('home_tinchnycnd_0ff769'),
           style: SLTheme.quicksand(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -367,7 +374,7 @@ class _HomeToolPickerSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Chọn tiện ích',
+            context.tr('home_chntinch_c56314'),
             style: SLTheme.quicksand(
               fontSize: 18,
               fontWeight: FontWeight.w900,
@@ -376,7 +383,7 @@ class _HomeToolPickerSheet extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Home chỉ hiển thị 1 tiện ích mỗi lần. Kéo xuống để xem đầy đủ các tiện ích chung và công cụ thiết yếu.',
+            context.tr('home_homechhint_91bdc8'),
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -390,8 +397,8 @@ class _HomeToolPickerSheet extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               children: [
                 if (funApps.isNotEmpty) ...[
-                  const _HomeToolSectionHeader(
-                    title: 'Tiện ích chung',
+                  _HomeToolSectionHeader(
+                    title: context.tr('home_tinchchung_3e7d5e'),
                     icon: Icons.celebration_rounded,
                   ),
                   const SizedBox(height: 10),
@@ -408,8 +415,8 @@ class _HomeToolPickerSheet extends StatelessWidget {
                 ],
                 if (toolApps.isNotEmpty) ...[
                   if (funApps.isNotEmpty) const SizedBox(height: 8),
-                  const _HomeToolSectionHeader(
-                    title: 'Công cụ thiết yếu',
+                  _HomeToolSectionHeader(
+                    title: context.tr('home_cngcthityu_872418'),
                     icon: Icons.build_circle_rounded,
                   ),
                   const SizedBox(height: 10),
@@ -667,8 +674,8 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
     final secureStyle = uiPrefs.vaultHomeStyle == 'secure';
     final compactStyle = uiPrefs.vaultHomeStyle == 'compact';
     final colors = secureStyle
-        ? const [Color(0xFF1F1C2C), Color(0xFF928DAB)]
-        : const [Color(0xFFFFF0F6), Color(0xFFE3F2FD)];
+        ? [const Color(0xFF1F1C2C), const Color(0xFF928DAB)]
+        : [const Color(0xFFFFF0F6), const Color(0xFFE3F2FD)];
     final accent = secureStyle ? const Color(0xFF4F46E5) : SLColors.primary;
     final showPreview = uiPrefs.vaultHomePreviewEnabled &&
         !(uiPrefs.vaultHomeHidePreviewWhenLocked && !_isUnlocked);
@@ -720,11 +727,8 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: secureStyle
-                                  ? const [Color(0xFF4F46E5), Color(0xFF111827)]
-                                  : const [
-                                      Color(0xFFFF7A86),
-                                      Color(0xFFF6A0C6)
-                                    ],
+                                  ? [const Color(0xFF4F46E5), const Color(0xFF111827)]
+                                  : [const Color(0xFFFF7A86), const Color(0xFFF6A0C6)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -770,7 +774,7 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Không gian riêng',
+                            context.tr('home_khnggianri_5aa2fb'),
                             style: SLTheme.quicksand(
                               fontSize: compactStyle ? 18 : 21,
                               fontWeight: FontWeight.w900,
@@ -780,8 +784,8 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                           const SizedBox(height: 5),
                           Text(
                             _isRequestingUnlock
-                                ? 'Đang xác thực để mở kho riêng tư.'
-                                : 'Nhật ký, ảnh riêng tư và khoảnh khắc chỉ hai bạn nhìn thấy.',
+                                ? context.tr('home_angxcthcmk_e31a5e')
+                                : context.tr('home_nhtknhring_4acbf3'),
                             style: SLTheme.quicksand(
                               fontSize: compactStyle ? 11.8 : 12.8,
                               fontWeight: FontWeight.w700,
@@ -803,18 +807,20 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                     children: [
                       _HomeVaultChip(
                         icon: Icons.visibility_off_rounded,
-                        label: showPreview ? 'Preview an toàn' : 'Ẩn preview',
+                        label: showPreview
+                            ? context.tr('home_previewant_dbaf55')
+                            : context.tr('home_npreview_1da491'),
                         color: accent,
                       ),
-                      const _HomeVaultChip(
+                      _HomeVaultChip(
                         icon: Icons.fingerprint_rounded,
-                        label: 'Mở bằng khóa',
-                        color: Color(0xFF7E57C2),
+                        label: context.tr('home_mbngkha_d3e60a'),
+                        color: const Color(0xFF7E57C2),
                       ),
-                      const _HomeVaultChip(
+                      _HomeVaultChip(
                         icon: Icons.favorite_rounded,
-                        label: 'Chỉ hai bạn',
-                        color: Color(0xFFD81B60),
+                        label: context.tr('home_chhaibn_a913db'),
+                        color: const Color(0xFFD81B60),
                       ),
                     ],
                   ),
@@ -833,7 +839,7 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                   FilledButton.icon(
                     onPressed: _requestUnlock,
                     icon: const Icon(Icons.lock_open_rounded),
-                    label: const Text('Mở Không gian riêng'),
+                    label: Text(context.tr('home_mkhnggianr_b53f72')),
                     style: FilledButton.styleFrom(
                       backgroundColor: accent,
                       foregroundColor: Colors.white,

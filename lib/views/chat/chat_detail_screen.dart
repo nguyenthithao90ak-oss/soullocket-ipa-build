@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../services/l10n_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -25,6 +26,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/security_service.dart';
 import '../../core/sl_theme.dart';
+import '../../core/sl_route.dart';
 import '../../utils/rapid_action_feedback_policy.dart';
 import '../../widgets/animated_rabbit_sticker.dart';
 
@@ -245,7 +247,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return Scaffold(
         appBar: AppBar(
           title: Text(
-            'Tin nhắn riêng',
+            L10nService().translate('chat_private_messages'),
             style: SLTheme.quicksand(fontWeight: FontWeight.w900),
           ),
           leading: IconButton(
@@ -260,7 +262,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               const Icon(Icons.lock_outline, size: 64, color: Colors.grey),
               SLSpacing.h16,
               Text(
-                'Tin nhắn đang được khóa',
+                L10nService().translate('chat_locked_title'),
                 style: SLTheme.quicksand(
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
@@ -269,7 +271,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               ),
               SLSpacing.h8,
               Text(
-                'Mở khóa để xem lại cuộc trò chuyện và tiếp tục nhắn với ${_nickname.trim().isEmpty ? widget.targetName : _nickname.trim()}.',
+                L10nService().format('chat_locked_desc', {'name': _nickname.trim().isEmpty ? widget.targetName : _nickname.trim()}),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w700,
@@ -284,7 +286,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     backgroundColor: const Color(0xFFD81B60),
                     foregroundColor: Colors.white),
                 child: Text(
-                  'Mở khóa',
+                  L10nService().translate('chat_unlock'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                 ),
               )
@@ -303,7 +305,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         final deletedDisplayName = meta.deletedDisplayName.trim();
         final displayName = isChatClosed
             ? (deletedDisplayName.isEmpty
-                ? 'Người dùng đã xóa'
+                ? L10nService().translate('chat_deleted_user')
                 : deletedDisplayName)
             : widget.targetName;
         final headerDisplayName = _nickname.trim().isNotEmpty && !isChatClosed
@@ -504,7 +506,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           Expanded(
                             child: Text(
                               closedMessage.isEmpty
-                                  ? 'Đoạn chat này đã bị đóng và chỉ còn xem lại lịch sử.'
+                                  ? L10nService().translate('chat_closed_history_only')
                                   : closedMessage,
                               style: SLTheme.quicksand(
                                 color: const Color(0xFFD81B60),

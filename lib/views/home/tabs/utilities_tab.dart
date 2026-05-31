@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart'
     show kDebugMode, kIsWeb, listEquals, TargetPlatform, defaultTargetPlatform;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -62,7 +63,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
   final MilitaryLockService _militaryLockService = MilitaryLockService();
 
   String? _houseId;
-  String _myName = 'Bạn';
+  String _myName = L10nService().translate('home_bn_1fd75b');
   List<String> _customOrder = [];
   String _relationshipMode = 'single';
   bool _isEditMode = false;
@@ -213,7 +214,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
             ),
           ),
           content: Text(
-            'Bạn có chắc muốn đưa thứ tự icon về mặc định không?',
+            context.tr('home_bncchcmuna_5043aa'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w700,
               height: 1.5,
@@ -223,7 +224,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
               child: Text(
-                'Hủy',
+                context.tr('home_hy_1e4050'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
               ),
             ),
@@ -234,7 +235,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
                 foregroundColor: Colors.white,
               ),
               child: Text(
-                'Đặt lại',
+                context.tr('home_tli_ffd7c4'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w900),
               ),
             ),
@@ -263,7 +264,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         if (cachedData != null) {
           if (mounted) {
             setState(() {
-              _myName = cachedData['nameU1'] ?? 'Bạn';
+              _myName = cachedData['nameU1'] ?? context.tr('home_bn_1fd75b');
               _relationshipMode =
                   HouseSettings.inferRelationshipModeFromSettingsMap(
                       Map<dynamic, dynamic>.from(cachedData));
@@ -280,7 +281,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
           OfflineCacheService.saveCache('utilities_settings_$_houseId', map);
           if (mounted) {
             setState(() {
-              _myName = map['nameU1'] ?? 'Bạn';
+              _myName = map['nameU1'] ?? context.tr('home_bn_1fd75b');
               _relationshipMode =
                   HouseSettings.inferRelationshipModeFromSettingsMap(map);
             });
@@ -389,201 +390,6 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
     setState(() => _isEditMode = value);
   }
 
-  // ── Header (giống .screen-header web) ─────────────────────────────────
-  Widget _buildUtilitiesHeader() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        20,
-        MediaQuery.of(context).padding.top + 8,
-        20,
-        12,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
-                      ).createShader(bounds),
-                      child: Text(
-                        'UTILITIES HUB',
-                        style: SLTheme.quicksand(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                    ),
-                    SLSpacing.h4,
-                    Container(
-                      width: 100,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        borderRadius: SLRadius.pillAll,
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                width: 44, // width 44 cho nút đặt lại
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    _buildUtilitiesHeaderAction(
-                      icon: Icons.restart_alt_rounded,
-                      tooltip: 'Đặt lại',
-                      onTap: _confirmResetLayout,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SLSpacing.h16,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Container(
-              padding: SLSpacing.all4,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.55),
-                borderRadius: SLRadius.mdAll,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _currentSegment = 0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: _currentSegment == 0
-                              ? Colors.white
-                              : Colors.transparent,
-                          borderRadius: SLRadius.smAll,
-                          boxShadow:
-                              _currentSegment == 0 ? SLShadow.subtle : null,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Vui Chơi',
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: _currentSegment == 0
-                                ? SLColors.primary
-                                : SLColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _currentSegment = 1),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: _currentSegment == 1
-                              ? Colors.white
-                              : Colors.transparent,
-                          borderRadius: SLRadius.smAll,
-                          boxShadow:
-                              _currentSegment == 1 ? SLShadow.subtle : null,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Công Cụ',
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: _currentSegment == 1
-                                ? SLColors.primary
-                                : SLColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUtilitiesHeaderAction({
-    required IconData icon,
-    required String tooltip,
-    required VoidCallback onTap,
-    bool active = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color:
-              active ? SLColors.primary : Colors.white.withValues(alpha: 0.9),
-          shape: BoxShape.circle,
-          boxShadow: SLShadow.subtle,
-          border: Border.all(
-              color: active
-                  ? SLColors.primary
-                  : Colors.white.withValues(alpha: 0.5)),
-        ),
-        child: Icon(
-          icon,
-          color: active ? Colors.white : SLColors.primary,
-          size: 20,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEditBtn(String label,
-      {bool isReset = false, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: isReset
-              ? Colors.white.withValues(alpha: 0.5)
-              : const Color(0xFFD81B60).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isReset
-                ? Colors.white
-                : const Color(0xFFD81B60).withValues(alpha: 0.3),
-          ),
-        ),
-        child: Text(
-          label,
-          style: SLTheme.quicksand(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: isReset ? const Color(0xFF555555) : const Color(0xFFD81B60),
-          ),
-        ),
-      ),
-    );
-  }
-
   static DateTime? _lastUtilityAdTime;
 
   Future<void> _navigateToApp(String id) async {
@@ -594,12 +400,12 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         SLNotice.showInfo(context, blockedMessage);
         return;
       }
-      SLNotice.showInfo(context, 'Tiện ích này chỉ dành cho chế độ Couple.');
+      SLNotice.showInfo(context, context.tr('home_tinchnychd_6061d1'));
       return;
     }
     final houseId = _houseId;
     if (houseId == null || houseId.isEmpty) {
-      SLNotice.showInfo(context, 'Đang tải dữ liệu nhà, thử lại ngay nhé.');
+      SLNotice.showInfo(context, context.tr('home_angtidliun_f42fcd'));
       return;
     }
 
@@ -716,7 +522,9 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         screen = CollageMakerScreen(houseId: houseId);
         break;
       case 'store':
-        screen = const RewardStoreScreen();
+        screen = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+            ? null
+            : const RewardStoreScreen();
         break;
       case 'age_zodiac':
         screen = AgeZodiacScreen(houseId: houseId);
@@ -762,7 +570,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tiện ích này đang được hoàn thiện.')));
+          SnackBar(content: Text(context.tr('home_tinchnyang_612f3d'))));
     }
   }
 }

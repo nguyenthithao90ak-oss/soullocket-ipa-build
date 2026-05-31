@@ -98,7 +98,7 @@ extension _CommunityFeedSurface on _CommunityTabState {
                   SLSpacing.h20,
                   Text(
                     _ct(
-                      'Tính năng đang phát triển',
+                      context.tr('home_tnhnngangp_4c4164'),
                       'Feature in development',
                     ),
                     textAlign: TextAlign.center,
@@ -131,20 +131,20 @@ extension _CommunityFeedSurface on _CommunityTabState {
                     children: [
                       _buildClosedFeedChip(
                         icon: Icons.rocket_launch_outlined,
-                        label: _ct('Đang phát triển', 'In development'),
+                        label: _ct(context.tr('home_angphttrin_0830a2'), 'In development'),
                       ),
                       _buildClosedFeedChip(
                         icon: Icons.auto_awesome_outlined,
-                        label: _ct('Sắp mở lại', 'Coming soon'),
+                        label: _ct(context.tr('home_spmli_3acdcb'), 'Coming soon'),
                       ),
                       _buildClosedFeedChip(
                         icon: Icons.view_carousel_outlined,
                         label:
-                            _ct('Giữ nguyên 6 khối trên', 'Top 6 blocks stay'),
+                            _ct(context.tr('home_ginguyn6kh_8880f8'), 'Top 6 blocks stay'),
                       ),
                       _buildClosedFeedChip(
                         icon: Icons.hourglass_bottom_rounded,
-                        label: _ct('Mở lại sau', 'Reopens later'),
+                        label: _ct(context.tr('home_mlisau_a08e61'), 'Reopens later'),
                       ),
                     ],
                   ),
@@ -285,7 +285,7 @@ extension _CommunityFeedSurface on _CommunityTabState {
           if (posts.isEmpty) {
             return _CommunityFeedEmptyState(
               message: _ct(
-                'Chưa có bài viết nào.',
+                context.tr('home_chacbivitn_a2faa8'),
                 'No posts yet.',
               ),
               textColor: _subTextColor,

@@ -18,6 +18,7 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
   final VoidCallback? onEditStartDate;
   final VoidCallback? onEditTopLabel;
   final VoidCallback? onEditBottomLabel;
+  final GlobalKey? firstGuideHeroKey;
 
   const _MainHomeHeroCountdownSection({
     required this.state,
@@ -37,6 +38,7 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
     this.onEditStartDate,
     this.onEditTopLabel,
     this.onEditBottomLabel,
+    this.firstGuideHeroKey,
   });
 
   @override
@@ -59,6 +61,7 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
             onEditStartDate: onEditStartDate,
             onEditTopLabel: onEditTopLabel,
             onEditBottomLabel: onEditBottomLabel,
+            firstGuideHeroKey: firstGuideHeroKey,
           ),
           SLSpacing.h16,
         ],
@@ -90,6 +93,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
   final VoidCallback? onEditStartDate;
   final VoidCallback? onEditTopLabel;
   final VoidCallback? onEditBottomLabel;
+  final GlobalKey? firstGuideHeroKey;
 
   const _MainHomeHeroCountdownCircle({
     required this.state,
@@ -104,6 +108,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
     this.onEditStartDate,
     this.onEditTopLabel,
     this.onEditBottomLabel,
+    this.firstGuideHeroKey,
   });
 
   @override
@@ -111,15 +116,17 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
     final transparentMode = UiPrefs.notifier.value.transparentMode;
     final countdownVisual =
         _CountdownVisualSpec.resolve(countdownStyleKey, transparentMode);
-    final labelHeight = (circleSize * 0.13).clamp(32.0, 56.0).toDouble();
-    final numberHeight = (circleSize * 0.34).clamp(74.0, 140.0).toDouble();
+    final labelHeight = (circleSize * 0.15).clamp(38.0, 64.0).toDouble();
+    final numberHeight = (circleSize * 0.32).clamp(70.0, 132.0).toDouble();
     final topLabelWidth = circleSize * 0.68;
     final bottomLabelWidth = circleSize * 0.64;
     final numberWidth = circleSize * 0.72;
-    final topGap = (circleSize * 0.025).clamp(4.0, 8.0).toDouble();
-    final bottomGap = (circleSize * 0.016).clamp(3.0, 6.0).toDouble();
+    final topGap = (circleSize * 0.07).clamp(16.0, 26.0).toDouble();
+    final bottomGap = (circleSize * 0.048).clamp(12.0, 20.0).toDouble();
 
-    return GestureDetector(
+    return KeyedSubtree(
+      key: firstGuideHeroKey,
+      child: GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: isSingle
           ? null
@@ -272,6 +279,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

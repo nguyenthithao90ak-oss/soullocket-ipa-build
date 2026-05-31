@@ -1,64 +1,37 @@
-// ignore_for_file: unused_element
+﻿// ignore_for_file: unused_element
 
 part of '../../main_home_tab.dart';
 
 extension _MainHomeTabDialogs on _MainHomeTabState {
-  Future<void> _maybeShowFirstSetupGuide() async {
-    final houseId = _houseId?.trim() ?? '';
-    if (houseId.isEmpty || _firstSetupGuidePrompting || !_isTabActive) return;
+  Future<void> _maybeShowFirstSetupGuide() async {}
 
-    final prefs = OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    final pendingKey = '${_MainHomeTabState._firstSetupGuidePendingPrefsPrefix}$houseId';
-    final seenKey = '${_MainHomeTabState._firstSetupGuideSeenPrefsPrefix}$houseId';
-    final isPending = (prefs.getString(pendingKey) ?? '').trim() == '1';
-    final isSeen = (prefs.getString(seenKey) ?? '').trim() == '1' ||
-        (prefs.getBool(seenKey) ?? false);
-    if (!isPending || isSeen || !mounted) return;
-
-    _firstSetupGuidePrompting = true;
-    try {
-      if (!mounted || !_isTabActive) return;
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted || !_isTabActive) return;
-      await _showFirstSetupGuideDialog(houseId: houseId);
-    } finally {
-      _firstSetupGuidePrompting = false;
-    }
-  }
-
-  Future<void> _markFirstSetupGuideSeen(String houseId) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    await prefs.setString('${_MainHomeTabState._firstSetupGuideSeenPrefsPrefix}$houseId', '1');
-    await prefs.remove('${_MainHomeTabState._firstSetupGuidePendingPrefsPrefix}$houseId');
-  }
+  Future<void> _markFirstSetupGuideSeen(String houseId) async {}
 
   Future<void> _showFirstSetupGuideDialog({required String houseId}) async {
     final guideSteps = <({IconData icon, String title, String body})>[
       (
         icon: Icons.favorite_rounded,
-        title: 'Chào mừng bạn đến với ngôi nhà mới',
+        title: context.tr('home_chomngbnnv_7ffc51'),
         body:
-            'Đây là hướng dẫn nhanh cho lần đầu dùng app. Bạn có thể bỏ qua hoặc xem từng bước.',
+            context.tr('home_ylhngdnnha_b558ac'),
       ),
       (
         icon: Icons.track_changes_rounded,
-        title: 'Vòng đếm ngày yêu',
+        title: context.tr('home_vngmngyyu_68e244'),
         body:
-            'Vùng được khoanh là nơi hiển thị số ngày bên nhau. Ví dụ: 520 ngày yêu.',
+            context.tr('home_vngckhoanh_623126'),
       ),
       (
         icon: Icons.edit_calendar_rounded,
-        title: 'Bấm vào để chỉnh chữ và ngày',
+        title: context.tr('home_bmvochnhch_0d6ef0'),
         body:
-            'Bấm số ngày để chỉnh ngày bắt đầu. Bấm chữ phía trên hoặc phía dưới để đổi “bên nhau”, “ngày yêu”.',
+            context.tr('home_bmsngychnh_cf2261'),
       ),
       (
         icon: Icons.apps_rounded,
-        title: 'Các khu vực chính',
+        title: context.tr('home_cckhuvcchn_6df4cf'),
         body:
-            'Nhật ký, album/kỷ niệm, cài đặt và bảo mật nằm ở các tab/chức năng bên dưới. Bạn có thể mở lại tài liệu hướng dẫn trong Cài đặt.',
+            context.tr('home_nhtkalbumk_6c939f'),
       ),
     ];
     await showDialog<void>(
@@ -161,7 +134,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                     }
                   },
                   child: Text(
-                    'Bỏ qua',
+                    context.tr('home_bqua_a3b533'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   ),
                 ),
@@ -178,7 +151,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                       }
                     },
                     child: Text(
-                      'Thử chỉnh',
+                      context.tr('home_thchnh_5c36f2'),
                       style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                     ),
                   )
@@ -196,7 +169,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                       setDialogState(() => stepIndex += 1);
                     },
                     child: Text(
-                      isLastStep ? 'Xong' : 'Tiếp tục',
+                      isLastStep ? 'Xong' : context.tr('home_tiptc_555f1f'),
                       style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                     ),
                   ),
@@ -233,7 +206,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
         title: Text(
-          'Tính năng đang phát triển',
+          context.tr('home_tnhnngangp_4c4164'),
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
@@ -248,7 +221,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                   size: 64, color: SLTheme.primary),
               SLSpacing.h16,
               Text(
-                'Hệ thống ghép đôi gọi video ngẫu nhiên',
+                context.tr('home_hthngghpig_fe040c'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
@@ -257,7 +230,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               ),
               SLSpacing.h12,
               Text(
-                'Tính năng này sẽ giúp bạn ghép nối ngẫu nhiên và an toàn với những người dùng độc thân khác phù hợp về độ tuổi và sở thích. Sẽ ra mắt trong phiên bản sắp tới, hãy cùng chờ đón nhé!',
+                context.tr('home_tnhnngnysg_2c2ec5'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w600,
@@ -283,7 +256,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: Text(
-                'Đã hiểu',
+                context.tr('home_hiu_93c4c0'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w900),
               ),
             ),
@@ -658,7 +631,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                       const SizedBox(height: 2),
                       Text(
                         partnerOnline
-                            ? '$partnerName sẽ thấy ngay'
+                            ? '$partnerName sáº½ tháº¥y ngay'
                             : 'Đã gửi cho $partnerName',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -720,6 +693,14 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
   }
 
   Future<void> _showEditStartDateDialog() async {
+    final msgDatingCooldown = context.tr('home_bncnch3ngy_4b578b');
+    final msgConfirmTitle = context.tr('home_lu_3b8e18');
+    final msgConfirmBody = context.tr('home_nubnitipbn_4888b3');
+    final msgCancel = context.tr('home_hy_1e4050');
+    final msgContinue = context.tr('home_itip_ed5193');
+    final msgUpdated = context.tr('home_cpnhtngybt_e362b6');
+    final msgUpdateFailed = context.tr('home_khngcpnhtc_f5e2a0');
+
     if (_houseId == null) return;
     final curStartDate = _houseSettings?['startDate']?.toString() ?? '';
     DateTime initialDate = DateTime.now();
@@ -727,7 +708,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       initialDate = DateTime.tryParse(curStartDate) ?? DateTime.now();
     }
 
-    // Lưu context-dependent objects trước async gap
+    // LÆ°u context-dependent objects trÆ°á»›c async gap
     if (!mounted) return;
     final scaffoldMessenger = ScaffoldMessenger.maybeOf(context);
 
@@ -759,7 +740,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               ? null
               : DateTime.fromMillisecondsSinceEpoch(cooldownUntil);
           final message = unlockAt == null
-              ? 'Bạn cần chờ đủ 3 ngày mới có thể đổi ngày yêu tiếp.'
+              ? msgDatingCooldown
               : 'Bạn cần chờ đến ${unlockAt.day}/${unlockAt.month}/${unlockAt.year} mới có thể đổi ngày yêu tiếp.';
           scaffoldMessenger?.showSnackBar(SnackBar(content: Text(message)));
           return;
@@ -771,18 +752,18 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: const Text('Lưu ý'),
-                  content: const Text(
-                    'Nếu bạn đổi tiếp, bạn sẽ phải đợi 3 ngày nữa mới có thể đổi ngày yêu lần sau.',
+                  title: Text(msgConfirmTitle),
+                  content: Text(
+                    msgConfirmBody,
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(ctx).pop(false),
-                      child: const Text('Hủy'),
+                      child: Text(msgCancel),
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(ctx).pop(true),
-                      child: const Text('Đổi tiếp'),
+                      child: Text(msgContinue),
                     ),
                   ],
                 ),
@@ -798,13 +779,13 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         );
         if (!mounted) return;
         scaffoldMessenger?.showSnackBar(
-          const SnackBar(content: Text('Đã cập nhật ngày bắt đầu yêu!')),
+          SnackBar(content: Text(msgUpdated)),
         );
       } catch (e) {
         if (!mounted) return;
         final message = _shortErrorMessage(
           e,
-          'Không cập nhật được ngày yêu: chưa xác định được lỗi từ hệ thống.',
+          msgUpdateFailed,
         );
         scaffoldMessenger?.showSnackBar(SnackBar(content: Text(message)));
       }
@@ -819,8 +800,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
 
     final controller = TextEditingController(text: currentLabel);
     final dialogTitle =
-        editTopLabel ? 'Đổi chữ phía trên' : 'Đổi chữ phía dưới';
-    final hintText = editTopLabel ? 'VD: BÊN NHAU' : 'VD: ngày yêu';
+        editTopLabel ? context.tr('home_ichphatrn_2b9989') : context.tr('home_ichphadi_5a1c20');
+    final hintText = editTopLabel ? context.tr('home_vdbnnhau_998f24') : context.tr('home_vdngyyu_f3c8aa');
 
     showDialog(
       context: context,
@@ -839,7 +820,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Để trống sẽ quay về chữ mặc định.',
+                context.tr('home_trngsquayv_97516b'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 12.5,
@@ -883,7 +864,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Hủy',
+              context.tr('home_hy_1e4050'),
               style: SLTheme.quicksand(
                 color: Colors.grey,
                 fontWeight: FontWeight.w700,
@@ -893,7 +874,15 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           ElevatedButton(
             onPressed: () async {
               final newLabel = controller.text.trim();
-              Navigator.pop(ctx);
+              Navigator.of(ctx).pop();
+              if (newLabel.isEmpty || !mounted) {
+                return;
+              }
+
+              // Đợi dialog route đóng hẳn rồi mới cập nhật để tránh lỗi
+              // deactivate/dependents trên một số thiết bị/emulator.
+              await Future<void>.delayed(const Duration(milliseconds: 16));
+              if (!mounted) return;
 
               try {
                 await _houseSettingsService.updateCountdownLabels(
@@ -905,7 +894,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                 if (!mounted) return;
                 final message = _shortErrorMessage(
                   e,
-                  'Không lưu được nhãn đếm ngày: chưa xác định được lỗi từ hệ thống.',
+                  context.tr('home_khnglucnhn_0689c8'),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(message)),
@@ -920,13 +909,13 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               ),
             ),
             child: Text(
-              'Lưu',
+              context.tr('home_lu_49fac1'),
               style: SLTheme.quicksand(fontWeight: FontWeight.w800),
             ),
           ),
         ],
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   void _showEditNameDialog(
@@ -938,7 +927,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
         title: Text(
-          'Đổi biệt danh',
+          context.tr('home_ibitdanh_345585'),
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
@@ -950,7 +939,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 18),
           decoration: InputDecoration(
-            hintText: 'Nhập tên mới...',
+            hintText: context.tr('home_nhptnmi_1b6bb3'),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -963,7 +952,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Hủy',
+            child: Text(context.tr('home_hy_1e4050'),
                 style: SLTheme.quicksand(
                     color: Colors.grey, fontWeight: FontWeight.w700)),
           ),
@@ -972,6 +961,9 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               final newName = controller.text.trim();
               if (newName.isNotEmpty) {
                 Navigator.pop(ctx);
+                if (!mounted) return;
+                await Future<void>.delayed(const Duration(milliseconds: 120));
+                if (!mounted) return;
                 final field = isUser1 ? 'nameU1' : 'nameU2';
                 final updates = {
                   'houses/$_houseId/settings/$field': newName,
@@ -988,11 +980,11 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text('Lưu',
+            child: Text(context.tr('home_lu_49fac1'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
           ),
         ],
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 }

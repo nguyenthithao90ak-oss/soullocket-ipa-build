@@ -40,12 +40,12 @@ extension _CommunityTabComposer on _CommunityTabState {
         SnackBar(
           content: Text(
             _ct(
-              'Lần upload bài cộng đồng trước đã bị gián đoạn.',
+              context.tr('home_lnuploadbi_0904e6'),
               'The last community upload was interrupted.',
             ),
           ),
           action: SnackBarAction(
-            label: _ct('Thử lại', 'Retry'),
+            label: _ct(context.tr('home_thli_4dffdf'), 'Retry'),
             onPressed: () {
               unawaited(_retryPendingCommunityUpload());
             },
@@ -113,6 +113,13 @@ extension _CommunityTabComposer on _CommunityTabState {
 
   Future<void> _submitLocketPost(XFile capturedImage) async {
     if (_isLoading) return;
+    final errUploadFailed = context.tr('home_khngthtinh_bfad65');
+    final defaultMood = context.tr('home_tho_ebaeb2');
+    final successMsg = context.tr('home_gikhonhkhc_804cd1');
+    final defaultErr = context.tr('home_khngthnglo_8f3faa');
+    final errorTitle = context.tr('home_li_aaf377');
+    final retryLabel = context.tr('home_thli_4dffdf');
+
     _updateState(() => _isLoading = true);
     final pendingKey = _pendingCommunityLocketUploadKey;
     try {
@@ -139,7 +146,7 @@ extension _CommunityTabComposer on _CommunityTabState {
       );
       final sessionId = upload?.sessionId?.trim() ?? '';
       if (sessionId.isEmpty) {
-        throw Exception('Không thể tải ảnh lên lúc này.');
+        throw Exception(errUploadFailed);
       }
 
       await _storageService.finalizePublicImageUpload(
@@ -152,8 +159,8 @@ extension _CommunityTabComposer on _CommunityTabState {
         authorAvt: _houseAvatar,
         content: '',
         privacy: 'friends',
-        mood: _ct('Tự hào', 'Proud'),
-        moodEmoji: '✨',
+        mood: _ct(defaultMood, 'Proud'),
+        moodEmoji: 'âœ¨',
         location: '',
         postType: 'polaroid',
         isAnon: false,
@@ -168,7 +175,7 @@ extension _CommunityTabComposer on _CommunityTabState {
       LegacyWebUi.showNotice(
         context,
         message: _ct(
-          'Đã gửi khoảnh khắc cho bạn bè!',
+          successMsg,
           'Moment sent to friends!',
         ),
         title: 'Locket',
@@ -178,7 +185,7 @@ extension _CommunityTabComposer on _CommunityTabState {
       final resolvedError = AppErrorMapper.resolve(
         e,
         fallbackMessage: _ct(
-          'Không thể đăng Locket lúc này.',
+          defaultErr,
           'Cannot post this Locket right now.',
         ),
       );
@@ -189,9 +196,9 @@ extension _CommunityTabComposer on _CommunityTabState {
       LegacyWebUi.showNoticeWithAction(
         context,
         message: resolvedError.message,
-        title: _ct('Lỗi', 'Error'),
+        title: _ct(errorTitle, 'Error'),
         icon: Icons.error_outline_rounded,
-        actionLabel: _ct('Thử lại', 'Retry'),
+        actionLabel: _ct(retryLabel, 'Retry'),
         success: false,
         onAction: () {
           unawaited(_submitLocketPost(capturedImage));
@@ -214,6 +221,16 @@ extension _CommunityTabComposer on _CommunityTabState {
     required String resolvedPostType,
   }) async {
     if (_isLoading) return;
+    final errUploadFailed = context.tr('home_khngthtinh_bfad65');
+    final flaggedReasonMsg = context.tr('home_moderation_flagged_reason');
+    final violationWarningMsg = context.tr('home_bivitcabnc_37c237');
+    final violationTitle = context.tr('home_cnhboviphm_bba9b1');
+    final successMsg = context.tr('home_bivitcabnl_588521');
+    final successTitle = context.tr('home_ngbithnhcn_bf3b57');
+    final fallbackErrMsg = context.tr('home_chathngbil_2a8a6b');
+    final failedTitle = context.tr('home_ngbichathn_682670');
+    final retryLabel = context.tr('home_thli_4dffdf');
+
     _updateState(() => _isLoading = true);
     try {
       final hid = _houseId;
@@ -283,7 +300,7 @@ extension _CommunityTabComposer on _CommunityTabState {
         );
         final sessionId = upload?.sessionId?.trim() ?? '';
         if (sessionId.isEmpty) {
-          throw Exception('Không thể tải ảnh lên lúc này.');
+          throw Exception(errUploadFailed);
         }
         await _storageService.finalizePublicImageUpload(
           houseId: hid,
@@ -315,15 +332,15 @@ extension _CommunityTabComposer on _CommunityTabState {
           context,
           message: moderationReason.isNotEmpty
               ? _ctf(
-                  'Bài viết của bạn đã bị đánh dấu kiểm duyệt. Lý do: {reason}. Bài viết đã được hạ mức hiển thị an toàn để tránh vi phạm lặp lại.',
+                  flaggedReasonMsg,
                   'Your post was flagged for moderation. Reason: {reason}. The visibility was reduced to a safer level to avoid repeated violations.',
                   {'reason': moderationReason},
                 )
               : _ct(
-                  'Bài viết của bạn chứa từ khóa vi phạm (tục tĩu/chửi bới). Bài viết đã bị gỡ khỏi cộng đồng và chuyển về chế độ riêng tư. Hình phạt: Cảnh cáo vi phạm tiêu chuẩn cộng đồng, nếu tái phạm sẽ bị khóa tài khoản.',
+                  violationWarningMsg,
                   'Your post contains violating keywords. It has been removed from the community and moved to private mode. This is a warning for violating community standards. Repeated violations may lead to an account lock.',
                 ),
-          title: _ct('Cảnh báo vi phạm', 'Violation warning'),
+          title: _ct(violationTitle, 'Violation warning'),
           icon: Icons.warning_amber_rounded,
           success: false,
         );
@@ -331,10 +348,10 @@ extension _CommunityTabComposer on _CommunityTabState {
         LegacyWebUi.showNotice(
           context,
           message: _ct(
-            'Bài viết của bạn đã lên cộng đồng và giữ đúng luật hiển thị.',
+            successMsg,
             'Your post is now live in the community and follows the visibility rules.',
           ),
-          title: _ct('Đăng bài thành công', 'Post published'),
+          title: _ct(successTitle, 'Post published'),
           icon: Icons.celebration_rounded,
         );
       }
@@ -342,7 +359,7 @@ extension _CommunityTabComposer on _CommunityTabState {
       final resolvedError = AppErrorMapper.resolve(
         e,
         fallbackMessage: _ct(
-          'Chưa thể đăng bài lúc này. Bạn thử lại sau.',
+          fallbackErrMsg,
           'Cannot publish the post right now. Please try again later.',
         ),
       );
@@ -352,9 +369,9 @@ extension _CommunityTabComposer on _CommunityTabState {
         context,
         message: resolvedError.message,
         success: false,
-        title: _ct('Đăng bài chưa thành công', 'Post not published'),
+        title: _ct(failedTitle, 'Post not published'),
         icon: Icons.cloud_off_rounded,
-        actionLabel: _ct('Thử lại', 'Retry'),
+        actionLabel: _ct(retryLabel, 'Retry'),
         onAction: () {
           unawaited(
             _submitCommunityPost(
@@ -377,8 +394,16 @@ extension _CommunityTabComposer on _CommunityTabState {
   }
 
   Future<void> _openComposer({bool openImagePicker = false}) async {
+    final editPhotoTitle = context.tr('home_chnhsanh_aa8a34');
+    final errEditorFailed = context.tr('home_khngthmtrn_18f5b5');
+    final errEditPhotoFailed = context.tr('home_khngthchnh_fafc68');
+    final errPickPhotoFailed = context.tr('home_khngthchnn_951911');
+    final cropIssueTitle = context.tr('home_nhnhkmangg_924f31');
+    final photoNotAddedTitle = context.tr('home_chathmcnh_e259af');
+    final advicePrefix = context.tr('home_xinlikhuyn_cd284a');
+
     if (_currentFeedType == 'locket') {
-      // Nhảy thẳng vào camera nếu là tab Locket
+      // Nháº£y tháº³ng vÃ o camera náº¿u lÃ  tab Locket
       if (!mounted) return;
       final capturedImage = await Navigator.push<XFile>(
         context,
@@ -403,8 +428,8 @@ extension _CommunityTabComposer on _CommunityTabState {
       final text = value.trim();
       if (text.isEmpty) return false;
       return text.contains('?') ||
-          text.endsWith('؟') ||
-          text.toLowerCase().startsWith(_ct('xin lời khuyên', 'need advice'));
+          text.endsWith('ØŸ') ||
+          text.toLowerCase().startsWith(_ct(advicePrefix, 'need advice'));
     }
 
     String fallbackPostType() {
@@ -415,6 +440,7 @@ extension _CommunityTabComposer on _CommunityTabState {
 
     String resolveComposerPostType() => fallbackPostType();
 
+    // ignore: unused_element
     Future<void> editComposerImage(
       void Function(void Function()) setInner,
       BuildContext bottomSheetContext,
@@ -431,7 +457,7 @@ extension _CommunityTabComposer on _CommunityTabState {
             compressQuality: 70,
             uiSettings: [
               IOSUiSettings(
-                title: _ct('Chỉnh sửa ảnh', 'Edit photo'),
+                title: _ct(editPhotoTitle, 'Edit photo'),
               ),
             ],
           );
@@ -446,7 +472,7 @@ extension _CommunityTabComposer on _CommunityTabState {
           final resolvedError = AppErrorMapper.resolve(
             e,
             fallbackMessage: _ct(
-              'Không thể mở trình chỉnh sửa ảnh lúc này.',
+              errEditorFailed,
               'Cannot open the photo editor right now.',
             ),
           );
@@ -456,7 +482,7 @@ extension _CommunityTabComposer on _CommunityTabState {
             context,
             message: resolvedError.message,
             success: false,
-            title: _ct('Lỗi', 'Error'),
+            title: _ct(context.tr('home_li_aaf377'), 'Error'),
             icon: Icons.broken_image_outlined,
           );
         }
@@ -464,7 +490,7 @@ extension _CommunityTabComposer on _CommunityTabState {
         final resolvedError = AppErrorMapper.resolve(
           e,
           fallbackMessage: _ct(
-            'Không thể chỉnh sửa ảnh lúc này.',
+            errEditPhotoFailed,
             'Cannot edit the photo right now.',
           ),
         );
@@ -474,7 +500,7 @@ extension _CommunityTabComposer on _CommunityTabState {
           message: resolvedError.message,
           success: false,
           title:
-              _ct('Ảnh đính kèm đang gặp lỗi', 'Attached photo has an issue'),
+              _ct(cropIssueTitle, 'Attached photo has an issue'),
           icon: Icons.broken_image_outlined,
         );
       } finally {
@@ -506,7 +532,7 @@ extension _CommunityTabComposer on _CommunityTabState {
             compressQuality: 70,
             uiSettings: [
               IOSUiSettings(
-                title: _ct('Chỉnh sửa ảnh', 'Edit photo'),
+                title: _ct(editPhotoTitle, 'Edit photo'),
               ),
             ],
           );
@@ -528,7 +554,7 @@ extension _CommunityTabComposer on _CommunityTabState {
           final resolvedError = AppErrorMapper.resolve(
             e,
             fallbackMessage: _ct(
-              'Không thể chỉnh sửa ảnh lúc này.',
+              errEditPhotoFailed,
               'Cannot edit the photo right now.',
             ),
           );
@@ -542,7 +568,7 @@ extension _CommunityTabComposer on _CommunityTabState {
         final resolvedError = AppErrorMapper.resolve(
           e,
           fallbackMessage: _ct(
-            'Không thể chọn ảnh lúc này.',
+            errPickPhotoFailed,
             'Cannot pick a photo right now.',
           ),
         );
@@ -551,7 +577,7 @@ extension _CommunityTabComposer on _CommunityTabState {
           context,
           message: resolvedError.message,
           success: false,
-          title: _ct('Chưa thêm được ảnh', 'Photo not added'),
+          title: _ct(photoNotAddedTitle, 'Photo not added'),
           icon: Icons.image_not_supported_outlined,
         );
       } finally {
@@ -571,7 +597,7 @@ extension _CommunityTabComposer on _CommunityTabState {
               borderRadius: SLRadius.xlAll,
             ),
             title: Text(
-              _ct('Gắn vị trí cho bài viết', 'Add a location to the post'),
+              _ct(context.tr('home_gnvtrchobi_cf0363'), 'Add a location to the post'),
               style: SLTheme.quicksand(fontWeight: FontWeight.w900),
             ),
             content: TextField(
@@ -580,7 +606,7 @@ extension _CommunityTabComposer on _CommunityTabState {
               style: SLTheme.quicksand(fontWeight: FontWeight.w700),
               decoration: InputDecoration(
                 hintText: _ct(
-                  'Ví dụ: Hà Nội, quán quen, Đà Lạt...',
+                  context.tr('home_vdhniqunqu_02afe3'),
                   'Example: Hanoi, favorite cafe, Da Lat...',
                 ),
                 border: OutlineInputBorder(
@@ -591,17 +617,17 @@ extension _CommunityTabComposer on _CommunityTabState {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, locationText),
-                child: Text(_ct('Hủy', 'Cancel')),
+                child: Text(_ct(context.tr('home_hy_1e4050'), 'Cancel')),
               ),
               if (locationText.isNotEmpty)
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, ''),
-                  child: Text(_ct('Xóa', 'Delete')),
+                  child: Text(_ct(context.tr('home_xa_4ed187'), 'Delete')),
                 ),
               ElevatedButton(
                 onPressed: () =>
                     Navigator.pop(ctx, locationController.text.trim()),
-                child: Text(_ct('Lưu', 'Save')),
+                child: Text(_ct(context.tr('home_lu_49fac1'), 'Save')),
               ),
             ],
           );
@@ -628,7 +654,7 @@ extension _CommunityTabComposer on _CommunityTabState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _ct('Chọn tâm trạng cho bài viết',
+                  _ct(context.tr('home_chntmtrngc_7fe6ac'),
                       'Choose a mood for the post'),
                   style: SLTheme.quicksand(
                     fontSize: 17,
@@ -675,7 +701,7 @@ extension _CommunityTabComposer on _CommunityTabState {
                     onPressed: () => Navigator.pop(ctx, <String, String>{}),
                     icon: const Icon(Icons.delete_outline_rounded),
                     label: Text(
-                      _ct('Xóa tâm trạng đã chọn', 'Clear selected mood'),
+                      _ct(context.tr('home_xatmtrngch_141960'), 'Clear selected mood'),
                     ),
                   ),
                 ],
@@ -699,19 +725,19 @@ extension _CommunityTabComposer on _CommunityTabState {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setInner) {
-            // Tự động mở bộ chọn ảnh nếu được yêu cầu
+            // Tá»± Ä‘á»™ng má»Ÿ bá»™ chá»n áº£nh náº¿u Ä‘Æ°á»£c yÃªu cáº§u
             if (openImagePicker && selectedImage == null && !isPickingImage) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 pickComposerImage(setInner, ctx);
               });
-              openImagePicker = false; // Chỉ mở 1 lần
+              openImagePicker = false; // Chá»‰ má»Ÿ 1 láº§n
             }
 
             final selectedAudience =
                 visibility == 'friends' ? 'friends' : 'public';
 
-            /*
 
+            // ignore: unused_element
             Widget buildAudienceOption({
               required String value,
               required String label,
@@ -720,7 +746,7 @@ extension _CommunityTabComposer on _CommunityTabState {
             }) {
               final isSelected = selectedAudience == value;
               return InkWell(
-                onTap: () => applyAudience(value),
+                onTap: () => setInner(() { visibility = value == 'private' ? 'private' : 'friends'; }),
                 borderRadius: BorderRadius.circular(18),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
@@ -762,9 +788,42 @@ extension _CommunityTabComposer on _CommunityTabState {
               );
             }
 
-                                'Cần thêm ảnh để dùng kiểu này.',
 
-            */
+            var selectedPostType = resolveComposerPostType();
+
+            Widget buildPostTypeOption({
+              required String value,
+              required String label,
+              required String subtitle,
+              required IconData icon,
+              required Color color,
+            }) {
+              final isSelected = selectedPostType == value;
+              return InkWell(
+                onTap: () => setInner(() => selectedPostType = value),
+                borderRadius: BorderRadius.circular(18),
+                child: Container(
+                  width: 148,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isSelected ? color.withValues(alpha: 0.12) : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: isSelected ? color : const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(icon, color: color, size: 20),
+                      const SizedBox(height: 8),
+                      Text(label, style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: color)),
+                      const SizedBox(height: 4),
+                      Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: SLTheme.quicksand(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+                    ],
+                  ),
+                ),
+              );
+            }
+
             return FractionallySizedBox(
               heightFactor: 1,
               child: Material(
@@ -786,7 +845,7 @@ extension _CommunityTabComposer on _CommunityTabState {
                                 onPressed: () => Navigator.of(ctx).pop(false),
                                 icon: const Icon(Icons.close_rounded),
                                 label: Text(
-                                  _ct('Hủy', 'Cancel'),
+                                  _ct(context.tr('home_hy_1e4050'), 'Cancel'),
                                   style: SLTheme.quicksand(
                                     fontWeight: FontWeight.w800,
                                   ),
@@ -795,7 +854,7 @@ extension _CommunityTabComposer on _CommunityTabState {
                             ),
                             Expanded(
                               child: Text(
-                                _ct('Tạo bài viết', 'Create post'),
+                                _ct(context.tr('home_tobivit_42e413'), 'Create post'),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   fontSize: 18,
@@ -822,7 +881,7 @@ extension _CommunityTabComposer on _CommunityTabState {
                                     ),
                                   ),
                                   child: Text(
-                                    _ct('ĐĂNG', 'POST'),
+                                    _ct(context.tr('home_ng_a91c66'), 'POST'),
                                     style: SLTheme.quicksand(
                                       fontWeight: FontWeight.w900,
                                     ),
@@ -847,30 +906,27 @@ extension _CommunityTabComposer on _CommunityTabState {
                                   accent: const Color(0xFFD81B60),
                                   radius: 24,
                                 ),
-                                child: Row(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    CircleAvatar(
-                                      radius: 24,
-                                      backgroundColor: const Color(0xFFF0F2F5),
-                                      backgroundImage: _houseAvatar.isNotEmpty
-                                          ? CachedNetworkImageProvider(
-                                              _houseAvatar)
-                                          : null,
-                                      child: _houseAvatar.isEmpty
-                                          ? const Icon(
-                                              Icons.favorite_rounded,
-                                              color: Color(0xFFD81B60),
-                                            )
-                                          : null,
-                                    ),
-                                    SLSpacing.w12,
-                                    const Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          /*
-                                          Text(
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 24,
+                                          backgroundColor: const Color(0xFFF0F2F5),
+                                          backgroundImage: _houseAvatar.isNotEmpty
+                                              ? CachedNetworkImageProvider(_houseAvatar)
+                                              : null,
+                                          child: _houseAvatar.isEmpty
+                                              ? const Icon(
+                                                  Icons.favorite_rounded,
+                                                  color: Color(0xFFD81B60),
+                                                )
+                                              : null,
+                                        ),
+                                        SLSpacing.w12,
+                                        Expanded(
+                                          child: Text(
                                             _houseName,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -880,265 +936,76 @@ extension _CommunityTabComposer on _CommunityTabState {
                                               color: const Color(0xFF1E293B),
                                             ),
                                           ),
-                                          SLSpacing.h8,
-                                          if (selectedAudience ==
-                                              'legacy-never')
-                                            Wrap(
-                                              spacing: 8,
-                                              runSpacing: 8,
-                                              children: [
-                                                Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 4,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        const Color(0xFFF1F5F9),
-                                                    borderRadius:
-                                                        SLRadius.smAll,
-                                                    border: Border.all(
-                                                      color: const Color(
-                                                          0xFFE2E8F0),
-                                                    ),
-                                                  ),
-                                                  child:
-                                                      DropdownButtonHideUnderline(
-                                                    child:
-                                                        DropdownButton<String>(
-                                                      value: visibility,
-                                                      isDense: true,
-                                                      style: SLTheme.quicksand(
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w800,
-                                                        color: const Color(
-                                                            0xFF475569),
-                                                      ),
-                                                      items: [
-                                                        DropdownMenuItem(
-                                                          value: 'public',
-                                                          child: Text(
-                                                            _ct(
-                                                              '🌐 Công khai',
-                                                              '🌐 Public',
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        DropdownMenuItem(
-                                                          value: 'friends',
-                                                          child: Text(
-                                                            _ct(
-                                                              '👥 Bạn bè',
-                                                              '👥 Friends',
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        DropdownMenuItem(
-                                                          value: 'private',
-                                                          child: Text(
-                                                            _ct(
-                                                              '🔒 Riêng tư',
-                                                              '🔒 Private',
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                      onChanged: (v) {
-                                                        if (v == null) return;
-                                                        setInner(() =>
-                                                            visibility = v);
-                                                      },
-                                                    ),
-                                                  ),
-                                                ),
-                                                InkWell(
-                                                  onTap: () => setInner(
-                                                      () => isAnon = !isAnon),
-                                                  borderRadius: SLRadius.smAll,
-                                                  child: Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 8,
-                                                    ),
-                                                    decoration: BoxDecoration(
-                                                      color: const Color(
-                                                          0xFFF1F5F9),
-                                                      borderRadius:
-                                                          SLRadius.smAll,
-                                                      border: Border.all(
-                                                        color: const Color(
-                                                            0xFFE2E8F0),
-                                                      ),
-                                                    ),
-                                                    child: Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        Checkbox(
-                                                          value: isAnon,
-                                                          onChanged: (v) =>
-                                                              setInner(
-                                                            () => isAnon =
-                                                                v ?? false,
-                                                          ),
-                                                          visualDensity:
-                                                              VisualDensity
-                                                                  .compact,
-                                                          activeColor:
-                                                              const Color(
-                                                            0xFFD81B60,
-                                                          ),
-                                                        ),
-                                                        Text(
-                                                          _ct('Ẩn danh',
-                                                              'Anonymous'),
-                                                          style:
-                                                              SLTheme.quicksand(
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight.w800,
-                                                            color: const Color(
-                                                                0xFF475569),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          Text(
-                                            _ct(
-                                              'Chọn cách hiển thị cho bài viết',
-                                              'Choose how this post will appear',
-                                            ),
-                                            style: SLTheme.quicksand(
-                                              fontSize: 12.2,
-                                              fontWeight: FontWeight.w700,
-                                              color: const Color(0xFF64748B),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          Wrap(
-                                            spacing: 8,
-                                            runSpacing: 8,
-                                            children: [
-                                              buildAudienceOption(
-                                                value: 'public',
-                                                label:
-                                                    _ct('Công khai', 'Public'),
-                                                icon: Icons.public_rounded,
-                                                color: const Color(0xFF2563EB),
-                                              ),
-                                              buildAudienceOption(
-                                                value: 'friends',
-                                                label: _ct('Bạn bè', 'Friends'),
-                                                icon: Icons.people_alt_rounded,
-                                                color: const Color(0xFF0F766E),
-                                              ),
-                                              buildAudienceOption(
-                                                value: 'anonymous',
-                                                label:
-                                                    _ct('Ẩn danh', 'Anonymous'),
-                                                icon: Icons
-                                                    .visibility_off_rounded,
-                                                color: const Color(0xFFD81B60),
-                                              ),
-                                            ],
-                                          ),
-                                          Text(
-                                            _ct(
-                                              'Chọn kiểu hiển thị cho bài viết',
-                                              'Choose the post style',
-                                            ),
-                                            style: SLTheme.quicksand(
-                                              fontSize: 12.2,
-                                              fontWeight: FontWeight.w700,
-                                              color: const Color(0xFF64748B),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          Wrap(
-                                            spacing: 10,
-                                            runSpacing: 10,
-                                            children: [
-                                              buildPostTypeOption(
-                                                value: 'mood',
-                                                label: _ct(
-                                                    'Mood card', 'Mood card'),
-                                                subtitle: _ct(
-                                                  'Nền đổi theo cảm xúc và tâm trạng.',
-                                                  'Mood background based on the feeling.',
-                                                ),
-                                                icon:
-                                                    Icons.auto_awesome_rounded,
-                                                color: const Color(0xFFD81B60),
-                                              ),
-                                              buildPostTypeOption(
-                                                value: 'polaroid',
-                                                label:
-                                                    _ct('Polaroid', 'Polaroid'),
-                                                subtitle: _ct(
-                                                  'Ưu tiên ảnh và caption như khung ảnh.',
-                                                  'Photo-first layout with a framed caption.',
-                                                ),
-                                                icon: Icons
-                                                    .photo_camera_back_rounded,
-                                                color: const Color(0xFF2563EB),
-                                              ),
-                                              buildPostTypeOption(
-                                                value: 'question',
-                                                label:
-                                                    _ct('Question', 'Question'),
-                                                subtitle: _ct(
-                                                  'Dành cho bài xin lời khuyên.',
-                                                  'Best for advice or help requests.',
-                                                ),
-                                                icon:
-                                                    Icons.help_outline_rounded,
-                                                color: const Color(0xFFF59E0B),
-                                              ),
-                                              buildPostTypeOption(
-                                                value: 'confession',
-                                                label: _ct(
-                                                    'Confession', 'Confession'),
-                                                subtitle: _ct(
-                                                  'Tự bật ẩn danh cho bài tâm sự.',
-                                                  'Automatically posts as anonymous.',
-                                                ),
-                                                icon: Icons
-                                                    .favorite_border_rounded,
-                                                color: const Color(0xFF7C3AED),
-                                              ),
-                                            ],
-                                          ),
-                                          */
-                                        ],
+                                        ),
+                                      ],
+                                    ),
+                                    SLSpacing.h16,
+                                    Text(
+                                      _ct(
+                                        context.tr('home_chnkiuhint_cc235b'),
+                                        'Choose the post style',
+                                      ),
+                                      style: SLTheme.quicksand(
+                                        fontSize: 12.2,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF64748B),
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                              SLSpacing.h16,
-                              // Đã loại bỏ _buildCommunityRulesCard ở đây để ẩn thẻ nội quy
-                              Container(
-                                width: double.infinity,
-                                padding: SLSpacing.all20,
-                                decoration: LegacyWebUi.softPanelDecoration(
-                                  accent: const Color(0xFFD81B60),
-                                  radius: 28,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
+                                    const SizedBox(height: 10),
+                                    Wrap(
+                                      spacing: 10,
+                                      runSpacing: 10,
+                                      children: [
+                                        buildPostTypeOption(
+                                          value: 'mood',
+                                          label: _ct('Mood card', 'Mood card'),
+                                          subtitle: _ct(
+                                            context.tr('home_nnitheocmx_0b199c'),
+                                            'Mood background based on the feeling.',
+                                          ),
+                                          icon: Icons.auto_awesome_rounded,
+                                          color: const Color(0xFFD81B60),
+                                        ),
+                                        buildPostTypeOption(
+                                          value: 'polaroid',
+                                          label: _ct('Polaroid', 'Polaroid'),
+                                          subtitle: _ct(
+                                            context.tr('home_utinnhvcap_e82e26'),
+                                            'Photo-first layout with a framed caption.',
+                                          ),
+                                          icon: Icons.photo_camera_back_rounded,
+                                          color: const Color(0xFF2563EB),
+                                        ),
+                                        buildPostTypeOption(
+                                          value: 'question',
+                                          label: _ct('Question', 'Question'),
+                                          subtitle: _ct(
+                                            context.tr('home_dnhchobixi_797865'),
+                                            'Best for advice or help requests.',
+                                          ),
+                                          icon: Icons.help_outline_rounded,
+                                          color: const Color(0xFFF59E0B),
+                                        ),
+                                        buildPostTypeOption(
+                                          value: 'confession',
+                                          label: _ct('Confession', 'Confession'),
+                                          subtitle: _ct(
+                                            context.tr('home_tbtndanhch_bef1f7'),
+                                            'Automatically posts as anonymous.',
+                                          ),
+                                          icon: Icons.lock_outline_rounded,
+                                          color: const Color(0xFF7C3AED),
+                                        ),
+                                      ],
+                                    ),
+                                    SLSpacing.h16,
                                     Row(
                                       children: [
                                         Text(
-                                          _ct('Nội dung bài viết',
-                                              'Post content'),
+                                          _ct(
+                                            context.tr('home_iconiconsf_3982b3'),
+                                            'Post content',
+                                          ),
                                           style: SLTheme.quicksand(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w900,
@@ -1184,7 +1051,7 @@ extension _CommunityTabComposer on _CommunityTabState {
                                       ),
                                       decoration: InputDecoration(
                                         hintText: _ct(
-                                          'Bạn muốn chia sẻ điều gì với cộng đồng?',
+                                          context.tr('home_bnmunchias_08f77e'),
                                           'What do you want to share with the community?',
                                         ),
                                         hintStyle: SLTheme.quicksand(
@@ -1197,7 +1064,7 @@ extension _CommunityTabComposer on _CommunityTabState {
                                     ),
                                     Text(
                                       _ctf(
-                                        'Tối đa {count} ký tự. Hệ thống sẽ từ chối bài có dấu hiệu spam hoặc nội dung 18+.',
+                                        context.tr('home_post_max_chars_policy'),
                                         'Up to {count} characters. The system rejects spam-like or 18+ content.',
                                         {'count': _communityPostMaxLength},
                                       ),
@@ -1212,322 +1079,39 @@ extension _CommunityTabComposer on _CommunityTabState {
                                 ),
                               ),
                               const SizedBox.shrink(),
-                              if (selectedAudience == 'legacy-never')
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      _buildComposerStarterChip(
-                                        label: _ct('Kỷ niệm', 'Memory'),
-                                        color: const Color(0xFF2563EB),
-                                        onTap: () {
-                                          final starter = _ct(
-                                            'Kể một kỷ niệm đáng nhớ nè...',
-                                            'Tell everyone about a memorable moment...',
-                                          );
-                                          controller.value = TextEditingValue(
-                                            text: starter,
-                                            selection: TextSelection.collapsed(
-                                              offset: starter.length,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildComposerStarterChip(
-                                        label: _ct('Lời yêu', 'Sweet note'),
-                                        color: const Color(0xFFD81B60),
-                                        onTap: () {
-                                          final starter = _ct(
-                                            'Hôm nay mình muốn gửi một lời yêu thương tới mọi người...',
-                                            'Today I want to send a warm note to everyone...',
-                                          );
-                                          controller.value = TextEditingValue(
-                                            text: starter,
-                                            selection: TextSelection.collapsed(
-                                              offset: starter.length,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildComposerStarterChip(
-                                        label: _ct('Check-in', 'Check-in'),
-                                        color: const Color(0xFF10B981),
-                                        onTap: () {
-                                          final starter = _ct(
-                                            'Check-in một khoảnh khắc dễ thương hôm nay...',
-                                            'Checking in with a cute moment from today...',
-                                          );
-                                          controller.value = TextEditingValue(
-                                            text: starter,
-                                            selection: TextSelection.collapsed(
-                                              offset: starter.length,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              if (locationText.isNotEmpty ||
-                                  moodLabel.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 14),
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: [
-                                        if (locationText.isNotEmpty)
-                                          _buildComposerStarterChip(
-                                            label: '📍 $locationText',
-                                            color: const Color(0xFF2563EB),
-                                            onTap: () => editLocation(setInner),
-                                          ),
-                                        if (moodLabel.isNotEmpty)
-                                          _buildComposerStarterChip(
-                                            label: '$moodEmoji $moodLabel',
-                                            color: const Color(0xFFD81B60),
-                                            onTap: () => pickMood(setInner),
-                                          ),
-                                      ],
+                              const SizedBox(height: 14),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    _buildComposerAction(
+                                      icon: Icons.image_outlined,
+                                      label: _ct(context.tr('home_nh_217304'), 'Photo'),
+                                      bg: const Color(0xFFFDF2F8),
+                                      color: const Color(0xFFD81B60),
+                                      onTap: () => pickComposerImage(setInner, ctx),
                                     ),
-                                  ),
-                                ),
-                              if (selectedImage != null || isPickingImage) ...[
-                                SLSpacing.h16,
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 220),
-                                  width: double.infinity,
-                                  height: 240,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF8FAFC),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: const Color(0xFFE2E8F0),
+                                    SLSpacing.w8,
+                                    _buildComposerAction(
+                                      icon: Icons.emoji_emotions_outlined,
+                                      label: _ct(context.tr('home_cmxc_0d1460'), 'Mood'),
+                                      bg: const Color(0xFFFFF7ED),
+                                      color: const Color(0xFFF97316),
+                                      onTap: () => pickMood(setInner),
                                     ),
-                                  ),
-                                  child: isPickingImage
-                                      ? Center(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const CircularProgressIndicator(
-                                                color: Color(0xFFD81B60),
-                                              ),
-                                              SLSpacing.h12,
-                                              Text(
-                                                _ct(
-                                                  'Đang chuẩn bị ảnh...',
-                                                  'Preparing photo...',
-                                                ),
-                                                style: SLTheme.quicksand(
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Colors.grey[400],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      : Stack(
-                                          fit: StackFit.expand,
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              child: kIsWeb
-                                                  ? Image.network(
-                                                      selectedImage!.path,
-                                                      fit: BoxFit.cover,
-                                                      filterQuality: FilterQuality.high,
-                                                    )
-                                                  : Image.file(
-                                                      File(selectedImage!.path),
-                                                      fit: BoxFit.cover,
-                                                      filterQuality: FilterQuality.high,
-                                                    ),
-                                            ),
-                                            Positioned(
-                                              bottom: 12,
-                                              right: 12,
-                                              child: InkWell(
-                                                onTap: () => editComposerImage(
-                                                    setInner, ctx),
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 16,
-                                                      vertical: 8),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.black
-                                                        .withValues(alpha: 0.6),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            20),
-                                                  ),
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      const Icon(
-                                                        Icons.edit_rounded,
-                                                        color: Colors.white,
-                                                        size: 16,
-                                                      ),
-                                                      SLSpacing.w8,
-                                                      Text(
-                                                        _ct('Chỉnh sửa',
-                                                            'Edit'),
-                                                        style:
-                                                            SLTheme.quicksand(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 13,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Positioned(
-                                              top: 12,
-                                              right: 12,
-                                              child: InkWell(
-                                                onTap: () => setInner(
-                                                    () => selectedImage = null),
-                                                borderRadius: SLRadius.lgAll,
-                                                child: Container(
-                                                  width: 36,
-                                                  height: 36,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.black
-                                                        .withValues(alpha: 0.58),
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.close_rounded,
-                                                    color: Colors.white,
-                                                    size: 18,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Positioned(
-                                              left: 12,
-                                              right: 12,
-                                              bottom: 12,
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                  horizontal: 12,
-                                                  vertical: 10,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black
-                                                      .withValues(alpha: 0.55),
-                                                  borderRadius: SLRadius.lgAll,
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    const Icon(
-                                                      Icons.image_rounded,
-                                                      color: Colors.white,
-                                                      size: 18,
-                                                    ),
-                                                    SLSpacing.w8,
-                                                    Expanded(
-                                                      child: Text(
-                                                        selectedImage?.name ??
-                                                            _ct(
-                                                              'Ảnh đã chọn',
-                                                              'Selected photo',
-                                                            ),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        style:
-                                                            SLTheme.quicksand(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                ),
-                                SLSpacing.h12,
-                                Text(
-                                  _ct(
-                                    'Ảnh xem trước sẽ được tải lên cùng bài viết.',
-                                    'The preview photo will be uploaded with the post.',
-                                  ),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF94A3B8),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          border: Border(
-                            top: BorderSide(color: Color(0xFFE2E8F0)),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            if (selectedAudience == 'legacy-never')
-                              Expanded(
-                                child: Text(
-                                  _ct('Thêm vào bài viết', 'Add to post'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.grey[400],
-                                  ),
+                                    SLSpacing.w8,
+                                    _buildComposerAction(
+                                      icon: Icons.location_on_outlined,
+                                      label: _ct(context.tr('home_vtr_69ea36'), 'Location'),
+                                      bg: const Color(0xFFEFF6FF),
+                                      color: const Color(0xFF3B82F6),
+                                      onTap: () => editLocation(setInner),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            _buildComposerAction(
-                              icon: Icons.image_outlined,
-                              label: _ct('Ảnh', 'Photo'),
-                              bg: const Color(0xFFF0FDF4),
-                              color: const Color(0xFF10B981),
-                              onTap: () => pickComposerImage(setInner, ctx),
-                            ),
-                            SLSpacing.w8,
-                            _buildComposerAction(
-                              icon: Icons.mood_rounded,
-                              label: _ct('Cảm xúc', 'Mood'),
-                              bg: const Color(0xFFFFF7ED),
-                              color: const Color(0xFFF97316),
-                              onTap: () => pickMood(setInner),
-                            ),
-                            SLSpacing.w8,
-                            _buildComposerAction(
-                              icon: Icons.location_on_outlined,
-                              label: _ct('Vị trí', 'Location'),
-                              bg: const Color(0xFFEFF6FF),
-                              color: const Color(0xFF3B82F6),
-                              onTap: () => editLocation(setInner),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -1559,11 +1143,11 @@ extension _CommunityTabComposer on _CommunityTabState {
       LegacyWebUi.showNotice(
         context,
         message: _ct(
-          'Bạn chưa nhập nội dung hoặc thêm ảnh nên chưa thể đăng.',
+          context.tr('home_bnchanhpni_47bc83'),
           'You have not entered any text or added a photo yet.',
         ),
         success: false,
-        title: _ct('Thiếu nội dung bài viết', 'Missing post content'),
+        title: _ct(context.tr('home_thiunidung_6c95cf'), 'Missing post content'),
         icon: Icons.edit_note_rounded,
       );
       return;
@@ -1577,7 +1161,7 @@ extension _CommunityTabComposer on _CommunityTabState {
           context,
           message: validationError,
           success: false,
-          title: _ct('Bài viết chưa hợp lệ', 'Post is not valid'),
+          title: _ct(context.tr('home_bivitchahp_f1b1ec'), 'Post is not valid'),
           icon: Icons.rule_folder_outlined,
         );
         return;
@@ -1590,11 +1174,11 @@ extension _CommunityTabComposer on _CommunityTabState {
       LegacyWebUi.showNotice(
         context,
         message: _ct(
-          'Kiểu Polaroid cần có ảnh đi kèm. Hãy thêm ảnh hoặc đổi sang kiểu bài viết khác.',
+          context.tr('home_kiupolaroi_c3835a'),
           'The Polaroid style needs a photo. Add an image or switch to another post style.',
         ),
         success: false,
-        title: _ct('Thiếu ảnh', 'Missing photo'),
+        title: _ct(context.tr('home_thiunh_4e52fb'), 'Missing photo'),
         icon: Icons.photo_library_outlined,
       );
       return;
@@ -1607,12 +1191,12 @@ extension _CommunityTabComposer on _CommunityTabState {
       LegacyWebUi.showNotice(
         context,
         message: _ct(
-          'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi thử tiếp.',
+          context.tr('home_phinngnhph_fd17bb'),
           'Your session has expired. Please sign in again and try once more.',
         ),
         success: false,
         title: _ct(
-          'Phiên đăng nhập không còn hiệu lực',
+          context.tr('home_phinngnhpk_0224d2'),
           'Session is no longer valid',
         ),
         icon: Icons.lock_clock_outlined,
@@ -1622,7 +1206,7 @@ extension _CommunityTabComposer on _CommunityTabState {
 
     bool isLocketPost = _currentFeedType == 'locket';
     if (isLocketPost) {
-      visibility = 'friends'; // Khoảnh khắc chỉ có bài viết cho bạn bè
+      visibility = 'friends'; // Khoáº£nh kháº¯c chá»‰ cÃ³ bÃ i viáº¿t cho báº¡n bÃ¨
     }
 
     await _submitCommunityPost(
@@ -1696,6 +1280,7 @@ extension _CommunityTabComposer on _CommunityTabState {
     );
   }
 
+  // ignore: unused_element
   Widget _buildComposerStarterChip({
     required String label,
     required Color color,

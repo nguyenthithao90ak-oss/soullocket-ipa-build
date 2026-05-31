@@ -249,20 +249,18 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
   }
 
   Future<void> _startCall(bool isVideo) async {
-    await Navigator.push(
+    await slPush(
       context,
-      MaterialPageRoute(
-        builder: (_) => VideoCallScreen(
-          houseId: widget.myHouseId,
-          targetHouseId: widget.targetHouseId,
-          targetName: widget.targetName,
+      VideoCallScreen(
+        houseId: widget.myHouseId,
+        targetHouseId: widget.targetHouseId,
+        targetName: widget.targetName,
+        isVideo: isVideo,
+        onRoomCreated: (roomId) => _chatService.sendCallInvite(
+          widget.myHouseId,
+          widget.targetHouseId,
+          roomId: roomId,
           isVideo: isVideo,
-          onRoomCreated: (roomId) => _chatService.sendCallInvite(
-            widget.myHouseId,
-            widget.targetHouseId,
-            roomId: roomId,
-            isVideo: isVideo,
-          ),
         ),
       ),
     );
@@ -278,30 +276,26 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       return;
     }
 
-    await Navigator.push(
+    await slPush(
       context,
-      MaterialPageRoute(
-        builder: (_) => VideoCallScreen(
-          houseId: widget.myHouseId,
-          targetHouseId: widget.targetHouseId,
-          targetName: widget.targetName,
-          isVideo: msg.callMode != 'audio',
-          roomId: roomId,
-        ),
+      VideoCallScreen(
+        houseId: widget.myHouseId,
+        targetHouseId: widget.targetHouseId,
+        targetName: widget.targetName,
+        isVideo: msg.callMode != 'audio',
+        roomId: roomId,
       ),
     );
   }
 
   Future<void> _openWatchTogether({String? initialUrl}) async {
-    await Navigator.push(
+    await slPush(
       context,
-      MaterialPageRoute(
-        builder: (_) => WatchTogetherScreen(
-          myHouseId: widget.myHouseId,
-          targetHouseId: widget.targetHouseId,
-          targetName: widget.targetName,
-          initialUrl: initialUrl,
-        ),
+      WatchTogetherScreen(
+        myHouseId: widget.myHouseId,
+        targetHouseId: widget.targetHouseId,
+        targetName: widget.targetName,
+        initialUrl: initialUrl,
       ),
     );
   }

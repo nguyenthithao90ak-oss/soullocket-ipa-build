@@ -6,7 +6,7 @@ import '../../core/sl_theme.dart';
 import '../../services/friends_service.dart';
 import '../../services/house_service.dart';
 import '../../services/schedule_notification_presenter.dart';
-import 'package:soullocket_app/services/l10n_service.dart';
+import '../../services/l10n_service.dart';
 import '../../utils/app_error_mapper.dart';
 
 part 'notification_screen_types.dart';
@@ -61,11 +61,11 @@ class _NotificationScreenState extends State<NotificationScreen>
   static const int _notificationsLimit = 100;
 
   static const _kTabs = [
-    (label: 'Tất cả', icon: Icons.notifications_outlined),
-    (label: 'Bạn bè', icon: Icons.people_outlined),
-    (label: 'Like', icon: Icons.favorite_border),
-    (label: 'Bình luận', icon: Icons.chat_bubble_outline),
-    (label: 'Hệ thống', icon: Icons.settings_outlined),
+    (label: 'notifications_tab_all', icon: Icons.notifications_outlined),
+    (label: 'notifications_tab_friends', icon: Icons.people_outlined),
+    (label: 'notifications_tab_like', icon: Icons.favorite_border),
+    (label: 'notifications_tab_comments', icon: Icons.chat_bubble_outline),
+    (label: 'notifications_tab_system', icon: Icons.settings_outlined),
   ];
 
   @override

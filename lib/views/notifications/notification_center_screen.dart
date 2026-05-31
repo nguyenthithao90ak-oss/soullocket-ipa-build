@@ -9,6 +9,7 @@ import '../../services/countdown_space_service.dart';
 import '../../services/friends_service.dart';
 import '../../services/house_service.dart';
 import '../../services/schedule_notification_presenter.dart';
+import '../../services/l10n_service.dart';
 
 part 'notification_center_screen_types.dart';
 part 'notification_center_screen_sections.dart';
@@ -335,32 +336,32 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     final deletable = _filtered.where((n) => !_isLocked(n)).toList();
     if (deletable.isEmpty) {
       _snack(
-        'Không có thông báo thường để xoá trong mục này. (Thông báo hệ thống sẽ được giữ lại).',
+        L10nService().translate('notif_no_regular_to_delete'),
       );
       return;
     }
 
-    var catName = 'tất cả';
-    if (_cat == _NotifCategory.warning) catName = 'cảnh báo';
-    if (_cat == _NotifCategory.friend) catName = 'bạn bè';
-    if (_cat == _NotifCategory.social) catName = 'cộng đồng';
+    var catName = L10nService().translate('core_all');
+    if (_cat == _NotifCategory.warning) catName = L10nService().translate('notif_category_warning');
+    if (_cat == _NotifCategory.friend) catName = L10nService().translate('notif_category_friend');
+    if (_cat == _NotifCategory.social) catName = L10nService().translate('notif_category_social');
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Xoá thông báo $catName?'),
+        title: Text(L10nService().format('notif_delete_title', {'category': catName})),
         content: Text(
-          'Bạn sắp xoá ${deletable.length} thông báo. Thao tác này không thể hoàn tác.',
+          L10nService().format('notif_delete_confirm_body', {'count': deletable.length}),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: Text(L10nService().translate('core_cancel')),
           ),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xoá hết'),
+            child: Text(L10nService().translate('notif_delete_all')),
           ),
         ],
       ),
@@ -390,7 +391,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     if (reqSnap.snapshot.exists) {
       final snapshotValue = reqSnap.snapshot.value;
       if (snapshotValue is! Map) {
-        _snack('Không tìm thấy lời mời.');
+        _snack(L10nService().translate('notif_invite_not_found'));
         return;
       }
       final map = Map<dynamic, dynamic>.from(snapshotValue);
@@ -409,7 +410,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     }
 
     if (reqId == null) {
-      _snack('Không tìm thấy lời mời.');
+      _snack(L10nService().translate('notif_invite_not_found'));
       return;
     }
 
@@ -419,7 +420,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
       fromHouseId: fromHouseId,
     );
     await _db.ref('notifications/$_houseId/$notifId').remove();
-    _snack(ok ? 'Đã chấp nhận kết bạn ✅' : 'Lỗi xử lý lời mời');
+    _snack(ok ? L10nService().translate('notif_friend_accepted') : L10nService().translate('notif_invite_process_error'));
   }
 
   Future<void> _declineFriendReq(String notifId, String fromHouseId) async {
@@ -434,7 +435,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
       final snapshotValue = reqSnap.snapshot.value;
       if (snapshotValue is! Map) {
         await _db.ref('notifications/$_houseId/$notifId').remove();
-        _snack('Đã từ chối ❌');
+        _snack(L10nService().translate('notif_declined'));
         return;
       }
       final map = Map<dynamic, dynamic>.from(snapshotValue);
@@ -456,7 +457,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     }
 
     await _db.ref('notifications/$_houseId/$notifId').remove();
-    _snack('Đã từ chối ❌');
+    _snack(L10nService().translate('notif_declined'));
   }
 
   bool _isCountdownSpaceRequest(_NotifModel notif) {

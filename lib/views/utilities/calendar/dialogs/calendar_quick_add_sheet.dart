@@ -1,9 +1,10 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
-import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_info_pill.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../../../core/fast_backdrop_filter.dart';
+import '../../../../core/sl_theme.dart';
+import '../widgets/calendar_info_pill.dart';
 
 Future<bool> showCalendarQuickAddSheet({
   required BuildContext context,
@@ -113,7 +114,7 @@ Future<bool> showCalendarQuickAddSheet({
                               SLSpacing.h4,
                               Text(
                                 eventCount == 0
-                                    ? 'Ngày này chưa có kế hoạch nào. Bạn có thể thêm ngay tại đây.'
+                                    ? context.tr('util_ngynychack_a59f49')
                                     : 'Ngày này đang có $eventCount kế hoạch. Có thể thêm tiếp mà không cần kéo xuống dưới.',
                                 style: SLTheme.quicksand(
                                   fontSize: compact ? 11.5 : 12,
@@ -156,7 +157,7 @@ Future<bool> showCalendarQuickAddSheet({
                         ),
                         decoration: InputDecoration(
                           hintText:
-                              'Ví dụ: 19:30 đi ăn, mua quà, gọi video, chuẩn bị đồ...',
+                              context.tr('util_vd1930inmu_d7456c'),
                           hintStyle: SLTheme.quicksand(
                             color: SLTheme.textMuted,
                             fontWeight: FontWeight.w600,
@@ -173,7 +174,7 @@ Future<bool> showCalendarQuickAddSheet({
                       children: [
                         CalendarInfoPill(
                           icon: Icons.notifications_none_rounded,
-                          label: 'Nhắc trước 1 ngày',
+                          label: context.tr('util_nhctrc1ngy_09c55a'),
                           accent: accent,
                           compact: compact,
                         ),
@@ -203,7 +204,7 @@ Future<bool> showCalendarQuickAddSheet({
                         ),
                         icon: const Icon(Icons.add_task_rounded, size: 20),
                         label: Text(
-                          'Lưu kế hoạch cho ngày này',
+                          context.tr('util_lukhochcho_e65ac2'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: compact ? 13 : 14,

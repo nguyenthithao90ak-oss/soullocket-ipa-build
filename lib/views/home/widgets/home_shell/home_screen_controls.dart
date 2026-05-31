@@ -144,30 +144,31 @@ extension _HomeScreenShellControls on _HomeScreenState {
     final useBackdropBlur = effectProfile.premiumEffects &&
         MediaQuery.of(context).size.shortestSide >= 600;
     final navSurface = Container(
+      key: _firstGuideBottomNavKey,
       padding: EdgeInsets.fromLTRB(6, 8, 6, bottomInset > 0 ? bottomInset : 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
               ? [
-                  const Color(0xFF151A25).withValues(alpha: 
-                    isPerformanceMode ? 0.98 : 0.95,
+                  const Color(0xFF151A25).withValues(
+                    alpha: isPerformanceMode ? 0.98 : 0.95,
                   ),
-                  const Color(0xFF20293A).withValues(alpha: 
-                    isPerformanceMode ? 0.96 : 0.92,
+                  const Color(0xFF20293A).withValues(
+                    alpha: isPerformanceMode ? 0.96 : 0.92,
                   ),
-                  const Color(0xFF141A24).withValues(alpha: 
-                    isPerformanceMode ? 0.98 : 0.95,
+                  const Color(0xFF141A24).withValues(
+                    alpha: isPerformanceMode ? 0.98 : 0.95,
                   ),
                 ]
               : [
-                  const Color(0xFFFFF8FB).withValues(alpha: 
-                    isPerformanceMode ? 0.995 : 0.98,
+                  const Color(0xFFFFF8FB).withValues(
+                    alpha: isPerformanceMode ? 0.995 : 0.98,
                   ),
-                  const Color(0xFFFFEEF5).withValues(alpha: 
-                    isPerformanceMode ? 0.992 : 0.97,
+                  const Color(0xFFFFEEF5).withValues(
+                    alpha: isPerformanceMode ? 0.992 : 0.97,
                   ),
-                  const Color(0xFFF8F2FF).withValues(alpha: 
-                    isPerformanceMode ? 0.988 : 0.95,
+                  const Color(0xFFF8F2FF).withValues(
+                    alpha: isPerformanceMode ? 0.988 : 0.95,
                   ),
                 ],
           begin: Alignment.topLeft,
@@ -187,8 +188,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 
-              isDark
+            color: Colors.black.withValues(
+              alpha: isDark
                   ? (isPerformanceMode ? 0.20 : 0.34)
                   : (isPerformanceMode ? 0.06 : 0.12),
             ),
@@ -282,7 +283,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.08),
+                        color: Colors.black
+                            .withValues(alpha: isDark ? 0.18 : 0.08),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -365,7 +367,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
+                      color:
+                          Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
                       blurRadius: 18,
                       offset: const Offset(0, 8),
                     ),
@@ -420,16 +423,18 @@ extension _HomeScreenShellControls on _HomeScreenState {
         ? Color.lerp(item.activeColor, Colors.white, 0.30) ?? item.activeColor
         : Color.lerp(item.activeColor, const Color(0xFF64748B), 0.22) ??
             item.activeColor;
-    final activeSurface = isDark
-        ? item.activeColor.withValues(alpha: 0.18)
-        : Color.lerp(item.activeColor, Colors.white, 0.83) ??
-            item.activeColor.withValues(alpha: 0.16);
-    final inactiveSurface = isDark
-        ? Colors.white.withValues(alpha: 0.04)
-        : Colors.white.withValues(alpha: 0.70);
-    final activeGlow = isDark
-        ? item.activeColor.withValues(alpha: 0.14)
-        : item.activeColor.withValues(alpha: 0.13);
+
+    GlobalKey? targetKey;
+    if ((!_HomeScreenState._communityTabEnabled && index == 1) ||
+        (_HomeScreenState._communityTabEnabled && index == 2)) {
+      targetKey = _firstGuideDiaryTabKey;
+    } else if ((!_HomeScreenState._communityTabEnabled && index == 2) ||
+        (_HomeScreenState._communityTabEnabled && index == 3)) {
+      targetKey = _firstGuideUtilitiesTabKey;
+    } else if ((!_HomeScreenState._communityTabEnabled && index == 4) ||
+        (_HomeScreenState._communityTabEnabled && index == 5)) {
+      targetKey = _firstGuideUpdateTabKey;
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1.0),
@@ -444,90 +449,24 @@ extension _HomeScreenShellControls on _HomeScreenState {
             height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 6),
             decoration: BoxDecoration(
-              gradient: isActive
-                  ? LinearGradient(
-                      colors: [
-                        activeSurface,
-                        Color.lerp(item.activeColor, Colors.white, 0.92) ??
-                            activeSurface,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : (!isDark
-                      ? LinearGradient(
-                          colors: [
-                            inactiveSurface,
-                            Color.lerp(item.activeColor, Colors.white, 0.95) ??
-                                inactiveSurface,
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        )
-                      : null),
-              color: isDark && !isActive ? inactiveSurface : null,
+              color: isActive
+                  ? item.activeColor.withValues(alpha: isDark ? 0.12 : 0.08)
+                  : Colors.transparent,
               borderRadius: SLRadius.lgAll,
-              border: Border.all(
-                color: isActive
-                    ? (isDark
-                        ? item.activeColor.withValues(alpha: 0.42)
-                        : item.activeColor.withValues(alpha: 0.20))
-                    : (isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : item.activeColor.withValues(alpha: 0.12)),
-                width: isActive ? 1.2 : 0.95,
-              ),
-              boxShadow: isPerformanceMode
-                  ? const []
-                  : (isActive
-                      ? [
-                          BoxShadow(
-                            color: activeGlow,
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
-                          ),
-                        ]
-                      : [
-                          BoxShadow(
-                            color: item.activeColor.withValues(alpha: 
-                              isDark ? 0.02 : 0.05,
-                            ),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ]),
             ),
             child: Center(
-              child: AnimatedScale(
-                duration: animationDuration,
-                curve: Curves.easeOutCubic,
-                scale: isActive && !isPerformanceMode ? 1.04 : 1,
-                child: AnimatedContainer(
+              child: KeyedSubtree(
+                key: targetKey,
+                child: AnimatedScale(
                   duration: animationDuration,
                   curve: Curves.easeOutCubic,
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? (isDark
-                            ? Colors.white.withValues(alpha: 0.12)
-                            : Colors.white.withValues(alpha: 0.95))
-                        : (isDark
-                            ? Colors.white.withValues(alpha: 0.04)
-                            : Colors.white.withValues(alpha: 0.86)),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isActive
-                          ? item.activeColor.withValues(alpha: isDark ? 0.46 : 0.16)
-                          : item.activeColor.withValues(alpha: isDark ? 0.10 : 0.08),
-                    ),
-                  ),
+                  scale: isActive && !isPerformanceMode ? 1.12 : 1,
                   child: Transform.translate(
                     offset: Offset(0, isActive ? -0.2 : 0),
                     child: Icon(
                       _getIconForTab(index),
                       color: isActive ? item.activeColor : inactiveColor,
-                      size: isActive ? 22 : 20,
+                      size: isActive ? 24 : 21,
                     ),
                   ),
                 ),

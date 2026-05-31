@@ -13,8 +13,10 @@ class HeartGameService {
 
   /// Cập nhật điểm số phiên chơi hiện tại (Realtime sync)
   Future<void> updateLiveScore(String houseId, int score) async {
-    await _db.ref('houses/$houseId/game_sessions/live').update({
-      'score': score,
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
+    await _db.ref('houses/$normalizedHouseId/game_sessions/live').update({
+      'score': score < 0 ? 0 : score,
       'lastUpdated': ServerValue.timestamp,
     });
   }
@@ -22,20 +24,25 @@ class HeartGameService {
   /// Kết thúc game và ghi vào bảng Highscore
   Future<void> submitHighScore(
       String houseId, int finalScore, String playerName) async {
-    await _db.ref('houses/$houseId/game_highscores').push().set({
-      'name': playerName,
-      'score': finalScore,
+    final normalizedHouseId = houseId.trim();
+    final normalizedPlayerName = playerName.trim();
+    if (normalizedHouseId.isEmpty || normalizedPlayerName.isEmpty) return;
+    await _db.ref('houses/$normalizedHouseId/game_highscores').push().set({
+      'name': normalizedPlayerName,
+      'score': finalScore < 0 ? 0 : finalScore,
       'timestamp': ServerValue.timestamp,
     });
   }
 
   /// Lắng nghe điểm số của đối phương đang chơi cùng
   Stream<int> listenToPartnerScore(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return Stream<int>.value(0);
     return _db
-        .ref('houses/$houseId/game_sessions/live/score')
+        .ref('houses/$normalizedHouseId/game_sessions/live/score')
         .onValue
         .map((event) {
-      return (event.snapshot.value as int?) ?? 0;
+      return (event.snapshot.value as num?)?.toInt() ?? 0;
     });
   }
 }

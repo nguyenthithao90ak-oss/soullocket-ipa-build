@@ -4,16 +4,16 @@ import 'package:app_links/app_links.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../core/constants/app_config.dart';
-import 'package:soullocket_app/services/gift_maker_service.dart';
-import 'package:soullocket_app/services/love_card_link_service.dart';
+import 'gift_maker_service.dart';
+import '../../../../services/love_card_link_service.dart';
 
 /// ============================================================
 ///  DeeplinkService — Gra (Logic/Data)
 ///  Xử lý deep link HTTPS khi user nhấp link từ Zalo/Messenger/SMS
 ///
 ///  Link format:
-///    https://soullockket.web.app/join?house=NH_ABC123
-///    https://soullockket.web.app/gift?id=...
+///    ${AppConfig.webBaseUrl}/join?house=NH_ABC123
+///    ${AppConfig.webBaseUrl}/gift?id=...
 ///
 ///  Cách dùng (gọi trong main.dart sau Firebase.initializeApp):
 ///    await DeeplinkService().initialize(onJoinHouse: (houseId) {
@@ -53,17 +53,22 @@ class DeeplinkService {
       }
     } catch (_) {}
 
-    _sub = _appLinks.uriLinkStream.listen((uri) {
-      unawaited(
-        _handleUri(
-          uri,
-          onJoinHouse,
-          onOpenGift,
-          onOpenLoveCard,
-          onPasswordResetLink,
-        ),
+    try {
+      _sub = _appLinks.uriLinkStream.listen(
+        (uri) {
+          unawaited(
+            _handleUri(
+              uri,
+              onJoinHouse,
+              onOpenGift,
+              onOpenLoveCard,
+              onPasswordResetLink,
+            ),
+          );
+        },
+        onError: (_) {},
       );
-    });
+    } catch (_) {}
   }
 
   Future<void> _handleUri(
@@ -91,31 +96,33 @@ class DeeplinkService {
         isTrustedAuthCompletionUri && uri.path == '/reset-password-complete';
     final mode = uri.queryParameters['mode'];
 
-    if (isJoinPath) {
-      final houseId = uri.queryParameters['house'];
-      if (houseId != null && houseId.isNotEmpty) {
-        onJoinHouse(houseId);
+    try {
+      if (isJoinPath) {
+        final houseId = uri.queryParameters['house']?.trim();
+        if (houseId != null && houseId.isNotEmpty) {
+          onJoinHouse(houseId);
+        }
+      } else if (isGiftPath && onOpenGift != null) {
+        final giftId = giftIdFromUri(uri) ?? giftPayloadFromUri(uri)?.giftId;
+        if (giftId != null && giftId.isNotEmpty) {
+          await onOpenGift(uri);
+        }
+      } else if (isLoveCardPath && onOpenLoveCard != null) {
+        final payload = LoveCardLinkService.payloadFromUri(uri);
+        final shareId = LoveCardLinkService.shareIdFromUri(uri);
+        if (payload != null || (shareId != null && shareId.isNotEmpty)) {
+          await onOpenLoveCard(uri);
+        }
+      } else if ((isResetCompletedPath ||
+              (isTrustedAuthActionUri && mode == 'resetPassword')) &&
+          onPasswordResetLink != null) {
+        await onPasswordResetLink(uri);
       }
-    } else if (isGiftPath && onOpenGift != null) {
-      final giftId = giftIdFromUri(uri) ?? giftPayloadFromUri(uri)?.giftId;
-      if (giftId != null && giftId.isNotEmpty) {
-        await onOpenGift(uri);
-      }
-    } else if (isLoveCardPath && onOpenLoveCard != null) {
-      final payload = LoveCardLinkService.payloadFromUri(uri);
-      final shareId = LoveCardLinkService.shareIdFromUri(uri);
-      if (payload != null || (shareId != null && shareId.isNotEmpty)) {
-        await onOpenLoveCard(uri);
-      }
-    } else if ((isResetCompletedPath ||
-            (isTrustedAuthActionUri && mode == 'resetPassword')) &&
-        onPasswordResetLink != null) {
-      await onPasswordResetLink(uri);
-    }
+    } catch (_) {}
   }
 
   bool _shouldSkipUri(Uri uri) {
-    final key = uri.toString();
+    final key = uri.toString().trim();
     final now = DateTime.now();
     final shouldSkip = _lastHandledUriKey == key &&
         _lastHandledAt != null &&
@@ -130,7 +137,7 @@ class DeeplinkService {
   String generateInviteLink(String houseId) {
     return AppConfig.webUri(
       '/join',
-      queryParameters: {'house': houseId},
+      queryParameters: {'house': houseId.trim()},
     ).toString();
   }
 
@@ -178,7 +185,13 @@ class DeeplinkService {
   }
 
   static bool isSupportedGiftUri(Uri uri) {
-    return false;
+    if (!AppConfig.isTrustedWebUri(uri)) return false;
+    final normalizedPath = uri.path.endsWith('/') && uri.path.length > 1
+        ? uri.path.substring(0, uri.path.length - 1)
+        : uri.path;
+    return normalizedPath == '/gift' ||
+        normalizedPath == '/gift.html' ||
+        normalizedPath == '/gift-open-demo.html';
   }
 
   static bool isSupportedLoveCardUri(Uri uri) {
@@ -237,27 +250,36 @@ class InviteLinkService {
 
   /// Tạo lời mời và lưu vào Firebase để track
   Future<String> createInvite(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return DeeplinkService().generateInviteLink('');
+    }
     final user = _auth.currentUser;
-    if (user == null) return DeeplinkService().generateInviteLink(houseId);
+    if (user == null) {
+      return DeeplinkService().generateInviteLink(normalizedHouseId);
+    }
 
     // Lưu invite record để biết ai đã mời ai
-    final inviteRef = _db.ref('invites/$houseId');
+    final inviteRef = _db.ref('invites/$normalizedHouseId');
     await inviteRef.set({
-      'house_id': houseId,
+      'house_id': normalizedHouseId,
       'created_by': user.uid,
       'creator_name': user.displayName ?? '',
       'created_at': ServerValue.timestamp,
       'status': 'pending', // pending / accepted
     });
 
-    return DeeplinkService().generateInviteLink(houseId);
+    return DeeplinkService().generateInviteLink(normalizedHouseId);
   }
 
   /// Đánh dấu lời mời đã được chấp nhận
   Future<void> markInviteAccepted(String houseId, String acceptorUid) async {
-    await _db.ref('invites/$houseId').update({
+    final normalizedHouseId = houseId.trim();
+    final normalizedAcceptorUid = acceptorUid.trim();
+    if (normalizedHouseId.isEmpty || normalizedAcceptorUid.isEmpty) return;
+    await _db.ref('invites/$normalizedHouseId').update({
       'status': 'accepted',
-      'accepted_by': acceptorUid,
+      'accepted_by': normalizedAcceptorUid,
       'accepted_at': ServerValue.timestamp,
     });
   }

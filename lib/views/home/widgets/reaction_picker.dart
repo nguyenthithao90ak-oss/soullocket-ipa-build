@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import '../../../core/sl_theme.dart';
 
@@ -7,15 +8,15 @@ import '../../../core/sl_theme.dart';
 ///  Gọi bằng: ReactionPicker.show(context, onSelect: (emoji) {...})
 /// ============================================================
 
-const _kReactions = [
-  ('❤️', 'Yêu'),
-  ('😍', 'Thích'),
+final _kReactions = [
+  ('❤️', L10nService().translate('home_yu_b0b34f')),
+  ('😍', L10nService().translate('home_thch_436ce5')),
   ('😂', 'Haha'),
   ('😮', 'Wow'),
-  ('😢', 'Buồn'),
-  ('😡', 'Giận'),
+  ('😢', L10nService().translate('home_bun_cc7bc1')),
+  ('😡', L10nService().translate('home_gin_6a4c8c')),
   ('🔥', 'Hot'),
-  ('👏', 'Vỗ tay'),
+  ('👏', L10nService().translate('home_vtay_880b85')),
 ];
 
 class ReactionPicker extends StatelessWidget {
@@ -90,9 +91,9 @@ class ReactionPicker extends StatelessWidget {
             ),
           ),
           SLSpacing.h16,
-          const Text(
-            'Cảm xúc',
-            style: TextStyle(
+          Text(
+            context.tr('home_cmxc_0d1460'),
+            style: const TextStyle(
               color: Colors.white70,
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -126,9 +127,9 @@ class ReactionPicker extends StatelessWidget {
                 Navigator.pop(context);
                 onSelect('', '');
               },
-              child: const Text(
-                'Xóa cảm xúc',
-                style: TextStyle(color: Colors.redAccent, fontSize: 13),
+              child: Text(
+                context.tr('home_xacmxc_ba960b'),
+                style: const TextStyle(color: Colors.redAccent, fontSize: 13),
               ),
             ),
           SizedBox(height: MediaQuery.of(context).padding.bottom),
@@ -315,13 +316,13 @@ class ReactionCountBar extends StatelessWidget {
     if (reactions.isEmpty && myReaction == null) {
       return GestureDetector(
         onTap: onTap,
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.favorite_border, size: 18, color: Colors.white54),
+            const Icon(Icons.favorite_border, size: 18, color: Colors.white54),
             SLSpacing.w4,
-            Text('Yêu thích',
-                style: TextStyle(color: Colors.white54, fontSize: 12)),
+            Text(context.tr('home_yuthch_2958ea'),
+                style: const TextStyle(color: Colors.white54, fontSize: 12)),
           ],
         ),
       );

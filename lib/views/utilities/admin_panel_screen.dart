@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 import '../../core/constants/app_config.dart';
@@ -85,7 +86,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   void _toggleMaintenance(bool value) async {
     if (!_hasAdminAccess) {
-      _showToast('Bạn không có quyền quản trị hợp lệ.');
+      _showToast(context.tr('util_bnkhngcquy_906a04'));
       return;
     }
     await Future.wait([
@@ -95,7 +96,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     if (!mounted) return;
     setState(() => _isMaintenanceMode = value);
     _showToast(
-        value ? 'Đã bật Bảo trì hệ thống 🛠️' : 'Hệ thống đã sẵn sàng ✅');
+        value ? context.tr('util_btbotrhthn_15c4a9') : context.tr('util_hthngsnsng_7bf976'));
   }
 
   void _adminActionDialog(String actionType) {
@@ -103,9 +104,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     final reasonCtrl = TextEditingController();
 
     String title = '';
-    if (actionType == 'ban') title = 'Quản lý Trạng Thái User';
-    if (actionType == 'add_vip') title = 'Cấp PRO Thủ Công';
-    if (actionType == 'report') title = 'Xử lý Vi Phạm & Cảnh Báo';
+    if (actionType == 'ban') title = context.tr('util_qunltrngth_6d5893');
+    if (actionType == 'add_vip') title = context.tr('util_cpprothcng_e96db2');
+    if (actionType == 'report') title = context.tr('util_xlviphmcnh_187ee5');
 
     showDialog(
       context: context,
@@ -117,42 +118,42 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             TextField(
               controller: uidCtrl,
               decoration:
-                  const InputDecoration(labelText: 'Nhập User ID (Target ID)'),
+                  InputDecoration(labelText: context.tr('util_nhpuseridt_8b5abd')),
             ),
             if (actionType == 'ban' || actionType == 'report')
               TextField(
                 controller: reasonCtrl,
                 decoration: InputDecoration(
                     labelText: actionType == 'ban'
-                        ? 'Lý do khóa'
-                        : 'Nội dung cảnh báo'),
+                        ? context.tr('util_ldokha_495968')
+                        : context.tr('util_nidungcnhb_cdfeea')),
               ),
           ],
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+              onPressed: () => Navigator.pop(ctx), child: Text(context.tr('util_hy_1e4050'))),
           if (actionType == 'ban') ...[
             ElevatedButton(
               onPressed: () => _executeAdminAction(
                   ctx, 'ban_perm', uidCtrl.text.trim(), reasonCtrl.text.trim()),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Khóa Vĩnh Viễn',
-                  style: TextStyle(color: Colors.white)),
+              child: Text(context.tr('util_khavnhvin_1f9874'),
+                  style: const TextStyle(color: Colors.white)),
             ),
             ElevatedButton(
               onPressed: () => _executeAdminAction(
                   ctx, 'ban_24h', uidCtrl.text.trim(), reasonCtrl.text.trim()),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               child:
-                  const Text('Khóa 24H', style: TextStyle(color: Colors.white)),
+                  Text(context.tr('util_kha24h_e65f85'), style: const TextStyle(color: Colors.white)),
             ),
             ElevatedButton(
               onPressed: () =>
                   _executeAdminAction(ctx, 'unban', uidCtrl.text.trim(), ''),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               child:
-                  const Text('Mở Khóa', style: TextStyle(color: Colors.white)),
+                  Text(context.tr('util_mkha_b8cf89'), style: const TextStyle(color: Colors.white)),
             ),
           ],
           if (actionType == 'add_vip')
@@ -160,23 +161,23 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               onPressed: () =>
                   _executeAdminAction(ctx, 'add_vip', uidCtrl.text.trim(), ''),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-              child: const Text('Cấp PRO 30 Ngày',
-                  style: TextStyle(color: Colors.black)),
+              child: Text(context.tr('util_cppro30ngy_df3e91'),
+                  style: const TextStyle(color: Colors.black)),
             ),
           if (actionType == 'report') ...[
             ElevatedButton(
               onPressed: () => _executeAdminAction(ctx, 'send_report',
                   uidCtrl.text.trim(), reasonCtrl.text.trim()),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              child: const Text('Gửi Cảnh Báo',
-                  style: TextStyle(color: Colors.white)),
+              child: Text(context.tr('util_gicnhbo_e010a5'),
+                  style: const TextStyle(color: Colors.white)),
             ),
             ElevatedButton(
               onPressed: () => _executeAdminAction(
                   ctx, 'clear_report', uidCtrl.text.trim(), ''),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              child: const Text('Xóa Báo Cáo',
-                  style: TextStyle(color: Colors.white)),
+              child: Text(context.tr('util_xaboco_6c7ba5'),
+                  style: const TextStyle(color: Colors.white)),
             ),
           ],
         ],
@@ -186,12 +187,23 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   Future<void> _executeAdminAction(BuildContext dialogCtx, String action,
       String targetId, String reason) async {
+    final msgNoAccess = context.tr('util_bnkhngcquy_906a04');
+    final msgEnterId = context.tr('util_vuilngnhpu_0f879a');
+    final msgBanReasonDefault = context.tr('util_viphmnghim_40f8de');
+    final msgBanPerm = context.tr('util_khatikhonv_32b914');
+    final msgBan24h = context.tr('util_kha24gi_255cc6');
+    final msgUnban = context.tr('util_mkhatikhon_1f76c3');
+    final msgInputWarningReason = context.tr('util_nhpnidungc_0509af');
+    final msgWarningSent = context.tr('util_gicnhbo_090877');
+    final msgClearReports = context.tr('util_lmschhsboc_9a97c8');
+    final msgActionFail = context.tr('util_chathhontt_aae5b1');
+
     if (!_hasAdminAccess) {
-      _showToast('Bạn không có quyền quản trị hợp lệ.');
+      _showToast(msgNoAccess);
       return;
     }
     if (targetId.isEmpty) {
-      _showToast('Vui lòng nhập User ID');
+      _showToast(msgEnterId);
       return;
     }
     final navigator = Navigator.of(dialogCtx);
@@ -206,36 +218,36 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         final nowTs = DateTime.now().millisecondsSinceEpoch;
         updates['houses/$targetId/proUntil'] =
             (current > nowTs ? current : nowTs) + (30 * 24 * 60 * 60 * 1000);
-        msg = "Đã tặng 30 ngày PRO cho T.ID: $targetId";
+        msg = L10nService().format('util_admin_gift_pro', {'id': targetId});
       } else if (action == 'ban_perm') {
         updates['houses/$targetId/isBanned'] = true;
         updates['houses/$targetId/banReason'] =
-            reason.isEmpty ? "Vi phạm nghiêm trọng" : reason;
-        msg = "Đã khóa tài khoản vĩnh viễn";
+            reason.isEmpty ? msgBanReasonDefault : reason;
+        msg = msgBanPerm;
       } else if (action == 'ban_24h') {
         updates['houses/$targetId/banUntil'] =
             DateTime.now().millisecondsSinceEpoch + (24 * 60 * 60 * 1000);
-        msg = "Đã khóa 24 giờ";
+        msg = msgBan24h;
       } else if (action == 'unban') {
         updates['houses/$targetId/isBanned'] = null;
         updates['houses/$targetId/banReason'] = null;
         updates['houses/$targetId/banUntil'] = null;
-        msg = "Đã mở khóa tài khoản";
+        msg = msgUnban;
       } else if (action == 'send_report') {
         if (reason.isEmpty) {
-          _showToast('Nhập nội dung cảnh báo!');
+          _showToast(msgInputWarningReason);
           return;
         }
         await _db.ref('notifications/$targetId').push().set({
           'type': 'warning',
           'from': 'system_admin',
-          'msg': 'CẢNH BÁO VI PHẠM: $reason',
+          'msg': L10nService().format('util_admin_violation_warning', {'reason': reason}),
           'ts': ServerValue.timestamp,
         });
-        msg = "Đã gửi cảnh báo!";
+        msg = msgWarningSent;
       } else if (action == 'clear_report') {
         updates['houses/$targetId/reportCount'] = 0;
-        msg = "Đã làm sạch hồ sơ báo cáo";
+        msg = msgClearReports;
       }
 
       if (updates.isNotEmpty) {
@@ -256,15 +268,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     } catch (e) {
       debugPrint('Admin action failed: ${AppErrorMapper.resolve(e).message}');
       if (mounted) {
-        _showToast(
-            'Chưa thể hoàn tất thao tác quản trị lúc này. Vui lòng thử lại.');
+        _showToast(msgActionFail);
       }
     }
   }
 
   void _sendGlobalNotification() async {
     if (!_hasAdminAccess) {
-      _showToast('Bạn không có quyền quản trị hợp lệ.');
+      _showToast(context.tr('util_bnkhngcquy_906a04'));
       return;
     }
     final titleCtrl = TextEditingController();
@@ -272,18 +283,18 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Thông Báo Toàn Cầu 📣'),
+        title: Text(context.tr('util_thngbotonc_2400f7')),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(
               controller: titleCtrl,
-              decoration: const InputDecoration(labelText: 'Tiêu đề')),
+              decoration: InputDecoration(labelText: context.tr('util_tiu_ae4b89'))),
           TextField(
               controller: bodyCtrl,
-              decoration: const InputDecoration(labelText: 'Nội dung')),
+              decoration: InputDecoration(labelText: context.tr('util_nidung_ee7ca5'))),
         ]),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+              onPressed: () => Navigator.pop(ctx), child: Text(context.tr('util_hy_1e4050'))),
           ElevatedButton(
             onPressed: () async {
               final navigator = Navigator.of(ctx);
@@ -296,9 +307,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 navigator.pop();
               }
               if (!mounted) return;
-              _showToast('Đã phát thông báo!');
+              _showToast(context.tr('util_phtthngbo_a8bd12'));
             },
-            child: const Text('PHÁT TIN'),
+            child: Text(context.tr('util_phttin_ec0f14')),
           ),
         ],
       ),
@@ -329,7 +340,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           child: Padding(
             padding: SLSpacing.all24,
             child: Text(
-              'Tài khoản hiện tại không có custom claim admin hợp lệ.',
+              context.tr('util_tikhonhint_16bd79'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 16,
@@ -355,42 +366,42 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             children: [
               Expanded(
                   child:
-                      _buildStatCard('Tổng Nhà', '$_totalHouses', Colors.blue)),
+                      _buildStatCard(context.tr('util_tngnh_389194'), '$_totalHouses', Colors.blue)),
               SLSpacing.w8,
               Expanded(
                   child:
-                      _buildStatCard('Báo Cáo', '$_totalReports', Colors.red)),
+                      _buildStatCard(context.tr('util_boco_42b48b'), '$_totalReports', Colors.red)),
               SLSpacing.w8,
               Expanded(
                   child:
-                      _buildStatCard('Bài Viết', '$_totalFeeds', Colors.green)),
+                      _buildStatCard(context.tr('util_bivit_3f3e59'), '$_totalFeeds', Colors.green)),
             ],
           ),
           SLSpacing.h20,
-          const Text('HỆ THỐNG',
+          Text(context.tr('util_hthng_d531ac'),
               style:
-                  TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
           Card(
             child: SwitchListTile(
               secondary: const Icon(Icons.handyman_rounded),
-              title: const Text('Chế độ Bảo trì (Maintenance)'),
-              subtitle: const Text(
-                  'Khi bật, người dùng bình thường không thể vào app.'),
+              title: Text(context.tr('util_chbotrmain_ab57dd')),
+              subtitle: Text(
+                  context.tr('util_khibtngidn_fd6b9d')),
               value: _isMaintenanceMode,
               onChanged: _toggleMaintenance,
             ),
           ),
           SLSpacing.h20,
-          const Text('QUẢN LÝ NGƯỜI DÙNG',
+          Text(context.tr('util_qunlngidng_f278a4'),
               style:
-                  TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
           Card(
             child: Column(
               children: [
                 ListTile(
                   leading:
                       const Icon(Icons.person_off_rounded, color: Colors.red),
-                  title: const Text('Khóa / Mở Khóa User'),
+                  title: Text(context.tr('util_khamkhause_0e9623')),
                   subtitle: const Text('ban_perm, ban_24h, unban'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _adminActionDialog('ban'),
@@ -398,7 +409,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.stars_rounded, color: Colors.amber),
-                  title: const Text('Cấp PRO Thủ Công +30D'),
+                  title: Text(context.tr('util_cpprothcng_218fd1')),
                   subtitle: const Text('add_vip'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _adminActionDialog('add_vip'),
@@ -407,7 +418,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 ListTile(
                   leading: const Icon(Icons.warning_amber_rounded,
                       color: Colors.orange),
-                  title: const Text('Xử lý Báo Cáo & Vi Phạm'),
+                  title: Text(context.tr('util_xlbocoviph_05fa0a')),
                   subtitle: const Text('send_report, clear_report'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _adminActionDialog('report'),
@@ -416,14 +427,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             ),
           ),
           SLSpacing.h20,
-          const Text('THÔNG BÁO & HỖ TRỢ',
+          Text(context.tr('util_thngbohtr_fc83ad'),
               style:
-                  TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
           Card(
             child: ListTile(
               leading:
                   const Icon(Icons.campaign_rounded, color: Colors.deepPurple),
-              title: const Text('Gửi thông báo toàn cục'),
+              title: Text(context.tr('util_githngboto_e32a3e')),
               subtitle: const Text('Broadcasting alerts to all users.'),
               trailing: const Icon(Icons.send),
               onTap: _sendGlobalNotification,
@@ -434,8 +445,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             child: ListTile(
               leading:
                   const Icon(Icons.support_agent_rounded, color: Colors.blue),
-              title: const Text('Hỗ trợ Support (AI)'),
-              subtitle: const Text('Chat với người dùng có gợi ý AI'),
+              title: Text(context.tr('util_htrsupport_95d335')),
+              subtitle: Text(context.tr('util_chatvingid_cbf855')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 Navigator.push(

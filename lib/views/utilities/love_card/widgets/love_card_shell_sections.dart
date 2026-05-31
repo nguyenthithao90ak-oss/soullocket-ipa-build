@@ -154,7 +154,7 @@ class _LoveCardHeaderSection extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Thiệp Tình Yêu',
+                  context.tr('util_thiptnhyu_4d90ec'),
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     color: Colors.white,
@@ -164,7 +164,7 @@ class _LoveCardHeaderSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Tạo đẹp hơn, chia sẻ bằng link riêng ngay sau khi gửi',
+                  context.tr('util_tophnchias_649b8a'),
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     color: Colors.white.withValues(alpha: 0.74),
@@ -224,7 +224,7 @@ class _LoveCardTabSwitcher extends StatelessWidget {
         children: [
           Expanded(
             child: _LoveCardTabButton(
-              label: 'Tạo thiệp',
+              label: context.tr('util_tothip_b2b416'),
               isActive: state._currentIndex == 0,
               activeTextColor: selectedTextColor,
               onTap: state._showCreateTab,
@@ -239,7 +239,7 @@ class _LoveCardTabSwitcher extends StatelessWidget {
                     snapshot.hasData ? state._unreadCount(snapshot.data!) : 0;
 
                 return _LoveCardTabButton(
-                  label: 'Lịch sử',
+                  label: context.tr('util_lchs_3061f5'),
                   isActive: state._currentIndex == 1,
                   activeTextColor: selectedTextColor,
                   unreadCount: unreadCount,

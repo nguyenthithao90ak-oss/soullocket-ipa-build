@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -49,7 +50,7 @@ class GpsHistoryCleanupService {
     } on FirebaseException catch (error) {
       final info = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Không thể dọn lịch sử GPS.',
+        fallbackMessage: L10nService().translate('err_gps_cleanup_failed'),
       );
       if (error.code.toLowerCase() == 'permission-denied') {
         return;

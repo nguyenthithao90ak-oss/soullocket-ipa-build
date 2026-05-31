@@ -12,11 +12,12 @@ class LoveWheelService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
 
   Future<int> spinTheWheel(String houseId, List<String> options) async {
+    final normalizedHouseId = houseId.trim();
     final normalizedOptions = options
         .map((item) => item.trim())
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
-    if (normalizedOptions.isEmpty) {
+    if (normalizedHouseId.isEmpty || normalizedOptions.isEmpty) {
       return 0;
     }
 
@@ -28,24 +29,28 @@ class LoveWheelService {
       'spinnedAt': ServerValue.timestamp,
     };
 
-    final historyRef = _db.ref('houses/$houseId/wheel_history').push();
+    final historyRef = _db.ref('houses/$normalizedHouseId/wheel_history').push();
     final historyKey = historyRef.key;
     if (historyKey == null || historyKey.isEmpty) {
-      await _db.ref('houses/$houseId/wheel_result').set(payload);
+      await _db.ref('houses/$normalizedHouseId/wheel_result').set(payload);
       return selectedIndex;
     }
 
     await _db.ref().update({
-      'houses/$houseId/wheel_result': payload,
-      'houses/$houseId/wheel_history/$historyKey': payload,
+      'houses/$normalizedHouseId/wheel_result': payload,
+      'houses/$normalizedHouseId/wheel_history/$historyKey': payload,
     });
-    await _trimHistory(houseId);
+    await _trimHistory(normalizedHouseId);
 
     return selectedIndex;
   }
 
   Stream<Map<dynamic, dynamic>?> listenToWheelResult(String houseId) {
-    return _db.ref('houses/$houseId/wheel_result').onValue.map((event) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<Map<dynamic, dynamic>?>.value(null);
+    }
+    return _db.ref('houses/$normalizedHouseId/wheel_result').onValue.map((event) {
       if (!event.snapshot.exists || event.snapshot.value is! Map) {
         return null;
       }
@@ -54,8 +59,12 @@ class LoveWheelService {
   }
 
   Stream<List<Map<String, dynamic>>> listenToWheelHistory(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<List<Map<String, dynamic>>>.value(const []);
+    }
     return _db
-        .ref('houses/$houseId/wheel_history')
+        .ref('houses/$normalizedHouseId/wheel_history')
         .orderByChild('spinnedAt')
         .limitToLast(5)
         .onValue
@@ -88,8 +97,10 @@ class LoveWheelService {
   }
 
   Future<void> _trimHistory(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
     final snapshot = await _db
-        .ref('houses/$houseId/wheel_history')
+        .ref('houses/$normalizedHouseId/wheel_history')
         .orderByChild('spinnedAt')
         .get();
     if (!snapshot.exists || snapshot.value is! Map) {
@@ -113,7 +124,7 @@ class LoveWheelService {
 
     final updates = <String, Object?>{};
     for (final entry in entries.skip(5)) {
-      updates['houses/$houseId/wheel_history/${entry.key}'] = null;
+      updates['houses/$normalizedHouseId/wheel_history/${entry.key}'] = null;
     }
     await _db.ref().update(updates);
   }

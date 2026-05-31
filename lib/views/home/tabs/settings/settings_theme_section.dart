@@ -118,13 +118,13 @@ extension _SettingsTabThemeSection on _SettingsTabState {
 
   Future<void> _openPremiumStoreFromThemePanel() async {
     if (!AppConfig.isPurchaseEnabled) {
-      _showToast('Gói PRO đang tạm ẩn trong bản review.', success: false);
+      _showToast(context.tr('home_mcnyangtmn_fdd99c'), success: false);
       return;
     }
 
     final houseId = _houseId?.trim();
     if (houseId == null || houseId.isEmpty) {
-      _showToast('Hãy vào nhà trước khi mở gói PRO.', success: false);
+      _showToast(context.tr('home_hyvonhtrck_c33334'), success: false);
       return;
     }
 
@@ -133,7 +133,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       MaterialPageRoute(
         builder: (_) => PremiumStoreScreen(
           houseId: houseId,
-          myName: _nameU1.trim().isEmpty ? 'Bạn' : _nameU1.trim(),
+          myName: _nameU1.trim().isEmpty ? context.tr('home_bn_1fd75b') : _nameU1.trim(),
         ),
       ),
     );
@@ -147,13 +147,18 @@ extension _SettingsTabThemeSection on _SettingsTabState {
             UiPrefs.notifier.value.customBackgroundUrl)
         .trim();
     if (customBackgroundUrl.isNotEmpty && themeKey != 'off') {
+      // Khi người dùng chọn theme mới, ưu tiên áp dụng theme đó ngay.
+      // Tự tắt nền ảnh custom để tránh cảm giác "đổi theme không ăn".
+      _updateThemeDraft(() {
+        _draftCustomBackgroundUrl = '';
+        _draftThemeKey = themeKey;
+      });
       LegacyWebUi.showNotice(
         context,
-        message:
-            'Bạn đang sử dụng ảnh nền app nên không thể sử dụng chủ đề. Hãy xóa ảnh nền app trước nếu muốn đổi chủ đề.',
-        success: false,
-        title: 'Không thể dùng chủ đề',
-        icon: Icons.wallpaper_rounded,
+        message: 'Đã tắt ảnh nền tùy chỉnh để áp dụng chủ đề mới.',
+        success: true,
+        title: 'Đã áp dụng chủ đề',
+        icon: Icons.palette_rounded,
       );
       return;
     }
@@ -165,10 +170,14 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       if (!_isVipActive) {
         LegacyWebUi.showNotice(
           context,
-          message: 'Chế độ tự đổi nền mỗi 30 giây cần PRO để sử dụng.',
+          message: AppConfig.isPurchaseEnabled
+              ? context.tr('home_chtinnmi30_57840c')
+              : context.tr('home_chtinnmi30_cf7b7c'),
           success: true,
-          title: 'Cần PRO',
-          icon: Icons.workspace_premium_rounded,
+          title: AppConfig.isPurchaseEnabled ? context.tr('home_cnpro_244529') : context.tr('home_chakhdng_9f4400'),
+          icon: AppConfig.isPurchaseEnabled
+              ? Icons.workspace_premium_rounded
+              : Icons.info_outline_rounded,
         );
         return;
       }
@@ -176,7 +185,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
 
     if (_isVipThemeLocked(themeKey)) {
       _showToast(
-        'Chế độ tự đổi nền mỗi 30 giây chỉ dành cho PRO.',
+        AppConfig.isPurchaseEnabled
+            ? context.tr('home_chtinnmi30_ae1dc8')
+            : context.tr('home_chtinnmi30_cf7b7c'),
         success: false,
       );
       await _openPremiumStoreFromThemePanel();
@@ -187,7 +198,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
 
   void _handleAvatarFrameSelection(String frameKey) {
     if (_isVipFrameLocked(frameKey)) {
-      _showToast('Vòng PRO chỉ áp dụng cho tài khoản PRO.', success: false);
+      _showToast(
+        context.tr('home_lachnnyang_d9f089'),
+        success: false,
+      );
       return;
     }
     _updateThemeDraft(
@@ -199,14 +213,14 @@ extension _SettingsTabThemeSection on _SettingsTabState {
     return _ThemePanelConfig(
       themes: [
         (context.tr('theme_auto_season'), 'theme-auto'),
-        ('Sóng Hồng (Mặc định)', 'theme-pink-glow'),
-        ('Đơn giản', 'theme-default'),
+        (context.tr('home_snghngmcnh_17c1e3'), 'theme-pink-glow'),
+        (context.tr('home_ngin_bcef46'), 'theme-default'),
         (context.tr('theme_sunset'), 'theme-sunset'),
         (context.tr('theme_ocean'), 'theme-ocean'),
         (context.tr('theme_night'), 'theme-night'),
         (context.tr('theme_dark'), 'theme-dark'),
         (context.tr('theme_mystic_dark'), 'theme-mystic-dark'),
-        ('Tắt Chủ Đề', 'off'),
+        (context.tr('home_ttch_324e9a'), 'off'),
       ],
       effects: [
         (context.tr('effect_auto_season'), 'auto'),
@@ -220,18 +234,19 @@ extension _SettingsTabThemeSection on _SettingsTabState {
         (context.tr('effect_off'), 'off'),
       ],
       avatarFrames: [
-        ('Tắt (Không có khung)', 'off'),
+        (context.tr('home_ttkhngckhu_37eb33'), 'off'),
         (context.tr('frame_circle'), 'circle'),
         (context.tr('frame_rounded'), 'rounded'),
         ('Squircle', 'squircle'),
         (context.tr('frame_pearl'), 'pearl'),
         (context.tr('frame_glass'), 'glass'),
-        (
-          _isVipActive
-              ? context.tr('frame_vip')
-              : '${context.tr('frame_vip')} 🔒',
-          'vip'
-        ),
+        if (AppConfig.isPurchaseEnabled)
+          (
+            _isVipActive
+                ? context.tr('frame_vip')
+                : '${context.tr('frame_vip')} 🔒',
+            'vip'
+          ),
       ],
       countdownStyles: [
         (context.tr('countdown_default'), 'default', false),
@@ -248,8 +263,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       ],
       fonts: SLTheme.cleanFontOptions,
       languages: [
-        (context.tr('lang_vi'), 'vi'),
-        (context.tr('lang_en'), 'en'),
+        for (final option in _settingsLanguageOptions) (option.title, option.code),
       ],
       homeTones: [
         (context.tr('tone_theme'), 'theme'),
@@ -271,7 +285,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
         (context.tr('widget_purple'), 'purple'),
         (context.tr('theme_ocean'), 'green'),
         (context.tr('widget_red'), 'red'),
-        (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
+        if (AppConfig.isPurchaseEnabled)
+          (
+            _isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒',
+            'premium'
+          ),
       ],
     );
   }
@@ -301,8 +319,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
             ? (_draftFontKey ?? ui.fontKey)
             : config.fonts.first.key;
     final languageKey = config.languages
-            .any((item) => item.$2 == L10nService().locale.languageCode)
-        ? L10nService().locale.languageCode
+            .any((item) => item.$2 == L10nService().localeCode)
+        ? L10nService().localeCode
         : config.languages.first.$2;
     final homeToneKey = config.homeTones.any((item) =>
             item.$2 == (_draftHomeBlockToneKey ?? ui.homeBlockToneKey))
@@ -375,8 +393,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 ? (_draftFontKey ?? ui.fontKey)
                 : fonts.first.key;
         final languageKey = languages
-                .any((item) => item.$2 == L10nService().locale.languageCode)
-            ? L10nService().locale.languageCode
+                .any((item) => item.$2 == L10nService().localeCode)
+            ? L10nService().localeCode
             : languages.first.$2;
         final homeToneKey = homeTones.any((item) =>
                 item.$2 == (_draftHomeBlockToneKey ?? ui.homeBlockToneKey))
@@ -469,7 +487,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Chỉ thêm mốc kỷ niệm ở đây',
+                      context.tr('home_chthmmckni_277577'),
                       style: SLTheme.quicksand(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w900,
@@ -478,7 +496,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Ví dụ: ngày yêu, cầu hôn, cưới. Lịch hẹn hằng ngày sẽ nằm riêng ở mục Lịch chung để không bị lẫn.',
+                      context.tr('home_vdngyyucuh_d971f6'),
                       style: SLTheme.quicksand(
                         fontSize: 11.6,
                         fontWeight: FontWeight.w700,
@@ -495,12 +513,12 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildThemeFieldCaption(
-                                'Tên kỷ niệm',
+                                context.tr('home_tnknim_c9204b'),
                                 Icons.favorite_border_rounded,
                               ),
                               _buildInput(
                                 _anniversaryNameCtrl,
-                                'Ví dụ: Ngày yêu nhau',
+                                context.tr('home_vdngyyunha_5849f3'),
                               ),
                             ],
                           ),
@@ -511,7 +529,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildThemeFieldCaption(
-                                'Ngày kỷ niệm',
+                                context.tr('home_ngyknim_4d03ad'),
                                 Icons.calendar_month_rounded,
                               ),
                               Container(
@@ -567,9 +585,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                     );
                                   },
                                   decoration: LegacyWebUi.softInputDecoration(
-                                    hintText: 'ngày/tháng/năm',
+                                    hintText: context.tr('home_ngythngnm_a697d0'),
                                   ).copyWith(
-                                    helperText: 'Đang nhập ngày/tháng/năm',
+                                    helperText: context.tr('home_angnhpngyt_377d85'),
                                     errorText: _anniversaryDateErrorText,
                                     prefixIcon: const Icon(
                                       Icons.calendar_month_rounded,
@@ -629,7 +647,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'Thêm',
+                                    context.tr('home_thm_d9cb42'),
                                     style: SLTheme.quicksand(
                                       fontSize: 10.2,
                                       fontWeight: FontWeight.w900,
@@ -762,7 +780,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Trong suốt',
+                            context.tr('home_trongsut_38b9d1'),
                             style: SLTheme.quicksand(
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
@@ -771,7 +789,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Làm các khối hiển thị trên trang chủ hơi trong suốt để nhìn thấy ảnh nền rõ hơn.',
+                            context.tr('home_lmcckhihin_df481f'),
                             style: SLTheme.quicksand(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -978,9 +996,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     const SizedBox(height: 10),
                     _buildGradientBtn(
                       label: _isGrantingPermissions
-                          ? 'ĐANG XIN QUYỀN...'
+                          ? context.tr('home_angxinquyn_8dc1d1')
                           : Platform.isIOS
-                              ? 'THIẾT LẬP QUYỀN CẦN THIẾT'
+                              ? context.tr('home_thitlpquyn_942e97')
                               : context.tr('theme_grant_all_perms'),
                       gradient: const [Color(0xFF57C96C), Color(0xFF78D884)],
                       onTap: _isGrantingPermissions

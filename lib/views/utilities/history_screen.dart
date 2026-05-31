@@ -1,9 +1,10 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import '../../core/fast_backdrop_filter.dart';
 
 import '../../core/sl_theme.dart';
 import '../../services/activity_history_service.dart';
@@ -54,28 +55,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
         backgroundColor: const Color(0xFF111827),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Xóa lịch sử?',
+          context.tr('util_xalchs_4e0e74'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
         content: Text(
-          'Bạn muốn xóa toàn bộ lịch sử hoạt động?',
+          context.tr('util_bnmunxaton_12ff7d'),
           style: SLTheme.quicksand(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Hủy',
+              context.tr('util_hy_1e4050'),
               style: SLTheme.quicksand(color: Colors.white38),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
-              'Xóa',
+              context.tr('util_xa_4ed187'),
               style: SLTheme.quicksand(
                 color: Colors.redAccent,
                 fontWeight: FontWeight.bold,
@@ -112,8 +113,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
       SnackBar(
         content: Text(
           ok
-              ? 'Đã khôi phục mục này.'
-              : 'Không thể khôi phục mục này hoặc mục đã quá hạn.',
+              ? context.tr('util_khiphcmcny_df4b8a')
+              : context.tr('util_khngthkhip_6ccfb2'),
         ),
       ),
     );
@@ -152,7 +153,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: !widget.embedded,
         title: Text(
-          'LỊCH SỬ HOẠT ĐỘNG',
+          context.tr('util_lchshotng_3defc0'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -234,7 +235,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tổng số hoạt động',
+                      context.tr('util_tngshotng_1d889d'),
                       style: SLTheme.quicksand(
                         color: Colors.white70,
                         fontWeight: FontWeight.w600,
@@ -259,7 +260,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     borderRadius: SLRadius.mdAll,
                   ),
                   child: Text(
-                    'Giới hạn: ${ActivityHistoryService.maxItems}',
+                    L10nService().format('util_history_limit', {'count': ActivityHistoryService.maxItems}),
                     style: SLTheme.quicksand(
                       color: Colors.white70,
                       fontWeight: FontWeight.w800,
@@ -279,7 +280,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (_history.isEmpty) {
       return Center(
         child: Text(
-          'Chưa có lịch sử hoạt động.',
+          context.tr('util_chaclchsho_b9320d'),
           style: SLTheme.quicksand(
             color: Colors.white70,
             fontWeight: FontWeight.w600,
@@ -397,13 +398,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                         if (canRestore)
                           _buildTag(
-                            'Khôi phục được',
+                            context.tr('util_khiphcc_3014dd'),
                             const Color(0xFF113826),
                             const Color(0xFF86EFAC),
                           ),
                         if (expired)
                           _buildTag(
-                            'Quá 3 ngày',
+                            context.tr('util_qu3ngy_45ff69'),
                             const Color(0xFF3F1721),
                             const Color(0xFFFCA5A5),
                           ),
@@ -432,7 +433,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                   child: IconButton(
                     tooltip:
-                        isRestoring ? 'Đang khôi phục...' : 'Khôi phục',
+                        isRestoring ? context.tr('util_angkhiphc_4d5bed') : context.tr('util_khiphc_682697'),
                     constraints: const BoxConstraints.tightFor(
                       width: 36,
                       height: 36,

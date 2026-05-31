@@ -4,8 +4,8 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
   Widget _buildHeaderCard(LoveInsightData insight) {
     final scoreColor = _scoreColor(insight.loveScore);
     final progress = _progressToNextLevel(insight.loveScore);
-    final scoreTitle = _isSingle ? 'Chỉ số hoạt động' : 'Chỉ số hạnh phúc';
-    final dayLabel = _isSingle ? 'ngày đồng hành' : 'ngày bên nhau';
+    final scoreTitle = _isSingle ? L10nService().translate('home_chshotng_328c7a') : L10nService().translate('home_chshnhphc_7c8e85');
+    final dayLabel = _isSingle ? L10nService().translate('home_ngynghnh_05daff') : L10nService().translate('home_ngybnnhau_dd626e');
     final loveDays = insight.loveDays > 0 ? insight.loveDays : widget.loveDays;
     final levelLabel = _levelLabel(insight.loveScore);
 
@@ -110,7 +110,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                 child: Column(
                   children: [
                     Text(
-                      _isSingle ? 'Ngày dùng' : 'Ngày yêu',
+                      _isSingle ? L10nService().translate('home_ngydng_ea4a15') : L10nService().translate('home_ngyyu_caafdc'),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 12,
@@ -146,8 +146,8 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
           SLSpacing.h16,
           _buildSectionLabel(
             title: _isSingle
-                ? 'Tiến trình nhịp sống tích cực'
-                : 'Tiến trình cấp độ tiếp theo',
+                ? L10nService().translate('home_tintrnhnhp_7d5499')
+                : L10nService().translate('home_tintrnhcpt_a15e61'),
             trailing: '${progress.round()}%',
           ),
           SLSpacing.h8,
@@ -216,7 +216,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Lời nhắn hôm nay',
+                  L10nService().translate('home_linhnhmnay_4773b5'),
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w900,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../widgets/community_settings_components.dart';
 
@@ -40,10 +41,10 @@ class CommunitySettingsInteractionSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final friendLimitValue = friendRequestLimit <= 0 ? 30 : friendRequestLimit;
     final friendLimitItems = <DropdownMenuItem<String>>[
-      const DropdownMenuItem(value: '30', child: Text('Tối đa 30 bạn')),
-      const DropdownMenuItem(value: '50', child: Text('Tối đa 50 bạn')),
-      const DropdownMenuItem(value: '100', child: Text('Tối đa 100 bạn')),
-      const DropdownMenuItem(value: '500', child: Text('Tối đa 500 bạn')),
+      DropdownMenuItem(value: '30', child: Text(context.tr('comm_tia30bn_f614cc'))),
+      DropdownMenuItem(value: '50', child: Text(context.tr('comm_tia50bn_fabbe8'))),
+      DropdownMenuItem(value: '100', child: Text(context.tr('comm_tia100bn_83c322'))),
+      DropdownMenuItem(value: '500', child: Text(context.tr('comm_tia500bn_a4f988'))),
     ];
     if (!friendLimitItems
         .any((item) => item.value == friendLimitValue.toString())) {
@@ -58,15 +59,15 @@ class CommunitySettingsInteractionSection extends StatelessWidget {
     return CommunitySettingsSectionCard(
       icon: Icons.group_outlined,
       accent: const Color(0xFF0E9F8F),
-      title: 'Kết nối, nhóm riêng tư và tương tác',
+      title: context.tr('comm_ktninhmrin_66bf85'),
       subtitle:
-          'Gom lời mời, bình luận, nhắn tin lạ và khả năng được tìm thấy vào cùng một chỗ để dễ kiểm soát.',
+          context.tr('comm_gomlimibnh_9f4e3b'),
       children: [
         CommunitySettingsStatusOverview(
           items: [
             CommunitySettingsStatusChipData(
               icon: Icons.search_rounded,
-              label: searchPrivacy ? 'Được tìm kiếm' : 'Ẩn khỏi tìm kiếm',
+              label: searchPrivacy ? context.tr('comm_ctmkim_b43760') : context.tr('comm_nkhitmkim_08ab73'),
               active: searchPrivacy,
             ),
             CommunitySettingsStatusChipData(
@@ -81,70 +82,70 @@ class CommunitySettingsInteractionSection extends StatelessWidget {
             ),
             CommunitySettingsStatusChipData(
               icon: Icons.mail_lock_rounded,
-              label: msgPrivacy ? 'Khóa tin nhắn lạ' : 'Nhận tin nhắn lạ',
+              label: msgPrivacy ? context.tr('comm_khatinnhnl_c1af9f') : context.tr('comm_nhntinnhnl_324287'),
               active: !msgPrivacy,
             ),
           ],
         ),
         const SizedBox(height: 12),
-        const CommunitySettingsSubsectionTitle(
-          title: 'Khả năng được tìm thấy',
+        CommunitySettingsSubsectionTitle(
+          title: context.tr('comm_khnngctmth_ea42fb'),
         ),
         const SizedBox(height: 10),
         CommunitySettingsToggleCard(
-          title: 'Cho phép tìm kiếm hồ sơ',
+          title: context.tr('comm_chophptmki_a2501f'),
           subtitle:
-              'Tắt nếu bạn chỉ muốn người đã biết nhà bạn mới có thể vào hồ sơ.',
+              context.tr('comm_ttnubnchmu_de045e'),
           value: searchPrivacy,
           onChanged: onSearchPrivacyChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsDropdownCard(
-          title: 'Ai có thể gửi lời mời kết bạn',
-          subtitle: 'Giới hạn vòng kết nối để giữ cộng đồng riêng tư hơn.',
+          title: context.tr('comm_aicthgilim_e49f0c'),
+          subtitle: context.tr('comm_giihnvngkt_efc737'),
           value: friendRequestPolicy,
-          items: const [
-            DropdownMenuItem(value: 'all', child: Text('Mọi người')),
-            DropdownMenuItem(value: 'mutual', child: Text('Chỉ bạn chung')),
-            DropdownMenuItem(value: 'none', child: Text('Không cho phép')),
+          items: [
+            DropdownMenuItem(value: 'all', child: Text(context.tr('comm_mingi_d524fb'))),
+            DropdownMenuItem(value: 'mutual', child: Text(context.tr('comm_chbnchung_b9c944'))),
+            DropdownMenuItem(value: 'none', child: Text(context.tr('comm_khngchophp_635c83'))),
           ],
           onChanged: onFriendRequestPolicyChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsDropdownCard(
-          title: 'Ai có thể bình luận trên bài viết',
+          title: context.tr('comm_aicthbnhlu_80deb5'),
           subtitle:
-              'Tách riêng phần bình luận để tránh nhiễu hoặc giữ bài viết riêng tư hơn.',
+              context.tr('comm_tchringphn_5c14f5'),
           value: commentPolicy,
-          items: const [
-            DropdownMenuItem(value: 'all', child: Text('Mọi người')),
-            DropdownMenuItem(value: 'friends', child: Text('Chỉ bạn bè')),
-            DropdownMenuItem(value: 'none', child: Text('Tắt bình luận')),
+          items: [
+            DropdownMenuItem(value: 'all', child: Text(context.tr('comm_mingi_d524fb'))),
+            DropdownMenuItem(value: 'friends', child: Text(context.tr('comm_chbnb_824805'))),
+            DropdownMenuItem(value: 'none', child: Text(context.tr('comm_ttbnhlun_85f22c'))),
           ],
           onChanged: onCommentPolicyChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsDropdownCard(
-          title: 'Giới hạn danh sách bạn bè',
+          title: context.tr('comm_giihndanhs_1a409f'),
           subtitle:
-              'Giữ quy mô phù hợp để feed và quan hệ trong cộng đồng dễ quản lý hơn.',
+              context.tr('comm_giquymphhp_6a78c2'),
           value: friendLimitValue.toString(),
           items: friendLimitItems,
           onChanged: onFriendRequestLimitChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsToggleCard(
-          title: 'Khóa tin nhắn từ người lạ',
+          title: context.tr('comm_khatinnhnt_e0f848'),
           subtitle:
-              'Bật nếu bạn chỉ muốn nhận tin nhắn khi đã có kết nối rõ ràng.',
+              context.tr('comm_btnubnchmu_60ffd7'),
           value: msgPrivacy,
           onChanged: onMsgPrivacyChanged,
         ),
         const SizedBox(height: 12),
         CommunitySettingsToggleCard(
-          title: 'Không cho phép tag hoặc nhắc tên',
+          title: context.tr('comm_khngchophp_ce31c1'),
           subtitle:
-              'Giảm việc bị kéo vào nội dung không liên quan trong cộng đồng.',
+              context.tr('comm_gimvicbkov_4df570'),
           value: taggingPolicy,
           onChanged: onTaggingPolicyChanged,
         ),

@@ -283,10 +283,13 @@ class StorageService {
         case 'invalid-argument':
           throw Exception('Thiếu thông tin tải ảnh kho bí mật.');
         case 'failed-precondition':
+          final message = (error.message ?? '').trim();
           throw Exception(
-            (error.message ?? '').trim().isNotEmpty
-                ? error.message!.trim()
-                : 'Secret Vault yêu cầu PRO đang hoạt động.',
+            Platform.isIOS || Platform.isMacOS
+                ? 'Kho ảnh mật chưa sẵn sàng trên thiết bị này.'
+                : message.isNotEmpty
+                    ? message
+                    : 'Secret Vault yêu cầu PRO đang hoạt động.',
           );
         case 'permission-denied':
           throw Exception('Bạn không có quyền tải ảnh vào kho bí mật này.');
@@ -694,13 +697,13 @@ class StorageService {
         },
         label: 'Memory finalize response',
       );
-      
+
       final isOk = response['ok'] == true;
       final memoryId = response['memoryId']?.toString().trim() ?? '';
       if (isOk && memoryId.isNotEmpty) {
         debugPrint('✅ UPLOAD THÀNH CÔNG: Memory ID = $memoryId');
       }
-      
+
       return response;
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
@@ -1072,7 +1075,8 @@ class StorageService {
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return;
         }
-        if (attempt < 2 && _shouldRetrySignedUploadStatus(response.statusCode)) {
+        if (attempt < 2 &&
+            _shouldRetrySignedUploadStatus(response.statusCode)) {
           await Future.delayed(Duration(milliseconds: 520 * (attempt + 1)));
           continue;
         }

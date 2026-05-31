@@ -120,6 +120,8 @@
 		9F94450EAB38EE942479C18D /* icon_gold_ipad@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AABE43DC9D38118371AFCBDC /* icon_gold_ipad@2x.png */; };
 		A10000000000000000000011 /* SoulLocketWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* SoulLocketWidget.swift */; };
 		A10000000000000000000012 /* SoulLocketWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* SoulLocketWidgetView.swift */; };
+		A10000000000000000000014 /* SoulLocketWidgetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000007 /* SoulLocketWidgetIntent.swift */; };
+		A10000000000000000000015 /* SoulLocketLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000008 /* SoulLocketLiveActivity.swift */; };
 		A10000000000000000000013 /* SoulLocketWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* SoulLocketWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
 		A2D24CF88025AA11F63013EB /* icon_sunset_ipadPro@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F1BA41B4A288BC34A37335E8 /* icon_sunset_ipadPro@2x.png */; };
 		A3D3481AA84FCB4567218DA2 /* icon_mint@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = EFEC43A9B2D4581D4410EAD5 /* icon_mint@2x.png */; };
@@ -264,6 +266,8 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A10000000000000000000001 /* SoulLocketWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoulLocketWidget.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* SoulLocketWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoulLocketWidgetView.swift; sourceTree = "<group>"; };
+		A10000000000000000000007 /* SoulLocketWidgetIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoulLocketWidgetIntent.swift; sourceTree = "<group>"; };
+		A10000000000000000000008 /* SoulLocketLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoulLocketLiveActivity.swift; sourceTree = "<group>"; };
 		A10000000000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A10000000000000000000004 /* SoulLocketWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SoulLocketWidget.entitlements; sourceTree = "<group>"; };
 		A10000000000000000000005 /* SoulLocketWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SoulLocketWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -436,6 +440,8 @@
 				A10000000000000000000004 /* SoulLocketWidget.entitlements */,
 				A10000000000000000000001 /* SoulLocketWidget.swift */,
 				A10000000000000000000002 /* SoulLocketWidgetView.swift */,
+				A10000000000000000000007 /* SoulLocketWidgetIntent.swift */,
+				A10000000000000000000008 /* SoulLocketLiveActivity.swift */,
 			);
 			path = SoulLocketWidget;
 			sourceTree = "<group>";
@@ -768,6 +774,8 @@
 			files = (
 				A10000000000000000000011 /* SoulLocketWidget.swift in Sources */,
 				A10000000000000000000012 /* SoulLocketWidgetView.swift in Sources */,
+				A10000000000000000000014 /* SoulLocketWidgetIntent.swift in Sources */,
+				A10000000000000000000015 /* SoulLocketLiveActivity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -5,9 +5,9 @@ extension _MapCheckinSheetExt on _MapScreenState {
     final activePoint = selectedPoint ?? _myLiveLocation;
     if (activePoint == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content:
-              Text('Chưa có vị trí hiện tại, vui lòng bật vị trí rồi thử lại'),
+              Text(context.tr('map_chacvtrhin_ccf9e7')),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -51,7 +51,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
                 ),
                 SLSpacing.h16,
                 Text(
-                  'Check-in vị trí đã chọn',
+                  context.tr('map_checkinvtr_07f54d'),
                   style: SLTheme.quicksand(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -70,15 +70,15 @@ extension _MapCheckinSheetExt on _MapScreenState {
                 SLSpacing.h16,
                 _buildCheckinTextField(
                   controller: nameCtrl,
-                  label: 'Tên địa điểm',
-                  hint: 'VD: Quán cafe, điểm hẹn, nhà sách...',
+                  label: context.tr('map_tnaim_ae1e33'),
+                  hint: context.tr('map_vdquncafei_701fce'),
                   icon: Icons.place_rounded,
                 ),
                 SLSpacing.h12,
                 _buildCheckinTextField(
                   controller: noteCtrl,
-                  label: 'Ghi chú',
-                  hint: 'Lưu lại kỷ niệm, cảm xúc, điều đặc biệt...',
+                  label: context.tr('map_ghich_f481f9'),
+                  hint: context.tr('map_luliknimcm_f10773'),
                   icon: Icons.note_alt_rounded,
                   maxLines: 2,
                 ),
@@ -87,6 +87,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
+                      final msgLimitFull = context.tr('map_ttia30vtrg_8875b5');
                       final pinSnapshot =
                           await _mapPinLimitService.getSnapshot(widget.houseId);
                       final isCurrentPlaceAlreadyPinned =
@@ -97,9 +98,9 @@ extension _MapCheckinSheetExt on _MapScreenState {
                       if (pinSnapshot.isFull && !isCurrentPlaceAlreadyPinned) {
                         if (!ctx.mounted) return;
                         ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Text(
-                              'Đã đạt tối đa 30 vị trí ghim trên bản đồ. Hãy xoá bớt ghim cũ rồi thử lại.',
+                              msgLimitFull,
                             ),
                             behavior: SnackBarBehavior.floating,
                           ),
@@ -140,7 +141,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
                     ),
                     icon: const Icon(Icons.add_location_alt_rounded),
                     label: Text(
-                      'Lưu check-in',
+                      context.tr('map_lucheckin_e0a374'),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: 14,

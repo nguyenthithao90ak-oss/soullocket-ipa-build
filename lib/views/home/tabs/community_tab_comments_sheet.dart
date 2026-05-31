@@ -174,6 +174,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
   }
 
   Future<String?> _resolveCurrentHouseId({bool showError = true}) async {
+    final noHouseFoundMsg = context.tr('home_khngtmthyn_a34ffb');
     final fresh = await _houseService.getCurrentHouseId(preferFresh: true);
     final resolved =
         (fresh?.trim().isNotEmpty ?? false) ? fresh!.trim() : _resolvedHouseId;
@@ -194,7 +195,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
     if (showError) {
       _showMessage(
         _ct(
-          'Không tìm thấy nhà hiện tại hợp lệ để tương tác cộng đồng.',
+          noHouseFoundMsg,
           'No valid active house was found for this community action.',
         ),
       );
@@ -233,7 +234,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
     return (item['author'] ??
             item['name'] ??
             item['u'] ??
-            _ct('Người dùng', 'User'))
+            _ct(context.tr('home_ngidng_3bf886'), 'User'))
         .toString()
         .trim();
   }
@@ -253,22 +254,22 @@ class _CommentsSheetState extends State<_CommentsSheet> {
     return showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(_ct('Báo cáo bình luận', 'Report comment')),
+        title: Text(_ct(context.tr('home_bocobnhlun_7e340e'), 'Report comment')),
         content: TextField(
           controller: controller,
           autofocus: true,
           decoration: InputDecoration(
-            hintText: _ct('Lý do báo cáo...', 'Reason for the report...'),
+            hintText: _ct(context.tr('home_ldoboco_1a5afa'), 'Reason for the report...'),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(_ct('Hủy', 'Cancel')),
+            child: Text(_ct(context.tr('home_hy_1e4050'), 'Cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: Text(_ct('Gửi', 'Send')),
+            child: Text(_ct(context.tr('home_gi_377294'), 'Send')),
           ),
         ],
       ),
@@ -276,6 +277,8 @@ class _CommentsSheetState extends State<_CommentsSheet> {
   }
 
   Future<void> _reportComment(String commentId) async {
+    final msgOk = context.tr('home_gibocobnhl_94a6fb');
+    final msgFail = context.tr('home_khnggicboc_998a39');
     final reason = await _promptReportReason();
     if (reason == null) return;
     final reporterHouseId = await _resolveCurrentHouseId();
@@ -291,19 +294,23 @@ class _CommentsSheetState extends State<_CommentsSheet> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_ct('Đã gửi báo cáo bình luận', 'Comment report sent')),
+          content: Text(_ct(msgOk, 'Comment report sent')),
         ),
       );
     } catch (e) {
       _showMessage(_communityActionErrorMessage(
         e,
-        viFallback: 'Không gửi được báo cáo lúc này.',
+        viFallback: msgFail,
         enFallback: 'Cannot send this report right now.',
       ));
     }
   }
 
   Future<void> _sendComment() async {
+    final msgCannotInteract = context.tr('home_khngthgibn_11fcfb');
+    final msgViolation = context.tr('home_bnhlunchat_5a7645');
+    final msgCannotSend = context.tr('home_khnggicbnh_b6207c');
+
     final text = _commentCtrl.text.trim();
     final validationError = _validateCommunityText(text, isComment: true);
     if (validationError != null) {
@@ -327,7 +334,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
     } catch (e) {
       _showMessage(_communityActionErrorMessage(
         e,
-        viFallback: 'Không thể gửi bình luận lúc này.',
+        viFallback: msgCannotInteract,
         enFallback: 'Cannot send this comment right now.',
       ));
       return;
@@ -392,7 +399,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
       if (hasViolations) {
         _showMessage(
           _ct(
-            'Bình luận chứa từ khóa vi phạm và đã bị ẩn.',
+            msgViolation,
             'This comment contains blocked words and has been hidden.',
           ),
         );
@@ -400,7 +407,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
     } catch (e) {
       _showMessage(_communityActionErrorMessage(
         e,
-        viFallback: 'Không gửi được bình luận lúc này.',
+        viFallback: msgCannotSend,
         enFallback: 'Cannot send this comment right now.',
       ));
     }
@@ -408,6 +415,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
 
   Future<void> _toggleLikeComment(
       String commentId, Map<String, dynamic> likeMap) async {
+    final msgFail = context.tr('home_khngcpnhtc_0b73c2');
     final myHouseId = await _resolveCurrentHouseId();
     if (myHouseId == null) return;
 
@@ -435,7 +443,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
     } catch (e) {
       _showMessage(_communityActionErrorMessage(
         e,
-        viFallback: 'Không cập nhật được lượt tim lúc này.',
+        viFallback: msgFail,
         enFallback: 'Cannot update this reaction right now.',
       ));
     }
@@ -481,7 +489,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _ct('Bình luận cộng đồng', 'Community comments'),
+                            _ct(context.tr('home_bnhluncngn_cc44c2'), 'Community comments'),
                             style: SLTheme.quicksand(
                               fontWeight: FontWeight.w900,
                               fontSize: 18,
@@ -491,7 +499,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                           SLSpacing.h4,
                           Text(
                             _ct(
-                              'Khu vực trò chuyện công khai.',
+                              context.tr('home_khuvctrchu_d54a4b'),
                               'Public conversation area.',
                             ),
                             style: SLTheme.quicksand(
@@ -595,7 +603,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                               SLSpacing.h12,
                               Text(
                                 _ct(
-                                  'Chưa có bình luận nào.\nHãy là người mở đầu bằng một lời tử tế.',
+                                  context.tr('home_no_comments_kind_start'),
                                   'No comments yet.\nBe the first to start with a kind note.',
                                 ),
                                 textAlign: TextAlign.center,
@@ -711,24 +719,24 @@ class _CommentsSheetState extends State<_CommentsSheet> {
       final tsFixed = tsMs == 0 ? DateTime.now().millisecondsSinceEpoch : tsMs;
       final now = DateTime.now().millisecondsSinceEpoch;
       final diff = ((now - tsFixed) / 1000).floor();
-      if (diff < 10) return _ct('Vừa xong', 'Just now');
+      if (diff < 10) return _ct(context.tr('home_vaxong_e92d16'), 'Just now');
       if (diff < 60) {
         return _ctf(
-          '{count} giây trước',
+          context.tr('home_seconds_ago'),
           '{count} seconds ago',
           {'count': diff},
         );
       }
       if (diff < 3600) {
         return _ctf(
-          '{count} phút trước',
+          context.tr('home_minutes_ago'),
           '{count} minutes ago',
           {'count': (diff / 60).floor()},
         );
       }
       if (diff < 86400) {
         return _ctf(
-          '{count} giờ trước',
+          context.tr('home_hours_ago'),
           '{count} hours ago',
           {'count': (diff / 3600).floor()},
         );
@@ -736,15 +744,15 @@ class _CommentsSheetState extends State<_CommentsSheet> {
       final days = (diff / 86400).floor();
       if (days < 7) {
         return _ctf(
-          '{count} ngày trước',
+          context.tr('home_days_ago'),
           '{count} days ago',
           {'count': days},
         );
       }
-      if (days < 14) return _ct('1 tuần trước', '1 week ago');
-      if (days < 21) return _ct('2 tuần trước', '2 weeks ago');
-      if (days < 28) return _ct('3 tuần trước', '3 weeks ago');
-      if (days < 31) return _ct('4 tuần trước', '4 weeks ago');
+      if (days < 14) return _ct(context.tr('home_1tuntrc_ed1eec'), '1 week ago');
+      if (days < 21) return _ct(context.tr('home_2tuntrc_d6d1af'), '2 weeks ago');
+      if (days < 28) return _ct(context.tr('home_3tuntrc_22d4b4'), '3 weeks ago');
+      if (days < 31) return _ct(context.tr('home_4tuntrc_186dd2'), '4 weeks ago');
       final d = DateTime.fromMillisecondsSinceEpoch(tsFixed);
       return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
     }
@@ -869,7 +877,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                         GestureDetector(
                           onTap: onReply,
                           child: Text(
-                            _ct('Trả lời', 'Reply'),
+                            _ct(context.tr('home_trli_4c5df0'), 'Reply'),
                             style: SLTheme.quicksand(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -891,7 +899,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                           GestureDetector(
                             onTap: onLike,
                             child: Text(
-                              _ct('Thích', 'Like'),
+                              _ct(context.tr('home_thch_436ce5'), 'Like'),
                               style: SLTheme.quicksand(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -970,8 +978,8 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                   onSubmitted: (_) => _sendComment(),
                   decoration: InputDecoration(
                     hintText: _replyingToAuthorName != null
-                        ? _ct('Viết câu trả lời...', 'Write a reply...')
-                        : _ct('Viết bình luận...', 'Write a comment...'),
+                        ? _ct(context.tr('home_vitcutrli_15710b'), 'Write a reply...')
+                        : _ct(context.tr('home_vitbnhlun_7ec6cd'), 'Write a comment...'),
                     counterText: '',
                     filled: true,
                     fillColor: Colors.white,

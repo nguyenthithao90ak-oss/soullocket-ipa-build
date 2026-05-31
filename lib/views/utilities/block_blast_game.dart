@@ -9,7 +9,7 @@ class BlockBlastGame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Keep the old storage key so best score and local leaderboard are preserved.
-    return const SoulBlockGame(
+    return SoulBlockGame(
       storageKeyPrefix: 'block_blast',
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import '../../services/sleep_sync_service.dart';
 import '../../core/sl_theme.dart';
 
@@ -34,7 +35,7 @@ class _SleepSyncScreenState extends State<SleepSyncScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'Chế độ nghỉ',
+          context.tr('util_chngh_a449ce'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             color: _isSleeping ? Colors.white : const Color(0xFFD81B60),
@@ -54,7 +55,7 @@ class _SleepSyncScreenState extends State<SleepSyncScreen> {
             ),
             SLSpacing.gapH(30),
             Text(
-              _isSleeping ? 'Bạn đang ngủ ngon...' : 'Bạn đang thức',
+              _isSleeping ? context.tr('util_bnangngngo_28c405') : context.tr('util_bnangthc_16ae73'),
               style: SLTheme.quicksand(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -81,7 +82,7 @@ class _SleepSyncScreenState extends State<SleepSyncScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    _isSleeping ? 'DẬY THÔI' : 'ĐI NGỦ NÀO',
+                    _isSleeping ? context.tr('util_dythi_7cf747') : context.tr('util_ingno_d5d1b4'),
                     style: SLTheme.quicksand(
                       color: _isSleeping ? Colors.black : Colors.white,
                       fontSize: 18,

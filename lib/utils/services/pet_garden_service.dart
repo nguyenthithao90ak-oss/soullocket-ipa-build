@@ -19,8 +19,10 @@ class PetGardenService {
 
   /// Lấy dữ liệu Thú cưng của nhà (nếu chưa có thì trả về null)
   Future<PetVirtual?> getPet(String houseId) async {
-    final snap = await _db.ref('houses/$houseId/pet').get();
-    if (!snap.exists || snap.value == null) return null;
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return null;
+    final snap = await _db.ref('houses/$normalizedHouseId/pet').get();
+    if (!snap.exists || snap.value is! Map) return null;
 
     final data = Map<dynamic, dynamic>.from(snap.value as Map);
     return PetVirtual.fromMap(data);
@@ -28,28 +30,37 @@ class PetGardenService {
 
   /// Nhận nuôi Thú cưng / Trồng cây lần đầu tiên
   Future<void> adoptPet(String houseId, String type, String name) async {
+    final normalizedHouseId = houseId.trim();
+    final normalizedType = type.trim();
+    final normalizedName = name.trim();
+    if (normalizedHouseId.isEmpty ||
+        normalizedType.isEmpty ||
+        normalizedName.isEmpty) {
+      return;
+    }
     final now = DateTime.now().millisecondsSinceEpoch;
     final pet = PetVirtual(
-      id: 'pet_$houseId',
-      type: type,
-      name: name,
+      id: 'pet_$normalizedHouseId',
+      type: normalizedType,
+      name: normalizedName,
       lastFedAt: now,
       lastPlayedAt: now,
     );
 
-    await _db.ref('houses/$houseId/pet').set(pet.toMap());
+    await _db.ref('houses/$normalizedHouseId/pet').set(pet.toMap());
   }
 
   /// Cho thú cưng ăn (Tăng Độ no, Cộng EXP kinh nghiệm)
   Future<void> feedPet(String houseId) async {
-    final ref = _db.ref('houses/$houseId/pet');
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
+    final ref = _db.ref('houses/$normalizedHouseId/pet');
 
     // Giao dịch an toàn (Transaction) để tránh hai người bấm cùng lúc bị lỗi đè số liệu
     await ref.runTransaction((Object? petData) {
-      if (petData == null) return Transaction.abort();
+      if (petData is! Map) return Transaction.abort();
 
-      final Map<dynamic, dynamic> pet =
-          Map<dynamic, dynamic>.from(petData as Map);
+      final Map<dynamic, dynamic> pet = Map<dynamic, dynamic>.from(petData);
 
       int currentHunger = (pet['hunger'] as num?)?.toInt() ?? 0;
       int currentExp = (pet['exp'] as num?)?.toInt() ?? 0;
@@ -77,13 +88,14 @@ class PetGardenService {
 
   /// Chơi với thú cưng (Tăng Độ vui vẻ)
   Future<void> playWithPet(String houseId) async {
-    final ref = _db.ref('houses/$houseId/pet');
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
+    final ref = _db.ref('houses/$normalizedHouseId/pet');
 
     await ref.runTransaction((Object? petData) {
-      if (petData == null) return Transaction.abort();
+      if (petData is! Map) return Transaction.abort();
 
-      final Map<dynamic, dynamic> pet =
-          Map<dynamic, dynamic>.from(petData as Map);
+      final Map<dynamic, dynamic> pet = Map<dynamic, dynamic>.from(petData);
 
       int currentHappiness = (pet['happiness'] as num?)?.toInt() ?? 0;
 
@@ -113,7 +125,7 @@ class PetGardenService {
       final newHunger = (pet.hunger - hungerDecay).clamp(0, 100);
       final newHappiness = (pet.happiness - happinessDecay).clamp(0, 100);
 
-      await _db.ref('houses/$houseId/pet').update({
+      await _db.ref('houses/${houseId.trim()}/pet').update({
         'hunger': newHunger,
         'happiness': newHappiness,
       });
@@ -122,9 +134,13 @@ class PetGardenService {
 
   /// Theo dõi Thú cưng Real-time để Trae vẽ UI chuyển động
   Stream<PetVirtual?> petStream(String houseId) {
-    return _db.ref('houses/$houseId/pet').onValue.map((event) {
-      if (!event.snapshot.exists) return null;
-      return PetVirtual.fromMap(event.snapshot.value as Map<dynamic, dynamic>);
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return Stream<PetVirtual?>.value(null);
+    return _db.ref('houses/$normalizedHouseId/pet').onValue.map((event) {
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return null;
+      return PetVirtual.fromMap(
+        Map<dynamic, dynamic>.from(event.snapshot.value as Map),
+      );
     });
   }
 }

@@ -39,29 +39,42 @@ class LocalActionThrottleService {
     Duration burstWindow = const Duration(seconds: 4),
   }) {
     final normalizedId = actionId.trim().toLowerCase();
+    final effectiveMinInterval = minInterval.isNegative ? Duration.zero : minInterval;
+    final effectiveMaxAttempts = maxAttempts < 1 ? 1 : maxAttempts;
+    final effectiveBurstWindow = burstWindow <= Duration.zero
+        ? const Duration(seconds: 4)
+        : burstWindow;
+    if (normalizedId.isEmpty) {
+      return LocalActionThrottleResult(
+        decision: LocalActionThrottleDecision.burstBlocked,
+        attemptCount: 0,
+        remainingCooldown: Duration.zero,
+        window: effectiveBurstWindow,
+      );
+    }
     final now = DateTime.now();
     final state =
         _states.putIfAbsent(normalizedId, () => _ActionThrottleState());
 
     state.attempts.removeWhere(
-      (timestamp) => now.difference(timestamp) > burstWindow,
+      (timestamp) => now.difference(timestamp) > effectiveBurstWindow,
     );
 
     final lastAcceptedAt = state.lastAcceptedAt;
     final remainingCooldown = lastAcceptedAt == null
         ? Duration.zero
-        : minInterval - now.difference(lastAcceptedAt);
+        : effectiveMinInterval - now.difference(lastAcceptedAt);
 
     if (remainingCooldown > Duration.zero) {
       state.attempts.add(now);
-      final decision = state.attempts.length >= maxAttempts
+      final decision = state.attempts.length >= effectiveMaxAttempts
           ? LocalActionThrottleDecision.burstBlocked
           : LocalActionThrottleDecision.cooldown;
       return LocalActionThrottleResult(
         decision: decision,
         attemptCount: state.attempts.length,
         remainingCooldown: remainingCooldown,
-        window: burstWindow,
+        window: effectiveBurstWindow,
       );
     }
 
@@ -71,7 +84,7 @@ class LocalActionThrottleService {
       decision: LocalActionThrottleDecision.allow,
       attemptCount: state.attempts.length,
       remainingCooldown: Duration.zero,
-      window: burstWindow,
+      window: effectiveBurstWindow,
     );
   }
 

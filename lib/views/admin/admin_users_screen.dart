@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:csv/csv.dart';
@@ -80,7 +81,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         _errorText = AppErrorMapper.resolve(
           error,
           fallbackMessage:
-              'Chưa thể tải danh sách người dùng. Hãy kiểm tra quyền quản trị và kết nối rồi thử lại.',
+              context.tr('admin_chathtidan_64c8c0'),
         ).message;
       });
     } finally {
@@ -102,7 +103,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       final filtered = _filteredHouses;
       if (filtered.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không có dữ liệu để xuất!')),
+          SnackBar(content: Text(context.tr('admin_khngcdliux_0c15a9'))),
         );
         return;
       }
@@ -115,8 +116,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         'User2',
         'Role',
         'PRO',
-        'Bị khóa',
-        'Lý do khóa',
+        context.tr('admin_bkha_fce0d8'),
+        context.tr('admin_ldokha_495968'),
         'Created At'
       ]);
 
@@ -141,7 +142,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         ]);
       }
 
-      String csvData = const ListToCsvConverter().convert(rows);
+      String csvData = Csv().encode(rows);
       final bytes = utf8.encode(csvData);
 
       if (kIsWeb) {
@@ -156,13 +157,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể xuất danh sách người dùng lúc này.',
+        fallbackMessage: context.tr('admin_chathxutda_dc5b37'),
       );
       debugPrint('Export users failed: ${errorInfo.message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể xuất danh sách người dùng lúc này.'),
+        SnackBar(
+          content: Text(context.tr('admin_chathxutda_dc5b37')),
         ),
       );
     }
@@ -172,8 +173,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     final reasonCtrl = TextEditingController();
     String title = '';
 
-    if (actionType == 'ban') title = 'Khóa tài khoản';
-    if (actionType == 'vip') title = 'Cấp PRO 30 ngày';
+    if (actionType == 'ban') title = context.tr('admin_khatikhon_aee1b3');
+    if (actionType == 'vip') title = context.tr('admin_cppro30ngy_ee8730');
 
     showDialog(
       context: context,
@@ -190,8 +191,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               TextField(
                 controller: reasonCtrl,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Lý do',
+                decoration: InputDecoration(
+                  labelText: context.tr('admin_ldo_bb946f'),
                   labelStyle: TextStyle(color: Colors.grey),
                   enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey)),
@@ -204,7 +205,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+            child: Text(context.tr('admin_hy_1e4050'), style: TextStyle(color: Colors.grey)),
           ),
           if (actionType == 'ban') ...[
             ElevatedButton(
@@ -213,7 +214,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 _executeAction('ban_perm', house['id'], reasonCtrl.text.trim());
                 Navigator.pop(ctx);
               },
-              child: const Text('Khóa Vĩnh Viễn',
+              child: Text(context.tr('admin_khavnhvin_1f9874'),
                   style: TextStyle(color: Colors.white)),
             ),
             ElevatedButton(
@@ -223,7 +224,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 Navigator.pop(ctx);
               },
               child:
-                  const Text('Mở Khóa', style: TextStyle(color: Colors.white)),
+                  Text(context.tr('admin_mkha_b8cf89'), style: TextStyle(color: Colors.white)),
             ),
           ],
           if (actionType == 'vip')
@@ -234,7 +235,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 Navigator.pop(ctx);
               },
               child:
-                  const Text('Cấp PRO', style: TextStyle(color: Colors.black)),
+                  Text(context.tr('admin_cppro_ece366'), style: TextStyle(color: Colors.black)),
             ),
         ],
       ),
@@ -254,7 +255,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       } else if (action == 'ban_perm') {
         updates['houses/$targetId/isBanned'] = true;
         updates['houses/$targetId/banReason'] =
-            reason.isEmpty ? "Vi phạm nghiêm trọng" : reason;
+            reason.isEmpty ? context.tr('admin_viphmnghim_40f8de') : reason;
       } else if (action == 'unban') {
         updates['houses/$targetId/isBanned'] = null;
         updates['houses/$targetId/banReason'] = null;
@@ -277,18 +278,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Thao tác thành công')));
+          .showSnackBar(SnackBar(content: Text(context.tr('admin_thaotcthnh_1f60b3'))));
       _loadData(refresh: true);
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể hoàn tất thao tác người dùng lúc này.',
+        fallbackMessage: context.tr('admin_chathhontt_8d99bd'),
       );
       debugPrint('Admin user action failed: ${errorInfo.message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể hoàn tất thao tác người dùng lúc này.'),
+        SnackBar(
+          content: Text(context.tr('admin_chathhontt_8d99bd')),
         ),
       );
     }
@@ -333,7 +334,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               child: Column(
                 children: [
                   AdminTopBar(
-                    title: 'Quản lý Nhà & Users',
+                    title: context.tr('admin_qunlnhuser_fa6518'),
                     user: widget.user,
                     isRefreshing: _isRefreshing,
                     lastUpdatedAt: _lastUpdatedAt,
@@ -352,7 +353,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         child: TextField(
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            hintText: 'Tìm theo ID hoặc Tên...',
+                            hintText: context.tr('admin_tmtheoidho_74d8f1'),
                             hintStyle: const TextStyle(color: Colors.grey),
                             prefixIcon:
                                 const Icon(Icons.search, color: Colors.grey),
@@ -383,16 +384,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            dropdownColor: const Color(0xFF10182A),
+                            dropdownColor: Color(0xFF10182A),
                             value: _filterStatus,
-                            style: const TextStyle(color: Colors.white),
-                            items: const [
+                            style: TextStyle(color: Colors.white),
+                            items: [
                               DropdownMenuItem(
-                                  value: 'all', child: Text('Tất cả')),
+                                  value: 'all', child: Text(context.tr('admin_ttc_d8586d'))),
                               DropdownMenuItem(
-                                  value: 'vip', child: Text('Chỉ PRO')),
+                                  value: 'vip', child: Text(context.tr('admin_chpro_b8ad3b'))),
                               DropdownMenuItem(
-                                  value: 'banned', child: Text('Đã Khóa')),
+                                  value: 'banned', child: Text(context.tr('admin_kha_f4517f'))),
                             ],
                             onChanged: (val) {
                               if (val != null) {
@@ -407,7 +408,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         onPressed: _exportCSV,
                         icon: const Icon(Icons.download_rounded,
                             color: Colors.white, size: 20),
-                        label: const Text('Xuất CSV',
+                        label: Text(context.tr('admin_xutcsv_47bfce'),
                             style: TextStyle(color: Colors.white)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1E88E5),
@@ -493,14 +494,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                             color: Colors.amber),
                                         onPressed: () =>
                                             _showActionDialog(h, 'vip'),
-                                        tooltip: 'Cấp PRO',
+                                        tooltip: context.tr('admin_cppro_ece366'),
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.block_rounded,
                                             color: Colors.red),
                                         onPressed: () =>
                                             _showActionDialog(h, 'ban'),
-                                        tooltip: 'Khóa / Mở Khóa',
+                                        tooltip: context.tr('admin_khamkha_6a6a2d'),
                                       ),
                                     ],
                                   ),

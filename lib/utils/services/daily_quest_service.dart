@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
+import '../app_error_mapper.dart';
 import 'admob_service.dart';
 import 'notification_service.dart';
 
@@ -71,14 +73,24 @@ class DailyQuestService {
   Future<void> recordProgress(String questId) async {
     if (_auth.currentUser == null) return;
 
-    final config = questsConfig[questId];
+    final normalizedQuestId = questId.trim();
+    if (normalizedQuestId.isEmpty) return;
+
+    final config = questsConfig[normalizedQuestId];
     if (config == null) return;
 
-    final title = config['title'] as String;
-    final result = await _adMob.recordDailyQuestProgress(questId);
-    final granted = (result?['granted'] as num?)?.toInt() ?? 0;
-    if (granted > 0) {
-      _onQuestCompleted(granted, title);
+    try {
+      final title = config['title'] as String;
+      final result = await _adMob.recordDailyQuestProgress(normalizedQuestId);
+      final granted = (result?['granted'] as num?)?.toInt() ?? 0;
+      if (granted > 0) {
+        _onQuestCompleted(granted, title);
+      }
+    } catch (e) {
+      debugPrint('Daily quest progress error: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể ghi tiến độ nhiệm vụ ngày.',
+      ).message}');
     }
   }
 

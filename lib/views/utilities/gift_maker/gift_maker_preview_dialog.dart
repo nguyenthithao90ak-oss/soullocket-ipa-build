@@ -254,7 +254,7 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
 
   Widget _buildBubbleStage() {
     return _stageShell(
-      title: 'Bóp bong bóng trước khi mở',
+      title: context.tr('util_bpbongbngt_8b7e15'),
       subtitle: 'Mở hết ${_bubbleStates.length} bong bóng để tiếp tục.',
       child: Wrap(
         spacing: 10,
@@ -296,8 +296,8 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
         final emojiSize = (artSize * 0.46).clamp(58.0, 74.0).toDouble();
         return _stageShell(
           title: widget.gift.giftType == GiftType.surpriseEgg
-              ? 'Chạm để trứng nở'
-              : 'Chạm để mở hộp quà',
+              ? context.tr('util_chmtrngn_eeffa0')
+              : context.tr('util_chmmhpqu_59f8b0'),
           subtitle: 'Còn $_remainingTaps lần chạm để mở quà.',
           child: Column(
             children: [
@@ -323,7 +323,7 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
               ),
               SLSpacing.h12,
               Text(
-                'Chạm liên tục để mở khóa món quà.',
+                context.tr('util_chmlintcmk_75b323'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w700,
@@ -344,8 +344,8 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
         final letterHeight = (letterWidth * 0.76).clamp(110.0, 130.0);
         final emojiSize = (letterHeight * 0.56).clamp(60.0, 74.0).toDouble();
         return _stageShell(
-          title: 'Bạn nhận được một bức thư',
-          subtitle: 'Nhấn vào phong thư để mở lời nhắn bên trong.',
+          title: context.tr('util_bnnhncmtbc_99e3b4'),
+          subtitle: context.tr('util_nhnvophong_6923c9'),
           child: Center(
             child: GestureDetector(
               onTap: () => setState(() => _stage = _GiftStage.letterOpen),
@@ -374,8 +374,8 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
 
   Widget _buildLetterOpenStage() {
     return _stageShell(
-      title: 'Lời nhắn đã mở',
-      subtitle: 'Đọc xong rồi bấm tiếp tục để khép lại món quà.',
+      title: context.tr('util_linhnm_9b1dfc'),
+      subtitle: context.tr('util_cxongribmt_b36fb3'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -404,7 +404,7 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
                 backgroundColor: const Color(0xFFD81B60),
               ),
               child: Text(
-                'Tiếp tục',
+                context.tr('util_tiptc_555f1f'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w900),
               ),
             ),
@@ -416,8 +416,8 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
 
   Widget _buildScratchStage() {
     return _stageShell(
-      title: 'Cào để lộ món quà',
-      subtitle: 'Mỗi lần chạm sẽ cào bớt lớp phủ phía trên.',
+      title: context.tr('util_colmnqu_1c010f'),
+      subtitle: context.tr('util_milnchmsco_4557e2'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -474,7 +474,7 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
                 backgroundColor: const Color(0xFFD81B60),
               ),
               child: Text(
-                _scratchProgress >= 0.75 ? 'Cào nốt' : 'Cào thêm',
+                _scratchProgress >= 0.75 ? context.tr('util_cont_01a0f4') : context.tr('util_cothm_1e2656'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w900),
               ),
             ),
@@ -491,8 +491,8 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
         final emojiSize =
             (constraints.maxWidth * 0.20).clamp(58.0, 72.0).toDouble();
         return _stageShell(
-          title: 'Món quà dành cho bạn',
-          subtitle: 'Quà đã được mở xong. Bạn có thể đóng lại bất cứ lúc nào.',
+          title: context.tr('util_mnqudnhcho_834cef'),
+          subtitle: context.tr('util_qucmxongbn_7edf8c'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -589,7 +589,7 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
                     backgroundColor: const Color(0xFFD81B60),
                   ),
                   child: Text(
-                    'Đóng',
+                    context.tr('util_ng_f63d1e'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   ),
                 ),

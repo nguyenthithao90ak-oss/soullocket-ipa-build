@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 class HouseSettings {
   final String houseName;
   final bool homeShowHouseName;
@@ -149,8 +150,8 @@ class HouseSettings {
       homeShowTimer: map.containsKey('homeShowTimer')
           ? (map['homeShowTimer'] == true || map['homeShowTimer'] == 'true')
           : false,
-      nameU1: (map['nameU1'] ?? 'Bạn Nam').toString(),
-      nameU2: (map['nameU2'] ?? 'Bạn Nữ').toString(),
+      nameU1: (map['nameU1'] ?? L10nService().translate('core_partner_male')).toString(),
+      nameU2: (map['nameU2'] ?? L10nService().translate('core_partner_female')).toString(),
       avtUser1: (map['avtUser1'] ?? '').toString(),
       avtUser2: (map['avtUser2'] ?? '').toString(),
       houseAvatar: (map['houseAvatar'] ?? '').toString(),

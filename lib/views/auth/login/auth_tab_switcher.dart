@@ -18,8 +18,6 @@ class AuthTabSwitcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = L10nService();
-    final isVietnamese = l10n.locale.languageCode == 'vi';
-
     return LayoutBuilder(
       builder: (context, rootConstraints) {
         final width = rootConstraints.maxWidth;
@@ -80,18 +78,14 @@ class AuthTabSwitcher extends StatelessWidget {
                   Row(
                     children: [
                       _AuthTabButton(
-                        label: isVietnamese
-                            ? 'VÀO NHÀ'
-                            : l10n.translate('login').toUpperCase(),
+                        label: l10n.translate('login').toUpperCase(),
                         active: isLoginTab,
                         onTap: onSelectLogin,
                         compact: compact,
                         dense: dense,
                       ),
                       _AuthTabButton(
-                        label: isVietnamese
-                            ? 'TẠO NHÀ MỚI'
-                            : l10n.translate('signup').toUpperCase(),
+                        label: l10n.translate('signup').toUpperCase(),
                         active: !isLoginTab,
                         onTap: onSelectRegister,
                         compact: compact,

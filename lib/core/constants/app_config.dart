@@ -142,9 +142,9 @@ class AppConfig {
     defaultValue: true,
   );
 
-  /// Tạm ẩn IAP trên iOS trong khi chờ Apple duyệt In-App Purchases.
-  /// Android vẫn hiển thị bình thường.
-  static bool get isPurchaseEnabled => showPurchaseUi && !Platform.isIOS;
+  /// Tạm thời tắt luồng mua/đổi quyền lợi trên iOS để phát hành bản free-only.
+  static bool get isPurchaseEnabled =>
+      showPurchaseUi && !Platform.isIOS && !Platform.isMacOS;
 
   /// Số ngày dùng thử VIP khi tạo nhà mới
   static const int newHouseTrialDays = 3;

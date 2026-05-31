@@ -69,7 +69,7 @@ class WidgetActionService {
   }
 
   bool _shouldSkipUri(Uri? uri) {
-    final key = uri?.toString();
+    final key = uri?.toString().trim();
     if (key == null || key.isEmpty) return false;
 
     final now = DateTime.now();

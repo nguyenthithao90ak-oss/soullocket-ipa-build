@@ -182,7 +182,7 @@ class _CommunityHeaderActionStrip extends StatelessWidget {
               headerTile(
                 CommunityHeaderActionTile(
                   icon: Icons.account_circle_outlined,
-                  label: _ct('Hồ sơ', 'Profile'),
+                  label: _ct(context.tr('home_hs_be0945'), 'Profile'),
                   iconColor: const Color(0xFFFA4E86),
                   bgColor: const Color(0xFFFF7EA6),
                   onTap: () async {
@@ -204,7 +204,7 @@ class _CommunityHeaderActionStrip extends StatelessWidget {
               headerTile(
                 CommunityHeaderActionTile(
                   icon: Icons.leaderboard_rounded,
-                  label: _ct('Xếp hạng', 'Ranking'),
+                  label: _ct(context.tr('home_xphng_0bf55c'), 'Ranking'),
                   iconColor: const Color(0xFFF2A800),
                   bgColor: const Color(0xFFFFC53D),
                   onTap: () => Navigator.push(
@@ -225,7 +225,7 @@ class _CommunityHeaderActionStrip extends StatelessWidget {
                       children: [
                         CommunityHeaderActionTile(
                           icon: Icons.notifications_active_outlined,
-                          label: _ct('Thông báo', 'Alerts'),
+                          label: _ct(context.tr('home_thngbo_fa0565'), 'Alerts'),
                           iconColor: const Color(0xFFF0518D),
                           bgColor: const Color(0xFFFF82B2),
                           onTap: () => Navigator.push(
@@ -272,7 +272,7 @@ class _CommunityHeaderActionStrip extends StatelessWidget {
               headerTile(
                 CommunityHeaderActionTile(
                   icon: Icons.forum_outlined,
-                  label: _ct('Tin nhắn', 'Chat'),
+                  label: _ct(context.tr('home_tinnhn_beeb0d'), 'Chat'),
                   iconColor: const Color(0xFF4C97F8),
                   bgColor: const Color(0xFF84C6FF),
                   onTap: () => Navigator.push(
@@ -286,7 +286,7 @@ class _CommunityHeaderActionStrip extends StatelessWidget {
               headerTile(
                 CommunityHeaderActionTile(
                   icon: Icons.people_alt_outlined,
-                  label: _ct('Bạn bè', 'Friends'),
+                  label: _ct(context.tr('home_bnb_411da0'), 'Friends'),
                   iconColor: const Color(0xFF66B76D),
                   bgColor: const Color(0xFFA4DB9F),
                   onTap: () => Navigator.push(
@@ -300,7 +300,7 @@ class _CommunityHeaderActionStrip extends StatelessWidget {
               headerTile(
                 CommunityHeaderActionTile(
                   icon: Icons.settings_rounded,
-                  label: _ct('Cài đặt', 'Settings'),
+                  label: _ct(context.tr('home_cit_1a6910'), 'Settings'),
                   iconColor: const Color(0xFF7A57D1),
                   bgColor: const Color(0xFFB99AF4),
                   onTap: () async {

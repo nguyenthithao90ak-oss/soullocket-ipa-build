@@ -8,6 +8,7 @@ import 'dart:ui' as ui;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../core/sl_theme.dart';
@@ -310,7 +311,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _localPendingStrokeIds.remove(stroke.id));
-      _showSnack('Chưa đồng bộ được nét vẽ này.');
+      _showSnack(context.tr('util_changbcntv_14c0f8'));
     }
   }
 
@@ -354,13 +355,16 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   Future<Uint8List> _captureCanvasPng() async {
+    final errNoCanvas = context.tr('util_khngtmthyv_03963c');
+    final errExportFailed = context.tr('util_khngxutcnh_baddd9');
+
     final pixelRatio =
         math.min(MediaQuery.devicePixelRatioOf(context) * 1.8, 3.0);
     await Future<void>.delayed(const Duration(milliseconds: 20));
     final boundary =
         _canvasKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) {
-      throw StateError('Không tìm thấy vùng vẽ.');
+      throw StateError(errNoCanvas);
     }
 
     final image = await boundary.toImage(pixelRatio: pixelRatio);
@@ -368,24 +372,28 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     image.dispose();
 
     if (byteData == null) {
-      throw StateError('Không xuất được ảnh từ khung vẽ.');
+      throw StateError(errExportFailed);
     }
     return byteData.buffer.asUint8List();
   }
 
   Future<Uint8List> _captureStickerPng() async {
+    final errNoCanvas = context.tr('util_khngtmthyv_03963c');
+    final errNoStrokes = context.tr('util_chacntvcts_959e53');
+    final errStickerFailed = context.tr('util_khngxutcst_169960');
+
     final canvasSize = _canvasKey.currentContext?.size;
     if (canvasSize == null || canvasSize.width <= 0 || canvasSize.height <= 0) {
-      throw StateError('Không tìm thấy vùng vẽ.');
+      throw StateError(errNoCanvas);
     }
     final strokes = _allVisibleStrokes;
     if (strokes.isEmpty) {
-      throw StateError('Chưa có nét vẽ để cắt sticker.');
+      throw StateError(errNoStrokes);
     }
 
     final bounds = _strokeBounds(strokes, canvasSize);
     if (bounds == null || bounds.isEmpty) {
-      throw StateError('Chưa có nét vẽ để cắt sticker.');
+      throw StateError(errNoStrokes);
     }
 
     final maxStrokeWidth = strokes.fold<double>(
@@ -418,7 +426,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     image.dispose();
     if (byteData == null) {
-      throw StateError('Không xuất được sticker.');
+      throw StateError(errStickerFailed);
     }
     return byteData.buffer.asUint8List();
   }
@@ -444,6 +452,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   Future<void> _selectBackground(String id) async {
+    final msgChangeFail = context.tr('util_changbcnnm_8867a9');
     final uid = _auth.currentUser?.uid ?? '';
     setState(() => _backgroundId = id);
     if (uid.isEmpty) return;
@@ -454,7 +463,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         background: DrawingStudioBackground(id: id),
       );
     } catch (_) {
-      _showSnack('Chưa đồng bộ được nền mới.');
+      _showSnack(msgChangeFail);
     }
   }
 
@@ -483,7 +492,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Chọn nền vẽ',
+                  context.tr('util_chnnnv_492407'),
                   style: SLTheme.quicksand(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -497,16 +506,16 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   crossAxisSpacing: 10,
                   shrinkWrap: true,
                   childAspectRatio: 1.55,
-                  children: const [
-                    _BackgroundChoice(id: 'paper_grid', label: 'Giấy caro'),
-                    _BackgroundChoice(id: 'blank_paper', label: 'Giấy trắng'),
-                    _BackgroundChoice(id: 'hearts', label: 'Tim hồng'),
-                    _BackgroundChoice(id: 'night_stars', label: 'Đêm sao'),
-                    _BackgroundChoice(id: 'blackboard', label: 'Bảng phấn'),
-                    _BackgroundChoice(id: 'notebook', label: 'Vở kẻ dòng'),
-                    _BackgroundChoice(id: 'photo_frame', label: 'Khung ảnh'),
-                    _BackgroundChoice(id: 'pastel_dots', label: 'Pastel dots'),
-                    _BackgroundChoice(id: 'sticker_sheet', label: 'Sticker'),
+                  children: [
+                    _BackgroundChoice(id: 'paper_grid', label: context.tr('util_giycaro_021a05')),
+                    _BackgroundChoice(id: 'blank_paper', label: context.tr('util_giytrng_049d6d')),
+                    _BackgroundChoice(id: 'hearts', label: context.tr('util_timhng_60d58d')),
+                    _BackgroundChoice(id: 'night_stars', label: context.tr('util_msao_38b356')),
+                    _BackgroundChoice(id: 'blackboard', label: context.tr('util_bngphn_6961e0')),
+                    _BackgroundChoice(id: 'notebook', label: context.tr('util_vkdng_be72f0')),
+                    _BackgroundChoice(id: 'photo_frame', label: context.tr('util_khungnh_b0bdfe')),
+                    const _BackgroundChoice(id: 'pastel_dots', label: 'Pastel dots'),
+                    const _BackgroundChoice(id: 'sticker_sheet', label: 'Sticker'),
                   ],
                 ),
               ],
@@ -539,6 +548,9 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return;
     }
 
+    final successMsg = context.tr('util_luvokhovtr_c1e919');
+    final fallbackMsg = context.tr('util_vuilngthli_abc123');
+
     setState(() => _isSaving = true);
     try {
       final data = await _captureCanvasPng();
@@ -548,10 +560,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         mode: _mode,
       );
       await _addSavedGalleryItem(saved);
-      _showSnack('Đã lưu vào Kho Vẽ trên máy.');
+      _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        'Không thể lưu vào Kho Vẽ: ${_errorText(error, fallback: 'Vui lòng thử lại.')}',
+        L10nService().format('util_drawing_save_gallery_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
     } finally {
       if (mounted) {
@@ -565,6 +577,9 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return;
     }
 
+    final successMsg = context.tr('util_ctvinvlust_ce2f9d');
+    final fallbackMsg = context.tr('util_vuilngthli_abc123');
+
     setState(() => _isSavingSticker = true);
     try {
       final data = await _captureStickerPng();
@@ -574,10 +589,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         mode: 'sticker',
       );
       await _addSavedGalleryItem(saved);
-      _showSnack('Đã cắt viền và lưu sticker vào Kho Vẽ.');
+      _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        'Không thể tạo sticker: ${_errorText(error, fallback: 'Vui lòng thử lại.')}',
+        L10nService().format('util_drawing_create_sticker_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
     } finally {
       if (mounted) {
@@ -591,6 +606,9 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return;
     }
 
+    final successMsg = context.tr('util_lustickerv_944eed');
+    final fallbackMsg = context.tr('util_check_photo_permission_abc123');
+
     setState(() => _isSavingToDevice = true);
     try {
       final data = await _captureStickerPng();
@@ -598,10 +616,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         data,
         fileName: 'soullocket_sticker_${DateTime.now().millisecondsSinceEpoch}',
       );
-      _showSnack('Đã lưu sticker về máy.');
+      _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        'Không thể lưu sticker: ${_errorText(error, fallback: 'Vui lòng kiểm tra quyền lưu ảnh.')}',
+        L10nService().format('util_drawing_save_sticker_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
     } finally {
       if (mounted) {
@@ -615,14 +633,17 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return;
     }
 
+    final successMsg = context.tr('util_lunhvmy_2a4557');
+    final fallbackMsg = context.tr('util_check_photo_permission_abc123');
+
     setState(() => _isSavingToDevice = true);
     try {
       final data = await _captureCanvasPng();
       await _drawingService.saveBytesToDevice(data);
-      _showSnack('Đã lưu ảnh về máy.');
+      _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        'Không thể lưu về máy: ${_errorText(error, fallback: 'Vui lòng kiểm tra quyền lưu ảnh.')}',
+        L10nService().format('util_drawing_save_device_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
     } finally {
       if (mounted) {
@@ -636,13 +657,16 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return;
     }
 
+    final successMsg = context.tr('util_lunhtkhovv_cc546c');
+    final fallbackMsg = context.tr('util_vuilngthli_abc123');
+
     setState(() => _activeGalleryActionId = item.id);
     try {
       await _drawingService.exportGalleryItemToDevice(item);
-      _showSnack('Đã lưu ảnh từ Kho Vẽ về máy.');
+      _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        'Không thể lưu ảnh: ${_errorText(error, fallback: 'Vui lòng thử lại sau.')}',
+        L10nService().format('util_drawing_save_image_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
     } finally {
       if (mounted) {
@@ -656,6 +680,9 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return false;
     }
 
+    final successMsg = context.tr('util_xanhkhikho_4a5be7');
+    final fallbackMsg = context.tr('util_vuilngthli_abc123');
+
     setState(() => _activeGalleryActionId = item.id);
     try {
       await _drawingService.deleteGalleryItem(widget.houseId, item);
@@ -665,11 +692,11 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       setState(() {
         _gallery = _gallery.where((entry) => entry.id != item.id).toList();
       });
-      _showSnack('Đã xóa ảnh khỏi Kho Vẽ.');
+      _showSnack(successMsg);
       return true;
     } catch (error) {
       _showSnack(
-        'Không thể xóa ảnh: ${_errorText(error, fallback: 'Vui lòng thử lại sau.')}',
+        L10nService().format('util_drawing_delete_image_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
       return false;
     } finally {
@@ -768,7 +795,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: const Color(0xFFD81B60),
         title: Text(
-          'Xưởng Vẽ',
+          context.tr('util_xngv_5f1f18'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             color: const Color(0xFFD81B60),
@@ -834,7 +861,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tranh ở đây chỉ lưu trên máy của bạn. Không đẩy lên store, cloud hay dữ liệu cộng đồng.\nNhấn 2 lần vào vùng vẽ để khóa hoặc mở khóa cuộn màn hình.',
+            context.tr('util_drawing_local_only_hint'),
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -847,7 +874,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
             children: [
               Expanded(
                 child: _buildModeChip(
-                  label: 'Vẽ Khung',
+                  label: context.tr('util_vkhung_cc3a36'),
                   icon: Icons.crop_square_rounded,
                   value: 'frame',
                 ),
@@ -855,7 +882,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
               SLSpacing.w8,
               Expanded(
                 child: _buildModeChip(
-                  label: 'Vẽ Tranh',
+                  label: context.tr('util_vtranh_d96af9'),
                   icon: Icons.brush_rounded,
                   value: 'pic',
                 ),
@@ -864,7 +891,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           ),
           SLSpacing.h16,
           Text(
-            'Tỉ lệ khung vẽ',
+            context.tr('util_tlkhungv_873220'),
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w900,
@@ -879,7 +906,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           ),
           SLSpacing.h16,
           Text(
-            'Bảng màu',
+            context.tr('util_bngmu_5abdcd'),
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w900,
@@ -896,7 +923,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           Row(
             children: [
               Text(
-                'Độ dày nét',
+                context.tr('util_dynt_e5cd93'),
                 style: SLTheme.quicksand(
                   fontSize: 13,
                   fontWeight: FontWeight.w900,
@@ -974,8 +1001,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                       });
                       _showSnack(
                         _isCanvasLocked
-                            ? 'Đã khóa cuộn để bạn vẽ thoải mái.'
-                            : 'Đã mở khóa, bạn có thể cuộn màn hình bình thường.',
+                            ? context.tr('util_khacunbnvt_fa926d')
+                            : context.tr('util_mkhabncthc_151b79'),
                       );
                     },
                     onPanStart: _startStroke,
@@ -1005,7 +1032,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _strokes.isEmpty ? null : _undoStroke,
                       icon: const Icon(Icons.undo_rounded),
-                      label: const Text('Hoàn tác'),
+                      label: Text(context.tr('util_hontc_96ce27')),
                       style: _secondaryButtonStyle(),
                     ),
                   ),
@@ -1014,7 +1041,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _showBackgroundPicker,
                       icon: const Icon(Icons.wallpaper_rounded),
-                      label: const Text('Đổi nền'),
+                      label: Text(context.tr('util_inn_2c444b')),
                       style: _secondaryButtonStyle(),
                     ),
                   ),
@@ -1023,7 +1050,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _hasAnyStroke ? _clearDrawing : null,
                       icon: const Icon(Icons.restart_alt_rounded),
-                      label: const Text('Xóa nét vẽ'),
+                      label: Text(context.tr('util_xantv_68c9be')),
                       style: _secondaryButtonStyle(),
                     ),
                   ),
@@ -1046,7 +1073,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                               ),
                             )
                           : const Icon(Icons.collections_bookmark_rounded),
-                      label: Text(_isSaving ? 'Đang lưu...' : 'Lưu vào Kho Vẽ'),
+                      label: Text(_isSaving ? context.tr('util_anglu_4d30b6') : context.tr('util_luvokhov_68fefe')),
                       style: _primaryButtonStyle(),
                     ),
                   ),
@@ -1068,10 +1095,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                           : const Icon(Icons.download_rounded),
                       label: Text(
                         kIsWeb
-                            ? 'Lưu máy chưa hỗ trợ'
+                            ? context.tr('util_lumychahtr_7b4bcf')
                             : _isSavingToDevice
-                                ? 'Đang lưu...'
-                                : 'Lưu về máy',
+                                ? context.tr('util_anglu_4d30b6')
+                                : context.tr('util_luvmy_4ac0a6'),
                       ),
                       style: _secondaryFilledButtonStyle(),
                     ),
@@ -1097,7 +1124,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                             )
                           : const Icon(Icons.auto_awesome_rounded),
                       label: Text(
-                        _isSavingSticker ? 'Đang cắt...' : 'Cắt viền sticker',
+                        _isSavingSticker ? context.tr('util_angct_b959fb') : context.tr('util_ctvinstick_30f8c2'),
                       ),
                       style: _primaryButtonStyle(),
                     ),
@@ -1109,7 +1136,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                           ? null
                           : _saveStickerToDevice,
                       icon: const Icon(Icons.cut_rounded),
-                      label: const Text('Lưu sticker'),
+                      label: Text(context.tr('util_lusticker_ddf743')),
                       style: _secondaryButtonStyle(),
                     ),
                   ),
@@ -1125,10 +1152,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   Widget _buildCanvasStatusBar() {
     final partnerDrawing = _presence.any((item) => item.isDrawing);
     final statusText = partnerDrawing
-        ? '${_presence.firstWhere((item) => item.isDrawing).name.isEmpty ? 'Người kia' : _presence.firstWhere((item) => item.isDrawing).name} đang vẽ...'
+        ? L10nService().format('util_drawing_partner_drawing', {'name': _presence.firstWhere((item) => item.isDrawing).name.isEmpty ? context.tr('util_ngikia_5cc882') : _presence.firstWhere((item) => item.isDrawing).name})
         : _isSyncOnline
-            ? 'Đồng bộ 2 người đang bật • ${_presence.length} người kia online'
-            : 'Chạm 2 lần vào khung để khóa cuộn khi cần.';
+            ? L10nService().format('util_drawing_sync_online_count', {'count': _presence.length})
+            : context.tr('util_chm2lnvokh_5f9664');
 
     return Container(
       width: double.infinity,
@@ -1154,7 +1181,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           SLSpacing.w8,
           Expanded(
             child: Text(
-              _isCanvasLocked ? 'Khung vẽ đang khóa cuộn. $statusText' : statusText,
+              _isCanvasLocked ? L10nService().format('util_drawing_canvas_locked_status', {'status': statusText}) : statusText,
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
@@ -1230,7 +1257,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Kho Xưởng Vẽ',
+                      context.tr('util_khoxngv_6fbea4'),
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
@@ -1238,7 +1265,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                       ),
                     ),
                     Text(
-                      'Lưu riêng trên máy, chạm để xem toàn màn hình',
+                      context.tr('util_luringtrnm_3707e8'),
                       style: SLTheme.quicksand(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
@@ -1275,7 +1302,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                 border: Border.all(color: const Color(0xFFFFDDE9)),
               ),
               child: Text(
-                'Chưa có ảnh nào. Vẽ xong rồi bấm "Lưu vào Kho Vẽ" hoặc "Lưu về máy".',
+                context.tr('util_drawing_empty_gallery_hint'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 12,
@@ -1407,7 +1434,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         ? Icons.history_toggle_off_rounded
         : Icons.phone_iphone_rounded;
     final bg = isLegacy ? const Color(0xFFB88725) : const Color(0xFF2E7D32);
-    final label = isLegacy ? 'Ảnh cũ' : 'Máy';
+    final label = isLegacy ? context.tr('util_nhc_3d3e02') : context.tr('util_my_211d16');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
@@ -1684,7 +1711,7 @@ class _DrawingStudioPreviewScreenState
         return;
       }
       _showSnack(
-        'Không thể lưu về máy: ${_errorText(error, fallback: 'Vui lòng thử lại sau.')}',
+        L10nService().format('util_drawing_save_device_failed', {'error': _errorText(error, fallback: context.tr('util_vuilngthli_abc123'))}),
       );
     } finally {
       if (mounted) {
@@ -1712,7 +1739,7 @@ class _DrawingStudioPreviewScreenState
         return;
       }
       _showSnack(
-        'Không thể xóa ảnh: ${_errorText(error, fallback: 'Vui lòng thử lại sau.')}',
+        L10nService().format('util_drawing_delete_image_failed', {'error': _errorText(error, fallback: context.tr('util_vuilngthli_abc123'))}),
       );
     } finally {
       if (mounted) {
@@ -1734,7 +1761,7 @@ class _DrawingStudioPreviewScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Xem ảnh',
+              context.tr('util_xemnh_e34862'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
@@ -1798,7 +1825,7 @@ class _DrawingStudioPreviewScreenState
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Chụm để phóng to và kéo để xem chi tiết.',
+                context.tr('util_chmphngtov_ab9578'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 12.5,
@@ -1836,8 +1863,8 @@ class _DrawingStudioPreviewScreenState
                       : const Icon(Icons.download_rounded),
                   label: Text(
                     widget.canSaveToDevice
-                        ? (_isSaving ? 'Đang lưu...' : 'Lưu về máy')
-                        : 'Chỉ hỗ trợ trên máy',
+                        ? (_isSaving ? context.tr('util_anglu_4d30b6') : context.tr('util_luvmy_4ac0a6'))
+                        : context.tr('util_chhtrtrnmy_a20629'),
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF8A5B76),
@@ -1863,7 +1890,7 @@ class _DrawingStudioPreviewScreenState
                           ),
                         )
                       : const Icon(Icons.delete_outline_rounded),
-                  label: Text(_isDeleting ? 'Đang xóa...' : 'Xóa khỏi Kho Vẽ'),
+                  label: Text(_isDeleting ? context.tr('util_angxa_c912a7') : context.tr('util_xakhikhov_b3e08d')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD81B60),
                     disabledBackgroundColor: const Color(0xFFE9A6C0),

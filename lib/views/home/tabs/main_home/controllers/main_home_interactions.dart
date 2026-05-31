@@ -168,7 +168,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
   }
 
   void _showReactionThrowLimitSnack() {
-    const message = 'Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.';
+    final message = L10nService().translate('home_bnthaotchi_00f319');
     _showLatestSnackBar(
       message,
       duration: const Duration(seconds: 2),
@@ -210,7 +210,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
       }).then((_) {
         HapticFeedback.lightImpact();
       }).catchError((_) {
-        _showLatestSnackBar('Không gửi được icon, kiểm tra mạng rồi thử lại.');
+        _showLatestSnackBar(L10nService().translate('home_khnggicico_202368'));
       }),
     );
 
@@ -250,7 +250,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               ? '$partnerName đang ở nơi khá nóng, lời nhắc đáng yêu này hiện ngay rồi.'
               : '$partnerName chưa mở nhà, lời nhắc uống nước sẽ đợi sẵn để người ấy mở ra là thấy.';
           message = customMessage ??
-              'Trời bên bạn nóng đó nha, uống thêm nước rồi nghỉ một chút cho mình yên tâm nhé.';
+              L10nService().translate('home_tribnbnnng_6be553');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy lời dặn này ngay luôn.'
               : '$partnerName chưa mở app, lời nhắc uống nước sẽ chờ khi người ấy quay lại.';
@@ -261,7 +261,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               ? '$partnerName đang ở nơi mưa hoặc lạnh, lời nhắc giữ ấm đã tới ngay rồi.'
               : '$partnerName chưa mở nhà, lời nhắc giữ ấm sẽ đợi sẵn để người ấy mở ra là thấy.';
           message = customMessage ??
-              'Bên bạn có vẻ lạnh đó nha, nhớ mặc ấm và giữ mình thật ấm áp nhé.';
+              L10nService().translate('home_bnbncvlnhn_a92b57');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy lời dặn này ngay luôn.'
               : '$partnerName chưa mở app, lời nhắc giữ ấm sẽ chờ khi người ấy quay lại.';
@@ -271,7 +271,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, nụ hôn này bay tới ngay luôn.'
               : '$partnerName chưa mở nhà, nụ hôn sẽ nằm chờ xinh xắn khi người ấy quay lại.';
-          message = customMessage ?? 'Chụt một cái thật ngoan nè 💋';
+          message = customMessage ?? L10nService().translate('home_chtmtcitht_f7bbad');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, nụ hôn sẽ chờ sẵn khi người ấy quay lại.';
@@ -282,7 +282,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               ? '$partnerName đang online, cái ôm mềm này tới ngay rồi.'
               : '$partnerName chưa mở nhà, cái ôm sẽ đợi sẵn để người ấy mở ra là thấy.';
           message =
-              customMessage ?? 'Ôm bạn một cái thật chặt và thật êm nè 🫂';
+              customMessage ?? L10nService().translate('home_mbnmtcitht_a0ec5e');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, cái ôm sẽ chờ sẵn khi người ấy quay lại.';
@@ -293,7 +293,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               ? '$partnerName đang online, lời dỗi yêu này hiện lên ngay rồi.'
               : '$partnerName chưa mở nhà, lời dỗi yêu sẽ nằm chờ để người ấy dỗ bạn sau.';
           message = customMessage ??
-              'Hừm, đang dỗi xíu thôi nên nhớ qua ôm mình nhé 😡';
+              L10nService().translate('home_hmangdixut_2726ac');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, lời dỗi hờn sẽ chờ sẵn khi người ấy quay lại.';
@@ -304,7 +304,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               ? '$partnerName đang online, cơn tức đỏ rực này hiện lên ngay rồi.'
               : '$partnerName chưa mở nhà, cơn tức đỏ rực này sẽ chờ sẵn để người ấy dỗ bạn sau.';
           message =
-              customMessage ?? 'Mình đang tức thật đó nha, qua dỗ liền đi 😡';
+              customMessage ?? L10nService().translate('home_mnhangtcth_dfdd25');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, cơn tức này sẽ chờ sẵn khi người ấy quay lại.';
@@ -315,7 +315,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               ? '$partnerName đang online, cú chọc yêu này bật ra ngay rồi.'
               : '$partnerName chưa mở nhà, cú trêu nghịch này sẽ nằm chờ khi người ấy quay lại.';
           message = customMessage ??
-              'Mình vừa chọc bạn một cái nhẹ xíu thôi đó, cười lên nha 🤡';
+              L10nService().translate('home_mnhvachcbn_f70061');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, cú trêu này sẽ chờ sẵn khi người ấy quay lại.';
@@ -326,7 +326,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               ? '$partnerName đang online, tín hiệu mít ướt này hiện lên ngay rồi.'
               : '$partnerName chưa mở nhà, tín hiệu cần dỗ dành sẽ chờ khi người ấy quay lại.';
           message = customMessage ??
-              'Hôm nay mình hơi tủi một chút, nếu rảnh thì dỗ mình nha 😭';
+              L10nService().translate('home_hmnaymnhhi_105e19');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, tín hiệu mít ướt sẽ chờ sẵn khi người ấy quay lại.';
@@ -337,7 +337,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               ? '$partnerName đang online, cú trêu này bật ra ngay rồi.'
               : '$partnerName chưa mở nhà, cú trêu nghịch này sẽ chờ sẵn khi người ấy quay lại.';
           message =
-              customMessage ?? 'Ném nhẹ một cục troll cho bạn bật cười nè 💩';
+              customMessage ?? L10nService().translate('home_nmnhmtcctr_3e8a1f');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, 💩 sẽ chờ sẵn khi người ấy quay lại.';
@@ -349,7 +349,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               ? '$partnerName đang online, nỗi nhớ này chạm tới ngay luôn.'
               : '$partnerName chưa mở nhà, nỗi nhớ sẽ đợi sẵn để người ấy mở ra là nhận được.';
           message = customMessage ??
-              'Mình nhớ bạn nhiều lắm đó, mở ra rồi ôm lấy nỗi nhớ này giúp mình nhé.';
+              L10nService().translate('home_mnhnhbnnhi_88a6c7');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, nỗi nhớ sẽ chờ sẵn khi người ấy quay lại.';
@@ -413,7 +413,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
       );
       HapticFeedback.mediumImpact();
     } catch (e) {
-      _showLatestSnackBar('Không thể gửi tín hiệu lúc này. Vui lòng thử lại.');
+      _showLatestSnackBar(L10nService().translate('home_khngthgitn_55060e'));
     }
   }
 }

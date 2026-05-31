@@ -276,14 +276,16 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                               onTap: _openLeaderboardSheet,
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _MenuMiniButton(
-                              icon: Icons.block_rounded,
-                              label: 'No Ads',
-                              onTap: _openPremiumStore,
+                          if (AppConfig.isPurchaseEnabled) ...<Widget>[
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _MenuMiniButton(
+                                icon: Icons.block_rounded,
+                                label: 'No Ads',
+                                onTap: _openPremiumStore,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),

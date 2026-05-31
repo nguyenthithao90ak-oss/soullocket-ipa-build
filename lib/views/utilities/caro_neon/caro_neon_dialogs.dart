@@ -91,8 +91,8 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                           children: [
                             Text(
                               widget.isBotMode
-                                  ? 'Bắt đầu với Bot Neon'
-                                  : 'Mở bàn riêng',
+                                  ? context.tr('util_btuvibotne_db98cc')
+                                  : context.tr('util_mbnring_58f533'),
                               style: SLTheme.quicksand(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
@@ -102,8 +102,8 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                             const SizedBox(height: 6),
                             Text(
                               widget.isBotMode
-                                  ? 'Chọn kiểu bàn và cách bot sẽ chơi.'
-                                  : 'Chọn kiểu bàn rồi vào ngay không gian riêng.',
+                                  ? context.tr('util_chnkiubnvc_c5cf34')
+                                  : context.tr('util_chnkiubnri_f50454'),
                               style: SLTheme.quicksand(
                                 fontSize: 12.8,
                                 fontWeight: FontWeight.w600,
@@ -125,7 +125,7 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'Chọn kiểu bàn',
+                    context.tr('util_chnkiubn_6c61c5'),
                     style: SLTheme.quicksand(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w800,
@@ -137,8 +137,8 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                     children: [
                       Expanded(
                         child: _StartChoiceCard(
-                          label: '3 ô thắng',
-                          caption: 'Nhanh, gọn, dễ vào trận',
+                          label: context.tr('util_3thng_080f34'),
+                          caption: context.tr('util_nhanhgndvo_ba02e0'),
                           icon: Icons.grid_3x3_rounded,
                           accent: const Color(0xFF4EDBFF),
                           selected: _winLength == 3,
@@ -148,8 +148,8 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: _StartChoiceCard(
-                          label: '5 ô thắng',
-                          caption: 'Rộng hơn, đánh đã mắt hơn',
+                          label: context.tr('util_5thng_5e66bf'),
+                          caption: context.tr('util_rnghnnhmth_d19d25'),
                           icon: Icons.grid_4x4_rounded,
                           accent: const Color(0xFFFFB86F),
                           selected: _winLength == 5,
@@ -161,7 +161,7 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                   if (widget.isBotMode) ...[
                     const SizedBox(height: 18),
                     Text(
-                      'Chọn kiểu bot',
+                      context.tr('util_chnkiubot_8f6aca'),
                       style: SLTheme.quicksand(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w800,
@@ -203,8 +203,8 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                     ),
                     child: Text(
                       widget.isBotMode
-                          ? 'Bàn 3 ô của bot đã được giảm độ hoàn hảo nhẹ để bớt gắt hơn.'
-                          : 'Sau khi chọn xong, app sẽ mở bàn riêng ngay.',
+                          ? context.tr('util_bn3cabotcg_346050')
+                          : context.tr('util_saukhichnx_967297'),
                       style: SLTheme.quicksand(
                         fontSize: 12.2,
                         fontWeight: FontWeight.w600,
@@ -228,7 +228,7 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                             ),
                           ),
                           child: Text(
-                            'Để sau',
+                            context.tr('util_sau_8a3721'),
                             style: SLTheme.quicksand(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -257,7 +257,7 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                           ),
                           icon: const Icon(Icons.play_arrow_rounded, size: 20),
                           label: Text(
-                            'Vào chơi',
+                            context.tr('util_vochi_e0d812'),
                             style: SLTheme.quicksand(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w900,

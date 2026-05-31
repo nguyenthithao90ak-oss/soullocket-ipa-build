@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../../../services/device_manager_service.dart';
+import '../../../../../utils/services/l10n_service.dart';
 
 class DeviceTrustGuardState {
   const DeviceTrustGuardState({
@@ -18,13 +19,12 @@ class DeviceTrustGuardState {
         pendingMessage = '',
         autoApproveAtMs = 0;
 
-  const DeviceTrustGuardState.unavailable({
-    String message =
-        'Không thể xác minh độ tin cậy của thiết bị. Hãy kiểm tra mạng rồi thử lại.',
+  DeviceTrustGuardState.unavailable({
+    String? message,
   })  : isTrusted = false,
         isPendingDevice = false,
         isTrustUnavailable = true,
-        pendingMessage = message,
+        pendingMessage = message ?? L10nService().translate('home_khngthxcmi_2b9511'),
         autoApproveAtMs = 0;
 
   final bool isTrusted;
@@ -74,9 +74,8 @@ class DeviceTrustGuard {
     final unlockLabel = formatPendingUnlockDate(unlockAtMs);
     final waitMessage = unlockLabel.isNotEmpty
         ? 'Hãy duyệt trên thiết bị tin cậy hoặc đợi đến $unlockLabel.'
-        : 'Hãy duyệt trên thiết bị tin cậy. Thời điểm tự được tin cậy sẽ hiển thị ngay khi hệ thống trả về.';
-    return 'Thiết bị này đang chờ duyệt nên tạm thời chưa thể chỉnh sửa Cài đặt. '
-        '$waitMessage';
+        : L10nService().translate('home_hyduyttrnt_a5b595');
+    return '${L10nService().translate('home_thitbnyang_707b26')}$waitMessage';
   }
 
   Future<DeviceTrustGuardState> resolve({
@@ -115,19 +114,19 @@ class DeviceTrustGuard {
       }
 
       if (trustState.isBlocked) {
-        return const DeviceTrustGuardState.unavailable(
+        return DeviceTrustGuardState.unavailable(
           message:
-              'Thiết bị này đang bị chặn. Hãy dùng thiết bị tin cậy để mở lại quyền truy cập.',
+              L10nService().translate('home_thitbnyang_23704c'),
         );
       }
 
       if (!trustState.exists || trustState.status == 'unknown') {
-        return const DeviceTrustGuardState.unavailable();
+        return DeviceTrustGuardState.unavailable();
       }
 
-      return const DeviceTrustGuardState.unavailable();
+      return DeviceTrustGuardState.unavailable();
     } catch (_) {
-      return const DeviceTrustGuardState.unavailable();
+      return DeviceTrustGuardState.unavailable();
     }
   }
 }

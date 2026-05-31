@@ -125,21 +125,23 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                               icon: isRead
                                   ? Icons.mark_email_read_outlined
                                   : Icons.mark_email_unread_outlined,
-                              label: isRead ? 'Đã đọc' : 'Chưa đọc',
+                              label: isRead
+                                  ? context.tr('notifications_status_read')
+                                  : context.tr('notifications_status_unread'),
                               accent: isRead ? SLColors.success : tone.accent,
                               highlighted: !isRead,
                             ),
                             if (locked)
                               _buildMetaChip(
                                 icon: Icons.lock_rounded,
-                                label: 'Thông báo hệ thống',
+                                label: context.tr('notifications_system_notification'),
                                 accent: SLColors.warning,
                                 highlighted: true,
                               )
                             else if (isPinned)
                               _buildMetaChip(
                                 icon: Icons.push_pin_rounded,
-                                label: 'Đã ghim',
+                                label: context.tr('notifications_pinned'),
                                 accent: SLColors.primaryActive,
                                 highlighted: true,
                               ),
@@ -151,7 +153,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                   SLSpacing.h16,
                   _buildSectionTitle(
                     icon: Icons.notes_rounded,
-                    label: 'Nội dung thông báo',
+                    label: context.tr('notifications_content_title'),
                   ),
                   SLSpacing.h10,
                   Container(
@@ -164,7 +166,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                     ),
                     child: Text(
                       displayMessage.isEmpty
-                          ? 'Thông báo này chưa có nội dung.'
+                          ? context.tr('notifications_no_content')
                           : displayMessage,
                       style: SLTheme.quicksand(
                         fontSize: 14,
@@ -177,7 +179,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                   SLSpacing.h16,
                   _buildSectionTitle(
                     icon: Icons.grid_view_rounded,
-                    label: 'Tóm tắt nhanh',
+                    label: context.tr('notifications_quick_summary'),
                   ),
                   SLSpacing.h10,
                   LayoutBuilder(
@@ -194,7 +196,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                             width: tileWidth,
                             child: _buildSummaryCard(
                               icon: Icons.person_outline_rounded,
-                              label: 'Nguồn',
+                              label: context.tr('notifications_summary_source'),
                               value: displaySource,
                               accent: tone.accent,
                             ),
@@ -203,7 +205,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                             width: tileWidth,
                             child: _buildSummaryCard(
                               icon: Icons.sell_outlined,
-                              label: 'Loại',
+                              label: context.tr('notifications_summary_type'),
                               value: _typeLabel(n),
                               accent: tone.accent,
                             ),
@@ -212,7 +214,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                             width: tileWidth,
                             child: _buildSummaryCard(
                               icon: Icons.schedule_rounded,
-                              label: 'Thời gian',
+                              label: context.tr('notifications_summary_time'),
                               value: _fmtDateTime(n.ts),
                               accent: SLColors.info,
                             ),
@@ -225,7 +227,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                                   : isRead
                                       ? Icons.mark_email_read_outlined
                                       : Icons.mark_email_unread_outlined,
-                              label: 'Trạng thái',
+                              label: context.tr('notifications_summary_status'),
                               value: _statusText(n),
                               accent: locked
                                   ? SLColors.warning
@@ -242,7 +244,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                     SLSpacing.h16,
                     _buildSectionTitle(
                       icon: Icons.info_outline_rounded,
-                      label: 'Chi tiết thêm',
+                      label: context.tr('notifications_extra_details'),
                     ),
                     ...detailRows,
                   ],

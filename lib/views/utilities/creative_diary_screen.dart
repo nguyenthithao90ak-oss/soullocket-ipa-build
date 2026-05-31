@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -146,13 +147,13 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
       extendBodyBehindAppBar: true,
       appBar: SLTheme.appBar(
         context,
-        'Sổ tay kỷ niệm 📖',
+        context.tr('util_stayknim_601a40'),
         actions: [
           if (hasPages)
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: PopupMenuButton<_DiarySaveTarget>(
-                tooltip: 'Lưu sổ tay',
+                tooltip: context.tr('util_lustay_95a119'),
                 enabled: !_isExportingNotebook,
                 onSelected: (target) {
                   if (target == _DiarySaveTarget.currentPage) {
@@ -161,21 +162,21 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                   }
                   _saveNotebookToDevice();
                 },
-                itemBuilder: (context) => const [
+                itemBuilder: (context) => [
                   PopupMenuItem<_DiarySaveTarget>(
                     value: _DiarySaveTarget.currentPage,
                     child: ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.bookmark_added_rounded),
-                      title: Text('Lưu trang đang xem'),
+                      leading: const Icon(Icons.bookmark_added_rounded),
+                      title: Text(context.tr('util_lutrangang_1835ca')),
                     ),
                   ),
                   PopupMenuItem<_DiarySaveTarget>(
                     value: _DiarySaveTarget.fullNotebook,
                     child: ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.collections_bookmark_rounded),
-                      title: Text('Lưu toàn bộ sổ tay'),
+                      leading: const Icon(Icons.collections_bookmark_rounded),
+                      title: Text(context.tr('util_lutonbstay_87d1d5')),
                     ),
                   ),
                 ],
@@ -201,7 +202,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
               foregroundColor: Colors.white,
               icon: const Icon(Icons.edit_note_rounded),
               label: Text(
-                'Viết trang',
+                context.tr('util_vittrang_c8d231'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
               ),
             ),
@@ -245,7 +246,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                               Text(
                                 hasPages
                                     ? 'Trang ${safeIndex + 1}/${_pages.length}'
-                                    : 'Sổ tay riêng của hai bạn',
+                                    : context.tr('util_stayringca_d5d3c4'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: SLTheme.quicksand(
@@ -257,7 +258,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                               ),
                               SLSpacing.h8,
                               Text(
-                                activePage?.title ?? 'Sổ tay của hai bạn',
+                                activePage?.title ?? context.tr('util_staycahaib_a09d75'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: SLTheme.quicksand(
@@ -270,8 +271,8 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                               SLSpacing.h8,
                               Text(
                                 activePage == null
-                                    ? 'Lưu lại những dòng tâm tư đẹp nhất của hai bạn'
-                                    : 'Lưu ngày ${DateFormat('dd/MM/yyyy').format(activePage.createdAt)}',
+                                    ? context.tr('util_lulinhngdn_f942d3')
+                                    : L10nService().format('util_diary_saved_date', {'date': DateFormat('dd/MM/yyyy').format(activePage.createdAt)}),
                                 style: SLTheme.quicksand(
                                   fontSize: compact ? 11.5 : 12.5,
                                   fontWeight: FontWeight.w600,
@@ -297,8 +298,8 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                             ),
                             child: Text(
                               hasPages
-                                  ? '${activePage!.wordCount} chữ'
-                                  : 'Bắt đầu viết',
+                                  ? L10nService().format('util_diary_word_count', {'count': activePage!.wordCount})
+                                  : context.tr('util_btuvit_250950'),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: SLTheme.quicksand(
@@ -450,7 +451,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Prompt gợi nhớ',
+                                    context.tr('util_promptginh_ef99f0'),
                                     style: SLTheme.quicksand(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w900,
@@ -460,7 +461,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                                   const SizedBox(height: 4),
                                   Text(
                                     activePage?.prompt ??
-                                        'Mỗi trang sẽ hiển thị đúng nội dung bạn đã viết và lưu lại.',
+                                        context.tr('util_mitrangshi_ed5c88'),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: SLTheme.quicksand(
@@ -506,9 +507,9 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
             if (_isExportingNotebook)
               Positioned.fill(
                 child: _DiaryExportProgressOverlay(
-                  status: _exportStatus ?? 'Đang lưu sổ tay về máy...',
+                  status: _exportStatus ?? context.tr('util_anglustayv_e1fb6c'),
                   detail: _exportDetail ??
-                      'Mỗi trang sẽ được lưu thành một ảnh đầy đủ.',
+                      context.tr('util_mitrangscl_408b1f'),
                 ),
               ),
           ],
@@ -562,7 +563,7 @@ class _CreativeDiaryEmptyCard extends StatelessWidget {
           ),
           SLSpacing.h16,
           Text(
-            canCreate ? 'Chưa có trang nào' : 'Chưa thể mở sổ tay',
+            canCreate ? context.tr('util_chactrangn_a61b97') : context.tr('util_chathmstay_c23b70'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 18,
@@ -573,8 +574,8 @@ class _CreativeDiaryEmptyCard extends StatelessWidget {
           SLSpacing.h8,
           Text(
             canCreate
-                ? 'Viết trang đầu tiên để sổ tay bắt đầu lưu lại những kỷ niệm quan trọng của hai bạn.'
-                : 'Không tìm thấy mã nhà hiện tại nên chưa thể tải dữ liệu sổ tay.',
+                ? context.tr('util_vittrangut_b59dc9')
+                : context.tr('util_khngtmthym_458358'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 13,
@@ -598,7 +599,7 @@ class _CreativeDiaryEmptyCard extends StatelessWidget {
               ),
               icon: const Icon(Icons.edit_note_rounded),
               label: Text(
-                'Viết trang đầu tiên',
+                context.tr('util_vittrangut_1a6b7b'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
               ),
             ),
@@ -711,14 +712,14 @@ class _DiaryPageCard extends StatelessWidget {
               ),
               _DiaryMetaChip(
                 icon: Icons.short_text_rounded,
-                label: '${page.wordCount} chữ',
+                label: L10nService().format('util_diary_word_count', {'count': page.wordCount}),
                 color: SLColors.primaryActive,
                 background: SLColors.primaryLight,
               ),
               if (page.prompt.trim().isNotEmpty)
                 _DiaryMetaChip(
                   icon: Icons.lightbulb_rounded,
-                  label: 'Có gợi nhớ',
+                  label: context.tr('util_cginh_a4a92b'),
                   color: SLColors.accentPurpleDark,
                   background: SLColors.accentPurple.withValues(alpha: 0.16),
                 ),
@@ -791,7 +792,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
                     borderRadius: SLRadius.pillAll,
                   ),
                   child: Text(
-                    extraCount > 0 ? 'Bộ sưu tập +$extraCount' : 'Ảnh đính kèm',
+                    extraCount > 0 ? L10nService().format('util_diary_collection_extra', {'count': extraCount}) : context.tr('util_nhnhkm_035065'),
                     style: SLTheme.quicksand(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w900,
@@ -906,7 +907,7 @@ class _DiaryExportPageCard extends StatelessWidget {
                       ),
                       SLSpacing.h6,
                       Text(
-                        'Ngày ${DateFormat('dd/MM/yyyy').format(page.createdAt)}',
+                        L10nService().format('util_diary_day_date', {'date': DateFormat('dd/MM/yyyy').format(page.createdAt)}),
                         style: SLTheme.quicksand(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -953,7 +954,7 @@ class _DiaryExportPageCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Nội dung',
+                    context.tr('util_nidung_ee7ca5'),
                     style: SLTheme.quicksand(
                       fontSize: 13,
                       fontWeight: FontWeight.w900,
@@ -1006,7 +1007,7 @@ class _DiaryExportPageCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Prompt gợi nhớ',
+                            context.tr('util_promptginh_ef99f0'),
                             style: SLTheme.quicksand(
                               fontSize: 13,
                               fontWeight: FontWeight.w900,
@@ -1043,7 +1044,7 @@ class _DiaryExportPageCard extends StatelessWidget {
                 ),
                 _DiaryMetaChip(
                   icon: Icons.short_text_rounded,
-                  label: '${page.wordCount} chữ',
+                  label: L10nService().format('util_diary_word_count', {'count': page.wordCount}),
                   color: SLColors.primaryActive,
                   background: SLColors.primaryLight,
                 ),
@@ -1060,7 +1061,7 @@ class _DiaryExportPageCard extends StatelessWidget {
                 ),
                 SLSpacing.w12,
                 Text(
-                  'SoulLocket • Sổ tay kỷ niệm',
+                  context.tr('util_soullocket_3b7608'),
                   style: SLTheme.quicksand(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
@@ -1288,11 +1289,11 @@ class _DiaryPageData {
 
     return _DiaryPageData(
       id: '${raw['id'] ?? ''}',
-      title: '${metadata['title'] ?? 'Trang kỷ niệm'}',
-      mood: '${metadata['mood'] ?? 'Yêu thương'}',
+      title: '${metadata['title'] ?? L10nService().translate('util_trangknim_1d5156')}',
+      mood: '${metadata['mood'] ?? L10nService().translate('util_yuthng_b60a77')}',
       memory: '${raw['content'] ?? ''}',
       prompt:
-          '${metadata['prompt'] ?? 'Hãy thêm một chi tiết nhỏ để ghi nhớ lâu hơn.'}',
+          '${metadata['prompt'] ?? L10nService().translate('util_hythmmtchi_6eddec')}',
       createdAt: createdAt,
       accent: palette.accent,
       surface: palette.surface,

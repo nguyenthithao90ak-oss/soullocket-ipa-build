@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
 
@@ -121,7 +122,7 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, 'Hứng tim vui vẻ 💖'),
+      appBar: SLTheme.appBar(context, context.tr('util_hngtimvuiv_3d908f')),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -139,7 +140,7 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                   children: [
                     Expanded(
                       child: _GameStatCard(
-                        label: 'Điểm',
+                        label: context.tr('util_im_559d58'),
                         value: '$_score',
                         color: SLColors.primaryActive,
                         background: SLColors.primaryLight,
@@ -157,7 +158,7 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                     SLSpacing.w8,
                     Expanded(
                       child: _GameStatCard(
-                        label: 'Lỡ mất',
+                        label: context.tr('util_lmt_125c5b'),
                         value: '$_missed/7',
                         color: SLColors.warning,
                         background: SLColors.warningLight,
@@ -198,10 +199,10 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                                   ),
                                   child: Text(
                                     _isGameOver
-                                        ? 'Trò chơi kết thúc'
+                                        ? context.tr('util_trchiktthc_010cc1')
                                         : _isPlaying
-                                            ? 'Vuốt để hứng tim'
-                                            : 'Đang tạm dừng',
+                                            ? context.tr('util_vuthngtim_da11e3')
+                                            : context.tr('util_angtmdng_b02607'),
                                     style: SLTheme.quicksand(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w800,
@@ -241,7 +242,7 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      'Hứng nè!',
+                                      context.tr('util_hngn_f1d1d6'),
                                       style: SLTheme.quicksand(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w900,
@@ -274,8 +275,8 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                                           children: [
                                             Text(
                                               _isGameOver
-                                                  ? 'Bạn vừa hứng được $_score điểm'
-                                                  : 'Tạm nghỉ một chút',
+                                                  ? L10nService().format('util_heart_catcher_score', {'score': _score})
+                                                  : context.tr('util_tmnghmtcht_c330b0'),
                                               textAlign: TextAlign.center,
                                               style: SLTheme.quicksand(
                                                 fontSize: 22,
@@ -286,8 +287,8 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                                             SLSpacing.h8,
                                             Text(
                                               _isGameOver
-                                                  ? 'Chạm chơi lại để lập điểm mới.'
-                                                  : 'Tiếp tục để giữ nhịp hứng tim đang có.',
+                                                  ? context.tr('util_chmchililp_6e564f')
+                                                  : context.tr('util_tiptcginhp_45350e'),
                                               textAlign: TextAlign.center,
                                               style: SLTheme.quicksand(
                                                 fontSize: 14,
@@ -311,8 +312,8 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                                               ),
                                               child: Text(
                                                 _isGameOver
-                                                    ? 'Chơi lại'
-                                                    : 'Tiếp tục',
+                                                    ? context.tr('util_chili_ddbf84')
+                                                    : context.tr('util_tiptc_555f1f'),
                                                 style: SLTheme.quicksand(
                                                   fontWeight: FontWeight.w800,
                                                 ),
@@ -344,7 +345,7 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Mỗi tim bắt được sẽ cộng điểm. Nếu để rơi quá 7 lần, màn chơi kết thúc.',
+                          context.tr('util_mitimbtcsc_4d28fd'),
                           style: SLTheme.quicksand(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -366,7 +367,7 @@ class _HeartCatcherGameState extends State<HeartCatcherGame> {
                           ),
                         ),
                         child: Text(
-                          _isPlaying ? 'Tạm dừng' : 'Tiếp tục',
+                          _isPlaying ? context.tr('util_tmdng_e5b361') : context.tr('util_tiptc_555f1f'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w800,
                           ),

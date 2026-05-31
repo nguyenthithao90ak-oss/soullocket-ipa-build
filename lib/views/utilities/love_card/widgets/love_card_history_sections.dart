@@ -97,7 +97,7 @@ class _LoveCardHistoryErrorState extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Chưa tải được lịch sử',
+            context.tr('util_chaticlchs_2c4d6b'),
             style: SLTheme.quicksand(
               color: Colors.white,
               fontSize: 18,
@@ -106,7 +106,7 @@ class _LoveCardHistoryErrorState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Dữ liệu thiệp đang lỗi hoặc phản hồi chậm. Kéo xuống để thử lại hoặc gửi một thiệp mới rồi mở lại tab này.',
+            context.tr('util_dliuthipan_d76963'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: Colors.white.withValues(alpha: 0.72),
@@ -157,7 +157,7 @@ class _LoveCardHistoryHero extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Kho link thiệp đã tạo',
+                      context.tr('util_kholinkthi_b841c6'),
                       style: SLTheme.quicksand(
                         color: Colors.white,
                         fontSize: 18,
@@ -166,7 +166,7 @@ class _LoveCardHistoryHero extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Chỉ hiện các liên kết bạn đã tạo. Link hết hạn hoặc bị gỡ sẽ tự biến mất.',
+                      context.tr('util_chhincclin_49d684'),
                       style: SLTheme.quicksand(
                         color: Colors.white.withValues(alpha: 0.72),
                         fontSize: 13,
@@ -183,14 +183,14 @@ class _LoveCardHistoryHero extends StatelessWidget {
             children: [
               Expanded(
                 child: _LoveCardHistoryMetric(
-                  label: 'Link đã tạo',
+                  label: context.tr('util_linkto_430227'),
                   value: '${cards.length}',
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _LoveCardHistoryMetric(
-                  label: 'Sắp hết hạn',
+                  label: context.tr('util_sphthn_bb4223'),
                   value: '${cards.where((card) {
                     final expiresAt = _timestampFromValue(card['expiresAt']);
                     if (expiresAt <= 0) {
@@ -206,7 +206,7 @@ class _LoveCardHistoryHero extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _LoveCardHistoryMetric(
-                  label: 'Bạn tạo',
+                  label: context.tr('util_bnto_0ed670'),
                   value: '$mine',
                 ),
               ),
@@ -240,7 +240,7 @@ class _LoveCardHistoryEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Chưa có thiệp nào',
+            context.tr('util_chacthipno_e7e271'),
             style: SLTheme.quicksand(
               color: Colors.white,
               fontSize: 18,
@@ -249,7 +249,7 @@ class _LoveCardHistoryEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Hãy tạo tấm thiệp đầu tiên. Sau khi gửi, chỉ các link bạn đã tạo sẽ hiện ở đây để chia sẻ lại hoặc gỡ bỏ.',
+            context.tr('util_hytotmthip_4c0a66'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: Colors.white.withValues(alpha: 0.72),
@@ -282,8 +282,8 @@ class _LoveCardHistoryItem extends StatelessWidget {
     final timeStr = _formatTime(_timestampOf(card));
     final hasImage = (card['imageUrl'] ?? '').toString().trim().isNotEmpty;
     final expiresAt = _timestampFromValue(card['expiresAt']);
-    final expiryText = expiresAt > 0 ? _formatTime(expiresAt) : 'Không có hạn';
-    const previewText = 'Liên kết thiệp đã tạo sẵn để bạn gửi lại nhanh.';
+    final expiryText = expiresAt > 0 ? _formatTime(expiresAt) : context.tr('util_khngchn_a4f770');
+    final previewText = context.tr('util_linktthipt_730c23');
 
     return Material(
       color: Colors.transparent,
@@ -300,18 +300,18 @@ class _LoveCardHistoryItem extends StatelessWidget {
             context: context,
             builder: (BuildContext dialogContext) {
               return AlertDialog(
-                title: const Text('Xóa liên kết thiệp?'),
-                content: const Text(
-                  'Liên kết này sẽ bị gỡ khỏi lịch sử chia sẻ. Bạn vẫn muốn xóa chứ?',
+                title: Text(context.tr('util_xalinktthi_8b9f9b')),
+                content: Text(
+                  context.tr('util_linktnysbg_b62df1'),
                 ),
                 actions: <Widget>[
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(false),
-                    child: const Text('Hủy'),
+                    child: Text(context.tr('util_hy_1e4050')),
                   ),
                   FilledButton(
                     onPressed: () => Navigator.of(dialogContext).pop(true),
-                    child: const Text('Xóa'),
+                    child: Text(context.tr('util_xa_4ed187')),
                   ),
                 ],
               );
@@ -381,7 +381,7 @@ class _LoveCardHistoryItem extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          'Link thiệp đã tạo',
+                          context.tr('util_linkthipto_ba42f9'),
                           style: SLTheme.quicksand(
                             color: Colors.white,
                             fontSize: 17,
@@ -392,7 +392,7 @@ class _LoveCardHistoryItem extends StatelessWidget {
                     ),
                   ),
                   _LoveCardStatusPill(
-                    label: 'Đang hoạt động',
+                    label: context.tr('util_anghotng_cfaecd'),
                     background: isUnread
                         ? Colors.redAccent
                         : Colors.white.withValues(alpha: 0.16),
@@ -439,7 +439,7 @@ class _LoveCardHistoryItem extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Có ảnh công khai',
+                        context.tr('util_cnhcngkhai_091717'),
                         style: SLTheme.quicksand(
                           color: Colors.white,
                           fontSize: 11,

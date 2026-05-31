@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../../../core/sl_theme.dart';
 
 import 'calendar_info_pill.dart';
 
@@ -136,7 +137,7 @@ class CalendarSelectedDaySummary extends StatelessWidget {
                 ),
                 CalendarInfoPill(
                   icon: Icons.notifications_active_rounded,
-                  label: 'Nhắc lúc 09:00',
+                  label: context.tr('util_nhclc0900_bc079d'),
                   accent: accent,
                   compact: compact,
                 ),

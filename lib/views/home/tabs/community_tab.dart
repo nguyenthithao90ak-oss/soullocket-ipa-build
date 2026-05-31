@@ -1,7 +1,5 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -16,6 +14,7 @@ import 'dart:async';
 import '../../../widgets/share_bottom_sheet.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../core/sl_route.dart';
 import '../../../services/admob_service.dart';
 
 import '../../../services/friends_service.dart';
@@ -42,7 +41,7 @@ import '../../../utils/app_error_mapper.dart';
 import '../../../services/security_service.dart';
 import 'package:flutter/gestures.dart';
 import '../screens/locket_camera_screen.dart';
-import 'package:soullocket_app/services/l10n_service.dart';
+import '../../../services/l10n_service.dart';
 import '../../ui_prefs.dart';
 import 'community/rich_post_text_parser.dart';
 
@@ -70,11 +69,11 @@ part 'community_tab_search_screen.dart';
 String _communityPrivacyLabel(String value) {
   switch (value) {
     case 'private':
-      return _ct('Riêng tư', 'Private');
+      return L10nService().translate('home_ringt_03b49a');
     case 'friends':
-      return _ct('Bạn bè', 'Friends');
+      return L10nService().translate('home_bnb_411da0');
     default:
-      return _ct('Công khai', 'Public');
+      return L10nService().translate('home_cngkhai_c7e9f6');
   }
 }
 
@@ -237,10 +236,7 @@ class _CommunityTabState extends State<CommunityTab>
   final SocialService _socialService = SocialService();
 
   bool _isCommunityMaintenance = false;
-  String _communityMaintenanceMsg = _ct(
-    'Tính năng mạng xã hội tạm thời đóng để nâng cấp.',
-    'The community feature is temporarily closed for an upgrade.',
-  );
+  String _communityMaintenanceMsg = L10nService().translate('home_tnhnngmngx_a56b2f');
   String _communityMaintenanceEta = '';
   StreamSubscription? _communityMaintenanceSub;
 
@@ -249,12 +245,11 @@ class _CommunityTabState extends State<CommunityTab>
   bool _isFeedSelectorExpanded = false;
 
   String? _houseId;
-  String get _defaultHouseName => _ct('Ngôi Nhà Ẩn Danh', 'Anonymous Home');
+  String get _defaultHouseName => context.tr('home_nginhndanh_500dbb');
   String _houseName = '';
-  String _houseAvatar = '';
-  // Mặc định dùng nền xám nhạt (giao diện sáng) cho dễ nhìn và gọn gàng
-  final String _communityTheme = 'light';
+  String _houseAvatar = 'light';
 
+  final String _communityTheme = 'light';
   bool get _isLight => _communityTheme == 'light';
   bool get _isDark => _communityTheme == 'dark';
   Color get _bgColor => _isLight
@@ -419,47 +414,42 @@ class _CommunityTabState extends State<CommunityTab>
   final Set<String> _pendingLikePostIds = <String>{};
   final Map<String, int> _likeSyncHoldUntilByPostId = <String, int>{};
   static List<Map<String, String>> get _composerMoodPresets => [
-        {'emoji': '😊', 'label': _ct('Vui vẻ', 'Happy')},
-        {'emoji': '😍', 'label': _ct('Yêu đời', 'In love')},
-        {'emoji': '🥰', 'label': _ct('Ngọt ngào', 'Sweet')},
-        {'emoji': '😌', 'label': _ct('Bình yên', 'Peaceful')},
-        {'emoji': '😴', 'label': _ct('Mệt nhẹ', 'A little tired')},
-        {'emoji': '😢', 'label': _ct('Tâm sự', 'Venting')},
-        {'emoji': '🔥', 'label': _ct('Bùng cháy', 'On fire')},
-        {'emoji': '🤍', 'label': _ct('Nhẹ nhàng', 'Gentle')},
+        {'emoji': '😊', 'label': L10nService().translate('home_vuiv_2d8b13')},
+        {'emoji': '😍', 'label': L10nService().translate('home_yui_b139a4')},
+        {'emoji': '🥰', 'label': L10nService().translate('home_ngtngo_5da115')},
+        {'emoji': '😌', 'label': L10nService().translate('home_bnhyn_325c26')},
+        {'emoji': '😴', 'label': L10nService().translate('home_mtnh_035761')},
+        {'emoji': '😢', 'label': L10nService().translate('home_tms_418cf9')},
+        {'emoji': '🔥', 'label': L10nService().translate('home_bngchy_a9de69')},
+        {'emoji': '🤍', 'label': L10nService().translate('home_nhnhng_100576')},
       ];
-
-  // Thả tim animation
-  final List<HeartAnimation> _hearts = [];
-  final List<EmojiReactionAnimation> _reactionAnimations = [];
-  late AnimationController _heartController;
-  bool _isHeartTickerActive = false;
-
-  int _currentLimit = 30;
-  final ScrollController _scrollController = ScrollController();
-  StreamSubscription? _feedSub;
-  StreamSubscription<DatabaseEvent>? _friendsSubscription;
+  StreamSubscription? _friendsSubscription;
   StreamSubscription? _friendsRequestSubscription;
-  StreamSubscription<DatabaseEvent>? _blockedUsersSubscription;
-  StreamSubscription<DatabaseEvent>? _communityMessengerPreviewSubscription;
+  StreamSubscription? _blockedUsersSubscription;
+  final ScrollController _scrollController = ScrollController();
+  int _lastFeedPreloadStartIndex = -1;
+  int _currentLimit = 30;
+  int? _oldestLoadedTs;
   static const int _feedPageSize = 20;
-  static const int _feedRealtimeWindow = 20;
+  static const int _feedPreloadMinIndexDelta = 8;
+  static const Duration _feedPreloadThrottleDelay = Duration(milliseconds: 250);
   static const Duration _feedCachePersistDelay = Duration(milliseconds: 350);
   static const Duration _likeSyncHoldDuration = Duration(seconds: 4);
+  static const double _feedLoadMoreThreshold = 480;
   bool _isLoadingMoreFeed = false;
   bool _hasMoreFeed = true;
-  int? _oldestLoadedTs;
+  StreamSubscription? _feedSub;
   Timer? _feedCachePersistTimer;
-  Timer? _communityMessengerButtonPersistTimer;
   Timer? _feedPreloadThrottleTimer;
-  static const Duration _feedPreloadThrottleDelay = Duration(
-    milliseconds: 220,
-  );
-  static const int _feedPreloadMinIndexDelta = 4;
-  static const double _feedLoadMoreThreshold = 120;
-  int _lastFeedPreloadStartIndex = -1;
+  Timer? _communityMessengerButtonPersistTimer;
+  StreamSubscription? _communityMessengerPreviewSubscription;
   int _communityMessengerUnreadCount = 0;
   String _communityMessengerPreviewText = '';
+  late AnimationController _heartController;
+  final List<HeartAnimation> _hearts = <HeartAnimation>[];
+  final List<EmojiReactionAnimation> _reactionAnimations = <EmojiReactionAnimation>[];
+  bool _isHeartTickerActive = false;
+
   Offset? _communityMessengerButtonOffset;
 
   static const Size _communityMessengerButtonSize = Size(64, 74);
@@ -742,7 +732,7 @@ class _CommunityTabState extends State<CommunityTab>
         debugPrint(
           'Community messenger preview listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải xem trước tin nhắn cộng đồng.',
+            fallbackMessage: context.tr('home_khngthtixe_2dfd82'),
           ).message}',
         );
       },
@@ -751,10 +741,9 @@ class _CommunityTabState extends State<CommunityTab>
 
   Future<void> _openCommunityMessenger() async {
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const MessengerScreen(),
-      ),
+    await slPush(
+      context,
+      const MessengerScreen(),
     );
   }
 
@@ -940,7 +929,7 @@ class _CommunityTabState extends State<CommunityTab>
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                _ct('Nhắn tin', 'Message'),
+                                _ct(context.tr('home_nhntin_3e833a'), 'Message'),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 style: SLTheme.quicksand(
@@ -1029,11 +1018,11 @@ class _CommunityTabState extends State<CommunityTab>
           icon: Icons.rocket_launch_rounded,
           accentColor: const Color(0xFFD81B60),
           title: _ct(
-            'Cộng đồng sẽ ra mắt ở phiên bản tới',
+            context.tr('home_cngngsramt_66c56c'),
             'Community will launch in the next version',
           ),
           message: _ct(
-            'Tab Cộng đồng hiện đang được đóng tạm toàn bộ và sẽ ra mắt ở phiên bản tới.',
+            context.tr('home_tabcngnghi_7e02d9'),
             'The Community tab is temporarily closed and will launch in the next version.',
           ),
           titleColor: Colors.white,
@@ -1049,11 +1038,11 @@ class _CommunityTabState extends State<CommunityTab>
           icon: Icons.auto_awesome_rounded,
           accentColor: const Color(0xFFD81B60),
           title: _ct(
-            'Cộng đồng tạm thời không khả dụng',
+            context.tr('home_cngngtmthi_9ca62a'),
             'Community is temporarily unavailable',
           ),
           message: _ct(
-            'Cộng đồng đang được bảo trì tạm thời. Vui lòng thử lại sau.\n\nCác tính năng khác của nhà bạn vẫn hoạt động bình thường.',
+            context.tr('home_community_maintenance_message'),
             'Community is under temporary maintenance. Please try again later.\n\nOther house features remain available as usual.',
           ),
           titleColor: Colors.white,
@@ -1069,7 +1058,7 @@ class _CommunityTabState extends State<CommunityTab>
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openComposer(),
         backgroundColor: const Color(0xFFD81B60),
-        tooltip: _ct('Đăng bài mới', 'New post'),
+        tooltip: _ct(context.tr('home_ngbimi_525829'), 'New post'),
         child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

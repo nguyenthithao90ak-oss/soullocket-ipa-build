@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../core/sl_theme.dart';
 import '../widgets/community_settings_components.dart';
@@ -32,7 +33,7 @@ class CommunitySettingsUnsavedBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Bạn đang có thay đổi chưa lưu. Nhấn "Lưu" ở góc trên để cập nhật cho toàn bộ hồ sơ cộng đồng.',
+              'Bạn đang có thay đổi chưa lưu. Nhấn ${context.tr('comm_lu_49fac1')} ở góc trên để cập nhật cho toàn bộ hồ sơ cộng đồng.',
               style: SLTheme.quicksand(
                 fontSize: 13,
                 height: 1.4,

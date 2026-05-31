@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 
-const List<String> _defaultBlockedTerms = <String>[
+final List<String> _defaultBlockedTerms = <String>[
   '18+',
   'khieu dam',
   'sex',
@@ -17,148 +18,148 @@ const List<String> _defaultBlockedTerms = <String>[
   'hiep dam',
   'rape',
   'dit',
-  'địt',
+  L10nService().translate('admin_t_3171fd'),
   'lon',
-  'lồn',
+  L10nService().translate('admin_ln_c66fa6'),
   'cac',
-  'cặc',
+  L10nService().translate('admin_cc_0b235c'),
   'buoi',
-  'buồi',
+  L10nService().translate('admin_bui_232277'),
   'cc',
   'cl',
   'vcl',
   'dcm',
-  'đcm',
+  L10nService().translate('admin_cm_8d28f4'),
   'vkl',
   'vl',
   'loz',
-  'đm',
+  L10nService().translate('admin_m_cf1d87'),
   'dm',
-  'đĩ',
+  L10nService().translate('admin_txt_da27bc'),
   'di',
   'cave',
-  'phò',
+  L10nService().translate('admin_ph_5bea54'),
   'pho',
-  'chịch',
+  L10nService().translate('admin_chch_9d9106'),
   'chich',
-  'nứng',
+  L10nService().translate('admin_nng_0dc53f'),
   'nung',
-  'dâm',
+  L10nService().translate('admin_dm_4f8dd4'),
   'dam',
   'thu dam',
-  'thủ dâm',
+  L10nService().translate('admin_thdm_92b0ca'),
   'quay tay',
   'mbbg',
   'sgbb',
   'sgdd',
-  'chửi',
-  'chui thề',
-  'chửi thề',
-  'địt mẹ',
+  L10nService().translate('admin_chi_1d8a79'),
+  L10nService().translate('admin_chuith_e23740'),
+  L10nService().translate('admin_chith_f215b4'),
+  L10nService().translate('admin_tm_3c034b'),
   'dit me',
-  'con đĩ',
+  L10nService().translate('admin_con_655ea0'),
   'con di',
-  'thằng chó',
+  L10nService().translate('admin_thngch_c392ee'),
   'thang cho',
-  'cức',
-  'cứt',
-  'đụ',
-  'đụ má',
-  'đụ mẹ',
+  L10nService().translate('admin_cc_d9cdc2'),
+  L10nService().translate('admin_ct_7733ff'),
+  L10nService().translate('admin_txt_70b3fa'),
+  L10nService().translate('admin_m_9ec17b'),
+  L10nService().translate('admin_m_2e7399'),
   'du ma',
   'du me',
-  'củ lồn',
+  L10nService().translate('admin_cln_ee86fa'),
   'cu lon',
-  'mặt lồn',
+  L10nService().translate('admin_mtln_2523d0'),
   'mat lon',
-  'hãm lồn',
+  L10nService().translate('admin_hmln_117a8b'),
   'ham lon',
-  'vãi lồn',
+  L10nService().translate('admin_viln_c54db8'),
   'vai lon',
-  'cái lồn',
+  L10nService().translate('admin_ciln_9a7be8'),
   'cai lon',
-  'cặc chó',
+  L10nService().translate('admin_ccch_4345ed'),
   'cac cho',
-  'ngu như chó',
+  L10nService().translate('admin_ngunhch_8b6470'),
   'ngu nhu cho',
-  'óc chó',
+  L10nService().translate('admin_cch_8a2417'),
   'oc cho',
-  'đầu bò',
+  L10nService().translate('admin_ub_5bc9fb'),
   'dau bo',
-  'bú cu',
+  L10nService().translate('admin_bcu_2063bc'),
   'bu cu',
-  'sục cặc',
+  L10nService().translate('admin_sccc_25571b'),
   'suc cac',
-  'thẩm du',
+  L10nService().translate('admin_thmdu_da530c'),
   'tham du',
-  'nứng lồn',
+  L10nService().translate('admin_nngln_78d8fc'),
   'nung lon',
-  'nứng cặc',
+  L10nService().translate('admin_nngcc_321db9'),
   'nung cac',
-  'dâm đãng',
+  L10nService().translate('admin_dmng_0c9251'),
   'dam dang',
-  'đĩ điếm',
+  L10nService().translate('admin_im_0d97ff'),
   'di diem',
-  'điếm thúi',
+  L10nService().translate('admin_imthi_5ca365'),
   'diem thui',
-  'bà nội cha mày',
+  L10nService().translate('admin_bnichamy_da01df'),
   'ba noi cha may',
-  'tổ cha mày',
+  L10nService().translate('admin_tchamy_1c6058'),
   'to cha may',
-  'đụ má mày',
+  L10nService().translate('admin_mmy_31c9fa'),
   'du ma may',
-  'đụ đĩ mẹ mày',
+  L10nService().translate('admin_mmy_9a36c2'),
   'du di me may',
-  'đĩ ngựa',
+  L10nService().translate('admin_nga_accf97'),
   'di ngua',
-  'đĩ điếm thúi',
+  L10nService().translate('admin_imthi_f792a9'),
   'di diem thui',
-  'phò nát',
+  L10nService().translate('admin_phnt_b92795'),
   'pho nat',
-  'hàng dạt',
+  L10nService().translate('admin_hngdt_59d61d'),
   'hang dat',
   've chai',
-  'đồng nát',
+  L10nService().translate('admin_ngnt_889ea5'),
   'dong nat',
-  'rác rưởi xã hội',
+  L10nService().translate('admin_rcrixhi_d90423'),
   'rac ruoi xa hoi',
-  'cặn bã xã hội',
+  L10nService().translate('admin_cnbxhi_8d7427'),
   'can ba xa hoi',
-  'ký sinh trùng',
+  L10nService().translate('admin_ksinhtrng_0b13a8'),
   'ky sinh trung',
-  'bám váy mẹ',
+  L10nService().translate('admin_bmvym_ec0ee5'),
   'bam vay me',
-  'ăn bám',
+  L10nService().translate('admin_nbm_7fe8a7'),
   'an bam',
-  'vô tích sự',
+  L10nService().translate('admin_vtchs_c7e809'),
   'vo tich su',
-  'đồ bỏ đi',
+  L10nService().translate('admin_bi_974e77'),
   'do bo di',
-  'phế vật',
+  L10nService().translate('admin_phvt_45e693'),
   'phe vat',
-  'vô dụng',
+  L10nService().translate('admin_vdng_36d569'),
   'vo dung',
-  'bất tài',
+  L10nService().translate('admin_btti_41d748'),
   'bat tai',
-  'kém cỏi',
+  L10nService().translate('admin_kmci_5a7f5f'),
   'kem coi',
-  'hèn hạ',
+  L10nService().translate('admin_hnh_2860fe'),
   'hen ha',
-  'nhục nhã',
+  L10nService().translate('admin_nhcnh_e625b1'),
   'nhuc nha',
-  'xấu hổ',
+  L10nService().translate('admin_xuh_fff5ea'),
   'xau ho',
-  'mất mặt',
+  L10nService().translate('admin_mtmt_037a16'),
   'mat mat',
-  'mất dạy',
+  L10nService().translate('admin_mtdy_a6e71a'),
   'mat day',
-  'hỗn láo',
+  L10nService().translate('admin_hnlo_babc1e'),
   'hon lao',
-  'hỗn xược',
+  L10nService().translate('admin_hnxc_b0ac68'),
   'hon xuoc',
-  'vô học',
+  L10nService().translate('admin_vhc_77d16a'),
   'vo hoc',
-  'thiếu giáo dục',
+  L10nService().translate('admin_thiugiodc_4c2b4b'),
   'thieu giao duc'
 ];
 
@@ -227,7 +228,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
 
     if (_bannedWords.contains(word)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Từ này đã có trong danh sách!')),
+        SnackBar(content: Text(context.tr('admin_tnyctrongd_ef7bb5'))),
       );
       return;
     }
@@ -241,7 +242,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã thêm từ cấm')),
+        SnackBar(content: Text(context.tr('admin_thmtcm_c1fc50'))),
       );
     }
   }
@@ -255,7 +256,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã xóa từ cấm')),
+        SnackBar(content: Text(context.tr('admin_xatcm_7d27ee'))),
       );
     }
   }
@@ -291,11 +292,11 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
     } catch (error) {
       debugPrint('Load abuse logs failed: ${AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Chưa thể tải nhật ký lạm dụng lúc này.',
+        fallbackMessage: context.tr('admin_chathtinht_d042ea'),
       ).message}');
       if (!mounted) return;
       setState(() {
-        _errorText = 'Chưa thể tải nhật ký lạm dụng lúc này. Vui lòng thử lại.';
+        _errorText = context.tr('admin_chathtinht_bd1243');
       });
     } finally {
       if (mounted) {
@@ -307,12 +308,15 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
   }
 
   Future<void> _takeAction(String uid, String actionType) async {
+    final banReason = context.tr('admin_viphmchnhs_2dad53');
+    final errorFallback = context.tr('admin_chathhontt_d19c7e');
+    final successText = _abuseActionSuccessText(actionType);
     try {
       if (actionType == 'ban') {
         await _db.child('houses/$uid/isBanned').set(true);
         await _db
             .child('houses/$uid/banReason')
-            .set('Vi phạm chính sách chống lạm dụng');
+            .set(banReason);
       }
 
       await _db.child('admin_system/audit_log').push().set({
@@ -324,17 +328,17 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_abuseActionSuccessText(actionType))),
+        SnackBar(content: Text(successText)),
       );
     } catch (e) {
       debugPrint('Abuse action failed: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể hoàn tất thao tác chống lạm dụng lúc này.',
+        fallbackMessage: errorFallback,
       ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể hoàn tất thao tác chống lạm dụng lúc này.'),
+        SnackBar(
+          content: Text(errorFallback),
         ),
       );
     }
@@ -343,9 +347,9 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
   String _abuseActionSuccessText(String actionType) {
     switch (actionType) {
       case 'ban':
-        return 'Đã khóa tài khoản vi phạm.';
+        return context.tr('admin_khatikhonv_f7a9f8');
       default:
-        return 'Đã hoàn tất thao tác chống lạm dụng.';
+        return context.tr('admin_honttthaot_bde531');
     }
   }
 
@@ -364,7 +368,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Chống lạm dụng (Anti-abuse)',
+                      context.tr('admin_chnglmdnga_60fa77'),
                       style: SLTheme.quicksand(
                         color: Colors.white,
                         fontSize: 24,
@@ -383,7 +387,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                 ),
                 SLSpacing.h8,
                 Text(
-                  'Phát hiện spam, đăng nhập nhiều thiết bị, và quản lý từ khóa cấm.',
+                  context.tr('admin_phthinspam_f8ae5c'),
                   style: SLTheme.quicksand(
                     color: const Color(0xFF9AA8C4),
                     fontSize: 14,
@@ -396,9 +400,9 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                   labelColor: const Color(0xFFFF4B91),
                   unselectedLabelColor: const Color(0xFF9AA8C4),
                   labelStyle: SLTheme.quicksand(fontWeight: FontWeight.bold),
-                  tabs: const [
-                    Tab(text: 'Nhật ký lạm dụng'),
-                    Tab(text: 'Quản lý Từ cấm (AI/Spam)'),
+                  tabs: [
+                    Tab(text: context.tr('admin_nhtklmdng_7a4f22')),
+                    Tab(text: context.tr('admin_qunltcmais_fa21dc')),
                   ],
                 ),
               ],
@@ -450,7 +454,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                     controller: _bannedWordCtrl,
                     style: SLTheme.quicksand(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Nhập từ khóa cần cấm...',
+                      hintText: context.tr('admin_nhptkhacnc_03102a'),
                       hintStyle:
                           SLTheme.quicksand(color: const Color(0xFF9AA8C4)),
                       filled: true,
@@ -469,7 +473,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                 ElevatedButton.icon(
                   onPressed: _addBannedWord,
                   icon: const Icon(Icons.add_rounded),
-                  label: const Text('Thêm'),
+                  label: Text(context.tr('admin_thm_d9cb42')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF4B91),
                     foregroundColor: Colors.white,
@@ -486,10 +490,10 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
           SLSpacing.h24,
           Expanded(
             child: _bannedWords.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
-                      'Chưa có từ khóa nào bị cấm.',
-                      style: TextStyle(color: Colors.white70),
+                      context.tr('admin_chactkhano_fa7f3b'),
+                      style: const TextStyle(color: Colors.white70),
                     ),
                   )
                 : ListView.builder(
@@ -515,7 +519,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                             icon: const Icon(Icons.delete_outline_rounded,
                                 color: Colors.red),
                             onPressed: () => _removeBannedWord(word),
-                            tooltip: 'Xóa khỏi danh sách cấm',
+                            tooltip: context.tr('admin_xakhidanhs_1e7649'),
                           ),
                         ),
                       );
@@ -529,9 +533,9 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
 
   Widget _buildAbuseLogs() {
     if (_abuseLogs.isEmpty) {
-      return const Center(
-        child: Text('Hệ thống an toàn, chưa phát hiện hành vi lạm dụng.',
-            style: TextStyle(color: Colors.white)),
+      return Center(
+        child: Text(context.tr('admin_hthnganton_89405b'),
+            style: const TextStyle(color: Colors.white)),
       );
     }
 
@@ -550,17 +554,17 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
             case 'spam':
               icon = Icons.warning_amber_rounded;
               color = Colors.orange;
-              title = 'Phát hiện Spam';
+              title = context.tr('admin_phthinspam_73464f');
               break;
             case 'multi_device':
               icon = Icons.devices_rounded;
               color = Colors.blue;
-              title = 'Đăng nhập nhiều thiết bị';
+              title = context.tr('admin_ngnhpnhiut_9d45e0');
               break;
             default:
               icon = Icons.error_outline_rounded;
               color = Colors.red;
-              title = 'Hành vi bất thường';
+              title = context.tr('admin_hnhvibtthn_cdd783');
           }
 
           return Container(
@@ -603,14 +607,14 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                   icon: const Icon(Icons.more_vert, color: Colors.white),
                   onSelected: (val) => _takeAction(log['uid'], val),
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'warn',
-                      child: Text('Gửi cảnh cáo'),
+                      child: Text(context.tr('admin_gicnhco_0354f5')),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'ban',
-                      child: Text('Khóa tài khoản',
-                          style: TextStyle(color: Colors.red)),
+                      child: Text(context.tr('admin_khatikhon_aee1b3'),
+                          style: const TextStyle(color: Colors.red)),
                     ),
                   ],
                 ),

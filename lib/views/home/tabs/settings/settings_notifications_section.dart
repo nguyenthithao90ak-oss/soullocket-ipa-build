@@ -11,12 +11,22 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
     if (name.isNotEmpty) {
       return name;
     }
-    return role == 'user2' ? 'bạn nữ' : 'bạn nam';
+    return role == 'user2'
+        ? context.tr('home_bnn_be46dc')
+        : context.tr('home_bnnam_b57724');
   }
 
-  Future<void> _persistNotificationsEnabledPref(bool value) async {
+  Future<void> _persistNotificationPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('il_notifications_enabled', value);
+    await prefs.setBool('il_notifications_enabled', _notificationsEnabled);
+    await prefs.setBool('il_notif_anniversary', _notifAnniversary);
+    await prefs.setBool('il_notif_post', _notifPost);
+    await prefs.setBool('il_notif_chat', _notifChat);
+    await prefs.setBool('il_notif_friend', _notifFriend);
+    await prefs.setBool('il_notif_heart', _notifHeart);
+    await prefs.setBool('il_smart_reminder_diary', _smartDiaryReminder);
+    await prefs.setBool('il_smart_reminder_capsule', _smartCapsuleReminder);
+    await prefs.setBool('il_smart_reminder_love_note', _smartLoveNoteReminder);
   }
 
   Future<void> _syncNotificationTopics(bool enabled) async {
@@ -36,6 +46,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
 
   Future<void> _handleNotificationsEnabledChanged(bool value) async {
     final previousValue = _notificationsEnabled;
+    final permissionRequiredMessage = context.tr('home_bncncpquyn_ce1ded');
+    final updateFailedMessage = context.tr('home_chathcpnht_c538a0');
     setState(() {
       _notificationsEnabled = value;
       _notifAnniversary = value;
@@ -43,6 +55,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       _notifChat = value;
       _notifHeart = value;
       _notifFriend = value;
+      _smartDiaryReminder = value;
+      _smartCapsuleReminder = value;
+      _smartLoveNoteReminder = value;
     });
 
     try {
@@ -57,17 +72,20 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             _notifChat = false;
             _notifHeart = false;
             _notifFriend = false;
+            _smartDiaryReminder = false;
+            _smartCapsuleReminder = false;
+            _smartLoveNoteReminder = false;
           });
-          await _persistNotificationsEnabledPref(false);
+          await _persistNotificationPrefs();
           _showToast(
-            'Bạn cần cấp quyền thông báo để bật nhắc ngủ và thông báo mới.',
+            permissionRequiredMessage,
             success: false,
           );
           return;
         }
       }
 
-      await _persistNotificationsEnabledPref(value);
+      await _persistNotificationPrefs();
       await _syncNotificationTopics(value);
       if (value) {
         await NotificationService().syncDailySleepReminder();
@@ -83,13 +101,15 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
         _notifChat = previousValue;
         _notifHeart = previousValue;
         _notifFriend = previousValue;
+        _smartDiaryReminder = previousValue;
+        _smartCapsuleReminder = previousValue;
+        _smartLoveNoteReminder = previousValue;
       });
-      await _persistNotificationsEnabledPref(previousValue);
+      await _persistNotificationPrefs();
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              'Chưa thể cập nhật thông báo đẩy. Hãy kiểm tra kết nối rồi thử lại.',
+          fallbackMessage: updateFailedMessage,
         ).message,
         success: false,
       );
@@ -109,7 +129,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             borderRadius: BorderRadius.circular(24),
           ),
           title: Text(
-            'Quản lý thông báo push',
+            context.tr('home_qunlthngbo_b1fc20'),
             style: SLTheme.quicksand(
               fontSize: 18,
               fontWeight: FontWeight.w900,
@@ -117,7 +137,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             ),
           ),
           content: Text(
-            'Thông báo push đang được bật ở mức hệ thống. Nếu muốn tắt hoặc bật lại quyền thông báo, hãy mở Cài đặt ứng dụng của điện thoại rồi chọn mục Thông báo.',
+            context.tr('home_thngbopush_e7d672'),
             style: SLTheme.quicksand(
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
@@ -129,7 +149,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(
-                'Để sau',
+                context.tr('home_sau_8a3721'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF64748B),
@@ -144,11 +164,12 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               onPressed: () {
                 Navigator.of(dialogContext).pop();
                 unawaited(
-                  AppLifecyclePresenceGuard.guard(app_permission.openAppSettings),
+                  AppLifecyclePresenceGuard.guard(
+                      app_permission.openAppSettings),
                 );
               },
               child: Text(
-                'Mở cài đặt',
+                context.tr('home_mcit_a2573b'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w900),
               ),
             ),
@@ -186,6 +207,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       'il_notif_chat',
       'il_notif_friend',
       'il_notif_heart',
+      'il_smart_reminder_diary',
+      'il_smart_reminder_capsule',
+      'il_smart_reminder_love_note',
       'il_touch_sound',
       'il_confetti_fx',
       'il_music_autoplay',
@@ -193,12 +217,26 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       'il_rel_mode',
       'il_theme_key',
       'il_falling_effect',
+      'il_avatar_size',
+      'il_countdown_size',
+      'il_avatar_frame',
+      'il_countdown_style',
+      'il_font_key',
+      'il_home_block_tone',
+      'il_lite_mode',
+      'il_graphics_quality',
+      'il_custom_background_url',
+      'il_transparent_mode',
+      'il_brand_mark_key',
       'il_show_weather',
       'il_show_status',
+      'il_home_show_house_name',
+      'il_home_show_timer',
     };
 
     const keepPrefixes = <String>[
       'il_widget_theme',
+      'il_widget_style',
       'il_widget_show_diary',
       'il_widget_heart_animated',
       'il_widget_heart_style',
@@ -243,7 +281,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Nhắc ngủ 22:15 • chào sáng 05:55',
+            context.tr('home_nhcng2215c_e961fb'),
             style: SLTextStyles.quicksand(
               fontSize: 12.8,
               fontWeight: FontWeight.w900,
@@ -322,8 +360,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     _notificationsEnabled,
                     _handleNotificationsEnabledChanged,
                     helperText: _notificationsEnabled
-                        ? 'Đã bật trong hệ thống. Nếu muốn tắt hoàn toàn, hãy tắt ở ngoài app.'
-                        : 'Bật để app xin quyền và nhận thông báo đẩy.',
+                        ? context.tr('home_bttronghth_f0f025')
+                        : context.tr('home_btappxinqu_1a6325'),
                     onTap: _notificationsEnabled
                         ? _showDisableNotificationsOutsideAppNotice
                         : null,
@@ -347,8 +385,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     _notificationsEnabled,
                     _handleNotificationsEnabledChanged,
                     helperText: _notificationsEnabled
-                        ? 'Đã bật trong hệ thống. Nếu muốn tắt hoàn toàn, hãy tắt ở ngoài app.'
-                        : 'Bật để app xin quyền và nhận thông báo đẩy.',
+                        ? context.tr('home_bttronghth_f0f025')
+                        : context.tr('home_btappxinqu_1a6325'),
                     onTap: _notificationsEnabled
                         ? _showDisableNotificationsOutsideAppNotice
                         : null,
@@ -357,6 +395,69 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                 ],
               ),
             ),
+          SLSpacing.h12,
+          Container(
+            padding: SLSpacing.all12,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8E1),
+              borderRadius: SLRadius.lgAll,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nhắc nhở thông minh',
+                  style: SLTextStyles.quicksand(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF9C6A00),
+                  ),
+                ),
+                SLSpacing.h8,
+                _buildSwitchRow(
+                  'Nhắc ngày kỷ niệm',
+                  _notifAnniversary,
+                  (v) {
+                    setState(() => _notifAnniversary = v);
+                    SoundService().playClick();
+                    unawaited(_persistNotificationPrefs());
+                  },
+                  helperText: 'Nhắc trước và trong ngày đặc biệt của hai bạn.',
+                ),
+                _buildSwitchRow(
+                  'Nhắc viết nhật ký',
+                  _smartDiaryReminder,
+                  (v) {
+                    setState(() => _smartDiaryReminder = v);
+                    SoundService().playClick();
+                    unawaited(_persistNotificationPrefs());
+                  },
+                  helperText: 'Gợi ý ghi lại cảm xúc khi lâu chưa viết.',
+                ),
+                _buildSwitchRow(
+                  'Nhắc mở time capsule',
+                  _smartCapsuleReminder,
+                  (v) {
+                    setState(() => _smartCapsuleReminder = v);
+                    SoundService().playClick();
+                    unawaited(_persistNotificationPrefs());
+                  },
+                  helperText: 'Báo khi hộp thư tương lai đã đến ngày mở.',
+                ),
+                _buildSwitchRow(
+                  'Lời yêu thương mỗi ngày',
+                  _smartLoveNoteReminder,
+                  (v) {
+                    setState(() => _smartLoveNoteReminder = v);
+                    SoundService().playClick();
+                    unawaited(_persistNotificationPrefs());
+                  },
+                  helperText:
+                      'Nhắc nhẹ một câu yêu thương, không gửi quá nhiều.',
+                ),
+              ],
+            ),
+          ),
           SLSpacing.h12,
           Container(
             padding: SLSpacing.all12,

@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -861,11 +862,11 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     try {
       if (wasDropped) {
         if (hadContributed) {
-          await _db
-              .ref('uploads/fire_totals/${widget.targetHouseId}')
-              .runTransaction((curr) {
-            int count = (curr as num?)?.toInt() ?? 0;
-            return Transaction.success(count > 0 ? count - 1 : 0);
+          await FirebaseFunctions.instance
+              .httpsCallable('dropVisitorHeart')
+              .call(<String, dynamic>{
+            'targetHouseId': widget.targetHouseId,
+            'active': false,
           });
         }
         await stateRef.set({
@@ -875,10 +876,12 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         });
         _HeartDropCache.clearDropped(storeKey);
       } else {
-        await _db
-            .ref('uploads/fire_totals/${widget.targetHouseId}')
-            .runTransaction(
-                (curr) => Transaction.success((curr as num? ?? 0) + 1));
+        await FirebaseFunctions.instance
+            .httpsCallable('dropVisitorHeart')
+            .call(<String, dynamic>{
+          'targetHouseId': widget.targetHouseId,
+          'active': true,
+        });
         await stateRef.set({
           'active': true,
           'hasContributed': true,

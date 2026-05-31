@@ -2,7 +2,7 @@ part of 'map_screen.dart';
 
 extension _MapScreenHelpers on _MapScreenState {
   String _buildMemorySummaryLabel(int total) {
-    if (total <= 0) return 'Chưa có ghim kỷ niệm';
+    if (total <= 0) return L10nService().translate('map_chacghimkn_c6823f');
     final visible = math.min(total, _kMaxRenderedMemoryMarkers);
     if (total <= _kMaxRenderedMemoryMarkers) {
       return '$total ghim kỷ niệm trên bản đồ';
@@ -11,7 +11,7 @@ extension _MapScreenHelpers on _MapScreenState {
   }
 
   String _buildCheckinSummaryLabel(int total) {
-    if (total <= 0) return 'Chưa có check-in';
+    if (total <= 0) return L10nService().translate('map_chacchecki_51b108');
     final visible = math.min(total, _kMaxRenderedCheckinMarkers);
     if (total <= _kMaxRenderedCheckinMarkers) {
       return '$total check-in gần đây';

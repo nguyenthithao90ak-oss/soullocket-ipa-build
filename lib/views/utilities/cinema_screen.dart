@@ -6,6 +6,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:share_plus/share_plus.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
@@ -60,7 +61,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
   StreamSubscription<DatabaseEvent>? _dailyReelSub;
   Timer? _previewTimer;
 
-  String _houseName = 'Rạp kỷ niệm';
+  String _houseName = L10nService().translate('util_rpknim_d094b9');
   DateTime? _startDate;
   List<_CinemaMemoryRecord> _records = const <_CinemaMemoryRecord>[];
   _CinemaDailyReel? _dailyReel;
@@ -109,9 +110,19 @@ class _CinemaScreenState extends State<CinemaScreen> {
 
   void _commitState(VoidCallback action) => setState(action);
 
+  late String _msgHouseNameDefault;
+  late String _msgSettingsLoadFail;
+  late String _msgMemoriesLoadFail;
+  late String _msgReelLoadFail;
+
   @override
   void initState() {
     super.initState();
+    _msgHouseNameDefault = context.tr('util_rpknim_d094b9');
+    _msgSettingsLoadFail = context.tr('util_khngthtici_5693ed');
+    _msgMemoriesLoadFail = context.tr('util_khngthtinh_b3efc6');
+    _msgReelLoadFail = context.tr('util_khngthtire_9725ac');
+
     _listenToSettings();
     _listenToMemories();
     _listenToDailyReel();
@@ -134,7 +145,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
       (event) {
         final data = _asMap(event.snapshot.value);
         final nextHouseName = _readTrimmedString(data['houseName']);
-        _houseName = nextHouseName.isEmpty ? 'Rạp kỷ niệm' : nextHouseName;
+        _houseName = nextHouseName.isEmpty ? _msgHouseNameDefault : nextHouseName;
         _startDate = _parseDate(data['startDate']);
         _didLoadSettings = true;
         if (mounted) {
@@ -146,7 +157,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
         debugPrint(
           'Cinema settings listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải cài đặt rạp.',
+            fallbackMessage: _msgSettingsLoadFail,
           ).message}',
         );
       },
@@ -199,7 +210,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
         debugPrint(
           'Cinema memories listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải ảnh rạp.',
+            fallbackMessage: _msgMemoriesLoadFail,
           ).message}',
         );
       },
@@ -229,7 +240,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
         debugPrint(
           'Cinema reel listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải reel hôm nay.',
+            fallbackMessage: _msgReelLoadFail,
           ).message}',
         );
       },
@@ -352,9 +363,9 @@ class _CinemaScreenState extends State<CinemaScreen> {
                     if (_isLoading)
                       _buildStateCard(
                         icon: Icons.hourglass_top_rounded,
-                        title: 'Đang dựng suất chiếu',
+                        title: context.tr('util_angdngsutc_7c751f'),
                         message:
-                            'SoulLocket đang lấy ảnh từ Nhật ký, kiểm tra ngày hôm nay và đồng bộ video kỷ niệm trong ngày.',
+                            context.tr('util_soullocket_a4255f'),
                         child: const Padding(
                           padding: EdgeInsets.only(top: 18),
                           child: LinearProgressIndicator(
@@ -367,16 +378,16 @@ class _CinemaScreenState extends State<CinemaScreen> {
                     else if (_startDate == null)
                       _buildStateCard(
                         icon: Icons.event_busy_rounded,
-                        title: 'Chưa có ngày bắt đầu',
+                        title: context.tr('util_chacngybtu_0f2f9a'),
                         message:
-                            'Rạp chỉ mở được khi nhà của hai bạn có startDate. Hãy cập nhật ngày bắt đầu trong cài đặt cặp đôi trước.',
+                            context.tr('util_rpchmckhin_716a2e'),
                       )
                     else if (!_isAnniversaryToday)
                       _buildStateCard(
                         icon: Icons.lock_clock_rounded,
-                        title: 'Rạp chưa mở hôm nay',
+                        title: context.tr('util_rpchamhmna_2cca0a'),
                         message:
-                            'Rạp chỉ mở khi chạm đúng mốc kỷ niệm như 10 ngày, 30 ngày, 100 ngày, 200 ngày, 300 ngày, 365 ngày và các mốc tiếp theo trong phần Kỷ niệm.',
+                            context.tr('util_rpchmkhich_85285a'),
                         child: Padding(
                           padding: const EdgeInsets.only(top: 16),
                           child: _buildLockedShowtimeCard(),
@@ -385,16 +396,16 @@ class _CinemaScreenState extends State<CinemaScreen> {
                     else if (_records.isEmpty)
                       _buildStateCard(
                         icon: Icons.photo_library_outlined,
-                        title: 'Chưa có ảnh để dựng video',
+                        title: context.tr('util_chacnhdngv_7555bb'),
                         message:
-                            'Hôm nay đã tới đúng mốc ${todayMilestone?.title.toLowerCase() ?? 'kỷ niệm'}, nhưng kho Nhật ký của hai bạn chưa có ảnh nào để tạo reel kỷ niệm.',
+                            L10nService().format('util_cinema_today_milestone', {'title': todayMilestone?.title.toLowerCase() ?? context.tr('util_knim_1a2b3c')}),
                       )
                     else if (reel == null || selectedItem == null)
                       _buildStateCard(
                         icon: Icons.movie_creation_outlined,
-                        title: 'Đang chốt reel hôm nay',
+                        title: context.tr('util_angchtreel_6b815f'),
                         message:
-                            'Video kỷ niệm đang được chọn ảnh và đồng bộ cho cả hai người. Mở lại sau vài giây nhé.',
+                            context.tr('util_videoknima_b36e6c'),
                         child: const Padding(
                           padding: EdgeInsets.only(top: 18),
                           child: LinearProgressIndicator(

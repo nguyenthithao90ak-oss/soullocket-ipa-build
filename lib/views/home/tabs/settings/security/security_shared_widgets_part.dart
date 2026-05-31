@@ -127,7 +127,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     VoidCallback? onSecondaryAction,
     String? secondaryActionLabel,
   }) {
-    final statusText = statusLabel ?? (isVerified ? 'Đã xác thực' : 'Chưa xác thực');
+    final statusText = statusLabel ?? (isVerified ? context.tr('home_xcthc_a8bcec') : context.tr('home_chaxcthc_54490d'));
     final statusBg = isVerified ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0);
     final statusFg = isVerified ? const Color(0xFF2E7D32) : const Color(0xFFE65100);
 
@@ -192,7 +192,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
                 if (onSecondaryAction != null)
                   Expanded(
                     child: _buildCompactActionBtn(
-                      label: secondaryActionLabel ?? 'Thay đổi',
+                      label: secondaryActionLabel ?? context.tr('home_thayi_d4d9d8'),
                       onTap: onSecondaryAction,
                       isPrimary: false,
                     ),
@@ -202,7 +202,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
                 if (onAction != null || isLoading)
                   Expanded(
                     child: _buildCompactActionBtn(
-                      label: isLoading ? 'Đang xử lý...' : actionLabel,
+                      label: isLoading ? context.tr('home_angxl_5d4018') : actionLabel,
                       onTap: isLoading ? null : onAction,
                       isPrimary: true,
                       accentColor: accentColor,
@@ -284,7 +284,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             ),
             const SizedBox(height: 24),
             Text(
-              'Email dự phòng',
+              context.tr('home_emaildphng_60bcd4'),
               style: SLTheme.quicksand(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
@@ -293,7 +293,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             ),
             const SizedBox(height: 8),
             Text(
-              'Dùng để nhận mã khôi phục khi bạn không thể truy cập email chính.',
+              context.tr('home_dngnhnmkhi_7efdcc'),
               style: SLTheme.quicksand(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -301,10 +301,10 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
               ),
             ),
             const SizedBox(height: 24),
-            _buildInput(_secondaryEmailCtrl, 'Nhập email phụ / email dự phòng'),
+            _buildInput(_secondaryEmailCtrl, context.tr('home_nhpemailph_9c0bf7')),
             const SizedBox(height: 16),
             _buildGradientBtn(
-              label: _secondaryEmail.isEmpty ? 'THÊM EMAIL PHỤ' : 'CẬP NHẬT',
+              label: _secondaryEmail.isEmpty ? context.tr('home_thmemailph_cdc362') : context.tr('home_cpnht_c81e30'),
               gradient: const [Color(0xFF8E24AA), Color(0xFF6A1B9A)],
               onTap: () {
                 Navigator.pop(context);

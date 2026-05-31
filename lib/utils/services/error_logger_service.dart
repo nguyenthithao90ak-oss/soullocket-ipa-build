@@ -10,23 +10,25 @@ class ErrorLoggerService {
   ErrorLoggerService._internal();
 
   Future<void> initialize() async {
+    if (kDebugMode) {
+      // In debug mode: disable Crashlytics entirely — do NOT attach error
+      // handlers so the SDK never processes errors and shows no debug overlays.
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
+      return;
+    }
+
     // Pass all uncaught "fatal" errors from the framework to Crashlytics
     FlutterError.onError = (errorDetails) {
       FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
     };
-    
+
     // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
     PlatformDispatcher.instance.onError = (error, stack) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
-    
-    if (kDebugMode) {
-      // Force disable Crashlytics collection while in debug mode
-      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
-    } else {
-      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-    }
+
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
   }
 
   Future<void> logError(dynamic error, StackTrace? stack, {String? reason, bool fatal = false}) async {

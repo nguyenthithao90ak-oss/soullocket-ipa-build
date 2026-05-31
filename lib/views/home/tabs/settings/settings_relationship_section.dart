@@ -81,7 +81,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
     if (primaryName.isNotEmpty) {
       return primaryName;
     }
-    return 'Người dùng';
+    return context.tr('home_ngidng_3bf886');
   }
 
   SettingsRelationshipPanelState _buildRelationshipPanelState() {
@@ -107,7 +107,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Hủy'),
+            child: Text(context.tr('home_hy_1e4050')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -126,19 +126,28 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
   Future<void> _submitBreakupRequest() async {
     final houseId = (_houseId ?? '').trim();
     final user = _auth.currentUser;
+    final missingDataErr = context.tr('home_thiudliuth_a60168');
+    final confirmSingleTitle = context.tr('home_xadliunh_bbb016');
+    final confirmCoupleTitle = context.tr('home_chiatayxad_3b2b07');
+    final confirmSingleMsg = context.tr('home_bnsplnlchx_e075e4');
+    final confirmCoupleMsg = context.tr('home_bnsptoyucu_809644');
+    final confirmSingleLabel = context.tr('home_tiptcxa_82cf87');
+    final confirmCoupleLabel = context.tr('home_giyucu_576885');
+    final fallbackErrMsg = context.tr('home_chathkhito_f4bc81');
+
     if (houseId.isEmpty || user == null) {
-      _showToast('Thiếu dữ liệu để thực hiện thao tác này.', success: false);
+      _showToast(missingDataErr, success: false);
       return;
     }
     if (!await _ensureCanModifySharedInfo()) return;
 
     final confirmed = await _confirmRelationshipAction(
       title:
-          _isSingleRelationship ? 'Xóa dữ liệu nhà' : 'Chia tay / Xóa dữ liệu',
+          _isSingleRelationship ? confirmSingleTitle : confirmCoupleTitle,
       message: _isSingleRelationship
-          ? 'Bạn sắp lên lịch xóa dữ liệu nhà này. Bạn vẫn có thể rút lại trước hạn xóa.'
-          : 'Bạn sắp tạo yêu cầu chia tay và xóa dữ liệu chung. Bạn có chắc chắn muốn tiếp tục?',
-      confirmLabel: _isSingleRelationship ? 'Tiếp tục xóa' : 'Gửi yêu cầu',
+          ? confirmSingleMsg
+          : confirmCoupleMsg,
+      confirmLabel: _isSingleRelationship ? confirmSingleLabel : confirmCoupleLabel,
     );
     if (!confirmed || !mounted) return;
 
@@ -160,8 +169,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              'Chưa thể khởi tạo yêu cầu lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+          fallbackMessage: fallbackErrMsg,
         ).message,
         success: false,
       );
@@ -175,13 +183,18 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
   Future<void> _withdrawBreakupRequest() async {
     final houseId = (_houseId ?? '').trim();
     if (houseId.isEmpty) return;
+    final confirmTitle = context.tr('home_rtliyucu_29ae92');
+    final confirmMsg = context.tr('home_bnchcchnmu_a5cf3b');
+    final confirmLabel = context.tr('home_rtli_c70307');
+    final fallbackErrMsg = context.tr('home_chathrtliy_6cc6e9');
+
     if (!await _ensureCanModifySharedInfo()) return;
 
     final confirmed = await _confirmRelationshipAction(
-      title: 'Rút lại yêu cầu',
+      title: confirmTitle,
       message:
-          'Bạn chắc chắn muốn rút lại yêu cầu này? Lịch chờ và lịch xóa sẽ bị hủy.',
-      confirmLabel: 'Rút lại',
+          confirmMsg,
+      confirmLabel: confirmLabel,
     );
     if (!confirmed || !mounted) return;
 
@@ -202,8 +215,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              'Chưa thể rút lại yêu cầu lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+          fallbackMessage: fallbackErrMsg,
         ).message,
         success: false,
       );
@@ -259,7 +271,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
                       unawaited(_withdrawBreakupRequest());
                     },
               icon: const Icon(Icons.undo_rounded),
-              label: const Text('Rút lại yêu cầu'),
+              label: Text(context.tr('home_rtliyucu_29ae92')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFFD81B60),
                 side: const BorderSide(color: Color(0xFFFFA8BF)),

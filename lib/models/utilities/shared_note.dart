@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 // lib/models/utilities/shared_note.dart
 
 class SharedNote {
@@ -22,7 +23,7 @@ class SharedNote {
   factory SharedNote.fromMap(String id, Map<dynamic, dynamic> map) {
     return SharedNote(
       id: id,
-      title: map['title'] ?? 'Ghi chú',
+      title: map['title'] ?? L10nService().translate('core_note'),
       content: map['content'] ?? '',
       authorId: map['authorId'] ?? 'U1',
       updatedAt: map['ts'] ?? 0,

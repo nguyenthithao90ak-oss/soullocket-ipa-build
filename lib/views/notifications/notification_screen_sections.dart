@@ -31,7 +31,7 @@ extension _NotificationScreenSections on _NotificationScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'SoulLocket Thông Báo',
+                  context.tr('notifications_title'),
                   style: SLTheme.quicksand(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
@@ -40,7 +40,10 @@ extension _NotificationScreenSections on _NotificationScreenState {
                 ),
                 if (_unreadCount > 0)
                   Text(
-                    '$_unreadCount chưa đọc',
+                    L10nScope.of(context).format(
+                      'notifications_unread_count',
+                      {'count': _unreadCount},
+                    ),
                     style: SLTheme.quicksand(
                       fontSize: 12,
                       color: SLColors.textSecondary,
@@ -60,7 +63,7 @@ extension _NotificationScreenSections on _NotificationScreenState {
                 ),
               ),
               child: Text(
-                'Đọc hết',
+                context.tr('notifications_mark_all_read_short'),
                 style: SLTheme.quicksand(
                   color: SLColors.primaryActive,
                   fontSize: 13,
@@ -114,7 +117,7 @@ extension _NotificationScreenSections on _NotificationScreenState {
           children: [
             _buildActionChip(
               icon: Icons.done_all_rounded,
-              label: 'Đã đọc tất cả',
+              label: context.tr('notifications_mark_all_read'),
               color: SLColors.success,
               background: SLColors.successLight,
               onTap:
@@ -123,7 +126,7 @@ extension _NotificationScreenSections on _NotificationScreenState {
             SLSpacing.w8,
             _buildActionChip(
               icon: Icons.delete_sweep_rounded,
-              label: 'Xóa tất cả',
+              label: context.tr('notifications_clear_all'),
               color: SLColors.danger,
               background: SLColors.dangerLight,
               onTap: deletableCount > 0 && !_isClearingAll
@@ -135,7 +138,9 @@ extension _NotificationScreenSections on _NotificationScreenState {
               icon: _showUnreadOnly
                   ? Icons.mark_email_unread_rounded
                   : Icons.drafts_outlined,
-              label: _showUnreadOnly ? 'Đang lọc chưa đọc' : 'Chỉ chưa đọc',
+              label: _showUnreadOnly
+                  ? context.tr('notifications_filter_unread_active')
+                  : context.tr('notifications_filter_unread_only'),
               color: SLColors.info,
               background: SLColors.infoLight,
               onTap: _toggleUnreadOnly,
@@ -143,7 +148,7 @@ extension _NotificationScreenSections on _NotificationScreenState {
             SLSpacing.w8,
             _buildActionChip(
               icon: Icons.lock_outline_rounded,
-              label: 'Hệ thống khóa',
+              label: context.tr('notifications_system_locked'),
               color: SLColors.accentPurpleDark,
               background: SLColors.accentPurple.withValues(alpha: 0.16),
               onTap: null,

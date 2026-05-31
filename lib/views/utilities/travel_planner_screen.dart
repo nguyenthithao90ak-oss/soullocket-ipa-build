@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
@@ -90,8 +91,8 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
                       SLSpacing.h16,
                       Text(
                         pin == null
-                            ? 'Thêm điểm đến mới'
-                            : 'Cập nhật kỷ niệm chuyến đi',
+                            ? context.tr('util_thmimnmi_b42340')
+                            : context.tr('util_cpnhtknimc_568fe9'),
                         style: SLTheme.quicksand(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
@@ -101,14 +102,14 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
                       SLSpacing.h16,
                       _TravelTextField(
                         controller: cityCtrl,
-                        label: 'Thành phố',
-                        hintText: 'Ví dụ: Đà Lạt',
+                        label: context.tr('util_thnhph_936210'),
+                        hintText: context.tr('util_vdlt_daeea6'),
                       ),
                       SLSpacing.h12,
                       _TravelTextField(
                         controller: countryCtrl,
-                        label: 'Quốc gia',
-                        hintText: 'Ví dụ: Việt Nam',
+                        label: context.tr('util_qucgia_5e1dc4'),
+                        hintText: context.tr('util_vdvitnam_ac7332'),
                       ),
                       SLSpacing.h12,
                       Row(
@@ -116,7 +117,7 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
                           Expanded(
                             child: _TravelTextField(
                               controller: latCtrl,
-                              label: 'Vĩ độ',
+                              label: context.tr('util_v_e1a2fe'),
                               hintText: '11.9404',
                               keyboardType:
                                   const TextInputType.numberWithOptions(
@@ -129,7 +130,7 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
                           Expanded(
                             child: _TravelTextField(
                               controller: lngCtrl,
-                              label: 'Kinh độ',
+                              label: context.tr('util_kinh_b75eec'),
                               hintText: '108.4583',
                               keyboardType:
                                   const TextInputType.numberWithOptions(
@@ -143,8 +144,8 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
                       SLSpacing.h12,
                       _TravelTextField(
                         controller: noteCtrl,
-                        label: 'Ghi chú',
-                        hintText: 'Kỷ niệm đẹp ở nơi này...',
+                        label: context.tr('util_ghich_f481f9'),
+                        hintText: context.tr('util_knimpniny_7bc54e'),
                         maxLines: 4,
                       ),
                       SLSpacing.h12,
@@ -161,7 +162,7 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                'Đã ghé thăm địa điểm này',
+                                context.tr('util_ghthmaimny_301482'),
                                 style: SLTheme.quicksand(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
@@ -233,7 +234,7 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
                             ),
                           ),
                           child: Text(
-                            pin == null ? 'Lưu điểm đến' : 'Cập nhật chuyến đi',
+                            pin == null ? context.tr('util_luimn_e2a891') : context.tr('util_cpnhtchuyn_612fcb'),
                             style: SLTheme.quicksand(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -266,7 +267,7 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, 'Bản đồ hành trình ✈️'),
+      appBar: SLTheme.appBar(context, context.tr('util_bnhnhtrnh_8e3daf')),
       floatingActionButton: _houseId == null
           ? null
           : FloatingActionButton.extended(
@@ -274,7 +275,7 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
               backgroundColor: SLColors.primaryActive,
               foregroundColor: Colors.white,
               label: Text(
-                'Thêm điểm đến',
+                context.tr('util_thmimn_cddee7'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
               ),
               icon: const Icon(Icons.add_location_alt_rounded),
@@ -295,10 +296,10 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
                   ),
                 )
               : _houseId == null
-                  ? const _TravelEmptyState(
-                      title: 'Chưa tìm thấy tổ ấm',
+                  ? _TravelEmptyState(
+                      title: context.tr('util_chatmthytm_e9e64b'),
                       subtitle:
-                          'Hãy đăng nhập lại để bắt đầu lưu các chuyến đi chung.',
+                          context.tr('util_hyngnhplib_d6cbe7'),
                       icon: Icons.travel_explore_rounded,
                     )
                   : StreamBuilder<List<TravelPin>>(
@@ -337,10 +338,10 @@ class _TravelPlannerScreenState extends State<TravelPlannerScreen> {
                                 ),
                                 Expanded(
                                   child: pins.isEmpty
-                                      ? const _TravelEmptyState(
-                                          title: 'Chưa có điểm đến nào',
+                                      ? _TravelEmptyState(
+                                          title: context.tr('util_chacimnno_5907b2'),
                                           subtitle:
-                                              'Thêm thành phố đầu tiên để bắt đầu bản đồ hành trình của hai bạn.',
+                                              context.tr('util_thmthnhphu_2dbd28'),
                                           icon: Icons.map_outlined,
                                         )
                                       : ListView.separated(
@@ -408,7 +409,7 @@ class _TravelHeroCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Bản đồ yêu thương',
+                  context.tr('util_bnyuthng_66ba68'),
                   style: SLTheme.quicksand(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -435,7 +436,7 @@ class _TravelHeroCard extends StatelessWidget {
           ),
           SLSpacing.h8,
           Text(
-            'Lưu những nơi hai bạn đã đi qua, dự định ghé thăm và những kỷ niệm nhỏ ở mỗi điểm dừng.',
+            context.tr('util_lunhngniha_eaa3c2'),
             style: SLTheme.quicksand(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -448,7 +449,7 @@ class _TravelHeroCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _TravelStatPill(
-                  label: 'Điểm đến',
+                  label: context.tr('util_imn_cfad69'),
                   value: '${stats.totalPins}',
                   color: SLColors.primaryActive,
                   background: SLColors.primaryLight,
@@ -457,7 +458,7 @@ class _TravelHeroCard extends StatelessWidget {
               SLSpacing.w8,
               Expanded(
                 child: _TravelStatPill(
-                  label: 'Quốc gia',
+                  label: context.tr('util_qucgia_5e1dc4'),
                   value: '${stats.uniqueCountries}',
                   color: SLColors.info,
                   background: SLColors.infoLight,
@@ -466,7 +467,7 @@ class _TravelHeroCard extends StatelessWidget {
               SLSpacing.w8,
               Expanded(
                 child: _TravelStatPill(
-                  label: 'Thành phố',
+                  label: context.tr('util_thnhph_936210'),
                   value: '${stats.uniqueCities}',
                   color: SLColors.success,
                   background: SLColors.successLight,
@@ -502,7 +503,7 @@ class _TravelInsightCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Nhịp du lịch của hai bạn',
+            context.tr('util_nhpdulchca_2cb700'),
             style: SLTheme.quicksand(
               fontSize: 16,
               fontWeight: FontWeight.w900,
@@ -521,9 +522,9 @@ class _TravelInsightCard extends StatelessWidget {
           SLSpacing.h8,
           Text(
             stats.totalPins == 0
-                ? 'Chưa có lịch trình nào được thêm.'
+                ? context.tr('util_chaclchtrn_9a9585')
                 : stats.visitedPins == stats.totalPins
-                    ? 'Tất cả điểm đến hiện tại đã được đánh dấu hoàn thành.'
+                    ? context.tr('util_ttcimnhint_da48a2')
                     : 'Còn ${stats.totalPins - stats.visitedPins} điểm đến đang chờ hai bạn ghé thăm.',
             style: SLTheme.quicksand(
               fontSize: 13,
@@ -553,7 +554,7 @@ class _TravelPinCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateText = pin.ts == 0
-        ? 'Vừa thêm'
+        ? context.tr('util_vathm_d378e3')
         : DateFormat('dd/MM/yyyy').format(
             DateTime.fromMillisecondsSinceEpoch(pin.ts),
           );
@@ -630,7 +631,7 @@ class _TravelPinCard extends StatelessWidget {
                   borderRadius: SLRadius.pillAll,
                 ),
                 child: Text(
-                  pin.visited ? 'Đã ghé' : 'Dự định',
+                  pin.visited ? context.tr('util_gh_b9f1ff') : context.tr('util_dnh_c8db9c'),
                   style: SLTheme.quicksand(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
@@ -650,7 +651,7 @@ class _TravelPinCard extends StatelessWidget {
             ),
             child: Text(
               pin.note.isEmpty
-                  ? 'Chưa có ghi chú, hãy thêm một kỷ niệm nhỏ cho chuyến đi này.'
+                  ? context.tr('util_chacghichh_a9bc72')
                   : pin.note,
               style: SLTheme.quicksand(
                 fontSize: 13,
@@ -686,7 +687,7 @@ class _TravelPinCard extends StatelessWidget {
                         ? Icons.undo_rounded
                         : Icons.check_circle_outline_rounded,
                   ),
-                  label: Text(pin.visited ? 'Chưa ghé' : 'Đánh dấu đã ghé'),
+                  label: Text(pin.visited ? context.tr('util_chagh_1b31d7') : context.tr('util_nhdugh_71e297')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: SLColors.primaryActive,
                     side: const BorderSide(color: SLColors.primary),

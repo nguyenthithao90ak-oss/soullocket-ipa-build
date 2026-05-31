@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
 import 'dart:math';
@@ -31,10 +32,10 @@ class _WheelScreenState extends State<WheelScreen>
   StreamSubscription<List<Map<String, dynamic>>>? _historySub;
 
   List<String> _items = [
-    'Ai nấu cơm?',
-    'Ai rửa bát?',
-    'Ai lau nhà?',
-    'Ai giặt đồ?'
+    L10nService().translate('util_ainucm_2b8319'),
+    L10nService().translate('util_airabt_f0a676'),
+    L10nService().translate('util_ailaunh_38cac1'),
+    L10nService().translate('util_aigit_48460b')
   ];
   final TextEditingController _itemController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
@@ -159,14 +160,14 @@ class _WheelScreenState extends State<WheelScreen>
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        throw Exception('Dịch vụ định vị chưa được bật.');
+        throw Exception(L10nService().translate('util_dchvnhvcha_809638'));
       }
 
       if (!mounted) return;
       final hasPerm = await LocationService()
           .requestPermission(context: context);
       if (!hasPerm) {
-        throw Exception('Quyền truy cập vị trí bị từ chối.');
+        throw Exception(L10nService().translate('util_quyntruycp_d7e682'));
       }
 
       final position = await Geolocator.getCurrentPosition(
@@ -236,13 +237,13 @@ class _WheelScreenState extends State<WheelScreen>
           backgroundColor: Colors.green,
         ));
       } else {
-        throw Exception('Không tìm thấy quán ăn nào xung quanh.');
+        throw Exception(L10nService().translate('util_khngtmthyq_bdb7de'));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-            'Không tìm được quán ăn phù hợp lúc này. Hãy thử lại sau.',
+            L10nService().translate('util_khngtmcqun_717598'),
           ),
           backgroundColor: Colors.red,
         ));
@@ -301,7 +302,7 @@ class _WheelScreenState extends State<WheelScreen>
       });
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể quay lúc này. Bạn thử lại sau.',
+        fallbackMessage: L10nService().translate('util_chathquayl_0d5dc0'),
       );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -366,7 +367,7 @@ class _WheelScreenState extends State<WheelScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, 'VÒNG QUAY ĐỊNH MỆNH 🎡'),
+      appBar: SLTheme.appBar(context, L10nService().translate('util_vngquaynhm_856e66')),
       body: SLTheme.background(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -426,7 +427,7 @@ class _WheelScreenState extends State<WheelScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Nhập các lựa chọn:',
+                  L10nService().translate('util_nhpcclachn_bd1e90'),
                   style: SLTheme.quicksand(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
@@ -453,7 +454,7 @@ class _WheelScreenState extends State<WheelScreen>
                             color: SLTheme.primary, size: 16),
                       SLSpacing.w4,
                       Text(
-                        'Tìm quán gần đây',
+                        L10nService().translate('util_tmqungny_6f19d7'),
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
@@ -612,7 +613,7 @@ class _WheelScreenState extends State<WheelScreen>
                   ],
                 ),
                 child: Text(
-                  currentItem.isEmpty ? 'Chờ Quay...' : currentItem,
+                  currentItem.isEmpty ? L10nService().translate('util_chquay_eb9f26') : currentItem,
                   style: SLTheme.quicksand(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -687,7 +688,7 @@ class _WheelScreenState extends State<WheelScreen>
                 shadowColor: SLTheme.primary.withValues(alpha: 0.35),
               ),
               child: Text(
-                _isSpinning ? 'ĐANG QUAY...' : 'BẮT ĐẦU QUAY',
+                _isSpinning ? L10nService().translate('util_angquay_3580ce') : L10nService().translate('util_btuquay_5c5ee8'),
                 style: SLTheme.quicksand(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -741,7 +742,7 @@ class _WheelScreenState extends State<WheelScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '5 lượt quay gần nhất',
+                      L10nService().translate('util_5ltquaygnn_75187c'),
                       style: SLTheme.quicksand(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
@@ -749,7 +750,7 @@ class _WheelScreenState extends State<WheelScreen>
                       ),
                     ),
                     Text(
-                      'Lưu lại nội dung và kết quả mỗi lần quay',
+                      L10nService().translate('util_lulinidung_62d967'),
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -791,7 +792,7 @@ class _WheelScreenState extends State<WheelScreen>
                 border: Border.all(color: SLTheme.primary.withValues(alpha: 0.12)),
               ),
               child: Text(
-                'Chưa có lịch sử quay nào. Bấm SPIN để lưu 5 lần gần nhất.',
+                L10nService().translate('util_chaclchsqu_9e0f48'),
                 style: SLTheme.quicksand(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -871,7 +872,7 @@ class _WheelScreenState extends State<WheelScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Kết quả',
+                      L10nService().translate('util_ktqu_80d598'),
                       style: SLTheme.quicksand(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -923,7 +924,7 @@ class _WheelScreenState extends State<WheelScreen>
           ),
           SLSpacing.h12,
           Text(
-            'Nội dung lúc quay',
+            L10nService().translate('util_nidunglcqu_48a701'),
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w800,

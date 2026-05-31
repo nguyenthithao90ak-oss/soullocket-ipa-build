@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -42,7 +43,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
 
   String get _senderName {
     final value = widget.payload.senderName.trim();
-    return value.isEmpty ? 'Người thương của bạn' : value;
+    return value.isEmpty ? context.tr('util_ngithngcab_27bf12') : value;
   }
 
   String get _signature {
@@ -52,7 +53,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
 
   String get _messageText {
     final value = widget.payload.content.trim();
-    return value.isEmpty ? 'Một lời nhắn dịu dàng dành riêng cho bạn.' : value;
+    return value.isEmpty ? context.tr('util_mtlinhndud_27a576') : value;
   }
 
   @override
@@ -143,7 +144,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã sao chép nội dung thiệp.')),
+      SnackBar(content: Text(context.tr('util_saochpnidu_7d192f'))),
     );
   }
 
@@ -391,7 +392,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                   openValue: openValue,
                                   onOpen: _startOpenSequence,
                                   hintText: _hasStartedOpen
-                                      ? 'Thiệp đang bung mở...'
+                                      ? context.tr('util_thipangbun_3c06d4')
                                       : palette.openHint,
                                 ),
                               ),
@@ -511,8 +512,8 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                       ),
                                       _PaperBadge(
                                         label: _isTornOpen
-                                            ? 'Thiệp đã mở'
-                                            : 'Thiệp riêng đang mở',
+                                            ? context.tr('util_thipm_f8b35c')
+                                            : context.tr('util_thipringan_f6bed6'),
                                         background: palette.envelopeLight,
                                         foreground: palette.muted,
                                       ),
@@ -533,7 +534,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                             ),
                             const SizedBox(height: 22),
                             Text(
-                              'Từ $_senderName',
+                              L10nService().format('util_love_card_from', {'name': _senderName}),
                               style: SLTheme.quicksand(
                                 color: palette.ink,
                                 fontSize: constraints.maxWidth < 420 ? 28 : 34,
@@ -718,7 +719,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Người gửi hiển thị rõ',
+                                          context.tr('util_ngigihinth_b649e4'),
                                           style: SLTheme.quicksand(
                                             color: palette.muted,
                                             fontSize: 11,
@@ -743,7 +744,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                             if (!_isTornOpen) ...[
                               const SizedBox(height: 18),
                               Text(
-                                'Kéo dải giấy ở phía trên để xé mở hoàn toàn.',
+                                context.tr('util_kodigiypha_5fbdc1'),
                                 style: SLTheme.quicksand(
                                   color: palette.muted,
                                   fontSize: 12,
@@ -784,7 +785,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                       children: [
                         Expanded(
                           child: _ActionPillButton(
-                            label: 'Sao chép lời nhắn',
+                            label: context.tr('util_saochplinh_4e2965'),
                             icon: Icons.content_copy_rounded,
                             onTap: _copyCardContent,
                             background: palette.accent.withValues(alpha: 0.10),
@@ -794,7 +795,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                         const SizedBox(width: 10),
                         Expanded(
                           child: _ActionPillButton(
-                            label: 'Chia sẻ',
+                            label: context.tr('util_chias_569031'),
                             icon: Icons.ios_share_rounded,
                             onTap: _shareCard,
                             background: palette.accent,

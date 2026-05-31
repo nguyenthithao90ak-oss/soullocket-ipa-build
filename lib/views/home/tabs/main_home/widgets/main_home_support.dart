@@ -46,7 +46,7 @@ class _BlinkingAvatarHintState extends State<_BlinkingAvatarHint>
             border: Border.all(color: Colors.white.withValues(alpha: 0.42)),
           ),
           child: Text(
-            'Chọn ảnh',
+            context.tr('home_chnnh_719c35'),
             style: SLTheme.quicksand(
               fontSize: 11,
               fontWeight: FontWeight.w900,
@@ -781,7 +781,7 @@ class _InteractionSuccessDialog extends StatelessWidget {
                   ),
                   SLSpacing.h12,
                   Text(
-                    'Chạm nhẹ ra ngoài để khép lại',
+                    context.tr('home_chmnhrango_80519e'),
                     style: SLTheme.quicksand(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
@@ -846,7 +846,7 @@ class _MissYouAlertPayload {
       title: map['title']?.toString() ?? '',
       message: map['message']?.toString() ?? '',
       body: map['body']?.toString() ?? '',
-      fromName: (map['from'] ?? map['fromName'] ?? 'Người ấy').toString(),
+      fromName: (map['from'] ?? map['fromName'] ?? L10nService().translate('home_ngiy_5bab37')).toString(),
       fromAvatar: map['fromAvatar']?.toString() ?? '',
       toName: map['toName']?.toString() ?? '',
       sentAtMs: (() {
@@ -916,7 +916,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
           ],
           const Color(0xFFFFD18A),
           '${widget.payload.fromName} nhắc bạn uống nước!',
-          'Bên kia đang nóng đó nha, uống thêm nước giúp người ấy yên tâm nhé.',
+          context.tr('home_bnkiaangnn_c62597'),
           null,
         ),
       'warmth' => (
@@ -927,7 +927,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
           ],
           const Color(0xFFC8F1FF),
           '${widget.payload.fromName} nhắc bạn giữ ấm!',
-          'Bên kia đang mưa hoặc lạnh đó, nhớ giữ ấm và đừng để mình lo nhé.',
+          context.tr('home_bnkiaangma_0a9e8e'),
           null,
         ),
       'kiss' => (
@@ -938,7 +938,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
               .toList(),
           Colors.white,
           '${widget.payload.fromName} gửi bạn một nụ hôn!',
-          'Chụt một cái thật ngoan nè 💕',
+          context.tr('home_chtmtcitht_1ca200'),
           'https://assets9.lottiefiles.com/packages/lf20_mjfquvsi.json',
         ),
       'hug' => (
@@ -949,7 +949,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
               .toList(),
           Colors.white,
           '${widget.payload.fromName} ôm bạn một cái!',
-          'Một cái ôm mềm đang tới, đón lấy thật ngoan nhé 🤗',
+          context.tr('home_mtcimmmang_ce0013'),
           'https://assets10.lottiefiles.com/packages/lf20_96py9mpe.json',
         ),
       'angry' => (
@@ -960,7 +960,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
               .toList(),
           Colors.white,
           '${widget.payload.fromName} đang dỗi kìa!',
-          'Dỗi xíu thôi đó, qua dỗ người ta chút nha!',
+          context.tr('home_dixuthiqua_ed30d2'),
           null,
         ),
       'furious' => (
@@ -971,7 +971,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
               .toList(),
           Colors.white,
           '${widget.payload.fromName} đang tức lắm đó!',
-          'Cơn tức đỏ rực vừa bay tới, qua dỗ người ta liền nha!',
+          context.tr('home_cntcrcvaba_c0f1f0'),
           null,
         ),
       'tease' => (
@@ -982,7 +982,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
               .toList(),
           Colors.white,
           '${widget.payload.fromName} vừa trêu bạn đó!',
-          'Một cú chọc yêu siêu nhẹ vừa bay tới nè!',
+          context.tr('home_mtcchcyusi_aef43a'),
           null,
         ),
       'cry' => (
@@ -993,7 +993,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
               .toList(),
           Colors.white,
           '${widget.payload.fromName} đang cần bạn dỗ dành!',
-          'Hôm nay người ấy hơi tủi một chút, ôm và dỗ một câu nha!',
+          context.tr('home_hmnayngiyh_a67699'),
           null,
         ),
       'poop' => (
@@ -1004,7 +1004,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
               .toList(),
           Colors.white,
           '${widget.payload.fromName} ném 💩 vào bạn!',
-          'Một cú trêu siêu nghịch vừa đáp xuống nè!',
+          context.tr('home_mtctrusiun_2b24ce'),
           null,
         ),
       _ => (
@@ -1015,7 +1015,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
               .toList(),
           Colors.white,
           '${widget.payload.fromName} đang nhớ bạn!',
-          'Nhớ phản hồi lại cho người ấy cười một cái nhé 💕',
+          context.tr('home_nhphnhilic_33736a'),
           'https://assets3.lottiefiles.com/packages/lf20_o7pajr.json',
         ),
     };

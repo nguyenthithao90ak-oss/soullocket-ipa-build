@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -69,7 +70,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
   Future<void> _copyHouseId() async {
     await Clipboard.setData(ClipboardData(text: widget.houseId));
     if (!mounted) return;
-    SLNotice.showSuccess(context, 'Đã sao chép ID nhà!');
+    SLNotice.showSuccess(context, context.tr('comm_saochpidnh_81b785'));
   }
 
   Future<void> _setTab(int index) async {
@@ -110,8 +111,8 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       }
     } catch (error) {
       if (!mounted) return;
-      const text =
-          'Không thể mở camera quét QR lúc này. Bạn có thể upload ảnh QR hoặc nhập ID bên dưới.';
+      final text =
+          context.tr('comm_khngthmcam_c28e15');
       setState(() => _scannerInfoText = text);
       if (!silent && mounted) {
         SLNotice.showError(context, text);
@@ -135,15 +136,15 @@ class _HouseQRScreenState extends State<HouseQRScreen>
   String _scannerErrorText(MobileScannerException error) {
     switch (error.errorCode) {
       case MobileScannerErrorCode.permissionDenied:
-        return 'Camera đang bị từ chối quyền. Hãy cấp quyền camera hoặc dùng Upload ảnh QR / nhập ID bên dưới.';
+        return context.tr('comm_cameraangb_4bacfe');
       case MobileScannerErrorCode.unsupported:
-        return 'Thiết bị hoặc emulator này không hỗ trợ camera quét QR. Hãy dùng Upload ảnh QR hoặc nhập ID bên dưới.';
+        return context.tr('comm_thitbhocem_8c72ee');
       case MobileScannerErrorCode.controllerUninitialized:
-        return 'Camera chưa khởi tạo xong. Bạn bấm Quét lại camera để thử lại.';
+        return context.tr('comm_camerachak_81d30f');
       case MobileScannerErrorCode.controllerAlreadyInitialized:
-        return 'Camera đang được giữ bởi phiên khác. Bạn thử bấm Quét lại camera.';
+        return context.tr('comm_cameraangc_b3ff08');
       default:
-        return 'Camera QR đang gặp lỗi. Bạn vẫn có thể Upload ảnh QR hoặc nhập ID bên dưới.';
+        return context.tr('comm_cameraqran_f00350');
     }
   }
 
@@ -172,11 +173,11 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       if (!mounted) return;
       setState(() {
         _scannerInfoText =
-            'Mã này là QR đăng nhập, không phải QR nhà cộng đồng.';
+            context.tr('comm_mnylqrngnh_78e9de');
       });
       SLNotice.showError(
         context,
-        'Đây là QR đăng nhập, không phải QR nhà để ghé thăm.',
+        context.tr('comm_ylqrngnhpk_2b21fa'),
       );
       await _startScanner(silent: true);
       return;
@@ -213,11 +214,11 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       setState(() {
         _isProcessing = false;
         _scannerInfoText =
-            'Có lỗi khi xử lý mã QR. Bạn có thể thử lại hoặc nhập ID thủ công.';
+            context.tr('comm_clikhixlmq_54b191');
       });
       SLNotice.showError(
         context,
-        'Chưa thể xử lý mã QR lúc này. Bạn có thể thử lại hoặc nhập ID thủ công.',
+        context.tr('comm_chathxlmqr_edb285'),
       );
       await _startScanner(silent: true);
     }
@@ -254,16 +255,16 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       if (raw.isEmpty) {
         setState(() {
           _scannerInfoText =
-              'Ảnh này chưa đọc ra QR. Bạn có thể thử ảnh khác hoặc nhập ID nhà bên dưới.';
+              context.tr('comm_nhnychacra_368948');
         });
         SLNotice.showError(
           context,
-          'Không đọc được QR từ ảnh này. Bạn có thể thử nhập ID nhà bên dưới.',
+          context.tr('comm_khngccqrtn_f5aefc'),
         );
         return;
       }
 
-      await _handleDetectedValue(raw, sourceLabel: 'ảnh QR');
+      await _handleDetectedValue(raw, sourceLabel: context.tr('comm_nhqr_288f50'));
     } on MobileScannerException catch (error) {
       if (!mounted) return;
       final text = _scannerErrorText(error);
@@ -275,11 +276,11 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       if (!mounted) return;
       setState(() {
         _scannerInfoText =
-            'Không thể đọc ảnh QR lúc này. Bạn có thể thử ảnh khác hoặc nhập ID nhà bên dưới.';
+            context.tr('comm_khngthcnhq_d71d1f');
       });
       SLNotice.showError(
         context,
-        'Chưa thể đọc ảnh QR lúc này. Bạn có thể thử ảnh khác hoặc nhập ID nhà bên dưới nhé.',
+        context.tr('comm_chathcnhqr_14b91e'),
       );
     } finally {
       if (mounted) {
@@ -300,7 +301,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
     if (query.isEmpty) {
       if (mounted) {
         SLNotice.showError(
-            context, 'Bạn nhập ID nhà, username hoặc link trước nhé.');
+            context, context.tr('comm_bnnhpidnhu_f2499d'));
       }
       return;
     }
@@ -327,7 +328,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       if (results.isEmpty) {
         SLNotice.showError(
           context,
-          'Không tìm thấy nhà nào khớp. Bạn có thể kiểm tra lại ID hoặc username.',
+          context.tr('comm_khngtmthyn_3d95f0'),
         );
       } else {
         SLNotice.showSuccess(context, 'Đã tìm thấy ${results.length} kết quả.');
@@ -335,7 +336,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
     } catch (error) {
       final errorInfo = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Chưa thể tìm nhà lúc này. Bạn thử lại sau.',
+        fallbackMessage: context.tr('comm_chathtmnhl_88938a'),
       );
       SLNotice.showError(
         context,
@@ -354,7 +355,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
     } catch (_) {
       if (!mounted) return;
       if (mounted) {
-        SLNotice.showError(context, 'Thiết bị này không hỗ trợ đèn flash.');
+        SLNotice.showError(context, context.tr('comm_thitbnykhn_df24cd'));
       }
     }
   }
@@ -365,7 +366,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
     } catch (_) {
       if (!mounted) return;
       if (mounted) {
-        SLNotice.showError(context, 'Không thể đổi camera trên thiết bị này.');
+        SLNotice.showError(context, context.tr('comm_khngthicam_8bf16f'));
       }
     }
   }
@@ -489,9 +490,13 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       }
     }
 
-    if (value.contains(AppConfig.webHost) ||
-        value.contains('soullockket.web.app') ||
-        value.contains('soullocket.com')) {
+    final knownWebHosts = <String>{
+      if (AppConfig.webHost.isNotEmpty) AppConfig.webHost,
+      'soullockket.web.app',
+      'soullocket.com',
+    };
+    final lowerValue = value.toLowerCase();
+    if (knownWebHosts.any(lowerValue.contains)) {
       final hostUri =
           Uri.tryParse(value.contains('://') ? value : 'https://$value');
       if (hostUri != null && hostUri.pathSegments.isNotEmpty) {
@@ -543,7 +548,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       if (!mounted) return;
       setState(() => _isProcessing = false);
       if (mounted) {
-        SLNotice.showError(context, 'Đây là nhà của bạn rồi!');
+        SLNotice.showError(context, context.tr('comm_ylnhcabnri_7f664c'));
       }
       await _startScanner(silent: true);
       return;
@@ -553,7 +558,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       if (!mounted) return;
       setState(() => _isProcessing = false);
       if (mounted) {
-        SLNotice.showError(context, 'ID nhà này hiện không tồn tại.');
+        SLNotice.showError(context, context.tr('comm_idnhnyhink_79555a'));
       }
       await _startScanner(silent: true);
       return;
@@ -608,7 +613,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
       backgroundColor: const Color(0xFFF7F7F7),
       appBar: AppBar(
         title: Text(
-          'Mã QR Nhà',
+          context.tr('comm_mqrnh_4cc87e'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.bold,
             color: Colors.black87,
@@ -628,7 +633,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                   child: _buildTabButton('👁️ Xem QR', 0),
                 ),
                 Expanded(
-                  child: _buildTabButton('📷 Quét & Tìm', 1),
+                  child: _buildTabButton(context.tr('comm_quttm_2c34c5'), 1),
                 ),
               ],
             ),
@@ -679,7 +684,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
             child: Column(
               children: [
                 Text(
-                  'Mã nhà của bạn',
+                  context.tr('comm_mnhcabn_de776a'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF334155),
@@ -721,7 +726,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                 ),
                 SLSpacing.h16,
                 Text(
-                  'Chia sẻ QR hoặc ID này để người khác ghé thăm nhà bạn nhanh hơn.',
+                  context.tr('comm_chiasqrhoc_a6ff48'),
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     fontSize: 13,
@@ -736,7 +741,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
           ElevatedButton.icon(
             onPressed: _copyHouseId,
             icon: const Icon(Icons.copy_rounded),
-            label: const Text('Sao chép ID nhà'),
+            label: Text(context.tr('comm_saochpidnh_7d7eb8')),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4CAF50),
               foregroundColor: Colors.white,
@@ -754,7 +759,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
           OutlinedButton.icon(
             onPressed: () => unawaited(_setTab(1)),
             icon: const Icon(Icons.qr_code_scanner_rounded),
-            label: const Text('Mở quét / upload / tìm ID'),
+            label: Text(context.tr('comm_mqutupload_1174a7')),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFD81B60),
               side: const BorderSide(color: Color(0xFFD81B60)),
@@ -886,8 +891,8 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                                 SLSpacing.h12,
                                 Text(
                                   _isAnalyzingImage
-                                      ? 'Đang đọc ảnh QR...'
-                                      : 'Đang mở nhà tương ứng...',
+                                      ? context.tr('comm_angcnhqr_0cfc4a')
+                                      : context.tr('comm_angmnhtngn_619c3d'),
                                   style: SLTheme.quicksand(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w900,
@@ -909,7 +914,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
             padding: const EdgeInsets.all(14),
             decoration: _panelDecoration(),
             child: Text(
-              'Nếu camera không nhận, bạn vẫn có thể upload ảnh QR hoặc tìm bằng ID ngay bên dưới.',
+              context.tr('comm_nucamerakh_4d4199'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 color: const Color(0xFF334155),
@@ -949,7 +954,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Quét, upload hoặc xử lý camera',
+                  context.tr('comm_qutuploadh_289c9c'),
                   style: SLTheme.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -958,7 +963,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                 ),
                 SLSpacing.h8,
                 Text(
-                  'Phần này giúp bạn xử lý khi camera không quét được ngay.',
+                  context.tr('comm_phnnygipbn_57adec'),
                   style: SLTheme.quicksand(
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w700,
@@ -980,15 +985,15 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                         _buildActionChip(
                           icon: Icons.photo_library_rounded,
                           label: _isAnalyzingImage
-                              ? 'Đang đọc ảnh...'
-                              : 'Upload ảnh QR',
+                              ? context.tr('comm_angcnh_ee1b76')
+                              : context.tr('comm_uploadnhqr_5cba41'),
                           onTap: _isAnalyzingImage
                               ? null
                               : _pickQrImageFromGallery,
                         ),
                         _buildActionChip(
                           icon: Icons.refresh_rounded,
-                          label: 'Quét lại camera',
+                          label: context.tr('comm_qutlicamer_1828af'),
                           onTap: _restartScanner,
                         ),
                         if (!torchUnavailable)
@@ -997,14 +1002,14 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                                 ? Icons.flash_off_rounded
                                 : Icons.flash_on_rounded,
                             label: state.torchState == TorchState.on
-                                ? 'Tắt đèn'
-                                : 'Bật đèn',
+                                ? context.tr('comm_ttn_1854c0')
+                                : context.tr('comm_btn_fb6cc2'),
                             onTap: _toggleTorch,
                           ),
                         if (canSwitchCamera)
                           _buildActionChip(
                             icon: Icons.cameraswitch_rounded,
-                            label: 'Đổi camera',
+                            label: context.tr('comm_icamera_039618'),
                             onTap: _switchCamera,
                           ),
                       ],
@@ -1023,7 +1028,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tìm bằng ID / username / link',
+                  context.tr('comm_tmbngiduse_23a776'),
                   style: SLTheme.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -1032,7 +1037,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                 ),
                 SLSpacing.h8,
                 Text(
-                  'Dán ID nhà, username hoặc link profile nếu bạn không có QR.',
+                  context.tr('comm_dnidnhuser_ce315c'),
                   style: SLTheme.quicksand(
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w700,
@@ -1046,7 +1051,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                   onChanged: (_) => setState(() {}),
                   onSubmitted: (_) => unawaited(_searchHouseManually()),
                   decoration: InputDecoration(
-                    hintText: 'Ví dụ: abc123xyz, @username hoặc link',
+                    hintText: context.tr('comm_vdabc123xy_310a2c'),
                     hintStyle: SLTheme.quicksand(
                       color: Colors.grey[500],
                       fontWeight: FontWeight.w600,
@@ -1095,7 +1100,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                           )
                         : const Icon(Icons.travel_explore_rounded),
                     label: Text(
-                      _isSearching ? 'Đang tìm...' : 'Tìm nhà ngay',
+                      _isSearching ? context.tr('comm_angtm_6c56d7') : context.tr('comm_tmnhngay_9f1329'),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFD81B60),
@@ -1124,7 +1129,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Kết quả tìm thấy',
+                    context.tr('comm_ktqutmthy_216f37'),
                     style: SLTheme.quicksand(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
@@ -1220,7 +1225,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    houseName.isNotEmpty ? houseName : 'Nhà chưa đặt tên',
+                    houseName.isNotEmpty ? houseName : context.tr('comm_nhchattn_36b406'),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       color: const Color(0xFF334155),

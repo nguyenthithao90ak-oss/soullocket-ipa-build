@@ -224,7 +224,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
               ),
               const SizedBox(height: 16),
               Text(
-                'Khởi động thất bại',
+                context.tr('util_khingthtbi_94e580'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 22,
@@ -257,7 +257,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                     ),
                   ),
                   child: Text(
-                    'Thử lại',
+                    context.tr('util_thli_4dffdf'),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 15,
@@ -411,7 +411,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                               ),
                               const SizedBox(width: 10),
                               Text(
-                                'ĐANG VÀO',
+                                context.tr('util_angvo_72ceaa'),
                                 style: SLTheme.quicksand(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
@@ -452,14 +452,16 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                   onTap: _openLeaderboardSheet,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _MenuMiniButton(
-                  icon: Icons.block_rounded,
-                  label: 'No Ads',
-                  onTap: _openPremiumStore,
+              if (AppConfig.isPurchaseEnabled) ...<Widget>[
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _MenuMiniButton(
+                    icon: Icons.block_rounded,
+                    label: 'No Ads',
+                    onTap: _openPremiumStore,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
@@ -971,7 +973,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Text(
-                          'Chưa có lượt chơi nào được lưu.',
+                          context.tr('util_chacltchin_2aa20c'),
                           textAlign: TextAlign.center,
                           style: SLTheme.quicksand(
                             fontSize: 13,
@@ -1062,8 +1064,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                           const SizedBox(height: 6),
                           Text(
                             _view == _SoulGameView.gameplay
-                                ? 'Điều chỉnh nhanh, về menu, restart hoặc trở lại home.'
-                                : 'Điều chỉnh âm thanh và mở nhanh các tính năng của game.',
+                                ? context.tr('util_iuchnhnhan_a96b6c')
+                                : context.tr('util_iuchnhmtha_75b9a6'),
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               fontSize: 12.4,
@@ -1115,15 +1117,16 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                   await _openLeaderboardSheet();
                                 },
                               ),
-                              _SettingsActionButton(
-                                icon: Icons.workspace_premium_rounded,
-                                label: 'No Ads',
-                                accent: const Color(0xFFB794F4),
-                                onTap: () async {
-                                  Navigator.of(context).pop();
-                                  await _openPremiumStore();
-                                },
-                              ),
+                              if (AppConfig.isPurchaseEnabled)
+                                _SettingsActionButton(
+                                  icon: Icons.workspace_premium_rounded,
+                                  label: 'No Ads',
+                                  accent: const Color(0xFFB794F4),
+                                  onTap: () async {
+                                    Navigator.of(context).pop();
+                                    await _openPremiumStore();
+                                  },
+                                ),
                               _SettingsActionButton(
                                 icon: _view == _SoulGameView.gameplay
                                     ? Icons.refresh_rounded

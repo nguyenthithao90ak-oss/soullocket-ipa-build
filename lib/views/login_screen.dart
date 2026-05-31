@@ -164,7 +164,8 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
+          content: Text(
+              'Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
           duration: Duration(seconds: 2),
         ),
       );
@@ -371,7 +372,8 @@ class _LoginScreenState extends State<LoginScreen> {
       final strongRegex = RegExp(r'^(?=.*[0-9])(?=.{6,})');
       if (!strongRegex.hasMatch(password)) {
         _showErrorDialog(
-          L10nService().translate('Mật khẩu yếu: Cần ít nhất 6 ký tự và 1 số!'),
+          L10nService().translate(
+              'Mật khẩu yếu: Cần ít nhất 6 ký tự và 1 số!'),
         );
         return;
       }
@@ -686,7 +688,8 @@ class _LoginScreenState extends State<LoginScreen> {
         e,
         fallbackMessage: L10nService().translate('auth_login_unavailable'),
       ).message;
-      debugPrint('[Auth][LoginScreen] social login failed ($provider): $resolvedMessage');
+      debugPrint(
+          '[Auth][LoginScreen] social login failed ($provider): $resolvedMessage');
       if (!mounted) return;
       _showErrorDialog(
         resolvedMessage.isEmpty
@@ -759,7 +762,6 @@ class _LoginScreenState extends State<LoginScreen> {
       listenable: L10nService(),
       builder: (context, _) {
         final l10n = L10nService();
-        final isVietnamese = l10n.locale.languageCode == 'vi';
         final backgroundColors = _isLoginTab
             ? const [
                 Color(0xFFFCFAF6),
@@ -798,8 +800,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: IgnorePointer(
                         child: Icon(
                           Icons.cloud_rounded,
-                          color: Colors.white.withValues(alpha: 
-                            _isLoginTab ? 0.38 : 0.26,
+                          color: Colors.white.withValues(
+                            alpha: _isLoginTab ? 0.38 : 0.26,
                           ),
                           size: _isLoginTab ? 196 : 154,
                         ),
@@ -889,11 +891,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     child: Align(
                                       alignment: Alignment.centerRight,
                                       child: AuthLanguageToggle(
-                                        isVietnamese: isVietnamese,
-                                        onToggle: () {
-                                          l10n.setLocale(
-                                            isVietnamese ? 'en' : 'vi',
-                                          );
+                                        currentLocale: l10n.localeCode,
+                                        onSelect: (code) {
+                                          l10n.setLocale(code);
                                         },
                                       ),
                                     ),

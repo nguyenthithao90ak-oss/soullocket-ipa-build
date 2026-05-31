@@ -546,9 +546,10 @@ class TarotReadingService {
     required TarotSpreadTemplate spread,
     required List<TarotReadingSelection> selections,
   }) async {
+    final normalizedHouseId = houseId.trim();
     final insights = await _loveInsightService.computeInsights(
-        houseId, viewerProfile.relationshipMode);
-    final messages = await _loadRecentMessages(houseId);
+        normalizedHouseId, viewerProfile.relationshipMode);
+    final messages = await _loadRecentMessages(normalizedHouseId);
     final signals = _buildSignals(messages);
     return _buildFallbackReading(
       viewerProfile: viewerProfile,
@@ -560,16 +561,19 @@ class TarotReadingService {
   }
 
   Future<List<String>> _loadRecentMessages(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return const [];
     try {
       final snap = await _dbRef
-          .child('houses/$houseId/chat_room/messages')
+          .child('houses/$normalizedHouseId/chat_room/messages')
           .orderByChild('ts')
           .limitToLast(50)
           .get();
       if (!snap.exists || snap.value == null) return const [];
       final raw = Map<dynamic, dynamic>.from(snap.value as Map);
       final items = raw.values
-          .map((value) => Map<dynamic, dynamic>.from(value as Map))
+          .whereType<Map>()
+          .map((value) => Map<dynamic, dynamic>.from(value))
           .where((item) => (item['type'] ?? 'text').toString() == 'text')
           .map((item) => (item['text'] ?? item['content'] ?? '').toString())
           .map((text) => text.trim())

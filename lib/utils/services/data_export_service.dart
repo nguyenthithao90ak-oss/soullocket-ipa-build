@@ -52,6 +52,12 @@ class DataExportService {
       return result;
     } on FirebaseFunctionsException catch (error) {
       throw DataExportException(_mapFunctionsError(error));
+    } on DataExportException {
+      rethrow;
+    } catch (_) {
+      throw const DataExportException(
+        'Không tạo được bản tải xuống dữ liệu. Hãy thử lại sau.',
+      );
     }
   }
 

@@ -95,7 +95,7 @@ class _UtilitiesHubDragFeedback extends StatelessWidget {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.18),
+                        color: SLColors.textPrimary.withValues(alpha: 0.18),
                         blurRadius: 22,
                         offset: const Offset(0, 10),
                       ),
@@ -133,7 +133,7 @@ class _UtilitiesHubTileContent extends StatelessWidget {
         };
     final List<Color> colors = config['colors'];
     final IconData iconData = config['icon'];
-    final Color iconColor = config['iconColor'] ?? Colors.white;
+    final Color iconColor = config['iconColor'] ?? SLColors.textInverse;
     final Color shellStart =
         Color.lerp(colors.first, colors.last, isTarget ? 0.10 : 0.16) ??
             colors.first;
@@ -141,7 +141,7 @@ class _UtilitiesHubTileContent extends StatelessWidget {
         Color.lerp(colors.last, colors.first, isTarget ? 0.04 : 0.10) ??
             colors.last;
     final Color shellBorder =
-        Color.lerp(colors.last, Colors.black, isTarget ? 0.04 : 0.10) ??
+        Color.lerp(colors.last, SLColors.textPrimary, isTarget ? 0.04 : 0.10) ??
             colors.last;
     final Color innerBorder =
         Color.lerp(colors.first, colors.last, 0.32) ?? colors.first;
@@ -156,7 +156,7 @@ class _UtilitiesHubTileContent extends StatelessWidget {
     final Color innerOverlayEnd =
         Color.lerp(colors.last, colors.first, 0.08) ?? colors.last;
     final Color labelColor =
-        Color.lerp(colors.last, const Color(0xFF2C2333), 0.72) ??
+        Color.lerp(colors.last, SLColors.textPrimary, 0.72) ??
             SLColors.textPrimary;
 
     return Material(
@@ -265,7 +265,7 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(12),
                                   gradient: LinearGradient(
                                     colors: [
-                                      Colors.black.withValues(alpha: 0.14),
+                                      SLColors.textPrimary.withValues(alpha: 0.14),
                                       Colors.transparent,
                                     ],
                                     begin: Alignment.bottomCenter,

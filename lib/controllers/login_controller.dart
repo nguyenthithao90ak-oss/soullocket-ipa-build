@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/services/offline_cache_service.dart';
 import '../services/anti_spam_service.dart';
 import '../services/auth_service.dart';
 import '../services/security_service.dart';
@@ -48,15 +49,15 @@ class LoginController extends ChangeNotifier {
   String? get draftRelationshipMode => _draftRelationshipMode;
 
   String _selectedSecurityQuestion =
-      L10nService().translate('Ngày sinh của bạn?');
+      L10nService().translate('auth_security_q_dob');
   String get selectedSecurityQuestion => _selectedSecurityQuestion;
 
   final List<String> securityQuestions = [
-    L10nService().translate('Ngày sinh của bạn?'),
-    L10nService().translate('Con vật đầu tiên bạn nuôi?'),
-    L10nService().translate('Tên giáo viên chủ nhiệm lớp 1?'),
-    L10nService().translate('Nơi lần đầu tiên hai bạn gặp nhau?'),
-    L10nService().translate('Món ăn yêu thích nhất của bạn?'),
+    L10nService().translate('auth_security_q_dob'),
+    L10nService().translate('auth_security_q_first_pet'),
+    L10nService().translate('auth_security_q_first_teacher'),
+    L10nService().translate('auth_security_q_first_meet'),
+    L10nService().translate('auth_security_q_favorite_food'),
   ];
 
   LoginController() {
@@ -112,7 +113,7 @@ class LoginController extends ChangeNotifier {
   }
 
   Future<void> _loadRememberedEmail() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     final savedEmail = prefs.getString('il_remembered_email');
     if (savedEmail != null && savedEmail.isNotEmpty) {
       emailController.text = savedEmail;
@@ -152,10 +153,9 @@ class LoginController extends ChangeNotifier {
     if (context.mounted && shouldShowRapidActionWarningSeconds(cooldown)) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(L10nService().translate('auth_rate_limit_wait')),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -174,13 +174,13 @@ class LoginController extends ChangeNotifier {
 
     if (email.isEmpty || password.isEmpty) {
       SLNotice.showError(
-          context, L10nService().translate('Vui lòng nhập email và mật khẩu.'));
+          context, L10nService().translate('auth_enter_email_password'));
       return;
     }
 
     if (!email.contains('@')) {
       SLNotice.showError(context,
-          L10nService().translate('Vui lòng nhập đúng định dạng email.'));
+          L10nService().translate('auth_invalid_email_format'));
       return;
     }
 
@@ -201,8 +201,8 @@ class LoginController extends ChangeNotifier {
         context,
         L10nService().format('auth_supported_domains_only', {
           'action': _isLoginTab
-              ? L10nService().translate('đăng nhập')
-              : L10nService().translate('đăng ký'),
+              ? L10nService().translate('auth_action_login')
+              : L10nService().translate('auth_action_register'),
           'domains': allowedDomains.join(', '),
         }),
       );
@@ -218,16 +218,14 @@ class LoginController extends ChangeNotifier {
       if (!_acceptTerms) {
         SLNotice.showError(
             context,
-            L10nService().translate(
-                'Vui lòng đồng ý với Điều khoản và Chính sách bảo mật để tiếp tục.'));
+            L10nService().translate('auth_accept_terms_required'));
         return;
       }
       final strongRegex = RegExp(r"^(?=.*[0-9])(?=.{6,})");
       if (!strongRegex.hasMatch(password)) {
         SLNotice.showError(
             context,
-            L10nService()
-                .translate('Mật khẩu cần có ít nhất 6 ký tự và 1 số.'));
+            L10nService().translate('auth_password_rule'));
         return;
       }
 
@@ -245,19 +243,19 @@ class LoginController extends ChangeNotifier {
     try {
       if (_isLoginTab) {
         SLNotice.showInfo(context,
-            L10nService().translate('Đang đăng nhập, bạn chờ một chút nhé.'));
+            L10nService().translate('auth_logging_in'));
         final isProxy = await SecurityService().isProxyOrVpnActive();
         SecurityService().setProxyAtLogin(isProxy);
 
         await _authService.signInWithEmailPassword(email, password).timeout(
               _authActionTimeout,
               onTimeout: () =>
-                  throw Exception('Đăng nhập quá lâu. Vui lòng thử lại.'),
+                  throw Exception(L10nService().translate('auth_login_timeout')),
             );
 
         final prefs = await SharedPreferences.getInstance().timeout(
           _prefsTimeout,
-          onTimeout: () => throw Exception('Lưu trạng thái đăng nhập quá lâu.'),
+          onTimeout: () => throw Exception(L10nService().translate('auth_save_login_state_timeout')),
         );
         if (_rememberMe) {
           await prefs.setString('il_remembered_email', email);
@@ -268,15 +266,13 @@ class LoginController extends ChangeNotifier {
         if (!context.mounted) return;
         _showSuccessDialog(
           context,
-          L10nService()
-              .translate('Đăng nhập thành công. Chào mừng bạn quay lại.'),
+          L10nService().translate('auth_login_success'),
           next: const AppEntry(),
         );
       } else {
         SLNotice.showInfo(
             context,
-            L10nService()
-                .translate('Đang tạo tài khoản, bạn chờ một chút nhé.'));
+            L10nService().translate('auth_creating_account'));
         final isProxy = await SecurityService().isProxyOrVpnActive();
         SecurityService().setProxyAtLogin(isProxy);
 
@@ -284,7 +280,7 @@ class LoginController extends ChangeNotifier {
         await _authService.registerWithEmailPassword(email, password).timeout(
               _authActionTimeout,
               onTimeout: () =>
-                  throw Exception('Tạo tài khoản quá lâu. Vui lòng thử lại.'),
+                  throw Exception(L10nService().translate('auth_register_timeout')),
             );
         debugPrint('[Auth][Register] account created successfully');
 
@@ -305,7 +301,7 @@ class LoginController extends ChangeNotifier {
               debugPrint(
                 'savePendingRelationshipModeForCurrentUser failed: ${AppErrorMapper.resolve(
                   error,
-                  fallbackMessage: 'Không thể lưu chế độ quan hệ đang chờ.',
+                  fallbackMessage: L10nService().translate('auth_save_pending_relationship_mode_failed'),
                 ).message}',
               );
             }),
@@ -317,8 +313,7 @@ class LoginController extends ChangeNotifier {
             '[Auth][Register] show success dialog and continue to AppEntry');
         _showSuccessDialog(
           context,
-          L10nService().translate(
-              'Tạo tài khoản thành công. Tiếp theo, hãy thiết lập ngôi nhà của bạn.'),
+          L10nService().translate('auth_register_success_setup_house'),
           next: const AppEntry(),
         );
       }
@@ -361,9 +356,9 @@ class LoginController extends ChangeNotifier {
         _authActionTimeout,
         onTimeout: () => throw Exception(
           switch (provider) {
-            'Facebook' => 'Đăng nhập Facebook quá lâu. Vui lòng thử lại.',
-            'Apple' => 'Đăng nhập Apple quá lâu. Vui lòng thử lại.',
-            _ => 'Đăng nhập Google quá lâu. Vui lòng thử lại.',
+            'Facebook' => L10nService().translate('auth_facebook_login_timeout'),
+            'Apple' => L10nService().translate('auth_apple_login_timeout'),
+            _ => L10nService().translate('auth_google_login_timeout'),
           },
         ),
       );
@@ -374,10 +369,8 @@ class LoginController extends ChangeNotifier {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text(provider == 'Facebook'
-                    ? 'Bạn đã hủy đăng nhập Facebook.'
-                    : L10nService().translate(
-                        'Bạn đã hủy đăng nhập Google.',
-                      ))),
+                    ? L10nService().translate('auth_facebook_login_cancelled')
+                    : L10nService().translate('auth_google_login_cancelled'))),
           );
         }
         return;
@@ -387,8 +380,8 @@ class LoginController extends ChangeNotifier {
         _showSuccessDialog(
           context,
           provider == 'Facebook'
-              ? 'Đăng nhập Facebook thành công.'
-              : L10nService().translate('Đăng nhập Google thành công.'),
+              ? L10nService().translate('auth_facebook_login_success')
+              : L10nService().translate('auth_google_login_success'),
           next: const AppEntry(),
         );
       }
@@ -396,8 +389,7 @@ class LoginController extends ChangeNotifier {
       if (context.mounted) {
         SLNotice.showError(
           context,
-          L10nService()
-              .translate('Chưa thể đăng nhập lúc này. Vui lòng thử lại sau.'),
+          L10nService().translate('auth_login_unavailable'),
         );
       }
     } finally {
@@ -421,7 +413,7 @@ class LoginController extends ChangeNotifier {
         final email = await _authService.findEmailByHouseId(houseId).timeout(
               _authActionTimeout,
               onTimeout: () =>
-                  throw Exception('Xác minh QR quá lâu. Vui lòng thử lại.'),
+                  throw Exception(L10nService().translate('auth_qr_verify_timeout')),
             );
         if (!context.mounted) return;
         if (email != null && email.isNotEmpty) {
@@ -429,15 +421,13 @@ class LoginController extends ChangeNotifier {
           if (context.mounted) {
             _showSuccessDialog(
                 context,
-                L10nService().translate(
-                    'Thiết bị khác đã xác nhận danh tính của bạn. Vui lòng nhập mật khẩu để tiếp tục.'));
+                L10nService().translate('auth_qr_identity_confirmed_enter_password'));
           }
         } else {
           if (context.mounted) {
             _showSuccessDialog(
                 context,
-                L10nService().translate(
-                    'Thiết bị khác đã xác nhận danh tính của bạn. Vui lòng nhập email đã liên kết với ngôi nhà và mật khẩu để tiếp tục.'));
+                L10nService().translate('auth_qr_identity_confirmed_enter_email_password'));
           }
         }
       } catch (e) {
@@ -460,7 +450,7 @@ class LoginController extends ChangeNotifier {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: Text(L10nService().translate('Thành công'),
+        title: Text(L10nService().translate('core_success'),
             style: SLTheme.quicksand(color: Colors.green)),
         content: Text(
           L10nService().translate(message),

@@ -25,7 +25,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Kho ảnh mật đang chờ reset',
+                  context.tr('util_khonhmtang_7c1b4d'),
                   softWrap: true,
                   style: SLTheme.quicksand(
                     color: Colors.white,
@@ -53,7 +53,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
               onPressed: _isCancelingReset ? null : _cancelVaultResetRequest,
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
-                side: BorderSide(color: Colors.orangeAccent.withValues(alpha: 0.6)),
+                side: BorderSide(
+                    color: Colors.orangeAccent.withValues(alpha: 0.6)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -71,8 +72,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                   : const Icon(Icons.undo_rounded, size: 18),
               label: Text(
                 _isCancelingReset
-                    ? 'Đang thu hồi yêu cầu...'
-                    : 'Thu hồi yêu cầu reset',
+                    ? context.tr('util_angthuhiyu_c4c6f7')
+                    : context.tr('util_thuhiyucur_db8240'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
               ),
             ),
@@ -129,7 +130,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                            color: const Color(0xFFE91E63).withValues(alpha: 0.4),
+                            color:
+                                const Color(0xFFE91E63).withValues(alpha: 0.4),
                             blurRadius: 15,
                             offset: const Offset(0, 6))
                       ],
@@ -148,8 +150,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                               const SizedBox(width: 10),
                               Text(
                                 _encryptionReady
-                                    ? 'THÊM ẢNH MẬT'
-                                    : 'MỞ KHÓA KHO MẬT',
+                                    ? context.tr('util_thmnhmt_b7dfc6')
+                                    : context.tr('util_mkhakhomt_35391f'),
                                 style: SLTheme.quicksand(
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white),
@@ -160,7 +162,9 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Mỗi lần tối đa ${StorageService.maxSecretVaultSelectionPerBatch} ảnh. Giới hạn ngày: ${StorageService.secretVaultDailyLimitFree} ảnh thường, ${StorageService.secretVaultDailyLimitVip} ảnh PRO.',
+                  Platform.isIOS || Platform.isMacOS
+                      ? 'Mỗi lần tối đa ${StorageService.maxSecretVaultSelectionPerBatch} ảnh. Giới hạn ngày: ${StorageService.secretVaultDailyLimitFree} ảnh.'
+                      : 'Mỗi lần tối đa ${StorageService.maxSecretVaultSelectionPerBatch} ảnh. Giới hạn ngày: ${StorageService.secretVaultDailyLimitFree} ảnh thường, ${StorageService.secretVaultDailyLimitVip} ảnh PRO.',
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     color: Colors.white60,
@@ -172,7 +176,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                 if (_hasPendingReset) ...[
                   const SizedBox(height: 12),
                   Text(
-                    'Tạm khóa thêm ảnh mới trong lúc Kho ảnh mật đang chờ reset.',
+                    context.tr('util_tmkhathmnh_eabdb8'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       color: Colors.orangeAccent,
@@ -186,7 +190,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                   TextButton(
                     onPressed: _prepareVault,
                     child: Text(
-                      'Nhập lại mật khẩu',
+                      context.tr('util_nhplimtkhu_eee7a7'),
                       style: SLTheme.quicksand(
                         color: Colors.white70,
                         fontWeight: FontWeight.w700,
@@ -243,7 +247,9 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                         )
                       : const Icon(Icons.history_rounded, size: 16),
                   label: Text(
-                    _isLoadingMorePhotos ? 'Đang tải...' : 'Ảnh cũ hơn',
+                    _isLoadingMorePhotos
+                        ? context.tr('util_angti_d5fe42')
+                        : context.tr('util_nhchn_d2d33c'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -355,22 +361,22 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1F1C2C),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Xóa ảnh mật?',
+        title: Text(context.tr('util_xanhmt_9adda3'),
             style: SLTheme.quicksand(
                 fontWeight: FontWeight.bold, color: Colors.white)),
-        content: Text('Ảnh này sẽ bị xóa khỏi kho mật.',
+        content: Text(context.tr('util_nhnysbxakh_78fc2c'),
             style: SLTheme.quicksand(color: Colors.white70)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child:
-                  Text('Hủy', style: SLTheme.quicksand(color: Colors.white38))),
+              child: Text(context.tr('util_hy_1e4050'),
+                  style: SLTheme.quicksand(color: Colors.white38))),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _deletePhoto(photo);
             },
-            child: Text('Xóa',
+            child: Text(context.tr('util_xa_4ed187'),
                 style: SLTheme.quicksand(
                     color: Colors.redAccent, fontWeight: FontWeight.bold)),
           ),

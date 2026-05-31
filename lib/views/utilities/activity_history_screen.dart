@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
@@ -57,19 +58,19 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           context: context,
           builder: (_) => AlertDialog(
             title: Text(
-              'Xóa lịch sử',
+              context.tr('util_xalchs_080e6d'),
               style: SLTheme.quicksand(fontWeight: FontWeight.w900),
             ),
-            content: const Text('Bạn muốn xóa toàn bộ lịch sử hoạt động?'),
+            content: Text(context.tr('util_bnmunxaton_12ff7d')),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Hủy'),
+                child: Text(context.tr('util_hy_1e4050')),
               ),
               TextButton(
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Xóa'),
+                child: Text(context.tr('util_xa_4ed187')),
               ),
             ],
           ),
@@ -82,7 +83,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     await _load();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã xóa lịch sử.')),
+      SnackBar(content: Text(context.tr('util_xalchs_020c40'))),
     );
   }
 
@@ -103,8 +104,8 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
       SnackBar(
         content: Text(
           ok
-              ? 'Đã khôi phục mục này.'
-              : 'Không thể khôi phục mục này hoặc mục đã quá hạn.',
+              ? context.tr('util_khiphcmcny_df4b8a')
+              : context.tr('util_khngthkhip_6ccfb2'),
         ),
       ),
     );
@@ -165,7 +166,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Lịch sử hoạt động',
+                context.tr('util_lchshotng_de1bcb'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w900,
                   fontSize: SLResponsive.sp(compact ? 15.2 : 16, screenWidth),
@@ -185,7 +186,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
               TextButton(
                 onPressed: _clearAll,
                 child: Text(
-                  'Xóa hết',
+                  context.tr('util_xaht_cf9bb5'),
                   style: SLTheme.quicksand(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -211,7 +212,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                         ),
                         SizedBox(height: SLResponsive.dp(12, screenWidth)),
                         Text(
-                          'Chưa có lịch sử.',
+                          context.tr('util_chaclchs_6be5ad'),
                           style: SLTheme.quicksand(
                             color: Colors.grey[500],
                             fontSize: SLResponsive.sp(compact ? 14.2 : 15, screenWidth),
@@ -350,7 +351,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                                             ),
                                           if (expired)
                                             _buildTag(
-                                              'Thông tin không tồn tại',
+                                              context.tr('util_thngtinkhn_d0b09f'),
                                               const Color(0xFFFFF1F2),
                                               const Color(0xFFDC2626),
                                               screenWidth: screenWidth,
@@ -374,7 +375,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                                     onPressed:
                                         isRestoring ? null : () => _restore(entry),
                                     child: Text(
-                                      isRestoring ? 'Đang khôi phục...' : 'Khôi phục',
+                                      isRestoring ? context.tr('util_angkhiphc_4d5bed') : context.tr('util_khiphc_682697'),
                                       style: SLTheme.quicksand(
                                         fontWeight: FontWeight.w800,
                                         color: const Color(0xFFD81B60),

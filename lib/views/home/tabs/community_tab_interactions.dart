@@ -34,7 +34,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
         SnackBar(
           content: Text(
             _ct(
-              'Không tìm thấy nhà hiện tại hợp lệ để tương tác cộng đồng.',
+              context.tr('home_khngtmthyn_a34ffb'),
               'No valid active house was found for this community action.',
             ),
             style: SLTheme.quicksand(fontWeight: FontWeight.w700),
@@ -190,11 +190,11 @@ extension _CommunityTabInteractions on _CommunityTabState {
         content: Text(
           added
               ? _ct(
-                  'Đã lưu bài viết để xem lại',
+                  context.tr('home_lubivitxem_751733'),
                   'Post saved to view later',
                 )
               : _ct(
-                  'Đã bỏ lưu bài viết',
+                  context.tr('home_blubivit_c5db66'),
                   'Post removed from saved items',
                 ),
           style: SLTheme.quicksand(fontWeight: FontWeight.w700),
@@ -240,13 +240,13 @@ extension _CommunityTabInteractions on _CommunityTabState {
       SnackBar(
         content: Text(
           _ct(
-            'Bài viết này sẽ được ẩn khỏi bảng tin của bạn.',
+            context.tr('home_bivitnyscn_ac7239'),
             'This post will be hidden from your feed.',
           ),
           style: SLTheme.quicksand(fontWeight: FontWeight.w700),
         ),
         action: SnackBarAction(
-          label: _ct('Hoàn tác', 'Undo'),
+          label: _ct(context.tr('home_hontc_96ce27'), 'Undo'),
           onPressed: () {
             unawaited(_unhidePostById(postId));
           },
@@ -348,9 +348,9 @@ extension _CommunityTabInteractions on _CommunityTabState {
       SnackBar(
         content: Text(
           ok
-              ? _ct('Đã chấp nhận lời mời kết bạn.', 'Friend request accepted.')
+              ? _ct(context.tr('home_chpnhnlimi_a049b6'), 'Friend request accepted.')
               : _ct(
-                  'Không thể chấp nhận lời mời lúc này.',
+                  context.tr('home_khngthchpn_6169c1'),
                   'Cannot accept this request right now.',
                 ),
           style: SLTheme.quicksand(fontWeight: FontWeight.w700),
@@ -368,7 +368,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _ct('Đã hủy lời mời kết bạn.', 'Friend request cancelled.'),
+          _ct(context.tr('home_hylimiktbn_0b5181'), 'Friend request cancelled.'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w700),
         ),
       ),
@@ -376,6 +376,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
   }
 
   Future<void> _sharePost(Map<String, dynamic> post) async {
+    final recordShareErrorFallback = context.tr('home_khngthghin_24a493');
     final hid = await _resolveInteractionHouseId();
     if (hid == null || hid.isEmpty) return;
 
@@ -409,7 +410,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
     } catch (e) {
       trackingErrorMessage = _communityActionErrorMessage(
         e,
-        viFallback: 'Không thể ghi nhận lượt chia sẻ lúc này.',
+        viFallback: recordShareErrorFallback,
         enFallback: 'Cannot record this share right now.',
       );
     }
@@ -443,12 +444,12 @@ extension _CommunityTabInteractions on _CommunityTabState {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(
-          _ct('Xác nhận xóa bài viết', 'Confirm post deletion'),
+          _ct(context.tr('home_xcnhnxabiv_05a787'), 'Confirm post deletion'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
           _ct(
-            'Bài viết này sẽ bị gỡ khỏi cộng đồng và không thể hoàn tác.',
+            context.tr('home_bivitnysbg_136371'),
             'This post will be removed from the community feed and cannot be undone.',
           ),
           style: SLTheme.quicksand(),
@@ -456,12 +457,12 @@ extension _CommunityTabInteractions on _CommunityTabState {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(_ct('Hủy', 'Cancel')),
+            child: Text(_ct(context.tr('home_hy_1e4050'), 'Cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
-              _ct('Xóa bài viết', 'Delete post'),
+              _ct(context.tr('home_xabivit_2c7199'), 'Delete post'),
               style: const TextStyle(color: Colors.red),
             ),
           ),
@@ -489,6 +490,10 @@ extension _CommunityTabInteractions on _CommunityTabState {
   }
 
   Future<void> _openMoreActions(Map<String, dynamic> post) async {
+    final deletedUserMsg = context.tr('home_ngidngxa_fdbd7c');
+    final anonStrangerMsg = context.tr('home_ngilndanh_d63da2');
+    final homeMsg = context.tr('home_nginh_731d70');
+
     final postId = (post['id'] ?? '').toString();
     final targetHouseId = (post['houseId'] ?? '').toString().trim();
     final legacyOwnerHouseId = (post['uid'] ?? '').toString().trim();
@@ -508,12 +513,12 @@ extension _CommunityTabInteractions on _CommunityTabState {
         targetHouseId.isEmpty;
     final postHouseName = (post['houseName'] ?? '').toString().trim();
     final postOwnerName = isDeletedAuthor
-        ? _ct('Người dùng đã xóa', 'Deleted user')
+        ? _ct(deletedUserMsg, 'Deleted user')
         : isAnon
-            ? _ct('Người lạ ẩn danh', 'Anonymous stranger')
+            ? _ct(anonStrangerMsg, 'Anonymous stranger')
             : postHouseName.isNotEmpty
                 ? postHouseName
-                : _ct('Ngôi Nhà', 'Home');
+                : _ct(homeMsg, 'Home');
     final content = (post['content'] ?? '').toString().trim();
     final isBookmarked =
         postId.isNotEmpty && _bookmarkedPostIds.contains(postId);
@@ -619,7 +624,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
                             const SizedBox(height: 4),
                             Text(
                               _ct(
-                                'Tùy chọn cho bài viết này',
+                                context.tr('home_tychnchobi_afaeb3'),
                                 'Actions for this post',
                               ),
                               style: SLTheme.quicksand(
@@ -636,9 +641,9 @@ extension _CommunityTabInteractions on _CommunityTabState {
                 if (canOpenProfile)
                   actionTile(
                     icon: Icons.person_outline_rounded,
-                    title: _ct('Xem trang cá nhân', 'View profile'),
+                    title: _ct(context.tr('home_xemtrangcn_9c72bc'), 'View profile'),
                     subtitle: _ct(
-                      'Mở hồ sơ của nhà này',
+                      context.tr('home_mhscanhny_9ba6c2'),
                       'Open this house profile',
                     ),
                     onTap: () => _openPostOwnerProfile(targetHouseId),
@@ -648,11 +653,11 @@ extension _CommunityTabInteractions on _CommunityTabState {
                     actionTile(
                       icon: Icons.block_rounded,
                       title: _ct(
-                        'Bạn đã chặn nhà này',
+                        context.tr('home_bnchnnhny_d99719'),
                         'You have blocked this house',
                       ),
                       subtitle: _ct(
-                        'Vào danh sách chặn để mở lại nếu cần',
+                        context.tr('home_vodanhschc_6c94fa'),
                         'Open your block list if you want to restore interaction',
                       ),
                       enabled: false,
@@ -661,11 +666,11 @@ extension _CommunityTabInteractions on _CommunityTabState {
                     actionTile(
                       icon: Icons.block_flipped,
                       title: _ct(
-                        'Nhà này đang chặn tương tác',
+                        context.tr('home_nhnyangchn_ea05cb'),
                         'This house blocked interactions',
                       ),
                       subtitle: _ct(
-                        'Bạn chưa thể kết bạn hay tương tác thêm',
+                        context.tr('home_bnchathktb_9f9c39'),
                         'You cannot add or interact further right now',
                       ),
                       enabled: false,
@@ -673,9 +678,9 @@ extension _CommunityTabInteractions on _CommunityTabState {
                   else if (friendState.isFriend)
                     actionTile(
                       icon: Icons.people_alt_rounded,
-                      title: _ct('Đã là bạn bè', 'Already friends'),
+                      title: _ct(context.tr('home_lbnb_4ee8d3'), 'Already friends'),
                       subtitle: _ct(
-                        'Hai nhà đã kết bạn với nhau',
+                        context.tr('home_hainhktbnv_9aa402'),
                         'Your houses are already connected as friends',
                       ),
                       enabled: false,
@@ -684,11 +689,11 @@ extension _CommunityTabInteractions on _CommunityTabState {
                     actionTile(
                       icon: Icons.person_add_alt_1_rounded,
                       title: _ct(
-                        'Chấp nhận lời mời kết bạn',
+                        context.tr('home_chpnhnlimi_d4d19b'),
                         'Accept friend request',
                       ),
                       subtitle: _ct(
-                        'Nhà này đang chờ bạn đồng ý',
+                        context.tr('home_nhnyangchb_e18657'),
                         'This house is waiting for your approval',
                       ),
                       onTap: () => _acceptFriendRequestFromPost(
@@ -700,11 +705,11 @@ extension _CommunityTabInteractions on _CommunityTabState {
                     actionTile(
                       icon: Icons.person_remove_alt_1_rounded,
                       title: _ct(
-                        'Hủy lời mời đã gửi',
+                        context.tr('home_hylimigi_7797c1'),
                         'Cancel sent request',
                       ),
                       subtitle: _ct(
-                        'Thu hồi lời mời kết bạn tới nhà này',
+                        context.tr('home_thuhilimik_b85d08'),
                         'Withdraw the friend request sent to this house',
                       ),
                       onTap: () => _cancelSentFriendRequestFromPost(
@@ -714,18 +719,18 @@ extension _CommunityTabInteractions on _CommunityTabState {
                   else
                     actionTile(
                       icon: Icons.person_add_alt_1_rounded,
-                      title: _ct('Kết bạn', 'Add friend'),
+                      title: _ct(context.tr('home_ktbn_b7f525'), 'Add friend'),
                       subtitle: _ct(
-                        'Gửi lời mời kết bạn tới nhà này',
+                        context.tr('home_gilimiktbn_e643bf'),
                         'Send a friend request to this house',
                       ),
                       onTap: () => _sendFriendRequestFromPost(targetHouseId),
                     ),
                 actionTile(
                   icon: Icons.repeat_rounded,
-                  title: _ct('Đăng lại / chia sẻ', 'Repost / share'),
+                  title: _ct(context.tr('home_nglichias_248e7e'), 'Repost / share'),
                   subtitle: _ct(
-                    'Chia sẻ bài này ra ngoài hoặc gửi cho bạn bè',
+                    context.tr('home_chiasbinyr_0b2130'),
                     'Share this post outside or send it to friends',
                   ),
                   onTap: () => _sharePost(post),
@@ -736,15 +741,15 @@ extension _CommunityTabInteractions on _CommunityTabState {
                         ? Icons.bookmark_remove_rounded
                         : Icons.bookmark_add_rounded,
                     title: isBookmarked
-                        ? _ct('Bỏ lưu bài viết', 'Remove saved post')
-                        : _ct('Lưu bài viết', 'Save post'),
+                        ? _ct(context.tr('home_blubivit_28e9ff'), 'Remove saved post')
+                        : _ct(context.tr('home_lubivit_c98a48'), 'Save post'),
                     subtitle: isBookmarked
                         ? _ct(
-                            'Xóa khỏi danh sách đã lưu',
+                            context.tr('home_xakhidanhs_6f3415'),
                             'Remove it from your saved items',
                           )
                         : _ct(
-                            'Lưu lại để xem sau',
+                            context.tr('home_lulixemsau_2ac0fd'),
                             'Keep it for later',
                           ),
                     onTap: () => _toggleBookmark(post),
@@ -752,9 +757,9 @@ extension _CommunityTabInteractions on _CommunityTabState {
                 if (content.isNotEmpty)
                   actionTile(
                     icon: Icons.copy_rounded,
-                    title: _ct('Sao chép nội dung', 'Copy content'),
+                    title: _ct(context.tr('home_saochpnidu_93932d'), 'Copy content'),
                     subtitle: _ct(
-                      'Sao chép phần chữ của bài viết',
+                      context.tr('home_saochpphnc_b9e267'),
                       'Copy the text from this post',
                     ),
                     onTap: () async {
@@ -763,7 +768,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            _ct('Đã sao chép nội dung', 'Content copied'),
+                            _ct(context.tr('home_saochpnidu_66725a'), 'Content copied'),
                           ),
                         ),
                       );
@@ -773,11 +778,11 @@ extension _CommunityTabInteractions on _CommunityTabState {
                   actionTile(
                     icon: Icons.visibility_off_outlined,
                     title: _ct(
-                      'Không quan tâm bài này',
+                      context.tr('home_khngquantm_953df9'),
                       'Not interested in this post',
                     ),
                     subtitle: _ct(
-                      'Ẩn bài này khỏi bảng tin của bạn',
+                      context.tr('home_nbinykhibn_17be53'),
                       'Hide this post from your feed',
                     ),
                     onTap: () => _hidePostFromFeed(post),
@@ -788,9 +793,9 @@ extension _CommunityTabInteractions on _CommunityTabState {
                     icon: Icons.delete_outline,
                     iconColor: Colors.red,
                     textColor: Colors.red,
-                    title: _ct('Xóa bài viết', 'Delete post'),
+                    title: _ct(context.tr('home_xabivit_2c7199'), 'Delete post'),
                     subtitle: _ct(
-                      'Gỡ bài viết này khỏi cộng đồng',
+                      context.tr('home_gbivitnykh_1a7d6b'),
                       'Remove this post from the community feed',
                     ),
                     onTap: () async {
@@ -809,7 +814,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              _ct('Đã xóa bài viết', 'Post deleted'),
+                              _ct(context.tr('home_xabivit_92d4ec'), 'Post deleted'),
                             ),
                           ),
                         );
@@ -817,7 +822,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
                         if (!mounted) return;
                         final errorMessage = _communityActionErrorMessage(
                           e,
-                          viFallback: 'Không thể xóa bài viết lúc này.',
+                          viFallback: context.tr('home_khngthxabi_cfbf88'),
                           enFallback: 'Cannot delete this post right now.',
                         );
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -837,9 +842,9 @@ extension _CommunityTabInteractions on _CommunityTabState {
                   actionTile(
                     icon: Icons.flag_outlined,
                     iconColor: Colors.orange,
-                    title: _ct('Báo cáo bài viết', 'Report post'),
+                    title: _ct(context.tr('home_bocobivit_08313a'), 'Report post'),
                     subtitle: _ct(
-                      'Gửi báo cáo tới quản trị viên',
+                      context.tr('home_gibocotiqu_e68d16'),
                       'Send a report to the moderators',
                     ),
                     onTap: () async {
@@ -857,7 +862,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
                         SnackBar(
                           content: Text(
                             _ct(
-                              'Đã gửi báo cáo tới quản trị viên',
+                              context.tr('home_gibocotiqu_fd2301'),
                               'Report sent to the moderators',
                             ),
                           ),
@@ -869,9 +874,9 @@ extension _CommunityTabInteractions on _CommunityTabState {
                     icon: Icons.block_rounded,
                     iconColor: Colors.red,
                     textColor: Colors.red,
-                    title: _ct('Chặn người dùng này', 'Block this user'),
+                    title: _ct(context.tr('home_chnngidngn_27d0c8'), 'Block this user'),
                     subtitle: _ct(
-                      'Ngăn nhà này xem và tương tác với nhà bạn',
+                      context.tr('home_ngnnhnyxem_ce0910'),
                       'Prevent this house from viewing and interacting with yours',
                     ),
                     onTap: () async {
@@ -881,7 +886,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
                         context: context,
                         builder: (ctx) => AlertDialog(
                           title: Text(
-                            _ct('Xác nhận chặn', 'Confirm block'),
+                            _ct(context.tr('home_xcnhnchn_ae00a6'), 'Confirm block'),
                             style: SLTheme.quicksand(
                               fontWeight: FontWeight.w900,
                             ),
@@ -896,12 +901,12 @@ extension _CommunityTabInteractions on _CommunityTabState {
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, false),
-                              child: Text(_ct('Hủy', 'Cancel')),
+                              child: Text(_ct(context.tr('home_hy_1e4050'), 'Cancel')),
                             ),
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, true),
                               child: Text(
-                                _ct('Chặn', 'Block'),
+                                _ct(context.tr('home_chn_483b6f'), 'Block'),
                                 style: const TextStyle(color: Colors.red),
                               ),
                             ),
@@ -925,7 +930,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
                         SnackBar(
                           content: Text(
                             _ct(
-                              'Đã chặn người dùng này.',
+                              context.tr('home_chnngidngn_adcaff'),
                               'This user has been blocked.',
                             ),
                           ),
@@ -971,7 +976,7 @@ extension _CommunityTabInteractions on _CommunityTabState {
           'Comments are disabled on this post, so you cannot reply yet.',
         ),
         success: false,
-        title: _ct('Bình luận đang bị khóa', 'Comments are locked'),
+        title: _ct(context.tr('home_bnhlunangb_aad36a'), 'Comments are locked'),
         icon: Icons.comments_disabled_outlined,
       );
       return;

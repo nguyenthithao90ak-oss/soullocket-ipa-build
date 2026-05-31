@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import '../../core/sl_theme.dart';
-import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 
 class AdminPaymentScreen extends StatefulWidget {
@@ -58,12 +57,8 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
       });
     } catch (error) {
       if (!mounted) return;
-      final errorInfo = AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Chưa thể tải lịch sử thanh toán lúc này. Bạn thử lại sau.',
-      );
       setState(() {
-        _errorText = errorInfo.message;
+        _errorText = error.toString();
       });
     } finally {
       if (mounted) {
@@ -137,14 +132,11 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
       );
       _loadData();
     } catch (e) {
-      final errorInfo = AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Chưa thể hoàn tiền lúc này. Bạn thử lại sau.',
-      );
+      debugPrint('Manual refund failed: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorInfo.message),
+        const SnackBar(
+          content: Text('Chưa thể hoàn tiền lúc này. Vui lòng thử lại.'),
         ),
       );
     }
@@ -187,7 +179,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
           else if (_errorText != null)
             Center(
               child: Text(
-                _errorText!,
+                'Lỗi: $_errorText',
                 style: const TextStyle(color: Colors.red),
               ),
             )

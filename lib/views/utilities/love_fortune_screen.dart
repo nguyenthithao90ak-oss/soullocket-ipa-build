@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import '../../core/sl_theme.dart';
 
 class LoveFortuneScreen extends StatefulWidget {
@@ -24,13 +25,13 @@ class _LoveFortuneScreenState extends State<LoveFortuneScreen> {
   }
 
   String _messageForPercent(int p) {
-    if (p >= 95) return 'Cực hợp nhau. Nhớ trân trọng và giữ lửa nhé.';
-    if (p >= 80) return 'Hợp nhau lắm. Chỉ cần lắng nghe thêm một chút.';
-    if (p >= 65) return 'Khá ổn. Thử hẹn hò/nhắn tin nhiều hơn để hiểu nhau.';
-    if (p >= 50) return 'Có tiềm năng. Quan trọng là cách hai bạn vun đắp.';
-    if (p >= 35) return 'Cần kiên nhẫn. Hãy nói rõ cảm xúc và kỳ vọng.';
-    if (p >= 20) return 'Khá khó. Đừng cố gượng ép, hãy tôn trọng nhau.';
-    return 'Độ hợp thấp. Nhưng biết đâu "lệch tông" lại thành duyên.';
+    if (p >= 95) return context.tr('util_cchpnhaunh_5153f6');
+    if (p >= 80) return context.tr('util_hpnhaulmch_3bdeea');
+    if (p >= 65) return context.tr('util_khnthhnhnh_674fd3');
+    if (p >= 50) return context.tr('util_ctimnngqua_fa18b9');
+    if (p >= 35) return context.tr('util_cnkinnhnhy_c55b2b');
+    if (p >= 20) return context.tr('util_khkhngcgng_69d50a');
+    return context.tr('util_love_fortune_low_match');
   }
 
   @override
@@ -38,7 +39,7 @@ class _LoveFortuneScreenState extends State<LoveFortuneScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7FB),
       appBar: AppBar(
-        title: Text('Bói Tình Yêu', style: SLTheme.quicksand()),
+        title: Text(context.tr('util_bitnhyu_a4d918'), style: SLTheme.quicksand()),
         backgroundColor: const Color(0xFFD81B60),
         foregroundColor: Colors.white,
       ),
@@ -63,7 +64,7 @@ class _LoveFortuneScreenState extends State<LoveFortuneScreen> {
               child: Column(
                 children: [
                   Text(
-                    _percent == null ? 'Chạm để bói' : '${_percent!}%',
+                    _percent == null ? context.tr('util_chmbi_350def') : '${_percent!}%',
                     style: SLTheme.quicksand(
                       fontSize: 42,
                       fontWeight: FontWeight.w900,
@@ -72,7 +73,7 @@ class _LoveFortuneScreenState extends State<LoveFortuneScreen> {
                   ),
                   SLSpacing.h8,
                   Text(
-                    _message ?? 'Tỉ lệ chỉ mang tính giải trí.',
+                    _message ?? context.tr('util_tlchmangtn_c41775'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       fontSize: 14,
@@ -98,7 +99,7 @@ class _LoveFortuneScreenState extends State<LoveFortuneScreen> {
                   ),
                 ),
                 child: Text(
-                  'Bói ngay',
+                  context.tr('util_bingay_9d1cbd'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                 ),
               ),

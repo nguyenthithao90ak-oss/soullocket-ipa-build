@@ -12,7 +12,7 @@ import '../../../models/social_post.dart';
 import '../../../services/social_service.dart';
 import '../../ui_prefs.dart';
 import '../../visitors/visitor_profile_screen.dart';
-import 'package:soullocket_app/services/l10n_service.dart';
+import '../../../services/l10n_service.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../utils/app_error_mapper.dart';
@@ -231,8 +231,7 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
                   }
                   final post = mediaPosts[index];
                   return _ShortVideoFeedPostCard(
-                    key: ValueKey(
-                        '${post.id}_${post.videoUrl}_${post.imageUrl}'),
+                    key: ValueKey('${post.id}_${post.videoUrl}_${post.imageUrl}'),
                     post: post,
                     houseId: widget.houseId,
                     blockedUsers: _blockedUsers,
@@ -242,8 +241,7 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
                 },
               );
             }),
-          // Layer trái tim bay (Gray's interactive touch)
-          ..._flyingHearts.map((h) => _HeartAnimation(
+              ..._flyingHearts.map((h) => _HeartAnimation(
                 key: ValueKey(h.id),
                 heart: h,
                 onComplete: () {

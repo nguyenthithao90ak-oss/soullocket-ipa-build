@@ -115,7 +115,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                             const SizedBox(height: 6),
                             Text(
                               _customTrackBytes != null
-                                  ? 'Official track · nhạc theo yêu cầu'
+                                  ? context.tr('util_officialtr_2dbfca')
                                   : 'Fixed Unity chart · melody locked',
                               textAlign: TextAlign.center,
                               style: SLTheme.quicksand(
@@ -204,7 +204,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                         child: Column(
                           children: [
                             Text(
-                              'CHỌN CHẾ ĐỘ',
+                              context.tr('util_chnch_52d13c'),
                               style: SLTheme.quicksand(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w900,

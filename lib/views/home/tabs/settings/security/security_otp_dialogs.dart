@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/app_error_mapper.dart';
@@ -95,12 +96,12 @@ Future<bool> showSettingsEmailOtpDialog({
                         isSending
                             ? 'Đang gửi mã OTP tới $email.'
                             : isVerifying
-                                ? 'Đang kiểm tra mã.'
+                                ? context.tr('home_angkimtram_f1186f')
                                 : sendError != null
                                     ? 'Không gửi được mã:\n$sendError'
                                     : verifyError != null
                                         ? 'Mã không hợp lệ:\n$verifyError'
-                                        : 'Nhập mã 6 số để tiếp tục.',
+                                        : context.tr('home_nhpm6stipt_fc04d6'),
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
@@ -123,7 +124,7 @@ Future<bool> showSettingsEmailOtpDialog({
                           }
                         },
                         decoration: InputDecoration(
-                          labelText: 'Mã xác nhận',
+                          labelText: context.tr('home_mxcnhn_ef70d2'),
                           counterText: '',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -137,7 +138,7 @@ Future<bool> showSettingsEmailOtpDialog({
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Hủy'),
+                  child: Text(context.tr('home_hy_1e4050')),
                 ),
                 ElevatedButton(
                   onPressed: canConfirm
@@ -163,10 +164,10 @@ Future<bool> showSettingsEmailOtpDialog({
                       : null,
                   child: Text(
                     isSending
-                        ? 'Đang gửi...'
+                        ? context.tr('home_anggi_6b22c8')
                         : isVerifying
-                            ? 'Đang kiểm tra...'
-                            : 'Xác nhận',
+                            ? context.tr('home_angkimtra_92e8dd')
+                            : context.tr('home_xcnhn_1e2eb2'),
                   ),
                 ),
               ],
@@ -252,7 +253,7 @@ Future<bool> showSettingsPasswordResetOtpDialog({
                   const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               scrollable: true,
               title: Text(
-                'Đặt lại mật khẩu',
+                context.tr('home_tlimtkhu_2896d3'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.bold),
               ),
               content: ConstrainedBox(
@@ -269,8 +270,8 @@ Future<bool> showSettingsPasswordResetOtpDialog({
                         enabled: canConfirm,
                         keyboardType: TextInputType.number,
                         maxLength: 6,
-                        decoration: const InputDecoration(
-                          labelText: 'Mã xác nhận',
+                        decoration: InputDecoration(
+                          labelText: context.tr('home_mxcnhn_ef70d2'),
                           counterText: '',
                         ),
                       ),
@@ -280,7 +281,7 @@ Future<bool> showSettingsPasswordResetOtpDialog({
                         enabled: canConfirm,
                         obscureText: obscure,
                         decoration: InputDecoration(
-                          labelText: 'Mật khẩu mới',
+                          labelText: context.tr('home_mtkhumi_ccef95'),
                           suffixIcon: IconButton(
                             onPressed: canConfirm
                                 ? () => setDialogState(() => obscure = !obscure)
@@ -310,7 +311,7 @@ Future<bool> showSettingsPasswordResetOtpDialog({
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Hủy'),
+                  child: Text(context.tr('home_hy_1e4050')),
                 ),
                 ElevatedButton(
                   onPressed: canConfirm
@@ -339,10 +340,10 @@ Future<bool> showSettingsPasswordResetOtpDialog({
                       : null,
                   child: Text(
                     isSending
-                        ? 'Đang gửi...'
+                        ? context.tr('home_anggi_6b22c8')
                         : isVerifying
-                            ? 'Đang đợi...'
-                            : 'Cập nhật',
+                            ? context.tr('home_angi_b39515')
+                            : context.tr('home_cpnht_3b7db4'),
                   ),
                 ),
               ],

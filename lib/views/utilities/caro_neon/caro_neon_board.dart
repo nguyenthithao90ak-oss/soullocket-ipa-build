@@ -41,29 +41,29 @@ class _ArenaBoardPanel extends StatelessWidget {
         currentRoom?.isActive == true && currentRoom?.turnRole == myRole;
 
     final resolvedMyName =
-        (myName ?? 'Bạn').trim().isEmpty ? 'Bạn' : (myName ?? 'Bạn').trim();
-    final resolvedOpponentName = (opponentName ?? 'Người ấy').trim().isEmpty
-        ? 'Người ấy'
-        : (opponentName ?? 'Người ấy').trim();
+        (myName ?? context.tr('util_bn_1fd75b')).trim().isEmpty ? context.tr('util_bn_1fd75b') : (myName ?? context.tr('util_bn_1fd75b')).trim();
+    final resolvedOpponentName = (opponentName ?? context.tr('util_ngiy_5bab37')).trim().isEmpty
+        ? context.tr('util_ngiy_5bab37')
+        : (opponentName ?? context.tr('util_ngiy_5bab37')).trim();
 
     String subtitle;
     if (currentRoom == null) {
       subtitle = isBotMode
-          ? 'Bắt đầu từ Sảnh rồi quay lại đây để đấu với Bot.'
-          : 'Mở bàn từ Sảnh rồi tab này sẽ là nơi đánh chính.';
+          ? context.tr('util_btutsnhriq_65fc48')
+          : context.tr('util_mbntsnhrit_a75c8b');
     } else if (currentRoom.isWaiting) {
       subtitle = currentRoom.createdByRole == myRole
           ? 'Đang chờ $resolvedOpponentName vào bàn.'
           : '$resolvedOpponentName đã mở sẵn bàn cho bạn.';
     } else if (currentRoom.isActive) {
       subtitle = allowTap
-          ? 'Tới lượt bạn. Chạm ô trống để đánh.'
+          ? context.tr('util_tiltbnchmt_8fabaf')
           : 'Đang chờ $resolvedOpponentName đi tiếp.';
     } else if (currentRoom.isDraw) {
-      subtitle = 'Ván này hòa.';
+      subtitle = context.tr('util_vnnyha_f96721');
     } else {
       subtitle = currentRoom.winnerRole == myRole
-          ? 'Bạn vừa thắng ván này.'
+          ? context.tr('util_bnvathngvn_5a2b5b')
           : '$resolvedOpponentName đã thắng ván này.';
     }
 
@@ -75,10 +75,10 @@ class _ArenaBoardPanel extends StatelessWidget {
     String? secondaryActionLabel;
     VoidCallback? secondaryAction;
     if (currentRoom == null) {
-      overlayTitle = isBotMode ? 'Chưa có ván nào' : 'Chưa mở bàn';
+      overlayTitle = isBotMode ? context.tr('util_chacvnno_79d99b') : context.tr('util_chambn_96d88c');
       overlayCaption = isBotMode
-          ? 'Quay lại tab Sảnh và bấm Bắt đầu với Bot.'
-          : 'Quay lại tab Sảnh để mời người ấy vào bàn.';
+          ? context.tr('util_quaylitabs_53de85')
+          : context.tr('util_quaylitabs_725d3f');
       overlayIcon =
           isBotMode ? Icons.smart_toy_rounded : Icons.rocket_launch_rounded;
     } else if (currentRoom.isWaiting) {
@@ -87,24 +87,24 @@ class _ArenaBoardPanel extends StatelessWidget {
           : '$resolvedOpponentName mời bạn vào chơi';
       overlayCaption = currentRoom.createdByRole == myRole
           ? 'Không gian riêng đã sẵn sàng. Khi $resolvedOpponentName vào, ván sẽ bắt đầu ngay.'
-          : 'Bàn riêng đã mở xong. Nhấn vào chơi để bắt đầu ngay.';
+          : context.tr('util_bnringmxon_50ff73');
       overlayIcon = currentRoom.createdByRole == myRole
           ? Icons.hourglass_top_rounded
           : Icons.login_rounded;
       if (currentRoom.createdByRole != myRole) {
-        primaryActionLabel = 'Vào chơi';
+        primaryActionLabel = context.tr('util_vochi_e0d812');
         primaryAction = onJoin;
       }
-      secondaryActionLabel = 'Thoát';
+      secondaryActionLabel = context.tr('util_thot_8df314');
       secondaryAction = onExit;
     } else if (currentRoom.isDone) {
       if (currentRoom.isDraw) {
-        overlayTitle = 'Ván hòa';
+        overlayTitle = context.tr('util_vnha_b83a70');
         overlayCaption =
-            'Không ai chiến thắng ở ván này. Bạn có thể thoát hoặc chơi tiếp ngay.';
+            context.tr('util_khngaichin_cf71f0');
         overlayIcon = Icons.handshake_rounded;
       } else if (currentRoom.winnerRole == myRole) {
-        overlayTitle = 'Bạn chiến thắng';
+        overlayTitle = context.tr('util_bnchinthng_5edacf');
         overlayCaption =
             '$resolvedMyName đã hoàn thành hàng ${currentRoom.winLength} ô trước $resolvedOpponentName.';
         overlayIcon = Icons.emoji_events_rounded;
@@ -114,9 +114,9 @@ class _ArenaBoardPanel extends StatelessWidget {
             '$resolvedOpponentName đã hoàn thành hàng ${currentRoom.winLength} ô và kết thúc ván này.';
         overlayIcon = Icons.flag_rounded;
       }
-      primaryActionLabel = 'Chơi tiếp';
+      primaryActionLabel = context.tr('util_chitip_027082');
       primaryAction = onReplay;
-      secondaryActionLabel = 'Thoát';
+      secondaryActionLabel = context.tr('util_thot_8df314');
       secondaryAction = onExit;
     }
 
@@ -240,7 +240,7 @@ class _ArenaBoardPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 _TinyPill(
-                  text: isWideBoard ? '5 ô thắng' : '3 ô thắng',
+                  text: isWideBoard ? context.tr('util_5thng_5e66bf') : context.tr('util_3thng_080f34'),
                   color: isWideBoard
                       ? const Color(0xFFFFD76F)
                       : const Color(0xFF4EDBFF),
@@ -517,8 +517,8 @@ class _BoardPanel extends StatelessWidget {
               Expanded(
                 child: Text(
                   isWideBoard
-                      ? 'BÀN 10x10 • THẮNG KHI ĐỦ 5 Ô'
-                      : 'BÀN 3x3 • THẮNG KHI ĐỦ 3 Ô',
+                      ? context.tr('util_bn10x10thn_b9b2a7')
+                      : context.tr('util_bn3x3thngk_37ac70'),
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
@@ -528,7 +528,7 @@ class _BoardPanel extends StatelessWidget {
                 ),
               ),
               _TinyPill(
-                text: isWideBoard ? 'Kéo ngang' : 'Chạm để đánh',
+                text: isWideBoard ? context.tr('util_kongang_2ac68f') : context.tr('util_chmnh_373341'),
                 color: isWideBoard
                     ? const Color(0xFFFFD76F)
                     : const Color(0xFF4EDBFF),
@@ -539,8 +539,8 @@ class _BoardPanel extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             isWideBoard
-                ? 'Bàn rộng cho ván Caro dài hơi. Kéo ngang để xem hết bàn rồi chạm ô trống để đi.'
-                : 'Bàn gọn giống ảnh tham chiếu: sáng, rõ và vào trận nhanh.',
+                ? context.tr('util_bnrngchovn_233fd9')
+                : context.tr('util_bngngingnh_ce6b3c'),
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w500,

@@ -346,10 +346,9 @@ exports.deleteUserDataHttp = functions.https.onRequest(async (req, res) => {
   try {
     await verifyAppCheckRequest(req);
   } catch (error) {
-    const code = normalizeText(error?.message);
-    return jsonResponse(res, 403, {
-      ok: false,
-      error: code === 'missing_app_check' ? 'missing_app_check' : 'invalid_app_check',
+    logAccountDeletionAudit('warn', 'delete_request_app_check_unavailable', {
+      actorUid: normalizeText(decodedToken.uid),
+      error: normalizeText(error?.message || error),
     });
   }
 
@@ -483,10 +482,9 @@ exports.undoAccountDeletionHttp = functions.https.onRequest(async (req, res) => 
   try {
     await verifyAppCheckRequest(req);
   } catch (error) {
-    const code = normalizeText(error?.message);
-    return jsonResponse(res, 403, {
-      ok: false,
-      error: code === 'missing_app_check' ? 'missing_app_check' : 'invalid_app_check',
+    logAccountDeletionAudit('warn', 'undo_app_check_unavailable', {
+      actorUid: normalizeText(decodedToken.uid),
+      error: normalizeText(error?.message || error),
     });
   }
 

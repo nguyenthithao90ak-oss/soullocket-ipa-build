@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
 import '../../services/ai_counselor_service.dart';
@@ -34,7 +35,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   String? _selectedTopicId;
   String? _houseId;
   String? _ticketId;
-  String _myName = 'Người dùng';
+  String _myName = L10nService().translate('util_ngidng_3bf886');
   String? _supportStatusMessage;
   String? _entryBannerText;
   Map<String, String> _supportContext = const {};
@@ -70,12 +71,14 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   }
 
   Future<void> _init() async {
+    final msgNoUser = context.tr('util_bncnngnhpd_e2e83c');
+    final msgAnonName = context.tr('util_ngidng_3bf886');
+    final msgNoHouse = context.tr('util_thitbnycha_71ad75');
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       if (!mounted) return;
       setState(() {
-        _supportStatusMessage =
-            'Bạn cần đăng nhập để dùng chat hỗ trợ. Mình vẫn có thể gợi ý các bước cơ bản cho bạn ngay trong màn này.';
+        _supportStatusMessage = msgNoUser;
       });
       _showGreeting();
       return;
@@ -90,13 +93,12 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         ? user.displayName!.trim()
         : (user.email?.trim().isNotEmpty ?? false)
             ? user.email!.trim()
-            : 'Người dùng';
+            : msgAnonName;
 
     if (_houseId == null || _houseId!.trim().isEmpty) {
       if (!mounted) return;
       setState(() {
-        _supportStatusMessage =
-            'Thiết bị này chưa liên kết nhà đôi nên yêu cầu hỗ trợ sẽ tạm gắn theo tài khoản hiện tại.';
+        _supportStatusMessage = msgNoHouse;
       });
     } else {
       final houseNameSnap =
@@ -128,6 +130,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       return;
     }
 
+    final msgStatusErr = context.tr('util_khngththeo_d103bb');
     _statusSub = _db.ref('support_tickets/$_ticketId/status').onValue.listen(
       (event) {
         if (!mounted || !event.snapshot.exists) return;
@@ -144,12 +147,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         debugPrint(
           'Support ticket status listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể theo dõi trạng thái hỗ trợ.',
+            fallbackMessage: msgStatusErr,
           ).message}',
         );
       },
     );
 
+    final msgMsgErr = context.tr('util_khngthtini_9fd6cd');
     _messagesSub = _db
         .ref('support_tickets/$_ticketId/messages')
         .orderByChild('ts')
@@ -198,7 +202,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         debugPrint(
           'Support ticket messages listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải nội dung hỗ trợ.',
+            fallbackMessage: msgMsgErr,
           ).message}',
         );
       },
@@ -306,7 +310,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               '6. Góp ý / Báo lỗi kỹ thuật khác\n'
               '7. Tư vấn gỡ rối tình cảm\n'
               '8. Hướng dẫn xóa tài khoản / Xóa nhà\n'
-              '9. Gặp Admin hỗ trợ trực tiếp',
+              '${context.tr('util_9gpadminht_8eebd4')}',
           isBot: true,
           isAdmin: false,
           isMenuCommand: false,
@@ -327,15 +331,16 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   }
 
   Future<void> _send({String? menuId, String? displayMessage}) async {
+    final msgNoTicket = context.tr('util_chathmhtrl_d7e30d');
+    final msgNoCategory = context.tr('util_htrkhc_abd8c5');
     final text = displayMessage ?? _msgCtrl.text.trim();
     if (text.isEmpty || _isSending) return;
 
     if (_ticketId == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('Chưa thể mở hỗ trợ lúc này. Hãy đăng nhập rồi thử lại.'),
+        SnackBar(
+          content: Text(msgNoTicket),
         ),
       );
       return;
@@ -465,7 +470,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       updates['email'] = currentUser!.email!.trim();
     }
     if (!hasCategory) {
-      updates['category'] = topic?.title ?? 'Hỗ trợ khác';
+      updates['category'] = topic?.title ?? msgNoCategory;
     }
     if (!hasPriority && topic != null) {
       updates['priority'] = topic.priority;
@@ -532,15 +537,14 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   }) async {
     if (!isMenuCommand) {
       final localReply = wasAlreadyWaiting
-          ? 'Mình đã bổ sung thêm thông tin vào ticket trước đó. Bạn vẫn có thể nhắn thêm nếu còn thiếu dữ liệu hoặc cần đính chính.'
-          : 'Yêu cầu của bạn đã được ghi nhận và xếp vào hàng chờ. Bạn vẫn có thể nhắn thêm thông tin, bước thao tác hoặc lỗi hiển thị để Admin xử lý nhanh hơn.';
+          ? context.tr('util_mnhbsungth_2f4d73')
+          : context.tr('util_yucucabncg_81d444');
       String? aiReply;
       try {
         aiReply = await AiCounselorService()
             .callTextGeneration(
-              'Người dùng vừa gửi tin nhắn hỗ trợ Admin: $userText\n'
-                  'Hãy trả lời như trợ lý hỗ trợ SoulLocket. Đưa ra hướng dẫn tạm thời ngắn gọn, không thay thế Admin, tối đa 4 câu.',
-              'Bạn là trợ lý AI lễ phép, cực kỳ ngắn gọn của SoulLocket.',
+              'Người dùng vừa gửi tin nhắn hỗ trợ Admin: $userText\n${context.tr('util_hytrlinhtr_e42d19')}',
+              context.tr('util_bnltrlailp_9d5e23'),
             )
             .timeout(const Duration(seconds: 6));
       } catch (_) {}
@@ -558,14 +562,14 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     try {
       final category = _getCategoryName(commandId ?? '0');
       final aiPrompt = 'Người dùng vừa chọn chủ đề hỗ trợ: $category. '
-          'Hãy đóng vai trợ lý ảo của SoulLocket, chào nhẹ nhàng và đưa ra đúng 2 giải pháp '
+          '${context.tr('util_hyngvaitrl_c96abd')}'
           'hoặc hướng dẫn cơ bản nhất liên quan đến $category (dưới 4 câu). '
-          'Cuối thư nhắc: "Mẫu điền chi tiết đã được chèn sẵn ở ô chat, bạn điền càng đủ thì Admin xử lý càng nhanh nhé!".';
+          'Cuối thư nhắc: ${context.tr('util_muinchitit_37f190')}.';
 
       final aiReply = await AiCounselorService()
           .callTextGeneration(
             aiPrompt,
-            'Bạn là trợ lý AI lễ phép và cực kỳ ngắn gọn của SoulLocket.',
+            context.tr('util_bnltrlailp_6890a8'),
           )
           .timeout(const Duration(seconds: 5));
 
@@ -583,25 +587,25 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   String _getCategoryName(String id) {
     switch (id) {
       case '1':
-        return 'Lỗi đăng nhập, mất mật khẩu';
+        return context.tr('util_lingnhpmtm_f03bed');
       case '2':
-        return 'Ghép đôi QR, tham gia nhà, ngắt kết nối';
+        return context.tr('util_ghpiqrtham_9051ff');
       case '3':
-        return 'Lỗi hiển thị ảnh, tải ảnh lên hoặc nhật ký trống';
+        return context.tr('util_lihinthnht_bda006');
       case '4':
-        return 'Hỏi về thanh toán, tính năng trả phí, lỗi mua hàng';
+        return context.tr('util_hivtrngthi_8ce10a');
       case '5':
-        return 'Mất dữ liệu khi đổi điện thoại, cài lại app';
+        return context.tr('util_mtdliukhii_6f6afc');
       case '6':
-        return 'Góp ý thêm tính năng, báo lỗi crash ứng dụng';
+        return context.tr('util_gpthmtnhnn_f4eb23');
       case '7':
-        return 'Tư vấn gỡ rối tình cảm, xoa dịu nỗi buồn';
+        return context.tr('util_tvngritnhc_1b6ffb');
       case '8':
-        return 'Cách xóa tài khoản, rời nhà, hủy kết nối';
+        return context.tr('util_cchxatikho_76d9d8');
       case '9':
-        return 'Cần gặp trực tiếp admin SoulLocket';
+        return context.tr('util_cngptrctip_f51f09');
       default:
-        return 'Khác';
+        return context.tr('util_khc_06c1f8');
     }
   }
 
@@ -624,16 +628,14 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   }
 
   String _buildGreetingReply() {
-    return 'Chào bạn, mình là trợ lý hỗ trợ của SoulLocket.\n'
-        'Bạn có thể gõ số 1 đến 9 để được hướng dẫn nhanh nhé!';
+    return 'Chào bạn, mình là trợ lý hỗ trợ của SoulLocket.\\n';
   }
 
   String _buildClarifyReply() {
     return 'Mình chưa đủ dữ kiện để hướng dẫn chính xác. Bạn nhắn thêm theo mẫu này nhé:\n'
         '• Màn hình/tính năng nào đang lỗi\n'
         '• Bạn vừa bấm những bước gì trước khi lỗi xảy ra\n'
-        '• Ghi nguyên văn dòng thông báo lỗi đang hiển thị (nếu có)\n'
-        '• Dữ liệu hoặc nội dung nào đang bị ảnh hưởng';
+        '• Ghi nguyên văn dòng thông báo lỗi đang hiển thị (nếu có)\\n';
   }
 
   String _buildLocalSupportReply(String userText) {
@@ -642,22 +644,15 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     if (text == '1') {
       return '🔑 HỖ TRỢ ĐĂNG NHẬP & QUÊN MẬT KHẨU\n\n'
           '* Nếu quên mật khẩu:\n'
-          'Bước 1: Ra ngoài màn hình đăng nhập, bấm vào chữ "Quên mật khẩu?".\n'
+          'Bước 1: Ra ngoài màn hình đăng nhập, bấm vào chữ .\\n'
           'Bước 2: Gõ đúng Email bạn đã dùng đăng ký.\n'
           'Bước 3: Mở ứng dụng Gmail (hoặc email của bạn), tìm thư của SoulLocket và bấm vào Link màu xanh để tạo lại mật khẩu mới.\n\n'
           '* Nếu gặp lỗi sai mật khẩu liên tục:\n'
-          'Thường do bàn phím tự động ghi hoa chữ cái đầu. Bạn hãy gõ cẩn thận lại và thử gỡ ứng dụng ra cài lại nhé.\n\n'
-          '👉 Nếu làm trọn các bước trên vẫn không được: Hãy nhắn thẳng Email của bạn vào đây để Admin kiểm tra tay cho bạn!';
+          'Thường do bàn phím tự động ghi hoa chữ cái đầu. Bạn hãy gõ cẩn thận lại và thử gỡ ứng dụng ra cài lại nhé.\n\n${context.tr('util_nulmtrnccb_e760be')}';
     }
 
     if (text == '2') {
-      return '🔗 HỖ TRỢ GHÉP ĐÔI & LỖI MẤT KẾT NỐI\n\n'
-          '* Cách ghép đôi QR dễ nhất:\n'
-          'Bước 1: Lấy điện thoại của người kia, mở màn hình có mã QR to đùng lên.\n'
-          'Bước 2: Lấy điện thoại của bạn, bấm nút "Quét Camera" và đưa camera soi vào khung QR của người kia.\n\n'
-          '* Hiện lỗi "Vừa mới thoát / Offline" sai lệch:\n'
-          'Đây không phải lỗi mất kết nối nhà nha! Xảy ra do đường truyền mạng chậm đi vài giây. Bạn chỉ cần thử tắt 4G/Wifi rồi bật lại hoặc kệ nó 1 lúc là app sẽ tự cập nhật đồng bộ lại chữ "Online".\n\n'
-          '👉 Nếu đã làm theo mà 2 bên thấy 2 nhà khác nhau: Bạn sao chép mã ID nhà (mã dài gồm chữ và số) rồi gửi vào đây cho Admin nhé!';
+      return '🔗 HỖ TRỢ GHÉP ĐÔI & LỖI MẤT KẾT NỐI\n\n* Cách ghép đôi QR dễ nhất:\nBước 1: Lấy điện thoại của người kia, mở màn hình có mã QR to đùng lên.\nBước 2: Lấy điện thoại của bạn, bấm nút ${context.tr('util_qutcamera_0e07a1')} và đưa camera soi vào khung QR của người kia.\\n\\n* Hiện lỗi ${context.tr('util_vamithotof_9440a3')} sai lệch:\\nĐây không phải lỗi mất kết nối nhà nha! Xảy ra do đường truyền mạng chậm đi vài giây. Bạn chỉ cần thử tắt 4G/Wifi rồi bật lại hoặc kệ nó 1 lúc là app sẽ tự cập nhật đồng bộ lại chữ "Online".\n\n${context.tr('util_nulmtheom2_b875c9')}';
     }
 
     if (text == '3') {
@@ -665,17 +660,15 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           '* Tải ảnh lên bị mờ, hình đen xì:\n'
           'Khi bạn đang lưu ảnh hoặc video lên, máy cần mạng để đẩy lên hệ thống. Tuyệt đối KHÔNG LƯỚT QUA màn hình khác hay tắt app khi vòng quay 100% chưa tải xong nhé!\n\n'
           '* Cập nhật nhật ký không thấy đâu:\n'
-          'Chỉ cần giữ ngón tay ở giữa màn hình rồi kéo vuốt mạnh từ trên xuống (Refresh) là dữ liệu mới nhất sẽ nhảy ra liền.\n\n'
-          '👉 Vẫn bị lỗi? Hãy nhắn rõ cho tụi mình là Tên Album nào, hoặc nội dung Nhật ký ngày nào báo lỗi nhé!';
+          'Chỉ cần giữ ngón tay ở giữa màn hình rồi kéo vuốt mạnh từ trên xuống (Refresh) là dữ liệu mới nhất sẽ nhảy ra liền.\n\n${context.tr('util_vnblihynhn_7eff73')}';
     }
 
     if (text == '4') {
-      return '💳 HỖ TRỢ THANH TOÁN VÀ MUA HÀNG\n\n'
-          '* Nếu bạn cần kiểm tra giao dịch hoặc quyền lợi trong ứng dụng:\n'
-          'Bước 1: Mở đúng màn hình mua hàng trong ứng dụng.\n'
+      return '🧾 HỖ TRỢ TÀI KHOẢN VÀ QUYỀN LỢI\n\n'
+          '* Nếu bạn cần kiểm tra trạng thái hoặc quyền lợi trong ứng dụng:\n'
+          'Bước 1: Mở đúng màn hình đang gặp vấn đề.\n'
           'Bước 2: Chụp lại thông báo hiển thị nếu có lỗi.\n'
-          'Bước 3: Gửi mô tả ngắn thao tác vừa làm để Admin kiểm tra.\n\n'
-          '👉 Mọi nội dung số trả phí trong app cần được mua trực tiếp bằng hệ thống mua hàng trong ứng dụng.';
+          'Bước 3: Gửi mô tả ngắn thao tác vừa làm để Admin kiểm tra.\n\n${context.tr('util_adminskimt_71493d')}';
     }
 
     if (text == '5') {
@@ -685,36 +678,22 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           '* Cách đổi máy chuẩn nhất:\n'
           'Bước 1: Ở máy Cũ, bạn tuyệt đối phải để nguyên ứng dụng không được xoá House.\n'
           'Bước 2: Cầm máy Mới, tải app về.\n'
-          'Bước 3: Nhớ lại thật kỹ bạn dùng Google hay Tên Đăng nhập gì lúc trước? Điền y xì đúc vậy ở máy mới là đống kỉ niệm ùa về luôn.\n\n'
-          '👉 Lỡ quên mất tài khoản của mình là gì? Nhắn ID nhà đôi và Email hay dùng nhất để Admin giúp bạn tìm.';
+          'Bước 3: Nhớ lại thật kỹ bạn dùng Google hay Tên Đăng nhập gì lúc trước? Điền y xì đúc vậy ở máy mới là đống kỉ niệm ùa về luôn.\n\n${context.tr('util_lqunmttikh_e1d8ee')}';
     }
 
     if (text == '6') {
-      return '🛠 BÁO CÁO LỖI VĂNG ỨNG DỤNG - TRẮNG MÀN HÌNH\n\n'
-          '* Văng ứng dụng (Vào app là bị đẩy thẳng ra ngoài):\n'
-          'Do bộ nhớ đầy hoặc xung đột. Bạn hãy tắt đa nhiệm (vuốt sạch app ngầm) sau đó khởi động lại điện thoại. Nếu vẫn bị văng, xoá app tải lại nhé.\n\n'
-          '* Trắng màn hình hoặc web đơ:\n'
-          'Việc này thường do lỗi cache lưu đệm. Nếu xài Web thì làm ơn F5 giùm mình hoặc ấn xoá Cache duyệt web. Nếu xài điện thoại, đổi từ Wi-Fi qua 4G xem sao.\n\n'
-          '👉 Nếu những lỗi này cản trở bạn xài, mong bạn hãy miêu tả cụ thể ở dưới: "Dùng máy gì? Lỗi xảy ra khi vừa bấm nút nào?". Admin sẽ bắt bệnh trong 1 nốt nhạc!';
+      return '🛠 BÁO CÁO LỖI VĂNG ỨNG DỤNG - TRẮNG MÀN HÌNH\n\n* Văng ứng dụng (Vào app là bị đẩy thẳng ra ngoài):\nDo bộ nhớ đầy hoặc xung đột. Bạn hãy tắt đa nhiệm (vuốt sạch app ngầm) sau đó khởi động lại điện thoại. Nếu vẫn bị văng, xoá app tải lại nhé.\n\n* Trắng màn hình hoặc web đơ:\nViệc này thường do lỗi cache lưu đệm. Nếu xài Web thì làm ơn F5 giùm mình hoặc ấn xoá Cache duyệt web. Nếu xài điện thoại, đổi từ Wi-Fi qua 4G xem sao.\n\n👉 Nếu những lỗi này cản trở bạn xài, mong bạn hãy miêu tả cụ thể ở dưới: ${context.tr('util_dngmyglixy_658238')}. Admin sẽ bắt bệnh trong 1 nốt nhạc!';
     }
 
     if (text == '7') {
       return '❤️ TRẠM LẮNG NGHE TÂM SỰ TÌNH YÊU\n\n'
           'Ở đây hoàn toàn bí mật, không có bất kì sự phán xét nào!\n\n'
           'Nếu hai bạn đang cãi nhau to, hay bản thân tự thấy cô đơn quá, hãy khoan đưa ra quyết định gì vội vàng nha.\n'
-          'Bấm vào Kỷ Niệm ngày đầu hoặc xem lại Cuốn Nhật Ký tháng 1, điều gì khiến hai người bắt đầu đến với nhau?\n\n'
-          'Nhắn hết nỗi buồn vào đây, câu chữ của bạn sẽ được Trợ Lý Tâm Lý AI lắng lòng đọc và hồi âm xoa dịu ngay lập tức. Cứ thoải mái gõ nhé!';
+          'Bấm vào Kỷ Niệm ngày đầu hoặc xem lại Cuốn Nhật Ký tháng 1, điều gì khiến hai người bắt đầu đến với nhau?\n\n${context.tr('util_nhnhtnibun_43c781')}';
     }
 
     if (text == '8') {
-      return '🗑 HƯỚNG DẪN RỜI NHÀ HOẶC XÓA TÀI KHOẢN VĨNH VIỄN\n\n'
-          'Cân nhắc kỹ trước khi làm, vì toàn bộ Ký ức, Ảnh và Nhật ký sẽ bị xóa vĩnh viễn, không thể khôi phục.\n\n'
-          '* Muốn Rời Ghép Đôi (Ngưng yêu):\n'
-          'Bước 1: Ấn nút "Cài Đặt" (Bánh răng trên cùng).\n'
-          'Bước 2: Cuộn xuống gần cuối, bạn sẽ thấy mục "Rời Nhà Đôi" màu đỏ.\n\n'
-          '* Muốn Xóa Bóng Hoàn Toàn (Xóa App Xóa Acc):\n'
-          'Vào "Cài Đặt" → Chọn mục "Bảo mật tài khoản" → Chọn "Xóa tài khoản".\n\n'
-          '👉 Nếu lỡ thao tác nhầm và tài khoản chưa bị xóa ở thiết bị còn lại, bạn có thể dùng mã QR ở máy đó để ghép lại.';
+      return '🗑 HƯỚNG DẪN RỜI NHÀ HOẶC XÓA TÀI KHOẢN VĨNH VIỄN\n\nCân nhắc kỹ trước khi làm, vì toàn bộ Ký ức, Ảnh và Nhật ký sẽ bị xóa vĩnh viễn, không thể khôi phục.\n\n* Muốn Rời Ghép Đôi (Ngưng yêu):\nBước 1: Ấn nút ${context.tr('util_cit_fa992a')} (Bánh răng trên cùng).\\nBước 2: Cuộn xuống gần cuối, bạn sẽ thấy mục ${context.tr('util_rinhi_202550')} màu đỏ.\\n\\n* Muốn Xóa Bóng Hoàn Toàn (Xóa App Xóa Acc):\nVào ${context.tr('util_cit_fa992a')} → Chọn mục ${context.tr('util_bomttikhon_80bc0d')} → Chọn ${context.tr('util_xatikhon_7d4ff0')}.\\n\\n${context.tr('util_nulthaotcn_7d2b85')}';
     }
 
     if (text == '9') {
@@ -723,98 +702,92 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           'Để được giải quyết cấp tốc bỏ qua mọi lời nói rườm rà, bạn hãy gửi gọn gàng đúng yêu cầu sau (bạn bỏ trống Admin sẽ chậm duyệt hơn nhé):\n'
           '• Mật khẩu bị gì / Hay Tên Email / ID Nhà là gì?\n'
           '• Hành động bạn vừa bấm là gì?\n'
-          '• Gửi thẳng Hình Ảnh màn hình lúc vừa bị lỗi vô đây.\n\n'
-          'Hệ thống đang khóa cửa để đóng băng hàng chờ. Lời nhắn sau của bạn sẽ bắn thẳng vào ĐT của Admin ngay lập tức!';
+          '• Gửi thẳng Hình Ảnh màn hình lúc vừa bị lỗi vô đây.\n\n${context.tr('util_hthngangkh_155fb0')}';
     }
 
-    if (_containsAny(text, ['xin chào', 'chào', 'hello', 'hi', 'alo'])) {
+    if (_containsAny(text, [context.tr('util_xincho_d79ae2'), context.tr('util_cho_1b0c99'), 'hello', 'hi', 'alo'])) {
       return _buildGreetingReply();
     }
 
-    if (_containsAny(text, ['cảm ơn', 'thank', 'thanks', 'ok', 'oke'])) {
-      return 'Không có gì đâu. Nếu bạn còn vướng bước nào, cứ nhắn rõ tên màn hình hoặc lỗi đang gặp nhé.';
+    if (_containsAny(text, [context.tr('util_cmn_90b4d0'), 'thank', 'thanks', 'ok', 'oke'])) {
+      return context.tr('util_khngcgunub_34bcf8');
     }
 
     if (_containsAny(text, [
-      'lỗi',
+      context.tr('util_li_0c9ec1'),
       'bug',
-      'không vào',
-      'không mở',
-      'không hiện',
-      'không chạy',
-      'không lưu',
-      'mất dữ liệu',
+      context.tr('util_khngvo_f36caf'),
+      context.tr('util_khngm_275ef0'),
+      context.tr('util_khnghin_e4735c'),
+      context.tr('util_khngchy_b0be60'),
+      context.tr('util_khnglu_3702b5'),
+      context.tr('util_mtdliu_3b15e9'),
       'upload',
-      'tải ảnh',
+      context.tr('util_tinh_e4c67c'),
       'web',
       'f5',
       'refresh',
-      'trắng',
+      context.tr('util_trng_60ab3d'),
       'treo',
       'crash',
-      'nhật ký',
-      'kỷ niệm',
+      context.tr('util_nhtk_1b8c37'),
+      context.tr('util_knim_61098c'),
     ])) {
       return _buildTechnicalReply(text);
     }
 
     if (_containsAny(text, [
-      'tài khoản',
-      'đăng nhập',
+      context.tr('util_tikhon_ab3a50'),
+      context.tr('util_ngnhp_5f027d'),
       'login',
       'email',
       'google',
-      'mật khẩu',
+      context.tr('util_mtkhu_8b7c6c'),
       'password',
-      'bị khóa',
-      'khóa tài khoản',
+      context.tr('util_bkha_e1550d'),
+      context.tr('util_khatikhon_b70488'),
     ])) {
       return _buildAccountReply(text);
     }
 
     if (_containsAny(text, [
-      'vip',
-      'pro',
-      'premium',
-      'nâng cấp',
-      'mua gói',
-      'mua vip',
-      'mua pro',
-      'thanh toán',
-      'restore',
-      'khôi phục',
+      context.tr('util_tikhon_ab3a50'),
+      context.tr('util_quynli_898c4c'),
+      context.tr('util_trngthi_8e1610'),
+      context.tr('util_kimtra_cdbca4'),
+      context.tr('util_htr_3f19ab'),
     ])) {
       return _buildVipReply(text);
     }
 
     if (_containsAny(
-        text, ['qr', 'ghép đôi', 'kết nối', 'mã nhà', 'tham gia nhà'])) {
+        text, ['qr', context.tr('util_ghpi_f175c9'), context.tr('util_ktni_36931a'), context.tr('util_mnh_f293b9'), context.tr('util_thamgianh_fb6185')])) {
       return _buildConnectionReply();
     }
 
     if (_containsAny(
-        text, ['bảo mật', 'khóa app', 'sinh trắc', 'vân tay', 'face id'])) {
+        text, [context.tr('util_bomt_eae571'), context.tr('util_khaapp_9de691'), context.tr('util_sinhtrc_7f36ab'), context.tr('util_vntay_295887'), 'face id'])) {
       return _buildSecurityReply();
     }
 
     if (_containsAny(
-        text, ['xóa tài khoản', 'xóa dữ liệu', 'chia tay', 'đóng tài khoản'])) {
+        text, [context.tr('util_xatikhon_232744'), context.tr('util_xadliu_d73744'), 'chia tay', context.tr('util_ngtikhon_78f19f')])) {
       return _buildDeleteReply();
     }
 
     if (_containsAny(
-        text, ['góp ý', 'đề xuất', 'tính năng', 'thêm chức năng'])) {
+        text, [context.tr('util_gp_a4c3bb'), context.tr('util_xut_5c3170'), context.tr('util_tnhnng_d3cb43'), context.tr('util_thmchcnng_7fc17b')])) {
       return _buildFeedbackReply();
     }
 
     if (_containsAny(text, [
-      'buồn',
-      'chán',
-      'cô đơn',
-      'khóc',
-      'tuyệt vọng',
-      'mệt mỏi',
-      'áp lực'
+      context.tr('util_bun_bff2fb'),
+      context.tr('util_chn_a97d41'),
+      context.tr('util_cn_1fa6ea'),
+      context.tr('util_khc_291c9d'),
+      context.tr('util_tuytvng_1383bd'),
+      context.tr('util_mtmi_1eb61e'),
+      context.tr('util_plc_eced84')
     ])) {
       return _buildEmotionalReply();
     }
@@ -831,17 +804,17 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   String _buildConnectionReply() => _buildLocalSupportReply('2');
 
   String _buildSecurityReply() {
-    return 'Bảo mật tài khoản nằm trong Cài đặt > Bảo mật tài khoản. Bạn có thể bật khóa app, kiểm tra thiết bị đăng nhập và đổi PIN tại đó. Nếu khóa app không mở được, hãy gửi ảnh màn hình lỗi và tên thiết bị để Admin kiểm tra.';
+    return context.tr('util_bomttikhon_30d9aa');
   }
 
   String _buildDeleteReply() => _buildLocalSupportReply('8');
 
   String _buildFeedbackReply() {
-    return 'Cảm ơn góp ý của bạn. Bạn hãy ghi rõ tính năng muốn thêm, màn hình liên quan và lý do cần tính năng đó. Admin sẽ gom góp ý để ưu tiên bản cập nhật tiếp theo.';
+    return context.tr('util_cmngpcabnb_7a669c');
   }
 
   String _buildEmotionalReply() {
-    return 'Mình có thể lắng nghe và đưa ra gợi ý tham khảo để bạn bình tĩnh hơn, nhưng không thay thế chuyên gia tâm lý/y tế/pháp lý. Nếu bạn thấy không an toàn hoặc có ý nghĩ tự làm hại bản thân, hãy liên hệ người thân tin cậy hoặc dịch vụ khẩn cấp tại nơi bạn sống ngay.';
+    return context.tr('util_mnhcthlngn_97a330');
   }
 
   void _scrollToBottom() {
@@ -901,9 +874,9 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   void _showWaitingAdminLimitSnackBar() {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Bạn đã gửi đủ 3 tin nhắn bổ sung. Hãy chờ Admin phản hồi.',
+          context.tr('util_bngi3tinnh_21d13b'),
         ),
       ),
     );
@@ -927,7 +900,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hỗ Trợ SoulLocket',
+              context.tr('util_htrsoulloc_ed0178'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
@@ -935,7 +908,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               ),
             ),
             Text(
-              '🤖 AI + Admin • Phản hồi nhanh',
+              context.tr('util_aiadminphn_b17549'),
               style: SLTheme.quicksand(
                 fontSize: compact ? 10 : 11,
                 color: Colors.white70,
@@ -967,7 +940,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                 ),
               ),
             ),
-            tooltip: 'Hướng dẫn gửi hỗ trợ',
+            tooltip: context.tr('util_hngdngihtr_9c6550'),
           ),
           IconButton(
             onPressed: _showFaq,
@@ -1103,11 +1076,11 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     final topic = _currentTopic;
     final badges = _supportContextBadges();
     final checklist = topic?.requiredFields ??
-        const [
-          'Chọn đúng chủ đề trước khi gửi để hệ thống nhóm ticket chính xác hơn.',
-          'Ghi rõ màn hình hoặc tính năng đang lỗi.',
-          'Mô tả bước vừa thao tác và thông báo lỗi nguyên văn nếu có.',
-          'Bạn vẫn có thể gửi bổ sung khi ticket đang ở hàng chờ Admin.',
+        [
+          context.tr('util_chnngchtrc_f6b51b'),
+          context.tr('util_ghirmnhnhh_326eae'),
+          context.tr('util_mtbcvathao_540a4d'),
+          context.tr('util_bnvncthgib_1075eb'),
         ];
 
     return Container(
@@ -1154,7 +1127,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                       children: [
                         Text(
                           topic == null
-                              ? 'Gửi hỗ trợ đầy đủ hơn'
+                              ? context.tr('util_gihtryhn_43d90c')
                               : 'Mẫu điền: ${topic.title}',
                           style: SLTheme.quicksand(
                             fontSize: 14,
@@ -1165,7 +1138,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                         const SizedBox(height: 3),
                         Text(
                           topic?.subtitle ??
-                              'Chọn một chủ đề phía trên để hệ thống chèn sẵn mẫu thông tin cần thiết cho ticket.',
+                              context.tr('util_chnmtchpha_4e00c7'),
                           style: SLTheme.quicksand(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1226,7 +1199,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           if (badges.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              'Thông tin tự đính kèm khi gửi',
+              context.tr('util_thngtintnh_78ed0b'),
               style: SLTheme.quicksand(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w900,
@@ -1329,7 +1302,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                   Padding(
                     padding: const EdgeInsets.only(left: 4, bottom: 3),
                     child: Text(
-                      message.isAdmin ? 'Admin SoulLocket' : 'Trợ lý AI',
+                      message.isAdmin ? 'Admin SoulLocket' : context.tr('util_trlai_e23336'),
                       style: SLTheme.quicksand(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -1419,7 +1392,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               borderRadius: BorderRadius.circular(18),
             ),
             child: Text(
-              '🤖 Trợ lý đang soạn...',
+              context.tr('util_trlangson_923025'),
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -1455,7 +1428,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           ),
           onPressed: _startNewChat,
           child: Text(
-            'Bắt đầu đoạn chat mới',
+            context.tr('util_btuonchatm_78aa12'),
             style: SLTheme.quicksand(
               fontSize: 15,
               fontWeight: FontWeight.bold,
@@ -1499,7 +1472,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Ticket đang ở hàng chờ Admin. Bạn vẫn có thể gửi bổ sung thêm lỗi, bước thao tác hoặc thông tin đơn hàng nếu cần.',
+                      context.tr('util_ticketangh_dbf826'),
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -1530,7 +1503,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Bạn đã gửi đủ 3 tin nhắn bổ sung. Ô chat đã khóa và đang chờ Admin phản hồi.',
+                      context.tr('util_bngi3tinnh_236681'),
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -1562,10 +1535,10 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                     ),
                     decoration: InputDecoration(
                       hintText: _ticketId == null
-                          ? 'Đăng nhập để nhắn...'
+                          ? context.tr('util_ngnhpnhn_b4a68d')
                           : (selectedTopic != null
                               ? 'Điền theo mẫu ${selectedTopic.title.toLowerCase()}...'
-                              : 'Nhập chi tiết lỗi, bước thao tác hoặc thông tin cần hỗ trợ...'),
+                              : context.tr('util_nhpchititl_2c70ce')),
                       hintStyle: SLTheme.quicksand(
                         color: Colors.grey[400],
                         fontWeight: FontWeight.w600,
@@ -1643,7 +1616,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Câu hỏi thường gặp',
+              context.tr('util_cuhithnggp_65b83c'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w900,
                 fontSize: 18,
@@ -1652,15 +1625,15 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             ),
             const SizedBox(height: 16),
             ...[
-              ('Quên mật khẩu?', 'Cài đặt → Bảo mật → Đổi mật khẩu'),
+              (context.tr('util_qunmtkhu_a9a074'), context.tr('util_citbomtimt_83d047')),
               (
-                'App bị lỗi?',
-                'Thử tắt hoàn toàn và mở lại, hoặc cập nhật app mới nhất.'
+                context.tr('util_appbli_92e3fa'),
+                context.tr('util_thtthonton_f1e6df')
               ),
-              ('Mua PRO ở đâu?', 'Tiện Ích → Cửa Hàng → Chọn gói phù hợp'),
+              (context.tr('util_kimtraquyn_4de2fd'), context.tr('util_mcittikhon_4429d3')),
               (
-                'Xóa tài khoản?',
-                'Cài đặt → Xóa tài khoản hoặc chia tay vĩnh viễn'
+                context.tr('util_xatikhon_348215'),
+                context.tr('util_citxatikho_9cdf64')
               ),
             ].map(
               (item) => ListTile(

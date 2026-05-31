@@ -24,7 +24,7 @@ extension _CinemaReelPlayerDialogsPart on _CinemaReelPlayerScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Tiêu đề video kỷ niệm',
+                  context.tr('util_tiuvideokn_0a7786'),
                   style: SLTheme.quicksand(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -33,7 +33,7 @@ extension _CinemaReelPlayerDialogsPart on _CinemaReelPlayerScreenState {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Ví dụ: Kỷ niệm album ảnh 1000 ngày',
+                  context.tr('util_vdknimalbu_a9c42d'),
                   style: SLTheme.quicksand(
                     fontSize: 13.5,
                     color: Colors.white.withValues(alpha: 0.68),
@@ -51,7 +51,7 @@ extension _CinemaReelPlayerDialogsPart on _CinemaReelPlayerScreenState {
                     color: Colors.white,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Nhập tiêu đề muốn hiển thị',
+                    hintText: context.tr('util_nhptiumunh_f0b220'),
                     hintStyle: SLTheme.quicksand(
                       fontSize: 15,
                       color: Colors.white.withValues(alpha: 0.38),
@@ -98,7 +98,7 @@ extension _CinemaReelPlayerDialogsPart on _CinemaReelPlayerScreenState {
                     ),
                     icon: const Icon(Icons.check_rounded),
                     label: Text(
-                      'Áp dụng tiêu đề',
+                      context.tr('util_pdngtiu_defa0e'),
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -129,7 +129,7 @@ extension _CinemaReelPlayerDialogsPart on _CinemaReelPlayerScreenState {
         if (mounted) {
           _commitState(() {
             _videoProgress = null;
-            _videoStatus = 'Đã cập nhật tiêu đề. Hãy tạo video để lấy bản mới.';
+            _videoStatus = context.tr('util_cpnhttiuhy_f6ca1a');
           });
         }
       } catch (e) {

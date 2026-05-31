@@ -21,49 +21,49 @@ class _CountdownModeCenterIconPreset {
   final Color accent;
 }
 
-const List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
+final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
   _CountdownModeCenterIconPreset(
     type: 'heart',
-    label: 'Trái tim',
+    label: L10nService().translate('home_tritim_94c542'),
     emoji: '\u{1F496}',
     icon: Icons.favorite_rounded,
     assetPath: null,
-    gradient: [Color(0xFFFFFFFF), Color(0xFFFFF2F8)],
-    accent: Color(0xFFD94C86),
+    gradient: [const Color(0xFFFFFFFF), const Color(0xFFFFF2F8)],
+    accent: const Color(0xFFD94C86),
   ),
   _CountdownModeCenterIconPreset(
     type: 'kiss',
-    label: 'Hôn',
+    label: L10nService().translate('home_hn_fac010'),
     emoji: '\u{1F48B}',
     icon: Icons.favorite_border_rounded,
-    gradient: [Color(0xFFFFF7FA), Color(0xFFFFD9E8)],
-    accent: Color(0xFFE14A8B),
+    gradient: [const Color(0xFFFFF7FA), const Color(0xFFFFD9E8)],
+    accent: const Color(0xFFE14A8B),
   ),
   _CountdownModeCenterIconPreset(
     type: 'hug',
-    label: 'Ôm',
+    label: L10nService().translate('home_m_07a3b7'),
     emoji: '\u{1F917}',
     icon: Icons.diversity_1_rounded,
-    gradient: [Color(0xFFFFFFFF), Color(0xFFDDF3FF)],
-    accent: Color(0xFF2D8FE3),
+    gradient: [const Color(0xFFFFFFFF), const Color(0xFFDDF3FF)],
+    accent: const Color(0xFF2D8FE3),
   ),
   _CountdownModeCenterIconPreset(
     type: 'angry',
-    label: 'Giận',
+    label: L10nService().translate('home_gin_6a4c8c'),
     emoji: '\u{1F620}',
     icon: Icons.sentiment_very_dissatisfied_rounded,
-    gradient: [Color(0xFFFFFFFF), Color(0xFFFFE6DC)],
-    accent: Color(0xFFE26A3A),
+    gradient: [const Color(0xFFFFFFFF), const Color(0xFFFFE6DC)],
+    accent: const Color(0xFFE26A3A),
   ),
   _CountdownModeCenterIconPreset(
     type: 'tease',
-    label: 'Trêu',
+    label: L10nService().translate('home_tru_d66cdf'),
     emoji: '\u{2728}',
     icon: Icons.auto_awesome_rounded,
-    gradient: [Color(0xFFFFFFFF), Color(0xFFE8E1FF)],
-    accent: Color(0xFF7B61D9),
+    gradient: [const Color(0xFFFFFFFF), const Color(0xFFE8E1FF)],
+    accent: const Color(0xFF7B61D9),
   ),
-  _CountdownModeCenterIconPreset(
+  const _CountdownModeCenterIconPreset(
     type: 'poop',
     label: 'Troll',
     emoji: '\u{26A1}',
@@ -189,7 +189,7 @@ Future<String?> _showCountdownModeCenterIconPicker(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Icon ở giữa',
+                  L10nService().translate('home_icongia_641af3'),
                   style: SLTheme.quicksand(
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
@@ -198,7 +198,7 @@ Future<String?> _showCountdownModeCenterIconPicker(
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Chạm để chọn nhanh hoặc vuốt trái phải ngay trên icon giữa.',
+                  L10nService().translate('home_chmchnnhan_712b91'),
                   style: SLTheme.quicksand(
                     fontSize: 12.2,
                     fontWeight: FontWeight.w700,
@@ -531,7 +531,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
               avatarUrl: leftAvatarUrl,
               avatarFrameKey: avatarFrameKey,
               fontKey: fontKey,
-              roleLabel: 'BẠN',
+              roleLabel: L10nService().translate('home_bn_415bfa'),
               accent: const Color(0xFF4BA7FF),
               foreground: foreground,
               isDark: isDark,
@@ -629,7 +629,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
               avatarUrl: rightAvatarUrl,
               avatarFrameKey: avatarFrameKey,
               fontKey: fontKey,
-              roleLabel: isSingleMode ? 'ĐANG CHỜ' : 'NGƯỜI ẤY',
+              roleLabel: isSingleMode ? L10nService().translate('home_angch_7a6550') : L10nService().translate('home_ngiy_e21b71'),
               accent: const Color(0xFFFF6FA3),
               foreground: foreground,
               isDark: isDark,

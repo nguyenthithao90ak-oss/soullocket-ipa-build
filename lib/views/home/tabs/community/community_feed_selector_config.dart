@@ -17,22 +17,22 @@ List<_CommunityFeedSelectorOption> _communityFeedSelectorOptions() {
     _CommunityFeedSelectorOption(
       value: 'foryou',
       icon: Icons.explore_rounded,
-      label: _ct('Dành Cho Bạn', 'For You'),
+      label: _ct(L10nService().translate('home_dnhchobn_ad2f6f'), 'For You'),
     ),
     _CommunityFeedSelectorOption(
       value: 'locket',
       icon: Icons.camera_alt_rounded,
-      label: _ct('Khoảnh Khắc (Locket)', 'Moments (Locket)'),
+      label: _ct(L10nService().translate('home_khonhkhclo_385edf'), 'Moments (Locket)'),
     ),
     _CommunityFeedSelectorOption(
       value: 'global',
       icon: Icons.public,
-      label: _ct('Toàn Cầu', 'Global'),
+      label: _ct(L10nService().translate('home_toncu_bd85e4'), 'Global'),
     ),
     _CommunityFeedSelectorOption(
       value: 'friends',
       icon: Icons.people,
-      label: _ct('Bạn Bè', 'Friends'),
+      label: _ct(L10nService().translate('home_bnb_d45c5b'), 'Friends'),
     ),
     _CommunityFeedSelectorOption(
       value: 'hot',
@@ -48,7 +48,7 @@ String _communityFeedLabel(String value) {
       return option.label;
     }
   }
-  return _ct('Dành Cho Bạn', 'For You');
+  return _ct(L10nService().translate('home_dnhchobn_ad2f6f'), 'For You');
 }
 
 IconData _communityFeedIcon(String value) {

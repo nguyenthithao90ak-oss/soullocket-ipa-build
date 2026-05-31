@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
 import '../../../services/story_service.dart';
@@ -51,9 +52,9 @@ class _StoryBarState extends State<StoryBar> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Lần upload Story trước đã bị gián đoạn.'),
+          content: Text(context.tr('home_lnuploadst_686dd4')),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('home_thli_4dffdf'),
             onPressed: () {
               unawaited(
                 _service.retryPendingStoryUpload(widget.houseId, widget.myName),
@@ -125,7 +126,7 @@ class _StoryBarState extends State<StoryBar> {
               ],
             ),
             SLSpacing.h8,
-            Text('Thêm Story',
+            Text(context.tr('home_thmstory_9eb8ce'),
                 style: SLTheme.quicksand(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -174,7 +175,7 @@ class _StoryBarState extends State<StoryBar> {
               ),
             ),
             SLSpacing.h8,
-            Text(story['author'] ?? 'Ai đó',
+            Text(story['author'] ?? context.tr('home_ai_2b68a4'),
                 style: SLTheme.quicksand(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -218,13 +219,13 @@ class _StoryBarState extends State<StoryBar> {
                   child: Icon(Icons.person, color: Colors.white70)),
               SLSpacing.w8,
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(story['author'] ?? 'Người yêu',
+                Text(story['author'] ?? context.tr('home_ngiyu_20ed51'),
                     style: SLTheme.quicksand(
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
                         decoration: TextDecoration.none,
                         fontSize: 13)),
-                Text('Vừa mới đăng',
+                Text(context.tr('home_vaming_0e4e95'),
                     style: SLTheme.quicksand(
                         color: Colors.white70,
                         fontSize: 10,

@@ -14,20 +14,22 @@ class LoveTreeService {
   /// [JS-06] Nâng cấp: Cập nhật sức khoẻ của cây (Tưới nước/Bón phân) và Level cây
   Future<void> nurtureTree(String houseId,
       {required int waterAmount, required int fertilizerAmount}) async {
-    final ref = _db.ref('houses/$houseId/love_tree');
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
+    final ref = _db.ref('houses/$normalizedHouseId/love_tree');
     final snapshot = await ref.get();
 
     int currentHealth = 0;
     int currentLevel = 1;
 
-    if (snapshot.exists) {
+    if (snapshot.exists && snapshot.value is Map) {
       final data = Map<dynamic, dynamic>.from(snapshot.value as Map);
-      currentHealth = (data['health'] as int?) ?? 0;
-      currentLevel = (data['level'] as int?) ?? 1;
+      currentHealth = (data['health'] as num?)?.toInt() ?? 0;
+      currentLevel = (data['level'] as num?)?.toInt() ?? 1;
     }
 
     // Tăng health
-    currentHealth += (waterAmount + fertilizerAmount);
+    currentHealth += (waterAmount.clamp(0, 100) + fertilizerAmount.clamp(0, 100));
 
     // Tính toán Level (Cứ 100 health lên 1 level)
     if (currentHealth >= currentLevel * 100) {
@@ -44,14 +46,16 @@ class LoveTreeService {
 
   /// [JS-06] Tự động trừ sức khoẻ cây theo thời gian (nếu lâu không vào app)
   Future<void> applyNaturalDecay(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
     // Logic: Nếu quá 24h chưa tưới, trừ 5 điểm health (tối thiểu về 0)
-    final ref = _db.ref('houses/$houseId/love_tree');
+    final ref = _db.ref('houses/$normalizedHouseId/love_tree');
     final snapshot = await ref.get();
 
-    if (snapshot.exists) {
+    if (snapshot.exists && snapshot.value is Map) {
       final data = Map<dynamic, dynamic>.from(snapshot.value as Map);
-      final lastTime = data['lastNurtured'] as int? ?? 0;
-      final currentHealth = data['health'] as int? ?? 0;
+      final lastTime = (data['lastNurtured'] as num?)?.toInt() ?? 0;
+      final currentHealth = (data['health'] as num?)?.toInt() ?? 0;
 
       final now = DateTime.now().millisecondsSinceEpoch;
 
@@ -67,8 +71,11 @@ class LoveTreeService {
   }
 
   Stream<Map<dynamic, dynamic>> listenToTreeStatus(String houseId) {
-    return _db.ref('houses/$houseId/love_tree').onValue.map((event) {
-      return Map<dynamic, dynamic>.from(event.snapshot.value as Map? ?? {});
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return Stream<Map<dynamic, dynamic>>.value({});
+    return _db.ref('houses/$normalizedHouseId/love_tree').onValue.map((event) {
+      if (event.snapshot.value is! Map) return {};
+      return Map<dynamic, dynamic>.from(event.snapshot.value as Map);
     });
   }
 }

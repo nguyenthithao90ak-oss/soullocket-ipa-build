@@ -342,7 +342,7 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
   // flex:0 0 98px; min-height:92px; border-radius:18px;
   // gradient alternating xanh/hồng, box-shadow 0 8px 20px rgba(37,99,235,0.16)
   Widget _buildTimeCell(String value, String label) {
-    final isAlt = label == 'PHÚT' || label == 'Phút';
+    final isAlt = label == 'PHÚT' || label == context.tr('home_pht_102a80');
     return Container(
       width: 74,
       height: 72,

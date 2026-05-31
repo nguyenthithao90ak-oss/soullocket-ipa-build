@@ -28,20 +28,23 @@ class SpotifySyncService {
 
   /// Kích hoạt tính năng "Cùng Nhau Nghe Nhạc"
   Future<void> startSyncSession(String houseId, String trackId) async {
+    final normalizedHouseId = houseId.trim();
+    final normalizedTrackId = trackId.trim();
+    if (normalizedHouseId.isEmpty || normalizedTrackId.isEmpty) return;
     _isSyncing = true;
     final sessionData = {
-      'trackId': trackId,
+      'trackId': normalizedTrackId,
       'isPlaying': true,
       'positionMs': 0,
       'lastUpdatedAt': ServerValue.timestamp,
     };
 
     // Tạo luồng chung trên Firebase
-    await _db.ref('houses/$houseId/spotify_sync').set(sessionData);
+    await _db.ref('houses/$normalizedHouseId/spotify_sync').set(sessionData);
 
     // Kích hoạt bài nhạc ở máy cục bộ (MethodChannel bắn lệnh sang Android/iOS chạy Spotify)
     try {
-      await platform.invokeMethod('playTrack', {'trackUri': trackId});
+      await platform.invokeMethod('playTrack', {'trackUri': normalizedTrackId});
     } catch (e) {
       debugPrint("Lỗi không mở được Spotify: ${AppErrorMapper.resolve(
         e,
@@ -52,15 +55,21 @@ class SpotifySyncService {
 
   /// Trae sẽ dùng Stream này để vẽ Tình trạng Đĩa Than (Đang xoay hay dừng)
   Stream<Map<dynamic, dynamic>?> listenToPartnerMusic(String houseId) {
-    return _db.ref('houses/$houseId/spotify_sync').onValue.map((event) {
-      if (!event.snapshot.exists) return null;
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<Map<dynamic, dynamic>?>.value(null);
+    }
+    return _db.ref('houses/$normalizedHouseId/spotify_sync').onValue.map((event) {
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return null;
       return Map<dynamic, dynamic>.from(event.snapshot.value as Map);
     });
   }
 
   /// Nút bấm Tạm dừng / Phát tiếp dùng chung
   Future<void> togglePlayPause(String houseId, bool isPlaying) async {
-    await _db.ref('houses/$houseId/spotify_sync').update({
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
+    await _db.ref('houses/$normalizedHouseId/spotify_sync').update({
       'isPlaying': isPlaying,
       'lastUpdatedAt': ServerValue.timestamp,
     });

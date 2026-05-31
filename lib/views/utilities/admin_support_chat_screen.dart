@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
@@ -23,6 +24,7 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
   @override
   void initState() {
     super.initState();
+    final msgListenerFail = context.tr('util_khngthtida_9bb7ee');
     _ticketsSub = _db.child('support_tickets').onValue.listen(
       (event) {
         final raw = event.snapshot.value;
@@ -57,7 +59,7 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
         debugPrint(
           'Admin support listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải danh sách hỗ trợ.',
+            fallbackMessage: msgListenerFail,
           ).message}',
         );
       },
@@ -73,15 +75,15 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
   String _statusLabel(String raw) {
     switch (raw) {
       case 'waiting_for_admin':
-        return 'Đang chờ';
+        return context.tr('util_angch_2bfffc');
       case 'bot_handled':
-        return 'Bot hướng dẫn';
+        return context.tr('util_bothngdn_97773b');
       case 'resolved':
-        return 'Đã phản hồi';
+        return context.tr('util_phnhi_688d40');
       case 'closed':
-        return 'Đã đóng';
+        return context.tr('util_ng_d7bccb');
       default:
-        return 'Mới';
+        return context.tr('util_mi_cd5dc8');
     }
   }
 
@@ -145,7 +147,7 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
       body: _tickets.isEmpty
           ? Center(
               child: Text(
-                'Không có ticket nào',
+                context.tr('util_khngcticke_1724ba'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w700),
               ),
             )
@@ -176,7 +178,7 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
                         Icon(Icons.support_agent_rounded, color: Colors.white),
                   ),
                   title: Text(
-                    ticket['name']?.toString() ?? 'Vô danh',
+                    ticket['name']?.toString() ?? context.tr('util_vdanh_f4df97'),
                     style: SLTheme.quicksand(
                       fontWeight: unread ? FontWeight.bold : FontWeight.w700,
                     ),
@@ -272,7 +274,7 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            'Mới',
+                            context.tr('util_mi_cd5dc8'),
                             style: SLTheme.quicksand(
                               color: Colors.white,
                               fontSize: 10,
@@ -324,6 +326,8 @@ class _AdminSupportChatDetailScreenState
   @override
   void initState() {
     super.initState();
+    final msgTicketFail = context.tr('util_khngthtidl_617c2c');
+    final msgMessagesFail = context.tr('util_khngthtihi_4d3f34');
     _db.child('support_tickets/${widget.ticketId}/unread_admin').set(0);
 
     _ticketSub = _db.child('support_tickets/${widget.ticketId}').onValue.listen(
@@ -345,7 +349,7 @@ class _AdminSupportChatDetailScreenState
         debugPrint(
           'Admin ticket listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải dữ liệu ticket.',
+            fallbackMessage: msgTicketFail,
           ).message}',
         );
       },
@@ -390,7 +394,7 @@ class _AdminSupportChatDetailScreenState
         debugPrint(
           'Admin messages listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải hội thoại ticket.',
+            fallbackMessage: msgMessagesFail,
           ).message}',
         );
       },
@@ -430,15 +434,15 @@ class _AdminSupportChatDetailScreenState
   String _statusLabel(String raw) {
     switch (raw) {
       case 'waiting_for_admin':
-        return 'Đang chờ Admin';
+        return context.tr('util_angchadmin_fa0fd4');
       case 'bot_handled':
-        return 'Bot đã hướng dẫn';
+        return context.tr('util_bothngdn_97653b');
       case 'resolved':
-        return 'Đã phản hồi';
+        return context.tr('util_phnhi_688d40');
       case 'closed':
-        return 'Đã đóng';
+        return context.tr('util_ng_d7bccb');
       default:
-        return 'Mới';
+        return context.tr('util_mi_cd5dc8');
     }
   }
 
@@ -498,7 +502,7 @@ class _AdminSupportChatDetailScreenState
       return category;
     }
     final topicId = ticket['topic_id']?.toString().trim() ?? '';
-    return supportTopicById(topicId)?.title ?? 'Hỗ trợ khác';
+    return supportTopicById(topicId)?.title ?? context.tr('util_htrkhc_abd8c5');
   }
 
   String _ticketSummary() {
@@ -652,7 +656,7 @@ class _AdminSupportChatDetailScreenState
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  'Ưu tiên: $priority',
+                  L10nService().format('util_priority_label', {'priority': priority}),
                   style: SLTheme.quicksand(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w900,
@@ -663,7 +667,7 @@ class _AdminSupportChatDetailScreenState
             ),
           _buildMetaRow(
             Icons.person_outline_rounded,
-            'Người gửi',
+            L10nService().translate('util_ngigi_0c86fe'),
             [
               ticket['name']?.toString().trim() ?? '',
               context['email'] ?? '',
@@ -677,17 +681,17 @@ class _AdminSupportChatDetailScreenState
           ),
           _buildMetaRow(
             Icons.phone_android_rounded,
-            'Thiết bị',
+            L10nService().translate('util_thitb_bcf3a9'),
             deviceLabel,
           ),
           _buildMetaRow(
             Icons.system_update_alt_rounded,
-            'Phiên bản app',
+            L10nService().translate('util_phinbnapp_d739a0'),
             appVersion,
           ),
           _buildMetaRow(
             Icons.route_outlined,
-            'Mở từ luồng',
+            L10nService().translate('util_mtlung_526929'),
             context['openedFrom'] ?? '',
           ),
         ],
@@ -707,7 +711,7 @@ class _AdminSupportChatDetailScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Chat với ${widget.ticketId}',
+          L10nService().format('util_chat_with_ticket', {'ticketId': widget.ticketId}),
           style: SLTheme.quicksand(
             fontSize: 14,
             fontWeight: FontWeight.w800,
@@ -733,7 +737,7 @@ class _AdminSupportChatDetailScreenState
                     ? 'Admin'
                     : message['is_bot'] == true
                         ? 'Bot'
-                        : 'Người dùng';
+                        : context.tr('util_ngidng_3bf886');
 
                 return Align(
                   alignment:
@@ -794,9 +798,9 @@ class _AdminSupportChatDetailScreenState
                     onSubmitted: (_) => _sendMessage(),
                     minLines: 1,
                     maxLines: 5,
-                    decoration: const InputDecoration(
-                      hintText: 'Nhập tin nhắn (Admin)...',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      hintText: context.tr('util_nhptinnhna_0d4f07'),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 
@@ -149,10 +150,10 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
     final lng = (raw['lng'] as num?)?.toDouble();
     return _DateSpotEntry(
       id: raw['id']?.toString() ?? '',
-      title: raw['name']?.toString() ?? 'Địa điểm hẹn hò',
+      title: raw['name']?.toString() ?? context.tr('util_aimhnh_83b8f2'),
       note: raw['note']?.toString() ?? '',
       emoji: '📍',
-      sourceLabel: 'Đã ghim',
+      sourceLabel: context.tr('util_ghim_4be667'),
       timestamp: DateTime.fromMillisecondsSinceEpoch(
         (raw['ts'] as num?)?.toInt() ?? 0,
       ),
@@ -194,7 +195,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('📍 Ghim Thánh Địa Mới',
+              Text(context.tr('util_ghimthnham_6e0e8d'),
                   style: SLTheme.quicksand(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
@@ -205,7 +206,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                 cursorColor: const Color(0xFFD81B60),
                 style: const TextStyle(color: Color(0xFF243041)),
                 decoration: InputDecoration(
-                  hintText: 'Tên địa điểm...',
+                  hintText: context.tr('util_tnaim_a8d25e'),
                   hintStyle: const TextStyle(color: Color(0xFFB55A73)),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.94),
@@ -221,7 +222,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                 style: const TextStyle(color: Color(0xFF243041)),
                 maxLines: 2,
                 decoration: InputDecoration(
-                  hintText: 'Kỷ niệm gì ở đây...',
+                  hintText: context.tr('util_knimgy_6310b9'),
                   hintStyle: const TextStyle(color: Color(0xFFB55A73)),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.94),
@@ -241,8 +242,8 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                     final navigator = Navigator.of(ctx);
                     if (name.isEmpty) {
                       scaffoldMessenger.showSnackBar(
-                        const SnackBar(
-                            content: Text('Nhập tên địa điểm trước nhé')),
+                        SnackBar(
+                            content: Text(context.tr('util_nhptnaimtr_5000c0'))),
                       );
                       return;
                     }
@@ -252,9 +253,9 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                     if (location == null) {
                       if (!mounted) return;
                       scaffoldMessenger.showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text(
-                            'Chưa có vị trí thật trong nhà chung. Hãy bật định vị hoặc dùng Điểm Danh trước.',
+                            context.tr('util_chacvtrtht_77a2ff'),
                           ),
                         ),
                       );
@@ -271,9 +272,9 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                     if (!mounted) return;
                     navigator.pop();
                     scaffoldMessenger.showSnackBar(
-                      const SnackBar(
+                      SnackBar(
                         content: Text(
-                            '📍 Đã ghim thánh địa tình yêu bằng vị trí hiện có'),
+                            context.tr('util_ghimthnhat_f4b569')),
                       ),
                     );
                   },
@@ -282,7 +283,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape:
                           RoundedRectangleBorder(borderRadius: SLRadius.mdAll)),
-                  child: Text('GHIM VÀO BẢN ĐỒ',
+                  child: Text(context.tr('util_ghimvobn_7d6d74'),
                       style: SLTheme.quicksand(
                           fontWeight: FontWeight.w900, color: Colors.white)),
                 ),
@@ -321,7 +322,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                             icon: const Icon(Icons.arrow_back_ios_new,
                                 color: Colors.white)),
                         Expanded(
-                            child: Text('Bản Đồ Hẹn Hò 💑',
+                            child: Text(context.tr('util_bnhnh_d7ac39'),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                     color: Colors.white,
@@ -351,18 +352,18 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
                                   fontSize: 28)),
-                          Text('Kỷ niệm',
+                          Text(context.tr('util_knim_4f6aeb'),
                               style: SLTheme.quicksand(
                                   color: Colors.white70, fontSize: 12)),
                         ]),
                         Column(children: [
                           Text(
-                              '${spots.where((e) => e.sourceLabel == 'Đã ghim').length}',
+                              '${spots.where((e) => e.sourceLabel == context.tr('util_ghim_4be667')).length}',
                               style: SLTheme.quicksand(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
                                   fontSize: 28)),
-                          Text('Đã ghim',
+                          Text(context.tr('util_ghim_4be667'),
                               style: SLTheme.quicksand(
                                   color: Colors.white70, fontSize: 12)),
                         ]),
@@ -372,7 +373,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
                                   fontSize: 22)),
-                          Text('Hành trình',
+                          Text(context.tr('util_hnhtrnh_ab967c'),
                               style: SLTheme.quicksand(
                                   color: Colors.white70, fontSize: 12)),
                         ]),
@@ -408,7 +409,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
             const Icon(Icons.map_outlined, color: Colors.white38, size: 64),
             SLSpacing.h16,
             Text(
-              'Chưa có điểm hẹn nào được lưu. Hãy check-in hoặc ghim một nơi thật để bắt đầu bản đồ hẹn hò.',
+              context.tr('util_chacimhnno_812308'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 color: Colors.white70,
@@ -457,7 +458,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
                 SLSpacing.h4,
                 Text(
                   spot.note.isEmpty
-                      ? 'Chưa có ghi chú cho địa điểm này.'
+                      ? context.tr('util_chacghichc_5ba7b2')
                       : spot.note,
                   style: SLTheme.quicksand(color: Colors.white60, fontSize: 12),
                 ),
@@ -496,7 +497,7 @@ class _DateSpotScreenState extends State<DateSpotScreen> {
   String _estimateTotalDistance(List<_DateSpotEntry> spots) {
     final located = spots.where((e) => e.lat != null && e.lng != null).toList();
     if (located.length < 2) {
-      return located.isEmpty ? '0 km' : '1 điểm';
+      return located.isEmpty ? '0 km' : context.tr('util_1im_5cbb98');
     }
     double total = 0;
     for (var i = 0; i < located.length - 1; i++) {
@@ -577,7 +578,7 @@ class StreamGroup {
           debugPrint(
             '[DateSpot] merged stream failed: ${AppErrorMapper.resolve(
               error,
-              fallbackMessage: 'Không thể tải dữ liệu bản đồ hẹn hò.',
+              fallbackMessage: L10nService().translate('util_khngthtidl_d9bc38'),
             ).message}',
           );
         },

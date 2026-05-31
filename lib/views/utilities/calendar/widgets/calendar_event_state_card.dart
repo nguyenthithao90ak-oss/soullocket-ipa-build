@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
+import '../../../../core/sl_theme.dart';
 
 class CalendarEventStateCard extends StatelessWidget {
   final IconData icon;

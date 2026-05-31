@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../services/love_insight_service.dart';
 import '../../services/offline_cache_service.dart';
+import '../../utils/services/l10n_service.dart';
 import '../../core/sl_theme.dart';
 
 part 'widgets/love_insights/insight_header_cards.dart';
@@ -85,7 +86,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
       setState(() {
         if (_insight == null) {
           _isLoading = false;
-          _errorText = 'Chưa tải được phần phân tích yêu thương lúc này.';
+          _errorText = L10nService().translate('insight_error_load');
         } else {
           _isLoading =
               false; // keep showing cache if error occurs but cache exists
@@ -104,7 +105,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
         foregroundColor: const Color(0xFF23192C),
         titleSpacing: 0,
         title: Text(
-          _isSingle ? 'Phân tích hoạt động' : 'Phân tích yêu thương',
+          _isSingle ? L10nService().translate('insight_title_single') : L10nService().translate('insight_title_couple'),
           style: SLTheme.quicksand(
             fontSize: 20,
             fontWeight: FontWeight.w900,
@@ -176,7 +177,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
               ),
               SLSpacing.h12,
               Text(
-                _errorText ?? 'Không có dữ liệu để hiển thị.',
+                _errorText ?? L10nService().translate('insight_no_data'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 15,
@@ -199,7 +200,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
                   ),
                 ),
                 child: Text(
-                  'Tải lại',
+                  L10nService().translate('insight_reload'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                 ),
               ),
@@ -308,18 +309,18 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
 
   String _levelLabel(int score) {
     if (_isSingle) {
-      if (score >= 90) return 'Rất rực rỡ';
-      if (score >= 75) return 'Đang rất ổn';
-      if (score >= 60) return 'Giữ nhịp tốt';
-      if (score >= 45) return 'Cần ấm lên';
-      return 'Nên chăm mình hơn';
+      if (score >= 90) return L10nService().translate('insight_single_90');
+      if (score >= 75) return L10nService().translate('insight_single_75');
+      if (score >= 60) return L10nService().translate('insight_single_60');
+      if (score >= 45) return L10nService().translate('insight_single_45');
+      return L10nService().translate('insight_single_low');
     }
 
-    if (score >= 90) return 'Soulmate rực rỡ';
-    if (score >= 75) return 'Yêu sâu đậm';
-    if (score >= 60) return 'Đang rất ổn';
-    if (score >= 45) return 'Cần hâm nóng';
-    return 'Nên chăm nhau hơn';
+    if (score >= 90) return L10nService().translate('insight_couple_90');
+    if (score >= 75) return L10nService().translate('insight_couple_75');
+    if (score >= 60) return L10nService().translate('insight_couple_60');
+    if (score >= 45) return L10nService().translate('insight_couple_45');
+    return L10nService().translate('insight_couple_low');
   }
 
   double _progressToNextLevel(int score) {
@@ -338,42 +339,42 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
   }
 
   String _offlineText(double value) {
-    if (value <= 0) return '0 ngày';
-    if (value < 1) return '< 1 ngày';
-    return '${value.floor()} ngày';
+    if (value <= 0) return L10nService().translate('insight_0_days');
+    if (value < 1) return L10nService().translate('insight_less_than_1_day');
+    return '${value.floor()} ${L10nService().translate('insight_days')}';
   }
 
   String _favoriteActivityLabel(LoveInsightData insight) {
-    if (insight.diaryTotal > insight.albumTotal) return 'Viết nhật ký';
-    if (insight.diaryTotal < insight.albumTotal) return 'Đăng ảnh/video';
-    return 'Cân bằng cả hai';
+    if (insight.diaryTotal > insight.albumTotal) return L10nService().translate('insight_habit_diary');
+    if (insight.diaryTotal < insight.albumTotal) return L10nService().translate('insight_habit_album');
+    return L10nService().translate('insight_habit_balance');
   }
 
   String _positivityStatus(int value) {
-    if (value >= 85) return 'Đang rất êm';
-    if (value >= 70) return 'Khá tích cực';
-    if (value >= 50) return 'Ổn định';
-    return 'Nên hâm ấm lại';
+    if (value >= 85) return L10nService().translate('insight_habit_status_85');
+    if (value >= 70) return L10nService().translate('insight_habit_status_70');
+    if (value >= 50) return L10nService().translate('insight_habit_status_50');
+    return L10nService().translate('insight_habit_status_low');
   }
 
   String _dailyTip(LoveInsightData insight) {
     if (_isSingle) {
       if (insight.memoryThisMonth >= 8) {
-        return 'Nhịp lưu giữ của bạn đang rất tốt. Cứ giữ đều nhật ký và album như hiện tại, bản đồ cảm xúc của bạn sẽ ngày càng rõ hơn.';
+        return L10nService().translate('insight_advice_single_high');
       }
       if (insight.positivity >= 70) {
-        return 'Tinh thần của bạn đang khá sáng. Chỉ cần thêm vài kỷ niệm nhỏ mỗi tuần là chỉ số này sẽ lên rất nhanh.';
+        return L10nService().translate('insight_advice_single_mid');
       }
-      return 'Hôm nay chỉ cần viết một dòng ngắn hoặc lưu lại một ảnh bạn thích là đủ để nhịp hoạt động ấm lên rồi.';
+      return L10nService().translate('insight_advice_single_low');
     }
 
     if (insight.loveScore >= 85) {
-      return 'Mối quan hệ của hai bạn đang phát triển rất đẹp. Một cử chỉ bất ngờ nhỏ hôm nay sẽ làm cảm xúc lên thêm một nấc.';
+      return L10nService().translate('insight_advice_couple_high');
     }
     if (insight.positivity >= 70) {
-      return 'Nhịp yêu đang ổn định. Hỏi han nhau thêm một lần thật lòng trong ngày sẽ giúp chỉ số này sáng lên rõ rệt.';
+      return L10nService().translate('insight_advice_couple_mid');
     }
-    return 'Hai bạn đang cần thêm một chút chất lượng hơn số lượng. Một cuộc trò chuyện ngắn nhưng thật lòng sẽ hiệu quả hơn rất nhiều.';
+    return L10nService().translate('insight_advice_couple_low');
   }
 }
 

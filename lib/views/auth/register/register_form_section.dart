@@ -55,26 +55,17 @@ class RegisterForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = L10nService();
-    final isVietnamese = l10n.locale.languageCode == 'vi';
     final isBirthQuestion =
         DateInputUtils.looksLikeBirthQuestion(selectedSecurityQuestion);
-    final passwordLabel =
-        isVietnamese ? 'Mật khẩu mở cửa:' : l10n.translate('password');
-    final passwordHint =
-        isVietnamese ? 'Tối thiểu 6 ký tự và có số' : 'Min 6 chars & 1 number';
-    final securityQuestionLabel = isVietnamese
-        ? 'Câu hỏi bảo mật (Tuỳ chọn)'
-        : 'Security Question (Optional)';
-    final securityQuestionTapLabel = isVietnamese
-        ? 'Câu hỏi bảo mật (Tuỳ chọn)  (ấn vào)'
-        : 'Security Question (Optional) (Tap)';
-    final securityNote = isVietnamese
-        ? 'Lưu ý: Có thể thêm trong Cài đặt sau khi tạo nhà. Cần thiết khi khôi phục tài khoản.'
-        : 'Note: Can be added in Settings later. Needed for account recovery.';
-    final securityAnswerHint =
-        isVietnamese ? 'Nhập câu trả lời bảo mật' : 'Security answer';
-    final signupLabel =
-        isVietnamese ? 'TẠO NHÀ MỚI' : l10n.translate('signup').toUpperCase();
+    final passwordLabel = l10n.translate('password');
+    final passwordHint = l10n.translate('auth_password_hint_short');
+    final securityQuestionLabel =
+        l10n.translate('auth_security_question_optional');
+    final securityQuestionTapLabel =
+        l10n.translate('auth_security_question_tap');
+    final securityNote = l10n.translate('auth_security_note');
+    final securityAnswerHint = l10n.translate('auth_security_answer_hint');
+    final signupLabel = l10n.translate('signup').toUpperCase();
 
     return AutofillGroup(
       child: Column(
@@ -82,8 +73,8 @@ class RegisterForm extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SLTheme.sectionHeader(
-            title: isVietnamese ? 'Email đăng nhập:' : 'Login Email:',
-            trailing: isVietnamese ? 'QUAN TRỌNG' : 'IMPORTANT',
+            title: l10n.translate('auth_login_email_label'),
+            trailing: l10n.translate('auth_required_badge').toUpperCase(),
             trailingColor: accentRose,
           ),
           const SizedBox(height: 8),
@@ -98,9 +89,7 @@ class RegisterForm extends StatelessWidget {
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
             style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
             decoration: SLTheme.authInputDecoration(
-              hintText: isVietnamese
-                  ? 'Ví dụ: example@gmail.com'
-                  : l10n.translate('Ví dụ: example@gmail.com'),
+              hintText: l10n.translate('auth_email_example'),
               focusColor: accentRose,
             ),
           ),
@@ -258,10 +247,12 @@ class RegisterForm extends StatelessWidget {
                     fontSize: 16,
                   ),
                   decoration: SLTheme.authInputDecoration(
-                    hintText:
-                        isBirthQuestion ? 'ngày/tháng/năm' : securityAnswerHint,
-                    helperText:
-                        isBirthQuestion ? 'Đang nhập ngày/tháng/năm' : null,
+                    hintText: isBirthQuestion
+                        ? l10n.translate('auth_birthdate_hint')
+                        : securityAnswerHint,
+                    helperText: isBirthQuestion
+                        ? l10n.translate('auth_birthdate_helper')
+                        : null,
                     focusColor: accentRose,
                   ),
                 ),
@@ -300,15 +291,14 @@ class RegisterForm extends StatelessWidget {
                         ),
                         children: [
                           TextSpan(
-                            text: isVietnamese
-                                ? 'Tôi xác nhận đủ 13 tuổi trở lên và đồng ý với '
-                                : 'I confirm I am 13+ and agree to the ',
+                            text:
+                                '${l10n.translate('auth_terms_confirm_prefix')} ',
                             recognizer: TapGestureRecognizer()
                               ..onTap =
                                   () => onAcceptTermsChanged(!acceptTerms),
                           ),
                           TextSpan(
-                            text: isVietnamese ? 'Điều khoản' : 'Terms',
+                            text: l10n.translate('terms_of_use'),
                             style: const TextStyle(
                               color: SLColors.primary,
                               fontWeight: FontWeight.w900,
@@ -323,9 +313,7 @@ class RegisterForm extends StatelessWidget {
                                   () => onAcceptTermsChanged(!acceptTerms),
                           ),
                           TextSpan(
-                            text: isVietnamese
-                                ? 'Chính sách bảo mật'
-                                : 'Privacy Policy',
+                            text: l10n.translate('privacy_policy'),
                             style: const TextStyle(
                               color: SLColors.primary,
                               fontWeight: FontWeight.w900,
@@ -352,7 +340,7 @@ class RegisterForm extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Center(
               child: Text(
-                isVietnamese ? 'HOẶC ĐĂNG KÝ NHANH' : 'OR QUICK SIGN UP',
+                l10n.translate('auth_quick_register').toUpperCase(),
                 style: SLTheme.quicksand(
                   color: const Color(0xFF888888),
                   fontSize: 12,
@@ -367,10 +355,7 @@ class RegisterForm extends StatelessWidget {
           const SizedBox(height: 12),
           Center(
             child: Text(
-              isVietnamese
-                  ? 'Việc đăng ký đồng nghĩa bạn xác nhận đủ 13 tuổi\n'
-                      'và đồng ý với Điều khoản của chúng tôi.'
-                  : 'By signing up, you confirm you are 13+\nand agree to our Terms.',
+              l10n.translate('auth_social_register_notice'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 color: const Color(0xFF999999),

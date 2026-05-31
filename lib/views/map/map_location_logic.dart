@@ -42,7 +42,7 @@ extension _MapLocationLogicExt on _MapScreenState {
       id: id,
       lat: lat,
       lng: lng,
-      title: (map['title'] ?? map['name'] ?? 'Kỷ niệm').toString(),
+      title: (map['title'] ?? map['name'] ?? context.tr('map_knim_4f6aeb')).toString(),
       note: (map['note'] ?? map['desc'] ?? '').toString(),
       author: (map['author'] ?? map['uid'] ?? '').toString(),
       ts: _readInt(map['ts'] ?? map['timestamp']),
@@ -279,7 +279,7 @@ extension _MapLocationLogicExt on _MapScreenState {
     if (lat != null && lng != null) {
       return '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
     }
-    return isLive ? 'Đang cập nhật...' : 'Không có dữ liệu';
+    return isLive ? context.tr('map_angcpnht_f4c117') : context.tr('map_khngcdliu_89903b');
   }
 
   String _formatDistanceMeters(double meters) {
@@ -302,7 +302,7 @@ extension _MapLocationLogicExt on _MapScreenState {
 
     _handlePinnedPlaceNearbyNotification(
       role: widget.myRole,
-      actorLabel: 'Bạn',
+      actorLabel: context.tr('map_bn_1fd75b'),
       livePoint: myLivePoint,
     );
 
@@ -340,7 +340,7 @@ extension _MapLocationLogicExt on _MapScreenState {
     _didNotifyPartnerNearby = true;
     _dispatchMapProximityNotice(
       key: 'partner_nearby',
-      title: 'Hai bạn đang ở gần nhau',
+      title: context.tr('map_haibnanggn_b5a8a9'),
       body:
           'Khoảng cách hiện tại chỉ còn ${_formatDistanceMeters(partnerDistanceMeters)}.',
     );
@@ -420,7 +420,7 @@ extension _MapLocationLogicExt on _MapScreenState {
       consider(
         key: 'memory_${memory.id}',
         title: memory.title,
-        kindLabel: 'Ghim kỷ niệm',
+        kindLabel: context.tr('map_ghimknim_8f50a6'),
         lat: memory.lat,
         lng: memory.lng,
       );
@@ -447,7 +447,7 @@ extension _MapLocationLogicExt on _MapScreenState {
         return _NearbyMapPinCandidate(
           key: key,
           title: memory.title,
-          kindLabel: 'Ghim kỷ niệm',
+          kindLabel: context.tr('map_ghimknim_8f50a6'),
           lat: memory.lat,
           lng: memory.lng,
           distanceMeters: 0,
@@ -552,19 +552,27 @@ extension _MapLocationLogicExt on _MapScreenState {
       unawaited(partnerLocSub.cancel());
     }
 
+    Timer? myGpsDebounce;
+    Timer? partnerGpsDebounce;
+
+    final msgMyGpsListenFail = context.tr('map_khngththeo_b5b716');
+    final msgPartnerGpsListenFail = context.tr('map_khngththeo_cd61b1');
     _myLocSub =
         _dbRef.child('gps/${widget.houseId}/${widget.myRole}').onValue.listen(
       (event) {
-        _setRoleLocationState(
-          widget.myRole,
-          _parseLocationNodeState(event.snapshot.value),
-        );
-        _scheduleLiveRefresh();
+        myGpsDebounce?.cancel();
+        myGpsDebounce = Timer(const Duration(milliseconds: 140), () {
+          _setRoleLocationState(
+            widget.myRole,
+            _parseLocationNodeState(event.snapshot.value),
+          );
+          _scheduleLiveRefresh();
+        });
       },
       onError: (Object error) {
         final message = AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể theo dõi vị trí hiện tại.',
+          fallbackMessage: msgMyGpsListenFail,
         ).message;
         debugPrint('Map live GPS listen failed: $message');
       },
@@ -575,16 +583,19 @@ extension _MapLocationLogicExt on _MapScreenState {
         .onValue
         .listen(
       (event) {
-        _setRoleLocationState(
-          widget.partnerRole,
-          _parseLocationNodeState(event.snapshot.value),
-        );
-        _scheduleLiveRefresh();
+        partnerGpsDebounce?.cancel();
+        partnerGpsDebounce = Timer(const Duration(milliseconds: 140), () {
+          _setRoleLocationState(
+            widget.partnerRole,
+            _parseLocationNodeState(event.snapshot.value),
+          );
+          _scheduleLiveRefresh();
+        });
       },
       onError: (Object error) {
         final message = AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể theo dõi vị trí đối phương.',
+          fallbackMessage: msgPartnerGpsListenFail,
         ).message;
         debugPrint('Map partner GPS listen failed: $message');
       },
@@ -615,6 +626,8 @@ extension _MapLocationLogicExt on _MapScreenState {
 
     syncMemorySource(_MapMemorySourceKind.publicDirect, const {});
 
+    final msgPublicMemFail = context.tr('map_khngthtigh_1162c8');
+    final msgHouseMemFail = context.tr('map_khngthtigh_2b4b7f');
     state.subscriptions.addAll([
       publicHouseBucketQuery.onValue.listen(
         (event) => syncMemorySource(
@@ -624,7 +637,7 @@ extension _MapLocationLogicExt on _MapScreenState {
         onError: (Object error) {
           final message = AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải ghim kỷ niệm bản đồ.',
+            fallbackMessage: msgPublicMemFail,
           ).message;
           debugPrint('Map public memory listen failed: $message');
         },
@@ -637,7 +650,7 @@ extension _MapLocationLogicExt on _MapScreenState {
         onError: (Object error) {
           final message = AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tải ghim kỷ niệm trong nhà.',
+            fallbackMessage: msgHouseMemFail,
           ).message;
           debugPrint('Map house memory listen failed: $message');
         },
@@ -646,6 +659,7 @@ extension _MapLocationLogicExt on _MapScreenState {
   }
 
   Future<void> _primeMemoryPipeline() async {
+    final msgFail = context.tr('map_khngthtidl_876664');
     try {
       final publicSnapshot = await _dbRef
           .child('map_memories/${widget.houseId}')
@@ -677,7 +691,7 @@ extension _MapLocationLogicExt on _MapScreenState {
     } catch (error) {
       final message = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Không thể tải dữ liệu ghim kỷ niệm.',
+        fallbackMessage: msgFail,
       ).message;
       debugPrint('Map memory bootstrap failed: $message');
     }
@@ -698,6 +712,7 @@ extension _MapLocationLogicExt on _MapScreenState {
       unawaited(checkinsSub.cancel());
     }
 
+    final msgCheckinFail = context.tr('map_khngthtida_ed38df');
     _checkinsSub = _dbRef
         .child('checkins/${widget.houseId}')
         .orderByChild('ts')
@@ -736,7 +751,7 @@ extension _MapLocationLogicExt on _MapScreenState {
         _applyPanelStateUpdate(() {
           _checkins = items;
           _checkinSummary = items.isEmpty
-              ? 'Chưa có check-in'
+              ? context.tr('map_chacchecki_51b108')
               : '${items.length} check-in gần đây';
           _checkinSummary = _buildCheckinSummaryLabel(items.length);
         });
@@ -748,7 +763,7 @@ extension _MapLocationLogicExt on _MapScreenState {
       onError: (Object error) {
         final message = AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể tải danh sách check-in.',
+          fallbackMessage: msgCheckinFail,
         ).message;
         debugPrint('Map check-in listen failed: $message');
       },
@@ -822,7 +837,7 @@ extension _MapLocationLogicExt on _MapScreenState {
       id: id,
       lat: lat,
       lng: lng,
-      title: (map['text'] ?? map['title'] ?? 'Kỷ niệm').toString(),
+      title: (map['text'] ?? map['title'] ?? context.tr('map_knim_4f6aeb')).toString(),
       note: (map['desc'] ?? map['note'] ?? '').toString(),
       imageUrl: (map['imageUrl'] ?? map['url'] ?? '').toString(),
       author: (map['author'] ?? '').toString(),
@@ -1238,11 +1253,11 @@ extension _MapLocationLogicExt on _MapScreenState {
   }
 
   String _lastUpdatedLabel(int? ts) {
-    if (ts == null || ts <= 0) return 'Chưa có thời gian';
+    if (ts == null || ts <= 0) return context.tr('map_chacthigia_2ba794');
     final age = DateTime.now().difference(
       DateTime.fromMillisecondsSinceEpoch(ts),
     );
-    if (age.inSeconds < 45) return 'Vừa cập nhật';
+    if (age.inSeconds < 45) return context.tr('map_vacpnht_e8745a');
     if (age.inMinutes < 60) return '${age.inMinutes} phút trước';
     if (age.inHours < 24) return '${age.inHours} giờ trước';
     return '${age.inDays} ngày trước';
@@ -1271,7 +1286,7 @@ extension _MapLocationLogicExt on _MapScreenState {
       isLive: myLive,
     );
     final partnerAddressText = partnerPoint == null
-        ? 'Chưa có vị trí'
+        ? context.tr('map_chacvtr_a02989')
         : _locationLabel(
             explicitAddress: partnerPoint.address,
             lat: partnerPoint.lat,
@@ -1289,18 +1304,18 @@ extension _MapLocationLogicExt on _MapScreenState {
 
     if (_isSingleRelationship) {
       if (myPoint != null && myLive) {
-        distanceText = 'Đang chia sẻ';
-        mapInsightText = 'Bản đồ đang hiển thị vị trí hiện tại của bạn.';
+        distanceText = context.tr('map_angchias_51b41c');
+        mapInsightText = context.tr('map_bnanghinth_85b060');
       } else if (myPoint != null || myHasHistory) {
-        distanceText = 'Vị trí đã lưu';
+        distanceText = context.tr('map_vtrlu_7f955b');
         mapInsightText =
-            'Bản đồ đang hiển thị vị trí cuối cùng đã lưu của bạn.';
+            context.tr('map_bnanghinth_652b9f');
         mapAlert =
-            'Đang dùng vị trí cuối. Bật GPS để cập nhật vị trí hiện tại.';
+            context.tr('map_angdngvtrc_9a3510');
       } else {
-        distanceText = 'Chưa bật GPS';
-        mapInsightText = 'Bật GPS để bản đồ hiển thị vị trí hiện tại của bạn.';
-        mapAlert = 'Chưa bật GPS. Bấm Bật GPS để chia sẻ vị trí.';
+        distanceText = context.tr('map_chabtgps_aa3568');
+        mapInsightText = context.tr('map_btgpsbnhin_4d7d3f');
+        mapAlert = context.tr('map_chabtgpsbm_b329bb');
       }
     } else if (myPoint != null && partnerPoint != null) {
       final directMeters = _distance
@@ -1318,20 +1333,20 @@ extension _MapLocationLogicExt on _MapScreenState {
       routeDistanceText = hasExactRoute
           ? _formatDistanceMeters(_routeSnapshot!.distanceMeters)
           : (_isFetchingRoute
-              ? 'Đang tính quãng đường'
-              : 'Chưa có quãng đường');
+              ? context.tr('map_angtnhqung_7529aa')
+              : context.tr('map_chacqungng_38c097'));
       etaText = hasExactRoute ? '${_routeSnapshot!.etaMinutes} phút' : '--';
 
       if (myLive && partnerLive) {
         mapInsightText = hasExactRoute
             ? 'Quãng đường hiện tại là $routeDistanceText, thời gian dự kiến $etaText.'
-            : 'Cả hai đang bật vị trí. Đang cập nhật quãng đường thực tế.';
+            : context.tr('map_chaiangbtv_4c3308');
       } else if (!myLive && !partnerLive) {
         mapInsightText = hasExactRoute
             ? 'Đang dùng vị trí cuối cùng đã lưu của cả hai. Quãng đường khoảng $routeDistanceText.'
-            : 'Đang dùng vị trí cuối cùng đã lưu của cả hai để ước tính khoảng cách.';
+            : context.tr('map_angdngvtrc_e2f616');
         mapAlert =
-            'GPS của cả hai đang tạm dừng. Khoảng cách có thể chậm vài phút.';
+            context.tr('map_gpscachaia_8a5ecd');
       } else if (!partnerLive) {
         mapInsightText =
             '${widget.partnerName} đang ở vị trí cuối cùng đã lưu. Khoảng cách vẫn được giữ để bạn tiện theo dõi.';
@@ -1339,51 +1354,51 @@ extension _MapLocationLogicExt on _MapScreenState {
       } else {
         mapInsightText =
             'Bản đồ đang dùng vị trí cuối cùng đã lưu của bạn để tính khoảng cách với ${widget.partnerName}.';
-        mapAlert = 'GPS của bạn đang tắt. Bật GPS để cập nhật khoảng cách.';
+        mapAlert = context.tr('map_gpscabnang_a6da92');
       }
 
       if (directMeters <= 120) {
-        mapAlert = 'Hai bạn đang ở rất gần nhau.';
+        mapAlert = context.tr('map_haibnangrt_0b7f41');
       } else if (directMeters <= 1500) {
         mapAlert =
             'Hai bạn chỉ cách nhau ${_formatDistanceMeters(directMeters)}.';
       } else {
         mapAlert ??= myLive && partnerLive
-            ? 'Quãng đường trên bản đồ sát thực tế hơn khoảng cách đường chim bay.'
-            : 'Khoảng cách đang dựa trên vị trí gần nhất đã lưu.';
+            ? context.tr('map_qungngtrnb_5fc7ae')
+            : context.tr('map_khongcchan_3d172e');
       }
     } else if (myPoint != null || partnerPoint != null) {
       if (!partnerHasHistory) {
-        distanceText = 'Người ấy chưa bật GPS';
+        distanceText = context.tr('map_ngiychabtg_defe08');
         mapInsightText =
             '${widget.partnerName} chưa bật vị trí nên bản đồ chưa thể đo khoảng cách của hai bạn.';
         mapAlert =
             '${widget.partnerName} chưa bật GPS. Chờ người ấy bật để xem khoảng cách.';
       } else if (!myHasHistory) {
-        distanceText = 'Bạn chưa bật GPS';
+        distanceText = context.tr('map_bnchabtgps_fc6f46');
         mapInsightText =
             'Bạn chưa bật vị trí nên bản đồ chưa đủ dữ liệu để đo khoảng cách với ${widget.partnerName}.';
-        mapAlert = 'Bạn chưa bật GPS. Bấm Bật GPS để đo khoảng cách.';
+        mapAlert = context.tr('map_bnchabtgps_2de829');
       } else if (!partnerLive) {
-        distanceText = 'Vị trí cuối đã lưu';
+        distanceText = context.tr('map_vtrcuilu_b4c8ee');
         mapInsightText =
             '${widget.partnerName} đã tắt vị trí. Bản đồ đang giữ lại vị trí cuối cùng đã lưu.';
         mapAlert = '${widget.partnerName} đã tắt GPS. Bản đồ giữ vị trí cuối.';
       } else if (!myLive) {
-        distanceText = 'Vị trí cuối đã lưu';
+        distanceText = context.tr('map_vtrcuilu_b4c8ee');
         mapInsightText =
-            'Bản đồ đang dùng vị trí cuối cùng đã lưu của bạn. Bật lại vị trí để tiếp tục cập nhật.';
-        mapAlert = 'GPS của bạn đang tắt. Bật lại để cập nhật.';
+            context.tr('map_bnangdngvt_3c6c9e');
+        mapAlert = context.tr('map_gpscabnang_6101f9');
       } else {
-        distanceText = 'Đang cập nhật...';
+        distanceText = context.tr('map_angcpnht_f4c117');
         mapInsightText =
-            'Bản đồ đang đồng bộ lại dữ liệu vị trí để đo khoảng cách chính xác hơn.';
+            context.tr('map_bnangngbli_a9747b');
       }
     } else {
-      distanceText = 'Đang định vị...';
+      distanceText = context.tr('map_angnhv_ea3669');
       mapInsightText =
-          'Bật GPS để bản đồ hiển thị khoảng cách và vị trí của hai bạn.';
-      mapAlert = 'Bật GPS để bắt đầu cập nhật bản đồ.';
+          context.tr('map_btgpsbnhin_b8be56');
+      mapAlert = context.tr('map_btgpsbtucp_89df3c');
     }
 
     _myAddressText = myAddressText;

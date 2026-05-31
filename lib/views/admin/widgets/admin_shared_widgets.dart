@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../../../core/sl_theme.dart';
 
@@ -119,7 +120,7 @@ class AdminTopBar extends StatelessWidget {
                   ),
                   SLSpacing.h8,
                   Text(
-                    '${user.email ?? 'Admin'} · ${lastUpdatedAt == null ? 'Chưa đồng bộ dữ liệu' : 'Cập nhật ${formatDateTime(lastUpdatedAt!)}'}',
+                    '${user.email ?? 'Admin'} · ${lastUpdatedAt == null ? context.tr('admin_changbdliu_d09b70') : 'Cập nhật ${formatDateTime(lastUpdatedAt!)}'}',
                     style: SLTheme.quicksand(
                       color: const Color(0xFF9AA8C4),
                       fontSize: 13,
@@ -158,7 +159,7 @@ class AdminTopBar extends StatelessWidget {
                         )
                       : const Icon(Icons.refresh_rounded),
                   label: Text(
-                    'Làm mới',
+                    context.tr('admin_lmmi_4d2036'),
                     style: SLTheme.quicksand(
                       color: Colors.white,
                       fontSize: 14,
@@ -182,7 +183,7 @@ class AdminTopBar extends StatelessWidget {
                   ),
                   icon: const Icon(Icons.logout_rounded),
                   label: Text(
-                    'Đăng xuất',
+                    context.tr('admin_ngxut_0b3c82'),
                     style: SLTheme.quicksand(
                       color: Colors.white,
                       fontSize: 14,

@@ -154,7 +154,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
       SLNotice.showError(
         context,
         _ct(
-          'QR của nhà bạn chưa sẵn sàng.',
+          context.tr('home_qrcanhbnch_486c2b'),
           'Your house QR is not ready yet.',
         ),
       );
@@ -241,7 +241,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
 
   String _displayHouseName(Map<String, dynamic> post) {
     final name = (post['houseName'] ?? '').toString().trim();
-    return name.isEmpty ? _ct('Ngôi Nhà', 'Home') : name;
+    return name.isEmpty ? _ct(context.tr('home_nginh_731d70'), 'Home') : name;
   }
 
   String _displayHouseCode(Map<String, dynamic> post) {
@@ -278,26 +278,26 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
 
     final location = (post['location'] ?? '').toString().trim();
     if (location.isNotEmpty) {
-      return _ct('Bài viết có vị trí: ', 'Post with location: ') + location;
+      return _ct(context.tr('home_bivitcvtr_3e33f1'), 'Post with location: ') + location;
     }
 
     final mood = (post['mood'] ?? '').toString().trim();
     if (mood.isNotEmpty) {
-      return _ct('Tâm trạng: ', 'Mood: ') + mood;
+      return _ct(context.tr('home_tmtrng_63c75a'), 'Mood: ') + mood;
     }
 
     final imageUrl = (post['imageUrl'] ?? '').toString().trim();
     if (imageUrl.isNotEmpty) {
-      return _ct('Bài viết có ảnh', 'Photo post');
+      return _ct(context.tr('home_bivitcnh_dd554a'), 'Photo post');
     }
 
     final videoUrl = (post['videoUrl'] ?? '').toString().trim();
     if (videoUrl.isNotEmpty) {
-      return _ct('Bài viết có video', 'Video post');
+      return _ct(context.tr('home_bivitcvide_373c06'), 'Video post');
     }
 
     return _ct(
-      'Bài viết không có nội dung văn bản',
+      context.tr('home_bivitkhngc_e20c79'),
       'This post has no text content',
     );
   }
@@ -739,13 +739,13 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
   String _matchLabel(String kind) {
     switch (kind) {
       case 'house':
-        return _ct('Khớp tên nhà', 'Matched house name');
+        return _ct(context.tr('home_khptnnh_474b91'), 'Matched house name');
       case 'location':
-        return _ct('Khớp vị trí', 'Matched location');
+        return _ct(context.tr('home_khpvtr_f688f3'), 'Matched location');
       case 'mood':
-        return _ct('Khớp tâm trạng', 'Matched mood');
+        return _ct(context.tr('home_khptmtrng_ee77e1'), 'Matched mood');
       default:
-        return _ct('Khớp nội dung', 'Matched content');
+        return _ct(context.tr('home_khpnidung_32ddb4'), 'Matched content');
     }
   }
 
@@ -781,32 +781,32 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
     switch (intent.mode) {
       case 'house':
         return _ct(
-          'Đang ưu tiên tên nhà, mã nhà và hồ sơ liên quan.',
+          context.tr('home_angutintnn_350edb'),
           'Prioritizing house names, house codes, and related profiles.',
         );
       case 'id':
         return _ct(
-          'Đang ưu tiên mã nhà, mã bài viết và định danh gần đúng.',
+          context.tr('home_angutinmnh_ddd67a'),
           'Prioritizing house codes, post ids, and exact identifiers.',
         );
       case 'location':
         return _ct(
-          'Đang ưu tiên vị trí xuất hiện trong bài viết.',
+          context.tr('home_angutinvtr_bf5517'),
           'Prioritizing locations mentioned in posts.',
         );
       case 'mood':
         return _ct(
-          'Đang ưu tiên tâm trạng và ngữ cảnh cảm xúc.',
+          context.tr('home_angutintmt_481023'),
           'Prioritizing mood and emotional context.',
         );
       case 'topic':
         return _ct(
-          'Đang ưu tiên chủ đề gần với hashtag bạn nhập.',
+          context.tr('home_angutinchg_a24afd'),
           'Prioritizing topics related to your hashtag.',
         );
       default:
         return _ct(
-          'Đang pha trộn độ khớp, độ mới và tương tác để xếp hạng thông minh hơn.',
+          context.tr('home_angphatrnk_37d26a'),
           'Blending relevance, freshness, and engagement for smarter ranking.',
         );
     }
@@ -822,7 +822,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _ct('Gợi ý thông minh', 'Smart suggestions'),
+            _ct(context.tr('home_githngminh_ea107e'), 'Smart suggestions'),
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w900,
@@ -911,7 +911,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _ct('Tìm kiếm cộng đồng', 'Community search'),
+                      _ct(context.tr('home_tmkimcngng_2f1ab5'), 'Community search'),
                       style: SLTheme.quicksand(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
@@ -921,7 +921,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
                     SLSpacing.gapH(2),
                     Text(
                       _ct(
-                        'Toàn màn hình, lịch sử 10 mục gần nhất, ưu tiên kết quả sát nhất.',
+                        context.tr('home_tonmnhnhlc_13ad38'),
                         'Full screen, 10 recent searches, and the closest matches first.',
                       ),
                       style: SLTheme.quicksand(
@@ -990,7 +990,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
               ),
               decoration: InputDecoration(
                 hintText: _ct(
-                  'Tìm theo tên nhà, nội dung, vị trí, tâm trạng...',
+                  context.tr('home_tmtheotnnh_ff5189'),
                   'Search by house name, content, location, mood...',
                 ),
                 hintStyle: SLTheme.quicksand(
@@ -1162,7 +1162,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
                 soft: true,
               ),
               _buildResultBadge(
-                label: 'nội dung',
+                label: context.tr('home_nidung_3ed81b'),
                 color: const Color(0xFF0F766E),
                 soft: true,
               ),
@@ -1238,8 +1238,8 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle(
-          title: _ct('Tìm gần đây', 'Recent searches'),
-          actionLabel: _ct('Xóa tất cả', 'Clear all'),
+          title: _ct(context.tr('home_tmgny_8b65d9'), 'Recent searches'),
+          actionLabel: _ct(context.tr('home_xattc_c159f6'), 'Clear all'),
           onAction: _clearHistory,
         ),
         ..._history.map((item) => _buildHistoryTile(item)),
@@ -1317,7 +1317,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle(
-          title: _ct('Đúng nội dung đã tìm', 'Exact recent content'),
+          title: _ct(context.tr('home_ngnidungtm_08f6d7'), 'Exact recent content'),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(18, 0, 18, 10),
@@ -1325,7 +1325,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
             query: latestQuery,
             description: previewResults.isEmpty
                 ? _ct(
-                    'Chưa có bài nào khớp với nội dung gần nhất bạn đã tìm.',
+                    context.tr('home_chacbinokh_c5971c'),
                     'No posts match your latest saved query yet.',
                   )
                 : _ctf(
@@ -1339,9 +1339,9 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 0, 18, 4),
             child: _buildIdleInstructionCard(
-              title: _ct('Thử một cụm khác', 'Try another phrase'),
+              title: _ct(context.tr('home_thmtcmkhc_f5a3ba'), 'Try another phrase'),
               description: _ct(
-                'Bạn có thể tìm theo mã nhà, @tên nhà, một câu trong bài viết, vị trí hoặc tâm trạng.',
+                context.tr('home_bncthtmthe_3407ad'),
                 'Search by house code, @house, a sentence in the post, location, or mood.',
               ),
             ),
@@ -1371,7 +1371,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
           _buildQueryEchoCard(
             query: query,
             description: _ct(
-              'Đang hiển thị đúng nội dung bạn vừa nhập và ưu tiên kết quả sát nhất.',
+              context.tr('home_anghinthng_bbbc24'),
               'Showing your exact query and prioritizing the closest matches.',
             ),
           ),
@@ -1399,7 +1399,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
                   SLSpacing.h16,
                   Text(
                     _ct(
-                      'Không tìm thấy kết quả phù hợp.',
+                      context.tr('home_khngtmthyk_84f0ce'),
                       'No matching results found.',
                     ),
                     textAlign: TextAlign.center,
@@ -1412,7 +1412,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
                   SLSpacing.h8,
                   Text(
                     _ct(
-                      'Thử đúng hơn với mã nhà, @tên nhà, vài từ khóa ngắn, vị trí hoặc tâm trạng.',
+                      context.tr('home_thnghnvimn_53383a'),
                       'Try a more exact house code, @house, a shorter keyword, location, or mood.',
                     ),
                     textAlign: TextAlign.center,
@@ -1709,7 +1709,7 @@ class _CommunitySearchScreenState extends State<_CommunitySearchScreen> {
                           child: Center(
                             child: Text(
                               _ct(
-                                'Chưa có bài viết nào để tìm.',
+                                context.tr('home_chacbivitn_fbc8e3'),
                                 'There are no posts to search yet.',
                               ),
                               textAlign: TextAlign.center,

@@ -1,6 +1,7 @@
 // ignore_for_file: unused_element
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../services/consent_service.dart';
 import '../home/screens/document_viewer_screen.dart';
@@ -207,25 +208,25 @@ class _ConsentGateState extends State<ConsentGate> {
                                             compact: compact),
                                         const SizedBox(height: 18),
                                         _buildStartupSectionLabel(
-                                          title: 'Trước khi bắt đầu',
+                                          title: context.tr('consent_trckhibtu_9c9c70'),
                                           subtitle:
-                                              'Bạn cần xem các thông tin pháp lý chính trước khi vào SoulLocket.',
+                                              context.tr('consent_bncnxemcct_f14d22'),
                                         ),
                                         const SizedBox(height: 10),
                                         _buildStartupLegalSection(
                                           accent: _accentRose,
                                           icon: Icons.gavel_rounded,
-                                          title: 'Điều khoản sử dụng',
+                                          title: context.tr('consent_iukhonsdng_9a9c73'),
                                           subtitle:
-                                              'Tóm tắt cách dùng SoulLocket, quyền lợi, trách nhiệm và các giới hạn chính.',
-                                          bullets: const [
-                                            'Áp dụng cho tài khoản, ghép đôi/nhà, bài viết, chat, media, tiện ích và gói dịch vụ.',
-                                            'Bạn cần dùng app đúng luật, tôn trọng người khác và tự chịu trách nhiệm với nội dung mình gửi.',
-                                            'App có thể giới hạn, ẩn hoặc xử lý nội dung/tài khoản vi phạm để bảo vệ cộng đồng.',
+                                              context.tr('consent_tmttcchdng_0cbb57'),
+                                          bullets: [
+                                            context.tr('consent_pdngchotik_f63a41'),
+                                            context.tr('consent_bncndngapp_4f1851'),
+                                            context.tr('consent_appcthgiih_057f23'),
                                           ],
-                                          actionLabel: 'Xem Điều khoản',
+                                          actionLabel: context.tr('consent_xemiukhon_5d9f36'),
                                           onTap: () => _openDoc(
-                                            'Điều khoản sử dụng',
+                                            context.tr('consent_iukhonsdng_9a9c73'),
                                             'assets/docs/terms.html',
                                           ),
                                         ),
@@ -233,17 +234,17 @@ class _ConsentGateState extends State<ConsentGate> {
                                         _buildStartupLegalSection(
                                           accent: _accentLavender,
                                           icon: Icons.privacy_tip_rounded,
-                                          title: 'Chính sách bảo mật',
+                                          title: context.tr('consent_chnhschbom_98b319'),
                                           subtitle:
-                                              'Tóm tắt dữ liệu app có thể dùng, lý do dùng và cách bạn kiểm soát dữ liệu.',
-                                          bullets: const [
-                                            'Có thể gồm tài khoản, nhà/ghép đôi, bài viết, chat, ảnh/media, vị trí, sức khỏe, thiết bị và thanh toán.',
-                                            'Dữ liệu dùng để đăng nhập, đồng bộ, cá nhân hóa, bảo mật, vận hành tiện ích và hỗ trợ khi có sự cố.',
-                                            'Bạn có thể đổi quyền riêng tư, quản lý quyền thiết bị hoặc yêu cầu xóa dữ liệu trong Cài đặt.',
+                                              context.tr('consent_tmttdliuap_7cebb7'),
+                                          bullets: [
+                                            context.tr('consent_cthgmtikho_a5b115'),
+                                            context.tr('consent_dliudngngn_4e0d61'),
+                                            context.tr('consent_bncthiquyn_e84865'),
                                           ],
-                                          actionLabel: 'Xem Bảo mật',
+                                          actionLabel: context.tr('consent_xembomt_eaa9ec'),
                                           onTap: () => _openDoc(
-                                            'Chính sách bảo mật',
+                                            context.tr('consent_chnhschbom_98b319'),
                                             'assets/docs/privacy.html',
                                           ),
                                         ),
@@ -251,9 +252,9 @@ class _ConsentGateState extends State<ConsentGate> {
                                         _buildStartupAcknowledgement(),
                                         const SizedBox(height: 22),
                                         _buildStartupSectionLabel(
-                                          title: 'Tùy chọn lưu trữ',
+                                          title: context.tr('consent_tychnlutr_ffd19f'),
                                           subtitle:
-                                              'Chọn mức cookie và lưu trữ cục bộ. Bạn có thể đổi lại sau trong Cài đặt.',
+                                              context.tr('consent_chnmccooki_16d2d1'),
                                         ),
                                         const SizedBox(height: 10),
                                         _buildStartupCookieStorageSection(
@@ -361,7 +362,7 @@ class _ConsentGateState extends State<ConsentGate> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bắt đầu an toàn',
+                  context.tr('consent_btuanton_63a99e'),
                   style: SLTheme.quicksand(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w900,
@@ -371,7 +372,7 @@ class _ConsentGateState extends State<ConsentGate> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Thiết lập quyền riêng tư',
+                  context.tr('consent_thitlpquyn_20c8a7'),
                   style: SLTheme.quicksand(
                     fontSize: compact ? 20 : 22,
                     fontWeight: FontWeight.w900,
@@ -381,7 +382,7 @@ class _ConsentGateState extends State<ConsentGate> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Xem nhanh quyền, bảo mật và chọn lưu trữ trước khi vào app.',
+                  context.tr('consent_xemnhanhqu_fd347e'),
                   style: SLTheme.quicksand(
                     fontSize: 13.2,
                     fontWeight: FontWeight.w700,
@@ -553,7 +554,7 @@ class _ConsentGateState extends State<ConsentGate> {
           SLSpacing.w12,
           Expanded(
             child: Text(
-              'Khi nhấn “Vào app và đồng ý”, bạn xác nhận đã đọc và đồng ý với Điều khoản sử dụng và Chính sách bảo mật.',
+              context.tr('consent_khinhnvoap_7418c8'),
               style: SLTheme.quicksand(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w800,
@@ -602,7 +603,7 @@ class _ConsentGateState extends State<ConsentGate> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Cookie & lưu trữ',
+                      context.tr('consent_cookielutr_6b35ac'),
                       style: SLTheme.quicksand(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
@@ -611,7 +612,7 @@ class _ConsentGateState extends State<ConsentGate> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Chọn mức lưu trữ cho phiên đăng nhập và trải nghiệm trong app.',
+                      context.tr('consent_chnmclutrc_0fe956'),
                       style: SLTheme.quicksand(
                         fontSize: 12.8,
                         fontWeight: FontWeight.w700,
@@ -629,12 +630,12 @@ class _ConsentGateState extends State<ConsentGate> {
             value: 'essential',
             groupValue: cookieLevel,
             accent: _accentBlue,
-            title: 'Thiết yếu',
+            title: context.tr('consent_thityu_cd979a'),
             subtitle:
-                'Giữ đăng nhập, consent pháp lý và các chức năng cốt lõi.',
-            bullets: const [
-              'Tối giản dữ liệu lưu cục bộ.',
-              'Phù hợp nếu bạn muốn vào app thật nhanh.',
+                context.tr('consent_gingnhpcon_189e36'),
+            bullets: [
+              context.tr('consent_tigindliul_a475c3'),
+              context.tr('consent_phhpnubnmu_d29e36'),
             ],
             onTap: () => onChanged('essential'),
           ),
@@ -643,22 +644,22 @@ class _ConsentGateState extends State<ConsentGate> {
             value: 'all',
             groupValue: cookieLevel,
             accent: _accentGreen,
-            title: 'Tất cả',
+            title: context.tr('consent_ttc_d8586d'),
             subtitle:
-                'Thêm cá nhân hóa, cache tiện ích và trải nghiệm mượt hơn.',
-            bullets: const [
-              'Phù hợp nếu bạn muốn trải nghiệm đầy đủ hơn.',
-              'Có thể lưu nhiều dữ liệu cục bộ hơn để tăng tốc.',
+                context.tr('consent_thmcnhnhac_f0e289'),
+            bullets: [
+              context.tr('consent_phhpnubnmu_4875ce'),
+              context.tr('consent_cthlunhiud_1e2ff6'),
             ],
-            badge: 'Đề xuất',
+            badge: context.tr('consent_xut_59efad'),
             onTap: () => onChanged('all'),
           ),
           const SizedBox(height: 11),
           _buildInlineDocLink(
             accent: _accentBlue,
-            label: 'Xem Chính sách Cookie',
+            label: context.tr('consent_xemchnhsch_10073b'),
             onTap: () =>
-                _openDoc('Chính sách Cookie', 'assets/docs/cookie-policy.html'),
+                _openDoc(context.tr('consent_chnhschcoo_9209d0'), 'assets/docs/cookie-policy.html'),
           ),
         ],
       ),
@@ -698,7 +699,7 @@ class _ConsentGateState extends State<ConsentGate> {
     required VoidCallback onConfirm,
   }) {
     final storageLabel =
-        cookieLevel == 'essential' ? 'Lưu trữ thiết yếu' : 'Lưu trữ đầy đủ';
+        cookieLevel == 'essential' ? context.tr('consent_lutrthityu_2d2969') : context.tr('consent_lutry_ea3cfa');
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -740,7 +741,7 @@ class _ConsentGateState extends State<ConsentGate> {
                 ),
               ),
               Text(
-                'Có thể đổi sau',
+                context.tr('consent_cthisau_73e33d'),
                 style: SLTheme.quicksand(
                   fontSize: 11.2,
                   fontWeight: FontWeight.w800,
@@ -752,7 +753,7 @@ class _ConsentGateState extends State<ConsentGate> {
           const SizedBox(height: 9),
           _buildPrimaryButton(
             accent: _accentGreen,
-            label: 'Đồng ý và vào app',
+            label: context.tr('consent_ngvvoapp_93cd33'),
             scaleDownContent: true,
             icon: Icons.arrow_forward_rounded,
             fontSize: 15.5,
@@ -878,33 +879,33 @@ class _ConsentGateState extends State<ConsentGate> {
 
   Future<bool?> _showTosDialog() {
     return _showConsentDialog(
-      title: 'Điều khoản sử dụng (TOS)',
+      title: context.tr('consent_iukhonsdng_b931f0'),
       subtitle:
-          'Trước khi vào app, bạn cần xác nhận đã đọc bộ điều khoản sử dụng để hiểu rõ quyền lợi, trách nhiệm và quy tắc sử dụng SoulLocket.',
-      actionLabel: 'Xem chi tiết Điều khoản',
+          context.tr('consent_trckhivoap_a78836'),
+      actionLabel: context.tr('consent_xemchititi_eda09f'),
       assetPath: 'assets/docs/terms.html',
       checkboxLabel:
-          'Tôi đã đọc và đồng ý với Điều khoản sử dụng của SoulLocket',
+          context.tr('consent_ticvngviiu_1cdf11'),
       leadingIcon: Icons.gavel_rounded,
       accent: _accentRose,
-      highlightItems: const [
+      highlightItems: [
         _ConsentHighlight(
           icon: Icons.verified_user_rounded,
-          title: 'Quyền và trách nhiệm',
+          title: context.tr('consent_quynvtrchn_bb2554'),
           description:
-              'Làm rõ trách nhiệm tài khoản, hành vi được phép và giới hạn sử dụng trong ứng dụng.',
+              context.tr('consent_lmrtrchnhi_ce82e7'),
         ),
         _ConsentHighlight(
           icon: Icons.groups_rounded,
-          title: 'Quy tắc cộng đồng',
+          title: context.tr('consent_quytccngng_8862e1'),
           description:
-              'Nêu các nguyên tắc khi đăng bài, chat, chia sẻ media và tương tác với người khác.',
+              context.tr('consent_nuccnguynt_1015f9'),
         ),
         _ConsentHighlight(
           icon: Icons.workspace_premium_rounded,
-          title: 'PRO và dịch vụ số',
+          title: context.tr('consent_provdchvs_00f86a'),
           description:
-              'Giải thích cách hoạt động của PRO, quà tặng, quảng cáo thưởng và các quyền lợi mở rộng.',
+              context.tr('consent_giithchcch_1cbbe5'),
         ),
       ],
     );
@@ -912,33 +913,33 @@ class _ConsentGateState extends State<ConsentGate> {
 
   Future<bool?> _showPrivacyDialog() {
     return _showConsentDialog(
-      title: 'Chính sách bảo mật',
+      title: context.tr('consent_chnhschbom_98b319'),
       subtitle:
-          'Bảng này tóm tắt dữ liệu nào được dùng, vì sao được dùng và cách bạn kiểm soát dữ liệu của mình trước khi tiếp tục.',
-      actionLabel: 'Xem chi tiết Bảo mật',
+          context.tr('consent_bngnytmttd_7ba1b0'),
+      actionLabel: context.tr('consent_xemchititb_d4c7c5'),
       assetPath: 'assets/docs/privacy.html',
       checkboxLabel:
-          'Tôi đã đọc và đồng ý với Chính sách bảo mật của SoulLocket',
+          context.tr('consent_ticvngvich_383523'),
       leadingIcon: Icons.privacy_tip_rounded,
       accent: _accentLavender,
-      highlightItems: const [
+      highlightItems: [
         _ConsentHighlight(
           icon: Icons.folder_shared_rounded,
-          title: 'Dữ liệu được xử lý',
+          title: context.tr('consent_dliucxl_cbc4d9'),
           description:
-              'Bao gồm định vị GPS (ngay cả trong nền để cập nhật bản đồ), ảnh riêng tư, dữ liệu sức khỏe (chu kỳ kinh nguyệt), tin nhắn chat và thiết bị.',
+              context.tr('consent_baogmnhvgp_7cae8c'),
         ),
         _ConsentHighlight(
           icon: Icons.lock_outline_rounded,
-          title: 'Mục đích sử dụng',
+          title: context.tr('consent_mcchsdng_803f65'),
           description:
-              'Dùng để kết nối cặp đôi, chia sẻ vị trí realtime, sao lưu kỷ niệm, nhắc nhở chu kỳ sức khỏe và cảnh báo bảo mật thiết bị.',
+              context.tr('consent_dngktnicpi_abde74'),
         ),
         _ConsentHighlight(
           icon: Icons.manage_accounts_rounded,
-          title: 'Quyền kiểm soát',
+          title: context.tr('consent_quynkimsot_363315'),
           description:
-              'Bạn có thể tắt GPS, xóa tin nhắn, xóa ảnh hoặc yêu cầu xóa toàn bộ dữ liệu tài khoản trong Cài đặt bất kỳ lúc nào.',
+              context.tr('consent_bncthttgps_338c10'),
         ),
       ],
     );
@@ -999,7 +1000,7 @@ class _ConsentGateState extends State<ConsentGate> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Bảo mật thiết bị và đăng nhập',
+                                context.tr('consent_bomtthitbv_6b7891'),
                                 style: SLTheme.quicksand(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
@@ -1008,7 +1009,7 @@ class _ConsentGateState extends State<ConsentGate> {
                               ),
                               SLSpacing.h4,
                               Text(
-                                'SoulLocket có thể lưu mẫu thiết bị, địa chỉ IP công khai và vị trí gần đúng suy ra từ IP để phát hiện đăng nhập lạ, duyệt thiết bị và gửi cảnh báo bảo mật. Dữ liệu này không dùng cho quảng cáo.',
+                                context.tr('consent_soullocket_3df71a'),
                                 style: SLTheme.quicksand(
                                   fontSize: 12.4,
                                   fontWeight: FontWeight.w700,
@@ -1023,24 +1024,24 @@ class _ConsentGateState extends State<ConsentGate> {
                     ),
                     SLSpacing.h12,
                     _buildHighlightList(
-                      const [
+                      [
                         _ConsentHighlight(
                           icon: Icons.phone_iphone_rounded,
-                          title: 'Dữ liệu được lưu',
+                          title: context.tr('consent_dliuclu_f572e2'),
                           description:
-                              'Model máy, hệ điều hành, token thiết bị, IP công khai và dấu thời gian đăng nhập.',
+                              context.tr('consent_modelmyhiu_a0b2e6'),
                         ),
                         _ConsentHighlight(
                           icon: Icons.public_rounded,
-                          title: 'Vị trí gần đúng từ IP',
+                          title: context.tr('consent_vtrgnngtip_a84a67'),
                           description:
-                              'Chỉ suy ra ở mức thành phố/khu vực từ IP công khai, không phải GPS nền.',
+                              context.tr('consent_chsuyramct_3cfdc0'),
                         ),
                         _ConsentHighlight(
                           icon: Icons.security_rounded,
-                          title: 'Mục đích sử dụng',
+                          title: context.tr('consent_mcchsdng_803f65'),
                           description:
-                              'Cảnh báo đăng nhập bất thường, phê duyệt/chặn thiết bị và hỗ trợ điều tra sự cố bảo mật.',
+                              context.tr('consent_cnhbongnhp_c8f63c'),
                         ),
                       ],
                       accent: _accentGreen,
@@ -1057,7 +1058,7 @@ class _ConsentGateState extends State<ConsentGate> {
                         ),
                       ),
                       child: Text(
-                        'Nếu bạn không bật mục này, app vẫn dùng được nhưng nhật ký thiết bị và một số cảnh báo bảo mật sẽ không đầy đủ.',
+                        context.tr('consent_nubnkhngbt_347436'),
                         style: SLTheme.quicksand(
                           fontSize: 11.8,
                           fontWeight: FontWeight.w800,
@@ -1069,10 +1070,10 @@ class _ConsentGateState extends State<ConsentGate> {
                     SLSpacing.h12,
                     _buildPrimaryButton(
                       accent: _accentGreen,
-                      label: 'Xem chi tiết Chính sách bảo mật',
+                      label: context.tr('consent_xemchititc_1cad13'),
                       icon: Icons.open_in_new_rounded,
                       onTap: () => _openDoc(
-                        'Chính sách bảo mật',
+                        context.tr('consent_chnhschbom_98b319'),
                         'assets/docs/privacy.html',
                       ),
                     ),
@@ -1090,7 +1091,7 @@ class _ConsentGateState extends State<ConsentGate> {
                               ),
                             ),
                             child: Text(
-                              'Không bật lúc này',
+                              context.tr('consent_khngbtlcny_fff385'),
                               textAlign: TextAlign.center,
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w900,
@@ -1103,7 +1104,7 @@ class _ConsentGateState extends State<ConsentGate> {
                         Expanded(
                           child: _buildPrimaryButton(
                             accent: _accentGreen,
-                            label: 'Bật bảo vệ thiết bị',
+                            label: context.tr('consent_btbovthitb_ce67e5'),
                             icon: Icons.shield_rounded,
                             onTap: () => Navigator.pop(ctx, true),
                           ),
@@ -1302,7 +1303,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                 ),
                               ),
                               child: Text(
-                                'Không đồng ý',
+                                context.tr('consent_khngng_e6ce42'),
                                 style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w900,
                                   fontSize: 14,
@@ -1314,7 +1315,7 @@ class _ConsentGateState extends State<ConsentGate> {
                               width: 138,
                               child: _buildPrimaryButton(
                                 accent: accent,
-                                label: 'Tiếp tục',
+                                label: context.tr('consent_tiptc_555f1f'),
                                 icon: Icons.check_rounded,
                                 onTap: checked
                                     ? () => Navigator.pop(ctx, true)
@@ -1409,7 +1410,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Tùy chọn Cookie & lưu trữ',
+                                    context.tr('consent_tychncooki_f0907c'),
                                     style: SLTheme.quicksand(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w900,
@@ -1418,7 +1419,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                   ),
                                   SLSpacing.h8,
                                   Text(
-                                    'Chọn mức lưu trữ phù hợp để app hoạt động ổn định và bạn dễ kiểm soát quyền riêng tư hơn.',
+                                    context.tr('consent_chnmclutrp_061bfc'),
                                     style: SLTheme.quicksand(
                                       fontSize: 12.2,
                                       fontWeight: FontWeight.w700,
@@ -1436,12 +1437,12 @@ class _ConsentGateState extends State<ConsentGate> {
                           value: 'essential',
                           groupValue: level,
                           accent: _accentBlue,
-                          title: 'Thiết yếu',
+                          title: context.tr('consent_thityu_cd979a'),
                           subtitle:
-                              'Giữ đăng nhập, consent pháp lý, bảo mật phiên và các chức năng cốt lõi của ứng dụng.',
-                          bullets: const [
-                            'Bắt buộc để app hoạt động ổn định.',
-                            'Phù hợp nếu bạn muốn tối giản lưu trữ mở rộng.',
+                              context.tr('consent_gingnhpcon_525036'),
+                          bullets: [
+                            context.tr('consent_btbucappho_b21b5b'),
+                            context.tr('consent_phhpnubnmu_575815'),
                           ],
                           onTap: () => setState(() {
                             level = 'essential';
@@ -1453,14 +1454,14 @@ class _ConsentGateState extends State<ConsentGate> {
                           value: 'all',
                           groupValue: level,
                           accent: _accentGreen,
-                          title: 'Tất cả',
+                          title: context.tr('consent_ttc_d8586d'),
                           subtitle:
-                              'Bao gồm thiết yếu, thêm cá nhân hóa, cache tiện ích và các dịch vụ mở rộng để trải nghiệm mượt hơn.',
-                          bullets: const [
-                            'Phù hợp nếu bạn muốn trải nghiệm đầy đủ hơn.',
-                            'Cho phép nhiều dữ liệu cục bộ hơn để tăng tốc và cá nhân hóa.',
+                              context.tr('consent_baogmthity_291746'),
+                          bullets: [
+                            context.tr('consent_phhpnubnmu_4875ce'),
+                            context.tr('consent_chophpnhiu_2f2045'),
                           ],
-                          badge: 'Mặc định',
+                          badge: context.tr('consent_mcnh_a57a8e'),
                           onTap: () => setState(() {
                             level = 'all';
                             showRequiredHint = false;
@@ -1473,10 +1474,10 @@ class _ConsentGateState extends State<ConsentGate> {
                         SLSpacing.h12,
                         _buildPrimaryButton(
                           accent: _accentBlue,
-                          label: 'Xem chi tiết Chính sách Cookie',
+                          label: context.tr('consent_xemchititc_de27c6'),
                           icon: Icons.open_in_new_rounded,
                           onTap: () => _openDoc(
-                            'Chính sách Cookie',
+                            context.tr('consent_chnhschcoo_9209d0'),
                             'assets/docs/cookie-policy.html',
                           ),
                         ),
@@ -1494,7 +1495,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                 ),
                               ),
                               child: Text(
-                                'Không đồng ý',
+                                context.tr('consent_khngng_e6ce42'),
                                 style: SLTheme.quicksand(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w900,
@@ -1507,7 +1508,7 @@ class _ConsentGateState extends State<ConsentGate> {
                               child: _buildPrimaryButton(
                                 accent:
                                     level == 'all' ? _accentGreen : _accentBlue,
-                                label: 'Xác nhận',
+                                label: context.tr('consent_xcnhn_1e2eb2'),
                                 icon: Icons.check_rounded,
                                 onTap: () => Navigator.pop(ctx, level),
                               ),
@@ -1921,7 +1922,7 @@ class _ConsentGateState extends State<ConsentGate> {
           SLSpacing.w8,
           Expanded(
             child: Text(
-              'Bạn cần đồng ý để tiếp tục vào SoulLocket.',
+              context.tr('consent_bncnngtipt_207123'),
               style: SLTheme.quicksand(
                 fontSize: 11.6,
                 fontWeight: FontWeight.w800,
@@ -1951,7 +1952,7 @@ class _ConsentHighlight {
   final String title;
   final String description;
 
-  const _ConsentHighlight({
+  _ConsentHighlight({
     required this.icon,
     required this.title,
     required this.description,

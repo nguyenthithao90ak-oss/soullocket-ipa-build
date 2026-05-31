@@ -15,7 +15,7 @@ Future<XFile?> _cropCountdownModeAvatarFile(XFile file) async {
       maxHeight: 1080,
       uiSettings: [
         IOSUiSettings(
-          title: 'Chỉnh avatar',
+          title: L10nService().translate('home_chnhavatar_d974c0'),
           aspectRatioPresets: const [CropAspectRatioPreset.square],
           aspectRatioLockEnabled: true,
           aspectRatioPickerButtonHidden: true,
@@ -46,7 +46,7 @@ Future<XFile?> _cropCountdownModeBackgroundFile(XFile file) async {
       maxHeight: 2560,
       uiSettings: [
         IOSUiSettings(
-          title: 'Chỉnh nền không gian',
+          title: L10nService().translate('home_chnhnnkhng_a929e1'),
           aspectRatioPresets: const [_themeBackgroundAspectRatioPreset],
           aspectRatioLockEnabled: true,
           aspectRatioPickerButtonHidden: true,
@@ -248,13 +248,13 @@ class _CountdownModeEditorScreenState
   String _previewTopLabel() {
     final value = _topCtrl.text.trim();
     if (value.isNotEmpty) return value;
-    return _singleMode ? 'TUỔI CỦA TÔI' : 'Yêu nhau';
+    return _singleMode ? context.tr('home_tuicati_5c654c') : context.tr('home_yunhau_501102');
   }
 
   String _previewBottomLabel() {
     final value = _bottomCtrl.text.trim();
     if (value.isNotEmpty) return value;
-    return _singleMode ? 'NGÀY TUỔI' : 'ngày';
+    return _singleMode ? context.tr('home_ngytui_22bed4') : context.tr('home_ngy_41ec10');
   }
 
   String? get _uploadHouseId {
@@ -302,9 +302,9 @@ class _CountdownModeEditorScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:
-              const Text('Lần upload khung đếm ngày trước đã bị gián đoạn.'),
+              Text(context.tr('home_lnuploadkh_b2b1ac')),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('home_thli_4dffdf'),
             onPressed: () {
               unawaited(_retryPendingUpload());
             },
@@ -414,7 +414,7 @@ class _CountdownModeEditorScreenState
         return;
       }
       if (!adSuccess) {
-        _showMessage('Cần xem quảng cáo để mở kiểu vòng đếm này.');
+        _showMessage(context.tr('home_cnxemqungc_fe69b5'));
         return;
       }
       await _CountdownModeIndependentScreenState._saveCountdownStyleAdUnlock();
@@ -422,7 +422,7 @@ class _CountdownModeEditorScreenState
         return;
       }
       setState(() => _styleKey = normalized);
-      _showMessage('Đã mở các kiểu vòng đếm premium trong 7 ngày.');
+      _showMessage(context.tr('home_mthmcckiuv_ad0e3f'));
     } finally {
       if (mounted) {
         setState(() => _isUnlockingCountdownStyle = false);
@@ -451,7 +451,7 @@ class _CountdownModeEditorScreenState
       return false;
     }
     if (!adSuccess) {
-      _showMessage('Cần xem quảng cáo thưởng để tải nền.');
+      _showMessage(context.tr('home_cnxemqungc_370ee8'));
       return false;
     }
     await prefs.setString('last_bg_ad_time', DateTime.now().toIso8601String());
@@ -464,7 +464,7 @@ class _CountdownModeEditorScreenState
   }) async {
     final houseId = _uploadHouseId;
     if (houseId == null) {
-      _showMessage('Không tìm thấy mã nhà để tải avatar.');
+      _showMessage(context.tr('home_khngtmthym_b7eeff'));
       return;
     }
     final role = isLeft ? 'left' : 'right';
@@ -511,7 +511,7 @@ class _CountdownModeEditorScreenState
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (mounted) {
-          _showMessage('Không tải được avatar mới.');
+          _showMessage(context.tr('home_khngticava_73ea14'));
         }
         return;
       }
@@ -539,7 +539,7 @@ class _CountdownModeEditorScreenState
   Future<void> _pickBackgroundImage({XFile? presetFile}) async {
     final houseId = _uploadHouseId;
     if (houseId == null) {
-      _showMessage('Không tìm thấy mã nhà để tải nền.');
+      _showMessage(context.tr('home_khngtmthym_6caf0b'));
       return;
     }
     if (_isUploadingBackground) {
@@ -586,7 +586,7 @@ class _CountdownModeEditorScreenState
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (mounted) {
-          _showMessage('Không tải được nền mới.');
+          _showMessage(context.tr('home_khngticnnm_27a6df'));
         }
         return;
       }
@@ -643,12 +643,6 @@ class _CountdownModeEditorScreenState
   Widget build(BuildContext context) {
     final themeData =
         _CountdownModeThemeData.resolve(_resolveThemeKey(_themeKey));
-    final styleData =
-        _CountdownModeStyleData.resolve(_styleKey, _transparentMode);
-    final previewValue =
-        _anchorDate == null ? '--' : _daysSince(_anchorDate!).toString();
-    final statusColor =
-        widget.isAccepted ? const Color(0xFF4BA7FF) : const Color(0xFFFFB74D);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -697,7 +691,7 @@ class _CountdownModeEditorScreenState
                     ),
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -736,7 +730,7 @@ class _CountdownModeEditorScreenState
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Cài đặt không gian riêng cho bạn bè',
+                                      context.tr('home_citkhnggia_09f866'),
                                       style: SLTheme.quicksand(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w900,
@@ -745,7 +739,7 @@ class _CountdownModeEditorScreenState
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Bố cục đầy đủ tương tự mục Giao diện, nhưng chỉ áp dụng cho không gian đang mở.',
+                                      context.tr('home_bccytngtmc_c1f7aa'),
                                       style: SLTheme.quicksand(
                                         fontSize: 12.2,
                                         fontWeight: FontWeight.w700,
@@ -763,159 +757,76 @@ class _CountdownModeEditorScreenState
                           const SizedBox(height: 16),
                           _sectionCard(
                             icon: Icons.timelapse_rounded,
-                            title: 'Xem trước không gian',
-                            subtitle:
-                                'Kiểm tra nhanh vòng đếm, màu sắc và avatar trước khi lưu.',
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        widget.spaceTitle,
-                                        style: SLTheme.quicksand(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w900,
-                                          color: const Color(0xFF243041),
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: statusColor.withValues(alpha: 0.14),
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: statusColor.withValues(alpha: 0.22),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        widget.isAccepted
-                                            ? 'Đã ghép'
-                                            : 'Không gian riêng',
-                                        style: SLTheme.quicksand(
-                                          fontSize: 10.8,
-                                          fontWeight: FontWeight.w900,
-                                          color: statusColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 18,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.72),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.92),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFFD94C86)
-                                            .withValues(alpha: 0.08),
-                                        blurRadius: 24,
-                                        offset: const Offset(0, 14),
-                                      ),
-                                    ],
-                                  ),
-                                  child: LayoutBuilder(
-                                    builder: (context, previewConstraints) {
-                                      final previewCircleMax =
-                                          (previewConstraints.maxWidth - 24)
-                                              .clamp(280.0,
-                                                  UiPrefs.maxCountdownSizePx);
-                                      final previewCircleSize =
-                                          (_sizePx < previewCircleMax
-                                                  ? _sizePx
-                                                  : previewCircleMax)
-                                              .clamp(
-                                                280.0,
-                                                UiPrefs.maxCountdownSizePx,
-                                              )
-                                              .toDouble();
-                                      return Center(
-                                        child: _CountdownModeCircle(
-                                          size: previewCircleSize,
-                                          value: previewValue,
-                                          topLabel: _previewTopLabel(),
-                                          bottomLabel: _previewBottomLabel(),
-                                          styleData: styleData,
-                                          fontKey: _fontKey,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-                                Center(
-                                  child: Text(
-                                    _anchorDate == null
-                                        ? 'Chưa chọn ngày mốc riêng cho không gian này.'
-                                        : 'Từ ${DateInputUtils.formatDisplayDate(_anchorDate!)}',
-                                    textAlign: TextAlign.center,
+                            title: 'Xem nhanh không gian',
+                            subtitle: 'Xem vòng đếm gọn trước khi lưu',
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF6FA),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFF4D2E1)),
+                              ),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    _previewTopLabel(),
                                     style: SLTheme.textStyleForKey(
                                       _fontKey,
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
                                       color: const Color(0xFF7C6D76),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                _CountdownModeAvatarCardStatic(
-                                  isSingleMode: _singleMode,
-                                  leftName: _leftCtrl.text.trim().isEmpty
-                                      ? 'Bạn'
-                                      : _leftCtrl.text.trim(),
-                                  rightName: _rightCtrl.text.trim().isEmpty
-                                      ? 'Người ấy'
-                                      : _rightCtrl.text.trim(),
-                                  leftAvatarUrl: _leftAvatarCtrl.text.trim(),
-                                  rightAvatarUrl: _singleMode
-                                      ? ''
-                                      : _rightAvatarCtrl.text.trim(),
-                                  avatarFrameKey: _frameKey,
-                                  fontKey: _fontKey,
-                                  foreground: const Color(0xFF243041),
-                                  isDark: false,
-                                  centerIconType: _centerIconType,
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _anchorDate == null
+                                        ? '--'
+                                        : _daysSince(_anchorDate!).toString(),
+                                    style: SLTheme.textStyleForKey(
+                                      _fontKey,
+                                      fontSize: 42,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFFD81B60),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    _previewBottomLabel(),
+                                    style: SLTheme.textStyleForKey(
+                                      _fontKey,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFF7C6D76),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                           _sectionCard(
                             icon: Icons.edit_note_rounded,
                             title: 'Nội dung hiển thị',
-                            subtitle:
-                                'Đổi tên hiển thị và tải ảnh avatar riêng cho vòng đếm này.',
+                            subtitle: 'Tên, avatar và icon trung tâm',
                             child: Column(
                               children: [
                                 TextField(
                                   controller: _leftCtrl,
+                                  maxLength: 22,
                                   decoration: _fieldDecoration(
-                                    label: 'Tên bên trái',
-                                    hint: 'Bạn',
+                                    label: context.tr('home_tnbntri_538c6b'),
+                                    hint: context.tr('home_bn_1fd75b'),
                                   ),
                                   onChanged: (_) => setState(() {}),
                                 ),
                                 const SizedBox(height: 12),
                                 TextField(
                                   controller: _rightCtrl,
+                                  maxLength: 22,
                                   decoration: _fieldDecoration(
-                                    label: 'Tên bên phải',
-                                    hint: 'Người ấy',
+                                    label: context.tr('home_tnbnphi_855cc7'),
+                                    hint: context.tr('home_ngiy_5bab37'),
                                   ),
                                   onChanged: (_) => setState(() {}),
                                 ),
@@ -956,7 +867,7 @@ class _CountdownModeEditorScreenState
                                                 Icons.upload_rounded,
                                                 size: 18,
                                               ),
-                                        label: const Text('Tải ảnh trái'),
+                                        label: Text(context.tr('home_tinhtri_3bb821')),
                                       ),
                                     ),
                                   ],
@@ -998,7 +909,7 @@ class _CountdownModeEditorScreenState
                                                 Icons.upload_rounded,
                                                 size: 18,
                                               ),
-                                        label: const Text('Tải ảnh phải'),
+                                        label: Text(context.tr('home_tinhphi_3b6cd5')),
                                       ),
                                     ),
                                   ],
@@ -1007,7 +918,7 @@ class _CountdownModeEditorScreenState
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    'Icon ở giữa',
+                                    context.tr('home_icongia_641af3'),
                                     style: SLTheme.quicksand(
                                       fontSize: 12.8,
                                       fontWeight: FontWeight.w900,
@@ -1078,150 +989,14 @@ class _CountdownModeEditorScreenState
                                     );
                                   }).toList(),
                                 ),
-                                const SizedBox(height: 16),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Nền riêng cho không gian',
-                                    style: SLTheme.quicksand(
-                                      fontSize: 12.8,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF8A5B76),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(22),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(22),
-                                      border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.72),
-                                      ),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: AspectRatio(
-                                        aspectRatio: 9 / 16,
-                                        child: Stack(
-                                          fit: StackFit.expand,
-                                          children: [
-                                            DecoratedBox(
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: themeData.background,
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                ),
-                                              ),
-                                            ),
-                                            if (_customBackgroundUrl
-                                                .trim()
-                                                .isNotEmpty)
-                                              Image.network(
-                                                _customBackgroundUrl,
-                                                fit: BoxFit.cover,
-                                                filterQuality: FilterQuality.high,
-                                                errorBuilder: (_, __, ___) =>
-                                                    const SizedBox.shrink(),
-                                              ),
-                                            DecoratedBox(
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: themeData.overlay,
-                                                  begin: Alignment.topCenter,
-                                                  end: Alignment.bottomCenter,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: _isUploadingBackground
-                                            ? null
-                                            : _pickBackgroundImage,
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFFD81B60),
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 12,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        icon: _isUploadingBackground
-                                            ? const SizedBox(
-                                                width: 16,
-                                                height: 16,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                  color: Colors.white,
-                                                ),
-                                              )
-                                            : const Icon(
-                                                Icons.wallpaper_rounded,
-                                                size: 18,
-                                              ),
-                                        label: Text(
-                                          _customBackgroundUrl.trim().isEmpty
-                                              ? 'Tải nền'
-                                              : 'Đổi nền',
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: OutlinedButton.icon(
-                                        onPressed:
-                                            _customBackgroundUrl.trim().isEmpty
-                                                ? null
-                                                : _clearBackgroundImage,
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor:
-                                              const Color(0xFF8A5B76),
-                                          side: const BorderSide(
-                                            color: Color(0xFFF2C3D7),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 12,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        icon: const Icon(
-                                          Icons.delete_outline_rounded,
-                                          size: 18,
-                                        ),
-                                        label: const Text('Gỡ nền'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                           _sectionCard(
                             icon: Icons.event_available_rounded,
-                            title: 'Chế độ và ngày mốc',
-                            subtitle:
-                                'Chọn kiểu cá nhân hoặc cặp đôi, sau đó gắn ngày bắt đầu để vòng đếm tính chính xác.',
+                            title: 'Mốc thời gian & kiểu hiển thị',
+                            subtitle: 'Chọn ngày mốc, theme, vòng đếm, kính mờ',
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1231,7 +1006,7 @@ class _CountdownModeEditorScreenState
                                   children: [
                                     ChoiceChip(
                                       selected: _singleMode,
-                                      label: const Text('Cá nhân'),
+                                      label: Text(context.tr('home_cnhn_9d6cf4')),
                                       labelStyle: SLTheme.quicksand(
                                         fontWeight: FontWeight.w800,
                                         color: _singleMode
@@ -1244,7 +1019,7 @@ class _CountdownModeEditorScreenState
                                     ),
                                     ChoiceChip(
                                       selected: !_singleMode,
-                                      label: const Text('Cặp đôi'),
+                                      label: Text(context.tr('home_cpi_d525b0')),
                                       labelStyle: SLTheme.quicksand(
                                         fontWeight: FontWeight.w800,
                                         color: !_singleMode
@@ -1258,6 +1033,46 @@ class _CountdownModeEditorScreenState
                                   ],
                                 ),
                                 const SizedBox(height: 14),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    ActionChip(
+                                      label: const Text('Hôm nay'),
+                                      onPressed: () {
+                                        final now = DateTime.now();
+                                        setState(() {
+                                          _anchorDate = DateTime(
+                                            now.year,
+                                            now.month,
+                                            now.day,
+                                          );
+                                        });
+                                      },
+                                    ),
+                                    ActionChip(
+                                      label: const Text('Ngày yêu mặc định'),
+                                      onPressed: () {
+                                        final parsed = DateInputUtils.parse(
+                                          widget.anchorDate == null
+                                              ? ''
+                                              : DateInputUtils.formatIsoDate(
+                                                  widget.anchorDate!,
+                                                ),
+                                        );
+                                        if (parsed == null) return;
+                                        setState(() {
+                                          _anchorDate = DateTime(
+                                            parsed.year,
+                                            parsed.month,
+                                            parsed.day,
+                                          );
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(14),
@@ -1276,7 +1091,7 @@ class _CountdownModeEditorScreenState
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              'Ngày mốc hiện tại',
+                                              context.tr('home_ngymchinti_2f583e'),
                                               style: SLTheme.quicksand(
                                                 fontSize: 11.5,
                                                 fontWeight: FontWeight.w800,
@@ -1286,7 +1101,7 @@ class _CountdownModeEditorScreenState
                                             const SizedBox(height: 6),
                                             Text(
                                               _anchorDate == null
-                                                  ? 'Chưa chọn'
+                                                  ? context.tr('home_chachn_cf29c8')
                                                   : DateInputUtils
                                                       .formatDisplayDate(
                                                       _anchorDate!,
@@ -1319,7 +1134,7 @@ class _CountdownModeEditorScreenState
                                           Icons.event_rounded,
                                           size: 18,
                                         ),
-                                        label: const Text('Chọn ngày'),
+                                        label: Text(context.tr('home_chnngy_d2cce5')),
                                       ),
                                     ],
                                   ),
@@ -1330,14 +1145,14 @@ class _CountdownModeEditorScreenState
                           const SizedBox(height: 14),
                           _sectionCard(
                             icon: Icons.palette_rounded,
-                            title: 'Giao diện vòng đếm',
+                            title: L10nService().translate('home_giaodinvng_2311dc'),
                             subtitle:
-                                'Kiểu hiển thị này được làm theo mẫu đầy đủ tương tự panel Giao diện.',
+                                context.tr('home_kiuhinthny_15f695'),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _CountdownModeSheetDropdown(
-                                  label: 'Chủ đề',
+                                  label: context.tr('home_ch_f5d6a5'),
                                   value: _themeKey,
                                   options: _themeOptions,
                                   onChanged: (value) =>
@@ -1346,8 +1161,8 @@ class _CountdownModeEditorScreenState
                                 const SizedBox(height: 12),
                                 _CountdownModeSheetDropdown(
                                   label: _isUnlockingCountdownStyle
-                                      ? 'Đang mở khóa kiểu vòng đếm...'
-                                      : 'Kiểu vòng đếm',
+                                      ? context.tr('home_angmkhakiu_38c380')
+                                      : context.tr('home_kiuvngm_96b8db'),
                                   value: _styleKey,
                                   options: _countdownStyleOptions.map((entry) {
                                     final locked = !widget.isVipActive &&
@@ -1381,7 +1196,7 @@ class _CountdownModeEditorScreenState
                                   dropdownColor: const Color(0xFF162136),
                                   iconEnabledColor: Colors.white70,
                                   decoration: _fieldDecoration(
-                                    label: 'Phông chữ',
+                                    label: context.tr('home_phngch_9b3aa7'),
                                     dark: true,
                                   ),
                                   style: SLTheme.quicksand(
@@ -1415,7 +1230,7 @@ class _CountdownModeEditorScreenState
                                   contentPadding: EdgeInsets.zero,
                                   activeThumbColor: const Color(0xFFD81B60),
                                   title: Text(
-                                    'Kính mờ',
+                                    context.tr('home_knhm_33b8ab'),
                                     style: SLTheme.quicksand(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w900,
@@ -1423,7 +1238,7 @@ class _CountdownModeEditorScreenState
                                     ),
                                   ),
                                   subtitle: Text(
-                                    'Giữ cảm giác trong veo cho vòng đếm và lớp nền.',
+                                    context.tr('home_gicmgictro_a2b87f'),
                                     style: SLTheme.quicksand(
                                       fontSize: 11.8,
                                       fontWeight: FontWeight.w700,
@@ -1458,13 +1273,13 @@ class _CountdownModeEditorScreenState
                               ],
                             ),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                           if (widget.showDeleteSection) ...[
                             _sectionCard(
                               icon: Icons.delete_outline_rounded,
-                              title: 'Xóa không gian',
+                              title: L10nService().translate('home_xakhnggian_e79cf3'),
                               subtitle:
-                                  'Gửi yêu cầu xóa ở đây. Bên kia xác nhận thì xóa ngay, nếu không hệ thống sẽ tự xóa sau 15 ngày.',
+                                  context.tr('home_giyucuxayb_e0eb6b'),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -1546,8 +1361,8 @@ class _CountdownModeEditorScreenState
                                         icon: const Icon(
                                           Icons.mail_rounded,
                                         ),
-                                        label: const Text(
-                                          'Gửi yêu cầu xóa',
+                                        label: Text(
+                                          context.tr('home_giyucuxa_d2e564'),
                                         ),
                                       ),
                                     ),
@@ -1579,8 +1394,8 @@ class _CountdownModeEditorScreenState
                                         icon: const Icon(
                                           Icons.delete_forever_rounded,
                                         ),
-                                        label: const Text(
-                                          'Xác nhận xóa ngay',
+                                        label: Text(
+                                          context.tr('home_xcnhnxanga_0b6891'),
                                         ),
                                       ),
                                     ),
@@ -1592,9 +1407,9 @@ class _CountdownModeEditorScreenState
                           ],
                           _sectionCard(
                             icon: Icons.check_circle_rounded,
-                            title: 'Thao tác nhanh',
+                            title: L10nService().translate('home_thaotcnhan_c45625'),
                             subtitle:
-                                'Lưu cấu hình cho không gian hiện tại hoặc quay về danh sách không gian.',
+                                context.tr('home_lucuhnhcho_40e113'),
                             child: Column(
                               children: [
                                 SizedBox(
@@ -1617,7 +1432,7 @@ class _CountdownModeEditorScreenState
                                     ),
                                     icon:
                                         const Icon(Icons.check_circle_rounded),
-                                    label: const Text('Lưu thay đổi'),
+                                    label: Text(context.tr('home_luthayi_0dc3cc')),
                                   ),
                                 ),
                                 const SizedBox(height: 10),
@@ -1644,7 +1459,7 @@ class _CountdownModeEditorScreenState
                                     ),
                                     icon: const Icon(Icons.grid_view_rounded),
                                     label:
-                                        const Text('Về danh sách không gian'),
+                                        Text(context.tr('home_vdanhschkh_0a2542')),
                                   ),
                                 ),
                                 const SizedBox(height: 10),
@@ -1669,8 +1484,8 @@ class _CountdownModeEditorScreenState
                                       ),
                                     ),
                                     icon: const Icon(Icons.close_rounded),
-                                    label: const Text(
-                                      'Thoát không gian riêng cho bạn bè',
+                                    label: Text(
+                                      context.tr('home_thotkhnggi_4055ed'),
                                     ),
                                   ),
                                 ),

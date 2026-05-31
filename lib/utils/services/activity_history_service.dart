@@ -189,9 +189,11 @@ class ActivityHistoryEntry {
     return base.isEmpty ? who : '$who $base';
   }
 
-  bool get hasPreview => previewUrl.trim().isNotEmpty;
-  bool get isImagePreview => previewType.trim().toLowerCase() == 'image';
-  bool get isVoicePreview => previewType.trim().toLowerCase() == 'audio';
+  bool get hasPreview => !isPrivate && previewUrl.trim().isNotEmpty;
+  bool get isImagePreview =>
+      !isPrivate && previewType.trim().toLowerCase() == 'image';
+  bool get isVoicePreview =>
+      !isPrivate && previewType.trim().toLowerCase() == 'audio';
   bool get isRestoreExpired =>
       restoreExpiresAt > 0 &&
       DateTime.now().millisecondsSinceEpoch > restoreExpiresAt;
@@ -291,6 +293,25 @@ class ActivityHistoryService {
     final seq = await _nextSeq(resolvedHouseId);
     final uid = _auth.currentUser?.uid ?? '';
     final entryId = '${now}_${seq}_${role.trim()}';
+    final moduleKey = module.trim().toLowerCase();
+    final entityTypeKey = entityType.trim().toLowerCase();
+    final isSecretVaultEntry = moduleKey == 'secret_vault' ||
+        entityTypeKey == 'secret_photo' ||
+        restorePath.contains('/private_secure/');
+    final safeSubtitle = isSecretVaultEntry ? '' : subtitle;
+    final safePreviewUrl = isSecretVaultEntry ? '' : previewUrl;
+    final safePreviewType = isSecretVaultEntry ? 'private' : previewType;
+    final safeRestorePayload = isSecretVaultEntry
+        ? (Map<String, dynamic>.from(restorePayload)
+          ..remove('url')
+          ..remove('downloadUrl')
+          ..remove('previewUrl')
+          ..remove('caption_plain'))
+        : restorePayload;
+    final safeIsPrivate = isPrivate || isSecretVaultEntry;
+    final safePlaceholder = isSecretVaultEntry && placeholder.trim().isEmpty
+        ? 'đã thao tác với Kho bí mật'
+        : placeholder;
     final entry = ActivityHistoryEntry(
       id: entryId,
       seq: seq,
@@ -298,22 +319,22 @@ class ActivityHistoryService {
       role: role,
       text: text,
       title: title,
-      subtitle: subtitle,
+      subtitle: safeSubtitle,
       action: action,
       module: module,
       entityType: entityType,
       entityId: entityId,
       sourceLabel: sourceLabel,
-      previewUrl: previewUrl,
-      previewType: previewType,
+      previewUrl: safePreviewUrl,
+      previewType: safePreviewType,
       restorePath: restorePath,
-      restorePayload: restorePayload,
+      restorePayload: safeRestorePayload,
       restoreExpiresAt: restoreExpiresAt ??
-          (restorePath.trim().isNotEmpty && restorePayload.isNotEmpty
+          (restorePath.trim().isNotEmpty && safeRestorePayload.isNotEmpty
               ? now + restoreWindowMs
               : 0),
-      isPrivate: isPrivate,
-      placeholder: placeholder,
+      isPrivate: safeIsPrivate,
+      placeholder: safePlaceholder,
       key: key,
       houseId: resolvedHouseId ?? '',
       authorUid: uid,
@@ -350,7 +371,8 @@ class ActivityHistoryService {
         );
         return;
       } catch (e) {
-        debugPrint('ActivityHistory direct sync failed: ${AppErrorMapper.resolve(
+        debugPrint(
+            'ActivityHistory direct sync failed: ${AppErrorMapper.resolve(
           e,
           fallbackMessage: 'Không thể đồng bộ lịch sử hoạt động.',
         ).message}');
@@ -379,7 +401,8 @@ class ActivityHistoryService {
           itemId: entry.entityId,
         );
       } catch (e) {
-        debugPrint('ActivityHistory album restore failed: ${AppErrorMapper.resolve(
+        debugPrint(
+            'ActivityHistory album restore failed: ${AppErrorMapper.resolve(
           e,
           fallbackMessage: 'Không thể khôi phục album.',
         ).message}');
@@ -426,7 +449,8 @@ class ActivityHistoryService {
             payload.isEmpty ||
             entry.houseId.isEmpty ||
             isExpired) {
-          debugPrint('ActivityHistory diary memory restore failed: ${AppErrorMapper.resolve(
+          debugPrint(
+              'ActivityHistory diary memory restore failed: ${AppErrorMapper.resolve(
             e,
             fallbackMessage: 'Không thể khôi phục kỷ niệm.',
           ).message}');
@@ -451,7 +475,8 @@ class ActivityHistoryService {
           debugPrint(
             'ActivityHistory diary memory fallback restore failed: ${AppErrorMapper.resolve(
               fallbackError,
-              fallbackMessage: 'Không thể khôi phục kỷ niệm bằng dữ liệu dự phòng.',
+              fallbackMessage:
+                  'Không thể khôi phục kỷ niệm bằng dữ liệu dự phòng.',
             ).message}',
           );
           return false;
@@ -747,7 +772,8 @@ $rows
       if (!snapshot.exists || snapshot.value == null) return;
 
       final raw = Map<dynamic, dynamic>.from(snapshot.value as Map);
-      final list = raw.entries.where((entry) => entry.value is Map).map((entry) {
+      final list =
+          raw.entries.where((entry) => entry.value is Map).map((entry) {
         final map = Map<String, dynamic>.from(
           Map<dynamic, dynamic>.from(entry.value as Map),
         );
@@ -755,7 +781,7 @@ $rows
         map['houseId'] ??= houseId;
         return ActivityHistoryEntry.fromJson(map);
       }).toList()
-        ..sort((a, b) => a.ts.compareTo(b.ts));
+            ..sort((a, b) => a.ts.compareTo(b.ts));
 
       if (list.length <= _max) return;
       final overflow = list.take(list.length - _max).toList();

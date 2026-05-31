@@ -20,7 +20,7 @@ class ThemeSettingsService {
   Future<void> saveLocalTheme(String themeColorHex, bool isDarkMode) async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await prefs.setString('app_primary_color', themeColorHex);
+    await prefs.setString('app_primary_color', themeColorHex.trim());
     await prefs.setBool('app_is_dark', isDarkMode);
 
     debugPrint(
@@ -37,17 +37,24 @@ class ThemeSettingsService {
   /// Đồng bộ màu sắc này qua máy của Đối phương!
   Future<void> uploadThemeToPartner(
       String houseId, String avatarFrameUrl, String themeColorHex) async {
-    await _db.ref('houses/$houseId/ui_settings').set({
-      'primaryThemeHex': themeColorHex,
-      'coupleAvatarFrame': avatarFrameUrl,
+    final normalizedHouseId = houseId.trim();
+    final normalizedThemeColorHex = themeColorHex.trim();
+    if (normalizedHouseId.isEmpty || normalizedThemeColorHex.isEmpty) return;
+    await _db.ref('houses/$normalizedHouseId/ui_settings').set({
+      'primaryThemeHex': normalizedThemeColorHex,
+      'coupleAvatarFrame': avatarFrameUrl.trim(),
       'updatedAt': ServerValue.timestamp,
     });
   }
 
   /// Gọi ở initState MyApp để bắt Giao diện phải đổi màu theo Ý của Đối Phương
   Stream<Map<dynamic, dynamic>?> listenToPartnerThemeChanges(String houseId) {
-    return _db.ref('houses/$houseId/ui_settings').onValue.map((event) {
-      if (!event.snapshot.exists) return null;
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<Map<dynamic, dynamic>?>.value(null);
+    }
+    return _db.ref('houses/$normalizedHouseId/ui_settings').onValue.map((event) {
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return null;
       return Map<dynamic, dynamic>.from(event.snapshot.value as Map);
     });
   }

@@ -28,7 +28,8 @@ class UpdateTab extends StatelessWidget {
     final uid = AuthService().currentUser?.uid.trim() ?? '';
     if (_cachedAdminFuture == null || _cachedAdminUid != uid) {
       _cachedAdminUid = uid;
-      _cachedAdminFuture = AuthService().isCurrentUserAdmin();
+      _cachedAdminFuture =
+          AuthService().isCurrentUserAdmin().catchError((_) => false);
     }
     return _cachedAdminFuture!;
   }
@@ -40,7 +41,7 @@ class UpdateTab extends StatelessWidget {
         'date': '21/03/2026',
         'items': [
           _tr(
-            'Cập nhật màn hình quản lý bạn bè mới với đầy đủ Tab Bạn bè, Lời mời và Tìm kiếm.',
+            L10nService().translate('home_cpnhtmnhnh_399dec'),
             'Updated the new friends management screen with full Friends, Requests, and Search tabs.',
           ),
           _tr(
@@ -48,11 +49,11 @@ class UpdateTab extends StatelessWidget {
             'Fixed the "ancestor path" issue when creating a new house in Firebase.',
           ),
           _tr(
-            'Gỡ bỏ thanh "Trợ lý Tiện Ích" trong tab Tiện ích để giao diện thoáng hơn.',
+            'Gỡ bỏ thanh ${L10nService().translate('home_trltinch_918abe')} trong tab Tiện ích để giao diện thoáng hơn.',
             'Removed the "Utility Assistant" bar from the Utilities tab for a cleaner layout.',
           ),
           _tr(
-            'Tối ưu hóa tốc độ tải dữ liệu cho bảng tin cộng đồng.',
+            L10nService().translate('home_tiuhatctid_1c12b6'),
             'Improved community feed data loading performance.',
           ),
         ],
@@ -62,15 +63,15 @@ class UpdateTab extends StatelessWidget {
         'date': '20/03/2026',
         'items': [
           _tr(
-            'Làm lại giao diện các tab Game, Giao diện và Top Hot.',
+            L10nService().translate('home_lmligiaodi_d4e0cf'),
             'Redesigned the Game, Theme, and Top Hot tabs.',
           ),
           _tr(
-            'Tích hợp tính năng Chat với Admin/Bot ngay trong ứng dụng.',
+            L10nService().translate('home_tchhptnhnn_a52c8c'),
             'Integrated in-app chat with Admin/Bot.',
           ),
           _tr(
-            'Cải thiện hệ thống thông báo đẩy cho ngày kỷ niệm.',
+            L10nService().translate('home_cithinhthn_65e1b9'),
             'Improved the push notification system for anniversaries.',
           ),
         ],
@@ -125,6 +126,7 @@ class UpdateTab extends StatelessWidget {
     required String title,
     required String assetPath,
   }) {
+    if (!context.mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -137,6 +139,7 @@ class UpdateTab extends StatelessWidget {
   }
 
   void _openSupportContact(BuildContext context) {
+    if (!context.mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const UserSupportChatScreen()),
@@ -148,16 +151,23 @@ class UpdateTab extends StatelessWidget {
     Uri uri, {
     String? clipboardFallback,
   }) async {
-    final ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
+    var ok = false;
+    try {
+      ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
+    } catch (_) {
+      ok = false;
+    }
     if (ok || !context.mounted) return;
 
     if (clipboardFallback != null && clipboardFallback.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: clipboardFallback));
+      try {
+        await Clipboard.setData(ClipboardData(text: clipboardFallback));
+      } catch (_) {}
       if (context.mounted) {
         _showToast(
           context,
           _tr(
-            'Không mở được liên kết. Mình đã sao chép thông tin hỗ trợ.',
+            L10nService().translate('home_khngmclink_4121d0'),
             'Could not open the link. Support details have been copied.',
           ),
         );
@@ -168,28 +178,31 @@ class UpdateTab extends StatelessWidget {
     if (context.mounted) {
       _showToast(
         context,
-        _tr('Không mở được liên kết hỗ trợ.',
+        _tr(L10nService().translate('home_khngmclink_bfd120'),
             'Could not open the support link.'),
       );
     }
   }
 
   void _showToast(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: _labelStyle(fontWeight: FontWeight.w800),
+    if (!context.mounted) return;
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            style: _labelStyle(fontWeight: FontWeight.w800),
+          ),
+          behavior: SnackBarBehavior.floating,
         ),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+      );
+    } catch (_) {}
   }
 
   void _showDeleteGuide(BuildContext context) {
     _openDoc(
       context,
-      title: _tr('Hướng dẫn xóa dữ liệu', 'Data deletion guide'),
+      title: _tr(L10nService().translate('home_hngdnxadli_a627ed'), 'Data deletion guide'),
       assetPath: 'assets/docs/delete_account.html',
     );
   }
@@ -231,7 +244,7 @@ class UpdateTab extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    _tr('Nhật ký cập nhật', 'Update log'),
+                    _tr(L10nService().translate('home_nhtkcpnht_028a74'), 'Update log'),
                     style: _titleStyle(
                       color: const Color(0xFF1E293B),
                     ),
@@ -376,7 +389,7 @@ class UpdateTab extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          _tr('UPDATE & ĐIỀU KHOẢN', 'UPDATE & TERMS'),
+                          _tr(L10nService().translate('home_updateiukh_a0963e'), 'UPDATE & TERMS'),
                           maxLines: 1,
                           softWrap: false,
                           style: SLTheme.quicksand(
@@ -433,12 +446,12 @@ class UpdateTab extends StatelessWidget {
                   const Color(0xFFFFE4EE), const Color(0xFFD81B60)),
               _buildHeroBadge(
                   Icons.calendar_month_rounded,
-                  _tr('Cập nhật: 19/04/2026', 'Updated: 19/04/2026'),
+                  _tr(L10nService().translate('home_cpnht19042_20d59f'), 'Updated: 19/04/2026'),
                   const Color(0xFFE3F2FD),
                   const Color(0xFF1976D2)),
               _buildHeroBadge(
                   Icons.verified_user_rounded,
-                  _tr('Tài liệu đang hiệu lực', 'Documents in effect'),
+                  _tr(L10nService().translate('home_tiliuanghi_9c3983'), 'Documents in effect'),
                   const Color(0xFFE8F5E9),
                   const Color(0xFF2E7D32)),
             ],
@@ -446,7 +459,7 @@ class UpdateTab extends StatelessWidget {
           SLSpacing.h16,
           Text(
             _tr(
-              'Trung tâm tài liệu, cập nhật và hỗ trợ của SoulLocket',
+              L10nService().translate('home_trungtmtil_39e391'),
               'SoulLocket documents, updates, and support hub',
             ),
             style: _titleStyle(
@@ -458,7 +471,7 @@ class UpdateTab extends StatelessWidget {
           SLSpacing.h12,
           Text(
             _tr(
-              'Mở nhanh bộ tài liệu đã rà soát, xem phạm vi tính năng hiện có và đi thẳng tới kênh hỗ trợ ngay tại đây.',
+              L10nService().translate('home_mnhanhbtil_6fca2a'),
               'Open the reviewed documents, check the current feature scope, and reach support from one place.',
             ),
             style: _bodyStyle(
@@ -474,7 +487,7 @@ class UpdateTab extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: () => _openDoc(
                   context,
-                  title: _tr('Hướng dẫn sử dụng app', 'App usage guide'),
+                  title: _tr(L10nService().translate('home_hngdnsdnga_1d5442'), 'App usage guide'),
                   assetPath: 'assets/docs/huong_dan.html',
                 ),
                 style: ElevatedButton.styleFrom(
@@ -490,7 +503,7 @@ class UpdateTab extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.menu_book_rounded, size: 18),
                 label: Text(
-                  _tr('Mở cẩm nang', 'Open handbook'),
+                  _tr(L10nService().translate('home_mcmnang_75f237'), 'Open handbook'),
                   style: _labelStyle(color: Colors.white),
                 ),
               ),
@@ -509,7 +522,7 @@ class UpdateTab extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.support_agent_rounded, size: 18),
                 label: Text(
-                  _tr('Chat hỗ trợ', 'Support chat'),
+                  _tr(L10nService().translate('home_chathtr_789f29'), 'Support chat'),
                   style: _labelStyle(color: const Color(0xFF334155)),
                 ),
               ),
@@ -520,10 +533,10 @@ class UpdateTab extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildMiniStatusCard(
-                  _tr('Tài liệu đã rà soát', 'Docs reviewed'),
+                  _tr(L10nService().translate('home_tiliursot_29e838'), 'Docs reviewed'),
                   '19/04/2026',
                   _tr(
-                    'Giới thiệu, hướng dẫn, bảo mật, cookie và điều khoản.',
+                    L10nService().translate('home_giithiuhng_541e3c'),
                     'About, guide, privacy, cookie, and terms documents.',
                   ),
                   Colors.white,
@@ -532,10 +545,10 @@ class UpdateTab extends StatelessWidget {
               SLSpacing.w12,
               Expanded(
                 child: _buildMiniStatusCard(
-                  _tr('Trạng thái hỗ trợ', 'Support status'),
+                  _tr(L10nService().translate('home_trngthihtr_e796c9'), 'Support status'),
                   'Online',
                   _tr(
-                    'Email hỗ trợ, chat trong app và trang web công khai.',
+                    L10nService().translate('home_emailhtrch_d34a60'),
                     'Support email, in-app chat, and public web pages.',
                   ),
                   const Color(0xFFFFF8FB),
@@ -551,9 +564,9 @@ class UpdateTab extends StatelessWidget {
 
   Widget _buildUpcomingEventsBoard(BuildContext context) {
     return _buildPanel(
-      title: _tr('Nhóm tính năng đang có', 'Current feature groups'),
+      title: _tr(L10nService().translate('home_nhmtnhnnga_bd84d9'), 'Current feature groups'),
       subtitle: _tr(
-        'Tóm tắt nhanh các cụm tính năng đang có trong bản hiện tại của SoulLocket.',
+        L10nService().translate('home_tmttnhanhc_0268ff'),
         'A quick summary of the feature groups available in the current SoulLocket build.',
       ),
       child: Column(
@@ -561,10 +574,10 @@ class UpdateTab extends StatelessWidget {
           _buildRoadmapItem(
             context,
             Icons.people_alt_rounded,
-            _tr('Community, nhắn tin và gọi',
+            _tr(L10nService().translate('home_communityn_852100'),
                 'Community, messaging, and calls'),
             _tr(
-              'App hiện có community feed, chat chi tiết, chat nhóm, gọi audio/video và luồng xem cùng nhau trong phạm vi các màn đã triển khai.',
+              L10nService().translate('home_apphinccom_3e94dd'),
               'The app currently includes a community feed, direct chat, group chat, audio/video calls, and watch-together flows where those screens are available.',
             ),
             const Color(0xFFFFF8E1),
@@ -574,9 +587,9 @@ class UpdateTab extends StatelessWidget {
           _buildRoadmapItem(
             context,
             Icons.favorite_rounded,
-            _tr('Đáng chú ý cho cặp đôi', 'Important for couples'),
+            _tr(L10nService().translate('home_ngchchocpi_dbb10a'), 'Important for couples'),
             _tr(
-              'SoulLocket hiện được thiết kế theo hướng hai bạn dùng chung một tài khoản. Để dùng cùng nhau, cả hai chỉ cần đăng nhập bằng cùng email và mật khẩu, hoặc cùng đúng phương thức đăng nhập đã tạo tài khoản trước đó. Hiện tại app chưa có bất kỳ cơ chế ghép nối, pair code, quét QR hay liên kết hai tài khoản riêng biệt với nhau.',
+              L10nService().translate('home_soullocket_ab23d4'),
               'SoulLocket is currently designed for two people to share one account. To use it together, both people simply sign in with the same email and password, or with the exact same login method originally used for that account. At this time, the app does not provide any pairing flow, pair code, QR join flow, or account-linking system between two separate accounts.',
             ),
             const Color(0xFFF3E5F5),
@@ -586,11 +599,11 @@ class UpdateTab extends StatelessWidget {
           _buildRoadmapItem(
             context,
             Icons.apps_rounded,
-            _tr('Nhật ký, tiện ích và quyền lợi',
+            _tr(L10nService().translate('home_nhtktinchv_26aa94'),
                 'Diary, utilities, and access'),
             _tr(
-              'Các khu nhật ký, game, quà tặng, tarot, tài chính, Secret Vault, Time Capsule, AI hỗ trợ, PRO/mua gói và quảng cáo được hiển thị theo phạm vi màn hình và quyền truy cập hiện có.',
-              'Diary, games, gift flows, tarot, finance, Secret Vault, Time Capsule, AI support, PRO purchases, and ads are available according to the screens and access level in this build.',
+              L10nService().translate('home_cckhunhtkg_2626f2'),
+              'Diary, games, gift flows, tarot, finance, Secret Vault, Time Capsule, AI support, and ads are available according to the screens and access level in this build.',
             ),
             const Color(0xFFE8F5E9),
             const Color(0xFF388E3C),
@@ -600,7 +613,7 @@ class UpdateTab extends StatelessWidget {
             _buildRoadmapItem(
               context,
               Icons.public_rounded,
-              _tr('Ứng dụng và truy cập web', 'App and web access'),
+              _tr(L10nService().translate('home_ngdngvtruy_f3be62'), 'App and web access'),
               _tr(
                 'Ngoài bản app, tài liệu công khai và một số luồng hỗ trợ có thể truy cập qua web tại ${AppConfig.webHost}. Trải nghiệm và phạm vi tính năng trên web có thể khác bản ứng dụng.',
                 'Besides the app build, public documents and some support flows are available on the web at ${AppConfig.webHost}. The web experience and feature scope may differ from the app.',
@@ -618,9 +631,9 @@ class UpdateTab extends StatelessWidget {
 
   Widget _buildQuickActions(BuildContext context) {
     return _buildPanel(
-      title: _tr('Truy cập nhanh', 'Quick access'),
+      title: _tr(L10nService().translate('home_truycpnhan_7f5e55'), 'Quick access'),
       subtitle: _tr(
-        'Các mục quan trọng nhất được gom vào một chỗ để mở nhanh.',
+        L10nService().translate('home_ccmcquantr_9f1e17'),
         'The most important items are grouped here for quick access.',
       ),
       child: GridView.count(
@@ -632,17 +645,17 @@ class UpdateTab extends StatelessWidget {
         childAspectRatio: 1.65,
         children: [
           _buildQuickCard(
-            _tr('Hướng dẫn sử dụng', 'Usage guide'),
+            _tr(L10nService().translate('home_hngdnsdng_14c212'), 'Usage guide'),
             Icons.book_rounded,
             const Color(0xFF2196F3),
             () => _openDoc(
               context,
-              title: _tr('Hướng dẫn sử dụng app', 'App usage guide'),
+              title: _tr(L10nService().translate('home_hngdnsdnga_1d5442'), 'App usage guide'),
               assetPath: 'assets/docs/huong_dan.html',
             ),
           ),
           _buildQuickCard(
-            _tr('Liên hệ hệ thống', 'Contact support'),
+            _tr(L10nService().translate('home_linhhthng_fc8a3f'), 'Contact support'),
             Icons.headset_mic_rounded,
             const Color(0xFF263238),
             () => _openExternal(
@@ -656,13 +669,13 @@ class UpdateTab extends StatelessWidget {
             ),
           ),
           _buildQuickCard(
-            _tr('Chat với admin', 'Chat with admin'),
+            _tr(L10nService().translate('home_chatviadmi_6daadf'), 'Chat with admin'),
             Icons.smart_toy_rounded,
             const Color(0xFF0288D1),
             () => _openSupportContact(context),
           ),
           _buildQuickCard(
-            _tr('Nhận tin mới', 'Latest news'),
+            _tr(L10nService().translate('home_nhntinmi_fa749d'), 'Latest news'),
             Icons.favorite_rounded,
             const Color(0xFFF06292),
             () => _showNewsSheet(context),
@@ -674,9 +687,9 @@ class UpdateTab extends StatelessWidget {
 
   Widget _buildRoadmapBoard(BuildContext context) {
     return _buildPanel(
-      title: _tr('Điểm cập nhật gần đây', 'Recent updates'),
+      title: _tr(L10nService().translate('home_imcpnhtgny_2402af'), 'Recent updates'),
       subtitle: _tr(
-        'Các thay đổi đã lên bản và đang phản ánh trong ứng dụng hiện tại.',
+        L10nService().translate('home_ccthayilnb_86d55f'),
         'Changes that are already shipped and reflected in the current app.',
       ),
       child: Column(
@@ -684,9 +697,9 @@ class UpdateTab extends StatelessWidget {
           _buildRoadmapItem(
             context,
             Icons.description_rounded,
-            _tr('Rà soát lại bộ tài liệu', 'Reviewed documentation set'),
+            _tr(L10nService().translate('home_rsotlibtil_c2bfa0'), 'Reviewed documentation set'),
             _tr(
-              'Đã cập nhật lại nội dung giới thiệu, hướng dẫn, bảo mật, cookie, điều khoản và hướng dẫn xóa dữ liệu theo đúng phạm vi tính năng đang có.',
+              L10nService().translate('home_cpnhtlinid_80e47a'),
               'About, guide, privacy, cookie, terms, and deletion documents were revised to match the current feature scope.',
             ),
             const Color(0xFFFFF7FA),
@@ -696,9 +709,9 @@ class UpdateTab extends StatelessWidget {
           _buildRoadmapItem(
             context,
             Icons.public_rounded,
-            _tr('Quản lý bạn bè mới', 'New friends management'),
+            _tr(L10nService().translate('home_qunlbnbmi_f15152'), 'New friends management'),
             _tr(
-              'Tab Bạn bè, Lời mời và Tìm kiếm đã được đưa vào luồng quản lý bạn bè.',
+              L10nService().translate('home_tabbnblimi_e6a654'),
               'Friends, Requests, and Search are now part of the friend management flow.',
             ),
             const Color(0xFFF7FBFF),
@@ -708,7 +721,7 @@ class UpdateTab extends StatelessWidget {
           _buildRoadmapItem(
             context,
             Icons.bug_report_rounded,
-            _tr('Tối ưu và sửa lỗi nền', 'Optimization and core fixes'),
+            _tr(L10nService().translate('home_tiuvsalinn_407716'), 'Optimization and core fixes'),
             _tr(
               'Đã làm gọn một số lớp giao diện tiện ích và xử lý lỗi "ancestor path" khi người dùng tạo nhà mới.',
               'The utilities surface was simplified and the "ancestor path" error when creating a new house was fixed.',
@@ -721,21 +734,21 @@ class UpdateTab extends StatelessWidget {
             context,
             Icons.auto_awesome_rounded,
             _tr(
-              'Các tính năng thú vị cho cặp đôi',
+              L10nService().translate('home_cctnhnngth_2479da'),
               'Fun features for couples',
             ),
             Platform.isIOS
                 ? _tr(
-                    'Khám phá thêm các tính năng thú vị dành cho cặp đôi trong ứng dụng.',
+                    L10nService().translate('home_khmphthmcc_928269'),
                     'Explore more fun features for couples in the app.',
                   )
                 : _tr(
-                    'Khám phá thêm các tính năng thú vị dành cho cặp đôi, ấn vào đây để chuyển hướng sang trang tổng hợp tính năng.',
+                    L10nService().translate('home_khmphthmcc_0ebf20'),
                     'Explore more fun features for couples, tap here to open the feature page.',
                   ),
             const Color(0xFFFFF9F2),
             const Color(0xFFFB8C00),
-            linkText: Platform.isIOS ? null : _tr('ấn vào đây', 'tap here'),
+            linkText: Platform.isIOS ? null : _tr(L10nService().translate('home_nvoy_41b59d'), 'tap here'),
             linkUri: Platform.isIOS ? null : _webAppUri,
           ),
         ],
@@ -745,73 +758,95 @@ class UpdateTab extends StatelessWidget {
 
   Widget _buildGuideBoard(BuildContext context) {
     return _buildPanel(
-      title: _tr('Hướng dẫn và chính sách', 'Guides and policies'),
+      title: _tr(L10nService().translate('home_hngdnvchnh_546b71'), 'Guides and policies'),
       subtitle: _tr(
-        'Mở nhanh bộ tài liệu đã được rà soát lại theo đúng tính năng hiện có.',
+        L10nService().translate('home_mnhanhbtil_b2996f'),
         'Open the reviewed document set aligned with the features currently available.',
       ),
       child: Column(
         children: [
           _buildGuideAction(
-            _tr('Giới thiệu về SoulLocket', 'About SoulLocket'),
+            _tr(L10nService().translate('home_giithiuvso_07b6ae'), 'About SoulLocket'),
             Icons.info_rounded,
             const Color(0xFF00695C),
             () => _openDoc(
               context,
-              title: _tr('Giới thiệu về SoulLocket', 'About SoulLocket'),
+              title: _tr(L10nService().translate('home_giithiuvso_07b6ae'), 'About SoulLocket'),
               assetPath: 'assets/docs/about.html',
             ),
           ),
           SLSpacing.h12,
           _buildGuideAction(
-            _tr('Mở hướng dẫn sử dụng app', 'Open the app guide'),
+            _tr(L10nService().translate('home_mhngdnsdng_ccfed6'), 'Open the app guide'),
             Icons.menu_book_rounded,
             const Color(0xFF2196F3),
             () => _openDoc(
               context,
-              title: _tr('Hướng dẫn sử dụng app', 'App usage guide'),
+              title: _tr(L10nService().translate('home_hngdnsdnga_1d5442'), 'App usage guide'),
               assetPath: 'assets/docs/huong_dan.html',
             ),
           ),
           SLSpacing.h12,
           _buildGuideAction(
-            _tr('Chính sách bảo mật', 'Privacy Policy'),
+            _tr(L10nService().translate('home_hngdncitln_85abba'), 'First setup guide'),
+            Icons.rocket_launch_rounded,
+            const Color(0xFF7B1FA2),
+            () => _openDoc(
+              context,
+              title: _tr(L10nService().translate('home_hngdncitln_85abba'), 'First setup guide'),
+              assetPath: 'assets/docs/huong_dan_cai_dat_lan_dau.html',
+            ),
+          ),
+          SLSpacing.h12,
+          _buildGuideAction(
+            _tr(L10nService().translate('home_chnhschbom_98b319'), 'Privacy Policy'),
             Icons.privacy_tip_rounded,
             const Color(0xFFD81B60),
             () => _openDoc(
               context,
-              title: _tr('Chính sách bảo mật', 'Privacy Policy'),
+              title: _tr(L10nService().translate('home_chnhschbom_98b319'), 'Privacy Policy'),
               assetPath: 'assets/docs/privacy.html',
             ),
           ),
           SLSpacing.h12,
           _buildGuideAction(
-            _tr('Điều khoản sử dụng', 'Terms of Use'),
+            _tr(L10nService().translate('home_iukhonsdng_9a9c73'), 'Terms of Use'),
             Icons.gavel_rounded,
             const Color(0xFF6D4C41),
             () => _openDoc(
               context,
-              title: _tr('Điều khoản sử dụng', 'Terms of Use'),
+              title: _tr(L10nService().translate('home_iukhonsdng_9a9c73'), 'Terms of Use'),
               assetPath: 'assets/docs/terms.html',
             ),
           ),
           SLSpacing.h12,
           _buildGuideAction(
-            _tr('Chính sách Cookie', 'Cookie Policy'),
+            _tr(L10nService().translate('home_chnhschcoo_9209d0'), 'Cookie Policy'),
             Icons.cookie_rounded,
             const Color(0xFFF57C00),
             () => _openDoc(
               context,
-              title: _tr('Chính sách Cookie', 'Cookie Policy'),
+              title: _tr(L10nService().translate('home_chnhschcoo_9209d0'), 'Cookie Policy'),
               assetPath: 'assets/docs/cookie-policy.html',
             ),
           ),
           SLSpacing.h12,
           _buildGuideAction(
-            _tr('Hướng dẫn xóa dữ liệu', 'Data deletion guide'),
+            _tr(L10nService().translate('home_hngdnxadli_a627ed'), 'Data deletion guide'),
             Icons.warning_amber_rounded,
             const Color(0xFFE53935),
             () => _showDeleteGuide(context),
+          ),
+          SLSpacing.h12,
+          _buildGuideAction(
+            _tr(L10nService().translate('home_trangyucux_92da02'), 'Account deletion request page'),
+            Icons.open_in_new_rounded,
+            const Color(0xFFAD1457),
+            () => _openExternal(
+              context,
+              Uri.parse(AppConfig.deleteAccountPageUrl),
+              clipboardFallback: AppConfig.deleteAccountPageUrl,
+            ),
           ),
           SLSpacing.h12,
           Container(
@@ -826,8 +861,8 @@ class UpdateTab extends StatelessWidget {
             ),
             child: Text(
               _tr(
-                'Mỗi mục sẽ mở trực tiếp tài liệu đầy đủ. Cập nhật lần cuối: 19/04/2026.',
-                'Each item opens the full document directly. Last updated: 19/04/2026.',
+                L10nService().translate('home_mimcsmtrct_0fb470'),
+                'Each item opens the full document directly: about, app guide, first setup, privacy, terms, cookie, and data deletion. Last updated: 19/04/2026.',
               ),
               style: _bodyStyle(
                 color: const Color(0xFF64748B),
@@ -843,9 +878,9 @@ class UpdateTab extends StatelessWidget {
 
   Widget _buildSupportBoard(BuildContext context, {required bool isAdmin}) {
     return _buildPanel(
-      title: _tr('Kênh hỗ trợ', 'Support channels'),
+      title: _tr(L10nService().translate('home_knhhtr_c41104'), 'Support channels'),
       subtitle: _tr(
-        'Nếu bạn gặp lỗi, cần hỗ trợ tài khoản hoặc muốn góp ý tính năng, hãy dùng một trong các kênh dưới đây.',
+        L10nService().translate('home_nubngplicn_c74a63'),
         'If you hit an issue, need account help, or want to suggest a feature, use one of the channels below.',
       ),
       child: Column(
@@ -903,7 +938,7 @@ class UpdateTab extends StatelessWidget {
         SLSpacing.h4,
         Text(
           _tr(
-            '© 2026 SoulLocket • Tài liệu và kênh hỗ trợ trong ứng dụng.',
+            L10nService().translate('home_2026soullo_5cd3ca'),
             '© 2026 SoulLocket • In-app documents and support channels.',
           ),
           textAlign: TextAlign.center,

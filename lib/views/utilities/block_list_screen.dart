@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/house_service.dart';
@@ -113,15 +114,15 @@ class _BlockListScreenState extends State<BlockListScreen> {
       setState(() => _blockedHouses.remove(houseId));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã bỏ chặn người dùng.')));
+            SnackBar(content: Text(context.tr('util_bchnngidng_45d465'))));
       }
     } catch (e) {
       debugPrint('Unblock user failed: ${AppErrorMapper.resolve(e).message}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content:
-                Text('Chưa thể bỏ chặn người dùng lúc này. Vui lòng thử lại.'),
+                Text(context.tr('util_chathbchnn_060c07')),
           ),
         );
       }
@@ -135,19 +136,19 @@ class _BlockListScreenState extends State<BlockListScreen> {
     final hid = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Chặn theo mã nhà',
+        title: Text(context.tr('util_chntheomnh_515f87'),
             style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
         content: TextField(
           controller: ctrl,
-          decoration: const InputDecoration(hintText: 'Nhập mã nhà cần chặn'),
+          decoration: InputDecoration(hintText: context.tr('util_nhpmnhcnch_30480e')),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, null),
-              child: const Text('Hủy')),
+              child: Text(context.tr('util_hy_1e4050'))),
           TextButton(
               onPressed: () => Navigator.pop(context, ctrl.text.trim()),
-              child: const Text('Chặn')),
+              child: Text(context.tr('util_chn_483b6f'))),
         ],
       ),
     );
@@ -155,7 +156,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
     if (hid == _myHouseId) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Không thể tự chặn mình!')));
+            SnackBar(content: Text(context.tr('util_khngthtchn_81d0bf'))));
       }
       return;
     }
@@ -163,7 +164,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
     await _load();
     if (mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('✅ Đã chặn người dùng.')));
+          .showSnackBar(SnackBar(content: Text(context.tr('util_chnngidng_fa6f1b'))));
     }
   }
 
@@ -173,11 +174,11 @@ class _BlockListScreenState extends State<BlockListScreen> {
       extendBodyBehindAppBar: true,
       appBar: SLTheme.appBar(
         context,
-        'Danh sách chặn',
+        context.tr('util_danhschchn_a78b3d'),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.person_add_disabled),
-            tooltip: 'Chặn theo ID',
+            tooltip: context.tr('util_chntheoid_9e626b'),
             onPressed: _blockByIdDialog,
           ),
         ],
@@ -197,9 +198,9 @@ class _BlockListScreenState extends State<BlockListScreen> {
                     _blockedHouses.isEmpty
                         ? SLTheme.emptyStatePanel(
                             icon: Icons.shield_rounded,
-                            title: 'Không gian đang an toàn',
+                            title: context.tr('util_khnggianan_a63f27'),
                             subtitle:
-                                'Hiện chưa có nhà nào bị chặn. Bạn có thể thêm mã nhà nếu cần giữ riêng tư.',
+                                context.tr('util_hinchacnhn_165e73'),
                             accentColor: SLColors.danger,
                           )
                         : _buildBlockedList(),
@@ -263,7 +264,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Không gian an toàn',
+                  context.tr('util_khnggianan_61f5c7'),
                   style: SLTheme.quicksand(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -272,7 +273,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
                 ),
                 SLSpacing.h4,
                 Text(
-                  'Những nhà trong danh sách này sẽ không thể tương tác với hai bạn.',
+                  context.tr('util_nhngnhtron_c601c3'),
                   style: SLTheme.quicksand(
                     fontSize: 12.2,
                     fontWeight: FontWeight.w700,
@@ -284,7 +285,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
             ),
           ),
           SLSpacing.w12,
-          SLTheme.chip('${_blockedHouses.length} chặn', SLColors.danger),
+          SLTheme.chip(L10nService().format('util_blocked_count', {'count': _blockedHouses.length}), SLColors.danger),
         ],
       ),
     );
@@ -390,7 +391,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
             ),
             icon: const Icon(Icons.lock_open_rounded, size: 15),
             label: Text(
-              'Bỏ chặn',
+              context.tr('util_bchn_040028'),
               style: SLTheme.quicksand(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w900,

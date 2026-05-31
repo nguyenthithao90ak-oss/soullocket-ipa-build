@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/admob_service.dart';
@@ -19,7 +20,6 @@ import '../../services/security_service.dart';
 import '../../services/session/app_background_session_tracker.dart';
 import '../../services/session/session_connectivity_coordinator.dart';
 import '../../utils/app_error_mapper.dart';
-import '../../utils/services/consent_service.dart';
 import '../../utils/services/widget_service.dart';
 
 class AppEntryAuthState {
@@ -75,6 +75,10 @@ class AppEntryController {
 
   static const String _startupPermissionPromptedPrefsKey =
       'il_startup_permission_prompted_v2';
+  static const String _notificationPermissionPromptedPrefsKey =
+      'il_notification_permission_prompted_v1';
+  static const String _locationPermissionPromptedPrefsKey =
+      'il_location_permission_prompted_v1';
   static const Duration _deviceRegistrationCooldown = Duration(seconds: 15);
 
   final HouseService _houseService;
@@ -122,7 +126,8 @@ class AppEntryController {
       } catch (e) {
         final errorInfo = AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Không thể khởi tạo thông báo lúc này.',
+          fallbackMessage:
+              L10nService().translate('app_entry_khngthkhit_1be321'),
         );
         debugPrint('[AppEntry] Notification init failed: ${errorInfo.message}');
       }
@@ -160,9 +165,10 @@ class AppEntryController {
     } catch (e, _) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể khởi động ứng dụng lúc này.',
+        fallbackMessage: L10nService().translate('app_entry_khngthkhin_190761'),
       );
-      debugPrint('[AppEntry] Bootstrap failed or timed out: ${errorInfo.message}');
+      debugPrint(
+          '[AppEntry] Bootstrap failed or timed out: ${errorInfo.message}');
       return const AppEntryAuthState(
         isAuthenticated: true,
         isCheckingAuth: false,
@@ -220,7 +226,7 @@ class AppEntryController {
         context: context,
         scope: LockScope.app,
         houseId: houseId,
-        title: 'Khóa ứng dụng',
+        title: context.tr('app_entry_khangdng_a0f538'),
         reason: MilitaryLockService.scopeReason(LockScope.app),
       )
           .timeout(const Duration(seconds: 8), onTimeout: () {
@@ -235,7 +241,7 @@ class AppEntryController {
     } catch (e, _) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể kiểm tra khóa ứng dụng lúc này.',
+        fallbackMessage: L10nService().translate('app_entry_khngthkimt_8544a4'),
       );
       debugPrint('[AppEntry] checkAppLock failed: ${errorInfo.message}');
       return const AppEntryAuthState(
@@ -251,7 +257,7 @@ class AppEntryController {
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
     debugPrint(
-      '[AppEntry] Hệ thống báo thiếu RAM, đã dọn dẹp image cache.',
+      L10nService().translate('app_entry_appentryht_a627df'),
     );
   }
 
@@ -339,7 +345,7 @@ class AppEntryController {
     } catch (e, _) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể kiểm tra trạng thái thiết bị lúc này.',
+        fallbackMessage: L10nService().translate('app_entry_khngthkimt_823050'),
       );
       debugPrint('[AppEntry] isDeviceCompromised failed: ${errorInfo.message}');
       return null;
@@ -454,25 +460,33 @@ class AppEntryController {
     if (kIsWeb || !context.mounted) return;
     final activeContext = context;
 
-    final hasValidConsent = await ConsentService().hasValidConsent();
-    if (!hasValidConsent || !activeContext.mounted) {
-      return;
+    final prefs = await getPrefs();
+    final hasLegacyPrompted =
+        prefs.getBool(_startupPermissionPromptedPrefsKey) ?? false;
+    final hasPromptedNotification =
+        prefs.getBool(_notificationPermissionPromptedPrefsKey) ?? false;
+    final hasPromptedLocation =
+        prefs.getBool(_locationPermissionPromptedPrefsKey) ?? false;
+    if (!activeContext.mounted) return;
+
+    if (!activeContext.mounted) return;
+
+    var notificationGranted = false;
+    if (!hasPromptedNotification) {
+      notificationGranted =
+          await NotificationService().requestPermissionAndInit();
+      await prefs.setBool(_notificationPermissionPromptedPrefsKey, true);
+      if (!activeContext.mounted) return;
     }
 
-    final prefs = await getPrefs();
-    final hasPrompted =
-        prefs.getBool(_startupPermissionPromptedPrefsKey) ?? false;
-    if (hasPrompted || !activeContext.mounted) return;
+    var locationGranted = false;
+    if (!hasPromptedLocation) {
+      locationGranted =
+          await LocationService().requestPermission(context: activeContext);
+      await prefs.setBool(_locationPermissionPromptedPrefsKey, true);
+    }
 
-    if (!activeContext.mounted) return;
-
-    final notificationGranted =
-        await NotificationService().requestPermissionAndInit();
-    if (!activeContext.mounted) return;
-
-    final locationGranted =
-        await LocationService().requestPermission(context: activeContext);
-    if (locationGranted || notificationGranted) {
+    if ((locationGranted || notificationGranted) && !hasLegacyPrompted) {
       await prefs.setBool(_startupPermissionPromptedPrefsKey, true);
     }
   }
@@ -489,7 +503,7 @@ class AppEntryController {
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể khởi tạo trạng thái hiện diện lúc này.',
+        fallbackMessage: L10nService().translate('app_entry_khngthkhit_44915f'),
       );
       debugPrint('[AppEntry] Presence init deferred: ${errorInfo.message}');
     }
@@ -612,7 +626,7 @@ class AppEntryController {
     } catch (e, _) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Tác vụ nền chưa thể hoàn tất lúc này.',
+        fallbackMessage: L10nService().translate('app_entry_tcvnnchath_7a7b99'),
       );
       debugPrint('[AppEntry] $label failed: ${errorInfo.message}');
     }

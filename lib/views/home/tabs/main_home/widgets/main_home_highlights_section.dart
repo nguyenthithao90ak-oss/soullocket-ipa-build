@@ -47,7 +47,7 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
 //               ),
 //               SLSpacing.h8,
 //               Text(
-//                 L10nService().translate('Đang tải...'),
+//                 L10nService().translate(context.tr('home_angti_d5fe42')),
 //                 style: SLTheme.quicksand(
 //                   fontSize: 16,
 //                   fontWeight: FontWeight.bold,
@@ -83,7 +83,7 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
 //                     SLSpacing.w8,
 //                     Expanded(
 //                       child: Text(
-//                         'Kỷ Niệm Nổi Bật',
+//                         context.tr('home_knimnibt_0ed358'),
 //                         style: SLTheme.quicksand(
 //                           fontSize: 16,
 //                           fontWeight: FontWeight.w900,
@@ -141,7 +141,7 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
           SLSpacing.w12,
           Expanded(
             child: Text(
-              'Tháng này chưa có ảnh nổi bật nào hết. Thêm vài tấm ảnh xinh để góc này trông đầy đặn và đáng yêu hơn nhé.',
+              context.tr('home_thngnychac_96e02c'),
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -262,6 +262,27 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
                               ),
                             ),
                             child: const SizedBox.expand(),
+                          ),
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.28),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.32),
+                              ),
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.all(5),
+                              child: Icon(
+                                Icons.zoom_out_map_rounded,
+                                color: Colors.white,
+                                size: 13,
+                              ),
+                            ),
                           ),
                         ),
                       ],

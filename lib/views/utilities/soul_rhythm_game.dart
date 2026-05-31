@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
@@ -1457,10 +1458,10 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
         _isWatchingReviveAd = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-              '✨ Đặc quyền PRO: Hồi sinh miễn phí không cần xem quảng cáo!'),
-          backgroundColor: Color(0xFFE040FB),
+              context.tr('util_cquynprohi_0db3f1')),
+          backgroundColor: const Color(0xFFE040FB),
         ),
       );
       return;
@@ -1475,17 +1476,17 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
         _isWatchingReviveAd = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-              'Chưa tải được quảng cáo hồi sinh. Bạn có thể thử lại hoặc bỏ qua.'),
+              context.tr('util_chaticqung_d632bb')),
         ),
       );
       return;
     }
     _revivePlayer();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Hồi sinh thành công, tiếp tục quẩy thôi!'),
+      SnackBar(
+        content: Text(context.tr('util_hisinhthnh_a10f6b')),
       ),
     );
   }

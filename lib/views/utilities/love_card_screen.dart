@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -64,7 +65,7 @@ class LoveCardService {
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể gửi thiệp lúc này.',
+        fallbackMessage: L10nService().translate('util_chathgithi_8d3426'),
       );
       debugPrint('Error in sendCard: ${errorInfo.message}');
       rethrow;
@@ -363,9 +364,9 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Lần gửi thiệp trước đã bị gián đoạn.'),
+          content: Text(context.tr('util_lngithiptr_3fb76e')),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('util_thli_4dffdf'),
             onPressed: () {
               unawaited(_retryPendingSendCard());
             },
@@ -521,7 +522,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
             AppErrorMapper.resolve(
               e,
               fallbackMessage:
-                  'Chưa thể chọn ảnh cho thiệp lúc này. Hãy kiểm tra quyền thư viện rồi thử lại.',
+                  context.tr('util_chathchnnh_d25503'),
             ).message,
           ),
         ),
@@ -566,6 +567,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     String action = '',
     String entityId = '',
   }) async {
+    final sourceLabel = context.tr('util_thipyuthng_eee83e');
     try {
       final role = await _activityRole();
       await ActivityHistoryService.instance.add(
@@ -578,7 +580,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
         module: 'love_card',
         entityType: 'love_card',
         entityId: entityId,
-        sourceLabel: 'Thiệp yêu thương',
+        sourceLabel: sourceLabel,
       );
     } catch (_) {}
   }
@@ -591,6 +593,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
 
     final senderName = _resolveSenderName();
     final signature = _resolveSignature();
+    final fallbackMsg = context.tr('util_chathgithi_33ccc9');
     String? shareLink;
     String? imageUrl;
     var isSuccess = false;
@@ -660,10 +663,9 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage:
-            'Chưa thể gửi thiệp lúc này. Hãy kiểm tra kết nối rồi thử lại.',
+        fallbackMessage: fallbackMsg,
       );
-      debugPrint('Lỗi gửi thiệp: ${errorInfo.message}');
+      debugPrint(L10nService().format('util_love_card_send_debug_error', {'error': errorInfo.message}));
       if (!mounted) {
         return;
       }
@@ -705,7 +707,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Thiệp đã được gửi đi.')),
+      SnackBar(content: Text(context.tr('util_thipcgii_431480'))),
     );
   }
 
@@ -714,7 +716,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     if (displayName.isNotEmpty) {
       return displayName;
     }
-    return 'Người thương của bạn';
+    return context.tr('util_ngithngcab_27bf12');
   }
 
   String _resolveSenderName() {
@@ -808,20 +810,26 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     required String link,
     required String content,
   }) async {
+    final titleText = context.tr('util_mnhgibnmtt_646b7a');
+    final suffixText = context.tr('util_mthiptiy_0f4c6c');
+    final logText = context.tr('util_tolinkthip_2b94a7');
+    final logTitle = context.tr('util_tolinkthip_76b16f');
+    final copiedSnackbarText = context.tr('util_tolinkthip_c78849');
+
     await Clipboard.setData(ClipboardData(text: link));
     final preview =
         content.length > 100 ? '${content.substring(0, 100)}…' : content;
     final shareText = [
-      'Mình gửi bạn một tấm thiệp riêng nè.',
-      if (preview.isNotEmpty) 'Lời nhắn: $preview',
-      'Mở thiệp tại đây:',
+      titleText,
+      if (preview.isNotEmpty) L10nService().format('util_love_card_message_preview', {'message': preview}),
+      suffixText,
       link,
     ].join('\n\n');
 
     await SharePlus.instance.share(ShareParams(text: shareText));
     unawaited(_logLoveCardActivity(
-      text: 'đã tạo link thiệp yêu thương',
-      title: 'Đã tạo link thiệp',
+      text: logText,
+      title: logTitle,
       subtitle: content,
       action: 'create_link',
     ));
@@ -830,9 +838,9 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Đã tạo link thiệp và copy sẵn để bạn gửi đi.',
+          copiedSnackbarText,
         ),
       ),
     );
@@ -844,14 +852,18 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       return;
     }
 
+    final logText = context.tr('util_glinkthipy_8c9f58');
+    final logTitle = context.tr('util_glinkthip_88286a');
+    final deletedSnackbarText = context.tr('util_glinktthip_238370');
+
     await _svc.deleteCardLink(
       houseId: widget.houseId,
       cardId: cardId,
       shareId: (card['publicShareId'] ?? '').toString(),
     );
     unawaited(_logLoveCardActivity(
-      text: 'đã gỡ link thiệp yêu thương',
-      title: 'Đã gỡ link thiệp',
+      text: logText,
+      title: logTitle,
       subtitle: (card['content'] ?? '').toString(),
       action: 'delete_link',
       entityId: cardId,
@@ -861,7 +873,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã gỡ liên kết thiệp.')),
+      SnackBar(content: Text(deletedSnackbarText)),
     );
   }
 
@@ -877,7 +889,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     if (text.isNotEmpty) {
       return text;
     }
-    return 'Viết vài câu chân thành, người nhận sẽ mở ra và thấy ngay nội dung đẹp như một tấm thiệp riêng.';
+    return context.tr('util_vitvicuchn_98d4af');
   }
 
   int _unreadCount(List<Map<dynamic, dynamic>> cards) {

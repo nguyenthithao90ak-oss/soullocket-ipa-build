@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../../services/military_lock_service.dart';
 import '../security/device_trust_guard.dart';
@@ -129,7 +130,7 @@ class SettingsSecurityController {
         context: context,
         scope: LockScope.security,
         houseId: houseId,
-        title: 'Khu bảo mật',
+        title: context.tr('home_khubomt_2143a3'),
         reason: MilitaryLockService.scopeReason(LockScope.security),
         effectiveSettings: effectiveSettings,
       );

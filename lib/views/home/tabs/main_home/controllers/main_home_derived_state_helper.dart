@@ -47,15 +47,15 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
     final isSingle = relMode == 'single';
 
     final houseName = _houseSettings?['houseName'] ??
-        (isSingle ? 'Ngôi Nhà Của Tôi' : 'Ngôi Nhà Tình Yêu');
+        (isSingle ? context.tr('home_nginhcati_dd5d98') : context.tr('home_nginhtnhyu_dbebce'));
     final nameU1 =
         (_houseSettings?['nameU1']?.toString().trim().isNotEmpty ?? false)
             ? _houseSettings!['nameU1'].toString().trim()
-            : 'Bạn';
+            : context.tr('home_bn_1fd75b');
     final nameU2 =
         (_houseSettings?['nameU2']?.toString().trim().isNotEmpty ?? false)
             ? _houseSettings!['nameU2'].toString().trim()
-            : 'Người ấy';
+            : context.tr('home_ngiy_5bab37');
     final avtUser1 = _houseSettings?['avtUser1']?.toString().trim() ?? '';
     final avtUser2 = _houseSettings?['avtUser2']?.toString().trim() ?? '';
     final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
@@ -66,30 +66,32 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
     final storedTopLabel = _houseSettings?['countdownTopLabel']?.toString();
     final storedBottomLabel =
         _houseSettings?['countdownBottomLabel']?.toString();
+
     final countdownTopLabelSource = (storedTopLabel?.trim().isNotEmpty ?? false)
         ? storedTopLabel
         : _houseSettings?['greetingQuote']?.toString();
+
     final countdownBottomLabelSource =
         (storedBottomLabel?.trim().isNotEmpty ?? false)
             ? storedBottomLabel
             : _houseSettings?['dayUnit']?.toString();
     final resolvedCircleTopLabel = isSingle
         ? null
-        : _resolveCountdownLabel(countdownTopLabelSource, 'BÊN NHAU');
+        : _resolveCountdownLabel(countdownTopLabelSource, context.tr('home_bnnhau_d90054'));
     final resolvedCircleBottomLabel = isSingle
         ? null
-        : _resolveCountdownLabel(countdownBottomLabelSource, 'NGÀY');
+        : _resolveCountdownLabel(countdownBottomLabelSource, context.tr('home_ngy_48e4b0'));
     final circleTopLabel = isSingle
-        ? 'TUỔI CỦA TÔI'
+        ? context.tr('home_tuicati_5c654c')
         : _resolveCountdownLabel(
             _houseSettings?['greetingQuote']?.toString(),
-            'BÊN NHAU',
+            context.tr('home_bnnhau_d90054'),
           );
     final circleBottomLabel = isSingle
-        ? 'NGÀY TUỔI'
+        ? context.tr('home_ngytui_22bed4')
         : _resolveCountdownLabel(
             _houseSettings?['dayUnit']?.toString(),
-            'NGÀY',
+            context.tr('home_ngy_48e4b0'),
           );
     final screenWidth = MediaQuery.of(context).size.width;
     final responsiveCircleMax =

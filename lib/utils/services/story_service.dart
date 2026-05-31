@@ -12,13 +12,18 @@ class StoryService {
   final StorageService _storageService = StorageService();
 
   String _pendingStoryUploadKey(String houseId) =>
-      '$_pendingStoryUploadKeyPrefix$houseId';
+      '$_pendingStoryUploadKeyPrefix${houseId.trim()}';
 
   Future<void> uploadStory(
     String houseId,
     String authorName, {
     XFile? presetImage,
   }) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      throw Exception('Thiếu mã nhà để tải story.');
+    }
+    final normalizedAuthorName = authorName.trim();
     final picker = ImagePicker();
     final XFile? image = presetImage ??
         await AppLifecyclePresenceGuard.guard(
@@ -31,14 +36,14 @@ class StoryService {
         );
 
     if (image == null) return;
-    final pendingKey = _pendingStoryUploadKey(houseId);
+    final pendingKey = _pendingStoryUploadKey(normalizedHouseId);
     await PendingUploadService.instance.save(
       pendingKey,
       <String, dynamic>{'imagePath': image.path},
     );
 
     final upload = await _storageService.uploadPublicImage(
-      houseId,
+      normalizedHouseId,
       'story',
       image,
     );
@@ -48,78 +53,90 @@ class StoryService {
     }
 
     await _storageService.finalizePublicImageUpload(
-      houseId: houseId,
+      houseId: normalizedHouseId,
       sessionId: sessionId,
       target: 'story',
-      authorName: authorName,
+      authorName: normalizedAuthorName,
       blurHash: upload?.blurHash,
     );
     await PendingUploadService.instance.clear(pendingKey);
   }
 
   Future<bool> hasPendingStoryUpload(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return false;
     return await PendingUploadService.instance.load(
-          _pendingStoryUploadKey(houseId),
+          _pendingStoryUploadKey(normalizedHouseId),
         ) !=
         null;
   }
 
   Future<void> retryPendingStoryUpload(
       String houseId, String authorName) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
+    final pendingKey = _pendingStoryUploadKey(normalizedHouseId);
     final pending = await PendingUploadService.instance.load(
-      _pendingStoryUploadKey(houseId),
+      pendingKey,
     );
     if (pending == null) {
       return;
     }
     final imagePath = pending['imagePath']?.toString().trim() ?? '';
     if (imagePath.isEmpty) {
-      await PendingUploadService.instance
-          .clear(_pendingStoryUploadKey(houseId));
+      await PendingUploadService.instance.clear(pendingKey);
       return;
     }
     final file = XFile(imagePath);
     try {
       if (await file.length() <= 0) {
-        await PendingUploadService.instance.clear(
-          _pendingStoryUploadKey(houseId),
-        );
+        await PendingUploadService.instance.clear(pendingKey);
         return;
       }
     } catch (_) {
-      await PendingUploadService.instance
-          .clear(_pendingStoryUploadKey(houseId));
+      await PendingUploadService.instance.clear(pendingKey);
       return;
     }
-    await uploadStory(houseId, authorName, presetImage: file);
+    await uploadStory(normalizedHouseId, authorName, presetImage: file);
   }
 
   Stream<List<Map<String, dynamic>>> streamStories(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<List<Map<String, dynamic>>>.value(const []);
+    }
     return _dbRef
-        .child('houses/$houseId/stories')
+        .child('houses/$normalizedHouseId/stories')
         .orderByChild('ts')
         .limitToLast(20)
         .onValue
         .map((event) {
-      if (!event.snapshot.exists) return [];
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return [];
 
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       final List<Map<String, dynamic>> activeStories = [];
       final now = DateTime.now().millisecondsSinceEpoch;
 
       data.forEach((key, value) {
-        final story = Map<String, dynamic>.from(value as Map);
+        if (value is! Map) return;
+        final story = Map<String, dynamic>.from(value);
         story['id'] = key;
 
-        if (story['expiresAt'] > now) {
+        final expiresAt = (story['expiresAt'] as num?)?.toInt() ?? 0;
+        if (expiresAt > now) {
           activeStories.add(story);
         }
       });
 
       activeStories.sort(
-        (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0),
+        (a, b) => _asTimestamp(b['ts']).compareTo(_asTimestamp(a['ts'])),
       );
       return activeStories;
     });
+  }
+
+  int _asTimestamp(Object? value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

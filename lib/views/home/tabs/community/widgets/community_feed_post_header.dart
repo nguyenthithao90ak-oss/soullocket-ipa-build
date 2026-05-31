@@ -52,11 +52,11 @@ class _FeedPostHeader extends StatelessWidget {
                       content: Text(
                         isDeletedAuthor
                             ? _ct(
-                                'Tài khoản này đã bị xóa.',
+                                context.tr('home_tikhonnybx_58cc38'),
                                 'This account has been deleted.',
                               )
                             : _ct(
-                                'Người dùng này đã chọn ẩn danh.',
+                                context.tr('home_ngidngnych_cd2f2f'),
                                 'This user chose to stay anonymous.',
                               ),
                       ),
@@ -150,28 +150,28 @@ class _FeedPostHeader extends StatelessWidget {
                             children: [
                               if (isBlocked)
                                 _FeedRelationshipBadge(
-                                  label: _ct('Đã chặn', 'Blocked'),
+                                  label: _ct(context.tr('home_chn_7c554a'), 'Blocked'),
                                   icon: Icons.block_rounded,
                                   backgroundColor: const Color(0xFFFEE2E2),
                                   foregroundColor: const Color(0xFFB91C1C),
                                 )
                               else if (hasReceivedRequest)
                                 _FeedRelationshipBadge(
-                                  label: _ct('Chờ bạn duyệt', 'Waiting for you'),
+                                  label: _ct(context.tr('home_chbnduyt_112763'), 'Waiting for you'),
                                   icon: Icons.mark_email_unread_rounded,
                                   backgroundColor: const Color(0xFFDBEAFE),
                                   foregroundColor: const Color(0xFF1D4ED8),
                                 )
                               else if (hasSentRequest)
                                 _FeedRelationshipBadge(
-                                  label: _ct('Đã gửi lời mời', 'Invite sent'),
+                                  label: _ct(context.tr('home_gilimi_707fc7'), 'Invite sent'),
                                   icon: Icons.schedule_send_rounded,
                                   backgroundColor: const Color(0xFFEDE9FE),
                                   foregroundColor: const Color(0xFF6D28D9),
                                 )
                               else if (isFriend)
                                 _FeedRelationshipBadge(
-                                  label: _ct('Bạn bè', 'Friends'),
+                                  label: _ct(context.tr('home_bnb_411da0'), 'Friends'),
                                   icon: Icons.people_alt_rounded,
                                   backgroundColor: const Color(0xFFDCFCE7),
                                   foregroundColor: const Color(0xFF15803D),

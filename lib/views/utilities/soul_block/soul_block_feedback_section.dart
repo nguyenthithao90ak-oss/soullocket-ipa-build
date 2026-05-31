@@ -3,6 +3,7 @@ part of '../soul_block_game.dart';
 
 extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   Future<void> _initAudio() async {
+    final errorFallback = context.tr('util_khngthkhit_0ee520');
     try {
       _tapSfxBytes = _buildWaveBytes(
         <_SoulSfxTone>[
@@ -116,7 +117,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     } catch (error) {
       debugPrint('Soul Block audio init failed: ${AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Không thể khởi tạo âm thanh Soul Block lúc này.',
+        fallbackMessage: errorFallback,
       ).message}');
       _audioReady = false;
     }
@@ -135,6 +136,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   }
 
   Future<void> _initBgm() async {
+    final bgmErrorFallback = context.tr('util_khngthkhit_38747d');
     try {
       final source = await _getBgmSource();
       await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
@@ -144,7 +146,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     } catch (error) {
       debugPrint('Soul Block bgm init failed: ${AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Không thể khởi tạo nhạc nền Soul Block lúc này.',
+        fallbackMessage: bgmErrorFallback,
       ).message}');
     }
   }
@@ -280,6 +282,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   }
 
   Future<Uint8List?> _loadAudioAssetBytes(String assetPath) async {
+    final loadSfxErrorFallback = context.tr('util_khngthtihi_635113');
     try {
       final fileName = p.basename(assetPath);
       final localPath =
@@ -297,7 +300,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     } catch (e) {
       debugPrint('Soul Block: Error loading SFX ($assetPath): ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể tải hiệu ứng âm thanh cho Soul Block lúc này.',
+        fallbackMessage: loadSfxErrorFallback,
       ).message}');
       return null;
     }
@@ -491,6 +494,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     );
   }
 
+  // ignore: unused_element
   void _triggerExplosionEffect({
     required int clearedCount,
     required List<int> clearedRows,

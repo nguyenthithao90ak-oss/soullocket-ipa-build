@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -37,7 +38,8 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
   Future<void> _loadContent() async {
     try {
       final raw = await rootBundle.loadString(widget.assetPath);
-      final prepared = _prepareHtmlDocument(raw);
+      final processed = _processHtmlForPlatform(raw);
+      final prepared = _prepareHtmlDocument(processed);
 
       if (kIsWeb) {
         // Generate a unique-per-instance key so the factory isn't re-registered
@@ -99,7 +101,13 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
   String _prepareHtmlDocument(String html) {
     const viewport =
         '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
-    const sharedStyles = '''
+    final isIOS = !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS);
+    final platformStyles = isIOS ? '''
+  #vip, a[href="#vip"] {
+    display: none !important;
+  }
+''' : '';
+    final sharedStyles = '''
 <style id="sl-inject">
   :root { color-scheme: light; }
   html, body { 
@@ -189,6 +197,7 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
   .tech-card {
     margin-bottom: 14px !important;
   }
+  $platformStyles
 </style>
 ''';
     final hasHtml = RegExp(r'<html[\s>]', caseSensitive: false).hasMatch(html);
@@ -210,6 +219,115 @@ $sharedStyles
 </head><body>$html</body></html>''';
   }
 
+  String _processHtmlForPlatform(String html) {
+    final isIOS = !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS);
+    if (!isIOS) return html;
+
+    var result = html;
+
+    // 1. Process huong_dan.html
+    if (widget.assetPath.contains('huong_dan.html')) {
+      // Hide VIP/reward/giftcode section with flexible matching.
+      result = result.replaceAll(
+        RegExp(
+          r'''<section[^>]*id=["']vip["'][^>]*>[\s\S]*?</section>''',
+          caseSensitive: false,
+        ),
+        '',
+      );
+      result = result.replaceAll(
+        RegExp(
+          r'<h[1-6][^>]*>\s*\d+\.?\s*VIP[^<]*</h[1-6]>[\s\S]*?(?=<h[1-6][^>]*>\s*\d+\.?\s*Khắc phục sự cố|</section>|$)',
+          caseSensitive: false,
+        ),
+        '',
+      );
+
+      // Hide TOC/quick-nav links to VIP section.
+      result = result.replaceAll(
+        RegExp(
+          r'''<a[^>]*href=["']#vip["'][^>]*>[\s\S]*?</a>''',
+          caseSensitive: false,
+        ),
+        '',
+      );
+      result = result.replaceAll(
+        RegExp(
+          r'<a[^>]*>\s*\d+\.?\s*VIP[^<]*</a>',
+          caseSensitive: false,
+        ),
+        '',
+      );
+
+      // Renumber troubleshooting heading/link if needed.
+      result = result.replaceAll('7. Khắc phục sự cố', '6. Khắc phục sự cố');
+      result = result.replaceAll('7. Khắc phục sự cố thường gặp', '6. Khắc phục sự cố thường gặp');
+
+      // Remove VIP troubleshooting row.
+      result = result.replaceAll(
+        RegExp(
+          r'<tr>\s*<td>\s*VIP[^<]*</td>[\s\S]*?</tr>',
+          caseSensitive: false,
+        ),
+        '',
+      );
+
+      // Clean up text mentions.
+      result = result
+          .replaceAll(', VIP, reward', '')
+          .replaceAll('và một phần trạng thái VIP.', '.')
+          .replaceAll('và có thể bị giới hạn theo VIP hoặc reward.', '.')
+          .replaceAll('gói VIP, ', '');
+    }
+
+    // 2. Process terms.html
+    if (widget.assetPath.contains('terms.html')) {
+      // Hide section 7 (vip) completely
+      result = result.replaceFirst(
+        RegExp(r'<section\s+class="section"\s+id="vip">[\s\S]*?</section>'), 
+        ''
+      );
+      // Hide/remove VIP link in toc
+      result = result.replaceFirst(
+        RegExp(r'<a\s+href="#vip">5\. VIP, quảng cáo và phần thưởng</a>'), 
+        ''
+      );
+      // Renumber TOC
+      result = result
+        .replaceAll('6. Bảo mật và thiết bị', '5. Bảo mật và thiết bị')
+        .replaceAll('7. Giới hạn trách nhiệm', '6. Giới hạn trách nhiệm')
+        .replaceAll('8. Liên hệ', '7. Liên hệ');
+      // Renumber headings
+      result = result
+        .replaceAll('8. Bảo mật, khóa app và trách nhiệm của bạn', '7. Bảo mật, khóa app và trách nhiệm của bạn')
+        .replaceAll('9. Sở hữu trí tuệ của SoulLocket', '8. Sở hữu trí tuệ của SoulLocket')
+        .replaceAll('10. Tạm ngừng, khóa hoặc chấm dứt dịch vụ', '9. Tạm ngừng, khóa hoặc chấm dứt dịch vụ')
+        .replaceAll('11. Giới hạn trách nhiệm', '10. Giới hạn trách nhiệm')
+        .replaceAll('12. Chính sách liên quan', '11. Chính sách liên quan')
+        .replaceAll('13. Cập nhật điều khoản', '12. Cập nhật điều khoản')
+        .replaceAll('14. Liên hệ', '13. Liên hệ');
+      // Clean up text mentions
+      result = result
+        .replaceAll(', VIP và dịch vụ hỗ trợ', ' và dịch vụ hỗ trợ')
+        .replaceAll(', VIP, gọi video', ', gọi video')
+        .replaceAll('<li>Tính năng VIP/Premium, quảng cáo thưởng', '<li>Quảng cáo thưởng');
+    }
+
+    // 3. Process about.html
+    if (widget.assetPath.contains('about.html')) {
+      // Hide VIP card
+      result = result.replaceFirst(
+        RegExp(r'<div\s+class="card">\s*<strong>Có lớp miễn phí, thưởng và trả phí</strong>[\s\S]*?</div>'), 
+        ''
+      );
+      // Clean up text mentions
+      result = result
+        .replaceAll(', reward, VIP', '');
+    }
+
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget content;
@@ -222,7 +340,7 @@ $sharedStyles
             const Icon(Icons.error_outline, size: 48, color: Color(0xFFD81B60)),
             SLSpacing.h12,
             Text(
-              'Không thể tải nội dung',
+              context.tr('home_khngthtini_145744'),
               style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[600],
@@ -265,7 +383,7 @@ $sharedStyles
                       const CircularProgressIndicator(color: Color(0xFFD81B60)),
                       SLSpacing.h16,
                       Text(
-                        'Đang tải... ${(_progress * 100).toInt()}%',
+                        L10nService().format('home_loading_percent', {'percent': (_progress * 100).toInt()}),
                         style: const TextStyle(
                           color: Color(0xFFD81B60),
                           fontWeight: FontWeight.bold,

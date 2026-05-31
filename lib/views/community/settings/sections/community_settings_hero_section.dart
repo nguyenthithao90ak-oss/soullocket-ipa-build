@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../core/sl_theme.dart';
 import '../widgets/community_settings_components.dart';
@@ -106,14 +107,14 @@ class CommunitySettingsHeroSection extends StatelessWidget {
                         CommunitySettingsHeroChip(
                           icon: Icons.palette_outlined,
                           label: headerImageUrl.isNotEmpty
-                              ? 'Có ảnh nền'
+                              ? context.tr('comm_cnhnn_9e62ed')
                               : headerThemeLabel,
                         ),
                         CommunitySettingsHeroChip(
                           icon: Icons.verified_user_outlined,
                           label: searchPrivacy
-                              ? 'Cho phép tìm kiếm'
-                              : 'Ẩn khỏi tìm kiếm',
+                              ? context.tr('comm_chophptmki_81ba6e')
+                              : context.tr('comm_nkhitmkim_08ab73'),
                         ),
                         CommunitySettingsHeroChip(
                           icon: Icons.insights_rounded,
@@ -180,13 +181,13 @@ class CommunitySettingsHeroSection extends StatelessWidget {
                         CommunitySettingsHeroMetricChip(
                           icon: Icons.account_circle_outlined,
                           label: avatarUrl.isNotEmpty
-                              ? 'Avatar đã đặt'
-                              : 'Chưa có avatar',
+                              ? context.tr('comm_avatart_26ec1e')
+                              : context.tr('comm_chacavatar_5f4c6f'),
                         ),
                         CommunitySettingsHeroMetricChip(
                           icon: Icons.wallpaper_rounded,
                           label: headerImageUrl.isNotEmpty
-                              ? 'Ảnh nền đã đặt'
+                              ? context.tr('comm_nhnnt_5c4808')
                               : headerThemeLabel,
                         ),
                         CommunitySettingsHeroMetricChip(

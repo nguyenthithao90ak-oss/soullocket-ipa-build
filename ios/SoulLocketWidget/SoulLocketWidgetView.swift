@@ -245,7 +245,22 @@ private let widgetHeartEmojiPool: [String] = [
     "\u{1FA75}", // 🩵
     "\u{1F498}", // 💘
     "\u{2764}\u{FE0F}\u{200D}\u{1FA79}", // ❤️‍🩹
-    "\u{1F493}" // 💓
+    "\u{1F493}", // 💓
+    "\u{1F497}", // 💗
+    "\u{1F496}", // 💖
+    "\u{1F49D}", // 💝
+    "\u{1F48C}", // 💌
+    "\u{1F48B}", // 💋
+    "\u{1FAF6}", // 🫶
+    "\u{1FAC0}", // 🫀
+    "\u{1F4AB}\u{1F497}", // 💫💗
+    "\u{2661}\u{2726}", // ♡✦
+    "\u{2727}\u{2665}\u{FE0E}", // ✧♥︎
+    "\u{2765}\u{221E}", // ❥∞
+    "\u{10E6}\u{2661}", // ღ♡
+    "\u{263E}\u{2661}", // ☾♡
+    "\u{2661}\u{1FABD}", // ♡🪽
+    "\u{2726}\u{1F498}" // ✦💘
 ]
 
 private func resolveHeartEmoji(_ styleKey: String) -> String {
@@ -335,6 +350,13 @@ struct HeartClusterView: View {
 
             Text(activeEmoji)
                 .font(.system(size: scaled(42)))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [palette.primary, palette.secondary, palette.glow],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 .scaleEffect(pulse)
                 .offset(x: scaled(sway * 0.35), y: scaled(drift))
                 .shadow(
@@ -421,6 +443,40 @@ struct WidgetCenterVisualView: View {
                     referenceDate: Date()
                 )
             }
+        }
+    }
+}
+
+struct InteractiveWidgetCenterVisualView: View {
+    let data: CoupleWidgetData
+    let theme: WidgetTheme
+    let palette: HeartPalette
+    let heartSize: CGFloat
+    let diaryWidth: CGFloat
+    let diaryHeight: CGFloat
+
+    var body: some View {
+        if #available(iOS 17.0, *) {
+            Button(intent: SendQuickActionIntent(actionType: "heart")) {
+                WidgetCenterVisualView(
+                    data: data,
+                    theme: theme,
+                    palette: palette,
+                    heartSize: heartSize,
+                    diaryWidth: diaryWidth,
+                    diaryHeight: diaryHeight
+                )
+            }
+            .buttonStyle(.plain)
+        } else {
+            WidgetCenterVisualView(
+                data: data,
+                theme: theme,
+                palette: palette,
+                heartSize: heartSize,
+                diaryWidth: diaryWidth,
+                diaryHeight: diaryHeight
+            )
         }
     }
 }
@@ -606,7 +662,7 @@ struct SmallWidgetView: View {
 
     var body: some View {
         VStack(spacing: 7) {
-            WidgetCenterVisualView(
+            InteractiveWidgetCenterVisualView(
                 data: data,
                 theme: theme,
                 palette: palette,
@@ -623,13 +679,13 @@ struct SmallWidgetView: View {
 
             HStack(spacing: 5) {
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar1Path, name: data.name1, size: 30, accentColor: theme.accentColor)
+                    AvatarView(path: data.avatar1Path, name: data.name1, size: 36, accentColor: theme.accentColor)
                     OnlineDot(isOnline: data.isOnline1)
                         .offset(x: 2, y: 2)
                 }
 
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar2Path, name: data.name2, size: 30, accentColor: theme.accentColor)
+                    AvatarView(path: data.avatar2Path, name: data.name2, size: 36, accentColor: theme.accentColor)
                     OnlineDot(isOnline: data.isOnline2)
                         .offset(x: 2, y: 2)
                 }
@@ -663,18 +719,18 @@ struct MediumWidgetView: View {
                 stars: data.stars1,
                 avatarPath: data.avatar1Path,
                 theme: theme,
-                avatarSize: 44
+                avatarSize: 60
             )
             .frame(maxWidth: .infinity)
 
-            VStack(spacing: 5) {
-                WidgetCenterVisualView(
+            VStack(spacing: 4) {
+                InteractiveWidgetCenterVisualView(
                     data: data,
                     theme: theme,
                     palette: palette,
-                    heartSize: 58,
-                    diaryWidth: 56,
-                    diaryHeight: 70
+                    heartSize: 64,
+                    diaryWidth: 64,
+                    diaryHeight: 78
                 )
 
                 Text(data.resolvedDaysText(referenceDate: Date()))
@@ -693,12 +749,12 @@ struct MediumWidgetView: View {
                 stars: data.stars2,
                 avatarPath: data.avatar2Path,
                 theme: theme,
-                avatarSize: 44
+                avatarSize: 60
             )
             .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
     }
 }
 
@@ -721,12 +777,12 @@ struct LargeWidgetView: View {
                     stars: data.stars1,
                     avatarPath: data.avatar1Path,
                     theme: theme,
-                    avatarSize: 52
+                    avatarSize: 60
                 )
                 .frame(maxWidth: .infinity)
 
                 VStack(spacing: 5) {
-                    WidgetCenterVisualView(
+                    InteractiveWidgetCenterVisualView(
                         data: data,
                         theme: theme,
                         palette: palette,
@@ -751,7 +807,7 @@ struct LargeWidgetView: View {
                     stars: data.stars2,
                     avatarPath: data.avatar2Path,
                     theme: theme,
-                    avatarSize: 52
+                    avatarSize: 60
                 )
                 .frame(maxWidth: .infinity)
             }

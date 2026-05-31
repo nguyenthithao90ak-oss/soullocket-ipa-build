@@ -45,13 +45,25 @@ class PrivateMediaUrlService {
     }
     await user.getIdToken(true);
 
+    final normalizedHouseId = houseId.trim();
+    final normalizedMediaId = mediaId.trim();
+    final normalizedKind = kind.trim();
+    if (normalizedHouseId.isEmpty ||
+        normalizedMediaId.isEmpty ||
+        normalizedKind.isEmpty) {
+      throw Exception('Thiếu thông tin media cần mở.');
+    }
+
     try {
       final callable = _functions.httpsCallable('resolvePrivateMediaUrl');
       final response = await callable.call(<String, dynamic>{
-        'houseId': houseId.trim(),
-        'mediaId': mediaId.trim(),
-        'kind': kind.trim(),
+        'houseId': normalizedHouseId,
+        'mediaId': normalizedMediaId,
+        'kind': normalizedKind,
       });
+      if (response.data is! Map) {
+        throw Exception('Phản hồi media không hợp lệ.');
+      }
       final data = Map<String, dynamic>.from(response.data as Map);
       final url = data['url']?.toString().trim() ?? '';
       final expiresAt = (data['expiresAt'] as num?)?.toInt() ?? 0;

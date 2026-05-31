@@ -10,10 +10,10 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
         children: [
           _buildCardTitle(
             icon: Icons.visibility_rounded,
-            title: _isSingle ? 'Tần suất sử dụng' : 'Tương tác & quan tâm',
+            title: _isSingle ? L10nService().translate('home_tnsutsdng_72ed67') : L10nService().translate('home_tngtcquant_578a21'),
             subtitle: _isSingle
-                ? 'Lấy theo số lần mở app và chạm xem nhật ký'
-                : 'So sánh mức độ xem nhật ký và mở app của hai người',
+                ? L10nService().translate('home_lytheoslnm_cc9da8')
+                : L10nService().translate('home_sosnhmcxem_8fb417'),
           ),
           SLSpacing.h16,
           if (_isSingle)
@@ -24,9 +24,9 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
                 Expanded(
                   child: _buildPersonStatBlock(
                     name: insight.nameU1,
-                    primaryLabel: 'Xem nhật ký',
+                    primaryLabel: L10nService().translate('home_xemnhtk_37a828'),
                     primaryValue: insight.viewU1,
-                    secondaryLabel: 'Mở app',
+                    secondaryLabel: L10nService().translate('home_mapp_ab1833'),
                     secondaryValue: insight.openU1,
                     accent: const Color(0xFF1976D2),
                   ),
@@ -35,9 +35,9 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
                 Expanded(
                   child: _buildPersonStatBlock(
                     name: insight.nameU2,
-                    primaryLabel: 'Xem nhật ký',
+                    primaryLabel: L10nService().translate('home_xemnhtk_37a828'),
                     primaryValue: insight.viewU2,
-                    secondaryLabel: 'Mở app',
+                    secondaryLabel: L10nService().translate('home_mapp_ab1833'),
                     secondaryValue: insight.openU2,
                     accent: const Color(0xFFD81B60),
                   ),
@@ -85,7 +85,7 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
       children: [
         Expanded(
           child: _buildMiniMetric(
-            label: 'Xem nhật ký',
+            label: L10nService().translate('home_xemnhtk_37a828'),
             value: '${insight.viewU1}',
             color: const Color(0xFF1976D2),
           ),
@@ -93,7 +93,7 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
         SLSpacing.w12,
         Expanded(
           child: _buildMiniMetric(
-            label: 'Mở app',
+            label: L10nService().translate('home_mapp_ab1833'),
             value: '${insight.openU1}',
             color: const Color(0xFFD81B60),
           ),

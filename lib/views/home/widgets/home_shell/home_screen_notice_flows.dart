@@ -2,7 +2,7 @@ part of '../../home_screen.dart';
 
 extension _HomeScreenShellNoticeFlows on _HomeScreenState {
   String _formatPendingDeviceUnlockAt(int epochMs) {
-    if (epochMs <= 0) return 'sau đủ 12 giờ';
+    if (epochMs <= 0) return context.tr('home_sau12gi_12955f');
     final dt = DateTime.fromMillisecondsSinceEpoch(epochMs);
     final dd = dt.day.toString().padLeft(2, '0');
     final mm = dt.month.toString().padLeft(2, '0');
@@ -22,7 +22,8 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
 
       final effectiveSettings =
           await MilitaryLockService().getEffectiveLockSettings(
-        houseId: trustState.houseId.trim().isNotEmpty ? trustState.houseId : null,
+        houseId:
+            trustState.houseId.trim().isNotEmpty ? trustState.houseId : null,
       );
       final locksSecuritySettings = effectiveSettings.enabled &&
           effectiveSettings.isScopeEnabled(LockScope.security);
@@ -30,11 +31,11 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
 
       await SLNotice.showConfirmDialog(
         context,
-        title: 'Thiết bị đang chờ duyệt',
+        title: context.tr('home_thitbangch_91f2dd'),
         message:
             'Thiết bị này đang ở chế độ chờ duyệt. Bạn chưa thể thay đổi tên nhà, bảo mật, thông báo hay widget cho đến khi được duyệt trên thiết bị tin cậy hoặc đến ${_formatPendingDeviceUnlockAt(trustState.autoApproveAtMs)}. Avatar vẫn có thể đổi ở màn hình chính.',
-        confirmText: 'Đã hiểu',
-        cancelText: 'Đóng',
+        confirmText: context.tr('home_hiu_93c4c0'),
+        cancelText: context.tr('home_ng_f63d1e'),
       );
     } catch (_) {}
   }
@@ -47,7 +48,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final houseId = await _houseService.getCurrentHouseId();
     if (houseId == null || houseId.isEmpty) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     final pendingKey = 'il_single_connect_qr_pending_$houseId';
     if (prefs.getString(pendingKey) != '1') return;
 
@@ -68,11 +69,10 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
 
     final goNow = await SLNotice.showConfirmDialog(
       context,
-      title: 'KẾT NỐI VỚI NGƯỜI ẤY',
-      message:
-          'Bạn đang ở luồng Độc thân. Nếu sau này muốn kết nối với người ấy, hãy mở QR để ghép đôi nhanh nhé. Thông báo này chỉ hiện đúng một lần khi vừa tạo tài khoản xong.',
-      confirmText: 'QUÉT MÃ QR',
-      cancelText: 'ĐỂ SAU',
+      title: context.tr('home_ktnivingiy_5bb8af'),
+      message: context.tr('home_bnanglungc_870f3e'),
+      confirmText: context.tr('home_qutmqr_93889d'),
+      cancelText: context.tr('home_sau_6d37db'),
     );
 
     if (!mounted || goNow != true) return;
@@ -92,7 +92,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final houseId = await _houseService.getCurrentHouseId();
     if (houseId == null || houseId.isEmpty) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     final pendingKey = 'il_first_setup_guide_pending_$houseId';
     if (prefs.getString(pendingKey) != '1') return;
     await prefs.remove(pendingKey);
@@ -112,7 +112,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final houseId = await _houseService.getCurrentHouseId();
     if (houseId == null || houseId.isEmpty || !mounted) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     final settings = await _houseSettingsService.fetchSettings(houseId);
     final isSingle =
         settings?.isSingle ?? (prefs.getString('il_rel_mode') == 'single');
@@ -128,381 +128,60 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     required String houseId,
     required bool isSingle,
   }) async {
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        final screenWidth = MediaQuery.sizeOf(ctx).width;
-        final dialogWidth = (screenWidth - 20).clamp(280.0, 440.0);
+    if (!mounted) return;
+    if (_navCollapsed) {
+      _navCollapsed = false;
+      await Future<void>.delayed(const Duration(milliseconds: 220));
+    }
 
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 18),
-          child: Container(
-            width: dialogWidth,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFFBFD), Color(0xFFFFEFF6)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFD81B60).withValues(alpha: 0.16),
-                  blurRadius: 28,
-                  offset: const Offset(0, 16),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFE3F0),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: const Color(0xFFFFB7D1),
-                        ),
-                      ),
-                      child: Text(
-                        'HƯỚNG DẪN CÀI ĐẶT LẦN ĐẦU',
-                        style: SLTheme.quicksand(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFD81B60),
-                          letterSpacing: 0.55,
-                        ),
-                      ),
-                    ),
-                    SLSpacing.h12,
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF7AAE), Color(0xFFD81B60)],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.auto_awesome_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        SLSpacing.w12,
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Thiết lập nhanh để dùng app mượt ngay từ đầu',
-                                style: SLTheme.quicksand(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: SLColors.textPrimary,
-                                  height: 1.2,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Bảng này chỉ hiện một lần sau khi tạo nhà. Bạn có thể mở lại trong Cài đặt > Hỗ trợ & Luật.',
-                                style: SLTheme.quicksand(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: SLColors.textSecondary,
-                                  height: 1.45,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SLSpacing.h16,
-                    _buildFirstSetupGuideStep(
-                      index: 1,
-                      icon: Icons.home_rounded,
-                      color: const Color(0xFFD81B60),
-                      title: 'Hoàn thiện thông tin ngôi nhà',
-                      description:
-                          'Đặt tên nhà, tên hiển thị và kiểm tra chế độ Độc thân/Couple để các màn sau chạy đúng luồng.',
-                    ),
-                    const SizedBox(height: 10),
-                    _buildFirstSetupGuideStep(
-                      index: 2,
-                      icon: Icons.pin_outlined,
-                      color: const Color(0xFF8E24AA),
-                      title: 'Bật mã PIN bảo vệ',
-                      description:
-                          'Vào Cài đặt > Bảo mật để khóa app bằng mã PIN trước, tránh người khác mở nhầm nhật ký hay dữ liệu riêng.',
-                    ),
-                    const SizedBox(height: 10),
-                    _buildFirstSetupGuideStep(
-                      index: 3,
-                      icon: Icons.palette_outlined,
-                      color: const Color(0xFF1976D2),
-                      title: 'Chỉnh giao diện và nhạc nền',
-                      description:
-                          'Mục Giao diện cho phép đổi theme, hiệu ứng rơi, font chữ và nhạc nền để nhà nhìn đúng gu của bạn.',
-                    ),
-                    const SizedBox(height: 10),
-                    _buildFirstSetupGuideStep(
-                      index: 4,
-                      icon: Icons.menu_book_rounded,
-                      color: const Color(0xFF2E7D32),
-                      title: 'Viết mục nhật ký đầu tiên',
-                      description:
-                          'Vào tab Nhật ký để thử Tâm tư hoặc Kỷ niệm. Đây là cách nhanh nhất để kiểm tra app đã lưu dữ liệu đúng chưa.',
-                    ),
-                    const SizedBox(height: 10),
-                    _buildFirstSetupGuideStep(
-                      index: 5,
-                      icon: isSingle
-                          ? Icons.qr_code_scanner_rounded
-                          : Icons.widgets_rounded,
-                      color: const Color(0xFFEF6C00),
-                      title: isSingle
-                          ? 'Kết nối với người ấy khi sẵn sàng'
-                          : 'Khám phá Tiện ích và Cộng đồng',
-                      description: isSingle
-                          ? 'Nếu muốn chuyển sang luồng đôi, hãy mở QR ghép đôi. Nếu chưa cần, bạn vẫn có thể dùng app một mình bình thường.'
-                          : 'Mở tab Tiện ích để dùng các công cụ nhanh và tab Cộng đồng để xem feed, bài đăng và nội dung chia sẻ.',
-                    ),
-                    const SizedBox(height: 14),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: const Color(0xFFF7C6DA),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Lối tắt nhanh',
-                            style: SLTheme.quicksand(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF7A5165),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _buildFirstSetupActionChip(
-                                label: 'Mở Cài đặt',
-                                icon: Icons.settings_rounded,
-                                color: const Color(0xFFD81B60),
-                                onTap: () {
-                                  Navigator.pop(ctx);
-                                  _openSettings();
-                                },
-                              ),
-                              _buildFirstSetupActionChip(
-                                label: 'Vào Nhật ký',
-                                icon: Icons.menu_book_rounded,
-                                color: const Color(0xFF2E7D32),
-                                onTap: () {
-                                  Navigator.pop(ctx);
-                                  _switchToTab(2);
-                                },
-                              ),
-                              _buildFirstSetupActionChip(
-                                label: 'Vào Tiện ích',
-                                icon: Icons.widgets_rounded,
-                                color: const Color(0xFF7E57C2),
-                                onTap: () {
-                                  Navigator.pop(ctx);
-                                  _switchToTab(3);
-                                },
-                              ),
-                              if (isSingle)
-                                _buildFirstSetupActionChip(
-                                  label: 'Quét QR',
-                                  icon: Icons.qr_code_scanner_rounded,
-                                  color: const Color(0xFFEF6C00),
-                                  onTap: () {
-                                    Navigator.pop(ctx);
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => CoupleConnectScreen(
-                                          houseId: houseId,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              _buildFirstSetupActionChip(
-                                label: 'Hướng dẫn đầy đủ',
-                                icon: Icons.open_in_new_rounded,
-                                color: const Color(0xFF1976D2),
-                                onTap: () {
-                                  Navigator.pop(ctx);
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const DocumentViewerScreen(
-                                        title: 'Hướng dẫn cài đặt lần đầu',
-                                        assetPath:
-                                            'assets/docs/huong_dan_cai_dat_lan_dau.html',
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    SLSpacing.h16,
-                    SizedBox(
-                      width: double.infinity,
-                      child: SLTheme.primaryButton(
-                        text: 'BẮT ĐẦU DÙNG APP',
-                        onPressed: () => Navigator.pop(ctx),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+    if (!mounted) return;
 
-  Widget _buildFirstSetupGuideStep({
-    required int index,
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String description,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.18)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '$index',
-              style: SLTheme.quicksand(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                color: color,
-              ),
-            ),
-          ),
-          SLSpacing.w12,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(icon, size: 16, color: color),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: SLTheme.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: SLColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  description,
-                  style: SLTheme.quicksand(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF6C6670),
-                    height: 1.45,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFirstSetupActionChip({
-    required String label,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: color.withValues(alpha: 0.18)),
+    await FirstSetupSpotlightGuide.show(
+      context,
+      steps: [
+        FirstSetupSpotlightStep(
+          targetKey: _firstGuideHomeHeroKey,
+          title: context.tr('home_trangchltr_ffe72e'),
+          description: context.tr('home_vngnyhinth_ae6dbe'),
+          icon: Icons.home_rounded,
+          color: const Color(0xFFD81B60),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 15, color: color),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: SLTheme.quicksand(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w900,
-                color: color,
-              ),
-            ),
-          ],
+        FirstSetupSpotlightStep(
+          targetKey: _firstGuideSettingsKey,
+          title: context.tr('home_mcittntny_e2bb85'),
+          description: context.tr('home_citchatikh_dada1e'),
+          icon: Icons.settings_rounded,
+          color: const Color(0xFF8E24AA),
         ),
-      ),
+        FirstSetupSpotlightStep(
+          targetKey: _firstGuideBottomNavKey,
+          title: context.tr('home_ylthanhiuh_5b0b9c'),
+          description: context.tr('home_bndngthanh_996c0a'),
+          icon: Icons.touch_app_rounded,
+          color: const Color(0xFF1976D2),
+        ),
+        FirstSetupSpotlightStep(
+          targetKey: _firstGuideDiaryTabKey,
+          title: context.tr('home_nhtklutmtv_49a161'),
+          description: context.tr('home_votabnyvit_09ef46'),
+          icon: Icons.menu_book_rounded,
+          color: const Color(0xFF2E7D32),
+        ),
+        FirstSetupSpotlightStep(
+          targetKey: _firstGuideUtilitiesTabKey,
+          title: context.tr('home_tinchlkhoc_2a15fe'),
+          description: context.tr('home_hmmtghichc_b3fd87'),
+          icon: Icons.widgets_rounded,
+          color: const Color(0xFF7E57C2),
+        ),
+        FirstSetupSpotlightStep(
+          targetKey: _firstGuideUpdateTabKey,
+          title: context.tr('home_theodicpnh_da00d0'),
+          description: context.tr('home_mcnygipbnx_4e92af'),
+          icon: Icons.notifications_rounded,
+          color: const Color(0xFFEF6C00),
+        ),
+      ],
     );
   }
 
@@ -510,7 +189,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     if (_didCheckNewUserWelcomeNotice) return;
     _didCheckNewUserWelcomeNotice = true;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await OfflineCacheService.getPrefs();
     if (prefs.getString('il_new_user_pro_trial_notice') != '1') return;
     await prefs.remove('il_new_user_pro_trial_notice');
     if (!mounted) return;
@@ -553,7 +232,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                 SLSpacing.w8,
                 Expanded(
                   child: Text(
-                    'CHÀO MỪNG BẠN ĐẾN VỚI SOULLOCKET',
+                    context.tr('home_chomngbnnv_b93a5d'),
                     style: SLTheme.quicksand(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
@@ -580,11 +259,28 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                     height: 1.45,
                   ),
                 ),
+                SLSpacing.h12,
+                _buildNewUserChecklistItem(
+                  icon: Icons.cloud_done_rounded,
+                  text: 'Kiểm tra đồng bộ để yên tâm khi đổi máy.',
+                ),
+                _buildNewUserChecklistItem(
+                  icon: Icons.photo_camera_rounded,
+                  text: 'Tạo kỷ niệm đầu tiên cho hai bạn.',
+                ),
+                _buildNewUserChecklistItem(
+                  icon: Icons.notifications_active_rounded,
+                  text: 'Bật nhắc ngày kỷ niệm và lời nhắn yêu thương.',
+                ),
+                _buildNewUserChecklistItem(
+                  icon: Icons.palette_rounded,
+                  text: 'Chọn theme hoặc chế độ hiệu năng phù hợp máy.',
+                ),
                 SLSpacing.h16,
                 SizedBox(
                   width: double.infinity,
                   child: SLTheme.primaryButton(
-                    text: 'MÌNH ĐÃ HIỂU',
+                    text: context.tr('home_mnhhiu_c4d94c'),
                     onPressed: () => Navigator.pop(context),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -597,8 +293,35 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     );
   }
 
+  Widget _buildNewUserChecklistItem({
+    required IconData icon,
+    required String text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: const Color(0xFFFF4B91)),
+          SLSpacing.w8,
+          Expanded(
+            child: Text(
+              text,
+              style: SLTheme.quicksand(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                color: SLColors.textPrimary,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _formatBreakupDateTime(int ts) {
-    if (ts <= 0) return 'không xác định';
+    if (ts <= 0) return context.tr('home_khngxcnh_fb806e');
     final dt = DateTime.fromMillisecondsSinceEpoch(ts);
     final day = dt.day.toString().padLeft(2, '0');
     final month = dt.month.toString().padLeft(2, '0');
@@ -619,12 +342,12 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     _isShowingBreakupEntryNotice = true;
 
     final title = request.isProcessing
-        ? 'Đang xử lý xóa dữ liệu'
+        ? context.tr('home_angxlxadli_9bb5cf')
         : request.isScheduled
-            ? 'Đã lên lịch xóa dữ liệu'
-            : 'Yêu cầu xóa đang chờ xác nhận';
+            ? context.tr('home_lnlchxadli_6e8028')
+            : context.tr('home_yucuxaangc_2cf9cc');
     final message = request.isProcessing
-        ? 'Hệ thống đang xử lý xóa dữ liệu vĩnh viễn của tài khoản này. Hiện không còn thao tác hoàn tác nào nữa.'
+        ? context.tr('home_hthngangxl_2041f8')
         : request.isScheduled
             ? 'Yêu cầu xóa hiện đã được lên lịch. Dữ liệu sẽ bị xóa vào ${_formatBreakupDateTime(request.deleteAt)} nếu bạn không rút lại trước thời điểm đó.'
             : 'Yêu cầu xóa hiện vẫn đang chờ xác nhận từ thiết bị tin cậy bên kia hoặc chờ đến ${_formatBreakupDateTime(request.expireAt)} để chuyển sang lịch xóa.';
@@ -685,7 +408,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                 ),
                 SLSpacing.h12,
                 Text(
-                  'Bạn có thể mở Cài đặt để xem chi tiết và rút lại yêu cầu nếu vẫn còn trong thời gian cho phép.',
+                  context.tr('home_bncthmcitx_672088'),
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -700,7 +423,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                       child: TextButton(
                         onPressed: () => Navigator.pop(ctx),
                         child: Text(
-                          'Đóng',
+                          context.tr('home_ng_f63d1e'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             color: const Color(0xFF7A6570),
@@ -711,7 +434,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                     SLSpacing.w12,
                     Expanded(
                       child: SLTheme.primaryButton(
-                        text: 'Mở Cài đặt',
+                        text: context.tr('home_mcit_8f1f98'),
                         onPressed: () {
                           Navigator.pop(ctx);
                           _openSettings();
@@ -743,20 +466,19 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     );
   }
 
-
   Future<bool> _handleExitAttempt() async {
     if (_currentIndex != 0) {
       _switchToTab(0);
-      _showExitHint('Đã quay về Trang chủ.');
+      _showExitHint(context.tr('home_quayvtrang_248b60'));
       return false;
     }
 
     final shouldExit = await SLNotice.showConfirmDialog(
       context,
-      title: 'Xác nhận thoát',
-      message: 'Bạn có chắc chắn muốn thoát ứng dụng không?',
-      confirmText: 'Thoát',
-      cancelText: 'Hủy',
+      title: context.tr('home_xcnhnthot_1aac22'),
+      message: context.tr('home_bncchcchnm_4da412'),
+      confirmText: context.tr('home_thot_8df314'),
+      cancelText: context.tr('home_hy_1e4050'),
     );
 
     if (shouldExit == true) {
@@ -767,6 +489,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
 
   Future<void> _moveAppToBackground() async {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      final fallbackMessage = context.tr('home_chathangdn_3f5a7a');
       try {
         await _HomeScreenState._appControlChannel
             .invokeMethod<bool>('moveTaskToBack');
@@ -774,7 +497,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
       } catch (e) {
         debugPrint('moveTaskToBack failed: ${AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Chưa thể đưa ứng dụng về nền lúc này.',
+          fallbackMessage: fallbackMessage,
         ).message}');
       }
     }

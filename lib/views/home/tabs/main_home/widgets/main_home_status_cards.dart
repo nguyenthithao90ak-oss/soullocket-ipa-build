@@ -41,7 +41,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         ],
                       ),
                       child: Text(
-                        'Ấn vào',
+                        context.tr('home_nvo_b99c83'),
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
@@ -60,7 +60,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
 
   String _formatInsightUpdatedAtText(int updatedAt) {
     if (updatedAt <= 0) {
-      return 'Cập nhật gần nhất không rõ thời điểm';
+      return context.tr('home_cpnhtgnnht_af26d6');
     }
 
     final now = DateTime.now();
@@ -68,7 +68,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     final diff = now.difference(updated);
 
     if (diff.inMinutes < 1) {
-      return 'Cập nhật gần nhất vừa xong';
+      return context.tr('home_cpnhtgnnht_d75b69');
     }
     if (diff.inHours < 1) {
       return 'Cập nhật gần nhất ${diff.inMinutes} phút trước';
@@ -114,7 +114,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Khoảnh khắc nổi bật',
+                      context.tr('home_khonhkhcni_903ef3'),
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
@@ -122,7 +122,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       ),
                     ),
                     Text(
-                      'Những điều ngọt ngào vừa được giữ lại',
+                      context.tr('home_nhngiungtn_061ab5'),
                       style: SLTheme.quicksand(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -203,7 +203,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isSingle ? 'Vị trí hiện tại' : 'Bản đồ của hai đứa',
+                        isSingle ? context.tr('home_vtrhinti_f5956d') : context.tr('home_bncahaia_12dcb1'),
                         style: SLTheme.quicksand(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
@@ -212,8 +212,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       ),
                       Text(
                         isSingle
-                            ? 'Xem vị trí hiện tại và điểm đã lưu của bạn'
-                            : 'Xem khoảng cách, vị trí và đường về với nhau',
+                            ? context.tr('home_xemvtrhint_58d61b')
+                            : context.tr('home_xemkhongcc_53f9b9'),
                         style: SLTheme.quicksand(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -253,7 +253,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   ),
                   SLSpacing.w12,
                   Text(
-                    'Mở ngay',
+                    context.tr('home_mngay_02e4c1'),
                     style: SLTheme.quicksand(
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
@@ -320,7 +320,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 SLSpacing.w8,
                 Flexible(
                   child: Text(
-                    isSingle ? 'TỔNG QUAN HÔM NAY' : 'HÀNH TRÌNH ĐÃ ĐI QUA',
+                    isSingle ? context.tr('home_tngquanhmn_0e1b6b') : context.tr('home_hnhtrnhiqu_cbcf59'),
                     maxLines: 1,
                     overflow: TextOverflow.visible,
                     style: SLTheme.quicksand(
@@ -342,7 +342,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             SLSpacing.h20,
             if (insight == null)
               Text(
-                'Đang gom thêm chút dữ liệu để hiện tổng quan đẹp hơn...',
+                context.tr('home_anggomthmc_0715ce'),
                 style: SLTheme.quicksand(
                   fontSize: 12,
                   color: SLColors.textTertiary,
@@ -376,7 +376,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Lời nhắn dịu dàng từ app',
+                      context.tr('home_linhndudng_83e5d9'),
                       style: SLTheme.quicksand(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,

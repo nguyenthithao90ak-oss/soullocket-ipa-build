@@ -1,7 +1,8 @@
-part of '../settings_tab.dart';
+﻿part of '../settings_tab.dart';
 
 extension _SettingsTabSupportLegalSection on _SettingsTabState {
   void _openPolicyOverview() {
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -14,6 +15,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _openTermsDocument() {
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -26,6 +28,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _openCookieDocument() {
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -38,6 +41,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _openAboutDocument() {
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -49,21 +53,50 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     );
   }
 
-  void _shareApp() {
+  Future<void> _shareApp() async {
     final storeUrl = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
         ? AppConfig.iOSStoreUrl
         : AppConfig.androidStoreUrl;
-    SharePlus.instance.share(
-      ShareParams(
-        text:
-            'SoulLocket - Ngôi nhà chung cho các cặp đôi. Cùng xây dựng không gian yêu thương, lưu giữ kỷ niệm và chơi game cùng nhau nhé! Tải ngay tại: $storeUrl',
-        subject: 'Tham gia SoulLocket cùng mình nhé!',
-      ),
+
+    final subject = 'SoulLocket â€” Nháº­t kÃ½ tÃ¬nh yÃªu cho 2 ngÆ°á»i';
+    final message = [
+      'SoulLocket â€” NgÃ´i nhÃ  chung cho cÃ¡c cáº·p Ä‘Ã´i ðŸ’–',
+      '',
+      'â€¢ Äáº¿m ngÃ y yÃªu (kÃ­nh má» siÃªu xinh)',
+      'â€¢ LÆ°u ká»· niá»‡m, áº£nh, nháº­t kÃ½',
+      'â€¢ Chat, widget mÃ n hÃ¬nh chÃ­nh, mini game',
+      '',
+      'Táº£i app táº¡i Ä‘Ã¢y ðŸ‘‡',
+      storeUrl,
+    ].join('\n');
+
+    if (!mounted) return;
+
+    // TrÃ¡nh cáº£m giÃ¡c Ä‘Æ¡ trÃªn emulator: copy sáºµn Ä‘á»ƒ ngÆ°á»i dÃ¹ng dÃ¹ng ngay,
+    // cÃ²n share sheet sáº½ má»Ÿ báº¥t Ä‘á»“ng bá»™ á»Ÿ ná»n.
+    try {
+      await Clipboard.setData(ClipboardData(text: message));
+      if (mounted) {
+        SLNotice.showInfo(context, 'ÄÃ£ copy ná»™i dung chia sáº»');
+      }
+    } catch (_) {}
+
+    unawaited(
+      Future<void>.delayed(const Duration(milliseconds: 50), () async {
+        try {
+          await SharePlus.instance.share(
+            ShareParams(
+              text: message,
+              subject: subject,
+            ),
+          ).timeout(const Duration(seconds: 3));
+        } catch (_) {
+          // ÄÃ£ cÃ³ fallback copy clipboard á»Ÿ trÃªn.
+        }
+      }),
     );
   }
-
-    
-    Future<void> _rateApp() async {
+  Future<void> _rateApp() async {
     try {
       final InAppReview inAppReview = InAppReview.instance;
       // Trong m?i tr??ng Debug, dialog th??ng kh?ng hi?n ra. Ta g?i m? th?ng Store.
@@ -71,20 +104,29 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         appStoreId: AppConfig.appStoreId,
       );
     } catch (e) {
-      debugPrint('L?i khi m? ??nh gi?: ');
+      debugPrint('L?i khi m? ??nh gi?: $e');
+      if (!mounted) return;
+      SLNotice.showError(context, context.tr('home_chathmtran_0217d6'));
     }
   }
 
   Future<void> _openSupportContact() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const UserSupportChatScreen(),
-      ),
-    );
+    if (!mounted) return;
+    try {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const UserSupportChatScreen(),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      SLNotice.showError(context, context.tr('home_chathmhtrl_290465'));
+    }
   }
 
   void _openGuideDocument() {
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -97,248 +139,69 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _openFirstSetupGuideDocument() {
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const DocumentViewerScreen(
-          title: 'Hướng dẫn cài đặt lần đầu',
+        builder: (_) => DocumentViewerScreen(
+          title: context.tr('home_hngdncitln_85abba'),
           assetPath: 'assets/docs/huong_dan_cai_dat_lan_dau.html',
         ),
       ),
     );
   }
 
-  Future<void> _replayFirstSetupGuide() async {
-    final replay = widget.onReplayFirstSetupGuide;
-    if (replay == null) {
-      _openFirstSetupGuideDocument();
-      return;
-    }
-    Navigator.of(context).maybePop();
-    await replay();
-  }
-
   void _openDeleteAccountRequestPage() {
     final uri = Uri.parse(AppConfig.deleteAccountPageUrl);
-    launchUrl(uri, mode: LaunchMode.externalApplication);
+    unawaited(
+      launchUrl(uri, mode: LaunchMode.externalApplication)
+          .catchError((_) => false),
+    );
   }
 
   void _logout() async {
     const logoutAccent = Color(0xFFD81B60);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        title: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: logoutAccent,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.logout_rounded,
-                color: Colors.white,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                context.tr('logout_confirm_btn'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w900,
-                  color: logoutAccent,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          context.tr('confirm_logout'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
-            color: Colors.black87,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              context.tr('cancel'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade600,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: logoutAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              context.tr('logout'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      await _authService.signOut();
-      if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
-    }
-  }
-
-  void _deleteAccount() async {
-    final houseId = _houseId?.trim();
-    if (houseId != null &&
-        houseId.isNotEmpty &&
-        !await _ensureCanModifySharedInfo()) {
-      return;
-    }
-
-    if (!mounted) return;
-    final canContinue = await _securityFlowGuard.guard(
-      context,
-      action: SensitiveActionType.deleteAccount,
-      houseId: _houseId,
-    );
-    if (!canContinue) {
-      return;
-    }
-
-    if (!mounted) return;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        title: Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded,
-                color: Colors.red, size: 32),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Gửi yêu cầu xóa tài khoản',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w900,
-                  color: Colors.red.shade700,
-                  fontSize: 18,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Bạn có chắc chắn muốn gửi yêu cầu xóa tài khoản và dữ liệu cá nhân của mình không?',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                fontSize: 15,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.shade200),
-              ),
-              child: Text(
-                '⚠️ Sau khi gửi yêu cầu, hệ thống sẽ lên lịch xóa tài khoản của bạn. Trong thời gian chờ, bạn có thể vẫn còn cơ hội hoàn tác tùy trạng thái xử lý. Khi đã xóa thì không thể khôi phục, dữ liệu sẽ bị xóa khỏi hệ thống. Dữ liệu nhà chung nếu có người kia vẫn còn sẽ không bị ảnh hưởng trực tiếp, nhưng tài khoản của bạn sẽ biến mất hoàn toàn.',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: Colors.red.shade900,
-                  height: 1.4,
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              context.tr('cancel'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade600,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade600,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              'Gửi yêu cầu xóa',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      // Xác nhận thêm lần nữa cho an toàn
-      if (!mounted) return;
-      final finalConfirm = await showDialog<bool>(
+    bool? confirm;
+    try {
+      confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          backgroundColor: Colors.red.shade50,
+          backgroundColor: Colors.white,
           title: Row(
             children: [
-              const Icon(Icons.dangerous_rounded, color: Colors.red, size: 32),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: logoutAccent,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Xác nhận lần cuối',
+                  context.tr('logout_confirm_btn'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
-                    color: Colors.red.shade900,
-                    fontSize: 18,
+                    color: logoutAccent,
                   ),
                 ),
               ),
             ],
           ),
           content: Text(
-            'Sau khi xác nhận, tài khoản của bạn sẽ được đưa vào hàng chờ xóa theo chính sách hiện tại. Tiếp tục?',
+            context.tr('confirm_logout'),
             style: SLTheme.quicksand(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               fontSize: 15,
-              color: Colors.red.shade900,
+              color: Colors.black87,
             ),
           ),
           actions: [
@@ -348,20 +211,20 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                 context.tr('cancel'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.bold,
-                  color: Colors.red.shade400,
+                  color: Colors.grey.shade600,
                 ),
               ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade800,
+                backgroundColor: logoutAccent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: Text(
-                'Xác nhận gửi yêu cầu',
+                context.tr('logout'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -371,28 +234,279 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           ],
         ),
       );
+    } catch (_) {
+      if (!mounted) return;
+      SLNotice.showError(context, context.tr('home_chathmxcnh_20e6af'));
+      return;
+    }
+    if (confirm == true) {
+      try {
+        await _authService.signOut();
+      } catch (_) {
+        if (!mounted) return;
+        SLNotice.showError(
+          context,
+          context.tr('home_chathngxut_9630af'),
+        );
+        return;
+      }
+      if (!mounted) return;
+      try {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      } catch (_) {}
+    }
+  }
+
+  void _deleteAccount() async {
+    final houseId = _houseId?.trim();
+    try {
+      if (houseId != null &&
+          houseId.isNotEmpty &&
+          !await _ensureCanModifySharedInfo()) {
+        return;
+      }
+
+      if (!mounted) return;
+      final canContinue = await _securityFlowGuard.guard(
+        context,
+        action: SensitiveActionType.deleteAccount,
+        houseId: _houseId,
+      );
+      if (!canContinue) {
+        return;
+      }
+    } catch (_) {
+      if (!mounted) return;
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+        _openDeleteAccountRequestPage();
+        return;
+      }
+      SLNotice.showError(
+        context,
+        context.tr('home_chathkimtr_01f860'),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    bool? confirm;
+    try {
+      confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          backgroundColor: Colors.white,
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded,
+                  color: Colors.red, size: 32),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.tr('home_giyucuxati_78b195'),
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w900,
+                    color: Colors.red.shade700,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.tr('home_bncchcchnm_59a1ba'),
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red.shade200),
+                ),
+                child: Text(
+                  context.tr('home_saukhigiyu_b063c7'),
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Colors.red.shade900,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                context.tr('cancel'),
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                context.tr('home_giyucuxa_d2e564'),
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+        _openDeleteAccountRequestPage();
+        return;
+      }
+      SLNotice.showError(context, context.tr('home_chathmxcnh_603dae'));
+      return;
+    }
+
+    if (confirm == true) {
+      // XÃ¡c nháº­n thÃªm láº§n ná»¯a cho an toÃ n
+      if (!mounted) return;
+      bool? finalConfirm;
+      try {
+        finalConfirm = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            backgroundColor: Colors.red.shade50,
+            title: Row(
+              children: [
+                const Icon(Icons.dangerous_rounded,
+                    color: Colors.red, size: 32),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.tr('home_xcnhnlncui_cc8537'),
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w900,
+                      color: Colors.red.shade900,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              context.tr('home_saukhixcnh_25a02e'),
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+                color: Colors.red.shade900,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(
+                  context.tr('cancel'),
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade400,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade800,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  context.tr('home_xcnhngiyuc_81446c'),
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      } catch (_) {
+        if (!mounted) return;
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+          _openDeleteAccountRequestPage();
+          return;
+        }
+        SLNotice.showError(context, context.tr('home_chathmxcnh_603dae'));
+        return;
+      }
 
       if (finalConfirm == true) {
         if (!mounted) return;
-        SLNotice.showInfo(context, 'Đang thiết lập lịch xóa tài khoản...');
+        SLNotice.showInfo(context, context.tr('home_angthitlpl_42ed13'));
         try {
           final result = await _authService.deleteAccount();
           if (!mounted) return;
           int days = result['delayDays'] ?? 3;
+          final scheduledAt = result['scheduledAt'];
+          if (scheduledAt is num) {
+            setState(() {
+              _pendingAccountDeletionAtMs = scheduledAt.toInt();
+              _pendingAccountDeletionUid = _auth.currentUser?.uid ?? '';
+            });
+          }
           SLNotice.showSuccess(
             context,
-            'Yêu cầu thành công. Tài khoản đã được lên lịch xóa sau $days ngày. Khi đã xóa thì không thể khôi phục.',
+            'YÃªu cáº§u thÃ nh cÃ´ng. TÃ i khoáº£n Ä‘Ã£ Ä‘Æ°á»£c lÃªn lá»‹ch xÃ³a sau $days ngÃ y. Khi Ä‘Ã£ xÃ³a thÃ¬ khÃ´ng thá»ƒ khÃ´i phá»¥c.',
           );
 
-          await _authService.signOut();
+          try {
+            await _authService.signOut();
+          } catch (_) {}
           if (!mounted) return;
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-            (route) => false,
-          );
+          try {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (route) => false,
+            );
+          } catch (_) {}
         } catch (e) {
           if (!mounted) return;
-          SLNotice.showError(context, 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.');
+          if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+            SLNotice.showInfo(
+              context,
+              context.tr('home_chathgitrc_22cb40'),
+            );
+            _openDeleteAccountRequestPage();
+            return;
+          }
+          SLNotice.showError(
+            context,
+            context.tr('home_chathhontt_de09e4'),
+          );
         }
       }
     }
@@ -408,7 +522,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tài liệu',
+            context.tr('home_tiliu_771458'),
             style: SLTheme.quicksand(
               fontSize: 14,
               fontWeight: FontWeight.w900,
@@ -417,15 +531,8 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           ),
           const SizedBox(height: 10),
           _buildLegalBtn(
-            icon: Icons.rocket_launch_rounded,
-            label: 'Mở hướng dẫn tương tác',
-            color: const Color(0xFFD81B60),
-            onTap: _replayFirstSetupGuide,
-          ),
-          const SizedBox(height: 10),
-          _buildLegalBtn(
             icon: Icons.article_rounded,
-            label: 'Tài liệu cài đặt lần đầu',
+            label: context.tr('home_tiliucitln_211bae'),
             color: const Color(0xFF7B1FA2),
             onTap: _openFirstSetupGuideDocument,
           ),
@@ -468,7 +575,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             onPressed: _openDeleteAccountRequestPage,
             icon: const Icon(Icons.open_in_new_rounded, size: 16),
             label: Text(
-              'Mở trang yêu cầu xóa ngoài app',
+              context.tr('home_mtrangyucu_d2e49c'),
               style: SLTheme.quicksand(fontWeight: FontWeight.w800),
             ),
           ),
@@ -477,4 +584,3 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     );
   }
 }
-

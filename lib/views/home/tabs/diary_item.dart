@@ -61,11 +61,11 @@ class DiaryItem extends StatelessWidget {
       }
 
       final lowered = trimmed.toLowerCase();
-      if (lowered == 'người yêu' ||
+      if (lowered == context.tr('home_ngiyu_ef6c08') ||
           lowered == 'nguoi yeu' ||
-          lowered == 'bạn nam' ||
+          lowered == context.tr('home_bnnam_b57724') ||
           lowered == 'ban nam' ||
-          lowered == 'bạn nữ' ||
+          lowered == context.tr('home_bnn_be46dc') ||
           lowered == 'ban nu') {
         return '';
       }
@@ -85,7 +85,7 @@ class DiaryItem extends StatelessWidget {
       rawName = normalizeDisplayName(houseNameForRole(authorRole));
     }
     if (rawName.isEmpty) {
-      rawName = isMyPost ? 'Tôi' : 'Người ấy';
+      rawName = isMyPost ? context.tr('home_ti_a843eb') : context.tr('home_ngiy_5bab37');
     }
 
     final displayName = rawName;
@@ -189,7 +189,7 @@ class DiaryItem extends StatelessWidget {
                   ),
                   SLSpacing.w8,
                   Text(
-                    L10nService().translate('Đã ghim tâm sự'),
+                    L10nService().translate(context.tr('home_ghimtms_3f794c')),
                     style: SLTheme.quicksand(
                       color: accentColor,
                       fontWeight: FontWeight.w900,

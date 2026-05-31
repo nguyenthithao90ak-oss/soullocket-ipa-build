@@ -25,13 +25,15 @@ class MemoryShareAllowanceService {
   Future<int> getCreateCount() async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    return prefs.getInt(_createCountKey) ?? 0;
+    final value = prefs.getInt(_createCountKey) ?? 0;
+    return value < 0 ? 0 : value;
   }
 
   Future<int> getCredits() async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    return prefs.getInt(_creditsKey) ?? 0;
+    final value = prefs.getInt(_creditsKey) ?? 0;
+    return value < 0 ? 0 : value;
   }
 
   Future<bool> requiresCreditForNextCreate() async {
@@ -45,9 +47,11 @@ class MemoryShareAllowanceService {
   }) async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final createCount = prefs.getInt(_createCountKey) ?? 0;
+    final rawCreateCount = prefs.getInt(_createCountKey) ?? 0;
+    final createCount = rawCreateCount < 0 ? 0 : rawCreateCount;
     final nextCount = createCount + 1;
-    var credits = prefs.getInt(_creditsKey) ?? 0;
+    final rawCredits = prefs.getInt(_creditsKey) ?? 0;
+    var credits = rawCredits < 0 ? 0 : rawCredits;
     final requiresCredit = nextCount >= 2 && nextCount.isEven;
 
     var rewardGranted = 0;

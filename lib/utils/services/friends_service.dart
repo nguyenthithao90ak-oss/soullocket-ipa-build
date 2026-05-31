@@ -241,10 +241,18 @@ class FriendsService {
     required String fromHouseId,
   }) async {
     try {
-      final reqRef = _db.ref('friend_requests/$requestId');
+      final normalizedRequestId = requestId.trim();
+      final normalizedCurrentHouseId = currentHouseId.trim();
+      final normalizedFromHouseId = fromHouseId.trim();
+      if (normalizedRequestId.isEmpty ||
+          normalizedCurrentHouseId.isEmpty ||
+          normalizedFromHouseId.isEmpty) {
+        return false;
+      }
+      final reqRef = _db.ref('friend_requests/$normalizedRequestId');
 
       // 1. Giới hạn 1000 bạn bè
-      final myFriendsSnap = await _db.ref('friends/$currentHouseId').get();
+      final myFriendsSnap = await _db.ref('friends/$normalizedCurrentHouseId').get();
       if (myFriendsSnap.exists) {
         final friends = _asStringDynamicMap(myFriendsSnap.value);
         if ((friends?.length ?? 0) >= 1000) return false;
@@ -254,25 +262,25 @@ class FriendsService {
       await reqRef.child('status').set('accepted');
 
       // 3. Thêm list bạn bè 2 chiều
-      await _db.ref('friends/$currentHouseId/$fromHouseId').set(true);
+      await _db.ref('friends/$normalizedCurrentHouseId/$normalizedFromHouseId').set(true);
 
       // Try to set for the other user.
       // It might fail due to Firebase security rules (only the user can write to their own friends list),
       // so we catch the error to prevent the whole function from failing.
       try {
-        await _db.ref('friends/$fromHouseId/$currentHouseId').set(true);
+        await _db.ref('friends/$normalizedFromHouseId/$normalizedCurrentHouseId').set(true);
       } catch (_) {}
 
       // 4. Tạo conversation tự động (DM)
-      final convId = _getConversationId(currentHouseId, fromHouseId);
+      final convId = _getConversationId(normalizedCurrentHouseId, normalizedFromHouseId);
       final convRef = _db.ref('conversations/$convId');
 
       await convRef.update({
         'ts': ServerValue.timestamp,
-        'members/$currentHouseId': true,
-        'members/$fromHouseId': true,
-        'participants/$currentHouseId': true,
-        'participants/$fromHouseId': true,
+        'members/$normalizedCurrentHouseId': true,
+        'members/$normalizedFromHouseId': true,
+        'participants/$normalizedCurrentHouseId': true,
+        'participants/$normalizedFromHouseId': true,
         'type': 'dm',
       });
 
@@ -284,7 +292,10 @@ class FriendsService {
         'type': 'system',
       });
 
-      await ChatService().seedFriendWelcomeIfEmpty(currentHouseId, fromHouseId);
+      await ChatService().seedFriendWelcomeIfEmpty(
+        normalizedCurrentHouseId,
+        normalizedFromHouseId,
+      );
 
       return true;
     } catch (_) {
@@ -293,24 +304,33 @@ class FriendsService {
   }
 
   Future<void> declineFriendRequest(String requestId, String houseId) async {
-    await _db.ref('friend_requests/$requestId').update({
+    final normalizedRequestId = requestId.trim();
+    final normalizedHouseId = houseId.trim();
+    if (normalizedRequestId.isEmpty || normalizedHouseId.isEmpty) return;
+    await _db.ref('friend_requests/$normalizedRequestId').update({
       'status': 'declined',
-      'declinedBy': houseId,
+      'declinedBy': normalizedHouseId,
       'declinedAt': ServerValue.timestamp,
     });
   }
 
   Future<void> cancelSentFriendRequest(String requestId, String houseId) async {
-    await _db.ref('friend_requests/$requestId').update({
+    final normalizedRequestId = requestId.trim();
+    final normalizedHouseId = houseId.trim();
+    if (normalizedRequestId.isEmpty || normalizedHouseId.isEmpty) return;
+    await _db.ref('friend_requests/$normalizedRequestId').update({
       'status': 'declined',
-      'canceledBy': houseId,
+      'canceledBy': normalizedHouseId,
       'canceledAt': ServerValue.timestamp,
     });
   }
 
   Future<void> removeFriend(String myHouseId, String friendHouseId) async {
-    await _db.ref('friends/$myHouseId/$friendHouseId').remove();
-    await _db.ref('friends/$friendHouseId/$myHouseId').remove();
+    final normalizedMyHouseId = myHouseId.trim();
+    final normalizedFriendHouseId = friendHouseId.trim();
+    if (normalizedMyHouseId.isEmpty || normalizedFriendHouseId.isEmpty) return;
+    await _db.ref('friends/$normalizedMyHouseId/$normalizedFriendHouseId').remove();
+    await _db.ref('friends/$normalizedFriendHouseId/$normalizedMyHouseId').remove();
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -318,7 +338,10 @@ class FriendsService {
   // ─────────────────────────────────────────────────────────────
 
   Future<void> toggleFavoriteFriend(String houseId, String friendId) async {
-    final ref = _db.ref('houses/$houseId/settings/favoriteFriends/$friendId');
+    final normalizedHouseId = houseId.trim();
+    final normalizedFriendId = friendId.trim();
+    if (normalizedHouseId.isEmpty || normalizedFriendId.isEmpty) return;
+    final ref = _db.ref('houses/$normalizedHouseId/settings/favoriteFriends/$normalizedFriendId');
     final snap = await ref.get();
 
     if (snap.exists) {
@@ -336,10 +359,14 @@ class FriendsService {
 
   /// Stream danh sách ID bạn bè
   Stream<List<String>> streamFriends(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<List<String>>.value(const <String>[]);
+    }
     // Khởi chạy đồng bộ ngầm các lời mời mình gửi đã được người khác chấp nhận
-    _startAcceptedRequestsSync(houseId);
+    _startAcceptedRequestsSync(normalizedHouseId);
 
-    return _db.ref('friends/$houseId').onValue.map((event) {
+    return _db.ref('friends/$normalizedHouseId').onValue.map((event) {
       final raw = event.snapshot.value;
       if (!event.snapshot.exists || raw is! Map) return <String>[];
       final data = Map<dynamic, dynamic>.from(raw);
@@ -348,14 +375,15 @@ class FriendsService {
   }
 
   void _startAcceptedRequestsSync(String houseId) {
-    if (_syncingHouseId == houseId) return;
-    _syncingHouseId = houseId;
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty || _syncingHouseId == normalizedHouseId) return;
+    _syncingHouseId = normalizedHouseId;
 
     // Lắng nghe các thay đổi trên friend_requests mà mình gửi đi
     _db
         .ref('friend_requests')
         .orderByChild('from')
-        .equalTo(houseId)
+        .equalTo(normalizedHouseId)
         .onValue
         .listen((event) async {
       final raw = event.snapshot.value;
@@ -366,12 +394,15 @@ class FriendsService {
         if (entry.value is! Map) continue;
         final req = Map<String, dynamic>.from(entry.value);
         if (req['status'] == 'accepted') {
-          final toHouseId = req['to'] as String?;
-          if (toHouseId != null) {
+          final toHouseId = req['to']?.toString().trim() ?? '';
+          if (toHouseId.isNotEmpty) {
             // Thêm vào danh sách bạn bè của mình
             try {
-              await _db.ref('friends/$houseId/$toHouseId').set(true);
-              await ChatService().seedFriendWelcomeIfEmpty(houseId, toHouseId);
+              await _db.ref('friends/$normalizedHouseId/$toHouseId').set(true);
+              await ChatService().seedFriendWelcomeIfEmpty(
+                normalizedHouseId,
+                toHouseId,
+              );
               // Xoá request sau khi đã đồng bộ
               await _db.ref('friend_requests/${entry.key}').remove();
             } catch (_) {}
@@ -383,11 +414,19 @@ class FriendsService {
 
   /// Gọi hàm này khi khởi động app hoặc ở HomeScreen để đảm bảo luôn đồng bộ bạn bè
   void initGlobalSync(String houseId) {
-    _startAcceptedRequestsSync(houseId);
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
+    _startAcceptedRequestsSync(normalizedHouseId);
   }
 
   /// Stream danh sách lời mời (đến & đi)
   Stream<FriendRequestsData> streamFriendRequests(String houseId) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<FriendRequestsData>.value(
+        FriendRequestsData(sent: {}, received: {}),
+      );
+    }
     return _db
         .ref('friend_requests')
         .orderByChild('status')
@@ -402,10 +441,12 @@ class FriendsService {
       map.forEach((key, value) {
         if (value is! Map) return;
         final req = Map<String, dynamic>.from(value);
-        if (req['from'] == houseId) {
-          data.sent[req['to']] = key.toString();
-        } else if (req['to'] == houseId) {
-          data.received[req['from']] = key.toString();
+        final from = req['from']?.toString().trim() ?? '';
+        final to = req['to']?.toString().trim() ?? '';
+        if (from == normalizedHouseId && to.isNotEmpty) {
+          data.sent[to] = key.toString();
+        } else if (to == normalizedHouseId && from.isNotEmpty) {
+          data.received[from] = key.toString();
         }
       });
       return data;
@@ -505,9 +546,16 @@ class FriendsService {
     required String myHouseName,
     required String friendHouseId,
   }) async {
+    final normalizedMyHouseName = myHouseName.trim();
+    final normalizedFriendHouseId = friendHouseId.trim();
+    if (myHouseId.trim().isEmpty ||
+        normalizedMyHouseName.isEmpty ||
+        normalizedFriendHouseId.isEmpty) {
+      return;
+    }
     await PushNotificationHelper.friendWave(
-      toHouseId: friendHouseId,
-      fromName: myHouseName,
+      toHouseId: normalizedFriendHouseId,
+      fromName: normalizedMyHouseName,
     );
   }
 
@@ -517,6 +565,7 @@ class FriendsService {
 
   Future<List<Map<String, dynamic>>> searchHouses(String query,
       {int limit = 50}) async {
+    final effectiveLimit = limit < 1 ? 1 : limit;
     final snap = await _db.ref('houses').get();
     final rawValue = snap.value;
     if (!snap.exists || rawValue is! Map) return [];
@@ -524,10 +573,13 @@ class FriendsService {
 
     // Extract ID or Username from URL if user pastes a link
     String q = query.toLowerCase().trim();
-    final webHost = Uri.parse(AppConfig.webBaseUrl).host.toLowerCase();
-    if (q.contains('soullocket.com') ||
-        q.contains('soullockket.web.app') ||
-        q.contains(webHost)) {
+    final webHost = AppConfig.webHost;
+    final knownWebHosts = <String>{
+      if (webHost.isNotEmpty) webHost,
+      'soullockket.web.app',
+      'soullocket.com',
+    };
+    if (knownWebHosts.any(q.contains)) {
       final uri = Uri.tryParse(q);
       if (uri != null && uri.pathSegments.isNotEmpty) {
         q = uri.pathSegments.last.toLowerCase();
@@ -610,11 +662,11 @@ class FriendsService {
         final nameB = (b['houseName'] ?? '').toString();
         return nameA.compareTo(nameB);
       });
-      return suggestions.take(limit).toList();
+      return suggestions.take(effectiveLimit).toList();
     }
 
     final results = [...exactMatches, ...partialMatches];
-    return results.take(limit).toList();
+    return results.take(effectiveLimit).toList();
   }
 }
 

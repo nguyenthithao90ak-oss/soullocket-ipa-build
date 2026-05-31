@@ -11,6 +11,8 @@ class QRPayloadCodec {
   static const String loginPrefix = 'SOULLOCKET:LOGIN:';
   static const String housePrefix = 'SOULLOCKET:HOUSE:';
   static const String communityPrefix = 'SOULLOCKET:COMMUNITY:';
+  static const int _maxPayloadLength = 2048;
+  static const int _maxIdLength = 256;
 
   static const List<String> _legacyHousePrefixes = <String>[
     'HOUSE:',
@@ -27,16 +29,20 @@ class QRPayloadCodec {
   ];
 
   static String encodeLoginToken(String token) {
-    return '$loginPrefix${token.trim()}';
+    final normalizedToken = _sanitizeToken(token);
+    return normalizedToken.isEmpty ? loginPrefix : '$loginPrefix$normalizedToken';
   }
 
   static String encodeHouseId(String houseId) {
-    return '$housePrefix${houseId.trim()}';
+    final normalizedHouseId = _sanitize(houseId);
+    return normalizedHouseId.isEmpty ? housePrefix : '$housePrefix$normalizedHouseId';
   }
 
   static QRPayloadKind detectKind(String raw) {
     final value = raw.trim();
-    if (value.isEmpty) return QRPayloadKind.unknown;
+    if (value.isEmpty || value.length > _maxPayloadLength) {
+      return QRPayloadKind.unknown;
+    }
 
     final upper = value.toUpperCase();
     if (upper.startsWith(loginPrefix)) {
@@ -57,35 +63,35 @@ class QRPayloadCodec {
 
   static String? extractLoginToken(String raw) {
     final value = raw.trim();
-    if (value.isEmpty) return null;
+    if (value.isEmpty || value.length > _maxPayloadLength) return null;
     if (!value.toUpperCase().startsWith(loginPrefix)) return null;
 
-    final token = value.substring(loginPrefix.length).trim();
+    final token = _sanitizeToken(value.substring(loginPrefix.length));
     return token.isEmpty ? null : token;
   }
 
   static String? extractHouseId(String raw) {
     final value = _sanitize(raw);
-    if (value.isEmpty) return null;
+    if (value.isEmpty || value.length > _maxPayloadLength) return null;
     if (isLoginPayload(value)) return null;
 
     final kind = detectKind(value);
     if (kind == QRPayloadKind.house) {
-      return _sanitize(value.substring(housePrefix.length));
+      return _normalizedId(value.substring(housePrefix.length));
     }
     if (kind == QRPayloadKind.community) {
-      return _sanitize(value.substring(communityPrefix.length));
+      return _normalizedId(value.substring(communityPrefix.length));
     }
 
     final upper = value.toUpperCase();
     for (final prefix in _legacyHousePrefixes) {
       if (upper.startsWith(prefix)) {
-        return _sanitize(value.substring(prefix.length));
+        return _normalizedId(value.substring(prefix.length));
       }
     }
 
     if (value.startsWith('@')) {
-      return _sanitize(value.substring(1));
+      return _normalizedId(value.substring(1));
     }
 
     final directUri = _tryParseUri(value);
@@ -94,9 +100,13 @@ class QRPayloadCodec {
       return fromUri;
     }
 
-    if (value.contains(AppConfig.webHost) ||
-        value.contains('soullockket.web.app') ||
-        value.contains('soullocket.com')) {
+    final knownWebHosts = <String>{
+      if (AppConfig.webHost.isNotEmpty) AppConfig.webHost,
+      'soullockket.web.app',
+      'soullocket.com',
+    };
+    final lowerValue = value.toLowerCase();
+    if (knownWebHosts.any(lowerValue.contains)) {
       final hostUri = _tryParseUri(
         value.contains('://') ? value : 'https://$value',
       );
@@ -106,8 +116,12 @@ class QRPayloadCodec {
       }
     }
 
+    if (directUri != null && directUri.hasScheme) {
+      return null;
+    }
+
     final compact = _sanitize(value.replaceAll(RegExp(r'\s+'), ''));
-    return compact.isEmpty ? null : compact;
+    return _normalizedId(compact);
   }
 
   static Uri? _tryParseUri(String value) {
@@ -120,8 +134,8 @@ class QRPayloadCodec {
 
     for (final key in _houseQueryKeys) {
       final raw = uri.queryParameters[key];
-      final candidate = _sanitize(raw);
-      if (candidate.isNotEmpty) {
+      final candidate = _normalizedId(raw);
+      if (candidate != null) {
         return candidate;
       }
     }
@@ -131,7 +145,7 @@ class QRPayloadCodec {
         .where((item) => item.isNotEmpty)
         .toList();
     if (segments.isNotEmpty) {
-      return segments.last;
+      return _normalizedId(segments.last);
     }
 
     return null;
@@ -139,6 +153,22 @@ class QRPayloadCodec {
 
   static String _sanitize(String? value) {
     if (value == null) return '';
-    return value.trim().replaceAll('"', '').replaceAll("'", '');
+    return value
+        .trim()
+        .replaceAll('"', '')
+        .replaceAll("'", '')
+        .replaceAll('/', '')
+        .replaceAll('\\', '');
+  }
+
+  static String? _normalizedId(String? value) {
+    final candidate = _sanitize(value);
+    if (candidate.isEmpty || candidate.length > _maxIdLength) return null;
+    return candidate;
+  }
+
+  static String _sanitizeToken(String? value) {
+    if (value == null) return '';
+    return value.trim().replaceAll('"', '').replaceAll("'", '').replaceAll('/', '');
   }
 }

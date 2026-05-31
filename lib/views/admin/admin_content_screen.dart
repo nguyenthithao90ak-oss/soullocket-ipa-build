@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import '../../services/auth_service.dart';
@@ -110,7 +111,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
         _errorText = AppErrorMapper.resolve(
           error,
           fallbackMessage:
-              'Chưa thể tải báo cáo nội dung. Hãy kiểm tra kết nối rồi thử lại.',
+              context.tr('admin_chathtiboc_54579d'),
         ).message;
       });
     } finally {
@@ -141,17 +142,17 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Đã xóa bài viết')));
+          .showSnackBar(SnackBar(content: Text(context.tr('admin_xabivit_92d4ec'))));
       _loadData(refresh: true);
     } catch (e) {
       debugPrint('Delete post failed: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể xóa bài viết lúc này.',
+        fallbackMessage: context.tr('admin_chathxabiv_907048'),
       ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể xóa bài viết lúc này. Vui lòng thử lại.'),
+        SnackBar(
+          content: Text(context.tr('admin_chathxabiv_72f417')),
         ),
       );
     }
@@ -174,17 +175,17 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Đã xóa bình luận')));
+          .showSnackBar(SnackBar(content: Text(context.tr('admin_xabnhlun_f398ed'))));
       _loadData(refresh: true);
     } catch (e) {
       debugPrint('Delete comment failed: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể xóa bình luận lúc này.',
+        fallbackMessage: context.tr('admin_chathxabnh_e82b92'),
       ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể xóa bình luận lúc này. Vui lòng thử lại.'),
+        SnackBar(
+          content: Text(context.tr('admin_chathxabnh_44e3be')),
         ),
       );
     }
@@ -195,17 +196,17 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       await _db.child('reports/$reportId').remove();
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Đã bỏ qua báo cáo')));
+          .showSnackBar(SnackBar(content: Text(context.tr('admin_bquaboco_cc6fa6'))));
       _loadData(refresh: true);
     } catch (e) {
       debugPrint('Dismiss report failed: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể bỏ qua báo cáo lúc này.',
+        fallbackMessage: context.tr('admin_chathbquab_cc5d96'),
       ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể bỏ qua báo cáo lúc này. Vui lòng thử lại.'),
+        SnackBar(
+          content: Text(context.tr('admin_chathbquab_36dbb8')),
         ),
       );
     }
@@ -238,10 +239,10 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                   children: [
                     Text(
                       isAiReport
-                          ? 'Chi tiết báo cáo AI'
+                          ? context.tr('admin_chititboco_c42261')
                           : isCommentReport
-                              ? 'Chi tiết Bình luận vi phạm'
-                              : 'Chi tiết Bài viết vi phạm',
+                              ? context.tr('admin_chititbnhl_8c9bc7')
+                              : context.tr('admin_chititbivi_a4cabd'),
                       style: SLTheme.quicksand(
                         color: Colors.white,
                         fontSize: 18,
@@ -261,14 +262,14 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildInfoRow('Lý do Report:', r['reason'] ?? 'Không rõ',
+                      _buildInfoRow(context.tr('admin_ldoreport_25f7cf'), r['reason'] ?? context.tr('admin_khngr_b18ff7'),
                           Colors.redAccent),
-                      _buildInfoRow('Người Report:',
+                      _buildInfoRow(context.tr('admin_ngireport_0d8b07'),
                           r['by'] ?? r['reporterId'] ?? 'Unknown', Colors.grey),
                       SLSpacing.h20,
                       if (isAiReport) ...[
                         Text(
-                          'TIN NHẮN NGƯỜI DÙNG:',
+                          context.tr('admin_tinnhnngid_d15860'),
                           style: SLTheme.quicksand(
                               color: const Color(0xFFFF4B91),
                               fontWeight: FontWeight.bold),
@@ -277,13 +278,13 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                         Text(
                           r['userText']?.toString().trim().isNotEmpty == true
                               ? r['userText'].toString()
-                              : '(Không có)',
+                              : context.tr('admin_khngc_6c5fcb'),
                           style: const TextStyle(
                               color: Colors.white70, fontSize: 14),
                         ),
                         SLSpacing.h20,
                         Text(
-                          'CÂU TRẢ LỜI AI:',
+                          context.tr('admin_cutrliai_d21f89'),
                           style: SLTheme.quicksand(
                               color: const Color(0xFFFF4B91),
                               fontWeight: FontWeight.bold),
@@ -298,14 +299,14 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                             border: Border.all(color: const Color(0xFF2A364E)),
                           ),
                           child: Text(
-                            r['assistantText']?.toString() ?? '(Không có)',
+                            r['assistantText']?.toString() ?? context.tr('admin_khngc_6c5fcb'),
                             style: const TextStyle(
                                 color: Colors.white, fontSize: 15),
                           ),
                         ),
                       ] else if (postData != null) ...[
                         Text(
-                          'NỘI DUNG BÀI VIẾT:',
+                          context.tr('admin_nidungbivi_bf8a19'),
                           style: SLTheme.quicksand(
                               color: const Color(0xFFFF4B91),
                               fontWeight: FontWeight.bold),
@@ -330,7 +331,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                               SLSpacing.h8,
                               Text(
                                 postData['content']?.toString() ??
-                                    '(Không có chữ)',
+                                    context.tr('admin_khngcch_130283'),
                                 style: const TextStyle(
                                     color: Colors.white, fontSize: 15),
                               ),
@@ -340,14 +341,14 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                           ),
                         ),
                       ] else ...[
-                        const Text(
-                            'Không tìm thấy dữ liệu bài viết (có thể đã bị xóa).',
-                            style: TextStyle(color: Colors.grey)),
+                        Text(
+                            context.tr('admin_khngtmthyd_865265'),
+                            style: const TextStyle(color: Colors.grey)),
                       ],
                       if (isCommentReport) ...[
                         SLSpacing.h20,
                         Text(
-                          'NỘI DUNG BÌNH LUẬN:',
+                          context.tr('admin_nidungbnhl_1b0dd9'),
                           style: SLTheme.quicksand(
                               color: const Color(0xFFFF4B91),
                               fontWeight: FontWeight.bold),
@@ -374,7 +375,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                 SLSpacing.h8,
                                 Text(
                                   commentData['content']?.toString() ??
-                                      '(Không có chữ)',
+                                      context.tr('admin_khngcch_130283'),
                                   style: const TextStyle(
                                       color: Colors.white, fontSize: 15),
                                 ),
@@ -382,9 +383,9 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                             ),
                           ),
                         ] else ...[
-                          const Text(
-                              'Không tìm thấy dữ liệu bình luận (có thể đã bị xóa).',
-                              style: TextStyle(color: Colors.grey)),
+                          Text(
+                              context.tr('admin_khngtmthyd_1f0f9f'),
+                              style: const TextStyle(color: Colors.grey)),
                         ]
                       ]
                     ],
@@ -401,8 +402,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Đóng',
-                          style: TextStyle(color: Colors.grey)),
+                      child: Text(context.tr('admin_ng_f63d1e'),
+                          style: const TextStyle(color: Colors.grey)),
                     ),
                     if (!isAiReport) ...[
                       SLSpacing.w12,
@@ -422,7 +423,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                         icon: const Icon(Icons.delete_forever,
                             color: Colors.white, size: 18),
                         label: Text(
-                            isCommentReport ? 'Xóa Bình luận' : 'Xóa Bài viết',
+                            isCommentReport ? context.tr('admin_xabnhlun_479f8e') : context.tr('admin_xabivit_29f643'),
                             style: const TextStyle(color: Colors.white)),
                       ),
                     ],
@@ -486,8 +487,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                       height: 100,
                       color: Colors.grey[800],
                       alignment: Alignment.center,
-                      child: const Text('Lỗi tải ảnh',
-                          style: TextStyle(color: Colors.white)),
+                      child: Text(context.tr('admin_litinh_5110a3'),
+                          style: const TextStyle(color: Colors.white)),
                     ),
                   ),
                 ),
@@ -508,7 +509,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
               child: Column(
                 children: [
                   AdminTopBar(
-                    title: 'Quản lý Nội dung & Báo cáo',
+                    title: context.tr('admin_qunlnidung_def100'),
                     user: widget.user,
                     isRefreshing: _isRefreshing,
                     lastUpdatedAt: _lastUpdatedAt,
@@ -523,9 +524,9 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                     child: _isLoading && _reports.isEmpty
                         ? const Center(child: CircularProgressIndicator())
                         : _reports.isEmpty
-                            ? const Center(
-                                child: Text('Không có báo cáo nào',
-                                    style: TextStyle(color: Colors.white)))
+                            ? Center(
+                                child: Text(context.tr('admin_khngcbocon_b28c2e'),
+                                    style: const TextStyle(color: Colors.white)))
                             : AdminGlassCard(
                                 padding: const EdgeInsets.all(0),
                                 child: ListView.separated(
@@ -554,7 +555,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
                                     String targetIdStr = '';
                                     if (isAiReport) {
-                                      targetIdStr = 'Chat thân thiện AI';
+                                      targetIdStr = context.tr('admin_chatthnthi_6c9f71');
                                     } else if (isUserReport) {
                                       targetIdStr = 'User: $targetHouseId';
                                     } else if (isCommentReport) {
@@ -581,7 +582,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                               style: const TextStyle(
                                                   color: Colors.orangeAccent)),
                                           Text(
-                                              'Lý do: ${r['reason'] ?? 'Không có lý do'}',
+                                              'Lý do: ${r['reason'] ?? context.tr('admin_khngcldo_4c7b39')}',
                                               style: const TextStyle(
                                                   color: Colors.redAccent)),
                                           Text(
@@ -597,7 +598,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                                 borderRadius: SLRadius.smAll,
                                               ),
                                               child: Text(
-                                                'Trích dẫn: ${r['postData']['content']?.toString() ?? '(Chỉ có ảnh)'}',
+                                                'Trích dẫn: ${r['postData']['content']?.toString() ?? context.tr('admin_chcnh_f0b82e')}',
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: const TextStyle(
@@ -618,7 +619,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                                 color: Colors.blue),
                                             onPressed: () =>
                                                 _showPostDetails(r),
-                                            tooltip: 'Xem chi tiết nội dung',
+                                            tooltip: context.tr('admin_xemchititn_abe496'),
                                           ),
                                           IconButton(
                                             icon: const Icon(
@@ -636,8 +637,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                                     }
                                                   },
                                             tooltip: isCommentReport
-                                                ? 'Xóa bình luận'
-                                                : 'Xóa bài viết',
+                                                ? context.tr('admin_xabnhlun_0e12a1')
+                                                : context.tr('admin_xabivit_2c7199'),
                                           ),
                                           IconButton(
                                             icon: const Icon(
@@ -646,7 +647,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                                 color: Colors.green),
                                             onPressed: () =>
                                                 _dismissReport(r['id']),
-                                            tooltip: 'Bỏ qua báo cáo',
+                                            tooltip: context.tr('admin_bquaboco_1f67bf'),
                                           ),
                                         ],
                                       ),

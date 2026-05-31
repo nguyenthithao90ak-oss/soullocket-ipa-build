@@ -258,7 +258,7 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'Run kết thúc. Bạn có thể chơi lại ngay hoặc về menu chọn stage khác.',
+                                  context.tr('util_runktthcbn_a9e2aa'),
                                   style: SLTheme.quicksand(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
@@ -272,14 +272,14 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                         ),
                       const SizedBox(height: 18),
                       _buildResultActionButton(
-                        label: 'CHƠI TIẾP VÁN MỚI',
+                        label: context.tr('util_chitipvnmi_c17cd9'),
                         icon: Icons.replay_rounded,
                         onTap: _startGame,
                         primary: true,
                       ),
                       const SizedBox(height: 12),
                       _buildResultActionButton(
-                        label: 'VỀ TRANG CHỦ',
+                        label: context.tr('util_vtrangch_2f3435'),
                         icon: Icons.home_rounded,
                         onTap: _backToMenu,
                         primary: false,
@@ -386,7 +386,7 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Hồi sinh đầy HP để tiếp tục stage hiện tại.',
+                      context.tr('util_hisinhyhpt_a737fe'),
                       style: SLTheme.quicksand(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
@@ -402,8 +402,8 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
           const SizedBox(height: 14),
           _buildResultActionButton(
             label: _isWatchingReviveAd
-                ? 'ĐANG XỬ LÝ HỒI SINH...'
-                : 'XEM QUẢNG CÁO HỒI SINH',
+                ? context.tr('util_angxlhisin_2d2c99')
+                : context.tr('util_xemqungcoh_c9cc51'),
             icon: _isWatchingReviveAd
                 ? Icons.hourglass_top_rounded
                 : Icons.play_circle_fill_rounded,

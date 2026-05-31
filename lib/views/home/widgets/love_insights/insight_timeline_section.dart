@@ -86,11 +86,11 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
           _buildCardTitle(
             icon: Icons.timeline_rounded,
             title: _isSingle
-                ? 'Dòng thời gian hoạt động'
-                : 'Dòng thời gian kỷ niệm',
+                ? context.tr('home_dngthigian_231147')
+                : context.tr('home_dngthigian_a93fc5'),
             subtitle: _isSingle
-                ? 'Những cột mốc và sự kiện bạn đã đi qua'
-                : 'Các mốc quan trọng của hai bạn và sự kiện riêng đã lưu',
+                ? context.tr('home_nhngctmcvs_f144c1')
+                : context.tr('home_ccmcquantr_89a221'),
           ),
           SLSpacing.h12,
           if (insight.timeline.isEmpty)
@@ -104,8 +104,8 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
               ),
               child: Text(
                 _isSingle
-                    ? 'Chưa có cột mốc nào được ghi lại. Khi bạn thêm kỷ niệm hoặc đi qua các mốc ngày dùng, phần này sẽ sáng lên.'
-                    : 'Chưa có kỷ niệm nào được ghi lại. Khi hai bạn thêm sự kiện hoặc đi qua các mốc ngày yêu, timeline sẽ tự hiện đầy đủ.',
+                    ? context.tr('home_chacctmcno_6d2fc1')
+                    : context.tr('home_chacknimno_aa5b75'),
                 style: SLTheme.quicksand(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -153,10 +153,10 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
             ? const Color(0xFFBBB5C3)
             : const Color(0xFF9B98A1);
     final badgeText = isCurrent
-        ? 'Hiện tại'
+        ? context.tr('home_hinti_d6af47')
         : isUpcoming
-            ? 'Khóa'
-            : 'Đã qua';
+            ? context.tr('home_kha_171aa7')
+            : context.tr('home_qua_8ff9a0');
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -363,7 +363,7 @@ class _TimelineFlameBadgeState extends State<_TimelineFlameBadge>
                 ),
                 SLSpacing.w4,
                 Text(
-                  'Đang cháy',
+                  context.tr('home_angchy_f406fd'),
                   style: SLTheme.quicksand(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w900,

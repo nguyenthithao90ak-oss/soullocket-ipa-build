@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
@@ -91,6 +92,7 @@ class _BucketListScreenState extends State<BucketListScreen>
     final text = _itemController.text.trim();
     if (text.isEmpty) return;
     final now = DateTime.now();
+    final labelAction = context.tr('util_thm1mcvobu_fc5d40');
     await _dbRef.child('houses/${widget.houseId}/bucket').push().set({
       'a': widget.myName,
       'c': text,
@@ -102,7 +104,7 @@ class _BucketListScreenState extends State<BucketListScreen>
     final prefs = await SharedPreferences.getInstance();
     final role = prefs.getString('il_role') ?? 'user1';
     ActivityHistoryService.instance.add(
-      'đã thêm 1 mục vào Bucket List',
+      labelAction,
       houseId: widget.houseId,
       role: role,
     );
@@ -119,6 +121,8 @@ class _BucketListScreenState extends State<BucketListScreen>
   }
 
   void _deleteItem(String key) {
+    final labelAction = context.tr('util_xamtmcbuck_d18916');
+    final labelTitle = context.tr('util_xabucketli_47d0b4');
     final existing = _dbRef.child('houses/${widget.houseId}/bucket/$key');
     existing.get().then((snapshot) async {
       if (!snapshot.exists || snapshot.value is! Map) {
@@ -126,9 +130,9 @@ class _BucketListScreenState extends State<BucketListScreen>
       }
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       await ActivityHistoryService.instance.add(
-        'đã xóa một mục bucket list',
+        labelAction,
         houseId: widget.houseId,
-        title: 'Đã xóa bucket list',
+        title: labelTitle,
         subtitle: data['c']?.toString() ?? '',
         action: 'delete',
         module: 'bucket_list',
@@ -146,7 +150,7 @@ class _BucketListScreenState extends State<BucketListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, 'Danh sách ước nguyện'),
+      appBar: SLTheme.appBar(context, context.tr('util_danhschcng_153531')),
       body: Stack(
         children: <Widget>[
           SLTheme.softCanvasBackdrop(
@@ -169,7 +173,7 @@ class _BucketListScreenState extends State<BucketListScreen>
                       child: Center(
                         child: SLTheme.emptyStatePanel(
                           icon: Icons.error_outline_rounded,
-                          title: 'Không tải được bucket list',
+                          title: context.tr('util_khngticbuc_cb9126'),
                           subtitle:
                               AppErrorMapper.resolve(snapshot.error).message,
                           accentColor: SLColors.danger,
@@ -216,9 +220,9 @@ class _BucketListScreenState extends State<BucketListScreen>
                                 child: Center(
                                   child: SLTheme.emptyStatePanel(
                                     icon: Icons.flag_rounded,
-                                    title: 'Chưa có ước nguyện nào',
+                                    title: context.tr('util_chaccnguyn_5c63b7'),
                                     subtitle:
-                                        'Hãy thêm một điều cả hai muốn cùng hoàn thành.',
+                                        context.tr('util_hythmmtiuc_67a421'),
                                     accentColor: const Color(0xFFEC4899),
                                   ),
                                 ),
@@ -282,7 +286,7 @@ class _BucketListScreenState extends State<BucketListScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Hành trình của hai bạn',
+                      context.tr('util_hnhtrnhcah_b1ffed'),
                       style: SLTheme.quicksand(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
@@ -291,7 +295,7 @@ class _BucketListScreenState extends State<BucketListScreen>
                     ),
                     SLSpacing.h4,
                     Text(
-                      'Đã hoàn thành $doneCount / $total mục.',
+                      L10nService().format('util_bucket_done_count', {'done': doneCount, 'total': total}),
                       style: SLTheme.quicksand(
                         fontSize: 12.2,
                         fontWeight: FontWeight.w700,
@@ -338,7 +342,7 @@ class _BucketListScreenState extends State<BucketListScreen>
             SLSpacing.h8,
             Center(
               child: Text(
-                'Hoàn thành tất cả rồi!',
+                context.tr('util_honthnhttc_75a566'),
                 style: SLTheme.quicksand(
                   color: const Color(0xFFBE185D),
                   fontWeight: FontWeight.w900,
@@ -366,7 +370,7 @@ class _BucketListScreenState extends State<BucketListScreen>
                 fontWeight: FontWeight.w700,
               ),
               decoration: InputDecoration(
-                hintText: 'Điều muốn làm cùng nhau...',
+                hintText: context.tr('util_iumunlmcng_a70228'),
                 hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,

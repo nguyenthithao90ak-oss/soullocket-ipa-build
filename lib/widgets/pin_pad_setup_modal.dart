@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/sl_theme.dart';
+import '../services/l10n_service.dart';
 import 'sensitive_content_guard.dart';
 
 part 'pin_pad_setup/pin_pad_background_part.dart';
@@ -276,7 +277,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
       setState(() {
         _hasError = true;
         _currentPin = '';
-        _errorMessage = 'Hai lần nhập chưa khớp nhau. Mình nhập lại nhé.';
+        _errorMessage = L10nService().translate('pin_mismatch');
       });
       return;
     }
@@ -361,7 +362,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
       }
       setState(() {
         _hasError = true;
-        _errorMessage = 'Không thể khôi phục mã PIN lúc này. Hãy thử lại sau.';
+        _errorMessage = L10nService().translate('pin_recover_failed');
       });
     }
     if (!mounted) {
@@ -382,7 +383,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
     setState(() {
       _hasError = true;
       _currentPin = '';
-      _errorMessage = 'Mã PIN chưa đúng. Hãy thử lại.';
+      _errorMessage = L10nService().translate('pin_incorrect');
     });
   }
 
@@ -393,7 +394,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
       _currentPin = '';
       _hasError = true;
       _errorMessage =
-          'Bạn đã nhập sai quá nhiều lần. Thử lại sau $_remainingLockSeconds giây.';
+          L10nService().format('pin_too_many_attempts_retry_seconds', {'seconds': _remainingLockSeconds});
     });
 
     _lockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -415,7 +416,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
       setState(() {
         _remainingLockSeconds -= 1;
         _errorMessage =
-            'Bạn đã nhập sai quá nhiều lần. Thử lại sau $_remainingLockSeconds giây.';
+            L10nService().format('pin_too_many_attempts_retry_seconds', {'seconds': _remainingLockSeconds});
       });
     });
   }
@@ -425,9 +426,9 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
       return fallback;
     }
 
-    final value = raw.replaceAll('Quên mã pin?', 'Quên mã PIN?').replaceAll(
+    final value = raw.replaceAll('Quên mã pin?', L10nService().translate('pin_forgot')).replaceAll(
           'Quên mã pin sau khi nhập sai 5 lần',
-          'Quên mã PIN sau khi nhập sai 5 lần',
+          L10nService().translate('pin_forgot_after_5'),
         );
 
     const mojibakeMarkers = <String>[
@@ -444,55 +445,55 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
   }
 
   String get _resolvedTitle =>
-      _cleanUiText(widget.title, fallback: 'Thiết lập mã PIN');
+      _cleanUiText(widget.title, fallback: L10nService().translate('pin_setup_title'));
 
   String get _resolvedSubtitle {
     final fallback = widget.isUnlock
-        ? 'Nhập mã PIN để mở khóa ứng dụng.'
+        ? L10nService().translate('pin_unlock_subtitle')
         : widget.isConfirming
-            ? 'Nhập lại đúng mã PIN vừa rồi để xác nhận.'
-            : 'Nhập 4-8 chữ số để khóa ứng dụng.';
+            ? L10nService().translate('pin_confirm_subtitle')
+            : L10nService().translate('pin_setup_subtitle');
     final raw = (widget.subtitle ?? _defaultSubtitle).trim();
     return raw.isEmpty ? fallback : _cleanUiText(raw, fallback: fallback);
   }
 
   String get _resolvedCuteMessage {
     final fallback = widget.isUnlock
-        ? 'Mở cánh cửa riêng tư của hai bạn thôi nào 💖'
+        ? L10nService().translate('pin_cute_unlock')
         : widget.isConfirming
-            ? 'Xác nhận lại chiếc chìa khóa nhỏ xinh này nhé ✨'
-            : 'Tạo một chiếc chìa khóa đáng yêu để giữ mọi điều riêng tư thật an toàn.';
+            ? L10nService().translate('pin_cute_confirm')
+            : L10nService().translate('pin_cute_setup');
     return _cleanUiText(_cuteMessage, fallback: fallback);
   }
 
   String get _resolvedHintText {
     final fallback = _pinSlotCount == _maxPinLength
-        ? 'Nhập từ 4 đến 8 số.'
-        : 'Nhập đủ $_pinSlotCount số để tiếp tục.';
+        ? L10nService().translate('pin_hint_4_8')
+        : L10nService().format('pin_hint_exact_count', {'count': _pinSlotCount});
     return _cleanUiText(_defaultHintText, fallback: fallback);
   }
 
   String get _resolvedProgressText {
     final fallback = _pinSlotCount == _maxPinLength
-        ? '${_currentPin.length}/8 số · tối thiểu 4 số'
-        : '${_currentPin.length}/$_pinSlotCount số';
+        ? L10nService().format('pin_progress_min', {'current': _currentPin.length})
+        : L10nService().format('pin_progress_exact', {'current': _currentPin.length, 'count': _pinSlotCount});
     return _cleanUiText(_pinProgressText, fallback: fallback);
   }
 
   String get _forgotPinActionLabel {
     if (_isRecoveringPin) {
-      return 'Đang khôi phục mã PIN...';
+      return L10nService().translate('pin_recovering');
     }
-    return 'Quên mã PIN?';
+    return L10nService().translate('pin_forgot');
   }
 
-  String get _forgotPinDisabledLabel => 'Quên mã PIN sau khi nhập sai 5 lần';
+  String get _forgotPinDisabledLabel => L10nService().translate('pin_forgot_after_5');
 
   String get _confirmDeliveryHint =>
-      'Mã xác nhận sẽ chỉ gửi tới ${widget.forgotPinHint}.';
+      L10nService().format('pin_confirm_delivery_hint', {'target': widget.forgotPinHint ?? ''});
 
   String get _primaryActionLabel =>
-      widget.isConfirming ? 'XÁC NHẬN' : 'TIẾP TỤC';
+      widget.isConfirming ? L10nService().translate('core_confirm_upper') : L10nService().translate('core_continue_upper');
 
   double _keypadButtonSize(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
@@ -574,7 +575,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                               onPressed: () => Navigator.of(context).pop(),
                               icon: const Icon(Icons.close_rounded),
                               color: SLColors.textSecond,
-                              tooltip: 'Đóng',
+                              tooltip: L10nService().translate('core_close'),
                             ),
                           )
                         else
@@ -639,9 +640,9 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                       borderRadius: BorderRadius.circular(18),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Hủy bỏ',
-                                    style: TextStyle(
+                                  child: Text(
+                                    L10nService().translate('core_cancel'),
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.w900,
                                       fontSize: 14,
                                       letterSpacing: 1.0,
@@ -1042,9 +1043,9 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                     ),
                                     foregroundColor: SLColors.textSecond,
                                   ),
-                                  child: const Text(
-                                    'Hủy bỏ',
-                                    style: TextStyle(
+                                  child: Text(
+                                    L10nService().translate('core_cancel'),
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.w900,
                                       fontSize: 15,
                                       letterSpacing: 1.1,
@@ -1545,7 +1546,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
-                                  'Mã xác nhận sẽ chỉ gửi tới ${widget.forgotPinHint}.',
+                                  L10nService().format('pin_confirm_delivery_hint', {'target': widget.forgotPinHint ?? ''}),
                                   textAlign: TextAlign.center,
                                   style: SLTheme.quicksand(
                                     fontSize: 12,

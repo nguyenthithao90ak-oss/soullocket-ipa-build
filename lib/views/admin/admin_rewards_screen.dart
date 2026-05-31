@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import '../../services/auth_service.dart';
@@ -70,7 +71,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
         _errorText = AppErrorMapper.resolve(
           error,
           fallbackMessage:
-              'Chưa thể tải dữ liệu điểm thưởng. Hãy kiểm tra kết nối rồi thử lại.',
+              context.tr('admin_chathtidli_561cb4'),
         ).message;
       });
     } finally {
@@ -95,8 +96,8 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Chỉnh sửa điểm thưởng',
-            style: TextStyle(color: Colors.white)),
+        title: Text(context.tr('admin_chnhsaimth_98fea8'),
+            style: const TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -107,12 +108,12 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
               controller: pointsCtrl,
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Số điểm mới',
-                labelStyle: TextStyle(color: Colors.grey),
-                enabledBorder: OutlineInputBorder(
+              decoration: InputDecoration(
+                labelText: context.tr('admin_simmi_4b0e3e'),
+                labelStyle: const TextStyle(color: Colors.grey),
+                enabledBorder: const OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey)),
-                focusedBorder: OutlineInputBorder(
+                focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFFF4B91))),
               ),
             ),
@@ -121,7 +122,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+            child: Text(context.tr('admin_hy_1e4050'), style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -145,24 +146,24 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                   Navigator.pop(ctx);
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã cập nhật điểm')));
+                      SnackBar(content: Text(context.tr('admin_cpnhtim_2675a2'))));
                   _loadData(refresh: true);
                 } catch (e) {
                   debugPrint('Update reward points failed: ${AppErrorMapper.resolve(
                     e,
-                    fallbackMessage: 'Chưa thể cập nhật điểm lúc này.',
+                    fallbackMessage: context.tr('admin_chathcpnht_98d3f7'),
                   ).message}');
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text(
-                          'Chưa thể cập nhật điểm lúc này. Vui lòng thử lại.'),
+                          context.tr('admin_chathcpnht_cc7c27')),
                     ),
                   );
                 }
               }
             },
-            child: const Text('Lưu', style: TextStyle(color: Colors.white)),
+            child: Text(context.tr('admin_lu_49fac1'), style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -181,7 +182,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
               child: Column(
                 children: [
                   AdminTopBar(
-                    title: 'Quản lý Điểm Thưởng (Ads & Games)',
+                    title: context.tr('admin_qunlimthng_6fe661'),
                     user: widget.user,
                     isRefreshing: _isRefreshing,
                     lastUpdatedAt: _lastUpdatedAt,
@@ -196,9 +197,9 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                     child: _isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : _usersPoints.isEmpty
-                            ? const Center(
-                                child: Text('Không có dữ liệu điểm thưởng',
-                                    style: TextStyle(color: Colors.white)))
+                            ? Center(
+                                child: Text(context.tr('admin_khngcdliui_f38d82'),
+                                    style: const TextStyle(color: Colors.white)))
                             : AdminGlassCard(
                                 padding: const EdgeInsets.all(0),
                                 child: ListView.separated(
@@ -228,7 +229,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                                             color: Color(0xFFFF4B91)),
                                         onPressed: () =>
                                             _showAdjustPointsDialog(u),
-                                        tooltip: 'Chỉnh sửa điểm',
+                                        tooltip: context.tr('admin_chnhsaim_4b9910'),
                                       ),
                                     );
                                   },

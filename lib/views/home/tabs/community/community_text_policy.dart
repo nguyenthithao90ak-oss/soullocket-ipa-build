@@ -2,14 +2,14 @@ part of '../community_tab.dart';
 
 String _normalizeCommunityText(String input) {
   var value = input.toLowerCase();
-  const replacements = <String, String>{
-    'àáạảãăằắặẳẵâầấậẩẫ': 'a',
-    'èéẹẻẽêềếệểễ': 'e',
-    'ìíịỉĩ': 'i',
-    'òóọỏõôồốộổỗơờớợởỡ': 'o',
-    'ùúụủũưừứựửữ': 'u',
-    'ỳýỵỷỹ': 'y',
-    'đ': 'd',
+  final replacements = <String, String>{
+    L10nService().translate('home_txt_147e69'): 'a',
+    L10nService().translate('home_txt_ae2260'): 'e',
+    L10nService().translate('home_txt_08e9a3'): 'i',
+    L10nService().translate('home_txt_76fa4b'): 'o',
+    L10nService().translate('home_txt_95beaf'): 'u',
+    L10nService().translate('home_txt_2a7735'): 'y',
+    L10nService().translate('home_txt_b5407d'): 'd',
   };
   replacements.forEach((pattern, replacement) {
     value = value.replaceAll(RegExp('[$pattern]'), replacement);
@@ -54,7 +54,7 @@ _CommunityModerationResult _moderateCommunityText(String text) {
       hasViolation: true,
       shouldPrivate: true,
       reason: _ct(
-        'Nội dung có từ khóa vi phạm tiêu chuẩn cộng đồng.',
+        L10nService().translate('home_nidungctkh_fa163a'),
         'The content contains a community-standard violation keyword.',
       ),
     );
@@ -69,7 +69,7 @@ _CommunityModerationResult _moderateCommunityText(String text) {
       hasViolation: true,
       shouldPrivate: false,
       reason: _ct(
-        'Nội dung có quá nhiều liên kết nên dễ bị xem là spam.',
+        L10nService().translate('home_nidungcqun_e26487'),
         'The content has too many links and may be treated as spam.',
       ),
     );
@@ -79,7 +79,7 @@ _CommunityModerationResult _moderateCommunityText(String text) {
       hasViolation: true,
       shouldPrivate: false,
       reason: _ct(
-        'Nội dung có ký tự lặp quá nhiều.',
+        L10nService().translate('home_nidungcktl_568351'),
         'The content has too many repeated characters.',
       ),
     );
@@ -94,7 +94,7 @@ _CommunityModerationResult _moderateCommunityText(String text) {
       hasViolation: true,
       shouldPrivate: false,
       reason: _ct(
-        'Nội dung có quá nhiều biểu tượng cảm xúc trong một bài ngắn.',
+        L10nService().translate('home_nidungcqun_499268'),
         'The content has too many emojis for a short post.',
       ),
     );
@@ -105,7 +105,7 @@ _CommunityModerationResult _moderateCommunityText(String text) {
       hasViolation: true,
       shouldPrivate: false,
       reason: _ct(
-        'Nội dung quá ngắn và có dấu hiệu spam.',
+        L10nService().translate('home_nidungqung_273027'),
         'The content is too short and looks spammy.',
       ),
     );
@@ -124,11 +124,11 @@ String? _validateCommunityText(
   if (trimmed.isEmpty) {
     return isComment
         ? _ct(
-            'Bình luận đang trống. Hãy viết vài dòng tử tế rồi gửi nhé.',
+            L10nService().translate('home_bnhlunangt_6471ae'),
             'The comment is empty. Write a kind line before sending.',
           )
         : _ct(
-            'Bài viết đang trống. Hãy thêm nội dung hoặc ảnh trước khi đăng.',
+            L10nService().translate('home_bivitangtr_41e9a3'),
             'The post is empty. Add text or a photo before posting.',
           );
   }

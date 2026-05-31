@@ -8,10 +8,12 @@ class CaroGameService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
 
   DatabaseReference _roomRef(String houseId) =>
-      _db.ref('houses/$houseId/game_caro');
+      _db.ref('houses/${houseId.trim()}/game_caro');
 
   Stream<CaroRoom?> streamRoom(String houseId) {
-    return _roomRef(houseId).onValue.map((event) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return Stream<CaroRoom?>.value(null);
+    return _roomRef(normalizedHouseId).onValue.map((event) {
       if (!event.snapshot.exists || event.snapshot.value == null) {
         return null;
       }
@@ -29,20 +31,25 @@ class CaroGameService {
     required int boardSize,
     required int winLength,
   }) async {
-    final otherRole = myRole == 'user2' ? 'user1' : 'user2';
+    final normalizedHouseId = houseId.trim();
+    final normalizedRole = _normalizeRole(myRole);
+    if (normalizedHouseId.isEmpty || normalizedRole == null) return;
+    final otherRole = normalizedRole == 'user2' ? 'user1' : 'user2';
+    final effectiveBoardSize = boardSize.clamp(3, 19);
+    final effectiveWinLength = winLength.clamp(3, effectiveBoardSize);
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    await _roomRef(houseId).set({
+    await _roomRef(normalizedHouseId).set({
       'status': 'waiting',
-      'boardSize': boardSize,
-      'winLength': winLength,
+      'boardSize': effectiveBoardSize,
+      'winLength': effectiveWinLength,
       'board': <String, String>{},
-      'turnRole': myRole,
-      'playerXRole': myRole,
+      'turnRole': normalizedRole,
+      'playerXRole': normalizedRole,
       'playerORole': otherRole,
-      'createdByRole': myRole,
-      'creatorName': myName,
-      'guestName': partnerName,
+      'createdByRole': normalizedRole,
+      'creatorName': myName.trim(),
+      'guestName': partnerName.trim(),
       'winnerRole': '',
       'winnerSymbol': '',
       'winningCells': <String>[],
@@ -56,7 +63,10 @@ class CaroGameService {
     required String houseId,
     required String myRole,
   }) async {
-    final tx = await _roomRef(houseId).runTransaction((Object? current) {
+    final normalizedHouseId = houseId.trim();
+    final normalizedRole = _normalizeRole(myRole);
+    if (normalizedHouseId.isEmpty || normalizedRole == null) return false;
+    final tx = await _roomRef(normalizedHouseId).runTransaction((Object? current) {
       final data = _asMap(current);
       if (data == null) return Transaction.abort();
       if ((data['status']?.toString() ?? '') != 'waiting') {
@@ -65,7 +75,7 @@ class CaroGameService {
 
       final playerXRole = data['playerXRole']?.toString() ?? 'user1';
       final playerORole = data['playerORole']?.toString() ?? 'user2';
-      if (myRole != playerXRole && myRole != playerORole) {
+      if (normalizedRole != playerXRole && normalizedRole != playerORole) {
         return Transaction.abort();
       }
 
@@ -85,7 +95,16 @@ class CaroGameService {
   }) async {
     String message = '';
 
-    final tx = await _roomRef(houseId).runTransaction((Object? current) {
+    final normalizedHouseId = houseId.trim();
+    final normalizedRole = _normalizeRole(myRole);
+    if (normalizedHouseId.isEmpty || normalizedRole == null) {
+      return const CaroMoveResult(
+        committed: false,
+        message: 'Nước đi không hợp lệ.',
+      );
+    }
+
+    final tx = await _roomRef(normalizedHouseId).runTransaction((Object? current) {
       final data = _asMap(current);
       if (data == null) {
         message = 'Ván chơi không tồn tại.';
@@ -97,7 +116,7 @@ class CaroGameService {
       }
 
       final currentTurn = data['turnRole']?.toString() ?? 'user1';
-      if (currentTurn != myRole) {
+      if (currentTurn != normalizedRole) {
         message = 'Chưa tới lượt của bạn.';
         return Transaction.abort();
       }
@@ -118,7 +137,7 @@ class CaroGameService {
 
       final playerXRole = data['playerXRole']?.toString() ?? 'user1';
       final playerORole = data['playerORole']?.toString() ?? 'user2';
-      final symbol = myRole == playerXRole ? 'X' : 'O';
+      final symbol = normalizedRole == playerXRole ? 'X' : 'O';
       board[cellKey] = symbol;
 
       final winningCells = _findWinningCells(
@@ -135,7 +154,7 @@ class CaroGameService {
 
       if (winningCells.isNotEmpty) {
         data['status'] = 'done';
-        data['winnerRole'] = myRole;
+        data['winnerRole'] = normalizedRole;
         data['winnerSymbol'] = symbol;
         data['winningCells'] = winningCells;
         data['isDraw'] = false;
@@ -151,7 +170,7 @@ class CaroGameService {
         return Transaction.success(data);
       }
 
-      data['turnRole'] = myRole == playerXRole ? playerORole : playerXRole;
+      data['turnRole'] = normalizedRole == playerXRole ? playerORole : playerXRole;
       data['winnerRole'] = '';
       data['winnerSymbol'] = '';
       data['winningCells'] = <String>[];
@@ -166,7 +185,9 @@ class CaroGameService {
   }
 
   Future<void> clearRoom(String houseId) async {
-    await _roomRef(houseId).remove();
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) return;
+    await _roomRef(normalizedHouseId).remove();
   }
 
   List<String> _findWinningCells({
@@ -264,6 +285,11 @@ class CaroGameService {
     return value.map(
       (key, item) => MapEntry(key.toString(), item?.toString() ?? ''),
     );
+  }
+  String? _normalizeRole(String value) {
+    final role = value.trim();
+    if (role == 'user1' || role == 'user2') return role;
+    return null;
   }
 }
 

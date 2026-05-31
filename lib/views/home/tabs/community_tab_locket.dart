@@ -69,7 +69,7 @@ extension _CommunityTabLocket on _CommunityTabState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _ct('Khoảnh Khắc', 'Moments'),
+                  _ct(context.tr('home_khonhkhc_cc3973'), 'Moments'),
                   style: SLTheme.quicksand(
                     color: _textColor,
                     fontSize: 18,
@@ -79,7 +79,7 @@ extension _CommunityTabLocket on _CommunityTabState {
                 SLSpacing.h4,
                 Text(
                   _ct(
-                    'Chạm để gửi ảnh cho bạn bè',
+                    context.tr('home_chmginhcho_53a26c'),
                     'Tap to send a photo to friends',
                   ),
                   style: SLTheme.quicksand(
@@ -124,7 +124,7 @@ extension _CommunityTabLocket on _CommunityTabState {
           ),
           SLSpacing.h12,
           Text(
-            _ct('Chưa có khoảnh khắc nào', 'No moments yet'),
+            _ct(context.tr('home_chackhonhk_fdb005'), 'No moments yet'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: _textColor,
@@ -135,7 +135,7 @@ extension _CommunityTabLocket on _CommunityTabState {
           const SizedBox(height: 6),
           Text(
             _ct(
-              'Chạm vào thẻ phía trên để gửi ảnh đầu tiên cho bạn bè.',
+              context.tr('home_chmvothpha_943f2c'),
               'Tap the card above to send your first photo to friends.',
             ),
             textAlign: TextAlign.center,
@@ -191,7 +191,7 @@ extension _CommunityTabLocket on _CommunityTabState {
   Widget _buildLocketPostCard(Map<String, dynamic> post) {
     final imageUrl = (post['imageUrl'] ?? '').toString();
     final houseName =
-        (post['houseName'] ?? _ct('Người lạ', 'Stranger')).toString();
+        (post['houseName'] ?? _ct(context.tr('home_ngil_c6d3ad'), 'Stranger')).toString();
     final houseAvt = (post['houseAvt'] ?? '').toString();
     final ts = _getTimestamp(post);
     final date = DateTime.fromMillisecondsSinceEpoch(
@@ -384,7 +384,7 @@ extension _CommunityTabLocket on _CommunityTabState {
                             children: [
                               Expanded(
                                 child: Text(
-                                  _ct('Gửi tin nhắn...', 'Send a message...'),
+                                  _ct(context.tr('home_gitinnhn_71edb2'), 'Send a message...'),
                                   style: SLTheme.quicksand(
                                     color: Colors.white70,
                                     fontWeight: FontWeight.w700,
@@ -476,7 +476,7 @@ extension _CommunityTabLocket on _CommunityTabState {
         {'count': diff.inMinutes},
       );
     }
-    return _ct('Vừa xong', 'Just now');
+    return _ct(context.tr('home_vaxong_e92d16'), 'Just now');
   }
 
   Future<void> _openLocketCamera() async {
@@ -522,7 +522,7 @@ extension _CommunityTabLocket on _CommunityTabState {
                     Expanded(
                       child: TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
-                        child: Text(_ct('Hủy', 'Cancel'),
+                        child: Text(_ct(context.tr('home_hy_1e4050'), 'Cancel'),
                             style: SLTheme.quicksand(
                                 color: Colors.white70,
                                 fontWeight: FontWeight.bold)),

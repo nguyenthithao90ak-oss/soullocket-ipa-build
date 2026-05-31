@@ -20,12 +20,12 @@ class _FeedPostCard extends StatelessWidget {
         (post['houseId'] ?? '').toString().trim().isEmpty;
     final postHouseId = (post['houseId'] ?? '').toString();
     final name = isDeletedAuthor
-        ? _ct('Người dùng đã xóa', 'Deleted user')
+        ? _ct(context.tr('home_ngidngxa_fdbd7c'), 'Deleted user')
         : isAnon
-            ? _ct('Người lạ ẩn danh', 'Anonymous stranger')
+            ? _ct(context.tr('home_ngilndanh_d63da2'), 'Anonymous stranger')
             : (post['houseName']?.toString().trim().isNotEmpty ?? false)
                 ? post['houseName'].toString()
-                : _ct('Ngôi Nhà', 'Home');
+                : _ct(context.tr('home_nginh_731d70'), 'Home');
     final avatar = (isAnon || isDeletedAuthor)
         ? ''
         : (post['houseAvt'] ?? post['authorAvt'] ?? '').toString();

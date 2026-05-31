@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/services/admob_service.dart';
-import 'package:soullocket_app/utils/web_helpers.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../../utils/services/admob_service.dart';
+import '../../../utils/web_helpers.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -195,7 +196,7 @@ class _WebUrlViewerScreenState extends State<WebUrlViewerScreen> {
           _applyInitialJavaScript();
         },
         onWebResourceError: (error) {
-          _setLoadError('Không thể tải nội dung web an toàn.');
+          _setLoadError(context.tr('home_khngthtini_c62d76'));
         },
       ),
     );
@@ -230,8 +231,8 @@ class _WebUrlViewerScreenState extends State<WebUrlViewerScreen> {
       _controller?.runJavaScript('if(window.Game) { window.Game.revive(); }');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Chưa hoàn thành video, không thể hồi sinh.')),
+        SnackBar(
+            content: Text(context.tr('home_chahonthnh_ce0bbc'))),
       );
     }
   }
@@ -245,7 +246,7 @@ class _WebUrlViewerScreenState extends State<WebUrlViewerScreen> {
     if (kIsWeb) {
       if (!widget.isLocalAsset && !_isHttpsUrl(widget.url)) {
         _isLoading = false;
-        _loadError = 'Chỉ hỗ trợ liên kết HTTPS an toàn.';
+        _loadError = context.tr('home_chhtrlinkt_8cdd36');
         _viewId = 'iframe-blocked-${DateTime.now().millisecondsSinceEpoch}';
         return;
       }
@@ -275,7 +276,7 @@ class _WebUrlViewerScreenState extends State<WebUrlViewerScreen> {
       } else if (_isHttpsUrl(widget.url)) {
         _controller?.loadRequest(Uri.parse(widget.url));
       } else {
-        _loadError = 'Chỉ hỗ trợ liên kết HTTPS an toàn.';
+        _loadError = context.tr('home_chhtrlinkt_8cdd36');
         _isLoading = false;
       }
     }
@@ -350,16 +351,16 @@ class _WebUrlViewerScreenState extends State<WebUrlViewerScreen> {
                     ),
                   ],
                 ),
-                child: const Column(
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircularProgressIndicator(
+                    const CircularProgressIndicator(
                       color: Color(0xFFD81B60),
                     ),
                     SLSpacing.h16,
                     Text(
-                      'Đang tải...',
-                      style: TextStyle(
+                      context.tr('home_angti_d5fe42'),
+                      style: const TextStyle(
                         color: Color(0xFFD81B60),
                         fontWeight: FontWeight.bold,
                       ),

@@ -41,7 +41,8 @@ class UtilitiesHubGrid extends StatelessWidget {
         const tileHeight = 112.0;
         final spacing = width >= 430 ? 14.0 : 12.0;
         final itemWidth =
-            (width - 44 - (spacing * (crossAxisCount - 1))) / crossAxisCount;
+            ((width - 44 - (spacing * (crossAxisCount - 1))) / crossAxisCount)
+                .clamp(64.0, 96.0);
 
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -79,39 +80,46 @@ class UtilitiesHubGrid extends StatelessWidget {
                   }).toList(growable: false),
                 ),
               ),
-              if (showBottomBanner && bottomBannerAd != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 22, 12, 0),
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.72),
-                        borderRadius: SLRadius.lgAll,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.45),
-                        ),
-                        boxShadow: SLShadow.subtle,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: SLRadius.mdAll,
-                        child: SizedBox(
-                          width: bottomBannerAd!.size.width.toDouble(),
-                          height: bottomBannerAd!.size.height.toDouble(),
-                          child: AdWidget(ad: bottomBannerAd!),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              if (showBottomBanner)
+                _buildBottomBanner(bottomBannerAd),
               SLSpacing.gapH(32),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildBottomBanner(BannerAd? bannerAd) {
+    if (bannerAd == null) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 22, 12, 0),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 8,
+          ),
+          decoration: BoxDecoration(
+            color: SLColors.bgElevated.withValues(alpha: 0.72),
+            borderRadius: SLRadius.lgAll,
+            border: Border.all(
+              color: SLColors.bgElevated.withValues(alpha: 0.45),
+            ),
+            boxShadow: SLShadow.subtle,
+          ),
+          child: ClipRRect(
+            borderRadius: SLRadius.mdAll,
+            child: SizedBox(
+              width: bannerAd.size.width.toDouble(),
+              height: bannerAd.size.height.toDouble(),
+              child: AdWidget(ad: bannerAd),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

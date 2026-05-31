@@ -6,11 +6,12 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart'
     show ChangeNotifier, ValueNotifier, debugPrint, kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soullocket_app/models/diary_post.dart';
-import 'package:soullocket_app/models/house_settings.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'package:soullocket_app/utils/services/house_service.dart';
-import 'package:soullocket_app/utils/services/offline_cache_service.dart';
+import '../../../../../models/diary_post.dart';
+import '../../../../../models/house_settings.dart';
+import '../../../../../utils/app_error_mapper.dart';
+import '../../../../../utils/services/house_service.dart';
+import '../../../../../utils/services/offline_cache_service.dart';
+import '../../../../../utils/services/l10n_service.dart';
 
 class DiaryFeedController extends ChangeNotifier {
   DiaryFeedController({
@@ -36,8 +37,8 @@ class DiaryFeedController extends ChangeNotifier {
 
   bool _isLoading = true;
   String? _houseId;
-  String _nameU1 = 'Bạn Nam';
-  String _nameU2 = 'Bạn Nữ';
+  String _nameU1 = L10nService().translate('home_bnnam_123ef2');
+  String _nameU2 = L10nService().translate('home_bnn_babaec');
   String _currentAuthorName = '';
   String _activeRoleKey = 'user1';
   String _relationshipMode = 'single';
@@ -137,10 +138,10 @@ class DiaryFeedController extends ChangeNotifier {
     switch (_normalizeRole(role)) {
       case 'user1':
         final name = _nameU1.trim();
-        return (name.isEmpty || name == 'Bạn Nam') ? '' : name;
+        return (name.isEmpty || name == L10nService().translate('home_bnnam_123ef2')) ? '' : name;
       case 'user2':
         final name = _nameU2.trim();
-        return (name.isEmpty || name == 'Bạn Nữ') ? '' : name;
+        return (name.isEmpty || name == L10nService().translate('home_bnn_babaec')) ? '' : name;
       default:
         return '';
     }
@@ -163,11 +164,11 @@ class DiaryFeedController extends ChangeNotifier {
     }
 
     final lowered = trimmed.toLowerCase();
-    if (lowered == 'người yêu' ||
+    if (lowered == L10nService().translate('home_ngiyu_ef6c08') ||
         lowered == 'nguoi yeu' ||
-        lowered == 'bạn nam' ||
+        lowered == L10nService().translate('home_bnnam_b57724') ||
         lowered == 'ban nam' ||
-        lowered == 'bạn nữ' ||
+        lowered == L10nService().translate('home_bnn_be46dc') ||
         lowered == 'ban nu') {
       return '';
     }
@@ -210,8 +211,8 @@ class DiaryFeedController extends ChangeNotifier {
       }
 
       _activeRoleKey = _memberRoleByUid[_auth.currentUser?.uid ?? ''] ?? role;
-      _nameU1 = settingsMap['nameU1']?.toString() ?? 'Bạn Nam';
-      _nameU2 = settingsMap['nameU2']?.toString() ?? 'Bạn Nữ';
+      _nameU1 = settingsMap['nameU1']?.toString() ?? L10nService().translate('home_bnnam_123ef2');
+      _nameU2 = settingsMap['nameU2']?.toString() ?? L10nService().translate('home_bnn_babaec');
       _relationshipMode =
           HouseSettings.inferRelationshipModeFromSettingsMap(settingsMap);
       final sdRaw = settingsMap['startDate'];
@@ -269,7 +270,7 @@ class DiaryFeedController extends ChangeNotifier {
     final fallback = _firstNameCandidate([
       currentRoleName,
       _emailLocalPart(user.email),
-      'Tôi',
+      L10nService().translate('home_ti_a843eb'),
     ]);
     _authorNameByUid[user.uid] = fallback;
     if (_currentAuthorName != fallback) {
@@ -592,7 +593,7 @@ class DiaryFeedController extends ChangeNotifier {
           debugPrint(
             'Diary realtime listener failed: ${AppErrorMapper.resolve(
               error,
-              fallbackMessage: 'Không thể tải nhật ký.',
+              fallbackMessage: L10nService().translate('home_khngthtinh_eb6eac'),
             ).message}',
           );
           _setLoading(false);

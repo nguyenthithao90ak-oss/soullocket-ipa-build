@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 class GroupChatRoom {
   final String id;
   final String name;
@@ -60,7 +61,7 @@ class GroupChatRoom {
       id: id,
       name: (raw['name']?.toString().trim().isNotEmpty ?? false)
           ? raw['name'].toString().trim()
-          : 'Nhóm chat',
+          : L10nService().translate('chat_group_default_name'),
       memberHouseIds: memberHouseIds,
       lastMessage: lastMessage,
       createdAtMs: readInt(raw['createdAt']),

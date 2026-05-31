@@ -336,6 +336,17 @@ mixin _SoulBlockStrategyLogic {
     final bool forceEasyAnchor = (progress < 0.24 || boardStress >= 0.65) &&
         fittingCandidates.any((candidate) => candidate.template.tier == 0);
 
+    // Early-game: tính trước piece nào clear được ngay để ưu tiên
+    final bool isEarlyGame = progress < 0.25;
+    final Map<String, bool> canClearMap = <String, bool>{};
+    if (isEarlyGame) {
+      for (final candidate in fittingCandidates) {
+        final placements = _findPlacements(boardMask, candidate.template);
+        canClearMap[candidate.template.id] =
+            placements.any((p) => p.clearedLines > 0);
+      }
+    }
+
     final allCombos = _pickTemplateCombos(pool, 3);
     if (allCombos.isEmpty) {
       return fittingCandidates
@@ -356,11 +367,19 @@ mixin _SoulBlockStrategyLogic {
       final difficultyBias =
           _difficultyBiasForCombo(boardMask, combo, progress);
 
+      // Early-game clear bonus: mỗi piece trong combo clear được ngay +60
+      double earlyGameClearBonus = 0;
+      if (isEarlyGame) {
+        final clearableCount =
+            combo.where((t) => canClearMap[t.id] == true).length;
+        earlyGameClearBonus = clearableCount * 60.0;
+      }
+
       final score = _evaluateBatchPlan(boardMask, combo, memo);
       if (score.isFinite) {
         rankedBatches.add(_BatchChoice(
           templates: combo,
-          score: score + varietyBonus + difficultyBias,
+          score: score + varietyBonus + difficultyBias + earlyGameClearBonus,
         ));
       }
     }

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'ai_counselor_service.dart';
 import 'offline_cache_service.dart';
 import 'push_notification_helper.dart';
+import 'l10n_service.dart';
 
 class LoveInsightTimelineEntry {
   final DateTime date;
@@ -193,6 +194,11 @@ class LoveInsightData {
 
 class LoveInsightService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+
+  String _tr(String key, [Map<String, Object?> params = const {}]) {
+    final l10n = L10nService();
+    return params.isEmpty ? l10n.translate(key) : l10n.format(key, params);
+  }
   static const List<int> _monthMilestones = [1, 3, 6, 9];
   static const List<int> _dayMilestones = [
     10,
@@ -905,7 +911,7 @@ class LoveInsightService {
         return milestoneSuggestion;
       }
       if (daysSinceLastMemory >= 6) {
-        return 'Nhịp lưu giữ của bạn đang chậm lại vài ngày gần đây. Chỉ cần viết vài dòng ngắn hoặc lưu một khoảnh khắc nhỏ hôm nay là chỉ số sẽ ấm lên rõ rệt.';
+        return _tr('love_insight_suggest_single_slow_rhythm');
       }
       if (loveScore >= 85) {
         return 'Bạn đang giữ nhịp sống rất ổn và đều. Hãy tiếp tục lưu lại những khoảnh khắc đẹp để hành trình của chính mình ngày càng đáng nhớ hơn.';
@@ -919,13 +925,13 @@ class LoveInsightService {
       if (milestoneSuggestion != null) {
         return milestoneSuggestion;
       }
-      return 'Dạo này bạn đang hơi thiếu nhịp chăm sóc bản thân. Mỗi tối viết vài dòng và lưu một điều vui trong ngày sẽ giúp tinh thần ấm lại rõ rệt.';
+      return _tr('love_insight_suggest_single_need_self_care');
     }
     if (memoryThisMonth <= 1 && activeDays <= 3 && milestoneSuggestion != null) {
       return milestoneSuggestion;
     }
     if (daysSinceLastMemory >= 6) {
-      return 'Dấu ấn chung của hai bạn đang hơi thưa ở những ngày gần đây. Chỉ cần một cuộc trò chuyện thật lòng hoặc một kỷ niệm nhỏ hôm nay là nhịp yêu sẽ sáng lại nhanh.';
+      return _tr('love_insight_suggest_couple_sparse_shared_marks');
     }
     if (balanceRatio < 0.45) {
       return 'Một phía đang chủ động nhiều hơn phía còn lại. Chỉ cần người đang yên hơn lên tiếng trước một chút, cảm giác cân bằng sẽ quay lại rất rõ.';
@@ -945,7 +951,7 @@ class LoveInsightService {
     if (milestoneSuggestion != null) {
       return milestoneSuggestion;
     }
-    return 'Nhịp kết nối của hai bạn đang hơi nguội so với trước. Dành riêng vài phút mỗi ngày để hỏi han thật lòng sẽ giúp cảm xúc quay lại nhanh hơn.';
+    return _tr('love_insight_suggest_couple_cool_connection');
   }
 
   String? _buildMilestoneSuggestion({
@@ -1043,8 +1049,7 @@ class LoveInsightService {
     String relationshipMode,
   ) async {
     try {
-      final prefs = OfflineCacheService.getPrefsSync() ??
-          await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
       final now = DateTime.now();
       final nowTs = now.millisecondsSinceEpoch;
       final data = await computeInsights(houseId, relationshipMode);

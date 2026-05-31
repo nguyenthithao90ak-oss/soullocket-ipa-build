@@ -118,12 +118,15 @@ class UiPrefsState {
   }
 
   static const defaults = UiPrefsState(
-    themeKey: 'theme-auto',
+    // Default to pink theme (avoid auto-dark/night selection).
+    themeKey: 'theme-default',
+    // Default to no falling effects.
     fallingEffectKey: 'off',
     avatarSizePx: 90,
     countdownSizePx: 500,
     avatarFrameKey: 'off',
-    countdownStyleKey: 'rose_wave',
+    // Default countdown visual: glass (kính mờ)
+    countdownStyleKey: 'glass',
     countdownTopLabel: '',
     countdownBottomLabel: '',
     fontKey: 'quicksand',
@@ -275,17 +278,20 @@ class UiPrefs {
     _cachedAutoQuality = await _detectAutoQuality();
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final themeKey =
-        (prefs.getString(_kThemeKey) ?? UiPrefsState.defaults.themeKey).trim();
-    final effectKey = (prefs.getString(_kFallingEffectKey) ??
-            UiPrefsState.defaults.fallingEffectKey)
-        .trim();
+    // Force fixed startup defaults requested by user.
+    final themeKey = 'theme-default';
+    final effectKey = 'off';
+
+    // Keep persisted values aligned so subsequent launches stay consistent.
+    await prefs.setString(_kThemeKey, themeKey);
+    await prefs.setString(_kFallingEffectKey, effectKey);
     final avatarFrameKey = (prefs.getString(_kAvatarFrameKey) ??
             UiPrefsState.defaults.avatarFrameKey)
         .trim();
-    final countdownStyleKey = (prefs.getString(_kCountdownStyleKey) ??
-            UiPrefsState.defaults.countdownStyleKey)
-        .trim();
+    // Force countdown ring to glass style by default on app load.
+    final countdownStyleKey = 'glass';
+    await prefs.setString(_kCountdownStyleKey, countdownStyleKey);
+    await prefs.setBool(_kTransparentModeKey, true);
     final countdownTopLabel =
         (prefs.getString(_kCountdownTopLabelKey) ?? '').trim();
     final countdownBottomLabel =

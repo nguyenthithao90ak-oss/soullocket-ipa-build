@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/app_error_mapper.dart';
@@ -84,7 +85,7 @@ class _SecurityProtectionRolloutPanelState
         _errorText = AppErrorMapper.resolve(
           error,
           fallbackMessage:
-              'Chưa thể tải dữ liệu rollout. Hãy kiểm tra kết nối rồi thử lại.',
+              context.tr('admin_chathtidli_9e9397'),
         ).message;
       });
     } finally {
@@ -119,8 +120,8 @@ class _SecurityProtectionRolloutPanelState
         _config = nextConfig;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã lưu rollout security protection'),
+        SnackBar(
+          content: Text(context.tr('admin_lurollouts_951d13')),
         ),
       );
     } catch (error) {
@@ -128,7 +129,7 @@ class _SecurityProtectionRolloutPanelState
       final message = AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Chưa thể lưu rollout lúc này. Hãy kiểm tra quyền quản trị rồi thử lại.',
+            context.tr('admin_chathlurol_15b46b'),
       ).message;
       setState(() {
         _errorText = message;
@@ -186,7 +187,7 @@ class _SecurityProtectionRolloutPanelState
             runSpacing: 12,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              sectionTag('Rollout bảo vệ thao tác'),
+              sectionTag(context.tr('admin_rolloutbov_4ed1d6')),
               HighlightChip(
                 icon: Icons.timeline_rounded,
                 label: _config.stage.adminLabel,
@@ -200,7 +201,7 @@ class _SecurityProtectionRolloutPanelState
           ),
           SLSpacing.h16,
           Text(
-            'Cảnh báo, dashboard và rollout 3 bước cho các luồng nhạy cảm',
+            context.tr('admin_cnhbodashb_195508'),
             style: SLTheme.quicksand(
               color: Colors.white,
               fontSize: 22,
@@ -209,7 +210,7 @@ class _SecurityProtectionRolloutPanelState
           ),
           SLSpacing.h8,
           Text(
-            'Tuần 1 chỉ log, tuần 2 hạ về warn, tuần 3 mới cho phép block thao tác nhạy cảm. Panel này để đội support và owner theo dõi block nhầm trước khi mở chặn mạnh.',
+            context.tr('admin_tun1chlogt_6ed83b'),
             style: SLTheme.quicksand(
               color: const Color(0xFF9AA8C4),
               fontSize: 13,
@@ -259,7 +260,7 @@ class _SecurityProtectionRolloutPanelState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Kế hoạch rollout',
+          context.tr('admin_khochrollo_fd175c'),
           style: SLTheme.quicksand(
             color: Colors.white,
             fontSize: 16,
@@ -291,7 +292,7 @@ class _SecurityProtectionRolloutPanelState
         ),
         SLSpacing.h16,
         Text(
-          'Ghi chú rollout',
+          context.tr('admin_ghichrollo_fc8d4b'),
           style: SLTheme.quicksand(
             color: Colors.white,
             fontSize: 14,
@@ -309,7 +310,7 @@ class _SecurityProtectionRolloutPanelState
           ),
           decoration: InputDecoration(
             hintText:
-                'Ví dụ: warn overlay trước, block build mod sau 3 ngày...',
+                context.tr('admin_vdwarnover_2b82ce'),
             hintStyle: SLTheme.quicksand(
               color: const Color(0xFF6F7E9E),
               fontSize: 13,
@@ -348,33 +349,33 @@ class _SecurityProtectionRolloutPanelState
           children: [
             AdminStatCard(
               width: itemWidth,
-              title: 'Cho phép / 7 ngày',
+              title: context.tr('admin_chophp7ngy_173e8e'),
               value: '$_allowTotal',
-              subtitle: 'Sự kiện được đi tiếp bình thường',
+              subtitle: context.tr('admin_skincitipb_03e938'),
               color: const Color(0xFF00C896),
               icon: Icons.verified_rounded,
             ),
             AdminStatCard(
               width: itemWidth,
-              title: 'Cảnh báo / 7 ngày',
+              title: context.tr('admin_cnhbo7ngy_b4b9ca'),
               value: '$_warnTotal',
-              subtitle: 'Cảnh báo và yêu cầu xác minh thêm',
+              subtitle: context.tr('admin_cnhbovyucu_e371ff'),
               color: const Color(0xFFFFB020),
               icon: Icons.warning_amber_rounded,
             ),
             AdminStatCard(
               width: itemWidth,
-              title: 'Chặn / 7 ngày',
+              title: context.tr('admin_chn7ngy_dbad1a'),
               value: '$_blockTotal',
-              subtitle: 'Đã chặn thao tác nhạy cảm',
+              subtitle: context.tr('admin_chnthaotcn_f8cbcc'),
               color: const Color(0xFFFF5A5F),
               icon: Icons.block_rounded,
             ),
             AdminStatCard(
               width: itemWidth,
-              title: 'Tổng sự kiện',
+              title: context.tr('admin_tngskin_35ae03'),
               value: '$_eventTotal',
-              subtitle: 'Tổng số log từ app layer',
+              subtitle: context.tr('admin_tngslogtap_270cea'),
               color: const Color(0xFF7C4DFF),
               icon: Icons.query_stats_rounded,
             ),
@@ -389,7 +390,7 @@ class _SecurityProtectionRolloutPanelState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Theo dõi 7 ngày',
+          context.tr('admin_theodi7ngy_afaa04'),
           style: SLTheme.quicksand(
             color: Colors.white,
             fontSize: 16,
@@ -399,7 +400,7 @@ class _SecurityProtectionRolloutPanelState
         SLSpacing.h12,
         if (_summaries.isEmpty)
           Text(
-            'Chưa có dữ liệu. Tuần 1 có thể chỉ log nên hãy đợi app bắt đầu ghi sự kiện.',
+            context.tr('admin_chacdliutu_791a47'),
             style: SLTheme.quicksand(
               color: const Color(0xFF9AA8C4),
               fontSize: 13,
@@ -472,7 +473,7 @@ class _SecurityProtectionRolloutPanelState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Luật theo từng lý do',
+          context.tr('admin_luttheotng_5d72f3'),
           style: SLTheme.quicksand(
             color: Colors.white,
             fontSize: 16,
@@ -481,7 +482,7 @@ class _SecurityProtectionRolloutPanelState
         ),
         SLSpacing.h8,
         Text(
-          'Người 3 đọc map này để biết lý do nào đang cho warn/block. Nếu tắt một lý do, rollout service sẽ hạ xuống allow cho lý do đó.',
+          context.tr('admin_ngi3cmapny_ea4a19'),
           style: SLTheme.quicksand(
             color: const Color(0xFF9AA8C4),
             fontSize: 13,
@@ -530,32 +531,32 @@ class _SecurityProtectionRolloutPanelState
           ),
         ),
         SLSpacing.h12,
-        const OverviewListTile(
+        OverviewListTile(
           icon: Icons.screen_share_rounded,
-          title: 'Nếu lý do là screen capture',
+          title: context.tr('admin_nuldolscre_f03866'),
           subtitle:
-              'Yêu cầu người dùng tắt quay màn hình, tắt screen share, vào lại OTP/PIN/QR và thử bằng mã mới.',
+              context.tr('admin_yucungidng_c8eddc'),
         ),
         SLSpacing.h12,
-        const OverviewListTile(
+        OverviewListTile(
           icon: Icons.touch_app_rounded,
-          title: 'Nếu lý do là overlay hoặc control app',
+          title: context.tr('admin_nuldolover_0584c2'),
           subtitle:
-              'Hỏi rõ app bong bóng chat, auto click, remote control, accessibility tool đang bật. Tắt hết rồi thử lại.',
+              context.tr('admin_hirappbong_7e1e8e'),
         ),
         SLSpacing.h12,
-        const OverviewListTile(
+        OverviewListTile(
           icon: Icons.download_done_rounded,
-          title: 'Nếu lý do là build mod hoặc unlicensed',
+          title: context.tr('admin_nuldolbuil_8e87ca'),
           subtitle:
-              'Yêu cầu cài lại bản chính thức, xóa bản sideload, đăng nhập lại và gửi version app nếu vẫn báo nhầm.',
+              context.tr('admin_yucucilibn_f0f10d'),
         ),
         SLSpacing.h12,
-        const OverviewListTile(
+        OverviewListTile(
           icon: Icons.health_and_safety_rounded,
-          title: 'Nếu lý do là malware hoặc play protect',
+          title: context.tr('admin_nuldolmalw_3246e8'),
           subtitle:
-              'Báo người dùng quét Play Protect, gỡ app nghi ngờ, khởi động lại máy và ghi danh sách app nền đang chạy.',
+              context.tr('admin_bongidngqu_c32dda'),
         ),
       ],
     );
@@ -566,7 +567,7 @@ class _SecurityProtectionRolloutPanelState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Sự kiện và ghi chú rollout',
+          context.tr('admin_skinvghich_0f91e0'),
           style: SLTheme.quicksand(
             color: Colors.white,
             fontSize: 16,
@@ -611,7 +612,7 @@ class _SecurityProtectionRolloutPanelState
         ),
         SLSpacing.h8,
         Text(
-          'Đường dẫn summary: admin_system/security_protection_daily_summary/<yyyyMMdd>',
+          context.tr('admin_ngdnsummar_b0a8b4'),
           style: SLTheme.quicksand(
             color: const Color(0xFF9AA8C4),
             fontSize: 13,
@@ -625,7 +626,7 @@ class _SecurityProtectionRolloutPanelState
   Widget _buildSaveBar() {
     final updatedText = _config.updatedAtMs > 0
         ? 'Cập nhật ${formatDateTime(DateTime.fromMillisecondsSinceEpoch(_config.updatedAtMs))}'
-        : 'Chưa có lần lưu nào';
+        : context.tr('admin_chaclnluno_c3107e');
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -659,7 +660,7 @@ class _SecurityProtectionRolloutPanelState
             children: [
               Expanded(
                 child: Text(
-                  'Lưu xong là team enforcement có thể đọc config mới ngay lập tức từ Realtime Database.',
+                  context.tr('admin_luxongltea_d264d1'),
                   style: SLTheme.quicksand(
                     color: const Color(0xFF9AA8C4),
                     fontSize: 13,
@@ -693,7 +694,7 @@ class _SecurityProtectionRolloutPanelState
                       )
                     : const Icon(Icons.save_rounded),
                 label: Text(
-                  _isSaving ? 'Đang lưu...' : 'Lưu rollout',
+                  _isSaving ? context.tr('admin_anglu_4d30b6') : context.tr('admin_lurollout_d1f7ef'),
                   style: SLTheme.quicksand(
                     color: Colors.white,
                     fontSize: 14,

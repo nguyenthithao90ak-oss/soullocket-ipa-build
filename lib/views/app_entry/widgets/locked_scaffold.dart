@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../core/sl_theme.dart';
 
@@ -54,7 +55,7 @@ class LockedScaffold extends StatelessWidget {
                       ),
                       SLSpacing.h20,
                       Text(
-                        'Ứng dụng đã bị khóa',
+                        context.tr('app_entry_ngdngbkha_85ff01'),
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
                           fontSize: 25,
@@ -64,7 +65,7 @@ class LockedScaffold extends StatelessWidget {
                       ),
                       SLSpacing.h12,
                       Text(
-                        'Xác thực lại để quay lại ứng dụng.',
+                        context.tr('app_entry_xcthcliqua_184be1'),
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
                           fontSize: 15,
@@ -83,7 +84,7 @@ class LockedScaffold extends StatelessWidget {
                     onPressed: onUnlock,
                     icon: const Icon(Icons.lock_open_rounded),
                     label: Text(
-                      'Mở khóa',
+                      context.tr('app_entry_mkha_5bfc67'),
                       style: SLTheme.quicksand(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,

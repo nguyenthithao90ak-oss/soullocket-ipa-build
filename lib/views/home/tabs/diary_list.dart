@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../models/diary_post.dart';
 import '../../../../widgets/skeleton_container.dart';
@@ -80,8 +81,8 @@ class DiaryList extends StatelessWidget {
                 )
               else if (houseId == null)
                 buildHouseSetupState(
-                  title: 'LỖI ĐỒNG BỘ',
-                  message: 'Không tìm thấy dữ liệu nhà. Vui lòng thử lại.',
+                  title: context.tr('home_lingb_9e6bb9'),
+                  message: context.tr('home_khngtmthyd_f2580e'),
                 )
               else if (posts.isEmpty)
                 buildDiaryEmptyState(),

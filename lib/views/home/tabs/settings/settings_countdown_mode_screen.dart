@@ -48,30 +48,31 @@ class _CountdownModeIndependentScreenState
 
   static const int _maxSpaces = CountdownSpaceService.maxSpacesPerHouse;
 
-  static const List<MapEntry<String, String>> _themeOptions = [
-    MapEntry('Tự động theo mùa', 'theme-auto'),
-    MapEntry('Sóng hồng', 'theme-pink-glow'),
-    MapEntry('Mặc định sáng', 'theme-default'),
-    MapEntry('Hoàng hôn', 'theme-sunset'),
-    MapEntry('Đại dương', 'theme-ocean'),
-    MapEntry('Đêm sâu', 'theme-night'),
-    MapEntry('Dark', 'theme-dark'),
-    MapEntry('Mystic Dark', 'theme-mystic-dark'),
-    MapEntry('Tắt chủ đề', 'off'),
+  static final List<MapEntry<String, String>> _themeOptions = [
+    MapEntry(L10nService().translate('home_tngtheoma_da55a7'), 'theme-auto'),
+    MapEntry(L10nService().translate('home_snghng_641d9c'), 'theme-pink-glow'),
+    MapEntry(L10nService().translate('home_mcnhsng_41d947'), 'theme-default'),
+    MapEntry(L10nService().translate('home_honghn_ab7dad'), 'theme-sunset'),
+    MapEntry(L10nService().translate('home_idng_b4a250'), 'theme-ocean'),
+    MapEntry(L10nService().translate('home_msu_573436'), 'theme-night'),
+    const MapEntry('Dark', 'theme-dark'),
+    const MapEntry('Mystic Dark', 'theme-mystic-dark'),
+    MapEntry(L10nService().translate('home_ttch_1676a7'), 'off'),
   ];
 
-  static const List<MapEntry<String, String>> _countdownStyleOptions = [
-    MapEntry('Mặc định', 'default'),
-    MapEntry('Rose Wave', 'rose_wave'),
-    MapEntry('Glass', 'glass'),
-    MapEntry('Glow', 'glow'),
-    MapEntry('Plain', 'plain'),
-    MapEntry('Candy', 'candy'),
-    MapEntry('Galaxy', 'galaxy'),
-    MapEntry('Aurora', 'aurora'),
-    MapEntry('Crystal', 'crystal'),
-    MapEntry('Fireworks', 'fireworks'),
-    MapEntry('Lava', 'lava'),
+  // Keep the most useful styles on top for a cleaner, faster settings flow.
+  static final List<MapEntry<String, String>> _countdownStyleOptions = [
+    const MapEntry('Glass', 'glass'),
+    MapEntry(L10nService().translate('home_mcnh_a57a8e'), 'default'),
+    const MapEntry('Rose Wave', 'rose_wave'),
+    const MapEntry('Plain', 'plain'),
+    const MapEntry('Glow', 'glow'),
+    const MapEntry('Candy', 'candy'),
+    const MapEntry('Galaxy', 'galaxy'),
+    const MapEntry('Aurora', 'aurora'),
+    const MapEntry('Crystal', 'crystal'),
+    const MapEntry('Fireworks', 'fireworks'),
+    const MapEntry('Lava', 'lava'),
   ];
 
   static const Set<String> _premiumCountdownStyleKeys = <String>{
@@ -133,14 +134,14 @@ class _CountdownModeIndependentScreenState
     );
   }
 
-  static const List<MapEntry<String, String>> _avatarFrameOptions = [
-    MapEntry('Không khung', 'off'),
-    MapEntry('Circle', 'circle'),
-    MapEntry('Rounded', 'rounded'),
-    MapEntry('Squircle', 'squircle'),
-    MapEntry('Pearl', 'pearl'),
-    MapEntry('Glass', 'glass'),
-    MapEntry('PRO', 'vip'),
+  static final List<MapEntry<String, String>> _avatarFrameOptions = [
+    MapEntry(L10nService().translate('home_khngkhung_e37077'), 'off'),
+    const MapEntry('Circle', 'circle'),
+    const MapEntry('Rounded', 'rounded'),
+    const MapEntry('Squircle', 'squircle'),
+    const MapEntry('Pearl', 'pearl'),
+    const MapEntry('Glass', 'glass'),
+    const MapEntry('Aurora', 'vip'),
   ];
 
   final CountdownSpaceService _countdownSpaceService = CountdownSpaceService();
@@ -374,7 +375,7 @@ class _CountdownModeIndependentScreenState
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final rightName =
-                        _nameU2.trim().isEmpty ? 'Người ấy' : _nameU2.trim();
+                        _nameU2.trim().isEmpty ? L10nService().translate('home_ngiy_5bab37') : _nameU2.trim();
                     return Stack(
                       children: [
                         SingleChildScrollView(
@@ -421,7 +422,7 @@ class _CountdownModeIndependentScreenState
                                     _CountdownModeAvatarCardStatic(
                                       isSingleMode: _singleMode,
                                       leftName: _nameU1.trim().isEmpty
-                                          ? 'Bạn'
+                                          ? L10nService().translate('home_bn_1fd75b')
                                           : _nameU1.trim(),
                                       rightName: rightName,
                                       leftAvatarUrl: _avatarUrl1,
@@ -466,7 +467,7 @@ class _CountdownModeIndependentScreenState
                                     isDark: themeData.isDark,
                                     onTap: _openSettingsSheet,
                                     tooltip:
-                                        'Cài đặt không gian riêng cho bạn bè',
+                                        L10nService().translate('home_citkhnggia_09f866'),
                                   ),
                                 ],
                               ),

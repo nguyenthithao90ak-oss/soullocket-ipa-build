@@ -219,12 +219,24 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                 child: AnimatedScale(
                   duration: const Duration(milliseconds: 220),
                   scale: isSelected ? 1.08 : 1,
-                  child: Text(
-                    heart,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 23,
-                      height: 1,
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [
+                        Color(0xFFFF4D8D),
+                        Color(0xFFFFB86B),
+                        Color(0xFF8B5CF6),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds),
+                    child: Text(
+                      heart,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 23,
+                        height: 1,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -347,20 +359,28 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               offset: Offset(swayX * 0.42, floatY),
               child: Transform.scale(
                 scale: pulse,
-                child: Text(
-                  activeStyleKey,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: emojiSize,
-                    height: 1,
-                    shadows: [
-                      Shadow(
-                        color: primary
-                            .withValues(alpha: _widgetHeartAnimated ? 0.28 : 0.16),
-                        blurRadius: size * 0.18,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+                child: ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [primary, secondary, glow],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds),
+                  child: Text(
+                    activeStyleKey,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: emojiSize,
+                      height: 1,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: primary
+                              .withValues(alpha: _widgetHeartAnimated ? 0.28 : 0.16),
+                          blurRadius: size * 0.18,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

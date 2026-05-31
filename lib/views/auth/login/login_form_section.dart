@@ -51,16 +51,11 @@ class LoginForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = L10nService();
-    final isVietnamese = l10n.locale.languageCode == 'vi';
-    final emailLabel = isVietnamese ? 'Email:' : l10n.translate('email');
-    final passwordLabel =
-        isVietnamese ? 'Mật khẩu mở cửa:' : l10n.translate('password');
-    final rememberMeLabel =
-        isVietnamese ? 'Ghi nhớ đăng nhập' : l10n.translate('remember_me');
-    final loginLabel =
-        isVietnamese ? 'VÀO NHÀ' : l10n.translate('login').toUpperCase();
-    final forgotPasswordLabel =
-        isVietnamese ? 'Quên mật khẩu?' : l10n.translate('forgot_password');
+    final emailLabel = l10n.translate('email');
+    final passwordLabel = l10n.translate('password');
+    final rememberMeLabel = l10n.translate('remember_me');
+    final loginLabel = l10n.translate('login').toUpperCase();
+    final forgotPasswordLabel = l10n.translate('forgot_password');
 
     return AutofillGroup(
       child: Column(
@@ -201,7 +196,7 @@ class LoginForm extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Center(
               child: Text(
-                isVietnamese ? 'HOẶC' : 'OR',
+                l10n.translate('auth_or').toUpperCase(),
                 style: SLTheme.quicksand(
                   color: const Color(0xFF888888),
                   fontSize: 13,
@@ -216,10 +211,7 @@ class LoginForm extends StatelessWidget {
           const SizedBox(height: 12),
           Center(
             child: Text(
-              isVietnamese
-                  ? 'Đăng nhập / Đăng ký qua Google hoặc Apple đồng nghĩa\n'
-                      'bạn xác nhận đủ 13 tuổi và đồng ý với Điều khoản.'
-                  : 'By continuing with Google or Apple, you confirm\nyou are 13+ and agree to our Terms.',
+              l10n.translate('auth_social_login_notice'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 color: const Color(0xFF999999),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../../../../services/breakup_service.dart';
 import '../../../../../services/notification_service.dart';
+import '../../../../../utils/services/l10n_service.dart';
 
 class RelationshipActionDescriptor {
   const RelationshipActionDescriptor({
@@ -207,10 +208,10 @@ class SettingsRelationshipActionRunner {
 
     await NotificationService().sendHouseNotification(
       houseId: houseId,
-      title: isSingleRelationship ? 'Xóa dữ liệu nhà' : 'Yêu cầu chia tay',
+      title: isSingleRelationship ? L10nService().translate('home_xadliunh_bbb016') : L10nService().translate('home_yucuchiata_be1aa9'),
       body: isSingleRelationship
-          ? 'Yêu cầu xóa dữ liệu đã được khởi tạo.'
-          : 'Yêu cầu chia tay đã được khởi tạo.',
+          ? L10nService().translate('home_yucuxadliu_357698')
+          : L10nService().translate('home_yucuchiata_df645c'),
     );
     return result;
   }
@@ -234,8 +235,8 @@ class SettingsRelationshipActionRunner {
 
     await NotificationService().sendHouseNotification(
       houseId: houseId,
-      title: 'Rút lại yêu cầu',
-      body: 'Yêu cầu chia tay / xóa dữ liệu đã được rút lại.',
+      title: L10nService().translate('home_rtliyucu_29ae92'),
+      body: L10nService().translate('home_yucuchiata_742234'),
     );
     return result;
   }
@@ -249,21 +250,21 @@ class SettingsRelationshipActions {
     required bool isCoupleConnected,
   }) {
     if (isSingle) {
-      return 'Tài khoản độc thân giữ luồng một mình. Khi sẵn sàng, bạn vẫn có thể quét QR để vào chung nhà với người ấy.';
+      return L10nService().translate('home_tikhoncthn_f0f6e1');
     }
     if (isCoupleConnected) {
-      return 'Chế độ có người yêu đang hoạt động ổn định. Hai thiết bị có thể đăng nhập cùng một tài khoản để đồng bộ dữ liệu.';
+      return L10nService().translate('home_chcngiyuan_5a4216');
     }
-    return 'Bạn đang ở luồng có người yêu nhưng chưa đủ 2 người. App sẽ ưu tiên nhắc hoàn tất kết nối để mở đầy đủ trải nghiệm đôi.';
+    return L10nService().translate('home_bnanglungc_13a19a');
   }
 
   static String panelNote({
     required bool isSingle,
   }) {
     if (isSingle) {
-      return 'Lưu ý: Độc thân là luồng trải nghiệm một mình. Nếu sau này muốn vào chung nhà, bạn có thể quét QR bất cứ lúc nào.';
+      return L10nService().translate('home_lucthnllun_57771d');
     }
-    return 'Lưu ý: Chế độ Có người yêu được chốt từ lúc tạo nhà. Khi chưa đủ 2 người, app sẽ ưu tiên bước kết nối trước các tính năng đôi.';
+    return L10nService().translate('home_luchcngiyu_28baaf');
   }
 
   static bool canShowQrConnect({
@@ -280,10 +281,10 @@ class SettingsRelationshipActions {
     required bool isSingle,
   }) {
     return RelationshipActionDescriptor(
-      label: isSingle ? 'Quét QR vào chung nhà' : 'Hoàn tất kết nối QR',
+      label: isSingle ? L10nService().translate('home_qutqrvochu_d848a8') : L10nService().translate('home_honttktniq_937193'),
       description: isSingle
-          ? 'Mở luồng vào chung nhà với người ấy.'
-          : 'Hoàn tất bước ghép đôi còn thiếu.',
+          ? L10nService().translate('home_mlungvochu_aabe86')
+          : L10nService().translate('home_honttbcghp_90b64c'),
       requiresHouseId: true,
     );
   }
@@ -293,9 +294,9 @@ class SettingsRelationshipActions {
     required bool isBusy,
   }) {
     if (isBusy) {
-      return 'Đang xử lý yêu cầu...';
+      return L10nService().translate('home_angxlyucu_0b316c');
     }
-    return isSingle ? 'Xóa dữ liệu nhà' : 'Chia tay / Xóa dữ liệu';
+    return isSingle ? L10nService().translate('home_xadliunh_bbb016') : L10nService().translate('home_chiatayxad_3b2b07');
   }
 
   static bool canWithdrawBreakup(BreakupRequestData? request) {
@@ -320,12 +321,12 @@ class SettingsRelationshipActions {
       return '';
     }
     if (request.isProcessing) {
-      return 'Đang xử lý xóa dữ liệu';
+      return L10nService().translate('home_angxlxadli_9bb5cf');
     }
     if (request.isScheduled) {
-      return 'Đã lên lịch xóa dữ liệu';
+      return L10nService().translate('home_lnlchxadli_6e8028');
     }
-    return isSingle ? 'Đang chờ xóa dữ liệu' : 'Đang chờ xử lý chia tay';
+    return isSingle ? L10nService().translate('home_angchxadli_e9699c') : L10nService().translate('home_angchxlchi_6eafab');
   }
 
   static String breakupStatusDescription({
@@ -336,29 +337,29 @@ class SettingsRelationshipActions {
       return '';
     }
     if (request.isProcessing) {
-      return 'Hệ thống đang dọn dữ liệu và đóng nhà vĩnh viễn.';
+      return L10nService().translate('home_hthngangdn_fae73f');
     }
     if (request.isScheduled) {
       return 'Dữ liệu sẽ bị xóa vào ${_formatDateTime(request.deleteAt)} nếu bạn không rút lại trước hạn.';
     }
     if (isSingle) {
-      return 'Tài khoản độc thân đã lên lịch xóa dữ liệu sau 3 ngày và vẫn có thể rút lại trước hạn.';
+      return L10nService().translate('home_tikhoncthn_7650c0');
     }
     final expireLabel = request.expireAt > 0
         ? _formatDateTime(request.expireAt)
-        : 'khi có thay đổi mới';
+        : L10nService().translate('home_khicthayim_65b886');
     return 'Yêu cầu đang chờ thiết bị bên kia hoặc hệ thống tự xử lý đến $expireLabel.';
   }
 
   static String statusLabel({
     required bool isSingle,
   }) {
-    return isSingle ? 'Độc thân' : 'Đang yêu';
+    return isSingle ? L10nService().translate('home_cthn_4e27b8') : L10nService().translate('home_angyu_cea065');
   }
 
   static String _formatDateTime(int value) {
     if (value <= 0) {
-      return 'không xác định';
+      return L10nService().translate('home_khngxcnh_fb806e');
     }
     final dt = DateTime.fromMillisecondsSinceEpoch(value);
     final day = dt.day.toString().padLeft(2, '0');

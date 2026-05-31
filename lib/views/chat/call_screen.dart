@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../services/l10n_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../services/webrtc_service.dart';
@@ -77,7 +78,7 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
             children: [
               // Header
               Text(
-                widget.isVideo ? '📹 Cuộc Gọi Video' : '📞 Cuộc Gọi Thoại',
+                widget.isVideo ? L10nService().translate('chat_video_call_title') : L10nService().translate('chat_voice_call_title'),
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 16,
@@ -85,9 +86,9 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
                 ),
               ),
               SLSpacing.h8,
-              const Text(
-                'Đang gọi đến...',
-                style: TextStyle(
+              Text(
+                L10nService().translate('chat_incoming_call'),
+                style: const TextStyle(
                   color: Colors.white54,
                   fontSize: 14,
                 ),
@@ -151,7 +152,7 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
                   // Decline
                   _CallButton(
                     icon: Icons.call_end,
-                    label: 'Từ chối',
+                    label: L10nService().translate('chat_decline'),
                     color: Colors.red.shade600,
                     onTap: widget.onDecline,
                     size: 72,
@@ -159,7 +160,7 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
                   // Accept
                   _CallButton(
                     icon: widget.isVideo ? Icons.videocam : Icons.call,
-                    label: 'Bắt máy',
+                    label: L10nService().translate('chat_answer'),
                     color: Colors.green.shade500,
                     onTap: widget.onAccept,
                     size: 72,
@@ -241,9 +242,8 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content:
-                  Text('Kết nối cuộc gọi chưa thành công. Vui lòng thử lại.'),
+          SnackBar(
+              content: Text(L10nService().translate('chat_call_connect_failed')),
               backgroundColor: Colors.red),
         );
         Navigator.pop(context);
@@ -351,7 +351,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                         ),
                         SLSpacing.h8,
                         Text(
-                          _connected ? _duration : 'Đang kết nối...',
+                          _connected ? _duration : L10nService().translate('chat_connecting'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
@@ -383,7 +383,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                           _SmallCallButton(
                             icon:
                                 _speakerOn ? Icons.volume_up : Icons.volume_off,
-                            label: _speakerOn ? 'Loa' : 'Tắt loa',
+                            label: _speakerOn ? L10nService().translate('chat_speaker') : L10nService().translate('chat_speaker_off'),
                             onTap: () =>
                                 setState(() => _speakerOn = !_speakerOn),
                           ),
@@ -391,7 +391,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                             _SmallCallButton(
                               icon:
                                   _camOff ? Icons.videocam_off : Icons.videocam,
-                              label: _camOff ? 'Bật cam' : 'Tắt cam',
+                              label: _camOff ? L10nService().translate('chat_camera_on') : L10nService().translate('chat_camera_off'),
                               onTap: () => setState(() => _camOff = !_camOff),
                             ),
                         ],
@@ -404,7 +404,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                         children: [
                           _CallButton(
                             icon: _micMuted ? Icons.mic_off : Icons.mic,
-                            label: _micMuted ? 'Bật mic' : 'Tắt mic',
+                            label: _micMuted ? L10nService().translate('chat_mic_on') : L10nService().translate('chat_mic_off'),
                             color: _micMuted
                                 ? Colors.grey.shade700
                                 : Colors.white24,
@@ -414,14 +414,14 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                           ),
                           _CallButton(
                             icon: Icons.call_end,
-                            label: 'Cúp máy',
+                            label: L10nService().translate('chat_hang_up'),
                             color: Colors.red.shade600,
                             onTap: _hangUp,
                             size: 72,
                           ),
                           _CallButton(
                             icon: Icons.flip_camera_ios,
-                            label: 'Đổi cam',
+                            label: L10nService().translate('chat_switch_camera'),
                             color: Colors.white24,
                             onTap: () {},
                             size: 60,

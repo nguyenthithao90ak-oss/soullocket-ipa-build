@@ -16,9 +16,10 @@ class SleepSyncService {
   /// Kích hoạt "Tính năng Đi ngủ" - Điện thoại chuyển sang màn hình đen
   Future<void> goToSleep(String houseId) async {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
+    final normalizedHouseId = houseId.trim();
+    if (uid == null || normalizedHouseId.isEmpty) return;
 
-    await _db.ref('houses/$houseId/sleep_sync/$uid').set({
+    await _db.ref('houses/$normalizedHouseId/sleep_sync/$uid').set({
       'isSleeping': true,
       'sleptAt': ServerValue.timestamp,
       'wokeUpAt': null,
@@ -28,9 +29,10 @@ class SleepSyncService {
   /// Sáng dậy tắt báo thức
   Future<void> wakeUp(String houseId) async {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
+    final normalizedHouseId = houseId.trim();
+    if (uid == null || normalizedHouseId.isEmpty) return;
 
-    await _db.ref('houses/$houseId/sleep_sync/$uid').update({
+    await _db.ref('houses/$normalizedHouseId/sleep_sync/$uid').update({
       'isSleeping': false,
       'wokeUpAt': ServerValue.timestamp,
     });
@@ -39,7 +41,10 @@ class SleepSyncService {
   /// Đặt giờ gửi báo thức cho người kia
   Future<void> setAlarmForPartner(
       String houseId, String partnerUid, DateTime alarmTime) async {
-    await _db.ref('houses/$houseId/alarms/$partnerUid').set({
+    final normalizedHouseId = houseId.trim();
+    final normalizedPartnerUid = partnerUid.trim();
+    if (normalizedHouseId.isEmpty || normalizedPartnerUid.isEmpty) return;
+    await _db.ref('houses/$normalizedHouseId/alarms/$normalizedPartnerUid').set({
       'alarmTimeMs': alarmTime.millisecondsSinceEpoch,
       'isActive': true,
       'message': 'Bé ơi dậy đi, tới giờ rồi nè! ☀️'
@@ -48,8 +53,12 @@ class SleepSyncService {
 
   /// Lắng nghe trạng thái ngủ của 2 người
   Stream<Map<dynamic, dynamic>?> listenToSleepState(String houseId) {
-    return _db.ref('houses/$houseId/sleep_sync').onValue.map((event) {
-      if (!event.snapshot.exists) return null;
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<Map<dynamic, dynamic>?>.value(null);
+    }
+    return _db.ref('houses/$normalizedHouseId/sleep_sync').onValue.map((event) {
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return null;
       return Map<dynamic, dynamic>.from(event.snapshot.value as Map);
     });
   }

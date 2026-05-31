@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../core/sl_theme.dart';
 
@@ -35,14 +36,14 @@ class UtilitiesHubHeader extends StatelessWidget {
                   children: [
                     ShaderMask(
                       shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
+                        colors: [SLColors.primary, SLColors.accentPink],
                       ).createShader(bounds),
                       child: Text(
                         'UTILITIES HUB',
                         style: SLTheme.quicksand(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
-                          color: Colors.white,
+                          color: SLColors.textInverse,
                           letterSpacing: 1.5,
                         ),
                       ),
@@ -54,7 +55,7 @@ class UtilitiesHubHeader extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: SLRadius.pillAll,
                         gradient: const LinearGradient(
-                          colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
+                          colors: [SLColors.primary, SLColors.accentPink],
                         ),
                       ),
                     ),
@@ -68,7 +69,7 @@ class UtilitiesHubHeader extends StatelessWidget {
                   children: [
                     _UtilitiesHubHeaderAction(
                       icon: Icons.restart_alt_rounded,
-                      tooltip: 'Đặt lại',
+                      tooltip: context.tr('home_tli_ffd7c4'),
                       onTap: onResetTap,
                     ),
                   ],
@@ -82,21 +83,21 @@ class UtilitiesHubHeader extends StatelessWidget {
             child: Container(
               padding: SLSpacing.all4,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.55),
+                color: SLColors.bgElevated.withValues(alpha: 0.55),
                 borderRadius: SLRadius.mdAll,
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: _UtilitiesHubSegmentButton(
-                      label: 'Tiện ích chung',
+                      label: context.tr('home_tinchchung_3e7d5e'),
                       active: currentSegment == 0,
                       onTap: () => onSegmentChanged(0),
                     ),
                   ),
                   Expanded(
                     child: _UtilitiesHubSegmentButton(
-                      label: 'Công cụ thiết yếu',
+                      label: context.tr('home_cngcthityu_872418'),
                       active: currentSegment == 1,
                       onTap: () => onSegmentChanged(1),
                     ),
@@ -132,11 +133,11 @@ class _UtilitiesHubHeaderAction extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
+            color: SLColors.bgElevated.withValues(alpha: 0.9),
             shape: BoxShape.circle,
             boxShadow: SLShadow.subtle,
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: SLColors.bgElevated.withValues(alpha: 0.5),
             ),
           ),
           child: Icon(
@@ -168,7 +169,9 @@ class _UtilitiesHubSegmentButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: active ? Colors.white : Colors.transparent,
+          color: active
+              ? SLColors.bgElevated
+              : SLColors.bgElevated.withValues(alpha: 0),
           borderRadius: SLRadius.smAll,
           boxShadow: active ? SLShadow.subtle : null,
         ),

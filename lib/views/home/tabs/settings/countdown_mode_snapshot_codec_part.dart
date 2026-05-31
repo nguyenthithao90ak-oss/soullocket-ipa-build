@@ -225,21 +225,21 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     final defaultTopLabel = defaultSingleMode
         ? (ui.countdownTopLabel.trim().isNotEmpty
             ? ui.countdownTopLabel.trim()
-            : 'TUỔI CỦA TÔI')
+            : L10nService().translate('home_tuicati_5c654c'))
         : (widget.fallbackTopLabel.trim().isNotEmpty
             ? widget.fallbackTopLabel.trim()
-            : 'Yêu nhau');
+            : L10nService().translate('home_yunhau_501102'));
     final defaultBottomLabel = defaultSingleMode
         ? (ui.countdownBottomLabel.trim().isNotEmpty
             ? ui.countdownBottomLabel.trim()
-            : 'NGÀY TUỔI')
+            : L10nService().translate('home_ngytui_22bed4'))
         : (widget.fallbackBottomLabel.trim().isNotEmpty
             ? widget.fallbackBottomLabel.trim()
-            : 'ngày');
+            : L10nService().translate('home_ngy_41ec10'));
     final defaultNameU1 =
-        widget.nameU1.trim().isEmpty ? 'Bạn' : widget.nameU1.trim();
+        widget.nameU1.trim().isEmpty ? L10nService().translate('home_bn_1fd75b') : widget.nameU1.trim();
     final defaultNameU2 =
-        widget.nameU2.trim().isEmpty ? 'Người ấy' : widget.nameU2.trim();
+        widget.nameU2.trim().isEmpty ? L10nService().translate('home_ngiy_5bab37') : widget.nameU2.trim();
     final defaultThemeKey =
         ui.themeKey.trim().isEmpty ? 'theme-auto' : ui.themeKey.trim();
     final defaultStyleKey = ui.countdownStyleKey.trim().isEmpty
@@ -305,19 +305,19 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     _topLabelText = _singleMode
         ? (ui.countdownTopLabel.trim().isNotEmpty
             ? ui.countdownTopLabel.trim()
-            : 'TUỔI CỦA TÔI')
+            : L10nService().translate('home_tuicati_5c654c'))
         : (widget.fallbackTopLabel.trim().isNotEmpty
             ? widget.fallbackTopLabel.trim()
-            : 'Yêu nhau');
+            : L10nService().translate('home_yunhau_501102'));
     _bottomLabelText = _singleMode
         ? (ui.countdownBottomLabel.trim().isNotEmpty
             ? ui.countdownBottomLabel.trim()
-            : 'NGÀY TUỔI')
+            : L10nService().translate('home_ngytui_22bed4'))
         : (widget.fallbackBottomLabel.trim().isNotEmpty
             ? widget.fallbackBottomLabel.trim()
-            : 'ngày');
-    _nameU1 = widget.nameU1.trim().isEmpty ? 'Bạn' : widget.nameU1.trim();
-    _nameU2 = widget.nameU2.trim().isEmpty ? 'Người ấy' : widget.nameU2.trim();
+            : L10nService().translate('home_ngy_41ec10'));
+    _nameU1 = widget.nameU1.trim().isEmpty ? L10nService().translate('home_bn_1fd75b') : widget.nameU1.trim();
+    _nameU2 = widget.nameU2.trim().isEmpty ? L10nService().translate('home_ngiy_5bab37') : widget.nameU2.trim();
     _avatarUrl1 = widget.avatarUrl1.trim();
     _avatarUrl2 = widget.avatarUrl2.trim();
     _themeKey = ui.themeKey.trim().isEmpty ? 'theme-auto' : ui.themeKey.trim();

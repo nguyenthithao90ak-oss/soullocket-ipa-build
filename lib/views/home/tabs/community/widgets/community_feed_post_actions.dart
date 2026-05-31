@@ -121,7 +121,7 @@ class _FeedPostActionBar extends StatelessWidget {
                 icon: isLikedByMe
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
-                label: _ct('Thích', 'Like'),
+                label: _ct(context.tr('home_thch_436ce5'), 'Like'),
                 active: isLikedByMe,
                 disabled: state._isLikePending(post),
                 onTap: () {
@@ -137,7 +137,7 @@ class _FeedPostActionBar extends StatelessWidget {
             child: _FeedActionButton(
               state: state,
               icon: Icons.mode_comment_outlined,
-              label: _ct('Bình luận', 'Comment'),
+              label: _ct(context.tr('home_bnhlun_6412d9'), 'Comment'),
               onTap: () => state._openComments(post),
             ),
           ),
@@ -146,7 +146,7 @@ class _FeedPostActionBar extends StatelessWidget {
             child: _FeedActionButton(
               state: state,
               icon: Icons.share_outlined,
-              label: _ct('Chia sẻ', 'Share'),
+              label: _ct(context.tr('home_chias_569031'), 'Share'),
               onTap: () => state._sharePost(post),
             ),
           ),

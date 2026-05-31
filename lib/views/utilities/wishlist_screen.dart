@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,6 +28,21 @@ class _WishlistScreenState extends State<WishlistScreen> {
   bool _isLoading = true;
 
   String _selectedScope = 'together'; // 'together', 'mine', 'partner'
+  String _selectedCategory = 'gift';
+  String _selectedPriority = 'normal';
+
+  final Map<String, String> _categoryLabels = const {
+    'gift': 'Quà tặng',
+    'date': 'Hẹn hò',
+    'home': 'Nhà chung',
+    'dream': 'Ước mơ',
+  };
+
+  final Map<String, String> _priorityLabels = const {
+    'urgent': 'Ưu tiên cao',
+    'normal': 'Vừa',
+    'someday': 'Để sau',
+  };
 
   @override
   void initState() {
@@ -88,6 +104,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
       'a': widget.myName,
       'by': role,
       'scope': _selectedScope,
+      'category': _selectedCategory,
+      'priority': _selectedPriority,
       'c': text,
       'est': price,
       'ts': now.millisecondsSinceEpoch,
@@ -111,7 +129,39 @@ class _WishlistScreenState extends State<WishlistScreen> {
     _dbRef.child('houses/${widget.houseId}/wishlist/$key').remove();
   }
 
-  final _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+  final _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: L10nService().translate('util_txt_b5407d'));
+
+  int _priorityRank(String? value) {
+    switch (value) {
+      case 'urgent':
+        return 3;
+      case 'normal':
+        return 2;
+      case 'someday':
+        return 1;
+      default:
+        return 2;
+    }
+  }
+
+  Color _priorityColor(String value) {
+    switch (value) {
+      case 'urgent':
+        return SLColors.danger;
+      case 'someday':
+        return SLColors.textSecond;
+      default:
+        return SLColors.primary;
+    }
+  }
+
+  String _categoryLabel(String? value) {
+    return _categoryLabels[value] ?? _categoryLabels['gift']!;
+  }
+
+  String _priorityLabel(String? value) {
+    return _priorityLabels[value] ?? _priorityLabels['normal']!;
+  }
 
   @override
   void dispose() {
@@ -125,7 +175,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, 'Wishlist đôi'),
+      appBar: SLTheme.appBar(context, context.tr('util_wishlisti_b2581f')),
       body: SLTheme.softCanvasBackdrop(
         baseColor: SLColors.bgMain,
         accentColor: SLColors.warning,
@@ -178,7 +228,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Điều ước mới',
+                      context.tr('util_iucmi_46ac75'),
                       style: SLTheme.quicksand(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
@@ -187,7 +237,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     ),
                     SLSpacing.h4,
                     Text(
-                      'Lưu món đồ hoặc mục tiêu hai bạn muốn mua.',
+                      context.tr('util_lumnhocmct_1fb788'),
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -202,12 +252,27 @@ class _WishlistScreenState extends State<WishlistScreen> {
           SLSpacing.h12,
           Row(
             children: <Widget>[
-              _buildScopeBtn('Cùng nhau', 'together'),
+              _buildScopeBtn(context.tr('util_cngnhau_592254'), 'together'),
               SLSpacing.w8,
-              _buildScopeBtn('Của tôi', 'mine'),
+              _buildScopeBtn(context.tr('util_cati_13fe32'), 'mine'),
               SLSpacing.w8,
-              _buildScopeBtn('Cho người ấy', 'partner'),
+              _buildScopeBtn(context.tr('util_chongiy_aa30ac'), 'partner'),
             ],
+          ),
+          SLSpacing.h12,
+          _buildWishOptionRow(
+            title: 'Nhóm',
+            options: _categoryLabels,
+            selectedValue: _selectedCategory,
+            onSelected: (value) => setState(() => _selectedCategory = value),
+          ),
+          SLSpacing.h10,
+          _buildWishOptionRow(
+            title: 'Ưu tiên',
+            options: _priorityLabels,
+            selectedValue: _selectedPriority,
+            onSelected: (value) => setState(() => _selectedPriority = value),
+            colorFor: _priorityColor,
           ),
           SLSpacing.h16,
           Row(
@@ -216,14 +281,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 flex: 2,
                 child: _buildWishTextField(
                   controller: _itemController,
-                  hintText: 'Tên món đồ...',
+                  hintText: context.tr('util_tnmn_945dda'),
                 ),
               ),
               SLSpacing.w8,
               Expanded(
                 child: _buildWishTextField(
                   controller: _priceController,
-                  hintText: 'Giá',
+                  hintText: context.tr('util_gi_072c1a'),
                   keyboardType: TextInputType.number,
                 ),
               ),
@@ -324,6 +389,64 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
   }
 
+  Widget _buildWishOptionRow({
+    required String title,
+    required Map<String, String> options,
+    required String selectedValue,
+    required ValueChanged<String> onSelected,
+    Color Function(String value)? colorFor,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          title,
+          style: SLTheme.quicksand(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w900,
+            color: SLColors.textSecond,
+          ),
+        ),
+        SLSpacing.h6,
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options.entries.map((entry) {
+            final selected = selectedValue == entry.key;
+            final accent = colorFor?.call(entry.key) ?? SLColors.primary;
+            return GestureDetector(
+              onTap: () => onSelected(entry.key),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? accent.withValues(alpha: 0.13)
+                      : Colors.white.withValues(alpha: 0.78),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: selected
+                        ? accent.withValues(alpha: 0.58)
+                        : SLColors.warning.withValues(alpha: 0.28),
+                  ),
+                ),
+                child: Text(
+                  entry.value,
+                  style: SLTheme.quicksand(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: selected ? accent : SLColors.textSecond,
+                  ),
+                ),
+              ),
+            );
+          }).toList(growable: false),
+        ),
+      ],
+    );
+  }
+
   Widget _buildWishList() {
     if (_isLoading) {
       return const Center(
@@ -337,8 +460,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
         child: Center(
           child: SLTheme.emptyStatePanel(
             icon: Icons.error_outline_rounded,
-            title: 'Không tải được wishlist',
-            subtitle: 'Không tải được danh sách lúc này. Hãy thử lại sau.',
+            title: context.tr('util_khngticwis_659dd6'),
+            subtitle: context.tr('util_khngticdan_0d77c8'),
             accentColor: SLColors.danger,
           ),
         ),
@@ -351,8 +474,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
         child: Center(
           child: SLTheme.emptyStatePanel(
             icon: Icons.shopping_bag_rounded,
-            title: 'Chưa có điều ước nào',
-            subtitle: 'Thêm món đầu tiên để hai bạn cùng lên kế hoạch nhé.',
+            title: context.tr('util_chaciucno_1000c1'),
+            subtitle: context.tr('util_thmmnutinh_30b48b'),
             accentColor: SLColors.warning,
           ),
         ),
@@ -367,8 +490,16 @@ class _WishlistScreenState extends State<WishlistScreen> {
         .where((item) =>
             item['scope'] == _selectedScope || item['scope'] == null)
         .toList();
-    items.sort(
-        (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
+    items.sort((a, b) {
+      if (a['done'] == true && b['done'] != true) return 1;
+      if (a['done'] != true && b['done'] == true) return -1;
+      final priorityCompare =
+          _priorityRank(b['priority']?.toString()).compareTo(
+        _priorityRank(a['priority']?.toString()),
+      );
+      if (priorityCompare != 0) return priorityCompare;
+      return (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0);
+    });
 
     final int totalCount = allItems.length;
     final int doneCount =
@@ -390,8 +521,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
           SLSpacing.h12,
           SLTheme.emptyStatePanel(
             icon: Icons.filter_alt_off_rounded,
-            title: 'Mục này đang trống',
-            subtitle: 'Hãy đổi nhóm hoặc thêm điều ước mới vào nhóm này.',
+            title: context.tr('util_mcnyangtrn_18c888'),
+            subtitle: context.tr('util_hyinhmhoct_956ce0'),
             accentColor: SLColors.primary,
           ),
         ],
@@ -424,62 +555,118 @@ class _WishlistScreenState extends State<WishlistScreen> {
     required int doneCount,
     required int totalPrice,
   }) {
+    final progress = totalCount == 0 ? 0.0 : doneCount / totalCount;
     return SLTheme.softPanel(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       borderColor: SLColors.warning.withValues(alpha: 0.50),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                colors: <Color>[
-                  SLColors.warning.withValues(alpha: 0.24),
-                  SLColors.primary.withValues(alpha: 0.14),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          Row(
+            children: <Widget>[
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    colors: <Color>[
+                      SLColors.warning.withValues(alpha: 0.24),
+                      SLColors.primary.withValues(alpha: 0.14),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border:
+                      Border.all(color: SLColors.warning.withValues(alpha: 0.50)),
+                ),
+                child: const Icon(Icons.local_mall_rounded,
+                    color: SLColors.warning, size: 28),
               ),
-              border:
-                  Border.all(color: SLColors.warning.withValues(alpha: 0.50)),
-            ),
-            child: const Icon(Icons.local_mall_rounded,
-                color: SLColors.warning, size: 28),
-          ),
-          SLSpacing.w12,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  'Wishlist đang có $totalCount món',
-                  style: SLTheme.quicksand(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.textPrimary,
-                  ),
+              SLSpacing.w12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Wishlist đang có $totalCount món',
+                      style: SLTheme.quicksand(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: SLColors.textPrimary,
+                      ),
+                    ),
+                    SLSpacing.h4,
+                    Text(
+                      'Hoàn thành $doneCount món • ${_currencyFormat.format(totalPrice)}',
+                      style: SLTheme.quicksand(
+                        fontSize: 12.2,
+                        fontWeight: FontWeight.w700,
+                        color: SLColors.textSecond,
+                      ),
+                    ),
+                  ],
                 ),
-                SLSpacing.h4,
-                Text(
-                  'Hoàn thành $doneCount món • ${_currencyFormat.format(totalPrice)}',
-                  style: SLTheme.quicksand(
-                    fontSize: 12.2,
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textSecond,
-                  ),
-                ),
-              ],
+              ),
+              SLSpacing.w12,
+              SLTheme.chip('$doneCount xong', SLColors.success),
+            ],
+          ),
+          SLSpacing.h12,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              minHeight: 7,
+              backgroundColor: SLColors.warningLight,
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(SLColors.success),
             ),
           ),
-          SLSpacing.w12,
-          SLTheme.chip('$doneCount xong', SLColors.success),
+          SLSpacing.h8,
+          Text(
+            'Ưu tiên cao sẽ được đưa lên trước để dễ quyết định mua/làm trước.',
+            style: SLTheme.quicksand(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: SLColors.textSecond,
+              height: 1.35,
+            ),
+          ),
         ],
       ),
     );
   }
 
+  Widget _buildWishMetaChip({
+    required String label,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.11),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.32)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: SLTheme.quicksand(
+              fontSize: 10.5,
+              color: color,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   Widget _buildWishCard({
     required Map<String, dynamic> item,
     required bool isDone,
@@ -575,6 +762,18 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         fontSize: 11.5,
                         color: SLColors.textSecond,
                         fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    _buildWishMetaChip(
+                      label: _categoryLabel(item['category']?.toString()),
+                      icon: Icons.category_rounded,
+                      color: SLColors.primary,
+                    ),
+                    _buildWishMetaChip(
+                      label: _priorityLabel(item['priority']?.toString()),
+                      icon: Icons.flag_rounded,
+                      color: _priorityColor(
+                        item['priority']?.toString() ?? 'normal',
                       ),
                     ),
                     if (price > 0)

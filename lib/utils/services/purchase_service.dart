@@ -446,7 +446,8 @@ class PurchaseService {
       _statusController.add(VipPurchaseState.success);
       return true;
     } catch (e) {
-      debugPrint('Error verifying purchase with server: ${AppErrorMapper.resolve(
+      debugPrint(
+          'Error verifying purchase with server: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể xác minh giao dịch mua với server.',
       ).message}');

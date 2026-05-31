@@ -30,6 +30,17 @@ class L10nService extends ChangeNotifier {
   final _L10nFormatHelper _formatHelper = const _L10nFormatHelper();
 
   Locale get locale => _state.currentLocale;
+  String get localeCode {
+    final locale = _state.currentLocale;
+    return _L10nAssetLoader.supportedLocales.firstWhere(
+      (code) => _L10nAssetLoader.supportedLocaleMap[code] == locale,
+      orElse: () => locale.languageCode,
+    );
+  }
+  List<Locale> get supportedLocales =>
+      _L10nAssetLoader.supportedLocales
+          .map(_localeForLangCode)
+          .toList(growable: false);
 
   Future<void> init({AssetBundle? bundle}) async {
     if (bundle != null) {
@@ -37,17 +48,18 @@ class L10nService extends ChangeNotifier {
     }
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final langCode = prefs.getString('il_lang') ?? 'vi';
+    final langCode = _normalizeLangCode(prefs.getString('il_lang'));
     await _ensureAssetTranslationsLoaded();
-    _state.currentLocale = Locale(langCode);
+    _state.currentLocale = _localeForLangCode(langCode);
     notifyListeners();
   }
 
   Future<void> setLocale(String langCode) async {
-    _state.currentLocale = Locale(langCode);
+    final normalizedLangCode = _normalizeLangCode(langCode);
+    _state.currentLocale = _localeForLangCode(normalizedLangCode);
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await prefs.setString('il_lang', langCode);
+    await prefs.setString('il_lang', normalizedLangCode);
     await _ensureAssetTranslationsLoaded();
     notifyListeners();
   }
@@ -56,8 +68,7 @@ class L10nService extends ChangeNotifier {
     return _lookup.translate(
       key,
       locale: _state.currentLocale,
-      assetVi: _state.assetVi,
-      assetEn: _state.assetEn,
+      assetMaps: _state.assetMaps,
       assetViValueToKey: _state.assetViValueToKey,
       staticViValueToKey: _viValueToKey,
     );
@@ -65,6 +76,32 @@ class L10nService extends ChangeNotifier {
 
   String format(String key, [Map<String, Object?> params = const {}]) {
     return _formatHelper.format(translate(key), params);
+  }
+
+  String _normalizeLangCode(String? value) {
+    final normalized = value?.trim();
+    if (normalized != null && normalized.isNotEmpty) {
+      for (final locale in _L10nAssetLoader.supportedLocales) {
+        if (locale.toLowerCase() == normalized.toLowerCase()) {
+          return locale;
+        }
+      }
+    }
+    
+    try {
+      final systemLocale = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+      for (final locale in _L10nAssetLoader.supportedLocales) {
+        if (locale.toLowerCase() == systemLocale.toLowerCase()) {
+          return locale;
+        }
+      }
+    } catch (_) {}
+    
+    return 'en';
+  }
+
+  Locale _localeForLangCode(String langCode) {
+    return _L10nAssetLoader.supportedLocaleMap[langCode] ?? const Locale('en', 'US');
   }
 
   Future<void> _ensureAssetTranslationsLoaded() async {
@@ -88,3 +125,4 @@ class L10nScope extends InheritedNotifier<L10nService> {
 extension TransContext on BuildContext {
   String tr(String key) => L10nScope.of(this).translate(key);
 }
+

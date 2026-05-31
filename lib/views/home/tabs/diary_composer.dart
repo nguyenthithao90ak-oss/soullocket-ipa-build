@@ -116,7 +116,7 @@ class DiaryComposer extends StatelessWidget {
               ),
               decoration: InputDecoration(
                 hintText:
-                    L10nService().translate('Hôm nay thế nào? Ghi lại nhé...'),
+                    L10nService().translate(context.tr('home_hmnaythnog_0c01f7')),
                 hintStyle: SLTheme.quicksand(
                   color: SLColors.textTertiary,
                   fontSize: 14,
@@ -172,7 +172,7 @@ class DiaryComposer extends StatelessWidget {
                             ),
                           )
                         : Text(
-                            L10nService().translate('LƯU TÂM SỰ'),
+                            L10nService().translate(context.tr('home_lutms_b4b0f3')),
                             style: SLTheme.quicksand(
                               color: Colors.white,
                               fontSize: 15.5,

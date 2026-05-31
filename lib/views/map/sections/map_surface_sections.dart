@@ -145,7 +145,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                     icon: Icons.alt_route_rounded,
                     label: uiSnap.isFetchingRoute &&
                             uiSnap.routeDistanceText == '--'
-                        ? 'Đang tính đường'
+                        ? context.tr('map_angtnhng_143257')
                         : uiSnap.routeDistanceText,
                     accent: _kMapBlue,
                   ),
@@ -153,8 +153,8 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                     icon: Icons.schedule_rounded,
                     label: uiSnap.etaText == '--'
                         ? (uiSnap.isFetchingRoute
-                            ? 'Đang ước tính'
-                            : 'Chưa có thời gian')
+                            ? context.tr('map_angctnh_9fd8b3')
+                            : context.tr('map_chacthigia_2ba794'))
                         : uiSnap.etaText,
                     accent: const Color(0xFF7C3AED),
                   ),
@@ -274,7 +274,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                   ),
                   SLSpacing.w8,
                   Text(
-                    'Đang dựng bản đồ...',
+                    context.tr('map_angdngbn_8460a8'),
                     style: SLTheme.quicksand(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,
@@ -513,7 +513,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                       ),
                       SLSpacing.h12,
                       Text(
-                        'Bản đồ tạm thời chưa sẵn sàng',
+                        context.tr('map_bntmthicha_687e4b'),
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
                           fontSize: 18,
@@ -582,7 +582,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Trạng thái GPS',
+                                      context.tr('map_trngthigps_9dd74f'),
                                       style: SLTheme.quicksand(
                                         fontSize: 11.5,
                                         fontWeight: FontWeight.w900,
@@ -615,7 +615,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                           FilledButton.icon(
                             onPressed: _retryMapSurface,
                             icon: const Icon(Icons.refresh_rounded),
-                            label: const Text('Tải lại bản đồ'),
+                            label: Text(context.tr('map_tilibn_d5770c')),
                           ),
                           OutlinedButton.icon(
                             onPressed: _isBootstrappingLocation
@@ -624,8 +624,8 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                             icon: const Icon(Icons.my_location_rounded),
                             label: Text(
                               _isBootstrappingLocation
-                                  ? 'Đang bật GPS'
-                                  : 'Bật GPS',
+                                  ? context.tr('map_angbtgps_26d573')
+                                  : context.tr('map_btgps_cf7e84'),
                             ),
                           ),
                         ],

@@ -44,8 +44,8 @@ class _SingleMatchWarningCard extends StatelessWidget {
               children: <Widget>[
                 Text(
                   !enabled
-                      ? 'Bạn đang ẩn khỏi pool ghép nối'
-                      : 'Hồ sơ còn thiếu vài thứ để match chính xác hơn',
+                      ? context.tr('match_bnangnkhip_3e5325')
+                      : context.tr('match_hscnthiuvi_279a59'),
                   style: SLTheme.quicksand(
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
@@ -55,8 +55,10 @@ class _SingleMatchWarningCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   !enabled
-                      ? 'Bật lại xuất hiện trong pool ở tab Cài đặt nếu bạn muốn người khác thấy mình.'
-                      : 'Hiện tại: ${issues.join(', ')}. Hoàn thiện thêm để điểm tương thích và chất lượng cuộc gọi tốt hơn.',
+                      ? context.tr('match_btlixuthin_f3af41')
+                      : L10nService().format('match_current_issues', {
+                          'issues': issues.join(', '),
+                        }),
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     height: 1.45,
@@ -103,7 +105,7 @@ class _SingleMatchActiveFiltersCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            'Bộ lọc đang áp dụng',
+            context.tr('match_blcangpdng_69b445'),
             style: SLTheme.quicksand(
               fontSize: 15,
               fontWeight: FontWeight.w900,
@@ -112,7 +114,7 @@ class _SingleMatchActiveFiltersCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Single Match đang dùng các tiêu chí này để lọc và chọn match ngẫu nhiên phù hợp hơn.',
+            context.tr('match_singlematc_5ed97d'),
             style: SLTheme.quicksand(
               fontSize: 12,
               height: 1.45,
@@ -150,7 +152,7 @@ class _SingleMatchActiveFiltersCard extends StatelessWidget {
                     : Icons.call_rounded,
                 label: hasEnabledCallMode
                     ? callModesLabel
-                    : 'Chưa bật mode cuộc gọi',
+                    : context.tr('match_chabtmodec_6c2e8e'),
                 foreground: const Color(0xFF18B67A),
                 background: const Color(0xFFEAFBF4),
               ),
@@ -167,7 +169,7 @@ class _SingleMatchActiveFiltersCard extends StatelessWidget {
           if (activeTags.isEmpty) ...<Widget>[
             const SizedBox(height: 12),
             Text(
-              'Thêm 2-4 tag sở thích để pool match và random gợi ý dễ hiểu hơn.',
+              context.tr('match_thm24tagst_3c9090'),
               style: SLTheme.quicksand(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
@@ -312,7 +314,7 @@ class _SingleMatchEmptyPoolCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Pool ghép nối đang trống',
+            context.tr('match_poolghpnia_bddb2a'),
             style: SLTheme.quicksand(
               fontSize: 18,
               fontWeight: FontWeight.w900,
@@ -321,7 +323,7 @@ class _SingleMatchEmptyPoolCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Hiện chưa có hồ sơ single công khai phù hợp với bộ lọc của bạn hoặc hồ sơ đó đang tắt random call.',
+            context.tr('match_hinchachss_0c1fd9'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 13,
@@ -339,7 +341,7 @@ class _SingleMatchEmptyPoolCard extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onEditProfile,
                 icon: const Icon(Icons.tune_rounded),
-                label: const Text('Sửa hồ sơ công khai'),
+                label: Text(context.tr('match_sahscngkha_ee9e83')),
               ),
               FilledButton.icon(
                 onPressed: onOpenFilters,
@@ -347,7 +349,7 @@ class _SingleMatchEmptyPoolCard extends StatelessWidget {
                   backgroundColor: const Color(0xFFFF4F87),
                 ),
                 icon: const Icon(Icons.settings_rounded),
-                label: const Text('Nới bộ lọc'),
+                label: Text(context.tr('match_niblc_d4b897')),
               ),
             ],
           ),

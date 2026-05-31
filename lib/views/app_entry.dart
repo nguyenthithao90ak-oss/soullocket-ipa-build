@@ -15,6 +15,7 @@ import '../services/offline_cache_service.dart';
 import '../services/storage_service.dart';
 import '../services/widget_action_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
+import '../utils/services/settings_sync_service.dart';
 import '../utils/app_error_mapper.dart';
 import 'app_entry/app_entry_access_resolver.dart';
 import 'app_entry/app_entry_home_asset_preparer.dart';
@@ -59,8 +60,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   bool _splashRemoved = false;
   bool _authStreamTimeout = false;
   bool _hasTriggeredInitialAppOpenAd = false;
+  bool _isCheckingRestoreNotice = false;
 
   String? _lastUserId;
+  String? _restoreNoticeCheckedUserId;
   Future<AppEntryAccessState>? _accessStateFuture;
   AppEntryAccessState? _initialAccessState;
   OverlayEntry? _privacyGuardEntry;
@@ -285,8 +288,54 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
   }
 
-  Widget _buildSignedInHouseContent(BuildContext context, String houseId) {
+  void _scheduleRestoreNotice(String uid) {
+    if (_isCheckingRestoreNotice || _restoreNoticeCheckedUserId == uid) {
+      return;
+    }
+    _isCheckingRestoreNotice = true;
+    _restoreNoticeCheckedUserId = uid;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(() async {
+        try {
+          final shouldShow =
+              await SettingsSyncService().consumePendingRestoreNotice(uid);
+          if (!mounted || !shouldShow) return;
+
+          await showDialog<void>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: const Text('Tìm thấy dữ liệu cũ'),
+              content: const Text(
+                'SoulLocket đã khôi phục cài đặt đã đồng bộ từ cloud trên thiết bị này. Bạn có thể kiểm tra lại trong Cài đặt > Dữ liệu hệ thống.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Đã hiểu'),
+                ),
+              ],
+            ),
+          );
+        } catch (e) {
+          debugPrint(
+            '[AppEntry] Restore notice failed: '
+            '${AppErrorMapper.resolve(e).message}',
+          );
+        } finally {
+          _isCheckingRestoreNotice = false;
+        }
+      }());
+    });
+  }
+
+  Widget _buildSignedInHouseContent(
+    BuildContext context,
+    String houseId,
+    String uid,
+  ) {
     _prepareHomeAssets(houseId);
+    _scheduleRestoreNotice(uid);
 
     _removeSplashOnce();
     return ConsentGate(
@@ -491,6 +540,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         if (user == null) {
           unawaited(_appEntryController.handleSignedOutSession());
           _lastUserId = null;
+          _restoreNoticeCheckedUserId = null;
           _hasTriggeredInitialAppOpenAd = false;
           _initialAccessState = null;
           _accessStateFuture = null;
@@ -512,7 +562,11 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             if (accessSnap.connectionState == ConnectionState.waiting) {
               final cachedHouseId = accessState?.houseId;
               if (cachedHouseId != null && cachedHouseId.isNotEmpty) {
-                return _buildSignedInHouseContent(context, cachedHouseId);
+                return _buildSignedInHouseContent(
+                  context,
+                  cachedHouseId,
+                  user.uid,
+                );
               }
               return const LoadingScaffold();
             }
@@ -579,7 +633,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
               );
             }
 
-            return _buildSignedInHouseContent(context, houseId);
+            return _buildSignedInHouseContent(context, houseId, user.uid);
           },
         );
       },

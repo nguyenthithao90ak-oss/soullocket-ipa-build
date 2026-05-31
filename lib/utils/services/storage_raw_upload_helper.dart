@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -49,13 +49,26 @@ class StorageRawUploadHelper {
       TaskSnapshot uploadTask;
 
       if (!kIsWeb && file.path.isNotEmpty) {
-        uploadTask = await _retryUpload(
-          () => ref.putFile(File(file.path), metadata),
-        );
+        if (_isImageContentType(resolvedContentType)) {
+          final compressed = await _compressImageFile(
+            File(file.path),
+            resolvedContentType,
+          );
+          uploadTask = await _retryUpload(
+            () => ref.putData(compressed, metadata),
+          );
+        } else {
+          uploadTask = await _retryUpload(
+            () => ref.putFile(File(file.path), metadata),
+          );
+        }
       } else {
         final fileBytes = await file.readAsBytes();
+        final dataToUpload = _isImageContentType(resolvedContentType)
+            ? await _compressImageBytes(fileBytes, resolvedContentType)
+            : fileBytes;
         uploadTask = await _retryUpload(
-          () => ref.putData(fileBytes, metadata),
+          () => ref.putData(dataToUpload, metadata),
         );
       }
 
@@ -68,6 +81,82 @@ class StorageRawUploadHelper {
       throw Exception(
         'Không tải tệp lên đám mây được: hãy kiểm tra kết nối mạng, đăng nhập và quyền truy cập tệp.',
       );
+    }
+  }
+
+  static const int _compressThresholdBytes = 500 * 1024; // 500 KB
+  static const int _compressQuality = 75;
+  static const int _compressMaxDimension = 1080;
+
+  bool _isImageContentType(String contentType) {
+    final ct = contentType.toLowerCase();
+    return ct.startsWith('image/') &&
+        (ct.contains('jpeg') ||
+            ct.contains('jpg') ||
+            ct.contains('png') ||
+            ct.contains('webp') ||
+            ct.contains('heic') ||
+            ct.contains('heif'));
+  }
+
+  /// Nén file ảnh nếu > 500KB. Trả về bytes đã nén (hoặc bytes gốc nếu không cần/lỗi).
+  Future<Uint8List> _compressImageFile(
+    File file,
+    String contentType,
+  ) async {
+    try {
+      final size = await file.length();
+      if (size <= _compressThresholdBytes) return await file.readAsBytes();
+      final ext = contentType.contains('png')
+          ? CompressFormat.png
+          : contentType.contains('webp')
+              ? CompressFormat.webp
+              : CompressFormat.jpeg;
+      final result = await FlutterImageCompress.compressWithFile(
+        file.absolute.path,
+        minWidth: _compressMaxDimension,
+        minHeight: _compressMaxDimension,
+        quality: _compressQuality,
+        format: ext,
+      );
+      if (result == null || result.isEmpty) return await file.readAsBytes();
+      debugPrint(
+        '[ImageCompress] ${p.basename(file.path)}: ${size ~/ 1024}KB → ${result.length ~/ 1024}KB',
+      );
+      return result;
+    } catch (e) {
+      debugPrint('[ImageCompress] Lỗi nén file, dùng ảnh gốc: $e');
+      return await file.readAsBytes();
+    }
+  }
+
+  /// Nén bytes ảnh nếu > 500KB. Trả về bytes đã nén (hoặc bytes gốc nếu không cần/lỗi).
+  Future<Uint8List> _compressImageBytes(
+    Uint8List bytes,
+    String contentType,
+  ) async {
+    try {
+      if (bytes.length <= _compressThresholdBytes) return bytes;
+      final ext = contentType.contains('png')
+          ? CompressFormat.png
+          : contentType.contains('webp')
+              ? CompressFormat.webp
+              : CompressFormat.jpeg;
+      final result = await FlutterImageCompress.compressWithList(
+        bytes,
+        minWidth: _compressMaxDimension,
+        minHeight: _compressMaxDimension,
+        quality: _compressQuality,
+        format: ext,
+      );
+      if (result.isEmpty) return bytes;
+      debugPrint(
+        '[ImageCompress] bytes: ${bytes.length ~/ 1024}KB → ${result.length ~/ 1024}KB',
+      );
+      return result;
+    } catch (e) {
+      debugPrint('[ImageCompress] Lỗi nén bytes, dùng ảnh gốc: $e');
+      return bytes;
     }
   }
 
@@ -236,9 +325,12 @@ class StorageRawUploadHelper {
 
     try {
       final ref = buildStorageRef(storagePath);
+      final dataToUpload = _isImageContentType(resolvedContentType)
+          ? await _compressImageBytes(fileBytes, resolvedContentType)
+          : fileBytes;
       final uploadTask = await _retryUpload(
         () => ref.putData(
-          fileBytes,
+          dataToUpload,
           SettableMetadata(
             contentType: resolvedContentType,
             cacheControl: storageImmutableCacheControl,

@@ -11,10 +11,19 @@ class OfflineCacheService {
   static SharedPreferences? _cachedPrefs;
   static Future<void>? _initializingPrefs;
   static const int _defaultSchemaVersion = 1;
+  static const Set<String> _allowedTables = <String>{
+    'chat_cache',
+    'diary_cache',
+  };
 
   OfflineCacheService._internal();
 
   static SharedPreferences? getPrefsSync() => _cachedPrefs;
+
+  static Future<SharedPreferences> getPrefs() async {
+    await initialize();
+    return _cachedPrefs!;
+  }
 
   static Future<void> initialize() async {
     if (_cachedPrefs != null) {
@@ -87,6 +96,7 @@ class OfflineCacheService {
     int schemaVersion = _defaultSchemaVersion,
     int? staleAfterMs,
   }) async {
+    _assertAllowedTable(table);
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.insert(
@@ -114,6 +124,7 @@ class OfflineCacheService {
     String table,
     String houseId,
   ) async {
+    _assertAllowedTable(table);
     final db = await database;
     final rows = await db.query(
       table,
@@ -125,6 +136,7 @@ class OfflineCacheService {
   }
 
   Future<void> clearCache(String table, {String? houseId}) async {
+    _assertAllowedTable(table);
     final db = await database;
     if (houseId != null) {
       await db.delete(table, where: 'house_id = ?', whereArgs: [houseId]);
@@ -134,30 +146,43 @@ class OfflineCacheService {
   }
 
   static Future<void> saveCache(String key, dynamic data) async {
-    final prefs = await SharedPreferences.getInstance();
-    _cachedPrefs = prefs;
-    await prefs.setString('offline_cache_$key', jsonEncode(data));
+    final cacheKey = _cacheKey(key);
+    final prefs = await getPrefs();
+    await prefs.setString(cacheKey, jsonEncode(data));
   }
 
   static Future<dynamic> loadCache(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    _cachedPrefs = prefs;
-    final raw = prefs.getString('offline_cache_$key');
+    final cacheKey = _cacheKey(key);
+    final prefs = await getPrefs();
+    final raw = prefs.getString(cacheKey);
     if (raw == null) return null;
     try {
       return jsonDecode(raw);
     } catch (_) {
+      await prefs.remove(cacheKey);
       return null;
     }
   }
 
   static dynamic loadCacheSync(String key) {
-    final raw = _cachedPrefs?.getString('offline_cache_$key');
+    final cacheKey = _cacheKey(key);
+    final raw = _cachedPrefs?.getString(cacheKey);
     if (raw == null) return null;
     try {
       return jsonDecode(raw);
     } catch (_) {
+      _cachedPrefs?.remove(cacheKey);
       return null;
+    }
+  }
+
+  static String _cacheKey(String key) {
+    return 'offline_cache_${key.trim()}';
+  }
+
+  void _assertAllowedTable(String table) {
+    if (!_allowedTables.contains(table)) {
+      throw ArgumentError.value(table, 'table', 'Unsupported offline cache table');
     }
   }
 
@@ -209,8 +234,7 @@ class OfflineCacheService {
   }
 
   static Future<void> clearAllCache() async {
-    final prefs = await SharedPreferences.getInstance();
-    _cachedPrefs = prefs;
+    final prefs = await getPrefs();
     final keys = prefs.getKeys().where((k) => k.startsWith('offline_cache_'));
     for (final key in keys) {
       await prefs.remove(key);

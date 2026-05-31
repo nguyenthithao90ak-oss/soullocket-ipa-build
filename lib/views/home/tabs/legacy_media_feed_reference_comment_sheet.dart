@@ -74,7 +74,7 @@ class _CommentSheetState extends State<_CommentSheet> {
                   item['author'] ??
                   item['name'] ??
                   item['u'] ??
-                  'Người dùng')
+                  context.tr('home_ngidng_3bf886'))
               .toString(),
           'author_id': authorId,
           'author_avt': (item['authorAvt'] ??
@@ -112,6 +112,8 @@ class _CommentSheetState extends State<_CommentSheet> {
     }
 
     final hasViolations = _socialService.containsBlockedCommunityTerms(text);
+    final msgViolation = context.tr('home_bnhlunchat_482499');
+    final msgError = context.tr('home_chathgibnh_095854');
     _ctrl.clear();
 
     try {
@@ -121,11 +123,10 @@ class _CommentSheetState extends State<_CommentSheet> {
         content: text,
       );
       if (hasViolations) {
-        _showSnack(
-            'Bình luận chứa từ khóa vi phạm và đã bị ẩn khỏi cộng đồng.');
+        _showSnack(msgViolation);
       }
     } catch (e) {
-      _showSnack('Chưa thể gửi bình luận lúc này. Vui lòng thử lại.');
+      _showSnack(msgError);
     }
   }
 
@@ -190,7 +191,7 @@ class _CommentSheetState extends State<_CommentSheet> {
                     : _comments.isEmpty
                         ? Center(
                             child: Text(
-                              'Chưa có bình luận nào.',
+                              context.tr('home_chacbnhlun_8fff46'),
                               style: SLTheme.quicksand(color: Colors.grey),
                             ),
                           )
@@ -227,7 +228,7 @@ class _CommentSheetState extends State<_CommentSheet> {
                         textInputAction: TextInputAction.send,
                         onSubmitted: (_) => _postComment(),
                         decoration: InputDecoration(
-                          hintText: 'Thêm bình luận...',
+                          hintText: context.tr('home_thmbnhlun_7cc7c1'),
                           hintStyle: SLTheme.quicksand(
                             color: Colors.grey,
                             fontSize: 14,
@@ -269,7 +270,7 @@ class _CommentSheetState extends State<_CommentSheet> {
   Widget _buildCommentItem(Map<String, dynamic> c) {
     final authorId = c['author_id']?.toString() ?? '';
     final authorAvt = c['author_avt']?.toString() ?? '';
-    final authorName = c['author_name']?.toString() ?? 'Người dùng';
+    final authorName = c['author_name']?.toString() ?? context.tr('home_ngidng_3bf886');
 
     return InkWell(
       onLongPress: () => _showCommentOptions(c),
@@ -360,7 +361,7 @@ class _CommentSheetState extends State<_CommentSheet> {
                           );
                         },
                         child: Text(
-                          'Trả lời',
+                          context.tr('home_trli_4c5df0'),
                           style: SLTheme.quicksand(
                             fontSize: 12,
                             color: Colors.grey,
@@ -391,7 +392,7 @@ class _CommentSheetState extends State<_CommentSheet> {
   }
 
   String _formatTime(dynamic ts) {
-    if (ts == null) return 'Vừa xong';
+    if (ts == null) return context.tr('home_vaxong_e92d16');
     try {
       final dateTime = ts is int
           ? DateTime.fromMillisecondsSinceEpoch(ts)
@@ -400,14 +401,14 @@ class _CommentSheetState extends State<_CommentSheet> {
       if (diff.inDays > 0) return '${diff.inDays} ngày trước';
       if (diff.inHours > 0) return '${diff.inHours} giờ trước';
       if (diff.inMinutes > 0) return '${diff.inMinutes} phút trước';
-      return 'Vừa xong';
+      return context.tr('home_vaxong_e92d16');
     } catch (_) {
-      return 'Vừa xong';
+      return context.tr('home_vaxong_e92d16');
     }
   }
 
   void _showCommentOptions(Map<String, dynamic> c) {
-    final authorName = c['author_name']?.toString() ?? 'Người dùng';
+    final authorName = c['author_name']?.toString() ?? context.tr('home_ngidng_3bf886');
     final authorId = c['author_id']?.toString() ?? '';
     final isMyComment = authorId == widget.houseId;
 
@@ -433,7 +434,7 @@ class _CommentSheetState extends State<_CommentSheet> {
               ),
               ListTile(
                 leading: const Icon(Icons.reply_rounded),
-                title: Text('Trả lời', style: SLTheme.quicksand()),
+                title: Text(context.tr('home_trli_4c5df0'), style: SLTheme.quicksand()),
                 onTap: () {
                   Navigator.pop(context);
                   _focusNode.requestFocus();
@@ -445,45 +446,47 @@ class _CommentSheetState extends State<_CommentSheet> {
               ),
               ListTile(
                 leading: const Icon(Icons.copy_rounded),
-                title: Text('Sao chép', style: SLTheme.quicksand()),
+                title: Text(context.tr('home_saochp_cbfba9'), style: SLTheme.quicksand()),
                 onTap: () {
                   Navigator.pop(context);
                   Clipboard.setData(
                     ClipboardData(text: c['content']?.toString() ?? ''),
                   );
-                  _showSnack('Đã sao chép bình luận.');
+                  _showSnack(context.tr('home_saochpbnhl_be6ed7'));
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.flag_rounded, color: Colors.orange),
-                title: Text('Báo cáo bình luận', style: SLTheme.quicksand()),
+                title: Text(context.tr('home_bocobnhlun_7e340e'), style: SLTheme.quicksand()),
                 onTap: () async {
                   Navigator.pop(context);
+                  final msgReportOk = context.tr('home_gibocobnhl_48e423');
+                  final msgReportErr = context.tr('home_chathgiboc_05046c');
                   final reason = await showDialog<String>(
                     context: context,
                     builder: (ctx) {
                       final rCtrl = TextEditingController();
                       return AlertDialog(
                         title: Text(
-                          'Báo cáo bình luận',
+                          context.tr('home_bocobnhlun_7e340e'),
                           style: SLTheme.quicksand(fontWeight: FontWeight.bold),
                         ),
                         content: TextField(
                           controller: rCtrl,
                           autofocus: true,
-                          decoration: const InputDecoration(
-                            hintText: 'Lý do báo cáo...',
+                          decoration: InputDecoration(
+                            hintText: context.tr('home_ldoboco_1a5afa'),
                           ),
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Hủy'),
+                            child: Text(context.tr('home_hy_1e4050')),
                           ),
                           TextButton(
                             onPressed: () =>
                                 Navigator.pop(ctx, rCtrl.text.trim()),
-                            child: const Text('Gửi'),
+                            child: Text(context.tr('home_gi_377294')),
                           ),
                         ],
                       );
@@ -498,10 +501,9 @@ class _CommentSheetState extends State<_CommentSheet> {
                       reporterHouseId: widget.houseId,
                       reason: reason,
                     );
-                    _showSnack('Đã gửi báo cáo bình luận thành công.');
+                    _showSnack(msgReportOk);
                   } catch (e) {
-                    _showSnack(
-                        'Chưa thể gửi báo cáo lúc này. Vui lòng thử lại.');
+                    _showSnack(msgReportErr);
                   }
                 },
               ),
@@ -509,18 +511,20 @@ class _CommentSheetState extends State<_CommentSheet> {
                 ListTile(
                   leading: const Icon(Icons.block_rounded, color: Colors.red),
                   title: Text(
-                    'Chặn người dùng này',
+                    context.tr('home_chnngidngn_27d0c8'),
                     style: SLTheme.quicksand(color: Colors.red),
                   ),
                   onTap: () async {
                     Navigator.pop(context);
                     if (authorId.isEmpty) return;
+                    final msgBlockOk = context.tr('home_chnngidng_1c851c');
+                    final msgBlockErr = context.tr('home_chathchnng_81d840');
 
                     final ok = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
                         title: Text(
-                          'Xác nhận chặn',
+                          context.tr('home_xcnhnchn_ae00a6'),
                           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                         ),
                         content: Text(
@@ -530,13 +534,13 @@ class _CommentSheetState extends State<_CommentSheet> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
-                            child: const Text('Hủy'),
+                            child: Text(context.tr('home_hy_1e4050')),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, true),
-                            child: const Text(
-                              'Chặn',
-                              style: TextStyle(color: Colors.red),
+                            child: Text(
+                              context.tr('home_chn_483b6f'),
+                              style: const TextStyle(color: Colors.red),
                             ),
                           ),
                         ],
@@ -549,10 +553,9 @@ class _CommentSheetState extends State<_CommentSheet> {
                         sourceHouseId: widget.houseId,
                         targetHouseId: authorId,
                       );
-                      _showSnack('Đã chặn người dùng.');
+                      _showSnack(msgBlockOk);
                     } catch (e) {
-                      _showSnack(
-                          'Chưa thể chặn người dùng lúc này. Vui lòng thử lại.');
+                      _showSnack(msgBlockErr);
                     }
                   },
                 ),
@@ -563,11 +566,12 @@ class _CommentSheetState extends State<_CommentSheet> {
                     color: Colors.red,
                   ),
                   title: Text(
-                    'Xóa',
+                    context.tr('home_xa_4ed187'),
                     style: SLTheme.quicksand(color: Colors.red),
                   ),
                   onTap: () async {
                     Navigator.pop(context);
+                    final msgDeleteErr = context.tr('home_chathxabnh_44e3be');
                     try {
                       await _socialService.deleteComment(
                         commentId: c['id'].toString(),
@@ -575,8 +579,7 @@ class _CommentSheetState extends State<_CommentSheet> {
                         requestingHouseId: widget.houseId,
                       );
                     } catch (e) {
-                      _showSnack(
-                          'Chưa thể xóa bình luận lúc này. Vui lòng thử lại.');
+                      _showSnack(msgDeleteErr);
                     }
                   },
                 ),

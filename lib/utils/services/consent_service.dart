@@ -36,28 +36,33 @@ class ConsentService {
   Future<String?> getCookieConsentLevel() async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final v = prefs.getString(cookieConsentKey);
-    if (v == null || v.trim().isEmpty) return null;
-    return v;
+    final value = _normalizeConsentValue(prefs.getString(cookieConsentKey));
+    if (value == null) return null;
+    return value;
   }
 
   Future<void> setCookieConsentLevel(String level) async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await prefs.setString(cookieConsentKey, level);
+    final value = _normalizeConsentValue(level);
+    if (value == null) {
+      await prefs.remove(cookieConsentKey);
+      return;
+    }
+    await prefs.setString(cookieConsentKey, value);
   }
 
   Future<String?> getSecurityDeviceSignalsConsentStatus() async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final value = prefs.getString(securityDeviceSignalsConsentKey);
-    if (value == null || value.trim().isEmpty) return null;
-    return value;
+    return _normalizeConsentValue(
+      prefs.getString(securityDeviceSignalsConsentKey),
+    );
   }
 
   Future<bool> hasResolvedSecurityDeviceSignalsConsent() async {
     final status = await getSecurityDeviceSignalsConsentStatus();
-    return status != null && status.trim().isNotEmpty;
+    return status != null;
   }
 
   Future<bool> isSecurityDeviceSignalsAllowed() async {
@@ -90,5 +95,11 @@ class ConsentService {
     await prefs.remove(privacyAcceptedKey);
     await prefs.remove(cookieConsentKey);
     await prefs.remove(securityDeviceSignalsConsentKey);
+  }
+
+  String? _normalizeConsentValue(String? value) {
+    final normalized = value?.trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) return null;
+    return normalized;
   }
 }

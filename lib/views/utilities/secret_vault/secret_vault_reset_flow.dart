@@ -4,7 +4,7 @@ part of '../secret_vault_screen.dart';
 extension _SecretVaultResetFlow on SecretVaultScreenState {
   String _formatResetSchedule(int timestamp) {
     if (timestamp <= 0) {
-      return 'không xác định';
+      return context.tr('util_khngxcnh_fb806e');
     }
     return _resetTimeFormat
         .format(DateTime.fromMillisecondsSinceEpoch(timestamp).toLocal());
@@ -12,13 +12,13 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
 
   String _pendingResetRequesterLabel() {
     if (_pendingResetRequestedByCurrentUser) {
-      return 'Bạn';
+      return context.tr('util_bn_1fd75b');
     }
     final name = _pendingResetRequest?.requestedByName.trim() ?? '';
     if (name.isNotEmpty) {
       return name;
     }
-    return 'Người kia';
+    return context.tr('util_ngikia_5cc882');
   }
 
   void _listenResetRequest() {
@@ -50,7 +50,7 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
     final email = FirebaseAuth.instance.currentUser?.email?.trim() ?? '';
     if (email.isEmpty) {
       _showVaultSnack(
-        'Tài khoản hiện tại chưa có email chính để xác nhận reset Kho ảnh mật.',
+        context.tr('util_tikhonhint_7a3935'),
         backgroundColor: Colors.redAccent,
       );
       return;
@@ -62,7 +62,7 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
         backgroundColor: const Color(0xFF1F1C2C),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Reset Kho ảnh mật?',
+          context.tr('util_resetkhonh_7d2128'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.bold,
             color: Colors.redAccent,
@@ -76,14 +76,14 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
-              'Huỷ',
+              context.tr('util_hu_9daba0'),
               style: SLTheme.quicksand(color: Colors.white54),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Tiếp tục',
+              context.tr('util_tiptc_555f1f'),
               style: SLTheme.quicksand(
                 color: Colors.redAccent,
                 fontWeight: FontWeight.bold,
@@ -102,7 +102,7 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
     try {
       final didVerify = await showSettingsEmailOtpDialog(
         context: context,
-        title: 'Xác nhận email để reset Kho ảnh mật',
+        title: context.tr('util_xcnhnemail_aa59e7'),
         email: email,
         sendCode: () => _authService.sendOtpEmail(email),
         verifyCode: (otp) async {
@@ -133,7 +133,7 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
         AppErrorMapper.resolve(
           error,
           fallbackMessage:
-              'Chưa thể tạo yêu cầu reset Kho ảnh mật. Hãy kiểm tra kết nối rồi thử lại.',
+              context.tr('util_chathtoyuc_9b47fd'),
         ).message,
         backgroundColor: Colors.redAccent,
       );
@@ -155,28 +155,28 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
         backgroundColor: const Color(0xFF1F1C2C),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Thu hồi yêu cầu reset?',
+          context.tr('util_thuhiyucur_7952bb'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.bold,
             color: Colors.orangeAccent,
           ),
         ),
         content: Text(
-          'Nếu thu hồi bây giờ, Kho ảnh mật sẽ không bị xoá nữa và cả hai người trong nhà sẽ nhận được thông báo.',
+          context.tr('util_nuthuhibyg_628a41'),
           style: SLTheme.quicksand(color: Colors.white70, height: 1.45),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
-              'Giữ nguyên',
+              context.tr('util_ginguyn_1d08e7'),
               style: SLTheme.quicksand(color: Colors.white54),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Thu hồi',
+              context.tr('util_thuhi_b8c669'),
               style: SLTheme.quicksand(
                 color: Colors.orangeAccent,
                 fontWeight: FontWeight.bold,
@@ -199,7 +199,7 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
         _pendingResetRequest = null;
       });
       _showVaultSnack(
-        'Đã thu hồi yêu cầu reset Kho ảnh mật.',
+        context.tr('util_thuhiyucur_97c1da'),
         backgroundColor: Colors.green,
       );
     } catch (error) {
@@ -207,7 +207,7 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
         AppErrorMapper.resolve(
           error,
           fallbackMessage:
-              'Chưa thể thu hồi yêu cầu reset Kho ảnh mật. Hãy thử lại sau.',
+              context.tr('util_chaththuhi_bab788'),
         ).message,
         backgroundColor: Colors.redAccent,
       );

@@ -22,8 +22,8 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                       ? Icons.schedule_rounded
                       : Icons.local_movies_rounded,
                   label: reel == null
-                      ? 'Chờ đúng mốc kỷ niệm'
-                      : 'Suất chiếu trong ngày',
+                      ? context.tr('util_chngmcknim_626e2b')
+                      : context.tr('util_sutchiutro_a8a347'),
                   color: reel == null
                       ? const Color(0xFF7FD3FF)
                       : Color(reel.accentValue),
@@ -42,31 +42,31 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     final metricValues = reel == null
         ? <Map<String, String>>[
             <String, String>{
-              'label': 'Bắt đầu',
+              'label': context.tr('util_btu_3cb0f0'),
               'value':
                   _startDate == null ? '--/--/----' : _formatDate(_startDate!),
             },
             <String, String>{
-              'label': 'Kho ảnh',
+              'label': context.tr('util_khonh_8160c2'),
               'value': '${_records.length} ảnh',
             },
             <String, String>{
-              'label': 'Mốc kế tiếp',
+              'label': context.tr('util_mcktip_3705df'),
               'value': nextShow == null ? '--/--/----' : _formatDate(nextShow),
             },
           ]
         : <Map<String, String>>[
             <String, String>{
-              'label': 'Bắt đầu',
+              'label': context.tr('util_btu_3cb0f0'),
               'value':
                   _startDate == null ? '--/--/----' : _formatDate(_startDate!),
             },
             <String, String>{
-              'label': 'Khung hình',
+              'label': context.tr('util_khunghnh_cba5af'),
               'value': '${reel.items.length}/$_kCinemaReelFrameLimit',
             },
             <String, String>{
-              'label': 'Tự xóa lúc',
+              'label': context.tr('util_txalc_c19250'),
               'value': _formatClock(reel.expiresAt),
             },
           ];
@@ -139,7 +139,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: <Widget>[
                             Text(
-                              'Rạp kỷ niệm',
+                              context.tr('util_rpknim_d094b9'),
                               style: SLTheme.quicksand(
                                 fontSize: compact ? 22 : 25,
                                 fontWeight: FontWeight.w800,
@@ -151,8 +151,8 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                   ? Icons.schedule_rounded
                                   : Icons.local_fire_department_rounded,
                               label: reel == null
-                                  ? 'Chờ mở suất'
-                                  : 'Đang sáng đèn',
+                                  ? context.tr('util_chmsut_dbc583')
+                                  : context.tr('util_angsngn_6f20a4'),
                               color: accent,
                             ),
                           ],
@@ -176,8 +176,8 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               SizedBox(height: compact ? 14 : 16),
               Text(
                 reel == null
-                    ? 'Đến đúng mốc kỷ niệm, hệ thống sẽ tự chọn ảnh đẹp trong Nhật ký để mở một suất chiếu riêng cho hai bạn trong ngày.'
-                    : 'Suất chiếu hôm nay đã lên hình. Reel giữ nguyên cho cả hai đến hết ngày rồi tự khép lại như một buổi chiếu riêng.',
+                    ? context.tr('util_nngmcknimh_7b8732')
+                    : context.tr('util_sutchiuhmn_0b4972'),
                 style: SLTheme.quicksand(
                   fontSize: compact ? 13.5 : 14.5,
                   height: 1.48,
@@ -226,7 +226,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Link phim cũ vẫn có thể điều hướng tới đây, nhưng rạp hiện đã chuyển sang chế độ video kỷ niệm tự dựng từ ảnh Nhật ký.',
+              context.tr('util_linkphimcv_f4802e'),
               style: SLTheme.quicksand(
                 fontSize: 13.5,
                 height: 1.45,
@@ -270,7 +270,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               children: <Widget>[
                 Text(
                   nextShow == null
-                      ? 'Chưa xác định được mốc kế tiếp'
+                      ? context.tr('util_chaxcnhcmc_84ba6e')
                       : 'Suất gần nhất sẽ mở vào ${_formatDate(nextShow)}',
                   style: SLTheme.quicksand(
                     fontSize: 14,
@@ -436,7 +436,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                 const SizedBox(height: 6),
                                 Text(
                                   item.authorName.isEmpty
-                                      ? 'Video kỷ niệm hôm nay được dựng tự động từ kho ảnh của hai bạn.'
+                                      ? context.tr('util_videoknimh_23d177')
                                       : 'Khung hình có ảnh được lưu bởi ${item.authorName}.',
                                   style: SLTheme.quicksand(
                                     fontSize: 13.5,
@@ -484,14 +484,14 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
             children: <Widget>[
               Expanded(
                 child: _metricCard(
-                  label: 'Thời lượng',
+                  label: context.tr('util_thilng_77d9bd'),
                   value: _formatDurationLabel(reel.items.length),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _metricCard(
-                  label: 'Nguồn ảnh',
+                  label: context.tr('util_ngunnh_7abd29'),
                   value: '${_records.length} ảnh nhật ký',
                 ),
               ),
@@ -579,7 +579,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              'Đang chiếu',
+                              context.tr('util_angchiu_6db1a2'),
                               style: SLTheme.quicksand(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
@@ -651,7 +651,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Thông tin suất chiếu',
+                      context.tr('util_thngtinsut_5983b0'),
                       style: SLTheme.quicksand(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w800,
@@ -690,7 +690,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 const SizedBox(height: 10),
                 _buildBulletLine(
                   Icons.lock_clock_rounded,
-                  'Giữ nguyên danh sách ảnh trong suốt hôm nay để cả hai xem cùng một reel.',
+                  context.tr('util_ginguyndan_dadbe6'),
                 ),
                 const SizedBox(height: 10),
                 _buildBulletLine(
@@ -717,7 +717,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               ),
               onPressed: _openPlayer,
               icon: const Icon(Icons.open_in_full_rounded, size: 18),
-              label: const Text('Mở video toàn màn hình'),
+              label: Text(context.tr('util_mvideotonm_ca3c77')),
             ),
           ),
         ],

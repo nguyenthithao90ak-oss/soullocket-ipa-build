@@ -84,7 +84,7 @@ class _MatchReadySheet extends StatelessWidget {
               candidate.intro.trim().isNotEmpty
                   ? candidate.intro
                   : (candidate.bio.trim().isEmpty
-                      ? 'Bạn có thể mở hồ sơ hoặc gọi ngay để bắt đầu cuộc trò chuyện đầu tiên.'
+                      ? context.tr('match_bncthmhsho_4b002d')
                       : candidate.bio),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
@@ -105,8 +105,8 @@ class _MatchReadySheet extends StatelessWidget {
                       side: BorderSide(color: Colors.white.withValues(alpha: 0.24)),
                     ),
                     icon: const Icon(Icons.person_search_rounded),
-                    label: const Text(
-                      'Mở hồ sơ',
+                    label: Text(
+                      context.tr('match_mhs_d226ff'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -120,8 +120,8 @@ class _MatchReadySheet extends StatelessWidget {
                       backgroundColor: const Color(0xFFFF4F87),
                     ),
                     icon: const Icon(Icons.call_rounded),
-                    label: const Text(
-                      'Thoại',
+                    label: Text(
+                      context.tr('match_thoi_a53b78'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -138,8 +138,8 @@ class _MatchReadySheet extends StatelessWidget {
                   backgroundColor: const Color(0xFF7C61FF),
                 ),
                 icon: const Icon(Icons.videocam_rounded),
-                label: const Text(
-                  'Gọi video ngay',
+                label: Text(
+                  context.tr('match_givideonga_ba8333'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

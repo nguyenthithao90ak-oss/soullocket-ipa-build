@@ -66,6 +66,12 @@ class _DiaryTabShell extends StatelessWidget {
           item: photo,
         );
       },
+      onEditGroupDate: (selectedDate, photos) {
+        return state._updateMemoryGroupDate(
+          selectedDate: selectedDate,
+          photos: photos,
+        );
+      },
     );
 
     return Scaffold(
@@ -184,10 +190,11 @@ class _DiaryTabShell extends StatelessWidget {
                       }
 
                       return ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 340),
+                        constraints: const BoxConstraints(maxWidth: 380),
                         child: DiarySelectionBottomBar(
                           selectedCount: state._selectedMemories.length,
                           onExit: state._exitSelectionMode,
+                          onSelectAll: state._selectAllVisibleMemories,
                           onSave: state._saveSelectedMemories,
                           onShare: state._shareSelectedMemories,
                           onDelete: state._deleteSelectedMemories,
@@ -218,7 +225,10 @@ class _DiaryTabLoadingSection extends StatelessWidget {
           const SkeletonContainer.rounded(width: 200, height: 28),
           const SizedBox(height: 24),
           // Skeleton cho Tab Switcher
-          const SkeletonContainer.rounded(width: double.infinity, height: 50, borderRadius: BorderRadius.all(Radius.circular(20))),
+          const SkeletonContainer.rounded(
+              width: double.infinity,
+              height: 50,
+              borderRadius: BorderRadius.all(Radius.circular(20))),
           const SizedBox(height: 30),
           // Danh sách Skeleton Items
           Expanded(
