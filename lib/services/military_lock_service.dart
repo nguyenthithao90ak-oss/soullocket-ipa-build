@@ -71,6 +71,7 @@ class MilitaryLockService {
       <String, Future<EffectiveLockSettings>>{};
   // Kept to retain the auth-state listener for the lifetime of the singleton.
   // ignore: unused_field
+  // ignore: cancel_subscriptions, unused_field
   StreamSubscription<User?>? _authStateSub;
 
   String? _cachedResolvedHouseId;

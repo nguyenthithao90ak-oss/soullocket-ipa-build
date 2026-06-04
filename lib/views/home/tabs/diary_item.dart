@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/sl_theme.dart';
-import '../../../../models/diary_post.dart';
-import '../../../../utils/services/l10n_service.dart';
+import '../../../core/sl_theme.dart';
+import '../../../models/diary_post.dart';
+import '../../../utils/services/l10n_service.dart';
 
 class DiaryItem extends StatelessWidget {
   final DiaryPost post;

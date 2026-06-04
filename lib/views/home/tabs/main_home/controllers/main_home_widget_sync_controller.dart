@@ -106,7 +106,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
             prefs.getBool('il_widget_show_diary') ??
             true;
     // Always pin heart style (no random animation) on app entry.
-    final heartAnimated = false;
+    const heartAnimated = false;
     final displayMode = WidgetService.normalizeWidgetDisplayMode(
       showDiaryOnWidget: showDiaryOnWidget,
       heartAnimated: heartAnimated,

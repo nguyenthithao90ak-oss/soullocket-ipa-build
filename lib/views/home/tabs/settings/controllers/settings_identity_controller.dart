@@ -99,6 +99,8 @@ class SettingsIdentityController {
       greetingQuote: draft.greetingQuote,
     );
 
+    // Shared Info is allowed from Settings; skip the device trust gate here.
+
     await prefs.setString('il_greeting_quote_text', draft.greetingQuote);
     await prefs.setString('il_love_unit_text', draft.dayUnit);
 

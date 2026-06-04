@@ -682,6 +682,11 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     final prefs = await SharedPreferences.getInstance();
     final previousRole = _activeRoleKey == 'user2' ? 'user2' : 'user1';
     final nextRole = _activeRoleKey == 'user1' ? 'user2' : 'user1';
+
+    setState(() {
+      _activeRoleKey = nextRole;
+    });
+
     await prefs.setString('il_role', nextRole);
     await prefs.setString('il_user_name', _displayNameForRole(nextRole));
 
@@ -701,25 +706,30 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
           ).message}',
         );
       }
-      await PushNotificationHelper.systemEvent(
-        toHouseId: resolvedHouseId,
-        type: 'role_change',
-        title: roleChangeTitle,
-        content:
-            'Thiết bị này vừa chuyển từ $previousRole sang $nextRole trong phần Cài đặt.',
-        extra: {
-          'previousRole': previousRole,
-          'role': nextRole,
-        },
+      unawaited(
+        PushNotificationHelper.systemEvent(
+          toHouseId: resolvedHouseId,
+          type: 'role_change',
+          title: roleChangeTitle,
+          content:
+              'Thiết bị này vừa chuyển từ $previousRole sang $nextRole trong phần Cài đặt.',
+          extra: {
+            'previousRole': previousRole,
+            'role': nextRole,
+          },
+        ),
       );
     }
 
     if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const AppEntry()),
-      (_) => false,
-    );
+    if (_relationshipMode == 'single') {
+      _showToast(
+        'Chế độ độc thân không hỗ trợ đổi vai Nam/Nữ.',
+        success: false,
+      );
+    }
   }
+
 
   Future<void> _linkGoogleAccount() async {
     if (_isLinkingGoogle) return;

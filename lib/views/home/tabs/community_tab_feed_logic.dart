@@ -669,15 +669,18 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
       });
       _friendsSubscription = _dbRef.child('friends/$houseId').onValue.listen(
         (event) {
-          final v = event.snapshot.value;
-          final next = <String, dynamic>{};
-          if (v is Map) {
-            v.forEach((k, val) => next[k.toString()] = val);
-          }
-          _updateState(() {
-            _friends = next;
-            _friendsRevision++;
-            _invalidateFilteredPostsCache();
+          _friendsDebounce?.cancel();
+          _friendsDebounce = Timer(const Duration(milliseconds: 200), () {
+            final v = event.snapshot.value;
+            final next = <String, dynamic>{};
+            if (v is Map) {
+              v.forEach((k, val) => next[k.toString()] = val);
+            }
+            _updateState(() {
+              _friends = next;
+              _friendsRevision++;
+              _invalidateFilteredPostsCache();
+            });
           });
         },
         onError: (Object error) {
@@ -692,15 +695,18 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
       _blockedUsersSubscription =
           _dbRef.child('houses/$houseId/blocked_users').onValue.listen(
         (event) {
-          final v = event.snapshot.value;
-          final next = <String, dynamic>{};
-          if (v is Map) {
-            v.forEach((k, val) => next[k.toString()] = val);
-          }
-          _updateState(() {
-            _blockedUsers = next;
-            _blockedUsersRevision++;
-            _invalidateFilteredPostsCache();
+          _blockedUsersDebounce?.cancel();
+          _blockedUsersDebounce = Timer(const Duration(milliseconds: 200), () {
+            final v = event.snapshot.value;
+            final next = <String, dynamic>{};
+            if (v is Map) {
+              v.forEach((k, val) => next[k.toString()] = val);
+            }
+            _updateState(() {
+              _blockedUsers = next;
+              _blockedUsersRevision++;
+              _invalidateFilteredPostsCache();
+            });
           });
         },
         onError: (Object error) {

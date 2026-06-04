@@ -10,7 +10,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../views/security/security_protection_dialogs.dart';
+import '../views/security/security_protection_dialogs.dart';
 import '../utils/rapid_action_feedback_policy.dart';
 import '../utils/sl_notice.dart';
 import '../utils/core/sl_theme.dart';

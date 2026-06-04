@@ -33,7 +33,7 @@ class BleOfflineService {
     // 2. Chuyển trạng thái sang Listening (Kênh ẩn)
     _isBleSupported = true; // Giả lập OK
     debugPrint(
-        "📡 [BleOfflineService] Đã kích hoạt sóng quét Bluetooth Low Energy.");
+        '📡 [BleOfflineService] Đã kích hoạt sóng quét Bluetooth Low Energy.');
   }
 
   /// Quét tìm thiết bị có phát đúng chuỗi mã hoá (houseId_hashed)
@@ -46,7 +46,7 @@ class BleOfflineService {
     Timer(const Duration(seconds: 3), () {
       _isConnected = true;
       debugPrint(
-          "👩‍❤️‍👨 [BleOfflineService] Bắt sóng thành công thiết bị người yêu ở gần!");
+          '👩‍❤️‍👨 [BleOfflineService] Bắt sóng thành công thiết bị người yêu ở gần!');
     });
   }
 
@@ -59,12 +59,12 @@ class BleOfflineService {
     final bytes = utf8.encode(payload);
 
     if (bytes.length > 20) {
-      debugPrint("Cảnh báo: Bản tin BLE quá lớn! Yêu cầu nén lại.");
+      debugPrint('Cảnh báo: Bản tin BLE quá lớn! Yêu cầu nén lại.');
     }
 
     // Đẩy qua kênh gửi BLE tới thiết bị kia
     debugPrint(
-        "💌 [BleOfflineService] Bắn tín hiệu BLE thành công: $normalizedAction = $data");
+        '💌 [BleOfflineService] Bắn tín hiệu BLE thành công: $normalizedAction = $data');
   }
 
   /// Gửi phím tắt Emoji (❤️, 🥺) từ Apple Watch / ĐT không mạng

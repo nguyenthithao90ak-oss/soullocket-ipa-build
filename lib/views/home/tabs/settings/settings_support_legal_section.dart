@@ -1,4 +1,4 @@
-﻿part of '../settings_tab.dart';
+part of '../settings_tab.dart';
 
 extension _SettingsTabSupportLegalSection on _SettingsTabState {
   void _openPolicyOverview() {
@@ -58,7 +58,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         ? AppConfig.iOSStoreUrl
         : AppConfig.androidStoreUrl;
 
-    final subject = 'SoulLocket â€” Nháº­t kÃ½ tÃ¬nh yÃªu cho 2 ngÆ°á»i';
+    const subject = 'SoulLocket â€” Nháº­t kÃ½ tÃ¬nh yÃªu cho 2 ngÆ°á»i';
     final message = [
       'SoulLocket â€” NgÃ´i nhÃ  chung cho cÃ¡c cáº·p Ä‘Ã´i ðŸ’–',
       '',

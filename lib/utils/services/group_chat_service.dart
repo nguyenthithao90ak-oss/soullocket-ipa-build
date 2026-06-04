@@ -375,8 +375,15 @@ class GroupChatService {
 
     controller = StreamController<ChatMessage>(
       onListen: () {
+        Timer? addedDebounce;
+        Timer? changedDebounce;
         addedSub = query.onChildAdded.map(readMessage).listen(
-          controller.add,
+          (msg) {
+            addedDebounce?.cancel();
+            addedDebounce = Timer(const Duration(milliseconds: 150), () {
+              controller.add(msg);
+            });
+          },
           onError: (Object error) {
             debugPrint(
               '[GroupChat] message add stream failed: ${AppErrorMapper.resolve(
@@ -387,7 +394,12 @@ class GroupChatService {
           },
         );
         changedSub = query.onChildChanged.map(readMessage).listen(
-          controller.add,
+          (msg) {
+            changedDebounce?.cancel();
+            changedDebounce = Timer(const Duration(milliseconds: 150), () {
+              controller.add(msg);
+            });
+          },
           onError: (Object error) {
             debugPrint(
               '[GroupChat] message change stream failed: ${AppErrorMapper.resolve(
@@ -397,10 +409,13 @@ class GroupChatService {
             );
           },
         );
+        Timer? membershipDebounce;
         membershipSub =
             _dbRef.child('groups/$groupId/memberHouseIds').onValue.listen((
           event,
         ) {
+          membershipDebounce?.cancel();
+          membershipDebounce = Timer(const Duration(milliseconds: 200), () {
           final raw = event.snapshot.value;
           final nextMembers = <String>[];
           if (raw is Map) {
@@ -425,7 +440,9 @@ class GroupChatService {
           }
           controller
               .addError(Exception('Bạn không còn là thành viên của nhóm này.'));
-        }, onError: (Object error) {
+        });
+      },
+      onError: (Object error) {
           debugPrint(
             '[GroupChat] membership stream failed: ${AppErrorMapper.resolve(
               error,
@@ -462,14 +479,19 @@ class GroupChatService {
     final Map<String, StreamSubscription<DatabaseEvent>> groupSubs =
         <String, StreamSubscription<DatabaseEvent>>{};
     final Map<String, GroupChatRoom> groups = <String, GroupChatRoom>{};
+    Timer? emitDebounce;
 
     void emit() {
       if (controller.isClosed) {
         return;
       }
-      final items = groups.values.toList()
-        ..sort((a, b) => b.sortTimestamp.compareTo(a.sortTimestamp));
-      controller.add(items);
+      emitDebounce?.cancel();
+      emitDebounce = Timer(const Duration(milliseconds: 200), () {
+        if (controller.isClosed) return;
+        final items = groups.values.toList()
+          ..sort((a, b) => b.sortTimestamp.compareTo(a.sortTimestamp));
+        controller.add(items);
+      });
     }
 
     Future<void> syncGroupSubscriptions(List<String> nextIds) async {

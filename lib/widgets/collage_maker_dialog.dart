@@ -14,6 +14,7 @@ import '../services/image_picker_recovery_service.dart';
 import '../services/storage_service.dart';
 import '../services/collage_limit_service.dart';
 import '../utils/collage_generator.dart';
+import '../utils/services/pending_upload_retry_coordinator.dart';
 import '../utils/services/pending_upload_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
 import '../core/sl_theme.dart';
@@ -96,11 +97,22 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
   @override
   void initState() {
     super.initState();
+    PendingUploadRetryCoordinator.instance.registerHandler(
+      'collage_maker',
+      (pending) async {
+        if (pending.key != _pendingUploadKey || !mounted) {
+          return false;
+        }
+        await _retryPendingCollageUpload();
+        return true;
+      },
+    );
     unawaited(_fetchMemoryPhotos());
   }
 
   @override
   void dispose() {
+    PendingUploadRetryCoordinator.instance.unregisterHandler('collage_maker');
     _generationTicket++;
     for (final image in _decodedImageCache.values) {
       try {

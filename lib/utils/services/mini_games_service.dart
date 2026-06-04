@@ -22,16 +22,16 @@ class MiniGamesService {
   // ─────────────────────────────────────────────────────────────
 
   static const List<String> _whoIsQuestions = [
-    "Ai hay dỗi hơn?",
-    "Ai ăn nhiều hơn?",
-    "Ai ngủ nướng hơn?",
-    "Ai chủ động làm quen trước?",
-    "Ai lãng mạn hơn?",
-    "Ai hay quên hơn?",
-    "Ai nấu ăn ngon hơn?",
-    "Ai bừa bộn hơn?",
-    "Ai chi tiêu tiết kiệm hơn?",
-    "Ai hay ghen hơn?"
+    'Ai hay dỗi hơn?',
+    'Ai ăn nhiều hơn?',
+    'Ai ngủ nướng hơn?',
+    'Ai chủ động làm quen trước?',
+    'Ai lãng mạn hơn?',
+    'Ai hay quên hơn?',
+    'Ai nấu ăn ngon hơn?',
+    'Ai bừa bộn hơn?',
+    'Ai chi tiêu tiết kiệm hơn?',
+    'Ai hay ghen hơn?'
   ];
 
   /// Set câu hỏi mới

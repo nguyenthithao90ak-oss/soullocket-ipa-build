@@ -13,6 +13,7 @@ import '../services/image_picker_recovery_service.dart';
 import '../services/military_lock_service.dart';
 import '../services/offline_cache_service.dart';
 import '../services/storage_service.dart';
+import '../services/texas_age_gate_service.dart';
 import '../services/widget_action_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
 import '../utils/services/settings_sync_service.dart';
@@ -84,6 +85,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(WidgetActionService().initialize());
+      unawaited(TexasAgeGateService().resolveAgeSignal());
       unawaited(() async {
         await ImagePickerRecoveryService.instance.primeLostData();
         if (!mounted ||

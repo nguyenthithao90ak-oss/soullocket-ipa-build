@@ -16,8 +16,8 @@ class DailyChallengeService {
 
   Future<String> _resolvedActivityRole() async {
     final prefs = await SharedPreferences.getInstance();
-    final role = (prefs.getString('il_role') ?? 'user1').trim();
-    return role == 'user2' ? 'user2' : 'user1';
+    final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
+    return role;
   }
 
   static const List<Map<String, String>> _challengePool = [

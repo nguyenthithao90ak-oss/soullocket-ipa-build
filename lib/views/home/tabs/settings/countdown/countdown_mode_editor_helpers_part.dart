@@ -1,4 +1,4 @@
-part of '../settings_tab.dart';
+part of '../../settings_tab.dart';
 
 extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
   void _showMessageImpl(String message) {

@@ -24,7 +24,7 @@ class ThemeSettingsService {
     await prefs.setBool('app_is_dark', isDarkMode);
 
     debugPrint(
-        "🎨 Hệ thống đã kích hoạt Cấu hình Màu Mới (RAM Local) ngay tức khắc!");
+        '🎨 Hệ thống đã kích hoạt Cấu hình Màu Mới (RAM Local) ngay tức khắc!');
   }
 
   Map<String, dynamic>? getLocalThemeSync(SharedPreferences prefs) {

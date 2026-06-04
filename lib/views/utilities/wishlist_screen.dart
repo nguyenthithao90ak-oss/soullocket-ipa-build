@@ -97,7 +97,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     final price = int.tryParse(priceText) ?? 0;
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final role = prefs.getString('il_role') ?? 'user1';
+    final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
 
     final now = DateTime.now();
     await _dbRef.child('houses/${widget.houseId}/wishlist').push().set({

@@ -1,4 +1,4 @@
-part of '../settings_tab.dart';
+part of '../../settings_tab.dart';
 // ignore_for_file: unused_element
 
 extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {

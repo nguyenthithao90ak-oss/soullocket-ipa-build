@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-import '../../../../models/diary_post.dart';
-import '../../../../widgets/skeleton_container.dart';
+import '../../../models/diary_post.dart';
+import '../../../widgets/skeleton_container.dart';
 
 
 class DiaryList extends StatelessWidget {

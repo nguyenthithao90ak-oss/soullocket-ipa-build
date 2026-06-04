@@ -291,4 +291,6 @@ class _MapMemoryPipelineState {
       <String, _MapMemorySourceRecord>{};
   final List<String> orderedDedupKeys = <String>[];
   final _MapStaticMarkerCache staticMarkerCache = _MapStaticMarkerCache();
+  Timer? debounce;
+  Timer? houseDebounce;
 }

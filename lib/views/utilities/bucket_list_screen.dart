@@ -102,7 +102,7 @@ class _BucketListScreenState extends State<BucketListScreen>
     });
 
     final prefs = await SharedPreferences.getInstance();
-    final role = prefs.getString('il_role') ?? 'user1';
+    final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
     ActivityHistoryService.instance.add(
       labelAction,
       houseId: widget.houseId,

@@ -221,7 +221,6 @@ class AdMobService {
 
   Future<void> initialize() async {
     if (_sdkInitialized) return;
-    if (!await _consentService.hasValidConsent()) return;
     if (_initializeCompleter != null) {
       return _initializeCompleter!.future;
     }
@@ -287,13 +286,17 @@ class AdMobService {
 
     try {
       final canRequestAds = await ConsentInformation.instance.canRequestAds();
-      if (!canRequestAds && !kDebugMode) {
-        return;
-      }
-      if (!canRequestAds && kDebugMode) {
+      if (!canRequestAds) {
         debugPrint(
-          'AdMobService: debug continues ads init after UMP canRequestAds=false '
-          '(consentUpdateFailed=$consentUpdateFailed).',
+          'AdMobService: canRequestAds=false '
+          '(consentUpdateFailed=$consentUpdateFailed, '
+          'debugMode=$kDebugMode).',
+        );
+        if (!kDebugMode) {
+          return;
+        }
+        debugPrint(
+          'AdMobService: debug continues ads init after UMP canRequestAds=false.',
         );
       }
 
@@ -305,6 +308,11 @@ class AdMobService {
             .timeout(const Duration(seconds: 4));
         if (snap.exists && snap.value is Map) {
           final map = Map<dynamic, dynamic>.from(snap.value as Map);
+          debugPrint(
+            'AdMobService: synced remote AdMob IDs '
+            '(android=${map.keys.where((k) => !k.toString().startsWith('ios_')).length}, '
+            'ios=${map.keys.where((k) => k.toString().startsWith('ios_')).length}).',
+          );
           if (map['rewardedMainId'] != null) {
             _androidRewardedMainId = map['rewardedMainId'].toString();
           }
@@ -357,10 +365,12 @@ class AdMobService {
         );
       }
       await MobileAds.instance.initialize();
+      debugPrint('AdMobService: MobileAds SDK initialized.');
       _sdkInitialized = true;
       _loadRewardedAd();
       _loadSoulGameRewardedAd();
       unawaited(loadInterstitialAd());
+      unawaited(loadAppOpenAd());
     } finally {
       if (!completer.isCompleted) {
         completer.complete();

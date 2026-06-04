@@ -144,6 +144,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   @override
   void dispose() {
+    _roomStatusSub?.cancel();
     _webrtcService.hangUp();
     _localRenderer.dispose();
     _remoteRenderer.dispose();

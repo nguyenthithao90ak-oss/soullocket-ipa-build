@@ -141,7 +141,7 @@ class WebRTCService {
     String? callerHouseId,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception("Chưa đăng nhập");
+    if (user == null) throw Exception('Chưa đăng nhập');
 
     final resolvedTargetHouseId = targetHouseId.trim();
     final resolvedCallerHouseId = await _resolveCallerHouseId(
@@ -277,7 +277,7 @@ class WebRTCService {
     _roomId = roomId;
     final roomRef = _db.ref('calls/$roomId');
     final roomSnap = await roomRef.get();
-    if (!roomSnap.exists) throw Exception("Phòng gọi không tồn tại");
+    if (!roomSnap.exists) throw Exception('Phòng gọi không tồn tại');
 
     _peerConnection = await createPeerConnection(await _loadRtcConfiguration());
 

@@ -387,5 +387,7 @@
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Dữ liệu của bạn được ẩn danh và dùng để cải thiện trải nghiệm ứng dụng, hiển thị quảng cáo phù hợp mà không bán cho bên thứ ba.</string>
 </dict>
 </plist>

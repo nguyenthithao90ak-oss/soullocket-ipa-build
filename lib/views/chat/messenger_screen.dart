@@ -193,13 +193,19 @@ class _MessengerScreenState extends State<MessengerScreen>
             return;
           }
 
-          setState(() {
-            _friends = ids;
-            _friendIdsSet
-              ..clear()
-              ..addAll(ids);
-            _sortedFriendsDirty = true;
-          });
+          final changed = !_sameStringList(_friends, ids);
+          if (!changed) {
+            return;
+          }
+
+          _friends = ids;
+          _friendIdsSet
+            ..clear()
+            ..addAll(ids);
+          _sortedFriendsDirty = true;
+          if (mounted) {
+            setState(() {});
+          }
           _pruneRemovedFriendRealtime(ids);
           _warmupFriendRealtime(ids);
           _loadHousesInfo(ids);
@@ -229,13 +235,22 @@ class _MessengerScreenState extends State<MessengerScreen>
     final loaded = Map<String, Map<dynamic, dynamic>>.fromEntries(entries);
 
     if (!mounted) return;
-    setState(() {
-      loaded.forEach((id, info) {
-        _housesInfo[id] =
-            info.isNotEmpty ? info : <dynamic, dynamic>{'__deleted__': true};
-      });
-      _sortedFriendsDirty = true;
+    var didChange = false;
+    loaded.forEach((id, info) {
+      final nextValue =
+          info.isNotEmpty ? info : <dynamic, dynamic>{'__deleted__': true};
+      if (_housesInfo[id] != nextValue) {
+        _housesInfo[id] = nextValue;
+        didChange = true;
+      }
     });
+    if (didChange && mounted) {
+      setState(() {
+        _sortedFriendsDirty = true;
+      });
+    } else {
+      _sortedFriendsDirty = true;
+    }
   }
 
   Future<Map<dynamic, dynamic>> _fetchHouseInfo(String houseId) async {

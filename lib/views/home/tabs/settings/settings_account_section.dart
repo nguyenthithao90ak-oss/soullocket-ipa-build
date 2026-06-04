@@ -295,6 +295,19 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       return;
     }
 
+    if (!mounted) return;
+    _houseNameCtrl.text = draft.normalizedHouseName;
+    _nameU1Ctrl.text = draft.normalizedNameU1;
+    _nameU2Ctrl.text = draft.normalizedNameU2;
+    _loveUnitCtrl.text = draft.normalizedDayUnit;
+    setState(() {
+      _houseName = draft.normalizedHouseName;
+      _nameU1 = draft.normalizedNameU1;
+      _nameU2 = draft.normalizedNameU2;
+      _loveUnit = draft.normalizedDayUnit;
+      _openPanel = null;
+    });
+
     try {
       final prefs = await SharedPreferences.getInstance();
       await _settingsIdentityController.persistDraft(
@@ -304,17 +317,6 @@ extension _SettingsTabAccountSection on _SettingsTabState {
         draft: draft,
       );
       if (!mounted) return;
-      _houseNameCtrl.text = draft.normalizedHouseName;
-      _nameU1Ctrl.text = draft.normalizedNameU1;
-      _nameU2Ctrl.text = draft.normalizedNameU2;
-      _loveUnitCtrl.text = draft.normalizedDayUnit;
-      setState(() {
-        _houseName = draft.normalizedHouseName;
-        _nameU1 = draft.normalizedNameU1;
-        _nameU2 = draft.normalizedNameU2;
-        _loveUnit = draft.normalizedDayUnit;
-        _openPanel = null;
-      });
       await NotificationService().syncDailySleepReminder();
       if (!mounted) return;
       _showToast(msgSaved, success: true);

@@ -835,7 +835,7 @@ class WidgetService {
       final houseId = await HouseService().getCurrentHouseId();
       if (houseId == null || houseId.trim().isEmpty) return;
 
-      final currentRole = prefs.getString('il_role') ?? 'user1';
+      final currentRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       final partnerRole = currentRole == 'user1' ? 'user2' : 'user1';
 
       final houseData = await FirebaseDatabase.instance.ref('houses/$houseId').get();

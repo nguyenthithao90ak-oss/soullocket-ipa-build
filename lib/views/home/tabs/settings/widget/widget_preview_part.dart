@@ -171,80 +171,224 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
 
   Widget _buildWidgetHeartStylePicker() {
     final selectedKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
+    final visibleHeartStyles = _widgetHeartStyleKeys.take(12).toList(growable: false);
+    final hiddenCount = _widgetHeartStyleKeys.length - visibleHeartStyles.length;
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _widgetHeartStyleKeys.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1,
-      ),
-      itemBuilder: (context, index) {
-        final heart = _widgetHeartStyleKeys[index];
-        final isSelected = selectedKey == heart;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: visibleHeartStyles.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 1,
+          ),
+          itemBuilder: (context, index) {
+            final heart = visibleHeartStyles[index];
+            final isSelected = selectedKey == heart;
 
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () async => _handleWidgetHeartStyleChanged(heart),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFFFFEEF5)
-                    : const Color(0xFFF8FAFC),
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFFFF6B97)
-                      : const Color(0xFFE4EAF3),
-                  width: isSelected ? 1.6 : 1.1,
-                ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFFFF6B97).withValues(alpha: 0.16),
-                          blurRadius: 12,
-                          offset: const Offset(0, 5),
-                        ),
-                      ]
-                    : const [],
-              ),
-              child: Center(
-                child: AnimatedScale(
+                onTap: () async => _handleWidgetHeartStyleChanged(heart),
+                child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
-                  scale: isSelected ? 1.08 : 1,
-                  child: ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Color(0xFFFF4D8D),
-                        Color(0xFFFFB86B),
-                        Color(0xFF8B5CF6),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ).createShader(bounds),
-                    child: Text(
-                      heart,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 23,
-                        height: 1,
-                        color: Colors.white,
+                  curve: Curves.easeOut,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFFFFEEF5)
+                        : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: isSelected
+                          ? const Color(0xFFFF6B97)
+                          : const Color(0xFFE4EAF3),
+                      width: isSelected ? 1.6 : 1.1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFFFF6B97).withValues(alpha: 0.16),
+                              blurRadius: 12,
+                              offset: const Offset(0, 5),
+                            ),
+                          ]
+                        : const [],
+                  ),
+                  child: Center(
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 220),
+                      scale: isSelected ? 1.08 : 1,
+                      child: ShaderMask(
+                        shaderCallback: (bounds) => const LinearGradient(
+                          colors: [
+                            Color(0xFFFF4D8D),
+                            Color(0xFFFFB86B),
+                            Color(0xFF8B5CF6),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ).createShader(bounds),
+                        child: Text(
+                          heart,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 23,
+                            height: 1,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
+            );
+          },
+        ),
+        if (hiddenCount > 0) ...[
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () {
+                showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (sheetContext) {
+                    return SafeArea(
+                      child: Container(
+                        margin: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 22,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Tất cả kiểu trái tim',
+                                    style: SLTheme.quicksand(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF4A3640),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => Navigator.pop(sheetContext),
+                                  icon: const Icon(Icons.close_rounded),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Flexible(
+                              child: GridView.builder(
+                                shrinkWrap: true,
+                                physics: const BouncingScrollPhysics(),
+                                itemCount: _widgetHeartStyleKeys.length,
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 4,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                  childAspectRatio: 1,
+                                ),
+                                itemBuilder: (context, index) {
+                                  final heart = _widgetHeartStyleKeys[index];
+                                  final isSelected = selectedKey == heart;
+                                  return Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(18),
+                                      onTap: () async {
+                                        await _handleWidgetHeartStyleChanged(heart);
+                                        if (sheetContext.mounted) {
+                                          Navigator.pop(sheetContext);
+                                        }
+                                      },
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 220),
+                                        curve: Curves.easeOut,
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? const Color(0xFFFFEEF5)
+                                              : const Color(0xFFF8FAFC),
+                                          borderRadius: BorderRadius.circular(18),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? const Color(0xFFFF6B97)
+                                                : const Color(0xFFE4EAF3),
+                                            width: isSelected ? 1.6 : 1.1,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: ShaderMask(
+                                            shaderCallback: (bounds) => const LinearGradient(
+                                              colors: [
+                                                Color(0xFFFF4D8D),
+                                                Color(0xFFFFB86B),
+                                                Color(0xFF8B5CF6),
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ).createShader(bounds),
+                                            child: Text(
+                                              heart,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                fontSize: 23,
+                                                height: 1,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+              icon: const Icon(Icons.more_horiz_rounded),
+              label: Text(
+                'Xem thêm $hiddenCount',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFFD81B60),
+                ),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFD81B60),
+              ),
             ),
           ),
-        );
-      },
+        ],
+      ],
     );
   }
 

@@ -55,7 +55,7 @@ class LoveMessengerCore {
     _currentUserUid = _auth.currentUser?.uid;
 
     if (_currentUserUid == null) {
-      throw Exception("Chưa đăng nhập! Lõi ngắt hoạt động.");
+      throw Exception('Chưa đăng nhập! Lõi ngắt hoạt động.');
     }
 
     if (!kIsWeb) {
@@ -173,7 +173,7 @@ class LoveMessengerCore {
     String finalContent = text;
     if (isEncrypted) {
       finalContent =
-          "ENCRYPTED:\$${base64Encode(utf8.encode(text))}"; // Dummy Crypto
+          'ENCRYPTED:\$${base64Encode(utf8.encode(text))}'; // Dummy Crypto
     }
 
     final msg = MessageCoreModel(
@@ -289,7 +289,7 @@ class LoveMessengerCore {
     final msg = MessageCoreModel(
       id: msgRef.key!,
       senderId: _currentUserUid!,
-      text: "[HEART_QUAKE_NUDGE_SIGNAL]", // Mã định dạng chọc ngoáy
+      text: '[HEART_QUAKE_NUDGE_SIGNAL]', // Mã định dạng chọc ngoáy
       timestamp: DateTime.now().millisecondsSinceEpoch,
       isRead: false,
       isEncrypted: false,
@@ -519,13 +519,13 @@ class SuperLoveMessengerViewState extends State<SuperLoveMessengerView>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Bé Yêu ❤️",
+                  const Text('Bé Yêu ❤️',
                       style: TextStyle(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
                           fontSize: 16)),
                   if (_isPartnerTyping)
-                    const Text("Đang gõ tin nhắn...",
+                    const Text('Đang gõ tin nhắn...',
                         style: TextStyle(
                             color: Colors.deepPurple,
                             fontSize: 12,
@@ -693,7 +693,7 @@ class SuperLoveMessengerViewState extends State<SuperLoveMessengerView>
                           },
                           decoration: const InputDecoration(
                               border: InputBorder.none,
-                              hintText: "Gửi yêu thương...",
+                              hintText: 'Gửi yêu thương...',
                               hintStyle: TextStyle(color: Colors.grey)),
                         ),
                       ),

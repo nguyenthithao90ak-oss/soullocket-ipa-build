@@ -73,7 +73,7 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   String _resolveSettingsMyName() {
-    return _activeRoleKey == 'user1' ? _nameU1 : _nameU2;
+    return _activeRoleKey == 'user2' ? _nameU2 : _nameU1;
   }
 
   Set<String> _settingsSearchableUtilityIds() {
@@ -297,12 +297,12 @@ extension _SettingsTabShell on _SettingsTabState {
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           child: Column(
                             children: [
-                              if (_relationshipMode != 'single') ...[
+                              if (_relationshipMode == 'couple') ...[
                                 _buildActionBtn(
                                   icon: Icons.swap_horiz_rounded,
-                                  label: _activeRoleKey == 'user1'
-                                      ? context.tr('settings_swap_role_to_female')
-                                      : context.tr('settings_swap_role_to_male'),
+                                  label: _activeRoleKey == 'user2'
+                                      ? context.tr('settings_swap_role_to_male')
+                                      : context.tr('settings_swap_role_to_female'),
                                   gradient: const [
                                     Color(0xFF42A5F5),
                                     Color(0xFF1E88E5)
@@ -332,17 +332,6 @@ extension _SettingsTabShell on _SettingsTabState {
                                 ],
                                 textColor: const Color(0xFFFF8F00),
                                 onTap: _rateApp,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildActionBtn(
-                                icon: Icons.share_rounded,
-                                label: context.tr('share_app'),
-                                gradient: const [
-                                  Color(0xFFCE93D8),
-                                  Color(0xFF6A1B9A)
-                                ],
-                                textColor: const Color(0xFF6A1B9A),
-                                onTap: _shareApp,
                               ),
                               const SizedBox(height: 12),
                               _buildActionBtn(
@@ -462,17 +451,6 @@ extension _SettingsTabShell on _SettingsTabState {
                                         ],
                                         textColor: const Color(0xFFFF8F00),
                                         onTap: _rateApp,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _buildActionBtn(
-                                        icon: Icons.share_rounded,
-                                        label: context.tr('share_app'),
-                                        gradient: const [
-                                          Color(0xFFCE93D8),
-                                          Color(0xFF6A1B9A),
-                                        ],
-                                        textColor: const Color(0xFF6A1B9A),
-                                        onTap: _shareApp,
                                       ),
                                       const SizedBox(height: 12),
                                       _buildActionBtn(
@@ -876,7 +854,7 @@ extension _SettingsTabShell on _SettingsTabState {
         return _buildSectionStack([
           if (!hideVipPanelOnIos)
             _buildVipPanel(hideBackButton: false),
-          _buildIdentityPanel(hideBackButton: true),
+          _buildIdentityPanel(hideBackButton: false),
           _buildLanguagePanel(hideBackButton: true),
         ]);
       case 'security':

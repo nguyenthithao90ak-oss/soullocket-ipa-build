@@ -97,6 +97,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       await _refreshSettingsBackupStatus();
       if (!mounted || !_hasSettingsCloudBackup) {
         _showToast(
+          // ignore: use_build_context_synchronously
           context.tr('settings_cloud_backup_not_found_to_restore'),
           success: false,
         );

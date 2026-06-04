@@ -221,7 +221,7 @@ class LoginController extends ChangeNotifier {
             L10nService().translate('auth_accept_terms_required'));
         return;
       }
-      final strongRegex = RegExp(r"^(?=.*[0-9])(?=.{6,})");
+      final strongRegex = RegExp(r'^(?=.*[0-9])(?=.{6,})');
       if (!strongRegex.hasMatch(password)) {
         SLNotice.showError(
             context,

@@ -26,6 +26,7 @@ import '../../services/music_service.dart';
 import '../../services/breakup_service.dart';
 import '../../services/military_lock_service.dart';
 import '../../services/notification_service.dart';
+import '../../utils/services/role_utils.dart';
 import '../../services/schedule_notif_service.dart';
 import '../../services/webrtc_service.dart';
 import '../../services/widget_action_service.dart';
@@ -367,6 +368,8 @@ class _HomeScreenState extends State<HomeScreen>
           false;
   bool _navHiddenUntilRestart = false;
   bool _hideNavForDiarySelection = false;
+  late final ValueNotifier<bool> _navCollapsedNotifier;
+  late final ValueNotifier<bool> _isUserTabSwipingNotifier;
   bool _didCheckCoupleOnboarding = false;
   bool _didCheckNewUserWelcomeNotice = false;
   bool _didCheckFirstSetupGuide = false;
@@ -444,6 +447,8 @@ class _HomeScreenState extends State<HomeScreen>
     _backgroundTabIndexNotifier =
         ValueNotifier<int>(_currentIndex); // ⚡ Init background notifier
     _vipThemeRotationTickNotifier = ValueNotifier<int>(0);
+    _navCollapsedNotifier = ValueNotifier<bool>(_navCollapsed);
+    _isUserTabSwipingNotifier = ValueNotifier<bool>(false);
     _pageController = PageController(initialPage: _currentIndex);
     _tabBuilders = [
       (isActive) => MainHomeTab(
@@ -927,7 +932,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     final settings = await _houseSettingsService.fetchSettings(houseId);
     final prefs = await OfflineCacheService.getPrefs();
-    final role = prefs.getString('il_role') ?? 'user1';
+    final role = RoleUtils.normalize(prefs.getString('il_role'));
     final myName = role == 'user2'
         ? (settings?.nameU2.trim().isNotEmpty == true
             ? settings!.nameU2.trim()
@@ -1061,13 +1066,15 @@ class _HomeScreenState extends State<HomeScreen>
     if (shouldStartTracking && !_isUserTabSwiping && mounted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _isUserTabSwiping) return;
-        setState(() => _isUserTabSwiping = true);
+        _isUserTabSwiping = true;
+        _isUserTabSwipingNotifier.value = true;
         _syncMusicAnimationState();
       });
     } else if (shouldStopTracking && _isUserTabSwiping && mounted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !_isUserTabSwiping) return;
-        setState(() => _isUserTabSwiping = false);
+        _isUserTabSwiping = false;
+        _isUserTabSwipingNotifier.value = false;
         _syncMusicAnimationState();
       });
     }
@@ -1078,13 +1085,15 @@ class _HomeScreenState extends State<HomeScreen>
     final prefs = await OfflineCacheService.getPrefs();
     final collapsed = prefs.getBool(_navCollapsedPrefsKey) ?? false;
     if (!mounted) return;
-    setState(() => _navCollapsed = collapsed);
+    _navCollapsed = collapsed;
+    _navCollapsedNotifier.value = collapsed;
   }
 
   Future<void> _setNavCollapsed(bool value) async {
     if (_navCollapsed == value) return;
     if (mounted) {
-      setState(() => _navCollapsed = value);
+      _navCollapsed = value;
+      _navCollapsedNotifier.value = value;
     }
     final prefs = await OfflineCacheService.getPrefs();
     await prefs.setBool(_navCollapsedPrefsKey, value);

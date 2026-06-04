@@ -632,6 +632,28 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
     });
   }
 
+  String _normalizeSettingsRoleKey(String? role) {
+    return role == 'user2' ? 'user2' : 'user1';
+  }
+
+  String _resolveSettingsActiveRoleKey({
+    required String relationshipMode,
+    String? storedRole,
+  }) {
+    final normalizedMode = relationshipMode.trim().toLowerCase();
+    final normalizedStoredRole = _normalizeSettingsRoleKey(storedRole);
+
+    if (normalizedMode == 'couple') {
+      return normalizedStoredRole;
+    }
+
+    if (normalizedMode == 'single') {
+      return 'user1';
+    }
+
+    return normalizedStoredRole;
+  }
+
   Future<void> _fetchSettingsData() async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -666,6 +688,15 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
           final relMode =
               (data['relationshipMode'] ?? syncedRelationshipMode ?? 'single')
                   .toString();
+          final storedRole =
+              _normalizeSettingsRoleKey(data['role']?.toString() ?? data['currentRole']?.toString() ?? data['activeRole']?.toString());
+          final activeRoleKey = _resolveSettingsActiveRoleKey(
+            relationshipMode: relMode,
+            storedRole: storedRole,
+          );
+          final shouldHideRoleSwitch = relMode.trim().toLowerCase() == 'single';
+          final resolvedActiveRoleKey =
+              shouldHideRoleSwitch ? 'user1' : activeRoleKey;
           final resolvedGreetingQuote =
               (data['countdownTopLabel'] ?? data['greetingQuote'] ?? '')
                   .toString()
@@ -698,6 +729,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                   ? loveDaysUnitMsg
                   : resolvedLoveUnit;
               _relationshipMode = relMode;
+              _activeRoleKey = resolvedActiveRoleKey;
               _musicAutoplay = _musicAutoplay;
               _draftThemeKey ??= (data['theme'] ?? '').toString().trim().isEmpty
                   ? null

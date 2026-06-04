@@ -12,6 +12,7 @@ import '../../services/storage_service.dart';
 import '../../services/collage_limit_service.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';
+import '../../utils/services/pending_upload_retry_coordinator.dart';
 import '../../utils/services/pending_upload_service.dart';
 
 class PhotoCollageScreen extends StatefulWidget {
@@ -42,11 +43,26 @@ class _PhotoCollageScreenState extends State<PhotoCollageScreen> {
   @override
   void initState() {
     super.initState();
+    PendingUploadRetryCoordinator.instance.registerHandler(
+      'photo_collage',
+      (pending) async {
+        if (!mounted) {
+          return false;
+        }
+        final pendingKey = await _pendingUploadKey();
+        if (pendingKey == null || pending.key != pendingKey) {
+          return false;
+        }
+        await _retryPendingSaveToHouseAlbum();
+        return true;
+      },
+    );
     unawaited(_promptPendingUploadRetryIfNeeded());
   }
 
   @override
   void dispose() {
+    PendingUploadRetryCoordinator.instance.unregisterHandler('photo_collage');
     _captionController.dispose();
     super.dispose();
   }

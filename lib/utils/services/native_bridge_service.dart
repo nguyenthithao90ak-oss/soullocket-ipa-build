@@ -24,7 +24,7 @@ class NativeBridgeService {
   Future<void> initialize() async {
     platform.setMethodCallHandler(_handleNativeCall);
     debugPrint(
-        "🚀 [NativeBridgeService] Đã mở cổng kết nối với Home Screen Widgets");
+        '🚀 [NativeBridgeService] Đã mở cổng kết nối với Home Screen Widgets');
   }
 
   /// Hàm bắt sự kiện khi Android/iOS gửi yêu cầu xin dữ liệu
@@ -79,7 +79,7 @@ class NativeBridgeService {
       final payload = await _buildWidgetPayload(houseId);
       await platform.invokeMethod('updateWidget', {'data': payload});
     } on PlatformException catch (e) {
-      debugPrint("Lỗi không đẩy được Widget: ${e.message}");
+      debugPrint('Lỗi không đẩy được Widget: ${e.message}');
     }
   }
 }

@@ -64,11 +64,11 @@ import '../../utilities/shared_notes_screen.dart';
 import '../../utilities/calculator_screen.dart';
 import '../../utilities/diary_export_screen.dart';
 import '../../utilities/history_screen.dart';
-import '../../utilities/tarot_screen.dart';
+import '../../../features/tarot/tarot_screen.dart';
 import '../../utilities/utility_sticker_icon.dart';
 import '../../utilities/utilities_config.dart';
 import '../../utilities/voice_screen.dart';
-import '../../utilities/wheel_screen.dart';
+import '../../../features/wheel/wheel_screen.dart';
 import '../../utilities/wishlist_screen.dart';
 import '../../../utils/zodiac_utils.dart';
 import '../../../services/widget_service.dart';
@@ -77,7 +77,7 @@ import '../../../core/constants/app_config.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../widgets/legacy_web_ui.dart';
 
-import '../love_insights_screen.dart';
+import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import '../screens/global_search_screen.dart';
 import 'dart:ui' as ui;
 
@@ -177,13 +177,14 @@ class _MainHomeTabState extends State<MainHomeTab> {
   String _currentRole = 'user1';
   String? _uploadingAvatarRole;
   bool _didPromptPendingAvatarRetry = false;
-  String _homeDistanceText = L10nService().translate('home_angnhv_ea3669');
+  String _homeDistanceText = 'Đang định vị...';
   String? _homeMapAlert;
   int _wishIndex = -1;
   int _tipIndex = -1;
   bool _hideSettingsButtonUntilRestart = false;
   Timer? _weatherRefreshTimer;
   Timer? _loveWidgetSyncDebounce;
+  Timer? _homeMapPreviewDebounce;
   Timer? _incomingInteractionDialogTimer;
   StreamSubscription? _settingsSubscription;
   StreamSubscription? _presenceSubscription;
@@ -218,7 +219,6 @@ class _MainHomeTabState extends State<MainHomeTab> {
   final Map<String, Future<String?>> _weatherReverseGeocodeInFlight =
       <String, Future<String?>>{};
   Timer? _interactionRotationTimer;
-  Timer? _homeMapPreviewDebounce;
   Map<String, dynamic>? _pendingWidgetSettings;
   bool _pendingWidgetSyncIncludeDiaryMedia = false;
   bool _widgetSyncInFlight = false;
@@ -257,6 +257,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
   bool _showInsightCardFirstTapHint = !(OfflineCacheService.getPrefsSync()
           ?.getBool(_insightCardFirstTapSeenPrefsKey) ??
       false);
+  bool _firstSetupGuidePrompting = false;
   String _lastHomeSettingsPayloadSignature = '';
   String _lastWidgetSettingsSyncKey = '';
   bool _deferHeavyHomeMotion = false;
@@ -266,17 +267,17 @@ class _MainHomeTabState extends State<MainHomeTab> {
 
   StreamSubscription? _membersSubscription;
 
-  static const Duration _kHomeMotionWarmupDelay = Duration(milliseconds: 1100);
+  static const Duration _kHomeMotionWarmupDelay = Duration(milliseconds: 650);
 
   bool get _showLegacyMessengerButton => false;
   String get _partnerRole => _currentRole == 'user1' ? 'user2' : 'user1';
 
   Map<String, dynamic> _buildDefaultHomeSettings() {
     return {
-      'houseName': context.tr('home_nginhcati_dd5d98'),
+      'houseName': 'Ngôi Nhà Của Tôi',
       'startDate': DateTime.now().toIso8601String().split('T')[0],
-      'nameU1': context.tr('home_bn_1fd75b'),
-      'nameU2': context.tr('home_ngiy_5bab37'),
+      'nameU1': 'Bạn',
+      'nameU2': 'Người ấy',
       'relationshipMode': 'couple',
     };
   }
@@ -304,9 +305,9 @@ class _MainHomeTabState extends State<MainHomeTab> {
 
   List<Color> _profileAccentGradient(bool isUser1) {
     if (isUser1) {
-      return [Color(0xFF60A5FA), Color(0xFF2563EB)];
+      return const [Color(0xFF60A5FA), Color(0xFF2563EB)];
     }
-    return [Color(0xFFFF8FB1), Color(0xFFFF4D79)];
+    return const [Color(0xFFFF8FB1), Color(0xFFFF4D79)];
   }
 
   Color _profileAccentText(bool isUser1) {
@@ -357,47 +358,35 @@ class _MainHomeTabState extends State<MainHomeTab> {
   BoxDecoration _homeCardDecoration({double radius = 24}) {
     final tone = UiPrefs.notifier.value.homeBlockToneKey;
     final color = switch (tone) {
-      'mist' => const Color(0xFFF2F7FF).withValues(alpha: 0.58),
-      'rose' => const Color(0xFFFFEDF4).withValues(alpha: 0.52),
-      'glass' => const Color(0xFF2D1B29).withValues(alpha: 0.26),
-      _ => const Color(0xFF412334).withValues(alpha: 0.24),
+      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.42),
+      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.38),
+      'glass' => const Color(0xFF3A2434).withValues(alpha: 0.22),
+      _ => const Color(0xFF43293A).withValues(alpha: 0.20),
     };
     final borderColor = switch (tone) {
-      'mist' => const Color(0xFFDCE9FF).withValues(alpha: 0.72),
-      'rose' => const Color(0xFFFFC9DB).withValues(alpha: 0.70),
-      'glass' => Colors.white.withValues(alpha: 0.20),
-      _ => const Color(0xFFFFD2E1).withValues(alpha: 0.28),
+      'mist' => const Color(0xFFDAE8FF).withValues(alpha: 0.62),
+      'rose' => const Color(0xFFFFC7DA).withValues(alpha: 0.60),
+      'glass' => Colors.white.withValues(alpha: 0.22),
+      _ => const Color(0xFFFFD6E4).withValues(alpha: 0.26),
     };
     final shadowColor = switch (tone) {
-      'mist' => const Color(0xFF8BBBF8).withValues(alpha: 0.11),
+      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.10),
       'rose' => SLColors.primary.withValues(alpha: 0.12),
-      'glass' => Colors.black.withValues(alpha: 0.18),
-      _ => const Color(0xFF1F1020).withValues(alpha: 0.18),
+      'glass' => Colors.black.withValues(alpha: 0.14),
+      _ => const Color(0xFF2C1623).withValues(alpha: 0.16),
     };
 
     return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          color.withValues(alpha: color.alpha / 255.0),
-          color.withValues(alpha: (color.alpha / 255.0) * 0.88),
-        ],
-      ),
+      color: color,
       borderRadius: BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: shadowColor.withValues(alpha: 0.72),
-          blurRadius: 16,
-          offset: const Offset(0, 8),
-        ),
-        BoxShadow(
-          color: Colors.white.withValues(alpha: tone == 'glass' ? 0.04 : 0.14),
-          blurRadius: 6,
-          offset: const Offset(0, -1),
+          color: shadowColor,
+          blurRadius: 28,
+          offset: const Offset(0, 10),
         ),
       ],
-      border: Border.all(color: borderColor, width: 1),
+      border: Border.all(color: borderColor, width: 1.2),
     );
   }
 
@@ -428,33 +417,31 @@ class _MainHomeTabState extends State<MainHomeTab> {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF8EC5FC).withValues(alpha: 0.20),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
+              color: const Color(0xFF8EC5FC).withValues(alpha: 0.28),
+              blurRadius: 40,
+              offset: const Offset(0, 18),
             ),
           ],
         );
       case 'glow':
         return BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             colors: [
-              Color.fromARGB(179, 255, 245, 250),
-              Color.fromARGB(179, 255, 217, 232)
+              const Color(0xFFFFF5FA).withValues(alpha: 0.7),
+              const Color(0xFFFFD9E8).withValues(alpha: 0.7)
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: const Border.fromBorderSide(
-            BorderSide(color: Color(0xBFFFFFFF), width: 6),
-          ),
-          boxShadow: const [
+          border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 6),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x6BFF5E92),
+              color: const Color(0xFFFF5E92).withValues(alpha: 0.42),
               blurRadius: 48,
             ),
             BoxShadow(
-              color: Color(0x0D000000),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 24,
               blurStyle: BlurStyle.inner,
             ),
@@ -480,9 +467,9 @@ class _MainHomeTabState extends State<MainHomeTab> {
           border: Border.all(color: Colors.white.withValues(alpha: 0.70), width: 4),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF00A8).withValues(alpha: 0.26),
-              blurRadius: 30,
-              spreadRadius: 3,
+              color: const Color(0xFFFF00A8).withValues(alpha: 0.38),
+              blurRadius: 48,
+              spreadRadius: 6,
             ),
           ],
         );
@@ -563,8 +550,6 @@ class _MainHomeTabState extends State<MainHomeTab> {
   void dispose() {
     _invalidateLiveWorkSession();
     _cancelLiveWorkBindings();
-    _homeMapPreviewDebounce?.cancel();
-    _homeMapPreviewDebounce = null;
     _homeMediaWarmupToken++;
     _fallingEffectTypeNotifier.dispose();
     _interactionDragHoveredNotifier.dispose();
@@ -1145,10 +1130,10 @@ class _MainHomeTabState extends State<MainHomeTab> {
             kind: _HomeHighlightKind.photo,
             title: item.caption.trim().isNotEmpty
                 ? item.caption.trim()
-                : context.tr('home_nhknim_6f622f'),
+                : 'Ảnh kỷ niệm',
             subtitle: item.authorName.trim().isNotEmpty
                 ? item.authorName.trim()
-                : context.tr('home_khonhchung_5461af'),
+                : 'Kho ảnh chung',
             imageUrl: item.thumbUrl.trim().isNotEmpty
                 ? item.thumbUrl.trim()
                 : item.url.trim(),
@@ -1202,7 +1187,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
     if (name != null && name.isNotEmpty) {
       return name;
     }
-    return role == 'user1' ? 'Nam' : context.tr('home_n_f406d1');
+    return role == 'user1' ? 'Nam' : 'Nữ';
   }
 
   Future<XFile?> _cropAvatarImage(
@@ -1223,7 +1208,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
         maxHeight: 1080,
         uiSettings: [
           IOSUiSettings(
-            title: isUser1 ? context.tr('home_ctavatarbn_f914c9') : context.tr('home_ctavatarng_30711f'),
+            title: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
             aspectRatioLockEnabled: true,
             aspectRatioPickerButtonHidden: true,
             resetAspectRatioEnabled: false,
@@ -1265,12 +1250,12 @@ class _MainHomeTabState extends State<MainHomeTab> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            context.tr('home_lniavatart_37d3af'),
+          content: const Text(
+            'Lần đổi avatar trang chủ trước đã bị gián đoạn.',
           ),
           behavior: SnackBarBehavior.floating,
           action: SnackBarAction(
-            label: context.tr('home_thli_4dffdf'),
+            label: 'Thử lại',
             onPressed: () {
               unawaited(_retryPendingAvatarUpload());
             },
@@ -1307,8 +1292,8 @@ class _MainHomeTabState extends State<MainHomeTab> {
       await PendingUploadService.instance.clear(pendingKey);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.tr('home_khngtmthyn_e7acea')),
+          const SnackBar(
+            content: Text('Không tìm thấy ảnh avatar cũ để thử lại.'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -1333,16 +1318,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
     try {
       file = presetFile ?? await _storageService.pickImage();
     } catch (e) {
-      if (mounted) {
-        SLNotice.showInfo(
-          context,
-          AppErrorMapper.resolve(
-            e,
-            fallbackMessage:
-                context.tr('home_chathchnnh_f9d997'),
-          ).message,
-        );
-      }
+      if (mounted) SLNotice.showInfo(context, 'Lỗi chọn ảnh: $e');
     }
     if (file == null) return;
     if (!mounted) return;
@@ -1375,7 +1351,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
       final sessionId = upload?.sessionId?.trim() ?? '';
       final url = upload?.downloadUrl.trim() ?? '';
       if (sessionId.isEmpty || url.isEmpty) {
-        throw context.tr('home_khnglycphi_565e05');
+        throw 'Không lấy được phiên tải ảnh mới.';
       }
 
       await _storageService.finalizePublicImageUpload(
@@ -1398,8 +1374,8 @@ class _MainHomeTabState extends State<MainHomeTab> {
           SnackBar(
             content: Text(
               isUser1
-                  ? context.tr('home_cpnhtavata_af1e5c')
-                  : context.tr('home_cpnhtavata_182b34'),
+                  ? 'Đã cập nhật avatar cho bạn nam.'
+                  : 'Đã cập nhật avatar cho bạn nữ.',
             ),
             behavior: SnackBarBehavior.floating,
           ),
@@ -1410,7 +1386,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content:
-                Text(context.tr('home_chathinhid_401e49')),
+                Text('Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -1433,18 +1409,18 @@ class _MainHomeTabState extends State<MainHomeTab> {
       return wishes;
     }
     if (_isSingleRelationship) {
-      return [
-        context.tr('home_mtchtdudng_c5a15c'),
-        context.tr('home_bmvotritim_03f82a'),
-        context.tr('home_mbnlnxemvt_fc0693'),
-        context.tr('home_lulimtbcnh_63a3b4'),
+      return const [
+        'Một chút dịu dàng với chính mình hôm nay cũng đủ làm ngày mới dễ thương hơn rồi.',
+        'Bấm vào trái tim ở giữa để thả sang một tín hiệu thật dễ thương nhé.',
+        'Mở bản đồ lên xem vị trí hiện tại của bạn để lưu lại những nơi mình đã đi qua.',
+        'Lưu lại một bức ảnh xinh hoặc một dòng note ngọt ngào cho trang chủ nhé.',
       ];
     }
-    return [
-      context.tr('home_mtcunhbnnh_017b34'),
-      context.tr('home_bmvotritim_03f82a'),
-      context.tr('home_mbnlnxemha_65c413'),
-      context.tr('home_lulimtbcnh_63a3b4'),
+    return const [
+      'Một câu nhớ bạn nho nhỏ cũng đủ làm tim người ấy rung nhẹ đó.',
+      'Bấm vào trái tim ở giữa để thả sang một tín hiệu thật dễ thương nhé.',
+      'Mở bản đồ lên xem hai đứa đang xa bao nhiêu để còn thương nhau thêm.',
+      'Lưu lại một bức ảnh xinh hoặc một dòng note ngọt ngào cho trang chủ nhé.',
     ];
   }
 
@@ -1455,10 +1431,10 @@ class _MainHomeTabState extends State<MainHomeTab> {
     return wishes[safeIndex];
   }
 
-  static final List<String> _kCountdownPressHoldTips = [
-    L10nService().translate('home_mokhingigi_a14cbf'),
-    L10nService().translate('home_mokhingigi_b69b3f'),
-    L10nService().translate('home_mokhingigi_2c326a'),
+  static const List<String> _kCountdownPressHoldTips = [
+    'Mẹo khi ấn giữ: giữ vòng đếm ngày để mở bảng đổi hiệu ứng nhanh ngay trên trang chủ.',
+    'Mẹo khi ấn giữ: giữ nút mũi tên dưới cùng để ẩn thanh tab cho tới khi mở lại màn hình.',
+    'Mẹo khi ấn giữ: giữ nút cài đặt góc phải để ẩn nút cài đặt cho ảnh chụp gọn hơn.',
   ];
 
   int _pickNextRandomIndex({
@@ -1596,7 +1572,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
             child: _buildHomeNoticeSection(
               icon: Icons.favorite_rounded,
               accent: const Color(0xFFFF8DB6),
-              label: context.tr('home_lichctsoul_bb041e'),
+              label: 'Lời chúc từ SoulLocket',
               message: nextWish,
             ),
           ),
@@ -1644,7 +1620,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                   : Icons.tips_and_updates_rounded,
               accent:
                   showWish ? const Color(0xFFFF8DB6) : const Color(0xFF8BE9FF),
-              label: showWish ? context.tr('home_lichctsoul_bb041e') : context.tr('home_monhanh_fbcd02'),
+              label: showWish ? 'Lời chúc từ SoulLocket' : 'Mẹo nhanh',
               message: selectedMessage,
             ),
           ),
@@ -1789,7 +1765,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
     } catch (e) {
       if (mounted) {
         _showLatestSnackBar(
-            context.tr('home_lutrnmycha_08ba34'));
+            'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.');
       }
     }
   }
@@ -2094,7 +2070,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                         if (locked) {
                           HapticFeedback.mediumImpact();
                           _showLatestSnackBar(
-                            context.tr('home_kiunyangkh_e879be'),
+                            'Kiểu này đang khóa. Mở trong Cài đặt giao diện để dùng các kiểu nâng cao.',
                           );
                           return;
                         }
@@ -2179,7 +2155,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                context.tr('home_tychnhvngm_09a3bd'),
+                                'Tùy chỉnh vòng đếm',
                                 style: SLTheme.quicksand(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
@@ -2188,7 +2164,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                context.tr('home_ngivngmngy_636dd5'),
+                                'Ấn giữ vòng đếm ngày để mở bảng này và đổi nhanh giao diện ngay trên trang chủ.',
                                 style: SLTheme.quicksand(
                                   fontSize: 12.4,
                                   fontWeight: FontWeight.w700,
@@ -2245,7 +2221,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            context.tr('home_angdng_8661c1'),
+                            'Đang dùng',
                             style: SLTheme.quicksand(
                               fontSize: 12.2,
                               fontWeight: FontWeight.w900,
@@ -2264,7 +2240,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                                 onTap: currentStyleIsLocked
                                     ? () {
                                         _showLatestSnackBar(
-                                          context.tr('home_kiunyangkh_e879be'),
+                                          'Kiểu này đang khóa. Mở trong Cài đặt giao diện để dùng các kiểu nâng cao.',
                                         );
                                       }
                                     : () => _saveCountdownQuickUiPrefs(
@@ -2285,7 +2261,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                           if (!hasCountdownAdPass) ...[
                             const SizedBox(height: 10),
                             Text(
-                              context.tr('home_cckiuckhav_8d9010'),
+                              'Các kiểu có khóa vẫn giữ nguyên nếu bạn đã mở trước đó, nhưng không đổi lại từ bảng nhanh này.',
                               style: SLTheme.quicksand(
                                 fontSize: 11.6,
                                 fontWeight: FontWeight.w700,
@@ -2299,8 +2275,8 @@ class _MainHomeTabState extends State<MainHomeTab> {
                     ),
                     const SizedBox(height: 14),
                     buildSection(
-                      title: context.tr('home_kiuvngm_96b8db'),
-                      description: context.tr('home_iphongcchh_3ce588'),
+                      title: 'Kiểu vòng đếm',
+                      description: 'Đổi phong cách hiển thị của vòng đếm ngày.',
                       icon: Icons.change_circle_rounded,
                       options: styleOptions,
                       selectedValue: uiState.countdownStyleKey,
@@ -2310,9 +2286,9 @@ class _MainHomeTabState extends State<MainHomeTab> {
                     ),
                     const SizedBox(height: 12),
                     buildSection(
-                      title: context.tr('home_hiungri_283df8'),
+                      title: 'Hiệu ứng rơi',
                       description:
-                          context.tr('home_ihiungnnca_23d003'),
+                          'Đổi hiệu ứng nền của trang chủ ngay lập tức.',
                       icon: Icons.auto_fix_high_rounded,
                       options: effectOptions,
                       selectedValue: uiState.fallingEffectKey,
@@ -2359,9 +2335,9 @@ class _MainHomeTabState extends State<MainHomeTab> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
-            context.tr('home_nntcitmlim_6bc8b0'),
+            'Đã ẩn nút cài đặt. Mở lại màn hình hoặc vào lại app để hiện lại.',
           ),
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 3),
@@ -2508,9 +2484,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
             ValueListenableBuilder<String>(
               valueListenable: _fallingEffectTypeNotifier,
               builder: (context, effectType, child) {
-                if (effectType == 'off' ||
-                    _deferHeavyHomeMotion ||
-                    !_isTabActive) {
+                if (effectType == 'off' || _deferHeavyHomeMotion) {
                   return const SizedBox.shrink();
                 }
                 return Positioned.fill(

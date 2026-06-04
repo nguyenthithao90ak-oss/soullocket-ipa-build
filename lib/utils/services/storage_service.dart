@@ -509,6 +509,17 @@ class StorageService {
         requireSessionId: true,
       );
     } on FirebaseFunctionsException catch (error) {
+      if (_appCheckHelper.isAppCheckFailure(
+        error,
+        allowUnauthenticatedWithoutMarkers: true,
+      )) {
+        throw Exception(
+          AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể tạo phiên tải ảnh ghép.',
+          ).message,
+        );
+      }
       throw Exception(
         (error.message ?? '').trim().isNotEmpty
             ? error.message!.trim()

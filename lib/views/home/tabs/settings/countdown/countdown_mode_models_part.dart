@@ -1,4 +1,4 @@
-part of '../settings_tab.dart';
+part of '../../settings_tab.dart';
 // ignore_for_file: dead_code, unused_element
 
 enum _CountdownModeMenuAction { appearance, exit }

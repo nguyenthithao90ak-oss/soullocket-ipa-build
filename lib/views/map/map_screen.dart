@@ -37,6 +37,10 @@ part 'map_screen_helpers.dart';
 part 'sections/map_panel_sections.dart';
 part 'sections/map_surface_sections.dart';
 
+/// Parses JSON on a background isolate to avoid blocking the UI thread for
+/// large payloads (e.g. OSRM route responses).
+dynamic _parseRouteMap(String raw) => jsonDecode(raw);
+
 const Color _kMapBlue = Color(0xFF2E8BFF);
 const Color _kMapBlueSoft = Color(0xFFAED7FF);
 const Color _kMapPink = Color(0xFFFF5C93);
@@ -164,6 +168,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   Timer? _routeDebounce;
   Timer? _liveRefreshDebounce;
   Timer? _memoryReloadDebounce;
+  Timer? _checkinsDebounce;
   Timer? _mapReadyTimeout;
   Timer? _fitDebounce;
   bool _realtimePipelinesActive = false;
@@ -225,6 +230,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _setRealtimePipelinesActive(false);
     _setPartnerListenerActive(false);
     _mapReadyTimeout?.cancel();
+    _myLocSub?.cancel();
+    _partnerLocSub?.cancel();
+    _memoriesRootSub?.cancel();
+    _memoriesHouseSub?.cancel();
+    _checkinsSub?.cancel();
     _mapController.dispose();
     _staticMarkersVN.dispose();
     _historyPolylinesVN.dispose();

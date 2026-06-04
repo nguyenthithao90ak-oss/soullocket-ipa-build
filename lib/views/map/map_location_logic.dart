@@ -628,12 +628,18 @@ extension _MapLocationLogicExt on _MapScreenState {
 
     final msgPublicMemFail = context.tr('map_khngthtigh_1162c8');
     final msgHouseMemFail = context.tr('map_khngthtigh_2b4b7f');
+    const memDebounceMs = Duration(milliseconds: 200);
     state.subscriptions.addAll([
       publicHouseBucketQuery.onValue.listen(
-        (event) => syncMemorySource(
-          _MapMemorySourceKind.publicHouseBucket,
-          _extractHouseScopedMemoryItems(event.snapshot.value),
-        ),
+        (event) {
+          state.debounce?.cancel();
+          state.debounce = Timer(memDebounceMs, () {
+            syncMemorySource(
+              _MapMemorySourceKind.publicHouseBucket,
+              _extractHouseScopedMemoryItems(event.snapshot.value),
+            );
+          });
+        },
         onError: (Object error) {
           final message = AppErrorMapper.resolve(
             error,
@@ -643,10 +649,15 @@ extension _MapLocationLogicExt on _MapScreenState {
         },
       ),
       houseMemoriesQuery.onValue.listen(
-        (event) => syncMemorySource(
-          _MapMemorySourceKind.houseScoped,
-          _extractHouseScopedMemoryItems(event.snapshot.value),
-        ),
+        (event) {
+          state.houseDebounce?.cancel();
+          state.houseDebounce = Timer(memDebounceMs, () {
+            syncMemorySource(
+              _MapMemorySourceKind.houseScoped,
+              _extractHouseScopedMemoryItems(event.snapshot.value),
+            );
+          });
+        },
         onError: (Object error) {
           final message = AppErrorMapper.resolve(
             error,
@@ -720,45 +731,48 @@ extension _MapLocationLogicExt on _MapScreenState {
         .onValue
         .listen(
       (event) {
-        final items = <_MapCheckinItem>[];
-        final raw = _toStringDynamicMap(event.snapshot.value);
-        for (final entry in raw.entries) {
-          final map = _toStringDynamicMap(entry.value);
-          final lat = _readDouble(map['lat']) ?? _readDouble(map['lt']);
-          final lng = _readDouble(map['lng']) ?? _readDouble(map['lg']);
-          if (lat == null || lng == null || !_isValidCoordinate(lat, lng)) {
-            continue;
+        _checkinsDebounce?.cancel();
+        _checkinsDebounce = Timer(const Duration(milliseconds: 200), () {
+          if (!mounted) return;
+          final items = <_MapCheckinItem>[];
+          final raw = _toStringDynamicMap(event.snapshot.value);
+          for (final entry in raw.entries) {
+            final map = _toStringDynamicMap(entry.value);
+            final lat = _readDouble(map['lat']) ?? _readDouble(map['lt']);
+            final lng = _readDouble(map['lng']) ?? _readDouble(map['lg']);
+            if (lat == null || lng == null || !_isValidCoordinate(lat, lng)) {
+              continue;
+            }
+            items.add(
+              _MapCheckinItem(
+                id: entry.key,
+                lat: lat,
+                lng: lng,
+                title: (map['name'] ?? 'Check-in').toString(),
+                note: (map['note'] ?? '').toString(),
+                imageUrl: (map['imageUrl'] ?? map['photoUrl'] ?? '').toString(),
+                role: (map['role'] ?? '').toString(),
+                author: (map['author'] ?? map['uid'] ?? '').toString(),
+                ts: _readInt(map['ts']),
+              ),
+            );
           }
-          items.add(
-            _MapCheckinItem(
-              id: entry.key,
-              lat: lat,
-              lng: lng,
-              title: (map['name'] ?? 'Check-in').toString(),
-              note: (map['note'] ?? '').toString(),
-              imageUrl: (map['imageUrl'] ?? map['photoUrl'] ?? '').toString(),
-              role: (map['role'] ?? '').toString(),
-              author: (map['author'] ?? map['uid'] ?? '').toString(),
-              ts: _readInt(map['ts']),
-            ),
+          items.sort((a, b) => (b.ts ?? 0).compareTo(a.ts ?? 0));
+          final signature = _buildCheckinSignature(items);
+          if (signature == _checkinSignature) return;
+          _checkinSignature = signature;
+          _applyPanelStateUpdate(() {
+            _checkins = items;
+            _checkinSummary = items.isEmpty
+                ? context.tr('map_chacchecki_51b108')
+                : '${items.length} check-in gần đây';
+            _checkinSummary = _buildCheckinSummaryLabel(items.length);
+          });
+          _rebuildStaticMarkersCached(
+            rebuildMemories: false,
+            rebuildCheckins: true,
           );
-        }
-        items.sort((a, b) => (b.ts ?? 0).compareTo(a.ts ?? 0));
-        final signature = _buildCheckinSignature(items);
-        if (signature == _checkinSignature) return;
-        _checkinSignature = signature;
-        if (!mounted) return;
-        _applyPanelStateUpdate(() {
-          _checkins = items;
-          _checkinSummary = items.isEmpty
-              ? context.tr('map_chacchecki_51b108')
-              : '${items.length} check-in gần đây';
-          _checkinSummary = _buildCheckinSummaryLabel(items.length);
         });
-        _rebuildStaticMarkersCached(
-          rebuildMemories: false,
-          rebuildCheckins: true,
-        );
       },
       onError: (Object error) {
         final message = AppErrorMapper.resolve(
@@ -1155,7 +1169,7 @@ extension _MapLocationLogicExt on _MapScreenState {
         ).timeout(const Duration(seconds: 10));
         if (response.statusCode != 200) return null;
 
-        final map = jsonDecode(response.body) as Map<String, dynamic>;
+        final map = await compute(_parseRouteMap, response.body) as Map<String, dynamic>;
         final routes = map['routes'];
         if (routes is! List || routes.isEmpty) return null;
 

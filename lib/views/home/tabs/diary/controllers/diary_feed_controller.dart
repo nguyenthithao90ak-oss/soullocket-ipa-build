@@ -204,7 +204,7 @@ class DiaryFeedController extends ChangeNotifier {
   Future<void> _fetchHouseSettingsData(String houseId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final role = prefs.getString('il_role') ?? 'user1';
+      final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       final settingsMap = await _houseService.getHouseSettings(houseId);
       if (settingsMap == null) {
         return;

@@ -278,20 +278,20 @@ class UiPrefs {
     _cachedAutoQuality = await _detectAutoQuality();
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    // Force fixed startup defaults requested by user.
-    final themeKey = 'theme-default';
-    final effectKey = 'off';
+    // Đọc theme đã lưu từ SharedPreferences, fallback về default nếu chưa có.
+    final themeKey = (prefs.getString(_kThemeKey) ??
+            UiPrefsState.defaults.themeKey)
+        .trim();
+    final effectKey = (prefs.getString(_kFallingEffectKey) ??
+            UiPrefsState.defaults.fallingEffectKey)
+        .trim();
 
-    // Keep persisted values aligned so subsequent launches stay consistent.
-    await prefs.setString(_kThemeKey, themeKey);
-    await prefs.setString(_kFallingEffectKey, effectKey);
     final avatarFrameKey = (prefs.getString(_kAvatarFrameKey) ??
             UiPrefsState.defaults.avatarFrameKey)
         .trim();
-    // Force countdown ring to glass style by default on app load.
-    final countdownStyleKey = 'glass';
-    await prefs.setString(_kCountdownStyleKey, countdownStyleKey);
-    await prefs.setBool(_kTransparentModeKey, true);
+    final countdownStyleKey = (prefs.getString(_kCountdownStyleKey) ??
+            UiPrefsState.defaults.countdownStyleKey)
+        .trim();
     final countdownTopLabel =
         (prefs.getString(_kCountdownTopLabelKey) ?? '').trim();
     final countdownBottomLabel =

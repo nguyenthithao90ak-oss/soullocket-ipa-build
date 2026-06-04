@@ -12,6 +12,7 @@ import '../utils/app_error_mapper.dart';
 import 'activity_history_service.dart';
 import 'anti_spam_service.dart';
 import 'offline_cache_service.dart';
+import '../utils/services/role_utils.dart';
 import 'storage_service.dart';
 import '../utils/services/storage_upload_result.dart';
 
@@ -419,7 +420,7 @@ class ChatService {
   Future<String> _resolvedActivityRole() async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final role = (prefs.getString('il_role') ?? 'user1').trim();
+    final role = RoleUtils.normalize(prefs.getString('il_role'));
     return role == 'user2' ? 'user2' : 'user1';
   }
 

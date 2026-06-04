@@ -217,35 +217,35 @@ class _HealthScreenState extends State<HealthScreen>
     final dayInCycle = ((diffDays % _length) + _length) % _length;
     final nextPeriodDays = _length - dayInCycle;
 
-    String phase = "";
-    String tip = "";
+    String phase = '';
+    String tip = '';
     double progress = 0.0;
 
     if (dayInCycle < _periodDays) {
-      phase = "🩸 Giai đoạn Hành kinh";
+      phase = '🩸 Giai đoạn Hành kinh';
       tip =
-          "Cơ thể có thể mệt hơn bình thường. Hãy ưu tiên nghỉ ngơi, uống nước ấm và chăm sóc nhẹ nhàng nhé.";
+          'Cơ thể có thể mệt hơn bình thường. Hãy ưu tiên nghỉ ngơi, uống nước ấm và chăm sóc nhẹ nhàng nhé.';
       progress = (dayInCycle / _periodDays) * 0.25;
     } else if (dayInCycle < _length / 2 - 2) {
-      phase = "✨ Giai đoạn Nang trứng";
+      phase = '✨ Giai đoạn Nang trứng';
       tip =
-          "Năng lượng đang quay trở lại. Đây là lúc phù hợp cho những hoạt động nhẹ nhàng, vui vẻ hoặc cùng nhau đi ra ngoài.";
+          'Năng lượng đang quay trở lại. Đây là lúc phù hợp cho những hoạt động nhẹ nhàng, vui vẻ hoặc cùng nhau đi ra ngoài.';
       progress = 0.25 +
           ((dayInCycle - _periodDays) / (_length / 2 - 2 - _periodDays)) * 0.25;
     } else if (dayInCycle < _length / 2 + 2) {
-      phase = "🥚 Giai đoạn Rụng trứng";
+      phase = '🥚 Giai đoạn Rụng trứng';
       tip =
-          "Đây thường là giai đoạn cảm xúc và năng lượng ổn hơn. Một lời khen hoặc buổi hẹn nhỏ sẽ rất hợp lúc này.";
+          'Đây thường là giai đoạn cảm xúc và năng lượng ổn hơn. Một lời khen hoặc buổi hẹn nhỏ sẽ rất hợp lúc này.';
       progress = 0.50 + ((dayInCycle - (_length / 2 - 2)) / 4) * 0.25;
     } else {
-      phase = "🌙 Giai đoạn Hoàng thể (PMS)";
+      phase = '🌙 Giai đoạn Hoàng thể (PMS)';
 
       if (nextPeriodDays <= 2 && nextPeriodDays > 0) {
-        tip = "⚠️ Chú ý: Chỉ còn $nextPeriodDays ngày nữa là tới kỳ! \n\n"
-            "Hãy chuẩn bị trước một chút: nghỉ ngơi đủ, giữ ấm cơ thể và ưu tiên những cách quan tâm dịu dàng.";
+        tip = '⚠️ Chú ý: Chỉ còn $nextPeriodDays ngày nữa là tới kỳ! \n\n'
+            'Hãy chuẩn bị trước một chút: nghỉ ngơi đủ, giữ ấm cơ thể và ưu tiên những cách quan tâm dịu dàng.';
       } else {
         tip =
-            "Tâm trạng có thể nhạy cảm hơn bình thường. Hãy kiên nhẫn, lắng nghe và ưu tiên sự dịu dàng trong cách quan tâm.";
+            'Tâm trạng có thể nhạy cảm hơn bình thường. Hãy kiên nhẫn, lắng nghe và ưu tiên sự dịu dàng trong cách quan tâm.';
       }
 
       progress = 0.75 +

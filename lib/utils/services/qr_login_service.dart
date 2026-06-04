@@ -75,7 +75,7 @@ class QRLoginService {
   /// Sẽ đẩy thông tin đăng nhập cần thiết qua Firebase (đã mã hóa hoặc bảo mật)
   Future<void> authorizeToken(String token, String houseId) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception("Bạn chưa đăng nhập!");
+    if (user == null) throw Exception('Bạn chưa đăng nhập!');
     final normalizedToken = _normalizeToken(token);
     final normalizedHouseId = _normalizeHouseId(houseId);
     if (normalizedToken == null || normalizedHouseId == null) {

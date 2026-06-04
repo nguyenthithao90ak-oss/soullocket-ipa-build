@@ -29,6 +29,7 @@ class PresenceService {
   String? _activeRole;
   String? _activeDeviceType;
   String? _lastOnlineFingerprint;
+  // ignore: cancel_subscriptions
   StreamSubscription? _connectedSub;
   Timer? _heartbeatTimer;
 

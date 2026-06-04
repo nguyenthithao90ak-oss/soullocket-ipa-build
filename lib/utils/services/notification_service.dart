@@ -20,6 +20,7 @@ import '../views/utilities/cinema_screen.dart';
 import '../utils/app_error_mapper.dart';
 import 'house_service.dart';
 import 'offline_cache_service.dart';
+import 'role_utils.dart';
 
 /// NotificationService — Gra (Logic/Data) chịu trách nhiệm toàn bộ
 /// Chức năng:
@@ -37,8 +38,11 @@ class NotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotif =
       FlutterLocalNotificationsPlugin();
+  // ignore: cancel_subscriptions
   StreamSubscription<String>? _tokenRefreshSubscription;
+  // ignore: cancel_subscriptions
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
+  // ignore: cancel_subscriptions
   StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
   bool _isInitialized = false;
   Future<void>? _initializingTask;
@@ -362,7 +366,7 @@ class NotificationService {
     try {
       final prefs = OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
-      final role = prefs.getString('il_role') ?? 'user1';
+      final role = RoleUtils.normalize(prefs.getString('il_role'));
       final settings = await houseService.getHouseSettings(houseId);
       if (settings == null) return fallback;
       final key = role == 'user2' ? 'nameU2' : 'nameU1';
@@ -924,7 +928,7 @@ class NotificationService {
               title: '🚀 Hộp thư tương lai đã đến hẹn!',
               body:
                   'Bạn có một hộp thư tương lai đã sẵn sàng để mở trong ứng dụng.',
-              data: {"screen": "utilities", "type": "time_capsule"},
+              data: {'screen': 'utilities', 'type': 'time_capsule'},
             );
             await prefs.setBool(key, true);
           }

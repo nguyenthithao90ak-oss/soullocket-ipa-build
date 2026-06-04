@@ -209,7 +209,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     final navigator = Navigator.of(dialogCtx);
 
     Map<String, dynamic> updates = {};
-    String msg = "";
+    String msg = '';
 
     try {
       if (action == 'add_vip') {

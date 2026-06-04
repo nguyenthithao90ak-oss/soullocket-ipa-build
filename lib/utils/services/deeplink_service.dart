@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../core/constants/app_config.dart';
 import 'gift_maker_service.dart';
-import '../../../../services/love_card_link_service.dart';
+import '../../services/love_card_link_service.dart';
 
 /// ============================================================
 ///  DeeplinkService — Gra (Logic/Data)

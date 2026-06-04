@@ -134,13 +134,13 @@ class LocalDatabaseService {
 
   Future<void> _upgradeToV2(Database db) async {
     final statements = <String>[
-      "ALTER TABLE sync_queue ADD COLUMN operationId TEXT",
-      "ALTER TABLE sync_queue ADD COLUMN entityType TEXT",
+      'ALTER TABLE sync_queue ADD COLUMN operationId TEXT',
+      'ALTER TABLE sync_queue ADD COLUMN entityType TEXT',
       "ALTER TABLE sync_queue ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'",
-      "ALTER TABLE sync_queue ADD COLUMN retryCount INTEGER NOT NULL DEFAULT 0",
-      "ALTER TABLE sync_queue ADD COLUMN lastError TEXT",
-      "ALTER TABLE sync_queue ADD COLUMN createdAt INTEGER",
-      "ALTER TABLE sync_queue ADD COLUMN syncedAt INTEGER",
+      'ALTER TABLE sync_queue ADD COLUMN retryCount INTEGER NOT NULL DEFAULT 0',
+      'ALTER TABLE sync_queue ADD COLUMN lastError TEXT',
+      'ALTER TABLE sync_queue ADD COLUMN createdAt INTEGER',
+      'ALTER TABLE sync_queue ADD COLUMN syncedAt INTEGER',
     ];
 
     for (final statement in statements) {

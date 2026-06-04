@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/sl_theme.dart';
-import '../../../../utils/services/l10n_service.dart';
+import '../../../core/sl_theme.dart';
+import '../../../utils/services/l10n_service.dart';
 
 const Color _diarySoftPink = Color(0xFFE98FB1);
 const Color _diarySoftPinkLight = Color(0xFFF6C3D5);

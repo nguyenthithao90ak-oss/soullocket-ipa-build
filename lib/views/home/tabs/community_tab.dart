@@ -442,6 +442,8 @@ class _CommunityTabState extends State<CommunityTab>
   Timer? _feedCachePersistTimer;
   Timer? _feedPreloadThrottleTimer;
   Timer? _communityMessengerButtonPersistTimer;
+  Timer? _friendsDebounce;
+  Timer? _blockedUsersDebounce;
   StreamSubscription? _communityMessengerPreviewSubscription;
   int _communityMessengerUnreadCount = 0;
   String _communityMessengerPreviewText = '';
@@ -481,6 +483,10 @@ class _CommunityTabState extends State<CommunityTab>
     _friendsRequestSubscription = null;
     _blockedUsersSubscription?.cancel();
     _blockedUsersSubscription = null;
+    _friendsDebounce?.cancel();
+    _friendsDebounce = null;
+    _blockedUsersDebounce?.cancel();
+    _blockedUsersDebounce = null;
   }
 
   @override

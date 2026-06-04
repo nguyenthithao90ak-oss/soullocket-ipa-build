@@ -93,35 +93,40 @@ extension _HomeScreenShellControls on _HomeScreenState {
 
   Widget _buildBottomNav({required bool isDark}) {
     return ValueListenableBuilder<bool>(
-      valueListenable: UiPrefs.captureModeNotifier,
-      builder: (context, captureMode, _) {
-        if (_navHiddenUntilRestart ||
-            _hideNavForDiarySelection ||
-            captureMode) {
-          return const SizedBox.shrink();
-        }
-        return ValueListenableBuilder<int>(
-          valueListenable: _backgroundTabIndexNotifier,
-          builder: (context, currentIndex, _) {
-            final effectProfile = _resolveHomeEffectProfile(
-              UiPrefs.notifier.value,
-              pauseAnimations: _isUserTabSwiping,
-            );
-            return AnimatedSize(
-              duration: effectProfile.performanceMode
-                  ? Duration.zero
-                  : const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.bottomCenter,
-              child: _navCollapsed
-                  ? _buildCollapsedNavHandle(
-                      isDark: isDark,
-                      currentIndex: currentIndex,
-                    )
-                  : _buildExpandedBottomNav(
-                      isDark: isDark,
-                      currentIndex: currentIndex,
-                    ),
+      valueListenable: _navCollapsedNotifier,
+      builder: (context, navCollapsed, _) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: UiPrefs.captureModeNotifier,
+          builder: (context, captureMode, _) {
+            if (_navHiddenUntilRestart ||
+                _hideNavForDiarySelection ||
+                captureMode) {
+              return const SizedBox.shrink();
+            }
+            return ValueListenableBuilder<int>(
+              valueListenable: _backgroundTabIndexNotifier,
+              builder: (context, currentIndex, _) {
+                final effectProfile = _resolveHomeEffectProfile(
+                  UiPrefs.notifier.value,
+                  pauseAnimations: _isUserTabSwiping,
+                );
+                return AnimatedSize(
+                  duration: effectProfile.performanceMode
+                      ? Duration.zero
+                      : const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.bottomCenter,
+                  child: navCollapsed
+                      ? _buildCollapsedNavHandle(
+                          isDark: isDark,
+                          currentIndex: currentIndex,
+                        )
+                      : _buildExpandedBottomNav(
+                          isDark: isDark,
+                          currentIndex: currentIndex,
+                        ),
+                );
+              },
             );
           },
         );

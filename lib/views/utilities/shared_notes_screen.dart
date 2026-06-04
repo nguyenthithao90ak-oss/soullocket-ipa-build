@@ -77,7 +77,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
-    final role = prefs.getString('il_role') ?? 'user1';
+    final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
     ActivityHistoryService.instance.add(
       context.tr('util_thmmtghich_99f963'),
       houseId: widget.houseId,

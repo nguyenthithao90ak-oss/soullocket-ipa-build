@@ -21,6 +21,7 @@ import '../../services/session/app_background_session_tracker.dart';
 import '../../services/session/session_connectivity_coordinator.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/widget_service.dart';
+import '../../utils/services/role_utils.dart';
 
 class AppEntryAuthState {
   final bool isAuthenticated;
@@ -532,7 +533,9 @@ class AppEntryController {
 
   Future<void> _initPresence(String houseId) async {
     final prefs = await getPrefs();
-    final role = prefs.getString('il_role') ?? 'user1';
+    final role = RoleUtils.normalizeNullable(prefs.getString('il_role')) ??
+        RoleUtils.normalizeNullable(_currentRole) ??
+        'user1';
     _currentHouseId = houseId;
     _currentRole = role;
     _sessionConnectivityCoordinator.updatePresenceTarget(
@@ -545,7 +548,9 @@ class AppEntryController {
 
   Future<void> _refreshPresenceContext() async {
     final prefs = await getPrefs();
-    final role = prefs.getString('il_role') ?? 'user1';
+    final role = _normalizeRole(prefs.getString('il_role')) ??
+        _normalizeRole(_currentRole) ??
+        'user1';
     final houseId = await _houseService.getCurrentHouseId();
     _currentHouseId = houseId;
     _currentRole = houseId == null || houseId.isEmpty ? null : role;

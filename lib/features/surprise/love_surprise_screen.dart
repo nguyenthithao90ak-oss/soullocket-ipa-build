@@ -210,10 +210,10 @@ class _LoveSurpriseScreenState extends State<LoveSurpriseScreen> {
         });
       }
     } catch (e) {
-      debugPrint("Lỗi load HTML: ${AppErrorMapper.resolve(
+      debugPrint('Lỗi load HTML: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: errFallback,
-      ).message}");
+      ).message}');
       if (mounted) {
         setState(() {
           _isLoading = false;

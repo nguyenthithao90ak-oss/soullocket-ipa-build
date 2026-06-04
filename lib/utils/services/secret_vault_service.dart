@@ -34,7 +34,7 @@ class SecretVaultService {
   /// Mã hóa ảnh / nội dung trước khi tống xuống Database
   String encryptDataBeforeSave(String sensitiveData) {
     if (_encryptionKey == null) {
-      throw Exception("⚠️ Vui lòng mở khóa két sắt trước khi lưu dữ liệu!");
+      throw Exception('⚠️ Vui lòng mở khóa két sắt trước khi lưu dữ liệu!');
     }
 
     // Tạo random IV cho mỗi lần mã hóa để chống phân tích pattern
@@ -49,7 +49,7 @@ class SecretVaultService {
   /// Giải mã nội dung khi bấm vào xem
   String decryptDataForViewing(String encryptedData) {
     if (_encryptionKey == null) {
-      throw Exception("⚠️ Lỗi truy cập trái phép. Két đang khóa!");
+      throw Exception('⚠️ Lỗi truy cập trái phép. Két đang khóa!');
     }
 
     try {
@@ -67,7 +67,7 @@ class SecretVaultService {
         return encrypter.decrypt64(encryptedData, iv: legacyIv);
       }
     } catch (e) {
-      return "DỮ LIỆU ĐÃ BỊ MÃ HÓA HOẶC SAI KHÓA - KHÔNG THỂ ĐỌC";
+      return 'DỮ LIỆU ĐÃ BỊ MÃ HÓA HOẶC SAI KHÓA - KHÔNG THỂ ĐỌC';
     }
   }
 

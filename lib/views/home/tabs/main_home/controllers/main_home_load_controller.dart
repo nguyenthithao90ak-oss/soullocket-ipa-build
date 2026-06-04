@@ -371,7 +371,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       final prefs = OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       if (isStale()) return;
-      _currentRole = prefs.getString('il_role') ?? 'user1';
+      _currentRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       final cachedRelMode = prefs.getString('il_rel_mode') ?? 'couple';
       _showStatus = prefs.getBool('il_show_status') ?? true;
       _showWeather = prefs.getBool('il_show_weather') ?? true;
