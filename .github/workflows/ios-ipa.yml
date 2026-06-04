@@ -266,6 +266,15 @@ jobs:
           path = Path("ios/Runner.xcodeproj/project.pbxproj")
           text = path.read_text(encoding="utf-8")
           
+          # Read default version from pubspec.yaml
+          pubspec = Path("pubspec.yaml").read_text(encoding="utf-8")
+          version_match = re.search(r'^version:\s*([^+]+)\+(.+)$', pubspec, re.M)
+          default_build_name = version_match.group(1).strip() if version_match else "1.2.1"
+          default_build_number = version_match.group(2).strip() if version_match else "47"
+
+          build_name = os.environ.get("BUILD_NAME") or default_build_name
+          build_number = os.environ.get("BUILD_NUMBER") or default_build_number
+
           profile_by_bundle = {
               os.environ["APP_BUNDLE_ID"]: os.environ["RUNNER_PROFILE_NAME"],
               "$(APP_BUNDLE_IDENTIFIER)": os.environ["RUNNER_PROFILE_NAME"],
@@ -294,6 +303,18 @@ jobs:
                   block = re.sub(r'PROVISIONING_PROFILE_SPECIFIER = [^;]+;', f'PROVISIONING_PROFILE_SPECIFIER = "{profile_name}";', block)
               else:
                   block = block.replace('buildSettings = {', f'buildSettings = {{\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "{profile_name}";')
+
+              # Force the version name and build number to match!
+              if bundle_id == os.environ["WIDGET_BUNDLE_ID"] or bundle_id == "$(WIDGET_BUNDLE_IDENTIFIER)":
+                  if 'MARKETING_VERSION' in block:
+                      block = re.sub(r'MARKETING_VERSION = [^;]+;', f'MARKETING_VERSION = "{build_name}";', block)
+                  else:
+                      block = block.replace('buildSettings = {', f'buildSettings = {{\n\t\t\t\tMARKETING_VERSION = "{build_name}";')
+                  if 'CURRENT_PROJECT_VERSION' in block:
+                      block = re.sub(r'CURRENT_PROJECT_VERSION = [^;]+;', f'CURRENT_PROJECT_VERSION = "{build_number}";', block)
+                  else:
+                      block = block.replace('buildSettings = {', f'buildSettings = {{\n\t\t\t\tCURRENT_PROJECT_VERSION = "{build_number}";')
+
               return block
           
           text = re.sub(r'buildSettings = \{.*?\n\t\t\t\};', patch_build_settings, text, flags=re.S)
