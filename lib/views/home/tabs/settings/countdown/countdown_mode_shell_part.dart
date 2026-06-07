@@ -309,7 +309,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                               fontKey: uiState.fontKey,
                                             ),
                                             if (uiState.countdownStyleKey == 'floating_hearts')
-                                              _FloatingHeartsRingOverlay(size: circleSize),
+                                              FloatingHeartsRingOverlay(size: circleSize),
                                           ],
                                         ),
                                       ),

@@ -378,7 +378,7 @@ extension _CountdownModeIndependentScreenViewPart
                       ),
                     ),
                     if (_countdownStyleKey == 'floating_hearts')
-                      _FloatingHeartsRingOverlay(size: circleSize),
+                      FloatingHeartsRingOverlay(size: circleSize),
                   ],
                 ),
               ),

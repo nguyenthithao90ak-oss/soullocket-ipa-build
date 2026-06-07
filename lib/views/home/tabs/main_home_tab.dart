@@ -42,7 +42,7 @@ import '../../../utils/sl_notice.dart';
 import '../../../models/album_item.dart';
 import '../../../models/house_settings.dart';
 import '../../../models/utilities/shared_note.dart';
-import 'settings_tab.dart' show SettingsTab;
+import 'settings_tab.dart' show SettingsTab, FloatingHeartsRingOverlay;
 import '../../ui_prefs.dart';
 import '../../utilities/age_zodiac_screen.dart';
 import '../../utilities/bucket_list_screen.dart';
@@ -1663,6 +1663,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
 
   static const Duration _kCountdownQuickUnlockWindow = Duration(days: 7);
   static const List<String> _kCountdownQuickPremiumStyleKeys = <String>[
+    'floating_hearts',
     'galaxy',
     'aurora',
     'crystal',
@@ -1713,6 +1714,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
     if (countdownStyleKey != null) {
       const allowedCountdownStyleKeys = <String>{
         'default',
+        'floating_hearts',
         'rose_wave',
         'glass',
         'glow',
@@ -1829,6 +1831,13 @@ class _MainHomeTabState extends State<MainHomeTab> {
         value: 'default',
         icon: Icons.favorite_rounded,
         accent: const Color(0xFFD94C86),
+      ),
+      _CountdownQuickOption(
+        label: context.tr('countdown_floating_hearts'),
+        value: 'floating_hearts',
+        icon: Icons.favorite_border_rounded,
+        accent: const Color(0xFFFF8DA1),
+        isPremium: true,
       ),
       _CountdownQuickOption(
         label: context.tr('countdown_rose_wave'),

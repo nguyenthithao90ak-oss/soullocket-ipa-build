@@ -78,6 +78,39 @@ class _CountdownVisualSpec {
           labelShadows: const [],
           numberShadows: const [],
         );
+      case 'floating_hearts':
+        return _CountdownVisualSpec(
+          outerColor: null,
+          outerGradient: const LinearGradient(
+            colors: [Color(0xFFFFF5F8), Color(0xFFFFF0F5)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          outerBorder: Border.all(
+            color: const Color(0xFFFFC0CB),
+            width: 4.5,
+          ),
+          shadows: [
+            BoxShadow(
+              color: const Color(0xFFFFC0CB).withValues(alpha: 0.35),
+              blurRadius: 24.0,
+              spreadRadius: 2.0,
+              offset: const Offset(0, 10),
+            ),
+          ],
+          innerColor: const Color(0xFFFFF0F5),
+          innerGradient: null,
+          innerBorder: null,
+          numberGradient: const [
+            Color(0xFFAD1457),
+            Color(0xFFD81B60),
+            Color(0xFFEC407A),
+          ],
+          topLabelColor: const Color(0xFFE91E63),
+          bottomLabelColor: const Color(0xFFF06292),
+          labelShadows: const [],
+          numberShadows: const [],
+        );
       case 'rose_wave':
         return _CountdownVisualSpec(
           outerColor: null,

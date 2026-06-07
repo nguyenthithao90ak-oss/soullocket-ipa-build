@@ -1059,17 +1059,17 @@ class _CountdownModeGlowOrb extends StatelessWidget {
 
 /// Overlay trái tim hồng bay nhẹ nhàng bên trong/ngoài vòng tròn đếm.
 /// Dùng cho style 'floating_hearts'.
-class _FloatingHeartsRingOverlay extends StatefulWidget {
-  const _FloatingHeartsRingOverlay({required this.size});
+class FloatingHeartsRingOverlay extends StatefulWidget {
+  const FloatingHeartsRingOverlay({required this.size});
   final double size;
 
   @override
-  State<_FloatingHeartsRingOverlay> createState() =>
+  State<FloatingHeartsRingOverlay> createState() =>
       _FloatingHeartsRingOverlayState();
 }
 
 class _FloatingHeartsRingOverlayState
-    extends State<_FloatingHeartsRingOverlay> with TickerProviderStateMixin {
+    extends State<FloatingHeartsRingOverlay> with TickerProviderStateMixin {
   static const int _kCount = 9;
 
   // Dữ liệu bất biến mỗi trái tim (khởi tạo 1 lần)

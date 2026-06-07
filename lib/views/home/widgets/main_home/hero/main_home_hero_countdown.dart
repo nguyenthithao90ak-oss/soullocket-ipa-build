@@ -171,6 +171,8 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
                   ),
                 ),
               ),
+              if (countdownStyleKey == 'floating_hearts')
+                FloatingHeartsRingOverlay(size: circleSize),
               Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
