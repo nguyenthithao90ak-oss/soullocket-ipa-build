@@ -2408,8 +2408,8 @@ class _MainHomeTabState extends State<MainHomeTab> {
                     ),
                     const SizedBox(height: 14),
                     buildSection(
-                      title: 'Kiểu vòng đếm',
-                      description: 'Đổi phong cách hiển thị của vòng đếm ngày.',
+                      title: 'Giao diện vòng đếm',
+                      description: 'Đổi phong cách hiển thị vòng đếm ngày.',
                       icon: Icons.change_circle_rounded,
                       options: styleOptions,
                       selectedValue: uiState.countdownStyleKey,
@@ -2419,9 +2419,9 @@ class _MainHomeTabState extends State<MainHomeTab> {
                     ),
                     const SizedBox(height: 12),
                     buildSection(
-                      title: 'Hiệu ứng rơi',
+                      title: 'Hiệu ứng nền',
                       description:
-                          'Đổi hiệu ứng nền của trang chủ ngay lập tức.',
+                          'Đổi hiệu ứng động trên màn hình chính.',
                       icon: Icons.auto_fix_high_rounded,
                       options: effectOptions,
                       selectedValue: uiState.fallingEffectKey,

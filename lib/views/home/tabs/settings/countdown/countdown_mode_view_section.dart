@@ -359,20 +359,27 @@ extension _CountdownModeIndependentScreenViewPart
               child: SizedBox(
                 width: circleSize,
                 height: circleSize,
-                child: _CountdownModeCircle(
-                  size: circleSize,
-                  value: value,
-                  topLabel: _topLabel(),
-                  bottomLabel: _bottomLabel(),
-                  styleData: styleData,
-                  fontKey: _fontKey,
-                  onTopTap: () => _editCountdownLabel(
-                    editTopLabel: true,
-                  ),
-                  onValueTap: _pickAnchorDate,
-                  onBottomTap: () => _editCountdownLabel(
-                    editTopLabel: false,
-                  ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    _CountdownModeCircle(
+                      size: circleSize,
+                      value: value,
+                      topLabel: _topLabel(),
+                      bottomLabel: _bottomLabel(),
+                      styleData: styleData,
+                      fontKey: _fontKey,
+                      onTopTap: () => _editCountdownLabel(
+                        editTopLabel: true,
+                      ),
+                      onValueTap: _pickAnchorDate,
+                      onBottomTap: () => _editCountdownLabel(
+                        editTopLabel: false,
+                      ),
+                    ),
+                    if (_countdownStyleKey == 'floating_hearts')
+                      _FloatingHeartsRingOverlay(size: circleSize),
+                  ],
                 ),
               ),
             ),

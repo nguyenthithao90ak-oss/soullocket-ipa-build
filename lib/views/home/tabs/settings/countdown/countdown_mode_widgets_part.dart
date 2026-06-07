@@ -1056,3 +1056,174 @@ class _CountdownModeGlowOrb extends StatelessWidget {
     );
   }
 }
+
+/// Overlay trái tim hồng bay nhẹ nhàng bên trong/ngoài vòng tròn đếm.
+/// Dùng cho style 'floating_hearts'.
+class _FloatingHeartsRingOverlay extends StatefulWidget {
+  const _FloatingHeartsRingOverlay({required this.size});
+  final double size;
+
+  @override
+  State<_FloatingHeartsRingOverlay> createState() =>
+      _FloatingHeartsRingOverlayState();
+}
+
+class _FloatingHeartsRingOverlayState
+    extends State<_FloatingHeartsRingOverlay> with TickerProviderStateMixin {
+  static const int _kCount = 9;
+
+  // Dữ liệu bất biến mỗi trái tim (khởi tạo 1 lần)
+  late final List<_HeartParticle> _particles;
+
+  // Một controller riêng cho từng trái tim
+  late final List<AnimationController> _controllers;
+  late final List<Animation<double>> _floatAnims;
+  late final List<Animation<double>> _fadeAnims;
+
+  @override
+  void initState() {
+    super.initState();
+    final rng = Object.hashAll([widget.size, identityHashCode(this)]);
+    _particles = List.generate(_kCount, (i) {
+      // Phân bổ đều theo góc, thêm jitter nhỏ
+      final base = (i / _kCount) * 2 * 3.14159265;
+      // Dùng hash để sinh pseudo-random nhất quán
+      final jitter = ((rng ^ (i * 2654435761)) & 0xFFFF) / 0xFFFF;
+      final angle = base + (jitter - 0.5) * 0.72;
+      // Bán kính từ 0.30 → 0.50 * size/2 (nằm sát mép vòng)
+      final rFrac = 0.30 + ((jitter * 17) % 1.0) * 0.18;
+      // Kích thước trái tim 8 → 18 px
+      final sz = 8.0 + ((jitter * 13) % 1.0) * 10.0;
+      // Delay bắt đầu animation: 0 → 4s
+      final delay = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF * 4.0;
+      // Chu kỳ: 3.2 → 5.8s
+      final duration = 3200 + (((rng ^ (i * 987654)) & 0xFFFF) / 0xFFFF * 2600).toInt();
+      // Biên độ float: 6 → 14 px
+      final floatAmp = 6.0 + ((jitter * 7) % 1.0) * 8.0;
+      return _HeartParticle(
+        angle: angle,
+        rFrac: rFrac,
+        size: sz,
+        delay: delay,
+        durationMs: duration,
+        floatAmplitude: floatAmp,
+        opacity: 0.45 + ((jitter * 11) % 1.0) * 0.40,
+      );
+    });
+
+    _controllers = List.generate(_kCount, (i) {
+      return AnimationController(
+        vsync: this,
+        duration: Duration(milliseconds: _particles[i].durationMs),
+      );
+    });
+
+    _floatAnims = List.generate(_kCount, (i) {
+      return Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(parent: _controllers[i], curve: Curves.easeInOut),
+      );
+    });
+
+    _fadeAnims = List.generate(_kCount, (i) {
+      return TweenSequence<double>([
+        TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 15),
+        TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.0), weight: 70),
+        TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 15),
+      ]).animate(_controllers[i]);
+    });
+
+    // Khởi động có delay lệch nhau
+    for (int i = 0; i < _kCount; i++) {
+      final delayMs = (_particles[i].delay * 1000).toInt();
+      Future.delayed(Duration(milliseconds: delayMs), () {
+        if (mounted) {
+          _controllers[i].repeat(reverse: true);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = widget.size / 2;
+    return IgnorePointer(
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: Stack(
+          children: [
+            for (int i = 0; i < _kCount; i++)
+              AnimatedBuilder(
+                animation: _controllers[i],
+                builder: (_, __) {
+                  final p = _particles[i];
+                  final t = _floatAnims[i].value;
+                  final fade = _fadeAnims[i].value;
+
+                  // Vị trí trên đường tròn + float theo trục Y
+                  final cx = radius + (radius * p.rFrac) * math.cos(p.angle);
+                  final cy = radius +
+                      (radius * p.rFrac) * math.sin(p.angle) -
+                      t * p.floatAmplitude;
+
+                  return Positioned(
+                    left: cx - p.size / 2,
+                    top: cy - p.size / 2,
+                    child: Opacity(
+                      opacity: (fade * p.opacity).clamp(0.0, 1.0),
+                      child: Icon(
+                        Icons.favorite_rounded,
+                        size: p.size,
+                        color: _kHeartColors[i % _kHeartColors.length],
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static const List<Color> _kHeartColors = [
+    Color(0xFFFF85C0),
+    Color(0xFFFF4D94),
+    Color(0xFFFFADD6),
+    Color(0xFFFF6BAD),
+    Color(0xFFFFC2DC),
+    Color(0xFFE8367E),
+    Color(0xFFFFD6EC),
+    Color(0xFFFF8DC7),
+    Color(0xFFFF3D8F),
+  ];
+}
+
+class _HeartParticle {
+  const _HeartParticle({
+    required this.angle,
+    required this.rFrac,
+    required this.size,
+    required this.delay,
+    required this.durationMs,
+    required this.floatAmplitude,
+    required this.opacity,
+  });
+  final double angle;
+  final double rFrac;
+  final double size;
+  final double delay;
+  final int durationMs;
+  final double floatAmplitude;
+  final double opacity;
+}
+
+

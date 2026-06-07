@@ -62,6 +62,7 @@ class _CountdownModeIndependentScreenState
 
   // Keep the most useful styles on top for a cleaner, faster settings flow.
   static final List<MapEntry<String, String>> _countdownStyleOptions = [
+    const MapEntry('Floating Hearts', 'floating_hearts'),
     const MapEntry('Glass', 'glass'),
     MapEntry(L10nService().translate('home_mcnh_a57a8e'), 'default'),
     const MapEntry('Rose Wave', 'rose_wave'),
@@ -76,6 +77,7 @@ class _CountdownModeIndependentScreenState
   ];
 
   static const Set<String> _premiumCountdownStyleKeys = <String>{
+    'floating_hearts',
     'galaxy',
     'aurora',
     'crystal',

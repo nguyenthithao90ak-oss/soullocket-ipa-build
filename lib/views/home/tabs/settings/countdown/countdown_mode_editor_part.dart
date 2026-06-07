@@ -417,7 +417,7 @@ class _CountdownModeEditorScreenState
     final normalized = styleKey.trim().toLowerCase();
     final exists = _countdownStyleOptions.any((item) => item.value == normalized);
     if (!exists) {
-      _showMessage('Kiểu vòng đếm không hợp lệ: $styleKey');
+      _showMessage('Giao diện vòng đếm không hợp lệ: $styleKey');
       return;
     }
     final requiresAd =

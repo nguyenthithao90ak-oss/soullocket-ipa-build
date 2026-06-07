@@ -423,6 +423,49 @@ class _CountdownModeStyleData {
             ),
           ],
         );
+      case 'floating_hearts':
+        return _CountdownModeStyleData(
+          outerGradient: LinearGradient(
+            colors: [
+              Colors.white.withValues(alpha: 0.95),
+              const Color(0xFFFFEAF4).withValues(alpha: 0.90),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          innerGradient: LinearGradient(
+            colors: [
+              const Color(0xFFFFB6D4).withValues(alpha: 0.22),
+              Colors.white.withValues(alpha: 0.08),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          outerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.90), width: 4.5),
+          innerBorder:
+              Border.all(color: const Color(0xFFFFB6D4).withValues(alpha: 0.28), width: 1.2),
+          shadows: [
+            BoxShadow(
+              color: const Color(0xFFFF69B4).withValues(alpha: 0.26),
+              blurRadius: 40,
+              offset: const Offset(0, 16),
+            ),
+          ],
+          numberGradient: const [Color(0xFFE8367E), Color(0xFFFF85BE)],
+          topColor: const Color(0xFFCC3377),
+          bottomColor: const Color(0xFF7A5C6E),
+          labelShadows: [
+            Shadow(color: Colors.white.withValues(alpha: 0.84), blurRadius: 8),
+          ],
+          numberShadows: [
+            Shadow(
+              color: const Color(0xFFFF69B4).withValues(alpha: 0.26),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        );
       case 'rose_wave':
       default:
         return _CountdownModeStyleData(
