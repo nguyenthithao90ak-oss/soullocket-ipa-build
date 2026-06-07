@@ -616,7 +616,7 @@ class _CountdownModeEditorScreenState
       }
       final url = await _storageService.uploadImage(
         houseId,
-        'theme_backgrounds',
+        'themes',
         file,
         quality: 78,
         minWidth: 900,
