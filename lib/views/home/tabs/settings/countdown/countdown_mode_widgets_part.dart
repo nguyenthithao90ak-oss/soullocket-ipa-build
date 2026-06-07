@@ -1088,21 +1088,21 @@ class _FloatingHeartsRingOverlayState
       final base = (i / _kCount) * 2 * 3.14159265;
       final jitter = ((rng ^ (i * 2654435761)) & 0xFFFF) / 0xFFFF;
       final angle = base + (jitter - 0.5) * 0.5;
-      final rFrac = 0.25 + ((jitter * 17) % 1.0) * 0.20;
+      // Vị trí xa trung tâm hơn một chút để không đè trực tiếp vào con số chính giữa quá nhiều
+      final rFrac = 0.32 + ((jitter * 17) % 1.0) * 0.22;
       
-      // Khối trái tim lớn: 18px to 32px
-      final sz = 18.0 + ((jitter * 13) % 1.0) * 14.0;
+      // Trái tim lớn nổi bật: 24px đến 42px
+      final sz = 24.0 + ((jitter * 13) % 1.0) * 18.0;
       
       final delay = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF * 3.0;
       
-      // Chu kỳ rất chậm: 5s to 9s (lắng đọng)
-      final duration = 5000 + (((rng ^ (i * 987654)) & 0xFFFF) / 0xFFFF * 4000).toInt();
+      // Chu kỳ trôi động: 3.8s đến 6.8s
+      final duration = 3800 + (((rng ^ (i * 987654)) & 0xFFFF) / 0xFFFF * 3000).toInt();
       
-      // Biên độ float rất nhẹ: 4px to 8px
-      final floatAmp = 4.0 + ((jitter * 7) % 1.0) * 4.0;
+      // Biên độ dao động
+      final floatAmp = 8.0 + ((jitter * 7) % 1.0) * 10.0;
       
-      // Parallax factor: 0.5 to 1.5
-      final parallax = 0.5 + ((jitter * 19) % 1.0) * 1.0;
+      final parallax = 0.6 + ((jitter * 19) % 1.0) * 0.9;
       
       return _HeartParticle(
         angle: angle,
@@ -1111,7 +1111,7 @@ class _FloatingHeartsRingOverlayState
         delay: delay,
         durationMs: duration,
         floatAmplitude: floatAmp,
-        opacity: 0.65 + ((jitter * 11) % 1.0) * 0.25,
+        opacity: 0.70 + ((jitter * 11) % 1.0) * 0.20,
         parallaxFactor: parallax,
       );
     });
@@ -1142,8 +1142,8 @@ class _FloatingHeartsRingOverlayState
       _sensorSub = accelerometerEventStream().listen(
         (event) {
           if (!mounted) return;
-          final targetX = -event.x.clamp(-6.0, 6.0) * 3.5;
-          final targetY = event.y.clamp(-6.0, 6.0) * 3.5;
+          final targetX = -event.x.clamp(-6.0, 6.0) * 4.0;
+          final targetY = event.y.clamp(-6.0, 6.0) * 4.0;
           setState(() {
             _tiltX = _tiltX * 0.85 + targetX * 0.15;
             _tiltY = _tiltY * 0.85 + targetY * 0.15;
@@ -1180,23 +1180,30 @@ class _FloatingHeartsRingOverlayState
                   final p = _particles[i];
                   final t = _floatAnims[i].value;
 
+                  // Sway góc: lắc lư trái phải qua lại
+                  final double currentAngle = p.angle + (t * 0.40);
+                  // Co giãn bán kính: dịch chuyển ra/vào nhẹ nhàng
+                  final double currentR = radius * (p.rFrac + (t * 0.08));
+
                   final double cx = radius +
-                      (radius * p.rFrac) * math.cos(p.angle) +
+                      currentR * math.cos(currentAngle) +
                       (_tiltX * p.parallaxFactor);
                   final double cy = radius +
-                      (radius * p.rFrac) * math.sin(p.angle) +
-                      (_tiltY * p.parallaxFactor) +
-                      (t * p.floatAmplitude);
+                      currentR * math.sin(currentAngle) +
+                      (_tiltY * p.parallaxFactor);
 
                   return Positioned(
                     left: cx - p.size / 2,
                     top: cy - p.size / 2,
                     child: Opacity(
                       opacity: p.opacity,
-                      child: Icon(
-                        Icons.favorite_rounded,
-                        size: p.size,
-                        color: _kHeartColors[i % _kHeartColors.length],
+                      child: Transform.rotate(
+                        angle: t * 0.25, // Xoay nghiêng trái tim nhẹ nhàng theo chuyển động
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          size: p.size,
+                          color: _kHeartColors[i % _kHeartColors.length],
+                        ),
                       ),
                     ),
                   );

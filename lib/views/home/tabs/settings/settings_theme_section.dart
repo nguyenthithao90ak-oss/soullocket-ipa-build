@@ -454,9 +454,23 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFFBFD),
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFFFFFFFF),
+                            Color(0xFFFFF6FA),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFF6D9E6)),
+                        border: Border.all(color: const Color(0xFFF5D6E5), width: 1.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF77A8).withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1045,17 +1059,24 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard> with SingleTickerP
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: widget.themeColor.withValues(alpha: 0.06),
+        gradient: LinearGradient(
+          colors: [
+            widget.themeColor.withValues(alpha: 0.04),
+            widget.themeColor.withValues(alpha: 0.12),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: widget.themeColor.withValues(alpha: 0.15),
-          width: 1.2,
+          color: widget.themeColor.withValues(alpha: 0.18),
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: widget.themeColor.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: widget.themeColor.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -1074,13 +1095,27 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard> with SingleTickerP
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: widget.themeColor.withValues(alpha: 0.1),
+              gradient: LinearGradient(
+                colors: [
+                  widget.themeColor,
+                  widget.themeColor.withValues(alpha: 0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: widget.themeColor.withValues(alpha: 0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Icon(
               widget.icon,
-              color: widget.themeColor,
-              size: 20,
+              color: Colors.white,
+              size: 18,
             ),
           ),
           title: Text(
