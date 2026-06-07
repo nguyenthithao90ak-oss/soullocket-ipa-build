@@ -1070,36 +1070,40 @@ class FloatingHeartsRingOverlay extends StatefulWidget {
 
 class _FloatingHeartsRingOverlayState
     extends State<FloatingHeartsRingOverlay> with TickerProviderStateMixin {
-  static const int _kCount = 9;
+  static const int _kCount = 8;
 
-  // Dữ liệu bất biến mỗi trái tim (khởi tạo 1 lần)
   late final List<_HeartParticle> _particles;
-
-  // Một controller riêng cho từng trái tim
   late final List<AnimationController> _controllers;
   late final List<Animation<double>> _floatAnims;
-  late final List<Animation<double>> _fadeAnims;
+
+  StreamSubscription<AccelerometerEvent>? _sensorSub;
+  double _tiltX = 0.0;
+  double _tiltY = 0.0;
 
   @override
   void initState() {
     super.initState();
     final rng = Object.hashAll([widget.size, identityHashCode(this)]);
     _particles = List.generate(_kCount, (i) {
-      // Phân bổ đều theo góc, thêm jitter nhỏ
       final base = (i / _kCount) * 2 * 3.14159265;
-      // Dùng hash để sinh pseudo-random nhất quán
       final jitter = ((rng ^ (i * 2654435761)) & 0xFFFF) / 0xFFFF;
-      final angle = base + (jitter - 0.5) * 0.72;
-      // Bán kính từ 0.30 → 0.50 * size/2 (nằm sát mép vòng)
-      final rFrac = 0.30 + ((jitter * 17) % 1.0) * 0.18;
-      // Kích thước trái tim 8 → 18 px
-      final sz = 8.0 + ((jitter * 13) % 1.0) * 10.0;
-      // Delay bắt đầu animation: 0 → 4s
-      final delay = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF * 4.0;
-      // Chu kỳ: 3.2 → 5.8s
-      final duration = 3200 + (((rng ^ (i * 987654)) & 0xFFFF) / 0xFFFF * 2600).toInt();
-      // Biên độ float: 6 → 14 px
-      final floatAmp = 6.0 + ((jitter * 7) % 1.0) * 8.0;
+      final angle = base + (jitter - 0.5) * 0.5;
+      final rFrac = 0.25 + ((jitter * 17) % 1.0) * 0.20;
+      
+      // Khối trái tim lớn: 18px to 32px
+      final sz = 18.0 + ((jitter * 13) % 1.0) * 14.0;
+      
+      final delay = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF * 3.0;
+      
+      // Chu kỳ rất chậm: 5s to 9s (lắng đọng)
+      final duration = 5000 + (((rng ^ (i * 987654)) & 0xFFFF) / 0xFFFF * 4000).toInt();
+      
+      // Biên độ float rất nhẹ: 4px to 8px
+      final floatAmp = 4.0 + ((jitter * 7) % 1.0) * 4.0;
+      
+      // Parallax factor: 0.5 to 1.5
+      final parallax = 0.5 + ((jitter * 19) % 1.0) * 1.0;
+      
       return _HeartParticle(
         angle: angle,
         rFrac: rFrac,
@@ -1107,7 +1111,8 @@ class _FloatingHeartsRingOverlayState
         delay: delay,
         durationMs: duration,
         floatAmplitude: floatAmp,
-        opacity: 0.45 + ((jitter * 11) % 1.0) * 0.40,
+        opacity: 0.65 + ((jitter * 11) % 1.0) * 0.25,
+        parallaxFactor: parallax,
       );
     });
 
@@ -1119,20 +1124,11 @@ class _FloatingHeartsRingOverlayState
     });
 
     _floatAnims = List.generate(_kCount, (i) {
-      return Tween<double>(begin: 0, end: 1).animate(
+      return Tween<double>(begin: -1.0, end: 1.0).animate(
         CurvedAnimation(parent: _controllers[i], curve: Curves.easeInOut),
       );
     });
 
-    _fadeAnims = List.generate(_kCount, (i) {
-      return TweenSequence<double>([
-        TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 15),
-        TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.0), weight: 70),
-        TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 15),
-      ]).animate(_controllers[i]);
-    });
-
-    // Khởi động có delay lệch nhau
     for (int i = 0; i < _kCount; i++) {
       final delayMs = (_particles[i].delay * 1000).toInt();
       Future.delayed(Duration(milliseconds: delayMs), () {
@@ -1141,10 +1137,27 @@ class _FloatingHeartsRingOverlayState
         }
       });
     }
+
+    try {
+      _sensorSub = accelerometerEventStream().listen(
+        (event) {
+          if (!mounted) return;
+          final targetX = -event.x.clamp(-6.0, 6.0) * 3.5;
+          final targetY = event.y.clamp(-6.0, 6.0) * 3.5;
+          setState(() {
+            _tiltX = _tiltX * 0.85 + targetX * 0.15;
+            _tiltY = _tiltY * 0.85 + targetY * 0.15;
+          });
+        },
+        onError: (_) {},
+        cancelOnError: false,
+      );
+    } catch (_) {}
   }
 
   @override
   void dispose() {
+    _sensorSub?.cancel();
     for (final c in _controllers) {
       c.dispose();
     }
@@ -1166,19 +1179,20 @@ class _FloatingHeartsRingOverlayState
                 builder: (_, __) {
                   final p = _particles[i];
                   final t = _floatAnims[i].value;
-                  final fade = _fadeAnims[i].value;
 
-                  // Vị trí trên đường tròn + float theo trục Y
-                  final cx = radius + (radius * p.rFrac) * math.cos(p.angle);
-                  final cy = radius +
-                      (radius * p.rFrac) * math.sin(p.angle) -
-                      t * p.floatAmplitude;
+                  final double cx = radius +
+                      (radius * p.rFrac) * math.cos(p.angle) +
+                      (_tiltX * p.parallaxFactor);
+                  final double cy = radius +
+                      (radius * p.rFrac) * math.sin(p.angle) +
+                      (_tiltY * p.parallaxFactor) +
+                      (t * p.floatAmplitude);
 
                   return Positioned(
                     left: cx - p.size / 2,
                     top: cy - p.size / 2,
                     child: Opacity(
-                      opacity: (fade * p.opacity).clamp(0.0, 1.0),
+                      opacity: p.opacity,
                       child: Icon(
                         Icons.favorite_rounded,
                         size: p.size,
@@ -1203,7 +1217,6 @@ class _FloatingHeartsRingOverlayState
     Color(0xFFE8367E),
     Color(0xFFFFD6EC),
     Color(0xFFFF8DC7),
-    Color(0xFFFF3D8F),
   ];
 }
 
@@ -1216,6 +1229,7 @@ class _HeartParticle {
     required this.durationMs,
     required this.floatAmplitude,
     required this.opacity,
+    required this.parallaxFactor,
   });
   final double angle;
   final double rFrac;
@@ -1224,6 +1238,7 @@ class _HeartParticle {
   final int durationMs;
   final double floatAmplitude;
   final double opacity;
+  final double parallaxFactor;
 }
 
 
