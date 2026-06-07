@@ -56,7 +56,9 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
 
   void _onUiPrefsChanged() {
     if (!mounted) return;
-    _syncAnimationState(_shouldAnimateFor());
+    setState(() {
+      _syncAnimationState(_shouldAnimateFor());
+    });
   }
 
   bool _shouldAnimateFor() {
@@ -82,29 +84,24 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
     if (!_AnimatedWaveBackground.hasMotion(widget.styleKey)) {
       return const SizedBox.expand();
     }
-    return ValueListenableBuilder<UiPrefsState>(
-      valueListenable: UiPrefs.notifier,
-      builder: (context, _, __) {
-        final shouldAnimate = _shouldAnimateFor();
-        _syncAnimationState(shouldAnimate);
-        if (!shouldAnimate) {
-          return RepaintBoundary(
-            child: CustomPaint(
-              painter: _WavePainter(0, widget.styleKey),
-            ),
+    final shouldAnimate = _shouldAnimateFor();
+    _syncAnimationState(shouldAnimate);
+    if (!shouldAnimate) {
+      return RepaintBoundary(
+        child: CustomPaint(
+          painter: _WavePainter(0, widget.styleKey),
+        ),
+      );
+    }
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return CustomPaint(
+            painter: _WavePainter(_controller.value, widget.styleKey),
           );
-        }
-        return RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _WavePainter(_controller.value, widget.styleKey),
-              );
-            },
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 }

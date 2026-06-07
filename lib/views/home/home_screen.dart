@@ -1322,7 +1322,7 @@ class _HomeScreenState extends State<HomeScreen>
               builder: (context, isSwiping, child) {
                 return TickerMode(
                   enabled: !isSwiping,
-                  child: child!,
+                  child: child ?? const SizedBox.shrink(),
                 );
               },
               child: _buildMusicButton(),
@@ -1393,19 +1393,21 @@ class _HomeScreenState extends State<HomeScreen>
             bodyContent = ValueListenableBuilder<int>(
               valueListenable: _activeTabIndexNotifier,
               builder: (context, activeIndex, child) {
+                final resolvedChild = child ?? bodyContent;
                 final isMainHomeTab = activeIndex == 0;
                 if (!isMainHomeTab) {
-                  return child!;
+                  return resolvedChild;
                 }
                 return ValueListenableBuilder<bool>(
                   valueListenable: _isUserTabSwipingNotifier,
                   builder: (context, isSwiping, childUnderTouch) {
+                    final targetChild = childUnderTouch ?? resolvedChild;
                     if (isSwiping) {
-                      return childUnderTouch!;
+                      return targetChild;
                     }
-                    return TouchEffectOverlay(child: childUnderTouch!);
+                    return TouchEffectOverlay(child: targetChild);
                   },
-                  child: child,
+                  child: resolvedChild,
                 );
               },
               child: bodyContent,

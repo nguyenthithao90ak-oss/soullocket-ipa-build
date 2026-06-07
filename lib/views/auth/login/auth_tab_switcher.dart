@@ -25,20 +25,26 @@ class AuthTabSwitcher extends StatelessWidget {
         final dense = width < 320;
 
         return Container(
-          height: compact ? 56 : 60,
-          padding: SLSpacing.all4,
+          height: compact ? 50 : 54,
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: SLTheme.authSurfaceTint.withValues(alpha: 0.96),
-            borderRadius: BorderRadius.circular(22),
+            color: isLoginTab
+                ? const Color(0xFFFFF0F5).withValues(alpha: 0.6)
+                : const Color(0xFFFCF0FF).withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(26),
             border: Border.all(
-              color: SLTheme.authFieldBorder.withValues(alpha: 0.98),
-              width: 1.2,
+              color: isLoginTab
+                  ? const Color(0xFFFFB6D3).withValues(alpha: 0.5)
+                  : const Color(0xFFD4AAFF).withValues(alpha: 0.5),
+              width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFD9C9BD).withValues(alpha: 0.16),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
+                color: isLoginTab
+                    ? const Color(0xFFFF85B3).withValues(alpha: 0.08)
+                    : const Color(0xFFB080FF).withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -56,20 +62,22 @@ class AuthTabSwitcher extends StatelessWidget {
                     child: Container(
                       width: indicatorWidth,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            SLColors.primary,
-                            Color(0xFFF191B3),
-                          ],
+                        gradient: LinearGradient(
+                          colors: isLoginTab
+                              ? const [Color(0xFFFF5293), Color(0xFFFF8FB8)]
+                              : const [Color(0xFF8A3BFF), Color(0xFFC49CFF)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(compact ? 16 : 18),
+                        borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: SLColors.primary.withValues(alpha: 0.24),
-                            blurRadius: 18,
-                            offset: const Offset(0, 8),
+                            color: (isLoginTab
+                                    ? const Color(0xFFFF5293)
+                                    : const Color(0xFF8A3BFF))
+                                .withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
@@ -135,7 +143,7 @@ class _AuthTabButton extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(compact ? 16 : 18),
+          borderRadius: BorderRadius.circular(22),
           onTap: onTap,
           child: Center(
             child: Padding(

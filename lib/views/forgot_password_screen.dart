@@ -462,16 +462,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF8FD), Color(0xFFFDF3FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: accent.withValues(alpha: 0.14)),
+        border: Border.all(
+          color: const Color(0xFFFFB6D3).withValues(alpha: 0.35),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: accent.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: const Color(0xFFE080BB).withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -482,41 +489,50 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.10),
+              gradient: LinearGradient(
+                colors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: accent.withValues(alpha: 0.2),
+                width: 1.0,
+              ),
             ),
-            child: Icon(icon, color: accent, size: 22),
+            child: Icon(icon, color: accent, size: 20),
           ),
-          SLSpacing.w12,
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  eyebrow,
+                  eyebrow.toUpperCase(),
                   style: SLTheme.quicksand(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: accent.withValues(alpha: 0.88),
-                    letterSpacing: 0.5,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: accent,
+                    letterSpacing: 1.0,
                   ),
                 ),
-                SLSpacing.h4,
+                const SizedBox(height: 4),
                 Text(
                   title,
                   style: SLTheme.quicksand(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF2F2A2E),
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w900,
+                    color: SLColors.textPrimary,
                   ),
                 ),
-                SLSpacing.h4,
+                const SizedBox(height: 5),
                 Text(
                   description,
                   style: SLTheme.quicksand(
-                    fontSize: 13,
-                    color: const Color(0xFF6F6670),
-                    height: 1.4,
+                    fontSize: 12.5,
+                    color: SLColors.textSecond,
+                    fontWeight: FontWeight.w700,
+                    height: 1.35,
                   ),
                 ),
               ],
@@ -534,17 +550,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Text(
           text,
           style: SLTheme.quicksand(
-            fontSize: 13.5,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            fontSize: 13,
+            color: SLColors.textPrimary,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.1,
           ),
         ),
         if (trailing != null)
           Text(
             trailing,
             style: SLTheme.quicksand(
-              fontSize: 12,
-              color: Colors.grey[600],
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              color: SLColors.primary,
             ),
           ),
       ],
@@ -559,24 +577,37 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return InputDecoration(
       hintText: hintText,
       helperText: helperText,
-      hintStyle: SLTheme.quicksand(color: Colors.grey[400]),
-      prefixIcon: Icon(icon, color: const Color(0xFFD81B60)),
-      prefixIconConstraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+      hintStyle: SLTheme.quicksand(
+        color: SLColors.textSecond.withValues(alpha: 0.70),
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+      ),
+      helperStyle: SLTheme.quicksand(
+        fontSize: 11,
+        color: SLColors.textSecond,
+        fontWeight: FontWeight.w700,
+      ),
+      prefixIcon: Icon(icon, color: const Color(0xFFD81B60), size: 20),
+      prefixIconConstraints: const BoxConstraints(minWidth: 46, minHeight: 46),
       isDense: true,
       filled: true,
-      fillColor: _recoveryAccentSoft,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
-      ),
+      fillColor: const Color(0xFFFFF8F4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFFF2C8D7), width: 1),
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: Color(0xFFE8DDD6), width: 1.25),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.5),
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.6),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: SLColors.danger, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: SLColors.danger, width: 1.6),
       ),
     );
   }
@@ -588,52 +619,68 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     required IconData icon,
   }) {
     final isEnabled = onTap != null;
-    return Container(
-      width: double.infinity,
-      height: 50,
-      decoration: BoxDecoration(
-        color: isEnabled ? _recoveryButtonColor : Colors.grey[300],
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: isEnabled
-            ? [
-                BoxShadow(
-                  color: _recoveryButtonColor.withValues(alpha: 0.2),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                )
-              ]
-            : const [],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Center(
-            child: busy
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        label,
-                        style: SLTheme.quicksand(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+    final colors = isEnabled
+        ? const [Color(0xFFD81B60), Color(0xFFFF5293), Color(0xFFFF8FB8)]
+        : const [Color(0xFFE8AFC4), Color(0xFFF1C3D3)];
+
+    return Opacity(
+      opacity: isEnabled ? 1 : 0.62,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.38),
+            width: 1.4,
+          ),
+          boxShadow: [
+            if (isEnabled)
+              BoxShadow(
+                color: colors.last.withValues(alpha: 0.20),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(22),
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              alignment: Alignment.center,
+              child: busy
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.2,
                       ),
-                      SLSpacing.w8,
-                      Icon(icon, color: Colors.white, size: 20),
-                    ],
-                  ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          label,
+                          style: SLTheme.quicksand(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16.5,
+                            letterSpacing: 0.9,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(icon, color: Colors.white, size: 20),
+                      ],
+                    ),
+            ),
           ),
         ),
       ),
@@ -1254,104 +1301,288 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColors = const [
+      Color(0xFFFFF0F5),
+      Color(0xFFFFD6E7),
+      Color(0xFFFCEEF7),
+      Color(0xFFEEDDF8),
+    ];
+
     return SensitiveContentGuard(
       child: Scaffold(
-        backgroundColor: const Color(0xFFFFF8FB),
-        appBar: AppBar(
-          backgroundColor: const Color(0xFFFFF8FB),
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.black87),
-            onPressed: isBusy ? null : () => Navigator.of(context).pop(),
-          ),
-          title: Text(
-            context.tr('forgot_pwd_appbar_title'),
-            style: SLTheme.quicksand(
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: backgroundColors,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
-          centerTitle: true,
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                        color: _recoveryButtonColor.withValues(alpha: 0.14)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _recoveryButtonColor.withValues(alpha: 0.06),
-                        blurRadius: 22,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+          child: Stack(
+            children: [
+              // --- top-left large blush orb ---
+              Positioned(
+                top: -80,
+                left: -80,
+                child: IgnorePointer(
+                  child: _AuthGlowOrb(
+                    size: 260,
+                    colors: const [Color(0xFFFFB6D3), Color(0xFFFF8FB8)],
+                    opacity: 0.38,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        child: KeyedSubtree(
-                          key: ValueKey(step),
-                          child: buildStepBody(),
-                        ),
-                      ),
-                      if (step > 1) ...[
-                        SLSpacing.h20,
-                        Center(
-                          child: TextButton.icon(
-                            onPressed: isBusy
-                                ? null
-                                : () {
-                                    setState(() {
-                                      if (step == 4) {
-                                        // From step 4 go back to start
-                                        step = 1;
-                                        linkSentEmail = '';
-                                      } else if (step == 3 &&
-                                          question.isNotEmpty) {
-                                        step = 2;
-                                      } else {
-                                        step = 1;
-                                      }
-                                    });
-                                  },
-                            icon:
-                                const Icon(Icons.arrow_back_rounded, size: 18),
-                            label: Text(
-                              step == 4 ? context.tr('forgot_pwd_btn_restart') : context.tr('forgot_pwd_btn_back_step'),
-                              style: SLTheme.quicksand(
-                                fontWeight: FontWeight.bold,
+                ),
+              ),
+              // --- right mid rose orb ---
+              Positioned(
+                top: 100,
+                right: -90,
+                child: IgnorePointer(
+                  child: _AuthGlowOrb(
+                    size: 220,
+                    colors: const [Color(0xFFFFC2DC), Color(0xFFFF85B3)],
+                    opacity: 0.44,
+                  ),
+                ),
+              ),
+              // --- bottom-right lavender orb ---
+              Positioned(
+                bottom: -30,
+                right: 20,
+                child: IgnorePointer(
+                  child: _AuthGlowOrb(
+                    size: 180,
+                    colors: const [Color(0xFFE0BBFF), Color(0xFFC49CFF)],
+                    opacity: 0.32,
+                  ),
+                ),
+              ),
+              // --- decorative sparkle icons ---
+              Positioned(
+                bottom: 100,
+                left: 12,
+                child: IgnorePointer(
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    color: SLColors.primary.withValues(alpha: 0.22),
+                    size: 52,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 160,
+                left: 30,
+                child: IgnorePointer(
+                  child: Icon(
+                    Icons.favorite_rounded,
+                    color: SLColors.primary.withValues(alpha: 0.12),
+                    size: 36,
+                  ),
+                ),
+              ),
+
+              // --- Main Content ---
+              Scaffold(
+                backgroundColor: Colors.transparent,
+                appBar: AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: SLColors.primary),
+                    onPressed: isBusy ? null : () => Navigator.of(context).pop(),
+                  ),
+                  title: Text(
+                    context.tr('forgot_pwd_appbar_title').toUpperCase(),
+                    style: SLTheme.quicksand(
+                      color: SLColors.primary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  centerTitle: true,
+                ),
+                body: SafeArea(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final width = constraints.maxWidth;
+                      final isCompact = width < 380;
+                      final isTablet = width >= 600;
+                      final horizontalPadding = isCompact ? 14.0 : 18.0;
+                      final maxContentWidth = isTablet ? 520.0 : 420.0;
+
+                      return Center(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                            vertical: 12,
+                          ),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: maxContentWidth),
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFFBFD).withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(36),
+                                border: Border.all(
+                                  color: const Color(0xFFFFB6D3).withValues(alpha: 0.55),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFFF85B3).withValues(alpha: 0.16),
+                                    blurRadius: 40,
+                                    spreadRadius: -4,
+                                    offset: const Offset(0, 20),
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.white.withValues(alpha: 0.88),
+                                    blurRadius: 0,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
                               ),
-                            ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFFD81B60),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Brand Header Logo
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 14),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        ShaderMask(
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [SLColors.primary, Color(0xFFE060B0)],
+                                          ).createShader(bounds),
+                                          child: const Icon(
+                                            Icons.favorite_rounded,
+                                            size: 16,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        ShaderMask(
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [Color(0xFFE0609A), Color(0xFFA044C0)],
+                                          ).createShader(bounds),
+                                          child: Text(
+                                            'soullocket',
+                                            style: SLTheme.quicksand(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.white,
+                                              letterSpacing: 1.4,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        ShaderMask(
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [Color(0xFFE060B0), SLColors.primary],
+                                          ).createShader(bounds),
+                                          child: const Icon(
+                                            Icons.favorite_rounded,
+                                            size: 16,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    switchInCurve: Curves.easeOutCubic,
+                                    switchOutCurve: Curves.easeInCubic,
+                                    child: KeyedSubtree(
+                                      key: ValueKey(step),
+                                      child: buildStepBody(),
+                                    ),
+                                  ),
+                                  if (step > 1) ...[
+                                    SLSpacing.h20,
+                                    Center(
+                                      child: TextButton.icon(
+                                        onPressed: isBusy
+                                            ? null
+                                            : () {
+                                                setState(() {
+                                                  if (step == 4) {
+                                                    step = 1;
+                                                    linkSentEmail = '';
+                                                  } else if (step == 3 &&
+                                                      question.isNotEmpty) {
+                                                    step = 2;
+                                                  } else {
+                                                    step = 1;
+                                                  }
+                                                });
+                                              },
+                                        icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                                        label: Text(
+                                          step == 4
+                                              ? context.tr('forgot_pwd_btn_restart')
+                                              : context.tr('forgot_pwd_btn_back_step'),
+                                          style: SLTheme.quicksand(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: const Color(0xFFD81B60),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    ],
+                      );
+                    },
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthGlowOrb extends StatelessWidget {
+  final double size;
+  final List<Color> colors;
+  final double opacity;
+
+  const _AuthGlowOrb({
+    required this.size,
+    required this.colors,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            colors.first.withValues(alpha: opacity),
+            colors.last.withValues(alpha: opacity * 0.58),
+            colors.last.withValues(alpha: 0),
+          ],
         ),
       ),
     );

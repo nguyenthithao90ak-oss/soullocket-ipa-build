@@ -1790,29 +1790,27 @@ class _MainHomeTabState extends State<MainHomeTab> {
       fallingEffectKey: normalizedFallingEffectKey,
     );
 
-    await UiPrefs.saveState(nextState);
+    unawaited(UiPrefs.saveState(nextState).catchError((_) {}));
 
     final houseId = (_houseId ?? '').trim();
-    if (houseId.isEmpty) {
-      return;
-    }
-
-    try {
-      await _houseSettingsService.updateHomeUiSettings(
+    if (houseId.isNotEmpty) {
+      unawaited(_houseSettingsService.updateHomeUiSettings(
         houseId: houseId,
         countdownStyleKey:
             normalizedCountdownStyleKey == current.countdownStyleKey
                 ? null
                 : normalizedCountdownStyleKey,
-        fallingEffectKey: normalizedFallingEffectKey == current.fallingEffectKey
-            ? null
-            : normalizedFallingEffectKey,
-      );
-    } catch (e) {
-      if (mounted) {
-        _showLatestSnackBar(
-            'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.');
-      }
+        fallingEffectKey:
+            normalizedFallingEffectKey == current.fallingEffectKey
+                ? null
+                : normalizedFallingEffectKey,
+      ).catchError((e) {
+        if (mounted) {
+          _showLatestSnackBar(
+            'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.',
+          );
+        }
+      }));
     }
   }
 

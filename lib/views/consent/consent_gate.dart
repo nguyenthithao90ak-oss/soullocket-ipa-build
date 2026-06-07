@@ -132,7 +132,7 @@ class _ConsentGateState extends State<ConsentGate> {
       builder: (ctx) {
         var cookieLevel =
             initialCookieLevel == 'essential' ? 'essential' : 'all';
-        var showScrollHint = true;
+        final showScrollHintNotifier = ValueNotifier<bool>(true);
 
         return StatefulBuilder(
           builder: (ctx, setState) {
@@ -198,10 +198,8 @@ class _ConsentGateState extends State<ConsentGate> {
                                         notification.metrics.pixels <= 8 &&
                                             notification.metrics.maxScrollExtent >
                                                 16;
-                                    if (showScrollHint != shouldShow) {
-                                      setState(() {
-                                        showScrollHint = shouldShow;
-                                      });
+                                    if (showScrollHintNotifier.value != shouldShow) {
+                                      showScrollHintNotifier.value = shouldShow;
                                     }
                                     return false;
                                   },
@@ -298,11 +296,16 @@ class _ConsentGateState extends State<ConsentGate> {
                                   right: 0,
                                   bottom: 8,
                                   child: IgnorePointer(
-                                    child: AnimatedOpacity(
-                                      duration:
-                                          const Duration(milliseconds: 180),
-                                      opacity: showScrollHint ? 1 : 0,
-                                      child: _buildStartupScrollHint(),
+                                    child: ValueListenableBuilder<bool>(
+                                      valueListenable: showScrollHintNotifier,
+                                      builder: (context, showHint, _) {
+                                        return AnimatedOpacity(
+                                          duration:
+                                              const Duration(milliseconds: 180),
+                                          opacity: showHint ? 1 : 0,
+                                          child: _buildStartupScrollHint(),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),
