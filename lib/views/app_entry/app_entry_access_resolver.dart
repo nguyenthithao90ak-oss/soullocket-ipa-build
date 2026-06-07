@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../services/offline_cache_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
@@ -109,12 +110,15 @@ class AppEntryAccessResolver {
     required String? userId,
     required void Function(AppEntryAccessState state) onBackgroundState,
   }) async {
-    SharedPreferences? prefs;
-    try {
-      prefs = await _getPrefs().timeout(_prefsTimeout);
-    } catch (e) {
-      debugPrint('[AppEntry] Prefs read timed out: ${AppErrorMapper.resolve(e).message}');
-    }
+    final prefs = OfflineCacheService.getPrefsSync() ?? await (() async {
+      try {
+        return await _getPrefs().timeout(_prefsTimeout);
+      } catch (e) {
+        debugPrint('[AppEntry] Prefs read timed out: ${AppErrorMapper.resolve(e).message}');
+        return null;
+      }
+    }());
+
     final cachedHouseId = prefs?.getString('il_house_id');
     final cachedAuthUid = prefs?.getString('il_auth_uid');
 
@@ -159,17 +163,31 @@ class AppEntryAccessResolver {
       await prefs?.remove('il_role');
     }
 
-    final isAdmin = await _authService.isUserAdmin(user).timeout(
+    final isAdminFuture = _authService.isUserAdmin(user).timeout(
           _adminTimeout,
           onTimeout: () => false,
         );
+    final remoteStateFuture = fetchRemoteAccessState(false);
+
     try {
-      return await fetchRemoteAccessState(isAdmin).timeout(
+      final results = await Future.wait([
+        isAdminFuture,
+        remoteStateFuture,
+      ]).timeout(
         _remoteTimeout,
         onTimeout: () => throw Exception('Remote auth checks timed out'),
       );
+      final isAdmin = results[0] as bool;
+      final remoteState = results[1] as AppEntryAccessState;
+      return AppEntryAccessState(
+        houseId: remoteState.houseId,
+        blockReason: remoteState.blockReason,
+        isAdmin: isAdmin,
+        isMaintenance: remoteState.isMaintenance,
+      );
     } catch (e) {
       debugPrint('[AppEntry] Offline fallback triggered: ${AppErrorMapper.resolve(e).message}');
+      final isAdmin = await isAdminFuture.catchError((_) => false);
       return AppEntryAccessState(
         houseId: null,
         isAdmin: isAdmin,

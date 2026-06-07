@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../core/sl_theme.dart';
 import '../services/anti_spam_service.dart';
@@ -12,6 +13,7 @@ import '../services/auth_service.dart';
 import '../services/l10n_service.dart';
 import '../services/security_flow_guard.dart';
 import '../services/security_service.dart';
+import '../utils/services/house_service.dart';
 import '../utils/app_error_mapper.dart';
 import '../utils/flexible_date_input.dart';
 import '../utils/rapid_action_feedback_policy.dart';
@@ -449,6 +451,19 @@ class _LoginScreenState extends State<LoginScreen> {
           await prefs.setString('il_role', sessionRole!);
         }
 
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          try {
+            final houseId = await HouseService()
+                .getCurrentHouseId(preferFresh: false)
+                .timeout(const Duration(seconds: 4));
+            if (houseId != null && houseId.isNotEmpty) {
+              await prefs.setString('il_house_id', houseId);
+              await prefs.setString('il_auth_uid', user.uid);
+            }
+          } catch (_) {}
+        }
+
         if (!mounted) return;
         debugPrint('[Auth][LoginScreen] login success -> navigate AppEntry');
         handedOffToAppEntry = true;
@@ -667,9 +682,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final email = (result.user?.email ?? '').trim().toLowerCase();
       final storedRole = await _readSavedGender(email);
+      final prefs = await SharedPreferences.getInstance();
       if (storedRole == 'user1' || storedRole == 'user2') {
-        final prefs = await SharedPreferences.getInstance();
         await prefs.setString('il_role', storedRole!);
+      }
+
+      final user = result.user;
+      if (user != null) {
+        try {
+          final houseId = await HouseService()
+              .getCurrentHouseId(preferFresh: false)
+              .timeout(const Duration(seconds: 4));
+          if (houseId != null && houseId.isNotEmpty) {
+            await prefs.setString('il_house_id', houseId);
+            await prefs.setString('il_auth_uid', user.uid);
+          }
+        } catch (_) {}
       }
 
       if (!mounted) return;

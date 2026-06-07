@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../services/offline_cache_service.dart';
+
 import '../../services/admob_service.dart';
 import '../../services/critical_data_sync_service.dart';
 import '../../services/device_manager_service.dart';
@@ -110,7 +112,7 @@ class AppEntryController {
   bool get hasPendingResume => _lastPausedAt != null;
 
   Future<SharedPreferences> getPrefs() async {
-    return _prefs ??= await SharedPreferences.getInstance();
+    return _prefs ??= OfflineCacheService.getPrefsSync() ?? await SharedPreferences.getInstance();
   }
 
   void dispose() {
@@ -140,8 +142,12 @@ class AppEntryController {
   }) async {
     try {
       debugPrint('[AppEntry] bootstrap start');
-      final compromisedState = await _resolveCompromisedAuthState()
-          .timeout(const Duration(seconds: 3));
+      final preResults = await Future.wait<dynamic>([
+        _resolveCompromisedAuthState().timeout(const Duration(seconds: 3)),
+        _applyStaleSessionPolicy(),
+      ]).timeout(const Duration(seconds: 5));
+
+      final compromisedState = preResults[0] as AppEntryAuthState?;
       if (compromisedState != null) {
         debugPrint('[AppEntry] bootstrap blocked by compromised state');
         return compromisedState;
@@ -153,12 +159,10 @@ class AppEntryController {
         );
       }
 
-      final results = await Future.wait<dynamic>([
-        _applyStaleSessionPolicy(),
-        checkAppLock(context: context, isResuming: false),
-      ]).timeout(const Duration(seconds: 8));
+      final lockState = await checkAppLock(context: context, isResuming: false)
+          .timeout(const Duration(seconds: 8));
       debugPrint('[AppEntry] bootstrap finished');
-      return (results[1] as AppEntryAuthState?) ??
+      return lockState ??
           const AppEntryAuthState(
             isAuthenticated: true,
             isCheckingAuth: false,
@@ -385,9 +389,11 @@ class AppEntryController {
     _scheduleDeviceRegistration();
 
     if (_currentHouseId != houseId) {
-      await _runGuarded(
-        'prime presence in background',
-        () => primePresenceInBackground(houseId),
+      unawaited(
+        _runGuarded(
+          'prime presence in background',
+          () => primePresenceInBackground(houseId),
+        ),
       );
     }
 
@@ -398,9 +404,11 @@ class AppEntryController {
       ),
     );
 
-    await _runGuarded(
-      'initialize AdMob',
-      () => _adMobService.initialize(),
+    unawaited(
+      _runGuarded(
+        'initialize AdMob',
+        () => _adMobService.initialize(),
+      ),
     );
 
     unawaited(_runGuarded('preload rewarded ad', () async {
@@ -420,13 +428,17 @@ class AppEntryController {
       });
     }
 
-    await _runGuarded(
-      'start auto interstitial scheduler',
-      () => _adMobService.startAutoInterstitialScheduler(),
+    unawaited(
+      _runGuarded(
+        'start auto interstitial scheduler',
+        () => _adMobService.startAutoInterstitialScheduler(),
+      ),
     );
-    await _runGuarded(
-      'record app open metric',
-      () => _recordAppOpenMetric(houseId: houseId),
+    unawaited(
+      _runGuarded(
+        'record app open metric',
+        () => _recordAppOpenMetric(houseId: houseId),
+      ),
     );
 
     unawaited(
@@ -447,9 +459,11 @@ class AppEntryController {
       ),
     );
 
-    await _runGuarded(
-      'refresh widget shell after home session',
-      () => WidgetService.refreshWidgetShell(),
+    unawaited(
+      _runGuarded(
+        'refresh widget shell after home session',
+        () => WidgetService.refreshWidgetShell(),
+      ),
     );
 
     return AppEntryHouseSessionResult(

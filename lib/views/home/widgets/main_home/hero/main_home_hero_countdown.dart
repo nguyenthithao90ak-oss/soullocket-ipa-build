@@ -117,12 +117,12 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
     final countdownVisual =
         _CountdownVisualSpec.resolve(countdownStyleKey, transparentMode);
     final labelHeight = (circleSize * 0.15).clamp(38.0, 64.0).toDouble();
-    final numberHeight = (circleSize * 0.32).clamp(70.0, 132.0).toDouble();
+    final numberHeight = (circleSize * 0.38).clamp(80.0, 150.0).toDouble();
     final topLabelWidth = circleSize * 0.68;
     final bottomLabelWidth = circleSize * 0.64;
     final numberWidth = circleSize * 0.72;
-    final topGap = (circleSize * 0.07).clamp(16.0, 26.0).toDouble();
-    final bottomGap = (circleSize * 0.048).clamp(12.0, 20.0).toDouble();
+    final topGap = (circleSize * 0.05).clamp(12.0, 20.0).toDouble();
+    final bottomGap = (circleSize * 0.035).clamp(8.0, 16.0).toDouble();
 
     return KeyedSubtree(
       key: firstGuideHeroKey,
@@ -194,7 +194,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
                           circleTopLabel,
                           maxLines: 1,
                           textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
+                          style: state._uiTextStyle(
                             fontSize: (circleSize * 0.075).clamp(16.0, 22.0),
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.2,
@@ -207,37 +207,57 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: topGap),
-                  ShaderMask(
-                    shaderCallback: (bounds) => LinearGradient(
-                      colors: countdownVisual.numberGradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ).createShader(bounds),
-                    child: _MainHomeHeroCountdownTapTarget(
-                      circleSize: circleSize,
-                      onTap: isSingle ? null : onEditStartDate,
-                      onLongPress: state._showCountdownQuickCustomizeSheet,
-                      constraints: BoxConstraints(
-                        minWidth: numberWidth,
-                        maxWidth: numberWidth,
-                        minHeight: numberHeight,
-                        maxHeight: numberHeight,
-                      ),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          circleValue,
-                          maxLines: 1,
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            fontSize: (circleSize * 0.36).clamp(54.0, 142.0),
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            height: 1.0,
-                          ).copyWith(
-                            shadows: countdownVisual.numberShadows,
+                  _MainHomeHeroCountdownTapTarget(
+                    circleSize: circleSize,
+                    onTap: isSingle ? null : onEditStartDate,
+                    onLongPress: state._showCountdownQuickCustomizeSheet,
+                    constraints: BoxConstraints(
+                      minWidth: numberWidth,
+                      maxWidth: numberWidth,
+                      minHeight: numberHeight,
+                      maxHeight: numberHeight,
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Shadow Layer (No ShaderMask to prevent blurriness)
+                          Text(
+                            circleValue,
+                            maxLines: 1,
+                            textAlign: TextAlign.center,
+                            style: state._uiTextStyle(
+                              fontSize: (circleSize * 0.36).clamp(56.0, 132.0),
+                              fontWeight: FontWeight.w900,
+                              color: Colors.transparent, // Only show shadow
+                              height: 0.96,
+                              letterSpacing: 4.0,
+                            ).copyWith(
+                              shadows: countdownVisual.numberShadows,
+                            ),
                           ),
-                        ),
+                          // Gradient Layer with ShaderMask
+                          ShaderMask(
+                            shaderCallback: (bounds) => LinearGradient(
+                              colors: countdownVisual.numberGradient,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds),
+                            child: Text(
+                              circleValue,
+                              maxLines: 1,
+                              textAlign: TextAlign.center,
+                              style: state._uiTextStyle(
+                                fontSize: (circleSize * 0.36).clamp(56.0, 132.0),
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                height: 0.96,
+                                letterSpacing: 4.0,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -261,7 +281,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
                           circleBottomLabel,
                           maxLines: 1,
                           textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
+                          style: state._uiTextStyle(
                             fontSize: (circleSize * 0.082).clamp(17.0, 24.0),
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.1,
@@ -284,7 +304,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
   }
 }
 
-class _MainHomeHeroCountdownMotionShell extends StatefulWidget {
+class _MainHomeHeroCountdownMotionShell extends StatelessWidget {
   final double size;
   final String styleKey;
   final List<Color> highlightColors;
@@ -300,75 +320,8 @@ class _MainHomeHeroCountdownMotionShell extends StatefulWidget {
   });
 
   @override
-  State<_MainHomeHeroCountdownMotionShell> createState() =>
-      _MainHomeHeroCountdownMotionShellState();
-}
-
-class _MainHomeHeroCountdownMotionShellState
-    extends State<_MainHomeHeroCountdownMotionShell>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 5200),
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    UiPrefs.notifier.addListener(_handleUiPrefsChanged);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _syncAnimation();
-  }
-
-  @override
-  void dispose() {
-    UiPrefs.notifier.removeListener(_handleUiPrefsChanged);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handleUiPrefsChanged() {
-    if (!mounted) return;
-    _syncAnimation();
-  }
-
-  bool _shouldAnimate() {
-    if (!TickerMode.valuesOf(context).enabled) return false;
-    return widget.enableMotion;
-  }
-
-  void _syncAnimation() {
-    final shouldAnimate = _shouldAnimate();
-    if (shouldAnimate) {
-      if (!_controller.isAnimating) {
-        _controller.repeat();
-      }
-    } else {
-      if (_controller.isAnimating) {
-        _controller.stop();
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<UiPrefsState>(
-      valueListenable: UiPrefs.notifier,
-      builder: (context, _, __) {
-        final shouldAnimate = _shouldAnimate();
-        _syncAnimation();
-
-        if (!shouldAnimate) {
-          return widget.child;
-        }
-
-        return widget.child;
-      },
-    );
+    return child;
   }
 }
 

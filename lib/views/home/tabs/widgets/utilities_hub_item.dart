@@ -112,6 +112,82 @@ class _UtilitiesHubDragFeedback extends StatelessWidget {
   }
 }
 
+class _TilePalette {
+  final Color shellStart;
+  final Color shellEnd;
+  final Color shellBorder;
+  final Color innerBorder;
+  final Color shellGlow;
+  final Color shellOverlayStart;
+  final Color shellOverlayEnd;
+  final Color innerOverlayStart;
+  final Color innerOverlayEnd;
+  final Color labelColor;
+
+  const _TilePalette({
+    required this.shellStart,
+    required this.shellEnd,
+    required this.shellBorder,
+    required this.innerBorder,
+    required this.shellGlow,
+    required this.shellOverlayStart,
+    required this.shellOverlayEnd,
+    required this.innerOverlayStart,
+    required this.innerOverlayEnd,
+    required this.labelColor,
+  });
+}
+
+final Map<String, _TilePalette> _paletteCache = {};
+
+_TilePalette _getTilePalette(List<Color> colors, bool isTarget) {
+  final cacheKey = '${colors.first.value}_${colors.last.value}_$isTarget';
+  if (_paletteCache.containsKey(cacheKey)) {
+    return _paletteCache[cacheKey]!;
+  }
+
+  final shellStart =
+      Color.lerp(colors.first, colors.last, isTarget ? 0.10 : 0.16) ??
+          colors.first;
+  final shellEnd =
+      Color.lerp(colors.last, colors.first, isTarget ? 0.04 : 0.10) ??
+          colors.last;
+  final shellBorder =
+      Color.lerp(colors.last, SLColors.textPrimary, isTarget ? 0.04 : 0.10) ??
+          colors.last;
+  final innerBorder =
+      Color.lerp(colors.first, colors.last, 0.32) ?? colors.first;
+  final shellGlow =
+      Color.lerp(colors.first, Colors.transparent, 0.46) ?? colors.first;
+  final shellOverlayStart =
+      Color.lerp(colors.first, colors.last, 0.14) ?? colors.first;
+  final shellOverlayEnd =
+      Color.lerp(colors.last, colors.first, 0.06) ?? colors.last;
+  final innerOverlayStart =
+      Color.lerp(colors.first, colors.last, 0.22) ?? colors.first;
+  final innerOverlayEnd =
+      Color.lerp(colors.last, colors.first, 0.08) ?? colors.last;
+  final labelColor =
+      Color.lerp(colors.last, SLColors.textPrimary, 0.72) ??
+          SLColors.textPrimary;
+
+  final palette = _TilePalette(
+    shellStart: shellStart,
+    shellEnd: shellEnd,
+    shellBorder: shellBorder,
+    innerBorder: innerBorder,
+    shellGlow: shellGlow,
+    shellOverlayStart: shellOverlayStart,
+    shellOverlayEnd: shellOverlayEnd,
+    innerOverlayStart: innerOverlayStart,
+    innerOverlayEnd: innerOverlayEnd,
+    labelColor: labelColor,
+  );
+
+  _paletteCache[cacheKey] = palette;
+  return palette;
+}
+
 class _UtilitiesHubTileContent extends StatelessWidget {
   const _UtilitiesHubTileContent({
     required this.app,
@@ -134,30 +210,18 @@ class _UtilitiesHubTileContent extends StatelessWidget {
     final List<Color> colors = config['colors'];
     final IconData iconData = config['icon'];
     final Color iconColor = config['iconColor'] ?? SLColors.textInverse;
-    final Color shellStart =
-        Color.lerp(colors.first, colors.last, isTarget ? 0.10 : 0.16) ??
-            colors.first;
-    final Color shellEnd =
-        Color.lerp(colors.last, colors.first, isTarget ? 0.04 : 0.10) ??
-            colors.last;
-    final Color shellBorder =
-        Color.lerp(colors.last, SLColors.textPrimary, isTarget ? 0.04 : 0.10) ??
-            colors.last;
-    final Color innerBorder =
-        Color.lerp(colors.first, colors.last, 0.32) ?? colors.first;
-    final Color shellGlow =
-        Color.lerp(colors.first, Colors.transparent, 0.46) ?? colors.first;
-    final Color shellOverlayStart =
-        Color.lerp(colors.first, colors.last, 0.14) ?? colors.first;
-    final Color shellOverlayEnd =
-        Color.lerp(colors.last, colors.first, 0.06) ?? colors.last;
-    final Color innerOverlayStart =
-        Color.lerp(colors.first, colors.last, 0.22) ?? colors.first;
-    final Color innerOverlayEnd =
-        Color.lerp(colors.last, colors.first, 0.08) ?? colors.last;
-    final Color labelColor =
-        Color.lerp(colors.last, SLColors.textPrimary, 0.72) ??
-            SLColors.textPrimary;
+
+    final palette = _getTilePalette(colors, isTarget);
+    final Color shellStart = palette.shellStart;
+    final Color shellEnd = palette.shellEnd;
+    final Color shellBorder = palette.shellBorder;
+    final Color innerBorder = palette.innerBorder;
+    final Color shellGlow = palette.shellGlow;
+    final Color shellOverlayStart = palette.shellOverlayStart;
+    final Color shellOverlayEnd = palette.shellOverlayEnd;
+    final Color innerOverlayStart = palette.innerOverlayStart;
+    final Color innerOverlayEnd = palette.innerOverlayEnd;
+    final Color labelColor = palette.labelColor;
 
     return Material(
       color: Colors.transparent,

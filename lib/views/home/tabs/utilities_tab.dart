@@ -42,6 +42,7 @@ import '../../utilities/love_card_screen.dart';
 import '../../utilities/calculator_screen.dart';
 import '../../utilities/creative_diary_screen.dart';
 import '../../utilities/sticker_library_screen.dart';
+import '../../utilities/utility_sticker_icon.dart';
 
 // import '../../utils/sl_notice.dart';
 
@@ -80,6 +81,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(_fetchUtilityStats());
+      precacheUtilityStickerList(context);
       Future<void>.delayed(const Duration(milliseconds: 420), () {
         if (!mounted) return;
         _loadBottomBanner();

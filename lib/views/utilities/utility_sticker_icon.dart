@@ -150,25 +150,19 @@ Widget buildUtilityStickerIcon({
       return SizedBox.expand(
         child: Padding(
           padding: padding,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              fallback,
-              Image(
-                image: provider,
-                fit: fit,
-                alignment: Alignment.center,
-                filterQuality: FilterQuality.high,
-                gaplessPlayback: true,
-                frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                  if (wasSynchronouslyLoaded || frame != null) {
-                    return child;
-                  }
-                  return const SizedBox.shrink();
-                },
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
-            ],
+          child: Image(
+            image: provider,
+            fit: fit,
+            alignment: Alignment.center,
+            filterQuality: FilterQuality.low, // Lowering filter quality from High to Low optimizes GPU texture processing for small assets
+            gaplessPlayback: true,
+            frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+              if (wasSynchronouslyLoaded || frame != null) {
+                return child;
+              }
+              return fallback;
+            },
+            errorBuilder: (_, __, ___) => fallback,
           ),
         ),
       );

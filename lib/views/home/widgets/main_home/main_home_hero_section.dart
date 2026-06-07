@@ -133,7 +133,8 @@ class _ModernHomeBody extends StatelessWidget {
                           showDayCounter: showDayCounter,
                           showLoveTimeDetail: showLoveTimeDetail,
                           countdownStyleKey: countdownStyleKey,
-                          enableMotion: !state._deferHeavyHomeMotion,
+                          enableMotion: effectProfile.animationEnabled &&
+                              !state._deferHeavyHomeMotion,
                           onEditStartDate: onEditStartDate,
                           onEditTopLabel: onEditTopLabel,
                           onEditBottomLabel: onEditBottomLabel,

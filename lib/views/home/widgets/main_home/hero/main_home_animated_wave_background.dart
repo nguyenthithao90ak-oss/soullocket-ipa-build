@@ -240,22 +240,22 @@ class _WavePainter extends CustomPainter {
     Offset center,
     double radius,
   ) {
+    // Pulsing ring - nhẹ, chỉ drawCircle
     final ringPaint1 = Paint()
-      ..color = const Color(0xFFFFC6DA).withValues(alpha: 0.15 * (1 - animationValue))
+      ..color = const Color(0xFFFFC6DA).withValues(alpha: 0.13 * (1 - animationValue))
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(
-        center, radius * (0.8 + 0.2 * animationValue), ringPaint1);
+    canvas.drawCircle(center, radius * (0.8 + 0.2 * animationValue), ringPaint1);
 
     final phase2 = (animationValue + 0.5) % 1.0;
     final ringPaint2 = Paint()
-      ..color = const Color(0xFFFF9EBB).withValues(alpha: 0.1 * (1 - phase2))
+      ..color = const Color(0xFFFF9EBB).withValues(alpha: 0.08 * (1 - phase2))
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius * (0.8 + 0.2 * phase2), ringPaint2);
 
-    void drawWave(
+    // Dùng bezier thay vòng lặp pixel-by-pixel (~400 pts → 4 điểm điều khiển)
+    void drawWaveBezier(
       Color color,
       double amplitude,
-      double frequency,
       double phaseShift,
       double verticalOffset,
     ) {
@@ -263,53 +263,42 @@ class _WavePainter extends CustomPainter {
         ..color = color
         ..style = PaintingStyle.fill;
 
-      final path = Path()..moveTo(0, height);
-      for (double i = 0; i <= width; i++) {
-        final y = sin(
-                  (i / width * frequency * pi * 2) +
-                      (animationValue * pi * 2) +
-                      phaseShift,
-                ) *
-                amplitude +
-            height * verticalOffset;
-        if (i == 0) {
-          path.lineTo(0, y);
-        } else {
-          path.lineTo(i, y);
-        }
-      }
-      path
+      final yBase = height * verticalOffset;
+      final t = animationValue * pi * 2 + phaseShift;
+
+      // 4 control points tạo sóng bezier đơn giản
+      final y0 = yBase + sin(t) * amplitude;
+      final y1 = yBase + sin(t + pi * 0.5) * amplitude;
+      final y2 = yBase + sin(t + pi) * amplitude;
+      final y3 = yBase + sin(t + pi * 1.5) * amplitude;
+
+      final path = Path()
+        ..moveTo(0, height)
+        ..lineTo(0, y0)
+        ..cubicTo(width * 0.25, y1, width * 0.5, y2, width * 0.75, y3)
+        ..cubicTo(width * 0.88, yBase + sin(t + pi * 1.75) * amplitude, width, y0, width, y0)
         ..lineTo(width, height)
         ..close();
 
       canvas.drawPath(path, paint);
     }
 
-    drawWave(const Color(0xFFFFC6DA).withValues(alpha: 0.35), 18, 1, 0, 0.55);
-    drawWave(
-      const Color(0xFFFF9EBB).withValues(alpha: 0.3),
-      14,
-      1.2,
-      pi / 2,
-      0.6,
-    );
-    drawWave(const Color(0xFFFFB1CA).withValues(alpha: 0.45), 10, 1.5, pi, 0.65);
+    drawWaveBezier(const Color(0xFFFFC6DA).withValues(alpha: 0.32), 18, 0, 0.55);
+    drawWaveBezier(const Color(0xFFFF9EBB).withValues(alpha: 0.26), 14, pi / 2, 0.60);
+    drawWaveBezier(const Color(0xFFFFB1CA).withValues(alpha: 0.40), 10, pi, 0.65);
 
+    // Bubbles nhẹ - bỏ maskFilter.blur (nặng GPU)
     final bubblePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+      ..color = Colors.white.withValues(alpha: 0.28)
+      ..style = PaintingStyle.fill;
 
     final bubbleY1 = height - (height * ((animationValue + 0.2) % 1.0));
     final bubbleX1 = width * 0.3 + sin(animationValue * pi * 4) * 10;
-    canvas.drawCircle(Offset(bubbleX1, bubbleY1), 6, bubblePaint);
+    canvas.drawCircle(Offset(bubbleX1, bubbleY1), 5, bubblePaint);
 
-    final bubbleY2 = height - (height * ((animationValue + 0.6) % 1.0));
-    final bubbleX2 = width * 0.7 + cos(animationValue * pi * 4) * 15;
-    canvas.drawCircle(Offset(bubbleX2, bubbleY2), 8, bubblePaint);
-
-    final bubbleY3 = height - (height * ((animationValue + 0.9) % 1.0));
-    final bubbleX3 = width * 0.5 + sin(animationValue * pi * 6) * 20;
-    canvas.drawCircle(Offset(bubbleX3, bubbleY3), 4, bubblePaint);
+    final bubbleY2 = height - (height * ((animationValue + 0.65) % 1.0));
+    final bubbleX2 = width * 0.68 + cos(animationValue * pi * 4) * 12;
+    canvas.drawCircle(Offset(bubbleX2, bubbleY2), 7, bubblePaint);
   }
 
   void _drawGalaxy(

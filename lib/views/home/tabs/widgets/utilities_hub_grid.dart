@@ -44,32 +44,35 @@ class UtilitiesHubGrid extends StatelessWidget {
             ((width - 44 - (spacing * (crossAxisCount - 1))) / crossAxisCount)
                 .clamp(64.0, 96.0);
 
-        return SingleChildScrollView(
+        return CustomScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 120),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (pinnedApps.isNotEmpty || recentApps.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+          slivers: [
+            if (pinnedApps.isNotEmpty || recentApps.isNotEmpty)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+                sliver: SliverToBoxAdapter(
                   child: UtilitiesHubShortcuts(
                     pinnedApps: pinnedApps,
                     recentApps: recentApps,
                     onShortcutTap: onShortcutTap,
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Wrap(
-                  spacing: spacing,
-                  runSpacing: 14,
-                  children: apps.map((app) {
-                    return SizedBox(
-                      key: ValueKey<String>(app.id),
-                      width: itemWidth,
-                      height: tileHeight,
+              ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
+              sliver: SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: 14,
+                  crossAxisSpacing: spacing,
+                  childAspectRatio: itemWidth / tileHeight,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final app = apps[index];
+                    return RepaintBoundary(
                       child: UtilitiesHubItem(
+                        key: ValueKey<String>(app.id),
                         app: app,
                         isEditMode: isEditMode,
                         onTap: () => onAppTap(app.id),
@@ -77,14 +80,19 @@ class UtilitiesHubGrid extends StatelessWidget {
                         onEditModeChanged: onEditModeChanged,
                       ),
                     );
-                  }).toList(growable: false),
+                  },
+                  childCount: apps.length,
                 ),
               ),
-              if (showBottomBanner)
-                _buildBottomBanner(bottomBannerAd),
-              SLSpacing.gapH(32),
-            ],
-          ),
+            ),
+            if (showBottomBanner)
+              SliverToBoxAdapter(
+                child: _buildBottomBanner(bottomBannerAd),
+              ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 120),
+            ),
+          ],
         );
       },
     );

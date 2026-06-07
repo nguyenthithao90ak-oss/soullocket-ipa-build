@@ -445,11 +445,19 @@ class _FallingPainter extends CustomPainter {
   final List<_FallingItem> items;
   final String type;
   final bool isDark;
+
+  // Reusable paint and path objects to prevent garbage collection pressure
+  final Paint _paint = Paint();
+  final Path _reusablePath = Path();
+
   _FallingPainter(this.items, {required this.type, required this.isDark});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint();
+    // Disable anti-alias for simple small particles to boost rendering speed
+    final isSimpleEffect = type == 'snow' || type == 'bubbles' || type == 'sparkles';
+    _paint.isAntiAlias = !isSimpleEffect;
+
     for (var item in items) {
       canvas.save();
       canvas.translate(item.x * size.width, item.y * size.height);
@@ -458,79 +466,81 @@ class _FallingPainter extends CustomPainter {
       final s = item.size;
       switch (type) {
         case 'sparkles':
-          paint
+          _paint
             ..color = (isDark ? const Color(0xFFFFF1B8) : Colors.white)
                 .withValues(alpha: item.opacity)
             ..style = PaintingStyle.fill;
-          _drawSparkle(canvas, paint, s);
+          _drawSparkle(canvas, _paint, s);
           break;
         case 'meteors':
-          paint
+          _paint
             ..color = (isDark ? const Color(0xFF9EE7FF) : Colors.white)
                 .withValues(alpha: item.opacity)
             ..style = PaintingStyle.stroke
             ..strokeWidth = (s * 0.12).clamp(1.0, 3.0);
           canvas.drawLine(
-              Offset(-s * 0.7, -s * 0.2), Offset(s * 0.7, s * 0.2), paint);
-          paint
+              Offset(-s * 0.7, -s * 0.2), Offset(s * 0.7, s * 0.2), _paint);
+          _paint
             ..style = PaintingStyle.fill
             ..strokeWidth = 0;
           canvas.drawCircle(
-              Offset(s * 0.75, s * 0.22), (s * 0.12).clamp(1.5, 4.0), paint);
+              Offset(s * 0.75, s * 0.22), (s * 0.12).clamp(1.5, 4.0), _paint);
           break;
         case 'bubbles':
-          paint
+          _paint
             ..color =
                 (isDark ? const Color(0xFFB3E5FC) : const Color(0xFFFFFFFF))
                     .withValues(alpha: item.opacity * 0.55)
             ..style = PaintingStyle.stroke
             ..strokeWidth = (s * 0.08).clamp(1.0, 2.5);
-          canvas.drawCircle(Offset.zero, s * 0.35, paint);
-          paint
+          canvas.drawCircle(Offset.zero, s * 0.35, _paint);
+          _paint
             ..color =
                 (isDark ? const Color(0xFFE1F5FE) : const Color(0xFFFFFFFF))
                     .withValues(alpha: item.opacity * 0.35)
             ..style = PaintingStyle.fill;
-          canvas.drawCircle(Offset(-s * 0.12, -s * 0.12), s * 0.12, paint);
+          canvas.drawCircle(Offset(-s * 0.12, -s * 0.12), s * 0.12, _paint);
           break;
         case 'leaves':
-          paint
+          _paint
             ..color = const Color(0xFFE65100).withValues(alpha: item.opacity)
             ..style = PaintingStyle.fill;
-          final path = Path()
+          _reusablePath.reset();
+          _reusablePath
             ..moveTo(0, -s * 0.5)
             ..quadraticBezierTo(s * 0.4, -s * 0.2, s * 0.3, s * 0.2)
             ..quadraticBezierTo(s * 0.1, s * 0.4, 0, s * 0.5)
             ..quadraticBezierTo(-s * 0.1, s * 0.4, -s * 0.3, s * 0.2)
             ..quadraticBezierTo(-s * 0.4, -s * 0.2, 0, -s * 0.5);
-          canvas.drawPath(path, paint);
+          canvas.drawPath(_reusablePath, _paint);
           break;
         case 'stars':
-          paint
+          _paint
             ..color = const Color(0xFFFFD54F).withValues(alpha: item.opacity)
             ..style = PaintingStyle.fill;
-          _drawStar(canvas, paint, s);
+          _drawStar(canvas, _paint, s);
           break;
         case 'snow':
-          paint
+          _paint
             ..color = Colors.white.withValues(alpha: item.opacity)
             ..style = PaintingStyle.fill;
-          canvas.drawCircle(Offset.zero, s * 0.2, paint);
+          canvas.drawCircle(Offset.zero, s * 0.2, _paint);
           break;
         case 'hearts':
         default:
-          paint
+          _paint
             ..color =
                 (isDark ? const Color(0xFFFF7AA2) : const Color(0xFFFF4D73))
                     .withValues(alpha: item.opacity)
             ..style = PaintingStyle.fill;
-          final path = Path()
+          _reusablePath.reset();
+          _reusablePath
             ..moveTo(0, s * 0.35)
             ..cubicTo(0, s * 0.1, -s * 0.45, 0, -s * 0.45, s * 0.35)
             ..cubicTo(-s * 0.45, s * 0.6, 0, s * 0.9, 0, s)
             ..cubicTo(0, s * 0.9, s * 0.45, s * 0.6, s * 0.45, s * 0.35)
             ..cubicTo(s * 0.45, 0, 0, s * 0.1, 0, s * 0.35);
-          canvas.drawPath(path, paint);
+          canvas.drawPath(_reusablePath, _paint);
           break;
       }
 
@@ -541,39 +551,39 @@ class _FallingPainter extends CustomPainter {
   void _drawSparkle(Canvas canvas, Paint paint, double s) {
     final outer = s * 0.35;
     final inner = s * 0.14;
-    final path = Path();
+    _reusablePath.reset();
     for (int i = 0; i < 8; i++) {
       final angle = (i * 3.1415926535) / 4;
       final r = i.isEven ? outer : inner;
       final x = r * cos(angle);
       final y = r * sin(angle);
       if (i == 0) {
-        path.moveTo(x, y);
+        _reusablePath.moveTo(x, y);
       } else {
-        path.lineTo(x, y);
+        _reusablePath.lineTo(x, y);
       }
     }
-    path.close();
-    canvas.drawPath(path, paint);
+    _reusablePath.close();
+    canvas.drawPath(_reusablePath, paint);
   }
 
   void _drawStar(Canvas canvas, Paint paint, double s) {
     final outer = s * 0.4;
     final inner = s * 0.15;
-    final path = Path();
+    _reusablePath.reset();
     for (int i = 0; i < 10; i++) {
       final angle = (i * 3.1415926535) / 5 - (3.1415926535 / 2);
       final r = i.isEven ? outer : inner;
       final x = r * cos(angle);
       final y = r * sin(angle);
       if (i == 0) {
-        path.moveTo(x, y);
+        _reusablePath.moveTo(x, y);
       } else {
-        path.lineTo(x, y);
+        _reusablePath.lineTo(x, y);
       }
     }
-    path.close();
-    canvas.drawPath(path, paint);
+    _reusablePath.close();
+    canvas.drawPath(_reusablePath, paint);
   }
 
   @override

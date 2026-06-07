@@ -1132,6 +1132,37 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       );
     }
 
+    final targetOpeningCells = 40 + _random.nextInt(5);
+    var filledCells = 0;
+    for (var row = 0; row < _boardSize; row++) {
+      for (var col = 0; col < _boardSize; col++) {
+        if (board[row][col] != null) filledCells++;
+      }
+    }
+
+    var guard = 0;
+    while (filledCells < targetOpeningCells && guard < 240) {
+      guard++;
+      final row = _random.nextInt(_boardSize);
+      final col = _random.nextInt(_boardSize);
+      if (board[row][col] != null) continue;
+
+      var rowCount = 0;
+      var colCount = 0;
+      for (var i = 0; i < _boardSize; i++) {
+        if (board[row][i] != null) rowCount++;
+        if (board[i][col] != null) colCount++;
+      }
+      if (rowCount >= _boardSize - 1 || colCount >= _boardSize - 1) continue;
+
+      board[row][col] = _SoulTile(
+        toneIndex: (row + col) % _kSoulTones.length,
+        pieceId: -100 - filledCells,
+        placedTurn: 0,
+      );
+      filledCells++;
+    }
+
     return board;
   }
 
@@ -1589,7 +1620,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       );
     }
     */
-    if (clearedNow >= 2) {
+    if (clearedNow > 0 && (clearedNow >= 1 || nextStreak.isEven)) {
       _triggerMemoryBurstReward(
         clearedCount: clearedNow,
         streakCount: nextStreak,

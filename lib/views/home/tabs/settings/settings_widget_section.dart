@@ -106,9 +106,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F6FB),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE1E8F0)),
+        color: const Color(0xFFF0F4F8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFDDE4ED), width: 1),
       ),
       child: Row(
         children: items.map((item) {
@@ -118,21 +118,28 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             child: GestureDetector(
               onTap: () => unawaited(_handleWidgetPanelTabChanged(item.$1)),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+                duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOut,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8,
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(14),
+                  gradient: isSelected
+                      ? const LinearGradient(
+                          colors: [Color(0xFFFF5E92), Color(0xFFFF8AB8)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: isSelected ? null : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF101828).withValues(alpha: 0.08),
-                            blurRadius: 12,
-                            offset: const Offset(0, 5),
+                            color: const Color(0xFFFF5E92).withValues(alpha: 0.28),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
                         ]
                       : const [],
@@ -144,8 +151,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                       item.$3,
                       size: 18,
                       color: isSelected
-                          ? const Color(0xFF1F2A37)
-                          : const Color(0xFF64748B),
+                          ? Colors.white
+                          : const Color(0xFF94A3B8),
                     ),
                     const SizedBox(height: 5),
                     Text(
@@ -155,8 +162,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                         fontSize: 11.8,
                         fontWeight: FontWeight.w900,
                         color: isSelected
-                            ? const Color(0xFF1F2A37)
-                            : const Color(0xFF64748B),
+                            ? Colors.white
+                            : const Color(0xFF94A3B8),
                       ),
                     ),
                   ],
@@ -315,17 +322,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     Color(0xFFFF9A9E),
                     Color(0xFFFECF6A),
                   ],
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildThemeDropdownField(
-                        value: _draftWidgetThemeKey ?? 'pink',
-                        options: config.themeOptions,
-                        onChanged: (value) async =>
-                            _handleWidgetThemeChanged(value),
-                      ),
-                    ],
-                  ),
+                  child: _buildWidgetThemeSwatchGrid(config),
                 ),
               if (_widgetStyleKey == WidgetService.defaultWidgetStyleKey) ...[
                 const SizedBox(height: 12),
@@ -532,6 +529,116 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           ),
         ),
       ),
+    );
+  }
+
+  /// Color swatch grid for widget background theme selection.
+  Widget _buildWidgetThemeSwatchGrid(_WidgetPanelConfig config) {
+    // Map themeKey -> (gradient colors, label)
+    final swatches = <(String, List<Color>, String)>[
+      ('pink',    [const Color(0xFFFFB6CA), const Color(0xFFFF7098)], config.themeOptions.firstWhere((o) => o.$2 == 'pink', orElse: () => ('Hồng', 'pink')).$1),
+      ('white',   [const Color(0xFFF8F8F8), const Color(0xFFE8EDF5)], config.themeOptions.firstWhere((o) => o.$2 == 'white', orElse: () => ('Trắng', 'white')).$1),
+      ('dark',    [const Color(0xFF3A3A4A), const Color(0xFF1C1C2E)], config.themeOptions.firstWhere((o) => o.$2 == 'dark', orElse: () => ('Tối', 'dark')).$1),
+      ('blue',    [const Color(0xFF90CAF9), const Color(0xFF1565C0)], config.themeOptions.firstWhere((o) => o.$2 == 'blue', orElse: () => ('Xanh lam', 'blue')).$1),
+      ('orange',  [const Color(0xFFFFCC80), const Color(0xFFEF6C00)], config.themeOptions.firstWhere((o) => o.$2 == 'orange', orElse: () => ('Cam', 'orange')).$1),
+      ('purple',  [const Color(0xFFCE93D8), const Color(0xFF6A1B9A)], config.themeOptions.firstWhere((o) => o.$2 == 'purple', orElse: () => ('Tím', 'purple')).$1),
+      ('green',   [const Color(0xFFA5D6A7), const Color(0xFF2E7D32)], config.themeOptions.firstWhere((o) => o.$2 == 'green', orElse: () => ('Xanh lá', 'green')).$1),
+      ('red',     [const Color(0xFFEF9A9A), const Color(0xFFB71C1C)], config.themeOptions.firstWhere((o) => o.$2 == 'red', orElse: () => ('Đỏ', 'red')).$1),
+    ];
+
+    final currentKey = _draftWidgetThemeKey ?? 'pink';
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: swatches.map((swatch) {
+        final key = swatch.$1;
+        final colors = swatch.$2;
+        final label = swatch.$3;
+        final isSelected = currentKey == key;
+
+        return GestureDetector(
+          onTap: () async => _handleWidgetThemeChanged(key),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            width: 74,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSelected
+                    ? colors.last.withValues(alpha: 0.85)
+                    : const Color(0xFFE0E7EF),
+                width: isSelected ? 2.0 : 1.2,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: colors.first.withValues(alpha: 0.32),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(13),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Color preview area
+                  Container(
+                    height: 46,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: colors,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: isSelected
+                        ? Center(
+                            child: Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.check_rounded,
+                                size: 14,
+                                color: colors.last,
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                  // Label area
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 5,
+                    ),
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        fontSize: 10.4,
+                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                        color: isSelected ? colors.last : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

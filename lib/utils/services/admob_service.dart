@@ -515,6 +515,7 @@ class AdMobService {
       onAdShowedFullScreenContent: (ad) async {
         _lastFullscreenAdShownMs = DateTime.now().millisecondsSinceEpoch;
         await _incrementAppOpenShownCount();
+        _sendAdImpressionPing('app_open', appOpenId);
         if (!completer.isCompleted) completer.complete(true);
       },
       onAdDismissedFullScreenContent: (ad) {
@@ -696,6 +697,7 @@ class AdMobService {
         debugPrint('AdMobService: rewarded showed.');
         _lastRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
         _lastFullscreenAdShownMs = _lastRewardedShownMs;
+        _sendAdImpressionPing('rewarded', rewardedMainId);
       },
       onAdDismissedFullScreenContent: (ad) {
         debugPrint('AdMobService: rewarded dismissed.');
@@ -779,6 +781,7 @@ class AdMobService {
       onAdShowedFullScreenContent: (ad) {
         _lastRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
         _lastFullscreenAdShownMs = _lastRewardedShownMs;
+        _sendAdImpressionPing('rewarded', rewardedSoulGameId);
       },
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
@@ -840,6 +843,7 @@ class AdMobService {
       listener: BannerAdListener(
         onAdLoaded: (ad) {
           onAdLoaded(ad);
+          _sendAdImpressionPing('banner', bannerId);
           if (!completer.isCompleted) {
             completer.complete(banner);
           }
@@ -914,6 +918,7 @@ class AdMobService {
     _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         _lastFullscreenAdShownMs = DateTime.now().millisecondsSinceEpoch;
+        _sendAdImpressionPing('interstitial', interstitialId);
       },
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
@@ -1476,5 +1481,39 @@ class AdMobService {
       },
     );
     return RewardClaimResult.fromResponse(response);
+  }
+
+  // ─── AD IMPRESSION PING ────────────────────────────────────────
+
+  /// Gui ping len server xac nhan da show quang cao thanh cong.
+  /// Giup server phat hien neu user tat quang cao bang cach patch client.
+  Future<void> _sendAdImpressionPing(String adType, String adUnit) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      if (await isProUser()) return; // Khong can ping neu la PRO
+
+      final endpoint = AppConfig.adImpressionPingUrl.trim();
+      if (endpoint.isEmpty) return;
+
+      final houseId = await _houseService.getCurrentHouseId();
+
+      final payload = <String, dynamic>{
+        'adType': adType,
+        'adUnit': adUnit,
+        'clientNonce': _buildRewardProofNonce(), // Dung lai ham nonce co san
+        'clientIssuedAtMs': DateTime.now().millisecondsSinceEpoch,
+        if (houseId != null && houseId.isNotEmpty) 'houseId': houseId,
+      };
+
+      // Gui ping bat dong bo, khong block luong chinh
+      unawaited(_postAuthenticatedJson(
+        endpoint,
+        payload,
+        requireAppCheck: false,
+      ));
+    } catch (_) {
+      // Ping loi khong anh huong den trai nghiem nguoi dung
+    }
   }
 }

@@ -91,8 +91,11 @@ jobs:
           DOMAIN_WEB="${IOS_ASSOCIATED_DOMAIN_WEB:-applinks:soullockket.web.app}"
           DOMAIN_AUTH="${IOS_ASSOCIATED_DOMAIN_AUTH:-applinks:soullockket.firebaseapp.com}"
           EXPORT_METHOD="${IOS_EXPORT_METHOD:-app-store}"
-          BUILD_NAME="${IOS_BUILD_NAME_INPUT:-}"
-          BUILD_NUMBER="${IOS_BUILD_NUMBER_INPUT:-52}"
+          # fallback: đọc version từ pubspec.yaml nếu không truyền input
+          PUBSPEC_VERSION=$(grep -m1 '^version:' pubspec.yaml | sed 's/version: *//' | cut -d'+' -f1 | tr -d '[:space:]')
+          PUBSPEC_NUMBER=$(grep -m1 '^version:' pubspec.yaml | sed 's/version: *//' | cut -d'+' -f2 | tr -d '[:space:]')
+          BUILD_NAME="${IOS_BUILD_NAME_INPUT:-${PUBSPEC_VERSION}}"
+          BUILD_NUMBER="${IOS_BUILD_NUMBER_INPUT:-${PUBSPEC_NUMBER:-52}}"
           export APP_BUNDLE_ID WIDGET_BUNDLE_ID RUNNER_TESTS_BUNDLE_ID APP_GROUP_ID DOMAIN_WEB DOMAIN_AUTH
 
           cat > ios/Flutter/AppConfig.local.xcconfig <<EOF

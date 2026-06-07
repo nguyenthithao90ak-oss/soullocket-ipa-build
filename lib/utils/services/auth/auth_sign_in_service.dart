@@ -1426,13 +1426,14 @@ class AuthSignInService {
       );
     }
 
-    if (houseId != null && houseId.isNotEmpty) {
-      final isBlocked = await DeviceManagerService().isCurrentDeviceBlocked();
-      if (isBlocked) {
-        await signOut();
-        throw 'Thiết bị này đã bị chặn truy cập vĩnh viễn.';
-      }
-    }
+    // 🔓 DISABLED: Bỏ kiểm tra chặn thiết bị để cho phép đăng nhập trên mọi thiết bị
+    // if (houseId != null && houseId.isNotEmpty) {
+    //   final isBlocked = await DeviceManagerService().isCurrentDeviceBlocked();
+    //   if (isBlocked) {
+    //     await signOut();
+    //     throw 'Thiết bị này đã bị chặn truy cập vĩnh viễn.';
+    //   }
+    // }
 
     unawaited(
       CriticalDataSyncService().syncCurrentUserData(

@@ -161,6 +161,38 @@ class _CountdownModeEditorScreenState
   bool _isUploadingBackground = false;
   bool _isUnlockingCountdownStyle = false;
   bool _didPromptPendingUploadRetry = false;
+  Set<String> _unlockedStyles = {};
+
+  Future<void> _loadUnlockedStyles() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final loaded = <String>{};
+    for (final styleKey in _CountdownModeIndependentScreenState._premiumCountdownStyleKeys) {
+      final expiryKey = 'il_countdown_style_unlock_expiry_$styleKey';
+      final expiry = prefs.getInt(expiryKey) ?? 0;
+      if (expiry > now) {
+        loaded.add(styleKey);
+      }
+    }
+    // Migration: legacy global unlocks
+    final legacyExpiry = prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
+    if (legacyExpiry > now) {
+      loaded.addAll(_CountdownModeIndependentScreenState._premiumCountdownStyleKeys);
+    } else {
+      final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
+      if (legacyTs > 0) {
+        final fallbackExpiry = legacyTs + const Duration(days: 7).inMilliseconds;
+        if (fallbackExpiry > now) {
+          loaded.addAll(_CountdownModeIndependentScreenState._premiumCountdownStyleKeys);
+        }
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _unlockedStyles = loaded;
+      });
+    }
+  }
 
   static List<MapEntry<String, String>> get _themeOptions =>
       _CountdownModeIndependentScreenState._themeOptions;
@@ -201,6 +233,8 @@ class _CountdownModeEditorScreenState
         _normalizeCountdownModeCenterIconType(widget.centerIconType);
     _transparentMode = widget.transparentMode;
     _sizePx = widget.sizePx.clamp(200.0, UiPrefs.maxCountdownSizePx).toDouble();
+    _unlockedStyles = {};
+    _loadUnlockedStyles();
     unawaited(_promptPendingUploadRetryIfNeeded());
   }
 
@@ -394,12 +428,7 @@ class _CountdownModeEditorScreenState
       return;
     }
 
-    final hasUnlock =
-        await _CountdownModeIndependentScreenState._hasCountdownStyleAdUnlock();
-    if (!mounted) {
-      return;
-    }
-    if (hasUnlock) {
+    if (_unlockedStyles.contains(normalized)) {
       setState(() => _styleKey = normalized);
       return;
     }
@@ -417,12 +446,21 @@ class _CountdownModeEditorScreenState
         _showMessage(context.tr('home_cnxemqungc_fe69b5'));
         return;
       }
-      await _CountdownModeIndependentScreenState._saveCountdownStyleAdUnlock();
+      final prefs = await SharedPreferences.getInstance();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final expiry = now + const Duration(days: 7).inMilliseconds;
+      final expiryKey = 'il_countdown_style_unlock_expiry_$normalized';
+      await prefs.setInt(expiryKey, expiry);
+      await prefs.setInt('il_last_any_rewarded_ad_ts', now);
+
       if (!mounted) {
         return;
       }
-      setState(() => _styleKey = normalized);
-      _showMessage(context.tr('home_mthmcckiuv_ad0e3f'));
+      setState(() {
+        _unlockedStyles = {..._unlockedStyles, normalized};
+        _styleKey = normalized;
+      });
+      _showMessage('Đã mở khóa "${_countdownStyleOptions.firstWhere((e) => e.value == normalized).key}" trong 7 ngày!');
     } finally {
       if (mounted) {
         setState(() => _isUnlockingCountdownStyle = false);
@@ -1169,7 +1207,8 @@ class _CountdownModeEditorScreenState
                                         _CountdownModeIndependentScreenState
                                             ._isPremiumCountdownStyleKey(
                                           entry.value,
-                                        );
+                                        ) &&
+                                        !_unlockedStyles.contains(entry.value);
                                     return MapEntry(
                                       locked
                                           ? '${entry.key} • Quảng cáo'

@@ -559,6 +559,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   Timer? _settingsSyncBannerDelayTimer;
   Timer? _settingsSyncBannerHideTimer;
   final ValueNotifier<int> _widgetPreviewTickNotifier = ValueNotifier<int>(0);
+  double? _localCountdownSize;
   final List<String> _securityQuestions = [
     L10nService().translate('home_ngysinhcab_82062b'),
     L10nService().translate('home_convtutinb_658f22'),
@@ -791,6 +792,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
     // ⚡ Save any pending theme settings before dispose
     _saveThemeSettings(silent: true).ignore();
+
+    _localCountdownSize = null;
 
     _panelRebuildNotifier.dispose();
     _widgetPreviewTickNotifier.dispose();
