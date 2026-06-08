@@ -6,7 +6,6 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-
 import '../../core/constants/app_config.dart';
 import '../../utils/app_error_mapper.dart';
 import '../app_check_http_headers.dart';
@@ -198,7 +197,8 @@ class PlayIntegrityService {
       MethodChannel('soul_locket/play_integrity');
   static const String _prepareMethod = 'prepareIntegrityToken';
   static const String _requestMethod = 'requestIntegrityToken';
-  static const Duration _requestTimeout = Duration(seconds: 20);
+  static const Duration _requestTimeout = Duration(seconds: 4);
+  static const Duration _warmUpTimeout = Duration(seconds: 4);
   static const Duration _serverTimeout = Duration(seconds: 20);
 
   final firebase_auth.FirebaseAuth? _firebaseAuth;
@@ -223,11 +223,15 @@ class PlayIntegrityService {
         <String, Object?>{
           'cloudProjectNumber': AppConfig.playIntegrityCloudProjectNumber,
         },
-      );
+      ).timeout(_warmUpTimeout);
       _prepared = true;
       return true;
     } on MissingPluginException {
       _prepared = false;
+      return false;
+    } on TimeoutException {
+      _prepared = false;
+      debugPrint('PlayIntegrity warmUp timed out.');
       return false;
     } on PlatformException catch (error) {
       _prepared = false;

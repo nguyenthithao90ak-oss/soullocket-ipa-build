@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:firebase_database/firebase_database.dart';
 import '../core/constants/app_config.dart';
@@ -420,6 +422,7 @@ class FriendsService {
   }
 
   /// Stream danh sách lời mời (đến & đi)
+  /// Dùng 2 query có index thay vì quét toàn bộ friend_requests
   Stream<FriendRequestsData> streamFriendRequests(String houseId) {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) {
@@ -427,30 +430,77 @@ class FriendsService {
         FriendRequestsData(sent: {}, received: {}),
       );
     }
-    return _db
+
+    // Query 1: lời mời mình ĐÃ GỬI (from == me)
+    final sentStream = _db
         .ref('friend_requests')
-        .orderByChild('status')
-        .equalTo('pending')
-        .onValue
-        .map((event) {
+        .orderByChild('from')
+        .equalTo(normalizedHouseId)
+        .onValue;
+
+    // Query 2: lời mời mình NHẬN (to == me)
+    final receivedStream = _db
+        .ref('friend_requests')
+        .orderByChild('to')
+        .equalTo(normalizedHouseId)
+        .onValue;
+
+    // Gộp 2 stream lại thành 1
+    FriendRequestsData sentCache = FriendRequestsData(sent: {}, received: {});
+    FriendRequestsData receivedCache =
+        FriendRequestsData(sent: {}, received: {});
+
+    late StreamController<FriendRequestsData> controller;
+
+    void emit() {
+      if (controller.isClosed) return;
+      controller.add(FriendRequestsData(
+        sent: {...sentCache.sent},
+        received: {...receivedCache.received},
+      ));
+    }
+
+    controller = StreamController<FriendRequestsData>.broadcast();
+
+    sentStream.listen((event) {
       final data = FriendRequestsData(sent: {}, received: {});
       final raw = event.snapshot.value;
-      if (!event.snapshot.exists || raw is! Map) return data;
+      if (event.snapshot.exists && raw is Map) {
+        final map = Map<dynamic, dynamic>.from(raw);
+        map.forEach((key, value) {
+          if (value is! Map) return;
+          final req = Map<String, dynamic>.from(value);
+          final to = req['to']?.toString().trim() ?? '';
+          final status = req['status']?.toString() ?? '';
+          if (to.isNotEmpty && status == 'pending') {
+            data.sent[to] = key.toString();
+          }
+        });
+      }
+      sentCache = data;
+      emit();
+    });
 
-      final map = Map<dynamic, dynamic>.from(raw);
-      map.forEach((key, value) {
-        if (value is! Map) return;
-        final req = Map<String, dynamic>.from(value);
-        final from = req['from']?.toString().trim() ?? '';
-        final to = req['to']?.toString().trim() ?? '';
-        if (from == normalizedHouseId && to.isNotEmpty) {
-          data.sent[to] = key.toString();
-        } else if (to == normalizedHouseId && from.isNotEmpty) {
-          data.received[from] = key.toString();
-        }
-      });
-      return data;
-    }).asBroadcastStream();
+    receivedStream.listen((event) {
+      final data = FriendRequestsData(sent: {}, received: {});
+      final raw = event.snapshot.value;
+      if (event.snapshot.exists && raw is Map) {
+        final map = Map<dynamic, dynamic>.from(raw);
+        map.forEach((key, value) {
+          if (value is! Map) return;
+          final req = Map<String, dynamic>.from(value);
+          final from = req['from']?.toString().trim() ?? '';
+          final status = req['status']?.toString() ?? '';
+          if (from.isNotEmpty && status == 'pending') {
+            data.received[from] = key.toString();
+          }
+        });
+      }
+      receivedCache = data;
+      emit();
+    });
+
+    return controller.stream;
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -563,13 +613,12 @@ class FriendsService {
   // 6. TÌM KIẾM
   // ─────────────────────────────────────────────────────────────
 
+  /// Tìm kiếm nhà (house) theo tên / username / mã nhà.
+  /// ⚡ BANDWIDTH FIX: dùng houses_public thay vì houses để tránh
+  ///    tải toàn bộ dữ liệu riêng tư (diary, chat, settings, …)
   Future<List<Map<String, dynamic>>> searchHouses(String query,
       {int limit = 50}) async {
     final effectiveLimit = limit < 1 ? 1 : limit;
-    final snap = await _db.ref('houses').get();
-    final rawValue = snap.value;
-    if (!snap.exists || rawValue is! Map) return [];
-    final raw = Map<dynamic, dynamic>.from(rawValue);
 
     // Extract ID or Username from URL if user pastes a link
     String q = query.toLowerCase().trim();
@@ -589,12 +638,19 @@ class FriendsService {
       }
     }
 
+    // ⚡ Dùng houses_public (chỉ chứa metadata công khai, nhỏ hơn nhiều)
+    final snap = await _db.ref('houses_public').get();
+    final rawValue = snap.value;
+    if (!snap.exists || rawValue is! Map) return [];
+    final raw = Map<dynamic, dynamic>.from(rawValue);
+
     final exactMatches = <Map<String, dynamic>>[];
     final partialMatches = <Map<String, dynamic>>[];
     final suggestions = <Map<String, dynamic>>[];
 
     raw.forEach((hid, data) {
       if (data is! Map) return;
+      // houses_public/<houseId>/settings/...
       final settings = data['settings'];
 
       // Kiểm tra cài đặt bảo mật: Có cho phép tìm kiếm không?
@@ -602,10 +658,22 @@ class FriendsService {
           settings is Map ? (settings['searchPrivacy'] != false) : true;
       if (!searchPrivacy) return;
 
-      final name =
-          (settings is Map ? settings['houseName']?.toString() : null) ?? '';
-      final username =
-          (settings is Map ? settings['username']?.toString() : null) ?? '';
+      // Thử lấy houseName từ settings trước, fallback về top-level
+      final name = (settings is Map
+              ? settings['houseName']?.toString()
+              : null) ??
+          data['houseName']?.toString() ??
+          '';
+      final username = (settings is Map
+              ? settings['username']?.toString()
+              : null) ??
+          data['username']?.toString() ??
+          '';
+      final houseAvatar = (settings is Map
+              ? settings['houseAvatar']?.toString()
+              : null) ??
+          data['houseAvatar']?.toString() ??
+          data['avatar']?.toString();
       final houseIdStr = hid.toString().toLowerCase();
 
       final nameLower = name.toLowerCase();
@@ -616,7 +684,7 @@ class FriendsService {
           'id': hid.toString(),
           'houseName': name.isEmpty ? hid.toString() : name,
           'username': username,
-          'houseAvatar': settings is Map ? settings['houseAvatar'] : null,
+          'houseAvatar': houseAvatar,
           'matchScore':
               (username.isNotEmpty ? 30 : 0) + (name.isNotEmpty ? 20 : 0),
         });
@@ -629,7 +697,7 @@ class FriendsService {
           'id': hid.toString(),
           'houseName': name,
           'username': username,
-          'houseAvatar': settings is Map ? settings['houseAvatar'] : null,
+          'houseAvatar': houseAvatar,
           'matchScore': 100,
         });
         return;
@@ -643,7 +711,7 @@ class FriendsService {
           'id': hid.toString(),
           'houseName': name,
           'username': username,
-          'houseAvatar': settings is Map ? settings['houseAvatar'] : null,
+          'houseAvatar': houseAvatar,
           'matchScore':
               nameLower.startsWith(q) || usernameLower.startsWith(q) ? 50 : 10,
         });

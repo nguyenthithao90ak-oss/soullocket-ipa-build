@@ -61,7 +61,18 @@ class StorageManagedUploadHelper {
         fallback: 'image/webp',
       );
 
-      if (!kIsWeb && request.file.path.isNotEmpty && fileExtension != '.gif') {
+      final isHeic = fileExtension == '.heic' || fileExtension == '.heif';
+      bool shouldCompress = !kIsWeb && request.file.path.isNotEmpty && fileExtension != '.gif';
+      if (shouldCompress && !isHeic) {
+        try {
+          final fileLength = await request.file.length();
+          if (fileLength <= 200 * 1024) {
+            shouldCompress = false;
+          }
+        } catch (_) {}
+      }
+
+      if (shouldCompress) {
         try {
           final tempDir = await getTemporaryDirectory();
           tempCompressedPath = p.join(
@@ -91,6 +102,34 @@ class StorageManagedUploadHelper {
             fallbackMessage: 'Không thể nén ảnh WebP.',
           ).message}');
           tempCompressedPath = null;
+
+          if (isHeic) {
+            try {
+              final tempDir = await getTemporaryDirectory();
+              tempCompressedPath = p.join(
+                tempDir.path,
+                'sl_upload_fallback_${nowMs}_${DateTime.now().microsecondsSinceEpoch}.jpg',
+              );
+              final compressedFile = await FlutterImageCompress.compressAndGetFile(
+                request.file.path,
+                tempCompressedPath,
+                minWidth: request.minWidth,
+                minHeight: request.minHeight,
+                quality: request.quality,
+                format: CompressFormat.jpeg,
+              );
+              if (compressedFile != null) {
+                uploadFile = compressedFile;
+                fileExtension = '.jpg';
+                finalContentType = 'image/jpeg';
+              } else {
+                tempCompressedPath = null;
+              }
+            } catch (fallbackError) {
+              debugPrint('Lỗi khi nén fallback sang JPEG cho ảnh HEIC: $fallbackError');
+              tempCompressedPath = null;
+            }
+          }
         }
       }
 

@@ -1,3 +1,5 @@
 #include "Generated.xcconfig"
 #include "AppConfig.xcconfig"
+APP_ATTEST_ENVIRONMENT = production
+APS_ENVIRONMENT = production
 #include? "AppConfig.local.xcconfig"

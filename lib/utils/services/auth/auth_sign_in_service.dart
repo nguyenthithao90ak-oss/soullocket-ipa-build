@@ -233,7 +233,7 @@ class AuthSignInService {
       final callable = _functions.httpsCallable('resolveLoginEmailAlias');
       final result = await callable.call(<String, dynamic>{
         'email': normalizedEmail,
-      });
+      }).timeout(const Duration(seconds: 8));
       final payload = _asStringDynamicMap(result.data);
       final resolvedEmail =
           (payload['email'] ?? '').toString().trim().toLowerCase();
@@ -1303,7 +1303,7 @@ class AuthSignInService {
 
   Future<void> _ensureUserProfileExists(firebase_auth.User user) async {
     final userRef = _db.child('users/${user.uid}');
-    final existingSnap = await userRef.get();
+    final existingSnap = await userRef.get().timeout(const Duration(seconds: 5));
 
     final payload = <String, dynamic>{
       'uid': user.uid,
@@ -1320,7 +1320,7 @@ class AuthSignInService {
       payload['createdAt'] = ServerValue.timestamp;
     }
 
-    await userRef.update(payload);
+    await userRef.update(payload).timeout(const Duration(seconds: 5));
   }
 
   Future<void> _finalizeAuthenticatedSession(
@@ -1342,7 +1342,10 @@ class AuthSignInService {
 
     await _ensureUserProfileExists(user);
 
-    final userSnap = await _db.child('users/${user.uid}/houseId').get();
+    final userSnap = await _db.child('users/${user.uid}/houseId').get().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => throw TimeoutException('Lấy houseId bị quá thời gian.'),
+        );
     final rawHouseId = userSnap.value?.toString().trim();
     final houseId =
         (rawHouseId == null || rawHouseId.isEmpty) ? null : rawHouseId;
@@ -1375,7 +1378,9 @@ class AuthSignInService {
 
     if (houseId != null && houseId.isNotEmpty) {
       try {
-        final settingsSnap = await _db.child('houses/$houseId/settings').get();
+        final settingsSnap = await _db.child('houses/$houseId/settings').get().timeout(
+              const Duration(seconds: 5),
+            );
         if (settingsSnap.exists) {
           final settings = settingsSnap.value is Map
               ? _asStringDynamicMap(settingsSnap.value)

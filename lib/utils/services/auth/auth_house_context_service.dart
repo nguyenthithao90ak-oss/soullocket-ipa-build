@@ -178,7 +178,9 @@ class AuthHouseContextService {
     if (currentIp != null) {
       try {
         final cleanIp = currentIp.replaceAll('.', '_');
-        final bannedSnap = await _db.child('banned_ips/$cleanIp').get();
+        final bannedSnap = await _db.child('banned_ips/$cleanIp').get().timeout(
+              const Duration(seconds: 4),
+            );
         if (bannedSnap.exists) {
           await onForcedSignOut();
           throw 'IP của bạn đã bị hệ thống chặn truy cập vĩnh viễn.';
@@ -194,7 +196,9 @@ class AuthHouseContextService {
         if (deviceId != null) {
           final securitySnapshot = await _db
               .child('houses/$houseId/security/devices/$deviceId')
-              .get();
+              .get().timeout(
+                const Duration(seconds: 4),
+              );
           if (securitySnapshot.exists) {
             final data = _asStringDynamicMap(securitySnapshot.value);
             if (data != null) {
@@ -228,7 +232,9 @@ class AuthHouseContextService {
 
     try {
       final houseSettingsSnap =
-          await _db.child('houses/$houseId/settings').get();
+          await _db.child('houses/$houseId/settings').get().timeout(
+                const Duration(seconds: 4),
+              );
       if (!houseSettingsSnap.exists) return 'user1';
       final settings = _asStringDynamicMap(houseSettingsSnap.value);
 
@@ -236,7 +242,9 @@ class AuthHouseContextService {
         return 'user1';
       }
 
-      final presenceSnap = await _db.child('houses/$houseId/presence').get();
+      final presenceSnap = await _db.child('houses/$houseId/presence').get().timeout(
+            const Duration(seconds: 4),
+          );
       final presence = _asStringDynamicMap(presenceSnap.value);
       if (presence != null) {
         final u1Map = _asStringDynamicMap(presence['user1']);
@@ -306,7 +314,9 @@ class AuthHouseContextService {
 
     try {
       final primarySnap =
-          await _db.child('users/${resolvedUser.uid}/houseId').get();
+          await _db.child('users/${resolvedUser.uid}/houseId').get().timeout(
+                const Duration(seconds: 4),
+              );
       final primaryValue = primarySnap.value?.toString().trim() ?? '';
       if (primaryValue.isNotEmpty) {
         await prefs.setString('il_house_id', primaryValue);
@@ -317,7 +327,9 @@ class AuthHouseContextService {
 
     try {
       final legacySnap =
-          await _db.child('users/${resolvedUser.uid}/house_id').get();
+          await _db.child('users/${resolvedUser.uid}/house_id').get().timeout(
+                const Duration(seconds: 4),
+              );
       final legacyValue = legacySnap.value?.toString().trim() ?? '';
       if (legacyValue.isNotEmpty) {
         await _db
@@ -363,7 +375,7 @@ class AuthHouseContextService {
           publicMeta['recovery_ready'];
     }
 
-    await _db.update(updates);
+    await _db.update(updates).timeout(const Duration(seconds: 5));
   }
 
   String _resolveProviderEmail(

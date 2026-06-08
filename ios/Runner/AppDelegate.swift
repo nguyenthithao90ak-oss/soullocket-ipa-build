@@ -1,10 +1,14 @@
 import Flutter
 import UIKit
+#if canImport(ActivityKit)
+import ActivityKit
+#endif
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
   private let widgetBridgeChannelName = "soullocket/widget_ios_bridge"
   private let bootstrapChannelName = "soul_locket/bootstrap"
+  private let appIconChannelName = "soullocket/app_icon"
 
   override func application(
     _ application: UIApplication,
@@ -46,6 +50,24 @@ import UIKit
           return
         }
         self.handleBootstrap(call: call, result: result)
+      }
+
+      let appIconChannel = FlutterMethodChannel(
+        name: appIconChannelName,
+        binaryMessenger: controller.binaryMessenger
+      )
+      appIconChannel.setMethodCallHandler { [weak self] call, result in
+        guard let self = self else {
+          result(
+            FlutterError(
+              code: "app_icon_unavailable",
+              message: "App icon bridge is unavailable.",
+              details: nil
+            )
+          )
+          return
+        }
+        self.handleAppIcon(call: call, result: result)
       }
     }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -98,10 +120,66 @@ import UIKit
     ]
   }
 
+  private func handleAppIcon(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "setAlternateIconName":
+      setAlternateIconName(call: call, result: result)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private func setAlternateIconName(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any] else {
+      result(
+        FlutterError(
+          code: "invalid_args",
+          message: "setAlternateIconName requires arguments.",
+          details: nil
+        )
+      )
+      return
+    }
+
+    guard UIApplication.shared.supportsAlternateIcons else {
+      result(
+        FlutterError(
+          code: "unsupported",
+          message: "Alternate app icons are not supported on this device.",
+          details: nil
+        )
+      )
+      return
+    }
+
+    let requestedIconName = (args["iconName"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let iconName = (requestedIconName?.isEmpty ?? true) ? nil : requestedIconName
+
+    UIApplication.shared.setAlternateIconName(iconName) { error in
+      if let error = error {
+        result(
+          FlutterError(
+            code: "set_icon_failed",
+            message: "Failed to change alternate app icon.",
+            details: error.localizedDescription
+          )
+        )
+      } else {
+        result(nil)
+      }
+    }
+  }
+
   private func handleWidgetBridge(call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "copyFileToAppGroup":
       copyFileToAppGroup(call: call, result: result)
+    case "startLiveActivity":
+      startLiveActivity(call: call, result: result)
+    case "updateLiveActivity":
+      updateLiveActivity(call: call, result: result)
+    case "endLiveActivity":
+      endLiveActivity(call: call, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -176,7 +254,191 @@ import UIKit
           message: "Failed to copy asset into the App Group container.",
           details: error.localizedDescription
         )
-      )
     }
   }
+
+  private func startLiveActivity(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    #if canImport(ActivityKit)
+    if #available(iOS 16.1, *) {
+      guard let args = call.arguments as? [String: Any],
+            let title = args["title"] as? String,
+            let label = args["label"] as? String,
+            let endTimeMs = args["endTimeMs"] as? Double else {
+        result(
+          FlutterError(
+            code: "invalid_args",
+            message: "startLiveActivity requires title, label, and endTimeMs.",
+            details: nil
+          )
+        )
+        return
+      }
+
+      for activity in Activity<SoulLocketActivityAttributes>.activities {
+        Task {
+          await activity.end(dismissalPolicy: .immediate)
+        }
+      }
+
+      let attributes = SoulLocketActivityAttributes(title: title)
+      let endTime = Date(timeIntervalSince1970: endTimeMs / 1000.0)
+      let initialContentState = SoulLocketActivityAttributes.ContentState(endTime: endTime, label: label)
+
+      do {
+        let activity = try Activity<SoulLocketActivityAttributes>.request(
+          attributes: attributes,
+          contentState: initialContentState,
+          pushType: nil
+        )
+        result(activity.id)
+      } catch {
+        result(
+          FlutterError(
+            code: "start_failed",
+            message: "Failed to start live activity: \(error.localizedDescription)",
+            details: nil
+          )
+        )
+      }
+    } else {
+      result(
+        FlutterError(
+          code: "unsupported",
+          message: "Live Activities require iOS 16.1 or later.",
+          details: nil
+        )
+      )
+    }
+    #else
+    result(
+      FlutterError(
+        code: "unsupported",
+        message: "ActivityKit is not available on this platform compilation.",
+        details: nil
+      )
+    )
+    #endif
+  }
+
+  private func updateLiveActivity(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    #if canImport(ActivityKit)
+    if #available(iOS 16.1, *) {
+      guard let args = call.arguments as? [String: Any],
+            let activityId = args["activityId"] as? String,
+            let label = args["label"] as? String,
+            let endTimeMs = args["endTimeMs"] as? Double else {
+        result(
+          FlutterError(
+            code: "invalid_args",
+            message: "updateLiveActivity requires activityId, label, and endTimeMs.",
+            details: nil
+          )
+        )
+        return
+      }
+
+      let endTime = Date(timeIntervalSince1970: endTimeMs / 1000.0)
+      let contentState = SoulLocketActivityAttributes.ContentState(endTime: endTime, label: label)
+
+      var found = false
+      for activity in Activity<SoulLocketActivityAttributes>.activities {
+        if activity.id == activityId {
+          found = true
+          Task {
+            await activity.update(using: contentState)
+            result(true)
+          }
+          break
+        }
+      }
+      if !found {
+        result(false)
+      }
+    } else {
+      result(
+        FlutterError(
+          code: "unsupported",
+          message: "Live Activities require iOS 16.1 or later.",
+          details: nil
+        )
+      )
+    }
+    #else
+    result(
+      FlutterError(
+        code: "unsupported",
+        message: "ActivityKit is not available on this platform compilation.",
+        details: nil
+      )
+    )
+    #endif
+  }
+
+  private func endLiveActivity(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    #if canImport(ActivityKit)
+    if #available(iOS 16.1, *) {
+      guard let args = call.arguments as? [String: Any],
+            let activityId = args["activityId"] as? String else {
+        result(
+          FlutterError(
+            code: "invalid_args",
+            message: "endLiveActivity requires activityId.",
+            details: nil
+          )
+        )
+        return
+      }
+
+      var found = false
+      for activity in Activity<SoulLocketActivityAttributes>.activities {
+        if activity.id == activityId {
+          found = true
+          Task {
+            await activity.end(dismissalPolicy: .immediate)
+            result(true)
+          }
+          break
+        }
+      }
+      if !found {
+        result(false)
+      }
+    } else {
+      result(
+        FlutterError(
+          code: "unsupported",
+          message: "Live Activities require iOS 16.1 or later.",
+          details: nil
+        )
+      )
+    }
+    #else
+    result(
+      FlutterError(
+        code: "unsupported",
+        message: "ActivityKit is not available on this platform compilation.",
+        details: nil
+      )
+    )
+    #endif
+  }
 }
+
+#if canImport(ActivityKit)
+import ActivityKit
+
+@available(iOS 16.1, *)
+public struct SoulLocketActivityAttributes: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        public var endTime: Date
+        public var label: String
+    }
+
+    public var title: String
+
+    public init(title: String) {
+        self.title = title
+    }
+}
+#endif
+

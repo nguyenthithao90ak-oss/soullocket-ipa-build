@@ -1345,13 +1345,21 @@ class _HomeScreenState extends State<HomeScreen>
             children: [
               Positioned.fill(
                 child: RepaintBoundary(
-                  child: _buildShellBackground(
-                    themeKey: resolvedThemeKey,
-                    tabIndex: 0,
-                    isDark: isDark,
-                    backgroundUrl: uiState.customBackgroundUrl,
-                    graphicsQualityKey: graphicsQualityKey,
-                    animateAmbientEffects: shouldAnimateEffects,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _isUserTabSwipingNotifier,
+                    builder: (context, isSwiping, child) {
+                      return TickerMode(
+                        enabled: !isSwiping,
+                        child: _buildShellBackground(
+                          themeKey: resolvedThemeKey,
+                          tabIndex: 0,
+                          isDark: isDark,
+                          backgroundUrl: uiState.customBackgroundUrl,
+                          graphicsQualityKey: graphicsQualityKey,
+                          animateAmbientEffects: shouldAnimateEffects && !isSwiping,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

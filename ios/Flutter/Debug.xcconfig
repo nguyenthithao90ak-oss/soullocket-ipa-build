@@ -1,3 +1,5 @@
 #include "Generated.xcconfig"
 #include "AppConfig.xcconfig"
+APP_ATTEST_ENVIRONMENT = development
+APS_ENVIRONMENT = development
 #include? "AppConfig.local.xcconfig"
