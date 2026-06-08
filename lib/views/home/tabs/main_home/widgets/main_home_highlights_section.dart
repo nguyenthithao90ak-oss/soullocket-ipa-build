@@ -218,7 +218,7 @@ extension _MainHomeHighlightsSectionExt on _MainHomeTabState {
                             memCacheWidth: imageCacheWidth,
                             imageUrl: item.imageUrl!,
                             fit: BoxFit.cover,
-                            filterQuality: FilterQuality.medium,
+                            filterQuality: FilterQuality.high,
                             placeholder: (_, __) => const DecoratedBox(
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(

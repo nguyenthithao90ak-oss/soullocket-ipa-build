@@ -854,7 +854,7 @@ extension _SettingsTabShell on _SettingsTabState {
         return _buildSectionStack([
           if (!hideVipPanelOnIos)
             _buildVipPanel(hideBackButton: false),
-          _buildIdentityPanel(hideBackButton: hideVipPanelOnIos ? false : true),
+          _buildIdentityPanel(hideBackButton: false),
           _buildLanguagePanel(hideBackButton: true),
         ]);
       case 'security':

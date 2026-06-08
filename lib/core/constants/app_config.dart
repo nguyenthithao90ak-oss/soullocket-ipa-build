@@ -208,21 +208,6 @@ class AppConfig {
     defaultValue:
         'https://us-central1-soullockket.cloudfunctions.net/verifyPlayIntegrityHttp',
   );
-  static const String adImpressionPingUrl = String.fromEnvironment(
-    'AD_IMPRESSION_PING_URL',
-    defaultValue:
-        'https://us-central1-soullockket.cloudfunctions.net/adImpressionPingHttp',
-  );
-  static const String adComplianceCheckUrl = String.fromEnvironment(
-    'AD_COMPLIANCE_CHECK_URL',
-    defaultValue:
-        'https://us-central1-soullockket.cloudfunctions.net/checkUserAdComplianceHttp',
-  );
-  static const String adComplianceResolutionUrl = String.fromEnvironment(
-    'AD_COMPLIANCE_RESOLUTION_URL',
-    defaultValue:
-        'https://us-central1-soullockket.cloudfunctions.net/reportAdResolutionHttp',
-  );
   static const String deleteAccountPageUrl = '$webBaseUrl/delete-account.html';
   static const String supportPageUrl = '$webBaseUrl/support.html';
   static const String privacyPolicyUrl = '$webBaseUrl/privacy.html';

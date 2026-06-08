@@ -161,38 +161,6 @@ class _CountdownModeEditorScreenState
   bool _isUploadingBackground = false;
   bool _isUnlockingCountdownStyle = false;
   bool _didPromptPendingUploadRetry = false;
-  Set<String> _unlockedStyles = {};
-
-  Future<void> _loadUnlockedStyles() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final loaded = <String>{};
-    for (final styleKey in _CountdownModeIndependentScreenState._premiumCountdownStyleKeys) {
-      final expiryKey = 'il_countdown_style_unlock_expiry_$styleKey';
-      final expiry = prefs.getInt(expiryKey) ?? 0;
-      if (expiry > now) {
-        loaded.add(styleKey);
-      }
-    }
-    // Migration: legacy global unlocks
-    final legacyExpiry = prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
-    if (legacyExpiry > now) {
-      loaded.addAll(_CountdownModeIndependentScreenState._premiumCountdownStyleKeys);
-    } else {
-      final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
-      if (legacyTs > 0) {
-        final fallbackExpiry = legacyTs + const Duration(days: 7).inMilliseconds;
-        if (fallbackExpiry > now) {
-          loaded.addAll(_CountdownModeIndependentScreenState._premiumCountdownStyleKeys);
-        }
-      }
-    }
-    if (mounted) {
-      setState(() {
-        _unlockedStyles = loaded;
-      });
-    }
-  }
 
   static List<MapEntry<String, String>> get _themeOptions =>
       _CountdownModeIndependentScreenState._themeOptions;
@@ -233,8 +201,6 @@ class _CountdownModeEditorScreenState
         _normalizeCountdownModeCenterIconType(widget.centerIconType);
     _transparentMode = widget.transparentMode;
     _sizePx = widget.sizePx.clamp(200.0, UiPrefs.maxCountdownSizePx).toDouble();
-    _unlockedStyles = {};
-    _loadUnlockedStyles();
     unawaited(_promptPendingUploadRetryIfNeeded());
   }
 
@@ -417,7 +383,7 @@ class _CountdownModeEditorScreenState
     final normalized = styleKey.trim().toLowerCase();
     final exists = _countdownStyleOptions.any((item) => item.value == normalized);
     if (!exists) {
-      _showMessage('Giao diện vòng đếm không hợp lệ: $styleKey');
+      _showMessage('Kiểu vòng đếm không hợp lệ: $styleKey');
       return;
     }
     final requiresAd =
@@ -428,7 +394,12 @@ class _CountdownModeEditorScreenState
       return;
     }
 
-    if (_unlockedStyles.contains(normalized)) {
+    final hasUnlock =
+        await _CountdownModeIndependentScreenState._hasCountdownStyleAdUnlock();
+    if (!mounted) {
+      return;
+    }
+    if (hasUnlock) {
       setState(() => _styleKey = normalized);
       return;
     }
@@ -446,21 +417,12 @@ class _CountdownModeEditorScreenState
         _showMessage(context.tr('home_cnxemqungc_fe69b5'));
         return;
       }
-      final prefs = await SharedPreferences.getInstance();
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final expiry = now + const Duration(days: 7).inMilliseconds;
-      final expiryKey = 'il_countdown_style_unlock_expiry_$normalized';
-      await prefs.setInt(expiryKey, expiry);
-      await prefs.setInt('il_last_any_rewarded_ad_ts', now);
-
+      await _CountdownModeIndependentScreenState._saveCountdownStyleAdUnlock();
       if (!mounted) {
         return;
       }
-      setState(() {
-        _unlockedStyles = {..._unlockedStyles, normalized};
-        _styleKey = normalized;
-      });
-      _showMessage('Đã mở khóa "${_countdownStyleOptions.firstWhere((e) => e.value == normalized).key}" trong 7 ngày!');
+      setState(() => _styleKey = normalized);
+      _showMessage(context.tr('home_mthmcckiuv_ad0e3f'));
     } finally {
       if (mounted) {
         setState(() => _isUnlockingCountdownStyle = false);
@@ -616,7 +578,7 @@ class _CountdownModeEditorScreenState
       }
       final url = await _storageService.uploadImage(
         houseId,
-        'themes',
+        'theme_backgrounds',
         file,
         quality: 78,
         minWidth: 900,
@@ -1207,8 +1169,7 @@ class _CountdownModeEditorScreenState
                                         _CountdownModeIndependentScreenState
                                             ._isPremiumCountdownStyleKey(
                                           entry.value,
-                                        ) &&
-                                        !_unlockedStyles.contains(entry.value);
+                                        );
                                     return MapEntry(
                                       locked
                                           ? '${entry.key} • Quảng cáo'

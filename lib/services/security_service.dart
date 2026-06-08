@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
@@ -364,84 +363,37 @@ class SecurityService {
     return _generateFallbackDeviceId();
   }
 
-  static const MethodChannel _securityChannel = MethodChannel('soul_locket/security');
-
-  /// Advanced Root/Jailbreak detection using native Kotlin layer.
-  /// Native check is harder to patch than pure Dart file.exists() checks.
+  /// Advanced Root/Jailbreak and Fake Location detection
   Future<bool> isDeviceCompromised() async {
     if (_isRootedCache != null) return _isRootedCache!;
 
     if (kIsWeb) return false;
 
-    // Fallback: use platform-native detection
-    if (Platform.isAndroid) {
-      try {
-        final result = await _securityChannel
-            .invokeMethod<Map>('checkRootStatus')
-            .timeout(const Duration(seconds: 3));
-        if (result != null) {
-          final isRooted = result['isRooted'] == true;
-          _isRootedCache = isRooted;
-          return isRooted;
-        }
-      } catch (_) {
-        // Native check failed, fall through to Dart fallback
-      }
-    }
-
-    if (Platform.isIOS) {
-      try {
-        final result = await _securityChannel
-            .invokeMethod<Map>('checkRootStatus')
-            .timeout(const Duration(seconds: 3));
-        if (result != null) {
-          final isRooted = result['isRooted'] == true;
-          _isRootedCache = isRooted;
-          return isRooted;
-        }
-      } catch (_) {
-        // iOS native check failed, use Dart fallback below
-      }
-    }
-
-    // Fallback: Dart-level root check (less reliable, kept for compatibility)
     try {
+      // Check common root/jailbreak paths without deprecated SafetyNet-backed SDKs.
       final paths = [
-        if (Platform.isAndroid) ...<String>[
-          '/system/app/Superuser.apk',
-          '/sbin/su',
-          '/system/bin/su',
-          '/system/xbin/su',
-          '/data/local/xbin/su',
-          '/data/local/bin/su',
-          '/system/sd/xbin/su',
-          '/system/bin/failsafe/su',
-          '/data/local/su',
-          '/su/bin/su',
-        ],
-        if (Platform.isIOS) ...<String>[
-          '/Applications/Cydia.app',
-          '/Library/MobileSubstrate/MobileSubstrate.dylib',
-          '/bin/bash',
-          '/usr/sbin/sshd',
-          '/etc/apt',
-        ],
+        '/system/app/Superuser.apk',
+        '/sbin/su',
+        '/system/bin/su',
+        '/system/xbin/su',
+        '/data/local/xbin/su',
+        '/data/local/bin/su',
+        '/system/sd/xbin/su',
+        '/system/bin/failsafe/su',
+        '/data/local/su',
+        '/su/bin/su',
+        '/Applications/Cydia.app',
+        '/Library/MobileSubstrate/MobileSubstrate.dylib',
+        '/bin/bash',
+        '/usr/sbin/sshd',
+        '/etc/apt'
       ];
 
-      if (paths.isEmpty) {
-        _isRootedCache = false;
-        return false;
-      }
-
-      final checks = await Future.wait(
-        paths.map((path) => File(path).exists().timeout(
-              const Duration(milliseconds: 150),
-              onTimeout: () => false,
-            )),
-      );
-      if (checks.any((exists) => exists)) {
-        _isRootedCache = true;
-        return true;
+      for (var path in paths) {
+        if (File(path).existsSync()) {
+          _isRootedCache = true;
+          return true;
+        }
       }
     } catch (_) {}
 

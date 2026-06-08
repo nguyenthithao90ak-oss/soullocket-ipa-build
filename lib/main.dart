@@ -6,8 +6,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -277,7 +275,6 @@ void main() {
     try {
       await _verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
-      await _initializeGoogleMobileAds();
       await _clearStaleIosAuthAfterFreshInstall();
       await _requestIosTrackingAuthorization();
 
@@ -389,7 +386,7 @@ Future<void> _initializeFirebaseBootstrap() async {
     try {
       FirebaseDatabase.instance.setPersistenceEnabled(true);
       // ⚡ Reduced from 10MB → 5MB to save RAM on startup
-      FirebaseDatabase.instance.setPersistenceCacheSizeBytes(104857600);
+      FirebaseDatabase.instance.setPersistenceCacheSizeBytes(5000000);
     } catch (e) {
       debugPrint('Firebase persistence error: ${AppErrorMapper.resolve(
         e,
@@ -575,30 +572,30 @@ Future<void> _requestIosTrackingAuthorization() async {
     return;
   }
 
-  try {
-    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-    if (status == TrackingStatus.notDetermined) {
-      await AppTrackingTransparency.requestTrackingAuthorization();
-    }
-  } catch (e) {
-    debugPrint('ATT request skipped: $e');
-  }
-}
+  // Temporary iOS submission guard for the current phone-only release.
+  // This function is intentionally disabled so the submitted iOS build does not
+  // request ATT permission while NSUserTrackingUsageDescription is removed.
+  //
+  // To restore the previous ATT + tablet-enabled behavior in a future release:
+  // 1) In this file, remove the `return;` below and restore the ATT request
+  //    block that uses AppTrackingTransparency.
+  // 2) In ios/Runner/Info.plist, add NSUserTrackingUsageDescription back.
+  // 3) In ios/Runner.xcodeproj/project.pbxproj, change every
+  //    TARGETED_DEVICE_FAMILY = 1;
+  //    back to:
+  //    TARGETED_DEVICE_FAMILY = "1,2";
+  // 4) Build and upload a new iOS binary, then update the release
+  //    privacy answers/screenshots to match that restored behavior.
+  return;
 
-Future<void> _initializeGoogleMobileAds() async {
-  if (kIsWeb) {
-    return;
-  }
-
-  try {
-    await MobileAds.instance.initialize();
-    debugPrint('Google Mobile Ads initialized successfully');
-  } catch (e) {
-    debugPrint('Google Mobile Ads init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: 'Could not initialize Google Mobile Ads',
-    ).message}');
-  }
+  // try {
+  //   final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+  //   if (status == TrackingStatus.notDetermined) {
+  //     await AppTrackingTransparency.requestTrackingAuthorization();
+  //   }
+  // } catch (e) {
+  //   debugPrint('ATT request skipped: $e');
+  // }
 }
 
 void _scheduleDeferredBootstrap() {

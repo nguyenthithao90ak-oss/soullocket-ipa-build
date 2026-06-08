@@ -430,7 +430,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
 
       final url = await _storageService.uploadImage(
         _houseId!,
-        'themes',
+        'theme_backgrounds',
         file,
         quality: 82, // 82 WebP = Nhẹ nhưng vẫn rất nét (Sharp)
         minWidth: 1080, // Giảm từ 1280 xuống 1080 để tránh OOM

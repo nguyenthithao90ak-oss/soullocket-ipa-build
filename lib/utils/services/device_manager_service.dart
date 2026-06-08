@@ -1,4 +1,3 @@
-// ignore_for_file: unused_field, unused_element
 import 'dart:async';
 import 'dart:convert';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -8,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'push_notification_helper.dart';
 import 'consent_service.dart';
 import 'security_service.dart';
 import 'offline_cache_service.dart';
@@ -34,9 +34,9 @@ class DeviceTrustState {
     required this.isAdmin,
   });
 
-  bool get isTrusted => status == 'approved' || status == 'pending' || status == 'unknown' || status == 'blocked';
-  bool get isPendingApproval => false;
-  bool get isBlocked => false;
+  bool get isTrusted => status == 'approved';
+  bool get isPendingApproval => status == 'pending';
+  bool get isBlocked => status == 'blocked';
 
   Duration? get remainingAutoApproval {
     if (!isPendingApproval || autoApproveAtMs <= 0) return null;
@@ -66,6 +66,7 @@ class DeviceManagerService {
   static const Duration pendingAutoTrustDelay = DeviceTrustState.autoTrustDelay;
   static const int autoTrustedDeviceLimit = 3;
   static const Duration _houseIdCacheTtl = Duration(minutes: 10);
+  static const Duration _trustStateCacheTtl = Duration(seconds: 15);
   static const String _prefHouseId = 'il_house_id';
   static const String _prefAuthUid = 'il_auth_uid';
   static const DeviceTrustState _unknownTrustState = DeviceTrustState(
@@ -89,11 +90,13 @@ class DeviceManagerService {
   Map<String, String>? _cachedDeviceInfo;
   String? _cachedHouseId;
   String? _cachedHouseAuthUid;
-  Future<String?>? _currentHouseIdFuture;
-  String? _currentHouseIdFutureUid;
-  int _cachedHouseIdAtMs = 0;
   DeviceTrustState? _cachedTrustState;
   String? _cachedTrustStateUid;
+  Future<String?>? _currentHouseIdFuture;
+  String? _currentHouseIdFutureUid;
+  Future<DeviceTrustState>? _currentTrustStateFuture;
+  String? _currentTrustStateFutureUid;
+  int _cachedHouseIdAtMs = 0;
   int _cachedTrustStateAtMs = 0;
 
   Future<bool> isSecurityDeviceSignalsAllowed() async {
@@ -116,22 +119,10 @@ class DeviceManagerService {
   Future<DeviceTrustState> getCurrentDeviceTrustState({
     bool autoApprove = true,
   }) async {
-    // DISABLED: Always return a trusted state for the current device so that
-    // logging in on a new device is never blocked by the device-trust flow.
     final uid = _auth.currentUser?.uid.trim() ?? '';
     if (uid.isEmpty) {
       return _unknownTrustState;
     }
-    return const DeviceTrustState(
-      houseId: '',
-      deviceId: 'auto-trusted',
-      status: 'approved',
-      firstSeenAtMs: 0,
-      autoApproveAtMs: 0,
-      exists: true,
-      isAdmin: true,
-    );
-    /*
 
     final now = DateTime.now().millisecondsSinceEpoch;
     final cachedState = _cachedTrustState;
@@ -176,7 +167,6 @@ class DeviceManagerService {
         _currentTrustStateFutureUid = null;
       }
     }
-    */
   }
 
   Future<DeviceTrustState> _loadCurrentDeviceTrustState({
@@ -268,11 +258,6 @@ class DeviceManagerService {
 
   /// Ghi thông tin thiết bị hiện tại vào Firebase khi đăng nhập
   Future<void> registerCurrentDevice() async {
-    // DISABLED: Always treat the current device as approved so that
-    // new-device logins are never blocked. Skip the heavy registration
-    // and realtime kick-out logic entirely.
-    return;
-    /*
     if (!await isSecurityDeviceSignalsAllowed()) {
       return;
     }
@@ -552,7 +537,6 @@ class DeviceManagerService {
         fallbackMessage: 'Không thể đăng ký thiết bị hiện tại.',
       ).message}');
     }
-    */
   }
 
   Future<bool> _registerCurrentDeviceWithFunction() async {
@@ -667,12 +651,6 @@ class DeviceManagerService {
 
   /// Lắng nghe trạng thái thiết bị realtime để tự động đăng xuất nếu bị chặn/xóa
   Future<void> startRealtimeTracking() async {
-    // [DISABLED_NEW_DEVICE_AUTH_BLOCK] The realtime device-status listener
-    // is disabled so a new device is never force-signed-out after login.
-    _deviceStatusSub?.cancel();
-    _deviceStatusSub = null;
-    return;
-    /* Original block/delete listener kept below for reference.
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
@@ -723,7 +701,6 @@ class DeviceManagerService {
         }
       }
     });
-    */
   }
 
   void stopRealtimeTracking() {
@@ -747,51 +724,42 @@ class DeviceManagerService {
 
   /// Kiểm tra thiết bị hiện tại có phải là thiết bị quen (tin cậy) không
   Future<bool> isCurrentDeviceTrusted() async {
-    // DISABLED: Always return true so new devices are not blocked.
-    return true;
-    // -------------------------------------------------------
-    // ORIGINAL CODE (commented out — kept for reference):
-    //
-    // try {
-    //   final trustState = await getCurrentDeviceTrustState(autoApprove: true);
-    //   return trustState.isTrusted;
-    //   /*
-    //   // ignore: dead_code
-    //   final data = const <String, Object?>{};
-    //   final houseId = '';
-    //   final deviceId = '';
-    //   if (false) {
-    //     final firstSeen = (data['first_seen'] as num?)?.toInt() ?? 0;
-    //     if (firstSeen > 0) {
-    //       final days = (DateTime.now().millisecondsSinceEpoch - firstSeen) /
-    //           (1000 * 60 * 60 * 24);
-    //       if (days >= 7) {
-    //         // Tự động duyệt nếu đã trên 7 ngày
-    //         await _db
-    //             .ref('houses/$houseId/security/devices/$deviceId/status')
-    //             .set('approved')
-    //             .timeout(const Duration(seconds: 5));
-    //         return true;
-    //       }
-    //     }
-    //   }
-    //   return false;
-    //   */
-    // } catch (e) {
-    //   debugPrint('isCurrentDeviceTrusted ignored: ${AppErrorMapper.resolve(
-    //     e,
-    //     fallbackMessage: 'Không thể kiểm tra thiết bị tin cậy.',
-    //   ).message}');
-    //   return false;
-    // }
-    // -------------------------------------------------------
+    try {
+      final trustState = await getCurrentDeviceTrustState(autoApprove: true);
+      return trustState.isTrusted;
+      /*
+      // ignore: dead_code
+      final data = const <String, Object?>{};
+      final houseId = '';
+      final deviceId = '';
+      if (false) {
+        final firstSeen = (data['first_seen'] as num?)?.toInt() ?? 0;
+        if (firstSeen > 0) {
+          final days = (DateTime.now().millisecondsSinceEpoch - firstSeen) /
+              (1000 * 60 * 60 * 24);
+          if (days >= 7) {
+            // Tự động duyệt nếu đã trên 7 ngày
+            await _db
+                .ref('houses/$houseId/security/devices/$deviceId/status')
+                .set('approved')
+                .timeout(const Duration(seconds: 5));
+            return true;
+          }
+        }
+      }
+      return false;
+      */
+    } catch (e) {
+      debugPrint('isCurrentDeviceTrusted ignored: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể kiểm tra thiết bị tin cậy.',
+      ).message}');
+      return false;
+    }
   }
 
   /// Kiểm tra thiết bị hiện tại có bị chặn không
   Future<bool> isCurrentDeviceBlocked() async {
-    // DISABLED: Always return false so new devices are never blocked.
-    return false;
-    /*
     final uid = _auth.currentUser?.uid;
     if (uid == null) return false;
 
@@ -815,7 +783,6 @@ class DeviceManagerService {
       ).message}');
       return false;
     }
-    */
   }
 
   /// Load danh sách tất cả thiết bị của user
@@ -827,19 +794,13 @@ class DeviceManagerService {
       return functionDevices ?? [];
     }
 
-    final houseSnap = await _db
-        .ref('users/$uid/houseId')
-        .get()
-        .timeout(const Duration(seconds: 5));
+    final houseSnap = await _db.ref('users/$uid/houseId').get();
     final houseId = houseSnap.value?.toString().trim();
     if (houseId == null || houseId.isEmpty) {
       return functionDevices ?? [];
     }
 
-    final snap = await _db
-        .ref('houses/$houseId/security/devices')
-        .get()
-        .timeout(const Duration(seconds: 6));
+    final snap = await _db.ref('houses/$houseId/security/devices').get();
     if (!snap.exists) {
       return functionDevices ?? [];
     }
@@ -898,9 +859,7 @@ class DeviceManagerService {
     try {
       final currentDeviceId = await getCurrentDeviceIdentifier();
       final callable = _functions.httpsCallable('getDeviceListSecure');
-      final result = await callable
-          .call({'currentDeviceId': currentDeviceId})
-          .timeout(const Duration(seconds: 6));
+      final result = await callable.call({'currentDeviceId': currentDeviceId});
       final rawDevices = result.data is Map ? result.data['devices'] : null;
       if (rawDevices is! List) {
         return const [];

@@ -182,10 +182,6 @@ class _TouchEffectPainter extends CustomPainter {
   final List<_TouchParticle> particles;
   final bool useGlow;
 
-  // Reusable path objects to eliminate garbage collection pressure during gestures
-  final Path _reusablePath = Path();
-  final Path _reusableCorePath = Path();
-
   _TouchEffectPainter({required this.particles, required this.useGlow});
 
   @override
@@ -222,43 +218,42 @@ class _TouchEffectPainter extends CustomPainter {
   }
 
   void _drawStar(Canvas canvas, Paint paint, double radius) {
-    _reusablePath.reset();
-    _reusablePath.moveTo(0, -radius);
-    _reusablePath.quadraticBezierTo(0, 0, radius, 0);
-    _reusablePath.quadraticBezierTo(0, 0, 0, radius);
-    _reusablePath.quadraticBezierTo(0, 0, -radius, 0);
-    _reusablePath.quadraticBezierTo(0, 0, 0, -radius);
+    final path = Path();
+    path.moveTo(0, -radius);
+    path.quadraticBezierTo(0, 0, radius, 0);
+    path.quadraticBezierTo(0, 0, 0, radius);
+    path.quadraticBezierTo(0, 0, -radius, 0);
+    path.quadraticBezierTo(0, 0, 0, -radius);
 
-    canvas.drawPath(_reusablePath, paint);
+    canvas.drawPath(path, paint);
 
     paint.maskFilter = null;
     paint.color = Colors.white.withValues(alpha: paint.color.a);
-
-    _reusableCorePath.reset();
+    final corePath = Path();
     final coreRadius = radius * 0.4;
-    _reusableCorePath.moveTo(0, -coreRadius);
-    _reusableCorePath.quadraticBezierTo(0, 0, coreRadius, 0);
-    _reusableCorePath.quadraticBezierTo(0, 0, 0, coreRadius);
-    _reusableCorePath.quadraticBezierTo(0, 0, -coreRadius, 0);
-    _reusableCorePath.quadraticBezierTo(0, 0, 0, -coreRadius);
-    canvas.drawPath(_reusableCorePath, paint);
+    corePath.moveTo(0, -coreRadius);
+    corePath.quadraticBezierTo(0, 0, coreRadius, 0);
+    corePath.quadraticBezierTo(0, 0, 0, coreRadius);
+    corePath.quadraticBezierTo(0, 0, -coreRadius, 0);
+    corePath.quadraticBezierTo(0, 0, 0, -coreRadius);
+    canvas.drawPath(corePath, paint);
   }
 
   void _drawHeart(Canvas canvas, Paint paint, double size) {
     final width = size;
     final height = size * 0.9;
-    
-    _reusablePath.reset();
-    _reusablePath.moveTo(0, height * 0.3);
-    _reusablePath.cubicTo(-width * 0.5, -height * 0.2, -width, height * 0.4, 0, height);
-    _reusablePath.moveTo(0, height * 0.3);
-    _reusablePath.cubicTo(width * 0.5, -height * 0.2, width, height * 0.4, 0, height);
+    final path = Path();
 
-    canvas.drawPath(_reusablePath, paint);
+    path.moveTo(0, height * 0.3);
+    path.cubicTo(-width * 0.5, -height * 0.2, -width, height * 0.4, 0, height);
+    path.moveTo(0, height * 0.3);
+    path.cubicTo(width * 0.5, -height * 0.2, width, height * 0.4, 0, height);
+
+    canvas.drawPath(path, paint);
 
     paint.maskFilter = null;
     paint.color = Colors.white.withValues(alpha: paint.color.a * 0.8);
-    canvas.drawPath(_reusablePath, paint);
+    canvas.drawPath(path, paint);
   }
 
   @override

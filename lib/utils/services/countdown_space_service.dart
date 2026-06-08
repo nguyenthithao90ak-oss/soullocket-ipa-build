@@ -443,27 +443,19 @@ class CountdownSpaceService {
 
   Stream<List<CountdownSpace>> streamActiveSpaces(String houseId) {
     final hId = houseId.trim();
-    if (hId.isEmpty) {
-      return Stream.value(const <CountdownSpace>[]);
-    }
-    return _combineHouseStreams<CountdownSpace>(
-      queryA: _db.ref('countdown_spaces').orderByChild('houseA').equalTo(hId),
-      queryB: _db.ref('countdown_spaces').orderByChild('houseB').equalTo(hId),
-      mapper: (snapshot) {
-        if (!snapshot.exists || snapshot.value == null) return [];
-        final raw = _toMap(snapshot.value);
-        final list = <CountdownSpace>[];
-        raw.forEach((key, value) {
-          final data = _toMap(value);
-          if (data['status'] == 'active') {
-            list.add(CountdownSpace.fromMap(key, data));
-          }
-        });
-        return list;
-      },
-      uniqueId: (item) => item.spaceId,
-      compare: (a, b) => b.updatedAt.compareTo(a.updatedAt),
-    );
+    return _db.ref('countdown_spaces').onValue.asyncMap((event) async {
+      if (event.snapshot.value == null) return [];
+      final raw = _toMap(event.snapshot.value);
+      final list = <CountdownSpace>[];
+      raw.forEach((key, value) {
+        final data = _toMap(value);
+        if (data['status'] == 'active' && _spaceContainsHouse(key, hId)) {
+          list.add(CountdownSpace.fromMap(key, data));
+        }
+      });
+      list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      return list;
+    });
   }
 
   Future<CountdownSpaceRequestResult> sendRequest({
@@ -584,24 +576,19 @@ class CountdownSpaceService {
 
   Stream<List<CountdownSpaceRequest>> watchRequestsForHouse(String houseId) {
     final hId = houseId.trim();
-    if (hId.isEmpty) {
-      return Stream.value(const <CountdownSpaceRequest>[]);
-    }
-    return _combineHouseStreams<CountdownSpaceRequest>(
-      queryA: _db.ref('countdown_space_requests').orderByChild('fromHouseId').equalTo(hId),
-      queryB: _db.ref('countdown_space_requests').orderByChild('toHouseId').equalTo(hId),
-      mapper: (snapshot) {
-        if (!snapshot.exists || snapshot.value == null) return [];
-        final raw = _toMap(snapshot.value);
-        final list = <CountdownSpaceRequest>[];
-        raw.forEach((key, value) {
-          list.add(CountdownSpaceRequest.fromMap(_toMap(value)));
-        });
-        return list;
-      },
-      uniqueId: (item) => item.requestId,
-      compare: (a, b) => b.createdAt.compareTo(a.createdAt),
-    );
+    return _db.ref('countdown_space_requests').onValue.map((event) {
+      if (event.snapshot.value == null) return [];
+      final raw = _toMap(event.snapshot.value);
+      final list = <CountdownSpaceRequest>[];
+      raw.forEach((key, value) {
+        final data = _toMap(value);
+        if (data['fromHouseId'] == hId || data['toHouseId'] == hId) {
+          list.add(CountdownSpaceRequest.fromMap(data));
+        }
+      });
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list;
+    });
   }
 
   Stream<List<CountdownSpace>> watchSpacesForHouse(String houseId) =>
@@ -610,24 +597,17 @@ class CountdownSpaceService {
   Stream<List<CountdownSpaceDeleteRequestInfo>> watchDeleteRequestsForHouse(
       String houseId) {
     final hId = houseId.trim();
-    if (hId.isEmpty) {
-      return Stream.value(const <CountdownSpaceDeleteRequestInfo>[]);
-    }
-    return _combineHouseStreams<CountdownSpaceDeleteRequestInfo>(
-      queryA: _db.ref('countdown_space_delete_requests').orderByChild('houseA').equalTo(hId),
-      queryB: _db.ref('countdown_space_delete_requests').orderByChild('houseB').equalTo(hId),
-      mapper: (snapshot) {
-        if (!snapshot.exists || snapshot.value == null) return [];
-        final raw = _toMap(snapshot.value);
-        final list = <CountdownSpaceDeleteRequestInfo>[];
-        raw.forEach((key, value) {
+    return _db.ref('countdown_space_delete_requests').onValue.map((event) {
+      if (event.snapshot.value == null) return [];
+      final raw = _toMap(event.snapshot.value);
+      final list = <CountdownSpaceDeleteRequestInfo>[];
+      raw.forEach((key, value) {
+        if (_spaceContainsHouse(key, hId)) {
           list.add(CountdownSpaceDeleteRequestInfo.fromMap(key, _toMap(value)));
-        });
-        return list;
-      },
-      uniqueId: (item) => item.spaceId,
-      compare: (a, b) => b.requestedAt.compareTo(a.requestedAt),
-    );
+        }
+      });
+      return list;
+    });
   }
 
   String pairKeyFor(String id1, String id2) {
@@ -703,58 +683,6 @@ class CountdownSpaceService {
       }
     });
     return result;
-  }
-
-  Stream<List<T>> _combineHouseStreams<T>({
-    required Query queryA,
-    required Query queryB,
-    required List<T> Function(DataSnapshot snapshot) mapper,
-    required String Function(T item) uniqueId,
-    required int Function(T a, T b) compare,
-  }) {
-    final controller = StreamController<List<T>>();
-    List<T>? latestA;
-    List<T>? latestB;
-    StreamSubscription? subA;
-    StreamSubscription? subB;
-
-    void emit() {
-      if (latestA != null && latestB != null) {
-        final mergedMap = <String, T>{};
-        for (final item in latestA!) {
-          mergedMap[uniqueId(item)] = item;
-        }
-        for (final item in latestB!) {
-          mergedMap[uniqueId(item)] = item;
-        }
-        final list = mergedMap.values.toList()..sort(compare);
-        controller.add(list);
-      }
-    }
-
-    controller.onListen = () {
-      subA = queryA.onValue.listen(
-        (event) {
-          latestA = mapper(event.snapshot);
-          emit();
-        },
-        onError: controller.addError,
-      );
-      subB = queryB.onValue.listen(
-        (event) {
-          latestB = mapper(event.snapshot);
-          emit();
-        },
-        onError: controller.addError,
-      );
-    };
-
-    controller.onCancel = () {
-      subA?.cancel();
-      subB?.cancel();
-    };
-
-    return controller.stream;
   }
 }
 

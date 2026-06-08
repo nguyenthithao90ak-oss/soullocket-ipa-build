@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element
+﻿// ignore_for_file: unused_element
 
 part of '../../main_home_tab.dart';
 
@@ -803,7 +803,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         editTopLabel ? context.tr('home_ichphatrn_2b9989') : context.tr('home_ichphadi_5a1c20');
     final hintText = editTopLabel ? context.tr('home_vdbnnhau_998f24') : context.tr('home_vdngyyu_f3c8aa');
 
-    showDialog<String>(
+    showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
@@ -820,7 +820,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                ctx.tr('home_trngsquayv_97516b'),
+                context.tr('home_trngsquayv_97516b'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 12.5,
@@ -864,7 +864,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              ctx.tr('home_hy_1e4050'),
+              context.tr('home_hy_1e4050'),
               style: SLTheme.quicksand(
                 color: Colors.grey,
                 fontWeight: FontWeight.w700,
@@ -872,9 +872,34 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final newLabel = controller.text.trim();
-              Navigator.pop(ctx, newLabel);
+              Navigator.of(ctx).pop();
+              if (newLabel.isEmpty || !mounted) {
+                return;
+              }
+
+              // Đợi dialog route đóng hẳn rồi mới cập nhật để tránh lỗi
+              // deactivate/dependents trên một số thiết bị/emulator.
+              await Future<void>.delayed(const Duration(milliseconds: 16));
+              if (!mounted) return;
+
+              try {
+                await _houseSettingsService.updateCountdownLabels(
+                  houseId: _houseId!,
+                  topLabel: editTopLabel ? newLabel : null,
+                  bottomLabel: editTopLabel ? null : newLabel,
+                );
+              } catch (e) {
+                if (!mounted) return;
+                final message = _shortErrorMessage(
+                  e,
+                  context.tr('home_khnglucnhn_0689c8'),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(message)),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: SLTheme.primary,
@@ -884,46 +909,25 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               ),
             ),
             child: Text(
-              ctx.tr('home_lu_49fac1'),
+              context.tr('home_lu_49fac1'),
               style: SLTheme.quicksand(fontWeight: FontWeight.w800),
             ),
           ),
         ],
       ),
-    ).then((newLabel) async {
-      if (newLabel == null || newLabel.isEmpty || !mounted) {
-        return;
-      }
-
-      try {
-        await _houseSettingsService.updateCountdownLabels(
-          houseId: _houseId!,
-          topLabel: editTopLabel ? newLabel : null,
-          bottomLabel: editTopLabel ? null : newLabel,
-        );
-      } catch (e) {
-        if (!mounted) return;
-        final message = _shortErrorMessage(
-          e,
-          context.tr('home_khnglucnhn_0689c8'),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-      }
-    }).whenComplete(controller.dispose);
+    ).whenComplete(controller.dispose);
   }
 
   void _showEditNameDialog(
       {required bool isUser1, required String currentName}) {
     if (_houseId == null) return;
     final controller = TextEditingController(text: currentName);
-    showDialog<String>(
+    showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
         title: Text(
-          ctx.tr('home_ibitdanh_345585'),
+          context.tr('home_ibitdanh_345585'),
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
@@ -935,7 +939,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 18),
           decoration: InputDecoration(
-            hintText: ctx.tr('home_nhptnmi_1b6bb3'),
+            hintText: context.tr('home_nhptnmi_1b6bb3'),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -948,14 +952,27 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(ctx.tr('home_hy_1e4050'),
+            child: Text(context.tr('home_hy_1e4050'),
                 style: SLTheme.quicksand(
                     color: Colors.grey, fontWeight: FontWeight.w700)),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final newName = controller.text.trim();
-              Navigator.pop(ctx, newName);
+              if (newName.isNotEmpty) {
+                Navigator.pop(ctx);
+                if (!mounted) return;
+                await Future<void>.delayed(const Duration(milliseconds: 120));
+                if (!mounted) return;
+                final field = isUser1 ? 'nameU1' : 'nameU2';
+                final updates = {
+                  'houses/$_houseId/settings/$field': newName,
+                  'house_profiles/$_houseId/$field': newName,
+                  'house_profiles/$_houseId/settings/$field': newName,
+                  'houses/$_houseId/updatedAt': ServerValue.timestamp,
+                };
+                await _dbRef.update(updates);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: SLTheme.primary,
@@ -963,21 +980,11 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text(ctx.tr('home_lu_49fac1'),
+            child: Text(context.tr('home_lu_49fac1'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
           ),
         ],
       ),
-    ).then((newName) async {
-      if (newName == null || newName.isEmpty || !mounted) return;
-      final field = isUser1 ? 'nameU1' : 'nameU2';
-      final updates = {
-        'houses/$_houseId/settings/$field': newName,
-        'house_profiles/$_houseId/$field': newName,
-        'house_profiles/$_houseId/settings/$field': newName,
-        'houses/$_houseId/updatedAt': ServerValue.timestamp,
-      };
-      await _dbRef.update(updates);
-    }).whenComplete(controller.dispose);
+    ).whenComplete(controller.dispose);
   }
 }

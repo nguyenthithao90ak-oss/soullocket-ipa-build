@@ -233,7 +233,7 @@ class AuthSignInService {
       final callable = _functions.httpsCallable('resolveLoginEmailAlias');
       final result = await callable.call(<String, dynamic>{
         'email': normalizedEmail,
-      }).timeout(const Duration(seconds: 8));
+      });
       final payload = _asStringDynamicMap(result.data);
       final resolvedEmail =
           (payload['email'] ?? '').toString().trim().toLowerCase();
@@ -1303,7 +1303,7 @@ class AuthSignInService {
 
   Future<void> _ensureUserProfileExists(firebase_auth.User user) async {
     final userRef = _db.child('users/${user.uid}');
-    final existingSnap = await userRef.get().timeout(const Duration(seconds: 5));
+    final existingSnap = await userRef.get();
 
     final payload = <String, dynamic>{
       'uid': user.uid,
@@ -1320,7 +1320,7 @@ class AuthSignInService {
       payload['createdAt'] = ServerValue.timestamp;
     }
 
-    await userRef.update(payload).timeout(const Duration(seconds: 5));
+    await userRef.update(payload);
   }
 
   Future<void> _finalizeAuthenticatedSession(
@@ -1342,10 +1342,7 @@ class AuthSignInService {
 
     await _ensureUserProfileExists(user);
 
-    final userSnap = await _db.child('users/${user.uid}/houseId').get().timeout(
-          const Duration(seconds: 5),
-          onTimeout: () => throw TimeoutException('Lấy houseId bị quá thời gian.'),
-        );
+    final userSnap = await _db.child('users/${user.uid}/houseId').get();
     final rawHouseId = userSnap.value?.toString().trim();
     final houseId =
         (rawHouseId == null || rawHouseId.isEmpty) ? null : rawHouseId;
@@ -1378,9 +1375,7 @@ class AuthSignInService {
 
     if (houseId != null && houseId.isNotEmpty) {
       try {
-        final settingsSnap = await _db.child('houses/$houseId/settings').get().timeout(
-              const Duration(seconds: 5),
-            );
+        final settingsSnap = await _db.child('houses/$houseId/settings').get();
         if (settingsSnap.exists) {
           final settings = settingsSnap.value is Map
               ? _asStringDynamicMap(settingsSnap.value)
@@ -1431,14 +1426,13 @@ class AuthSignInService {
       );
     }
 
-    // 🔓 DISABLED: Bỏ kiểm tra chặn thiết bị để cho phép đăng nhập trên mọi thiết bị
-    // if (houseId != null && houseId.isNotEmpty) {
-    //   final isBlocked = await DeviceManagerService().isCurrentDeviceBlocked();
-    //   if (isBlocked) {
-    //     await signOut();
-    //     throw 'Thiết bị này đã bị chặn truy cập vĩnh viễn.';
-    //   }
-    // }
+    if (houseId != null && houseId.isNotEmpty) {
+      final isBlocked = await DeviceManagerService().isCurrentDeviceBlocked();
+      if (isBlocked) {
+        await signOut();
+        throw 'Thiết bị này đã bị chặn truy cập vĩnh viễn.';
+      }
+    }
 
     unawaited(
       CriticalDataSyncService().syncCurrentUserData(

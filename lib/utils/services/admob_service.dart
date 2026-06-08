@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
@@ -230,19 +229,6 @@ class AdMobService {
     if (kIsWeb) {
       completer.complete();
       return;
-    }
-
-    if (Platform.isIOS) {
-      try {
-        var status = await AppTrackingTransparency.trackingAuthorizationStatus;
-        if (status == TrackingStatus.notDetermined) {
-          await Future<void>.delayed(const Duration(milliseconds: 250));
-          status = await AppTrackingTransparency.requestTrackingAuthorization();
-        }
-        debugPrint('AdMobService: iOS ATT Status = $status');
-      } catch (attError) {
-        debugPrint('AdMobService: Failed to request ATT permission: $attError');
-      }
     }
 
     // Implement UMP Consent Flow
@@ -529,7 +515,6 @@ class AdMobService {
       onAdShowedFullScreenContent: (ad) async {
         _lastFullscreenAdShownMs = DateTime.now().millisecondsSinceEpoch;
         await _incrementAppOpenShownCount();
-        _sendAdImpressionPing('app_open', appOpenId);
         if (!completer.isCompleted) completer.complete(true);
       },
       onAdDismissedFullScreenContent: (ad) {
@@ -705,22 +690,20 @@ class AdMobService {
     }
 
     final completer = Completer<bool>();
-    var _didEarnReward = false;
     AppLifecyclePresenceGuard.arm();
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         debugPrint('AdMobService: rewarded showed.');
         _lastRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
         _lastFullscreenAdShownMs = _lastRewardedShownMs;
-        _sendAdImpressionPing('rewarded', rewardedMainId);
       },
       onAdDismissedFullScreenContent: (ad) {
-        debugPrint('AdMobService: rewarded dismissed (earned=$_didEarnReward).');
+        debugPrint('AdMobService: rewarded dismissed.');
         ad.dispose();
         _rewardedAd = null;
         _loadRewardedAd();
         AppLifecyclePresenceGuard.settle();
-        if (!completer.isCompleted) completer.complete(_didEarnReward);
+        if (!completer.isCompleted) completer.complete(false);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         final errorInfo = AppErrorMapper.resolve(
@@ -742,7 +725,7 @@ class AdMobService {
       _rewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
           debugPrint('AdMobService: rewarded earned.');
-          _didEarnReward = true;
+          if (!completer.isCompleted) completer.complete(true);
         },
       );
     } catch (error) {
@@ -759,7 +742,7 @@ class AdMobService {
     }
 
     return completer.future.timeout(
-      const Duration(seconds: 60),
+      const Duration(seconds: 12),
       onTimeout: () {
         AppLifecyclePresenceGuard.settle();
         return false;
@@ -791,20 +774,18 @@ class AdMobService {
     }
 
     final completer = Completer<bool>();
-    var _didEarnReward = false;
     AppLifecyclePresenceGuard.arm();
     _soulGameRewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         _lastRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
         _lastFullscreenAdShownMs = _lastRewardedShownMs;
-        _sendAdImpressionPing('rewarded', rewardedSoulGameId);
       },
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
         _soulGameRewardedAd = null;
         _loadSoulGameRewardedAd();
         AppLifecyclePresenceGuard.settle();
-        if (!completer.isCompleted) completer.complete(_didEarnReward);
+        if (!completer.isCompleted) completer.complete(false);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
@@ -819,7 +800,7 @@ class AdMobService {
       _soulGameRewardedAd!.setImmersiveMode(true);
       _soulGameRewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-          _didEarnReward = true;
+          if (!completer.isCompleted) completer.complete(true);
         },
       );
     } catch (_) {
@@ -831,7 +812,7 @@ class AdMobService {
     }
 
     return completer.future.timeout(
-      const Duration(seconds: 60),
+      const Duration(seconds: 12),
       onTimeout: () {
         AppLifecyclePresenceGuard.settle();
         return false;
@@ -859,7 +840,6 @@ class AdMobService {
       listener: BannerAdListener(
         onAdLoaded: (ad) {
           onAdLoaded(ad);
-          _sendAdImpressionPing('banner', bannerId);
           if (!completer.isCompleted) {
             completer.complete(banner);
           }
@@ -934,7 +914,6 @@ class AdMobService {
     _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         _lastFullscreenAdShownMs = DateTime.now().millisecondsSinceEpoch;
-        _sendAdImpressionPing('interstitial', interstitialId);
       },
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
@@ -1497,39 +1476,5 @@ class AdMobService {
       },
     );
     return RewardClaimResult.fromResponse(response);
-  }
-
-  // ─── AD IMPRESSION PING ────────────────────────────────────────
-
-  /// Gui ping len server xac nhan da show quang cao thanh cong.
-  /// Giup server phat hien neu user tat quang cao bang cach patch client.
-  Future<void> _sendAdImpressionPing(String adType, String adUnit) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-      if (await isProUser()) return; // Khong can ping neu la PRO
-
-      final endpoint = AppConfig.adImpressionPingUrl.trim();
-      if (endpoint.isEmpty) return;
-
-      final houseId = await _houseService.getCurrentHouseId();
-
-      final payload = <String, dynamic>{
-        'adType': adType,
-        'adUnit': adUnit,
-        'clientNonce': _buildRewardProofNonce(), // Dung lai ham nonce co san
-        'clientIssuedAtMs': DateTime.now().millisecondsSinceEpoch,
-        if (houseId != null && houseId.isNotEmpty) 'houseId': houseId,
-      };
-
-      // Gui ping bat dong bo, khong block luong chinh
-      unawaited(_postAuthenticatedJson(
-        endpoint,
-        payload,
-        requireAppCheck: false,
-      ));
-    } catch (_) {
-      // Ping loi khong anh huong den trai nghiem nguoi dung
-    }
   }
 }

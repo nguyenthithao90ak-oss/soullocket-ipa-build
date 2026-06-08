@@ -88,33 +88,6 @@ class ConsentService {
     return cookieLevel != null && cookieLevel.trim().isNotEmpty;
   }
 
-  bool isTosAcceptedSync() {
-    final prefs = OfflineCacheService.getPrefsSync();
-    if (prefs == null) return false;
-    return prefs.getBool(tosAcceptedKey) ?? false;
-  }
-
-  bool isPrivacyAcceptedSync() {
-    final prefs = OfflineCacheService.getPrefsSync();
-    if (prefs == null) return false;
-    return prefs.getBool(privacyAcceptedKey) ?? false;
-  }
-
-  String? getCookieConsentLevelSync() {
-    final prefs = OfflineCacheService.getPrefsSync();
-    if (prefs == null) return null;
-    return _normalizeConsentValue(prefs.getString(cookieConsentKey));
-  }
-
-  bool hasValidConsentSync() {
-    final tosAccepted = isTosAcceptedSync();
-    if (!tosAccepted) return false;
-    final privacyAccepted = isPrivacyAcceptedSync();
-    if (!privacyAccepted) return false;
-    final cookieLevel = getCookieConsentLevelSync();
-    return cookieLevel != null && cookieLevel.trim().isNotEmpty;
-  }
-
   Future<void> clearAll() async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();

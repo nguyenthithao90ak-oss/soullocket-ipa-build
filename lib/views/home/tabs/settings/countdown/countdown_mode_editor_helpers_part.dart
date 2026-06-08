@@ -100,21 +100,17 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFFFFF),
-            Color(0xFFFFF8FB),
-            Color(0xFFFDF0F6),
-          ],
+          colors: [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFDF6FA)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF8DBE8), width: 1.0),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFF6D4E2)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: const Color(0xFF231926).withValues(alpha: 0.08),
+            blurRadius: 26,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -127,24 +123,10 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFFEC407A),
-                      Color(0xFFD81B60),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFD81B60).withValues(alpha: 0.25),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: const Color(0xFFFFE6F0),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: Colors.white, size: 16),
+                child: Icon(icon, color: const Color(0xFFD81B60), size: 17),
               ),
               const SizedBox(width: 10),
               Expanded(

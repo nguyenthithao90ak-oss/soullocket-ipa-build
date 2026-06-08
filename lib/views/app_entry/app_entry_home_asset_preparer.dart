@@ -1,7 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter/widgets.dart';
 
 import '../../services/home_startup_media_cache.dart';
 import '../../services/offline_cache_service.dart';
@@ -57,47 +55,6 @@ class AppEntryHomeAssetPreparer {
           HomeStartupMediaCache.saveFile(url, file);
         } catch (_) {}
       }
-
-      // Preload active Google Fonts to prevent 1s blinking/flickering
-      final fontKey = UiPrefs.notifier.value.fontKey;
-      TextStyle? selectedUiFont;
-      switch (fontKey) {
-        case 'patrickHand':
-          selectedUiFont = GoogleFonts.patrickHand();
-          break;
-        case 'dancingScript':
-          selectedUiFont = GoogleFonts.dancingScript();
-          break;
-        case 'caveat':
-          selectedUiFont = GoogleFonts.caveat();
-          break;
-        case 'lora':
-          selectedUiFont = GoogleFonts.lora();
-          break;
-        case 'nunito':
-          selectedUiFont = GoogleFonts.nunito();
-          break;
-        case 'comfortaa':
-          selectedUiFont = GoogleFonts.comfortaa();
-          break;
-        case 'playfair':
-          selectedUiFont = GoogleFonts.playfairDisplay();
-          break;
-        case 'beVietnam':
-          selectedUiFont = GoogleFonts.beVietnamPro();
-          break;
-        case 'quicksand':
-        default:
-          selectedUiFont = GoogleFonts.quicksand();
-          break;
-      }
-
-      try {
-        await GoogleFonts.pendingFonts([
-          GoogleFonts.comfortaa(fontWeight: FontWeight.w900),
-          if (selectedUiFont != null) selectedUiFont,
-        ]);
-      } catch (_) {}
 
       _preparedHouseId = houseId;
     } finally {

@@ -27,51 +27,48 @@ class AuthPanelShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = L10nService();
+    final panelGradient = isLoginTab
+        ? const [
+            Color(0xFFFFFCFA),
+            Color(0xFFFFF6F1),
+            Color(0xFFFCF7F8),
+          ]
+        : const [
+            Color(0xFFFFFBF8),
+            Color(0xFFFDF4F2),
+            Color(0xFFFAF7FB),
+          ];
     final textScale = MediaQuery.textScalerOf(context).scale(1);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
       padding: EdgeInsets.fromLTRB(
-        compact ? 18 : 28,
-        compact ? 22 : 28,
-        compact ? 18 : 28,
-        compact ? 18 : 24,
+        compact ? 16 : 26,
+        compact ? 20 : 26,
+        compact ? 16 : 26,
+        compact ? 16 : 22,
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isLoginTab
-              ? const [
-                  Color(0xFFFFFBFD),
-                  Color(0xFFFFF2F8),
-                  Color(0xFFFCF4FF),
-                ]
-              : const [
-                  Color(0xFFFFF8FE),
-                  Color(0xFFFFF0FA),
-                  Color(0xFFF8F0FF),
-                ],
+          colors: panelGradient,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(compact ? 32 : 40),
+        borderRadius: BorderRadius.circular(compact ? 30 : 38),
         border: Border.all(
-          color: isLoginTab
-              ? const Color(0xFFFFB6D3).withValues(alpha: 0.55)
-              : const Color(0xFFD4AAFF).withValues(alpha: 0.50),
-          width: 1.5,
+          color: SLTheme.authFieldBorder.withValues(alpha: 0.98),
+          width: 1.3,
         ),
         boxShadow: [
           BoxShadow(
-            color: isLoginTab
-                ? const Color(0xFFFF85B3).withValues(alpha: 0.18)
-                : const Color(0xFFB080FF).withValues(alpha: 0.16),
-            blurRadius: 40,
-            spreadRadius: -4,
+            color: SLColors.primary.withValues(alpha: isLoginTab ? 0.12 : 0.08),
+            blurRadius: 34,
+            spreadRadius: -6,
             offset: const Offset(0, 20),
           ),
           BoxShadow(
-            color: Colors.white.withValues(alpha: 0.88),
+            color: Colors.white.withValues(alpha: 0.82),
             blurRadius: 0,
             offset: const Offset(0, 1),
           ),
@@ -79,21 +76,20 @@ class AuthPanelShell extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // top-right glow orb inside card
           Positioned(
-            top: compact ? -36 : -48,
-            right: compact ? -28 : -18,
+            top: compact ? -34 : -44,
+            right: compact ? -30 : -22,
             child: IgnorePointer(
               child: Container(
-                width: compact ? 120 : 148,
-                height: compact ? 120 : 148,
+                width: compact ? 112 : 132,
+                height: compact ? 112 : 132,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
                       isLoginTab
-                          ? const Color(0xFFFF85B3).withValues(alpha: 0.22)
-                          : const Color(0xFFB080FF).withValues(alpha: 0.18),
+                          ? SLTheme.authHeroGlow.withValues(alpha: 0.34)
+                          : SLColors.accentPurple.withValues(alpha: 0.16),
                       Colors.transparent,
                     ],
                   ),
@@ -105,53 +101,6 @@ class AuthPanelShell extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- brand micro-header ---
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [SLColors.primary, Color(0xFFE060B0)],
-                      ).createShader(bounds),
-                      child: const Icon(
-                        Icons.favorite_rounded,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    ShaderMask(
-                      shaderCallback: (bounds) => LinearGradient(
-                        colors: isLoginTab
-                            ? const [Color(0xFFE0609A), Color(0xFFA044C0)]
-                            : const [Color(0xFF9030C0), Color(0xFFE060B0)],
-                      ).createShader(bounds),
-                      child: Text(
-                        'soullocket',
-                        style: SLTheme.quicksand(
-                          fontSize: compact ? 12 : 13,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 1.4,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFFE060B0), SLColors.primary],
-                      ).createShader(bounds),
-                      child: const Icon(
-                        Icons.favorite_rounded,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               AuthTabSwitcher(
                 isLoginTab: isLoginTab,
                 onSelectLogin: onSelectLogin,
@@ -191,55 +140,32 @@ class AuthPanelShell extends StatelessWidget {
                 child: RepaintBoundary(child: authSection),
               ),
               Container(
-                margin: const EdgeInsets.only(top: 16),
+                margin: const EdgeInsets.only(top: 18),
                 padding: EdgeInsets.fromLTRB(
                   compact ? 12 : 14,
-                  12,
+                  14,
                   compact ? 12 : 14,
-                  compact ? 10 : 12,
+                  compact ? 12 : 14,
                 ),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFFF8FD), Color(0xFFFDF3FF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: SLTheme.authHelpBackground.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: const Color(0xFFE8B8D8).withValues(alpha: 0.55),
-                    width: 1.2,
+                    color: SLTheme.authFieldBorder.withValues(alpha: 0.96),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFE080BB).withValues(alpha: 0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.support_agent_rounded,
-                          size: 13,
-                          color: SLColors.primary.withValues(alpha: 0.7),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          l10n.translate('auth_help_center_guide'),
-                          style: SLTheme.quicksand(
-                            fontSize: 12,
-                            color: SLColors.primary.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      l10n.translate('auth_help_center_guide'),
+                      style: SLTheme.quicksand(
+                        fontSize: 12.5,
+                        color: SLColors.textSecond,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                    const SizedBox(height: 10),
+                    SLSpacing.h12,
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final stackButtons = compact ||

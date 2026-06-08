@@ -1,4 +1,3 @@
-// ignore_for_file: unused_field
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -253,17 +252,16 @@ class SecurityFlowGuard {
       );
     }
 
-    // Device trust check: thiết bị chờ duyệt → warn (không block), thiết bị bị chặn → block
     if (_trustedDeviceOnlyActions.contains(action)) {
       if (signals.trustState.isPendingApproval) {
         decisions.add(
           SecurityFlowDecision(
             action: action,
-            level: SecurityRiskLevel.warn,
+            level: SecurityRiskLevel.block,
             code: 'pending_device',
             title: 'Thiết bị đang chờ duyệt',
             message:
-                'Thiết bị này đang chờ duyệt. Hãy duyệt trên máy tin cậy để thực hiện thao tác này, hoặc bỏ qua nếu bạn tin thiết bị này.',
+                'Thao tác này chỉ được thực hiện trên thiết bị đã duyệt. Hãy duyệt thiết bị này trên máy tin cậy rồi thử lại.',
           ),
         );
       } else if (signals.trustState.isBlocked) {

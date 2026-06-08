@@ -91,11 +91,6 @@ class RegisterForm extends StatelessWidget {
             decoration: SLTheme.authInputDecoration(
               hintText: l10n.translate('auth_email_example'),
               focusColor: accentRose,
-              prefixIcon: Icon(
-                Icons.mail_outline_rounded,
-                color: accentRose.withValues(alpha: 0.65),
-                size: 20,
-              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -115,11 +110,6 @@ class RegisterForm extends StatelessWidget {
             decoration: SLTheme.authInputDecoration(
               hintText: passwordHint,
               focusColor: accentRose,
-              prefixIcon: Icon(
-                Icons.lock_outline_rounded,
-                color: accentRose.withValues(alpha: 0.65),
-                size: 20,
-              ),
               suffixIcon: IconButton(
                 icon: Icon(
                   obscurePassword ? Icons.visibility : Icons.visibility_off,
@@ -264,11 +254,6 @@ class RegisterForm extends StatelessWidget {
                         ? l10n.translate('auth_birthdate_helper')
                         : null,
                     focusColor: accentRose,
-                    prefixIcon: Icon(
-                      Icons.question_answer_outlined,
-                      color: accentRose.withValues(alpha: 0.65),
-                      size: 20,
-                    ),
                   ),
                 ),
                 const SizedBox(height: 4),

@@ -613,12 +613,12 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
       title: title ?? (success ? L10nService().translate('legacy_saved_success') : L10nService().translate('legacy_save_failed')),
       icon: icon ??
           (success ? Icons.auto_awesome_rounded : Icons.warning_rounded),
-      iconTint: success ? const Color(0xFF2E7D32) : SLColors.danger,
-      borderColor: success ? const Color(0xFFA5D6A7) : const Color(0xFFF2C5C5),
+      iconTint: success ? SLColors.primary : SLColors.danger,
+      borderColor: success ? SLColors.primarySoft : const Color(0xFFF2C5C5),
       gradient: success
           ? const [
-              Color(0xFFF9FFF9),
-              Color(0xFFF0FFF4),
+              Color(0xFFFFFBFD),
+              SLColors.primarySoft,
               Color(0xFFFFFFFF),
             ]
           : const [
@@ -626,7 +626,7 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
               Color(0xFFFFEBEE),
               Color(0xFFFFFFFF),
             ],
-      titleColor: success ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+      titleColor: success ? SLColors.primaryActive : const Color(0xFFC62828),
       bodyColor: success ? SLColors.textSecond : const Color(0xFF7A4D4D),
     );
   }

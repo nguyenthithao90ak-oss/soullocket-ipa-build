@@ -225,9 +225,7 @@ class SettingsSyncService {
 
   Future<void> restoreSettingsFromCloud(String uid) async {
     try {
-      final snapshot = await _db.child('users/$uid/settings').get().timeout(
-            const Duration(seconds: 6),
-          );
+      final snapshot = await _db.child('users/$uid/settings').get();
       final prefs = OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       final hadLocalBackupMarker =

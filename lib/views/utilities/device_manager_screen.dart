@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
@@ -62,7 +60,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       if (!mounted) return;
       _currentDeviceCanManageDevices =
           trustState.isTrusted || trustState.isAdmin;
-      unawaited(_loadDevices());
+      await _loadDevices();
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,

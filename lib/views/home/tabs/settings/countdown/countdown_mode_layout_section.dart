@@ -294,7 +294,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                         ),
                         const SizedBox(height: 10),
                         _CountdownModeSheetDropdown(
-                          label: 'Giao diện vòng đếm',
+                          label: 'Kiểu vòng đếm',
                           value: draftStyleKey,
                           options: _CountdownModeIndependentScreenState
                               ._countdownStyleOptions,

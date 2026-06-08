@@ -294,24 +294,13 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      SizedBox(
-                                        width: circleSize,
-                                        height: circleSize,
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            _CountdownModeCircle(
-                                              size: circleSize,
-                                              value: value,
-                                              topLabel: _topLabel(uiState),
-                                              bottomLabel: _bottomLabel(uiState),
-                                              styleData: styleData,
-                                              fontKey: uiState.fontKey,
-                                            ),
-                                            if (uiState.countdownStyleKey == 'floating_hearts')
-                                              FloatingHeartsRingOverlay(size: circleSize),
-                                          ],
-                                        ),
+                                      _CountdownModeCircle(
+                                        size: circleSize,
+                                        value: value,
+                                        topLabel: _topLabel(uiState),
+                                        bottomLabel: _bottomLabel(uiState),
+                                        styleData: styleData,
+                                        fontKey: uiState.fontKey,
                                       ),
                                       const SizedBox(height: 18),
                                       Text(

@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers, cancel_subscriptions
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -42,7 +42,7 @@ import '../../../utils/sl_notice.dart';
 import '../../../models/album_item.dart';
 import '../../../models/house_settings.dart';
 import '../../../models/utilities/shared_note.dart';
-import 'settings_tab.dart' show SettingsTab, FloatingHeartsRingOverlay;
+import 'settings_tab.dart' show SettingsTab;
 import '../../ui_prefs.dart';
 import '../../utilities/age_zodiac_screen.dart';
 import '../../utilities/bucket_list_screen.dart';
@@ -76,8 +76,6 @@ import '../../../services/daily_quest_service.dart';
 import '../../../core/constants/app_config.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../widgets/legacy_web_ui.dart';
-import '../../../utils/services/purchase_service.dart';
-import '../../../utils/services/admob_service.dart';
 
 import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import '../screens/global_search_screen.dart';
@@ -194,6 +192,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
   StreamSubscription<DatabaseEvent>? _alertSubscription;
   StreamSubscription<DatabaseEvent>? _newDeviceNotificationSubscription;
   StreamSubscription<DatabaseEvent>? _partnerInboxSubscription;
+  StreamSubscription<DatabaseEvent>? _loveCardsSubscription;
   StreamSubscription? _albumSubscription;
   StreamSubscription? _noteSubscription;
   StreamSubscription<DatabaseEvent>? _chatSignalSubscription;
@@ -258,6 +257,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
   bool _showInsightCardFirstTapHint = !(OfflineCacheService.getPrefsSync()
           ?.getBool(_insightCardFirstTapSeenPrefsKey) ??
       false);
+  bool _firstSetupGuidePrompting = false;
   String _lastHomeSettingsPayloadSignature = '';
   String _lastWidgetSettingsSyncKey = '';
   bool _deferHeavyHomeMotion = false;
@@ -411,6 +411,10 @@ class _MainHomeTabState extends State<MainHomeTab> {
         return BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white.withValues(alpha: 0.55),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.7),
+            width: 4,
+          ),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF8EC5FC).withValues(alpha: 0.28),
@@ -430,6 +434,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 6),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFFF5E92).withValues(alpha: 0.42),
@@ -459,6 +464,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
               Color(0xFFFF005D),
             ],
           ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.70), width: 4),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFFF00A8).withValues(alpha: 0.38),
@@ -477,6 +483,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.78), width: 4),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFFF69B4).withValues(alpha: 0.28),
@@ -488,6 +495,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
         return BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white.withValues(alpha: 0.7),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 7),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFFF69B4).withValues(alpha: 0.50),
@@ -510,46 +518,6 @@ class _MainHomeTabState extends State<MainHomeTab> {
   void initState() {
     super.initState();
     _isTabActive = widget.isActive;
-    unawaited(() async {
-      try {
-        final fontKey = UiPrefs.notifier.value.fontKey;
-        TextStyle? selectedUiFont;
-        switch (fontKey) {
-          case 'patrickHand':
-            selectedUiFont = GoogleFonts.patrickHand();
-            break;
-          case 'dancingScript':
-            selectedUiFont = GoogleFonts.dancingScript();
-            break;
-          case 'caveat':
-            selectedUiFont = GoogleFonts.caveat();
-            break;
-          case 'lora':
-            selectedUiFont = GoogleFonts.lora();
-            break;
-          case 'nunito':
-            selectedUiFont = GoogleFonts.nunito();
-            break;
-          case 'comfortaa':
-            selectedUiFont = GoogleFonts.comfortaa();
-            break;
-          case 'playfair':
-            selectedUiFont = GoogleFonts.playfairDisplay();
-            break;
-          case 'beVietnam':
-            selectedUiFont = GoogleFonts.beVietnamPro();
-            break;
-          case 'quicksand':
-          default:
-            selectedUiFont = GoogleFonts.quicksand();
-            break;
-        }
-        await GoogleFonts.pendingFonts([
-          GoogleFonts.comfortaa(fontWeight: FontWeight.w900),
-          if (selectedUiFont != null) selectedUiFont,
-        ]);
-      } catch (_) {}
-    }());
     unawaited(_syncHomeCardFirstTapHintState());
     _restoreWarmHomeCache();
     _warmHomeMedia(
@@ -1662,7 +1630,6 @@ class _MainHomeTabState extends State<MainHomeTab> {
 
   static const Duration _kCountdownQuickUnlockWindow = Duration(days: 7);
   static const List<String> _kCountdownQuickPremiumStyleKeys = <String>[
-    'floating_hearts',
     'galaxy',
     'aurora',
     'crystal',
@@ -1670,33 +1637,25 @@ class _MainHomeTabState extends State<MainHomeTab> {
     'lava',
   ];
 
-  /// Trả về Set các style đã được mở khóa riêng lẻ qua xem quảng cáo.
-  /// Mỗi style được lưu độc lập, không phụ thuộc nhau.
-  Future<Set<String>> _getUnlockedCountdownStyles() async {
+  Future<bool> _hasCountdownQuickAdUnlock() async {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final result = <String>{};
-    for (final styleKey in _kCountdownQuickPremiumStyleKeys) {
-      final expiryKey = 'il_countdown_style_unlock_expiry_$styleKey';
-      final expiry = prefs.getInt(expiryKey) ?? 0;
-      if (expiry > now) {
-        result.add(styleKey);
-      }
+    final storedUnlockExpiry =
+        prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
+    if (storedUnlockExpiry > now) {
+      return true;
     }
-    // Migration: nếu đã có unlock hàng loạt cũ còn hiệu lực thì cộng vào
-    final legacyExpiry = prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
-    if (legacyExpiry > now) {
-      result.addAll(_kCountdownQuickPremiumStyleKeys);
-    } else {
-      final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
-      if (legacyTs > 0) {
-        final fallbackExpiry = legacyTs + _kCountdownQuickUnlockWindow.inMilliseconds;
-        if (fallbackExpiry > now) {
-          result.addAll(_kCountdownQuickPremiumStyleKeys);
-        }
-      }
+
+    final legacyUnlockTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
+    final legacyUnlockedRaw =
+        prefs.getStringList('il_unlocked_countdown_styles') ?? [];
+    if (legacyUnlockTs <= 0 && legacyUnlockedRaw.isEmpty) {
+      return false;
     }
-    return result;
+
+    final fallbackExpiry =
+        legacyUnlockTs + _kCountdownQuickUnlockWindow.inMilliseconds;
+    return fallbackExpiry > now;
   }
 
   Future<void> _saveCountdownQuickUiPrefs({
@@ -1713,7 +1672,6 @@ class _MainHomeTabState extends State<MainHomeTab> {
     if (countdownStyleKey != null) {
       const allowedCountdownStyleKeys = <String>{
         'default',
-        'floating_hearts',
         'rose_wave',
         'glass',
         'glow',
@@ -1757,19 +1715,16 @@ class _MainHomeTabState extends State<MainHomeTab> {
       }
     }
 
-    final isVip = await PurchaseService().isVip();
+    final hasCountdownAdPass = await _hasCountdownQuickAdUnlock();
     if (countdownStyleKey != null &&
         _kCountdownQuickPremiumStyleKeys.contains(resolvedCountdownStyleKey) &&
-        !isVip) {
-      final unlockedStyles = await _getUnlockedCountdownStyles();
-      if (!unlockedStyles.contains(resolvedCountdownStyleKey)) {
-        if (mounted) {
-          _showLatestSnackBar(
-            'Kiểu "$resolvedCountdownStyleKey" chưa được mở. Hãy xem quảng cáo trong bảng tùy chỉnh để mở kiểu này.',
-          );
-        }
-        return;
+        !hasCountdownAdPass) {
+      if (mounted) {
+        _showLatestSnackBar(
+          'Kiểu "$resolvedCountdownStyleKey" đang khóa. Hãy mở trong Cài đặt giao diện để xem quảng cáo hoặc nâng cấp VIP.',
+        );
       }
+      return;
     }
 
     final normalizedCountdownStyleKey = countdownStyleKey == null
@@ -1789,38 +1744,36 @@ class _MainHomeTabState extends State<MainHomeTab> {
       fallingEffectKey: normalizedFallingEffectKey,
     );
 
-    unawaited(UiPrefs.saveState(nextState).catchError((_) {}));
+    await UiPrefs.saveState(nextState);
 
     final houseId = (_houseId ?? '').trim();
-    if (houseId.isNotEmpty) {
-      unawaited(_houseSettingsService.updateHomeUiSettings(
+    if (houseId.isEmpty) {
+      return;
+    }
+
+    try {
+      await _houseSettingsService.updateHomeUiSettings(
         houseId: houseId,
         countdownStyleKey:
             normalizedCountdownStyleKey == current.countdownStyleKey
                 ? null
                 : normalizedCountdownStyleKey,
-        fallingEffectKey:
-            normalizedFallingEffectKey == current.fallingEffectKey
-                ? null
-                : normalizedFallingEffectKey,
-      ).catchError((e) {
-        if (mounted) {
-          _showLatestSnackBar(
-            'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.',
-          );
-        }
-      }));
+        fallingEffectKey: normalizedFallingEffectKey == current.fallingEffectKey
+            ? null
+            : normalizedFallingEffectKey,
+      );
+    } catch (e) {
+      if (mounted) {
+        _showLatestSnackBar(
+            'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.');
+      }
     }
   }
 
 
   Future<void> _showCountdownQuickCustomizeSheet() async {
-    final isVip = await PurchaseService().isVip();
-    Set<String> unlockedStyles = isVip
-        ? Set<String>.from(_kCountdownQuickPremiumStyleKeys)
-        : await _getUnlockedCountdownStyles();
+    final hasCountdownAdPass = await _hasCountdownQuickAdUnlock();
     if (!mounted) return;
-    String? unlockingStyleKey;
 
     final styleOptions = <_CountdownQuickOption>[
       _CountdownQuickOption(
@@ -1828,13 +1781,6 @@ class _MainHomeTabState extends State<MainHomeTab> {
         value: 'default',
         icon: Icons.favorite_rounded,
         accent: const Color(0xFFD94C86),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_floating_hearts'),
-        value: 'floating_hearts',
-        icon: Icons.favorite_border_rounded,
-        accent: const Color(0xFFFF8DA1),
-        isPremium: true,
       ),
       _CountdownQuickOption(
         label: context.tr('countdown_rose_wave'),
@@ -1967,24 +1913,30 @@ class _MainHomeTabState extends State<MainHomeTab> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (sheetContext, setSheetState) {
-            final mediaQuery = MediaQuery.of(sheetContext);
+        final mediaQuery = MediaQuery.of(sheetContext);
 
-        /// Chip cho mục đã mở hoặc miễn phí
         Widget buildOptionChip({
           required _CountdownQuickOption option,
           required bool selected,
+          required bool locked,
           required VoidCallback onTap,
         }) {
           final accent = option.accent;
           final borderColor = selected
               ? accent
-              : accent.withValues(alpha: 0.28);
+              : locked
+                  ? const Color(0xFFD7C8CF)
+                  : accent.withValues(alpha: 0.28);
           final backgroundColor = selected
               ? accent.withValues(alpha: 0.14)
-              : Colors.white;
-          final textColor = selected ? accent : const Color(0xFF584450);
+              : locked
+                  ? const Color(0xFFF8F2F4)
+                  : Colors.white;
+          final textColor = locked
+              ? const Color(0xFFB598A5)
+              : selected
+                  ? accent
+                  : const Color(0xFF584450);
 
           return Material(
             color: Colors.transparent,
@@ -2012,7 +1964,11 @@ class _MainHomeTabState extends State<MainHomeTab> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(option.icon, size: 17, color: accent),
+                    Icon(
+                      option.icon,
+                      size: 17,
+                      color: locked ? const Color(0xFFB598A5) : accent,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       option.label,
@@ -2023,119 +1979,14 @@ class _MainHomeTabState extends State<MainHomeTab> {
                         color: textColor,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
-        /// Nút riêng cho mục chưa mở khóa
-        Widget buildLockedAdButton({
-          required _CountdownQuickOption option,
-          required Future<void> Function(_CountdownQuickOption option) onUnlocked,
-        }) {
-          final isThisUnlocking = unlockingStyleKey == option.value;
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: isThisUnlocking
-                  ? null
-                  : () async {
-                      if (unlockingStyleKey != null) return;
-                      HapticFeedback.mediumImpact();
-                      setSheetState(() {
-                        unlockingStyleKey = option.value;
-                      });
-                      try {
-                        final adMob = AdMobService();
-                        final adSuccess = await adMob.showRewardedAd();
-                        if (!mounted) return;
-                        if (adSuccess) {
-                          final prefs = await SharedPreferences.getInstance();
-                          final now = DateTime.now().millisecondsSinceEpoch;
-                          await prefs.setInt('il_last_any_rewarded_ad_ts', now);
-                          final expiry = now + _kCountdownQuickUnlockWindow.inMilliseconds;
-                          final expiryKey = 'il_countdown_style_unlock_expiry_${option.value}';
-                          await prefs.setInt(expiryKey, expiry);
-                          unlockedStyles = {...unlockedStyles, option.value};
-                          setSheetState(() {});
-                          await onUnlocked(option);
-                          _showLatestSnackBar('Đã mở khóa "${option.label}" trong 7 ngày!');
-                        } else {
-                          _showLatestSnackBar('Chưa mở khóa. Vui lòng xem hết quảng cáo.');
-                        }
-                      } catch (_) {
-                        _showLatestSnackBar('Đã xảy ra lỗi khi tải quảng cáo.');
-                      } finally {
-                        setSheetState(() {
-                          unlockingStyleKey = null;
-                        });
-                      }
-                    },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF5F0),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFFFFB87A)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      option.icon,
-                      size: 17,
-                      color: const Color(0xFFE06000),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      option.label,
-                      style: SLTheme.quicksand(
-                        fontSize: 12.6,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF7A3800),
+                    if (locked) ...[
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.lock_rounded,
+                        size: 15,
+                        color: Color(0xFFB598A5),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (isThisUnlocking)
-                      const SizedBox(
-                        width: 13,
-                        height: 13,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE06000)),
-                        ),
-                      )
-                    else
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF8C00),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.play_circle_rounded,
-                              size: 11,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              'Xem QC',
-                              style: SLTheme.quicksand(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    ],
                   ],
                 ),
               ),
@@ -2210,20 +2061,19 @@ class _MainHomeTabState extends State<MainHomeTab> {
                   spacing: 10,
                   runSpacing: 10,
                   children: options.map((option) {
-                    final isLocked = option.isPremium && !unlockedStyles.contains(option.value);
-                    if (isLocked) {
-                      return buildLockedAdButton(
-                        option: option,
-                        onUnlocked: (opt) async {
-                          HapticFeedback.selectionClick();
-                          await onSelect(opt);
-                        },
-                      );
-                    }
+                    final locked = option.isPremium && !hasCountdownAdPass;
                     return buildOptionChip(
                       option: option,
                       selected: selectedValue == option.value,
+                      locked: locked,
                       onTap: () async {
+                        if (locked) {
+                          HapticFeedback.mediumImpact();
+                          _showLatestSnackBar(
+                            'Kiểu này đang khóa. Mở trong Cài đặt giao diện để dùng các kiểu nâng cao.',
+                          );
+                          return;
+                        }
                         HapticFeedback.selectionClick();
                         await onSelect(option);
                       },
@@ -2252,7 +2102,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
                   _kCountdownQuickPremiumStyleKeys.contains(
                         uiState.countdownStyleKey,
                       ) &&
-                      !unlockedStyles.contains(uiState.countdownStyleKey);
+                      !hasCountdownAdPass;
 
               return SingleChildScrollView(
                 padding: EdgeInsets.fromLTRB(
@@ -2383,39 +2233,50 @@ class _MainHomeTabState extends State<MainHomeTab> {
                             spacing: 10,
                             runSpacing: 10,
                             children: [
-                              if (currentStyleIsLocked)
-                              buildLockedAdButton(
-                                option: selectedStyle,
-                                onUnlocked: (opt) async {
-                                  await _saveCountdownQuickUiPrefs(
-                                    countdownStyleKey: opt.value,
-                                  );
-                                },
-                              )
-                            else
                               buildOptionChip(
                                 option: selectedStyle,
                                 selected: true,
-                                onTap: () => _saveCountdownQuickUiPrefs(
-                                  countdownStyleKey: selectedStyle.value,
-                                ),
+                                locked: currentStyleIsLocked,
+                                onTap: currentStyleIsLocked
+                                    ? () {
+                                        _showLatestSnackBar(
+                                          'Kiểu này đang khóa. Mở trong Cài đặt giao diện để dùng các kiểu nâng cao.',
+                                        );
+                                      }
+                                    : () => _saveCountdownQuickUiPrefs(
+                                          countdownStyleKey:
+                                              selectedStyle.value,
+                                        ),
                               ),
                               buildOptionChip(
                                 option: selectedEffect,
                                 selected: true,
+                                locked: false,
                                 onTap: () => _saveCountdownQuickUiPrefs(
                                   fallingEffectKey: selectedEffect.value,
                                 ),
                               ),
                             ],
                           ),
+                          if (!hasCountdownAdPass) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              'Các kiểu có khóa vẫn giữ nguyên nếu bạn đã mở trước đó, nhưng không đổi lại từ bảng nhanh này.',
+                              style: SLTheme.quicksand(
+                                fontSize: 11.6,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF8E6F7E),
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
                     const SizedBox(height: 14),
                     buildSection(
-                      title: 'Giao diện vòng đếm',
-                      description: 'Đổi phong cách hiển thị vòng đếm ngày.',
+                      title: 'Kiểu vòng đếm',
+                      description: 'Đổi phong cách hiển thị của vòng đếm ngày.',
                       icon: Icons.change_circle_rounded,
                       options: styleOptions,
                       selectedValue: uiState.countdownStyleKey,
@@ -2425,9 +2286,9 @@ class _MainHomeTabState extends State<MainHomeTab> {
                     ),
                     const SizedBox(height: 12),
                     buildSection(
-                      title: 'Hiệu ứng nền',
+                      title: 'Hiệu ứng rơi',
                       description:
-                          'Đổi hiệu ứng động trên màn hình chính.',
+                          'Đổi hiệu ứng nền của trang chủ ngay lập tức.',
                       icon: Icons.auto_fix_high_rounded,
                       options: effectOptions,
                       selectedValue: uiState.fallingEffectKey,
@@ -2463,8 +2324,6 @@ class _MainHomeTabState extends State<MainHomeTab> {
               );
             },
           ),
-        );
-          },
         );
       },
     );
@@ -2625,14 +2484,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
             ValueListenableBuilder<String>(
               valueListenable: _fallingEffectTypeNotifier,
               builder: (context, effectType, child) {
-                final effectProfile = UiPrefs.resolveEffectProfile(
-                  state: uiState,
-                  isWeb: kIsWeb,
-                );
-                if (!widget.isActive ||
-                    effectType == 'off' ||
-                    _deferHeavyHomeMotion ||
-                    !effectProfile.animationEnabled) {
+                if (effectType == 'off' || _deferHeavyHomeMotion) {
                   return const SizedBox.shrink();
                 }
                 return Positioned.fill(
@@ -2640,7 +2492,11 @@ class _MainHomeTabState extends State<MainHomeTab> {
                     child: FallingEffect(
                       type: effectType,
                       isDark: false,
-                      density: effectProfile.graphicsQualityKey,
+                      density: uiState.liteMode
+                          ? 'low'
+                          : (uiState.graphicsQualityKey == 'auto'
+                              ? UiPrefs.getAutoGraphicsQuality()
+                              : uiState.graphicsQualityKey),
                     ),
                   ),
                 );

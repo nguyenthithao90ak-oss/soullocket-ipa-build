@@ -62,7 +62,6 @@ class _CountdownModeIndependentScreenState
 
   // Keep the most useful styles on top for a cleaner, faster settings flow.
   static final List<MapEntry<String, String>> _countdownStyleOptions = [
-    const MapEntry('Floating Hearts', 'floating_hearts'),
     const MapEntry('Glass', 'glass'),
     MapEntry(L10nService().translate('home_mcnh_a57a8e'), 'default'),
     const MapEntry('Rose Wave', 'rose_wave'),
@@ -77,7 +76,6 @@ class _CountdownModeIndependentScreenState
   ];
 
   static const Set<String> _premiumCountdownStyleKeys = <String>{
-    'floating_hearts',
     'galaxy',
     'aurora',
     'crystal',
@@ -108,31 +106,32 @@ class _CountdownModeIndependentScreenState
     return normalized;
   }
 
-  static Future<Set<String>> _getUnlockedCountdownStyleKeys() async {
+  static Future<bool> _hasCountdownStyleAdUnlock() async {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final result = <String>{};
-    for (final styleKey in _premiumCountdownStyleKeys) {
-      final expiryKey = 'il_countdown_style_unlock_expiry_$styleKey';
-      final expiry = prefs.getInt(expiryKey) ?? 0;
-      if (expiry > now) {
-        result.add(styleKey);
-      }
+    final expiry = prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
+    if (expiry > now) {
+      return true;
     }
-    // Migration: nếu đã có unlock hàng loạt cũ còn hiệu lực thì cộng vào
-    final legacyExpiry = prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
-    if (legacyExpiry > now) {
-      result.addAll(_premiumCountdownStyleKeys);
-    } else {
-      final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
-      if (legacyTs > 0) {
-        final fallbackExpiry = legacyTs + _countdownAdUnlockWindow.inMilliseconds;
-        if (fallbackExpiry > now) {
-          result.addAll(_premiumCountdownStyleKeys);
-        }
-      }
+    final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
+    if (legacyTs <= 0) {
+      return false;
     }
-    return result;
+    return now - legacyTs < _countdownAdUnlockWindow.inMilliseconds;
+  }
+
+  static Future<void> _saveCountdownStyleAdUnlock() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await prefs.setInt(
+      'il_countdown_unlock_weekly_expiry_v2',
+      now + _countdownAdUnlockWindow.inMilliseconds,
+    );
+    await prefs.setInt('il_countdown_unlock_ad_ts', now);
+    await prefs.setStringList(
+      'il_unlocked_countdown_styles',
+      _premiumCountdownStyleKeys.toList(growable: false),
+    );
   }
 
   static final List<MapEntry<String, String>> _avatarFrameOptions = [
@@ -233,15 +232,17 @@ class _CountdownModeIndependentScreenState
       'il_countdown_space_${(scope ?? _scopeKey).trim()}_$key';
 
   Future<void> _refreshCountdownStyleUnlockState() async {
-    final unlocked = widget.isVipActive
-        ? _premiumCountdownStyleKeys
-        : await _getUnlockedCountdownStyleKeys();
+    final hasUnlock = await _hasCountdownStyleAdUnlock();
     if (!mounted) {
-      _unlockedCountdownStyleKeys = unlocked;
+      if (hasUnlock || widget.isVipActive) {
+        _unlockedCountdownStyleKeys = _premiumCountdownStyleKeys;
+      }
       return;
     }
     _safeSetState(() {
-      _unlockedCountdownStyleKeys = unlocked;
+      _unlockedCountdownStyleKeys = hasUnlock || widget.isVipActive
+          ? _premiumCountdownStyleKeys
+          : <String>{};
     });
   }
 

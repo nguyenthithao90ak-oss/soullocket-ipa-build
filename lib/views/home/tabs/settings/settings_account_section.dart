@@ -570,25 +570,15 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: _isVipActive
-                    ? const [Color(0xFFFFFDE7), Color(0xFFFFF59D), Color(0xFFFFE082)]
-                    : const [Color(0xFFFFFFFF), Color(0xFFECEFF1)],
+                    ? const [Color(0xFFFFF6CC), Color(0xFFFFE082)]
+                    : const [Color(0xFFF5F5F5), Color(0xFFE0E0E0)],
               ),
               borderRadius: SLRadius.lgAll,
               border: Border.all(
                 color: _isVipActive
-                    ? const Color(0xFFFFD54F)
-                    : Colors.white.withValues(alpha: 0.5),
-                width: 1.0,
+                    ? const Color(0xFFFFC107)
+                    : const Color(0xFFBDBDBD),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: _isVipActive
-                      ? const Color(0xFFFFC107).withValues(alpha: 0.15)
-                      : Colors.black.withValues(alpha: 0.03),
-                  blurRadius: _isVipActive ? 10 : 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,12 +646,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: Colors.white.withValues(alpha: 0.65),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            width: 1.0,
-                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -694,12 +680,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: Colors.white.withValues(alpha: 0.65),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            width: 1.0,
-                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -782,13 +764,12 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     final panelState = _buildIdentityPanelState();
     final panelActions = _buildIdentityPanelActions();
     final isSingle = panelState.isSingle;
-    const panelAccent = Color(0xFFf48fb1);
 
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'identity',
       title: context.tr('profile_info_title'),
-      borderColor: panelAccent,
+      borderColor: const Color(0xFFf48fb1),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -801,19 +782,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                border: Border.all(
-                  color: panelAccent.withValues(alpha: 0.25),
-                  width: 1.0,
-                ),
+                color: Colors.white,
+                border: Border.all(color: Colors.grey.shade300),
                 borderRadius: SLRadius.mdAll,
-                boxShadow: [
-                  BoxShadow(
-                    color: panelAccent.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
               child: Row(
                 children: [
@@ -834,29 +805,15 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             ),
           ),
           _buildLabel('${context.tr('house_name')} (${context.tr('home_khngbtbuc_0a1fee')})'),
-          _buildInput(
-            _houseNameCtrl,
-            context.tr('house_name_hint'),
-            maxLength: 30,
-            accentColor: panelAccent,
-          ),
+          _buildInput(_houseNameCtrl, context.tr('house_name_hint'),
+              maxLength: 30),
           Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              border: Border.all(
-                color: panelAccent.withValues(alpha: 0.25),
-                width: 1.0,
-              ),
+              color: Colors.white,
+              border: Border.all(color: Colors.grey.shade300),
               borderRadius: SLRadius.mdAll,
-              boxShadow: [
-                BoxShadow(
-                  color: panelAccent.withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -880,19 +837,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              border: Border.all(
-                color: panelAccent.withValues(alpha: 0.25),
-                width: 1.0,
-              ),
+              color: Colors.white,
+              border: Border.all(color: Colors.grey.shade300),
               borderRadius: SLRadius.mdAll,
-              boxShadow: [
-                BoxShadow(
-                  color: panelAccent.withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -915,12 +862,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
           _buildLabel(isSingle
               ? context.tr('your_nickname')
               : context.tr('male_nickname')),
-          _buildInput(
-            _nameU1Ctrl,
-            context.tr('your_name'),
-            maxLength: 20,
-            accentColor: panelAccent,
-          ),
+          _buildInput(_nameU1Ctrl, context.tr('your_name'), maxLength: 20),
           _buildLabel(
               isSingle ? context.tr('your_dob') : context.tr('male_dob')),
           GestureDetector(
@@ -929,19 +871,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                border: Border.all(
-                  color: panelAccent.withValues(alpha: 0.25),
-                  width: 1.0,
-                ),
+                color: Colors.white,
+                border: Border.all(color: Colors.grey.shade300),
                 borderRadius: SLRadius.mdAll,
-                boxShadow: [
-                  BoxShadow(
-                    color: panelAccent.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
               child: Row(
                 children: [
@@ -962,12 +894,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
           ),
           if (panelState.showPartnerFields) ...[
             _buildLabel(context.tr('female_nickname')),
-            _buildInput(
-              _nameU2Ctrl,
-              context.tr('partner_name'),
-              maxLength: 20,
-              accentColor: panelAccent,
-            ),
+            _buildInput(_nameU2Ctrl, context.tr('partner_name'), maxLength: 20),
             _buildLabel(context.tr('female_dob')),
             GestureDetector(
               onTap: panelActions.onPickDobU2,
@@ -976,19 +903,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  border: Border.all(
-                    color: panelAccent.withValues(alpha: 0.25),
-                    width: 1.0,
-                  ),
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey.shade300),
                   borderRadius: SLRadius.mdAll,
-                  boxShadow: [
-                    BoxShadow(
-                      color: panelAccent.withValues(alpha: 0.03),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
                 child: Row(
                   children: [
@@ -1008,19 +925,10 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               ),
             ),
             _buildLabel(context.tr('greeting_quote')),
-            _buildInput(
-              _autoReplyCtrl,
-              context.tr('quote_hint'),
-              maxLength: 22,
-              accentColor: panelAccent,
-            ),
+            _buildInput(_autoReplyCtrl, context.tr('quote_hint'),
+                maxLength: 22),
             _buildLabel(context.tr('count_unit')),
-            _buildInput(
-              _loveUnitCtrl,
-              context.tr('unit_hint'),
-              maxLength: 14,
-              accentColor: panelAccent,
-            ),
+            _buildInput(_loveUnitCtrl, context.tr('unit_hint'), maxLength: 14),
           ],
           Padding(
             padding: const EdgeInsets.only(bottom: 8),

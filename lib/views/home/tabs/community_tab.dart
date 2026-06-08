@@ -239,7 +239,6 @@ class _CommunityTabState extends State<CommunityTab>
   String _communityMaintenanceMsg = L10nService().translate('home_tnhnngmngx_a56b2f');
   String _communityMaintenanceEta = '';
   StreamSubscription? _communityMaintenanceSub;
-  bool _isInitialized = false;
 
   bool _isLoading = true;
   String _currentFeedType = 'foryou';
@@ -549,18 +548,24 @@ class _CommunityTabState extends State<CommunityTab>
         }
       }
     });
-    if (widget.isActive) {
-      _activateTab();
-    }
+    _listenToCommunityMaintenance();
+    _init();
+    _startAdLogic();
     unawaited(_restoreCommunityMessengerButtonOffset());
   }
 
   @override
   void dispose() {
-    _deactivateTab();
+    unawaited(_persistCommunityUsageSession());
+    _feedSub?.cancel();
+    _cancelFeedFilterSubscriptions();
     _feedCachePersistTimer?.cancel();
     _communityMessengerButtonPersistTimer?.cancel();
+    _communityMessengerPreviewSubscription?.cancel();
+    _feedPreloadThrottleTimer?.cancel();
     _scrollController.dispose();
+    _communityMaintenanceSub?.cancel();
+    _sessionTimer?.cancel();
     _heartController.dispose();
     super.dispose();
   }
@@ -572,11 +577,14 @@ class _CommunityTabState extends State<CommunityTab>
       return;
     }
     if (!widget.isActive) {
-      _deactivateTab();
-    } else {
-      _activateTab();
+      _feedSub?.cancel();
+      _feedSub = null;
+      _feedPreloadThrottleTimer?.cancel();
+      return;
     }
+    _syncRealtimeFeedSubscription(forceRestart: true);
   }
+
   static int _adShowCount = 0;
 
   void _updateState(VoidCallback fn) {

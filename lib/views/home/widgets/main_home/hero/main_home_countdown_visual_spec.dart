@@ -78,97 +78,50 @@ class _CountdownVisualSpec {
           labelShadows: const [],
           numberShadows: const [],
         );
-      case 'floating_hearts':
-        return _CountdownVisualSpec(
-          outerColor: null,
-          outerGradient: const LinearGradient(
-            colors: [Color(0xFFFFF5F8), Color(0xFFFFF0F5)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          outerBorder: Border.all(
-            color: const Color(0xFFFFC0CB),
-            width: 4.5,
-          ),
-          shadows: [
-            BoxShadow(
-              color: const Color(0xFFFFC0CB).withValues(alpha: 0.35),
-              blurRadius: 24.0,
-              spreadRadius: 2.0,
-              offset: const Offset(0, 10),
-            ),
-          ],
-          innerColor: const Color(0xFFFFF0F5),
-          innerGradient: null,
-          innerBorder: null,
-          numberGradient: const [
-            Color(0xFFAD1457),
-            Color(0xFFD81B60),
-            Color(0xFFEC407A),
-          ],
-          topLabelColor: const Color(0xFFE91E63),
-          bottomLabelColor: const Color(0xFFF06292),
-          labelShadows: const [],
-          numberShadows: const [],
-        );
       case 'rose_wave':
         return _CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
-            colors: [Color(0xFFFFFCFE), Color(0xFFFFEAF4), Color(0xFFFFCFE1)],
+            colors: [Colors.white, Color(0xFFFFF2F8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.92), width: 4.5),
+              Border.all(color: Colors.white.withValues(alpha: 0.78), width: 4),
           shadows: [
             BoxShadow(
-              color: const Color(0xFFFF5E9D).withValues(alpha: 0.30),
-              blurRadius: 46,
-              spreadRadius: 2,
-              offset: const Offset(0, 18),
+              color: const Color(0xFFFF69B4).withValues(alpha: 0.24),
+              blurRadius: 34,
+              offset: const Offset(0, 14),
             ),
             BoxShadow(
-              color: const Color(0xFF8A4CFF).withValues(alpha: 0.10),
-              blurRadius: 28,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.90),
-              blurRadius: 14,
+              color: Colors.white.withValues(alpha: 0.78),
+              blurRadius: 12,
               spreadRadius: 1,
-              offset: const Offset(-4, -4),
+              offset: const Offset(-3, -3),
             ),
           ],
           innerColor: null,
           innerGradient: LinearGradient(
             colors: [
-              Colors.white.withValues(alpha: 0.34),
-              const Color(0xFFFF9FBE).withValues(alpha: 0.20),
+              const Color(0xFFFFC6DA).withValues(alpha: 0.32),
               Colors.white.withValues(alpha: 0.08),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.34), width: 1),
-          numberGradient: const [Color(0xFFFFF7FB), Color(0xFFFFD7E8)],
-          topLabelColor: Colors.white,
-          bottomLabelColor: Colors.white.withValues(alpha: 0.94),
+          innerBorder: null,
+          numberGradient: const [SLColors.primary, SLColors.secondary],
+          topLabelColor: const Color(0xFFD9508A),
+          bottomLabelColor: const Color(0xFF6B5B79),
           labelShadows: [
-            Shadow(color: const Color(0xFF9D315F).withValues(alpha: 0.32), blurRadius: 10),
-            Shadow(color: Colors.white.withValues(alpha: 0.72), blurRadius: 4),
+            Shadow(color: Colors.white.withValues(alpha: 0.75), blurRadius: 8),
           ],
           numberShadows: [
             Shadow(
-              color: const Color(0xFF8D365B).withValues(alpha: 0.30),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-            Shadow(
-              color: Colors.white.withValues(alpha: 0.60),
-              blurRadius: 4,
-              offset: const Offset(-1, -2),
+              color: const Color(0xFFFF7AA8).withValues(alpha: 0.22),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         );
@@ -451,65 +404,28 @@ class _CountdownVisualSpec {
         );
       default:
         return _CountdownVisualSpec(
-          outerColor: null,
-          outerGradient: const LinearGradient(
-            colors: [Color(0xFFFFF0F7), Color(0xFFFFDDEF), Color(0xFFFFC8DE)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          outerBorder: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 4.5),
+          outerColor: Colors.white,
+          outerGradient: null,
+          outerBorder: Border.all(color: const Color(0xFFF2EAF0), width: 2.2),
           shadows: [
-            // highlight góc trên-trái (ánh sáng 3D)
             BoxShadow(
-              color: Colors.white.withValues(alpha: 0.92),
-              blurRadius: 20,
-              spreadRadius: 2,
-              offset: const Offset(-8, -8),
-            ),
-            // shadow đổ nặng phía dưới-phải (tạo cảm giác lồi)
-            BoxShadow(
-              color: const Color(0xFFD4547A).withValues(alpha: 0.38),
-              blurRadius: 28,
-              spreadRadius: 4,
-              offset: const Offset(8, 12),
-            ),
-            // ambient glow hồng
-            BoxShadow(
-              color: const Color(0xFFFF6FA7).withValues(alpha: 0.30),
-              blurRadius: 48,
-              spreadRadius: 0,
-              offset: const Offset(0, 20),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
           ],
-          innerColor: null,
-          innerGradient: LinearGradient(
-            colors: [
-              Colors.white.withValues(alpha: 0.52),
-              const Color(0xFFFFA6C8).withValues(alpha: 0.22),
-              Colors.white.withValues(alpha: 0.04),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.55), width: 1.5),
-          numberGradient: const [Color(0xFFFFFBFD), Color(0xFFFFBCD7)],
-          topLabelColor: Colors.white,
-          bottomLabelColor: Colors.white.withValues(alpha: 0.94),
-          labelShadows: [
-            Shadow(color: const Color(0xFF9D315F).withValues(alpha: 0.38), blurRadius: 10),
-            Shadow(color: Colors.white.withValues(alpha: 0.60), blurRadius: 4),
-          ],
-          numberShadows: [
+          innerColor: const Color(0xFFFBF7FA),
+          innerGradient: null,
+          innerBorder: null,
+          numberGradient: const [SLColors.primary, SLColors.secondary],
+          topLabelColor: const Color(0xFFD9508A),
+          bottomLabelColor: const Color(0xFF6B5B79),
+          labelShadows: const [],
+          numberShadows: const [
             Shadow(
-              color: const Color(0xFF8D365B).withValues(alpha: 0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-            Shadow(
-              color: Colors.white.withValues(alpha: 0.65),
-              blurRadius: 6,
-              offset: const Offset(-2, -3),
+              color: Color(0x22FF7AA8),
+              blurRadius: 12,
+              offset: Offset(0, 5),
             ),
           ],
         );

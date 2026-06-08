@@ -53,7 +53,6 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     );
   }
 
-  // ignore: unused_element
   Future<void> _shareApp() async {
     final storeUrl = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
         ? AppConfig.iOSStoreUrl
