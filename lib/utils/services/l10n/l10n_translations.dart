@@ -573,7 +573,7 @@ abstract final class _L10nStaticData {
     'theme_home_block_tone': 'Màu nền khối trang chủ:',
     'theme_widget_bg': 'Màu nền Widget (ngoài màn hình chính):',
     'theme_uploading_img': 'ĐANG TẢI ẢNH...',
-    'theme_upload_web_bg': 'TẢI ẢNH NỀN',
+    'theme_upload_web_bg': 'TẢI LÊN ẢNH NỀN',
     'theme_remove_bg': 'Xóa Nền',
     'theme_lite_mode_title': '🚀 Chế độ Siêu Nhẹ (Lite Mode)',
     'theme_lite_mode_desc':

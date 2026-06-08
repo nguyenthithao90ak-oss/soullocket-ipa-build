@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
@@ -229,6 +230,19 @@ class AdMobService {
     if (kIsWeb) {
       completer.complete();
       return;
+    }
+
+    if (Platform.isIOS) {
+      try {
+        var status = await AppTrackingTransparency.trackingAuthorizationStatus;
+        if (status == TrackingStatus.notDetermined) {
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+          status = await AppTrackingTransparency.requestTrackingAuthorization();
+        }
+        debugPrint('AdMobService: iOS ATT Status = $status');
+      } catch (attError) {
+        debugPrint('AdMobService: Failed to request ATT permission: $attError');
+      }
     }
 
     // Implement UMP Consent Flow
@@ -691,6 +705,7 @@ class AdMobService {
     }
 
     final completer = Completer<bool>();
+    var _didEarnReward = false;
     AppLifecyclePresenceGuard.arm();
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
@@ -700,12 +715,12 @@ class AdMobService {
         _sendAdImpressionPing('rewarded', rewardedMainId);
       },
       onAdDismissedFullScreenContent: (ad) {
-        debugPrint('AdMobService: rewarded dismissed.');
+        debugPrint('AdMobService: rewarded dismissed (earned=$_didEarnReward).');
         ad.dispose();
         _rewardedAd = null;
         _loadRewardedAd();
         AppLifecyclePresenceGuard.settle();
-        if (!completer.isCompleted) completer.complete(false);
+        if (!completer.isCompleted) completer.complete(_didEarnReward);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         final errorInfo = AppErrorMapper.resolve(
@@ -727,7 +742,7 @@ class AdMobService {
       _rewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
           debugPrint('AdMobService: rewarded earned.');
-          if (!completer.isCompleted) completer.complete(true);
+          _didEarnReward = true;
         },
       );
     } catch (error) {
@@ -744,7 +759,7 @@ class AdMobService {
     }
 
     return completer.future.timeout(
-      const Duration(seconds: 12),
+      const Duration(seconds: 60),
       onTimeout: () {
         AppLifecyclePresenceGuard.settle();
         return false;
@@ -776,6 +791,7 @@ class AdMobService {
     }
 
     final completer = Completer<bool>();
+    var _didEarnReward = false;
     AppLifecyclePresenceGuard.arm();
     _soulGameRewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
@@ -788,7 +804,7 @@ class AdMobService {
         _soulGameRewardedAd = null;
         _loadSoulGameRewardedAd();
         AppLifecyclePresenceGuard.settle();
-        if (!completer.isCompleted) completer.complete(false);
+        if (!completer.isCompleted) completer.complete(_didEarnReward);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
@@ -803,7 +819,7 @@ class AdMobService {
       _soulGameRewardedAd!.setImmersiveMode(true);
       _soulGameRewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-          if (!completer.isCompleted) completer.complete(true);
+          _didEarnReward = true;
         },
       );
     } catch (_) {
@@ -815,7 +831,7 @@ class AdMobService {
     }
 
     return completer.future.timeout(
-      const Duration(seconds: 12),
+      const Duration(seconds: 60),
       onTimeout: () {
         AppLifecyclePresenceGuard.settle();
         return false;

@@ -721,7 +721,33 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     const SizedBox(height: 12),
                     _buildLabel(context.tr('theme_color_theme')),
                     const SizedBox(height: 6),
-                    _buildThemePaletteStrip(selection.themeKey),
+                    selection.previewBackground.isNotEmpty
+                        ? Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF2F2F2),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: const Color(0xFFE0E0E0),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Bạn đang sử dụng nền tải lên, không thể sử dụng nền hệ thống',
+                                textAlign: TextAlign.center,
+                                style: SLTheme.quicksand(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF757575),
+                                ),
+                              ),
+                            ),
+                          )
+                        : _buildThemePaletteStrip(selection.themeKey),
                     const SizedBox(height: 12),
                     _buildLabel(context.tr('theme_home_block_tone')),
                     _buildThemeDropdownField(
