@@ -44,11 +44,11 @@ extension _SettingsTabPersistence on _SettingsTabState {
   }
 
   void _updateThemeDraft(VoidCallback updateFn) {
-    setState(updateFn);
+    updateFn();
     _applyThemeDraftToUiPrefsPreview();
     _autoSaveThemeTimer?.cancel();
     if (mounted) {
-      _autoSaveThemeTimer = Timer(const Duration(milliseconds: 500), () {
+      _autoSaveThemeTimer = Timer(const Duration(milliseconds: 1200), () {
         if (!mounted) return;
         unawaited(_saveThemeSettings(silent: true));
       });

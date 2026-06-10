@@ -318,7 +318,29 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       }
 
       if (!mounted) return;
-      setState(() {
+      if (!silent) {
+        setState(() {
+          _draftThemeKey = themeKey;
+          _draftEffectKey = effectKey;
+          _draftAvatarSizePx = avatarSizePx;
+          _draftCountdownSizePx = countdownSizePx;
+          _draftAvatarFrameKey = avatarFrameKey;
+          _draftCountdownStyleKey = countdownStyleKey;
+          _draftFontKey = fontKey;
+          _draftHomeBlockToneKey = homeBlockToneKey;
+          _draftGraphicsQualityKey = graphicsQualityKey;
+          _draftCustomBackgroundUrl = customBackgroundUrl;
+          _draftTransparentMode = transparentMode;
+          _showSettingsSyncBanner = false;
+        });
+
+        UiPrefs.notifier.value = UiPrefs.notifier.value.copyWith();
+        _showToast(
+          successMsg,
+          success: true,
+        );
+      } else {
+        // Silent save: update drafts without triggering rebuild
         _draftThemeKey = themeKey;
         _draftEffectKey = effectKey;
         _draftAvatarSizePx = avatarSizePx;
@@ -331,13 +353,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         _draftCustomBackgroundUrl = customBackgroundUrl;
         _draftTransparentMode = transparentMode;
         _showSettingsSyncBanner = false;
-      });
-
-      UiPrefs.notifier.value = UiPrefs.notifier.value.copyWith();
-      _showToast(
-        successMsg,
-        success: true,
-      );
+      }
     } catch (e) {
       if (!mounted) return;
       if (!silent) {

@@ -91,8 +91,6 @@ class DiaryHeaderSection extends StatelessWidget {
               onTabChanged: onTabChanged,
             ),
           ),
-          const SizedBox(width: 8),
-          DiaryExportMenuButton(houseId: houseId),
         ],
       ),
     );
