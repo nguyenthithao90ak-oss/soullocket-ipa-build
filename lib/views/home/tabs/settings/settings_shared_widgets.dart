@@ -264,12 +264,16 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: border.withValues(alpha: 0.15),
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: border.withValues(alpha: 0.4), width: 1.5),
+        border: Border.all(color: border, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: border.withValues(alpha: 0.1),
+            color: border.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -288,7 +292,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: gradient.first.withValues(alpha: 0.15),
+                    color: Colors.white.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(icon, color: textColor, size: 26),

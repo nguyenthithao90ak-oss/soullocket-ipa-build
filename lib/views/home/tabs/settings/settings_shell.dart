@@ -674,7 +674,7 @@ extension _SettingsTabShell on _SettingsTabState {
           Icons.lock_outline_rounded,
           Icons.phonelink_lock_rounded,
         ],
-        label: context.tr('settings_security_label'),
+        label: 'PRO',
         desc: context.tr('settings_security_desc'),
         gradient: const [Color(0xFFFFD7E1), Color(0xFFF5A3B7)],
         border: const Color(0xFFFFA8BF),
@@ -794,9 +794,13 @@ extension _SettingsTabShell on _SettingsTabState {
         return ValueListenableBuilder<UiPrefsState>(
           valueListenable: UiPrefs.notifier,
           builder: (context, uiState, _) {
-            return Scaffold(
-              backgroundColor: Colors.white,
-              body: SafeArea(
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                const _SettingsBackgroundLayer(),
+                Scaffold(
+                  backgroundColor: Colors.transparent,
+                  body: SafeArea(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         return Align(
@@ -821,6 +825,8 @@ extension _SettingsTabShell on _SettingsTabState {
                       },
                     ),
                   ),
+                ),
+              ],
             );
           },
         );

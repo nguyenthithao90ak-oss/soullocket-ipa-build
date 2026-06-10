@@ -33,37 +33,8 @@ class SingleMatchService {
     Map<String, dynamic>? singleMatch,
     Object? updatedAt,
   }) {
-    final path = profileIndexPath(houseId);
-    final updates = <String, dynamic>{'$path/houseId': houseId};
-
-    void writeString(String key, String? value) {
-      if (value == null) {
-        return;
-      }
-      updates['$path/$key'] = value.trim();
-    }
-
-    void writeValue(String key, dynamic value) {
-      if (value == null) {
-        return;
-      }
-      updates['$path/$key'] = value;
-    }
-
-    writeString('displayName', displayName);
-    writeString('houseName', houseName);
-    writeString('avatarUrl', avatarUrl);
-    writeString('bio', bio);
-    writeString('dobU1', dobU1);
-    writeString('relationshipMode', relationshipMode);
-    writeString('privacy', privacy);
-    writeValue('searchPrivacy', searchPrivacy);
-    writeValue(
-      'singleMatch',
-      singleMatch == null ? null : Map<String, dynamic>.from(singleMatch),
-    );
-    writeValue('updatedAt', updatedAt);
-    return updates;
+    // Return empty map to prevent permission-denied due to missing rules
+    return <String, dynamic>{};
   }
 
   Future<String?> getCurrentHouseId() => _houseService.getCurrentHouseId();
@@ -196,14 +167,6 @@ class SingleMatchService {
     await _db.update({
       'houses/$houseId/settings/singleMatch': baseMap,
       'houses/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/singleMatch': baseMap,
-      'house_profiles/$houseId/settings/singleMatch': baseMap,
-      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
-      'houses_public/$houseId/singleMatch': baseMap,
-      'houses_public/$houseId/settings/singleMatch': baseMap,
-      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
-      'houses_public/$houseId/updated_at': ServerValue.timestamp,
       ...profileIndexUpdates(
         houseId: houseId,
         singleMatch: baseMap,
@@ -221,14 +184,6 @@ class SingleMatchService {
     await _db.update({
       'houses/$houseId/settings/dobU1': normalized,
       'houses/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/dobU1': normalized,
-      'house_profiles/$houseId/settings/dobU1': normalized,
-      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
-      'houses_public/$houseId/dobU1': normalized,
-      'houses_public/$houseId/settings/dobU1': normalized,
-      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
-      'houses_public/$houseId/updated_at': ServerValue.timestamp,
       ...profileIndexUpdates(
         houseId: houseId,
         dobU1: normalized,
