@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers, cancel_subscriptions
 import 'package:flutter/material.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -138,7 +139,7 @@ class MainHomeTab extends StatefulWidget {
   State<MainHomeTab> createState() => _MainHomeTabState();
 }
 
-class _MainHomeTabState extends State<MainHomeTab> {
+class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   static const String _pendingAvatarUploadKeyPrefix = 'main_home_avatar_';
   static const String _mapCardFirstTapSeenPrefsKey =
       'il_home_map_card_first_tap_seen_v1';
@@ -511,6 +512,7 @@ class _MainHomeTabState extends State<MainHomeTab> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _isTabActive = widget.isActive;
     unawaited(() async {
       try {
@@ -582,12 +584,21 @@ class _MainHomeTabState extends State<MainHomeTab> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _invalidateLiveWorkSession();
     _cancelLiveWorkBindings();
     _homeMediaWarmupToken++;
     _fallingEffectTypeNotifier.dispose();
     _interactionDragHoveredNotifier.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _isTabActive && _houseId != null) {
+      unawaited(_ensureAppWideLocationTracking(_houseId!));
+      unawaited(_refreshCurrentRoleWeather());
+    }
   }
 
   void _handleTabActivityChanged(bool isActive) {

@@ -801,7 +801,17 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
       normalizedRole,
       context: context,
     );
-    if (!started || !mounted) {
+    if (!started) {
+      if (mounted) {
+        final status = await Geolocator.checkPermission();
+        if (status == LocationPermission.denied ||
+            status == LocationPermission.deniedForever) {
+          _updateHomeMapPreview(
+            distanceText: 'Chưa cấp quyền vị trí',
+            alertText: 'Vui lòng cấp quyền vị trí để xem bản đồ.',
+          );
+        }
+      }
       return;
     }
 
@@ -889,8 +899,72 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         await _locationService.requestPermission(context: context);
     if (!hasPermission) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('home_vuilngcpqu_f78dc3'))),
+        final status = await Geolocator.checkPermission();
+        final isPermanentlyDenied = status == LocationPermission.deniedForever;
+
+        showDialog(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: Row(
+                children: [
+                  const Icon(
+                    Icons.location_off_rounded,
+                    color: Colors.redAccent,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Quyền vị trí',
+                    style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+              content: Text(
+                isPermanentlyDenied
+                    ? 'Ứng dụng cần quyền vị trí để định vị và chia sẻ bản đồ. Bạn đã từ chối quyền này vĩnh viễn, vui lòng mở Cài đặt để bật lại.'
+                    : 'Vui lòng cấp quyền truy cập vị trí trong Cài đặt hệ thống để tiếp tục xem bản đồ chung.',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  height: 1.5,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(
+                    'Hủy',
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SLColors.secondary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () async {
+                    Navigator.of(dialogContext).pop();
+                    await Geolocator.openAppSettings();
+                  },
+                  child: Text(
+                    'Mở Cài đặt',
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       }
       return;

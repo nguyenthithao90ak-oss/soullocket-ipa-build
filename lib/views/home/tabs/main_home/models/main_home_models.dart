@@ -137,7 +137,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: L10nService().translate('home_tru_d66cdf'),
     emoji: '\u{1F921}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_006.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_070.png',
     weight: 9,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFE8E1FF), const Color(0xFFF8F5FF)],
@@ -205,7 +205,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Troll',
     emoji: '\u{1F4A9}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_193.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_071.png',
     weight: 6,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],

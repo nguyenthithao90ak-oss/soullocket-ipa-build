@@ -21,6 +21,9 @@ class _AnimatedWaveBackground extends StatefulWidget {
 class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  StreamSubscription<AccelerometerEvent>? _sensorSubscription;
+  double _tiltX = 0.0;
+  double _tiltY = 0.0;
 
   @override
   void initState() {
@@ -30,6 +33,25 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
       duration: const Duration(seconds: 8),
     );
     UiPrefs.notifier.addListener(_onUiPrefsChanged);
+  }
+
+  void _initSensor() {
+    if (kIsWeb) return;
+    try {
+      _sensorSubscription?.cancel();
+      _sensorSubscription = accelerometerEventStream().listen(
+        (event) {
+          if (!mounted) return;
+          // Smooth the tilt using low-pass filter (lerp)
+          final targetX = -event.x.clamp(-6.0, 6.0) * 3.5;
+          final targetY = event.y.clamp(-6.0, 6.0) * 3.5;
+          _tiltX = _tiltX * 0.92 + targetX * 0.08;
+          _tiltY = _tiltY * 0.92 + targetY * 0.08;
+        },
+        onError: (_) {},
+        cancelOnError: false,
+      );
+    } catch (_) {}
   }
 
   @override
@@ -50,6 +72,7 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
   @override
   void dispose() {
     UiPrefs.notifier.removeListener(_onUiPrefsChanged);
+    _sensorSubscription?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -72,10 +95,15 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
       if (!_controller.isAnimating) {
         _controller.repeat();
       }
+      if (_sensorSubscription == null) {
+        _initSensor();
+      }
     } else {
       if (_controller.isAnimating) {
         _controller.stop();
       }
+      _sensorSubscription?.cancel();
+      _sensorSubscription = null;
     }
   }
 
@@ -96,7 +124,13 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
     if (!shouldAnimate) {
       return RepaintBoundary(
         child: CustomPaint(
-          painter: _WavePainter(0, widget.styleKey, quality: quality),
+          painter: _WavePainter(
+            0,
+            widget.styleKey,
+            quality: quality,
+            tiltX: _tiltX,
+            tiltY: _tiltY,
+          ),
         ),
       );
     }
@@ -105,7 +139,13 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
         animation: _controller,
         builder: (context, child) {
           return CustomPaint(
-            painter: _WavePainter(_controller.value, widget.styleKey, quality: quality),
+            painter: _WavePainter(
+              _controller.value,
+              widget.styleKey,
+              quality: quality,
+              tiltX: _tiltX,
+              tiltY: _tiltY,
+            ),
           );
         },
       ),
@@ -117,8 +157,16 @@ class _WavePainter extends CustomPainter {
   final double animationValue;
   final String styleKey;
   final String quality;
+  final double tiltX;
+  final double tiltY;
 
-  _WavePainter(this.animationValue, this.styleKey, {required this.quality});
+  _WavePainter(
+    this.animationValue,
+    this.styleKey, {
+    required this.quality,
+    this.tiltX = 0.0,
+    this.tiltY = 0.0,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -207,8 +255,8 @@ class _WavePainter extends CustomPainter {
       final size = 12.0 + (i * 5 % 12);
 
       final progress = (animationValue * speed + (i * 0.17)) % 1.0;
-      final y = height + size - progress * (height + size * 2);
-      final x = startX + sin((animationValue * pi * 4) + i) * 15;
+      final y = height + size - progress * (height + size * 2) + tiltY * (0.6 + i * 0.1);
+      final x = startX + sin((animationValue * pi * 4) + i) * 15 + tiltX * (0.6 + i * 0.1);
       final opacity = sin(progress * pi);
 
       _drawHeartPath(canvas, x, y, size, opacity * 0.8);
@@ -228,8 +276,8 @@ class _WavePainter extends CustomPainter {
       final size = 6.0 + (i * 7 % 14);
 
       final progress = (animationValue * speed + (i * 0.23)) % 1.0;
-      final y = height + size - progress * (height + size * 2);
-      final x = startX + cos((animationValue * pi * 3) + i * 2) * 12;
+      final y = height + size - progress * (height + size * 2) + tiltY * (0.5 + i * 0.1);
+      final x = startX + cos((animationValue * pi * 3) + i * 2) * 12 + tiltX * (0.5 + i * 0.1);
       final opacity = sin(progress * pi);
 
       bubblePaint.color = Colors.white.withValues(alpha: 0.15 * opacity);
@@ -250,17 +298,25 @@ class _WavePainter extends CustomPainter {
     double radius,
   ) {
     if (quality != 'low') {
-      // Pulsing ring - nhẹ, chỉ drawCircle
+      // Pulsing ring - nhẹ, chỉ drawCircle, có lệch nhẹ theo nghiêng
       final ringPaint1 = Paint()
         ..color = const Color(0xFFFFC6DA).withValues(alpha: 0.13 * (1 - animationValue))
         ..style = PaintingStyle.fill;
-      canvas.drawCircle(center, radius * (0.8 + 0.2 * animationValue), ringPaint1);
+      canvas.drawCircle(
+        Offset(center.dx + tiltX * 0.3, center.dy + tiltY * 0.3),
+        radius * (0.8 + 0.2 * animationValue),
+        ringPaint1,
+      );
 
       final phase2 = (animationValue + 0.5) % 1.0;
       final ringPaint2 = Paint()
         ..color = const Color(0xFFFF9EBB).withValues(alpha: 0.08 * (1 - phase2))
         ..style = PaintingStyle.fill;
-      canvas.drawCircle(center, radius * (0.8 + 0.2 * phase2), ringPaint2);
+      canvas.drawCircle(
+        Offset(center.dx + tiltX * 0.3, center.dy + tiltY * 0.3),
+        radius * (0.8 + 0.2 * phase2),
+        ringPaint2,
+      );
     }
 
     // Dùng bezier thay vòng lặp pixel-by-pixel (~400 pts → 4 điểm điều khiển)
@@ -274,20 +330,22 @@ class _WavePainter extends CustomPainter {
         ..color = color
         ..style = PaintingStyle.fill;
 
-      final yBase = height * verticalOffset;
+      // Phản ứng nghiêng điện thoại: tiltY thay đổi chiều cao nước chung, tiltX nghiêng nước qua trái/phải
+      final yBase = height * verticalOffset + (tiltY * 0.75);
       final t = animationValue * pi * 2 + phaseShift;
 
-      // 4 control points tạo sóng bezier đơn giản
-      final y0 = yBase + sin(t) * amplitude;
-      final y1 = yBase + sin(t + pi * 0.5) * amplitude;
+      // 4 control points tạo sóng bezier đơn giản phản ứng với độ nghiêng điện thoại
+      final y0 = yBase + sin(t) * amplitude - tiltX;
+      final y1 = yBase + sin(t + pi * 0.5) * amplitude - tiltX * 0.5;
       final y2 = yBase + sin(t + pi) * amplitude;
-      final y3 = yBase + sin(t + pi * 1.5) * amplitude;
+      final y3 = yBase + sin(t + pi * 1.5) * amplitude + tiltX * 0.5;
+      final yLast = yBase + sin(t + pi * 2) * amplitude + tiltX;
 
       final path = Path()
         ..moveTo(0, height)
         ..lineTo(0, y0)
         ..cubicTo(width * 0.25, y1, width * 0.5, y2, width * 0.75, y3)
-        ..cubicTo(width * 0.88, yBase + sin(t + pi * 1.75) * amplitude, width, y0, width, y0)
+        ..cubicTo(width * 0.88, yBase + sin(t + pi * 1.75) * amplitude + tiltX * 0.8, width, yLast, width, yLast)
         ..lineTo(width, height)
         ..close();
 
@@ -308,13 +366,13 @@ class _WavePainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.28)
       ..style = PaintingStyle.fill;
 
-    final bubbleY1 = height - (height * ((animationValue + 0.2) % 1.0));
-    final bubbleX1 = width * 0.3 + sin(animationValue * pi * 4) * 10;
+    final bubbleY1 = height - (height * ((animationValue + 0.2) % 1.0)) + tiltY * 0.8;
+    final bubbleX1 = width * 0.3 + sin(animationValue * pi * 4) * 10 + tiltX * 0.8;
     canvas.drawCircle(Offset(bubbleX1, bubbleY1), 5, bubblePaint);
 
     if (quality != 'low') {
-      final bubbleY2 = height - (height * ((animationValue + 0.65) % 1.0));
-      final bubbleX2 = width * 0.68 + cos(animationValue * pi * 4) * 12;
+      final bubbleY2 = height - (height * ((animationValue + 0.65) % 1.0)) + tiltY * 0.8;
+      final bubbleX2 = width * 0.68 + cos(animationValue * pi * 4) * 12 + tiltX * 0.8;
       canvas.drawCircle(Offset(bubbleX2, bubbleY2), 7, bubblePaint);
     }
   }

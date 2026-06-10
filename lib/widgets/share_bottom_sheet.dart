@@ -179,10 +179,12 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     Navigator.pop(context);
   }
 
-  void _copyToClipboard() {
+  void _copyContentToClipboard({bool closeSheet = false}) {
     final text = '${widget.contentToShare}\n${widget.shareUrl}'.trim();
     Clipboard.setData(ClipboardData(text: text));
-    Navigator.pop(context);
+    if (closeSheet && mounted) {
+      Navigator.pop(context);
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       _buildFeedbackSnackBar(
         message: L10nService().translate('share_copied'),
@@ -190,6 +192,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
         accentColor: const Color(0xFF0F9D58),
       ),
     );
+  }
+
+  void _copyToClipboard() {
+    _copyContentToClipboard(closeSheet: true);
   }
 
   String _composeShareMessage() {
@@ -320,28 +326,33 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
       max: 1.08,
     );
 
-    final sheetHeight = (screenHeight * 0.86).clamp(320.0, screenHeight);
+    final sheetHeight = (screenHeight * 0.93).clamp(320.0, screenHeight);
 
     return MediaQuery(
       data: mediaQuery.copyWith(textScaler: textScaler),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            16 + mediaQuery.viewInsets.bottom,
+          ),
           child: Container(
-            height: sheetHeight,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
+            height: sheetHeight - 32,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
                 colors: [Color(0xFFFFFBFD), Color(0xFFF8FAFC)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-              boxShadow: [
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: const [
                 BoxShadow(
-                  color: Color(0x260F172A),
-                  blurRadius: 36,
-                  offset: Offset(0, -10),
+                  color: Color(0x33000000),
+                  blurRadius: 28,
+                  offset: Offset(0, 10),
                 ),
               ],
             ),
@@ -370,94 +381,37 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     contentHorizontalPadding,
-                    0,
+                    SLResponsive.dp(4, screenWidth),
                     contentHorizontalPadding,
-                    SLResponsive.dp(8, screenWidth),
+                    SLResponsive.dp(12, screenWidth),
                   ),
-                  child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.fromLTRB(
-                      SLResponsive.dp(compact ? 16 : 18, screenWidth),
-                      SLResponsive.dp(compact ? 15 : 16, screenWidth),
-                      SLResponsive.dp(compact ? 16 : 18, screenWidth),
-                      SLResponsive.dp(compact ? 15 : 16, screenWidth),
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0x1AF472B6), Color(0x0DF8FAFC)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Chia sẻ kỷ niệm',
+                        style: SLTheme.quicksand(
+                          fontSize: SLResponsive.sp(18, screenWidth),
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF0F172A),
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(
-                        SLResponsive.dp(24, screenWidth),
-                      ),
-                      border: Border.all(color: const Color(0xFFFFD6E7)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: SLResponsive.dp(compact ? 42 : 46, screenWidth),
-                          height: SLResponsive.dp(compact ? 42 : 46, screenWidth),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFD81B60), Color(0xFFFB7185)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(
-                              SLResponsive.dp(16, screenWidth),
-                            ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x33D81B60),
-                                blurRadius: 16,
-                                offset: Offset(0, 8),
-                              ),
-                            ],
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF1F5F9),
+                            shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.ios_share_rounded,
-                            color: Colors.white,
+                            Icons.close_rounded,
+                            size: 18,
+                            color: Color(0xFF64748B),
                           ),
                         ),
-                        SizedBox(width: SLResponsive.dp(12, screenWidth)),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                L10nService().translate('share_sheet_title'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: SLTheme.quicksand(
-                                  fontSize: SLResponsive.sp(
-                                    compact ? 16.2 : 17.0,
-                                    screenWidth,
-                                  ),
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF0F172A),
-                                ),
-                              ),
-                              SizedBox(height: SLResponsive.dp(3, screenWidth)),
-                              Text(
-                                L10nService().translate('share_sheet_subtitle'),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: SLTheme.quicksand(
-                                  fontSize: SLResponsive.sp(
-                                    compact ? 11.2 : 11.8,
-                                    screenWidth,
-                                  ),
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF64748B),
-                                  height: 1.35,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
@@ -703,7 +657,36 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           ),
                           children: [
                             _buildExternalShareItem(
-                              icon: Icons.message_rounded,
+                              icon: Container(
+                                width: SLResponsive.dp(compact ? 32 : 36, screenWidth),
+                                height: SLResponsive.dp(compact ? 32 : 36, screenWidth),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF0068FF),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.chat_bubble_rounded,
+                                      color: Colors.white,
+                                      size: SLResponsive.dp(compact ? 18 : 20, screenWidth),
+                                    ),
+                                    Positioned(
+                                      top: SLResponsive.dp(compact ? 1.5 : 2.0, screenWidth),
+                                      child: Text(
+                                        'z',
+                                        style: TextStyle(
+                                          color: const Color(0xFF0068FF),
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: SLResponsive.sp(compact ? 10 : 11, screenWidth),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               label: 'Zalo',
                               color: const Color(0xFF0068FF),
                               onTap: _shareToExternal,
@@ -711,7 +694,48 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               screenWidth: screenWidth,
                             ),
                             _buildExternalShareItem(
-                              icon: Icons.copy_all_rounded,
+                              icon: Icon(
+                                Icons.facebook_rounded,
+                                color: const Color(0xFF1877F2),
+                                size: SLResponsive.dp(compact ? 28 : 32, screenWidth),
+                              ),
+                              label: 'Facebook',
+                              color: const Color(0xFF1877F2),
+                              onTap: _shareToExternal,
+                              compact: compact,
+                              screenWidth: screenWidth,
+                            ),
+                            _buildExternalShareItem(
+                              icon: Container(
+                                width: SLResponsive.dp(compact ? 32 : 36, screenWidth),
+                                height: SLResponsive.dp(compact ? 32 : 36, screenWidth),
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Color(0xFF00B2FF), Color(0xFF006AFF), Color(0xFF9B30FF)],
+                                    begin: Alignment.topRight,
+                                    end: Alignment.bottomLeft,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.chat_bubble_rounded,
+                                  color: Colors.white,
+                                  size: SLResponsive.dp(compact ? 16 : 18, screenWidth),
+                                ),
+                              ),
+                              label: 'Messenger',
+                              color: const Color(0xFF00B2FF),
+                              onTap: _shareToExternal,
+                              compact: compact,
+                              screenWidth: screenWidth,
+                            ),
+                            _buildExternalShareItem(
+                              icon: Icon(
+                                Icons.copy_all_rounded,
+                                color: Colors.blueGrey,
+                                size: SLResponsive.dp(compact ? 22 : 24, screenWidth),
+                              ),
                               label: L10nService().translate('core_copy'),
                               color: Colors.blueGrey,
                               onTap: _copyToClipboard,
@@ -719,7 +743,11 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               screenWidth: screenWidth,
                             ),
                             _buildExternalShareItem(
-                              icon: Icons.share_rounded,
+                              icon: Icon(
+                                Icons.share_rounded,
+                                color: Colors.grey,
+                                size: SLResponsive.dp(compact ? 22 : 24, screenWidth),
+                              ),
                               label: L10nService().translate('core_other'),
                               color: Colors.grey,
                               onTap: _shareToExternal,
@@ -886,10 +914,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
+        SLResponsive.dp(compact ? 16 : 18, screenWidth),
         SLResponsive.dp(compact ? 14 : 16, screenWidth),
-        SLResponsive.dp(compact ? 13 : 14, screenWidth),
+        SLResponsive.dp(compact ? 16 : 18, screenWidth),
         SLResponsive.dp(compact ? 14 : 16, screenWidth),
-        SLResponsive.dp(compact ? 13 : 14, screenWidth),
       ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -897,13 +925,13 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(SLResponsive.dp(22, screenWidth)),
-        border: Border.all(color: const Color(0xFFFFD8E6)),
+        borderRadius: BorderRadius.circular(SLResponsive.dp(24, screenWidth)),
+        border: Border.all(color: const Color(0xFFFFD1E3)),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x120F172A),
-            blurRadius: 18,
-            offset: Offset(0, 8),
+            color: Color(0x0C000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
           ),
         ],
       ),
@@ -914,8 +942,11 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
             width: SLResponsive.dp(compact ? 42 : 46, screenWidth),
             height: SLResponsive.dp(compact ? 42 : 46, screenWidth),
             decoration: BoxDecoration(
-              color: const Color(0xFFD81B60).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(SLResponsive.dp(16, screenWidth)),
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFFEEF4), Color(0xFFFFF5F8)],
+              ),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFFFD8E6)),
             ),
             child: const Icon(
               Icons.auto_awesome_rounded,
@@ -927,59 +958,102 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Nội dung bạn đang chia sẻ',
-                  style: SLTheme.quicksand(
-                    fontSize: SLResponsive.sp(compact ? 12.2 : 12.8, screenWidth),
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFD81B60),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Nội dung bạn đang chia sẻ',
+                      style: SLTheme.quicksand(
+                        fontSize: SLResponsive.sp(compact ? 12.8 : 13.4, screenWidth),
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFFD81B60),
+                      ),
+                    ),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: () => _copyContentToClipboard(closeSheet: false),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0F5),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFFFE0EB)),
+                          ),
+                          child: Icon(
+                            Icons.copy_rounded,
+                            size: SLResponsive.dp(14, screenWidth),
+                            color: const Color(0xFFD81B60),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: SLResponsive.dp(6, screenWidth)),
-                Text(
-                  previewText.isEmpty ? 'Chưa có nội dung hiển thị.' : previewText,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    fontSize: SLResponsive.sp(compact ? 12.4 : 13, screenWidth),
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
-                    height: 1.35,
+                GestureDetector(
+                  onTap: () => _copyContentToClipboard(closeSheet: false),
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: Text(
+                      previewText.isEmpty ? 'Chưa có nội dung hiển thị.' : previewText,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        fontSize: SLResponsive.sp(compact ? 12.6 : 13.2, screenWidth),
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF334155),
+                        height: 1.4,
+                      ),
+                    ),
                   ),
                 ),
                 if (previewUrl.isNotEmpty) ...[
-                  SizedBox(height: SLResponsive.dp(8, screenWidth)),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: SLResponsive.dp(10, screenWidth),
-                      vertical: SLResponsive.dp(7, screenWidth),
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(SLResponsive.dp(14, screenWidth)),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.link_rounded,
-                          size: SLResponsive.dp(15, screenWidth),
-                          color: const Color(0xFF64748B),
+                  SizedBox(height: SLResponsive.dp(10, screenWidth)),
+                  GestureDetector(
+                    onTap: () => _copyContentToClipboard(closeSheet: false),
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: SLResponsive.dp(12, screenWidth),
+                          vertical: SLResponsive.dp(8, screenWidth),
                         ),
-                        SizedBox(width: SLResponsive.dp(6, screenWidth)),
-                        Expanded(
-                          child: Text(
-                            previewUrl,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: SLTheme.quicksand(
-                              fontSize: SLResponsive.sp(11.4, screenWidth),
-                              fontWeight: FontWeight.w700,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(SLResponsive.dp(14, screenWidth)),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.link_rounded,
+                              size: SLResponsive.dp(16, screenWidth),
                               color: const Color(0xFF64748B),
                             ),
-                          ),
+                            SizedBox(width: SLResponsive.dp(8, screenWidth)),
+                            Expanded(
+                              child: Text(
+                                previewUrl,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: SLTheme.quicksand(
+                                  fontSize: SLResponsive.sp(11.6, screenWidth),
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: SLResponsive.dp(8, screenWidth)),
+                            Icon(
+                              Icons.copy_rounded,
+                              size: SLResponsive.dp(13, screenWidth),
+                              color: const Color(0xFF94A3B8),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ],
@@ -1151,9 +1225,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
       ),
     );
   }
-
   Widget _buildExternalShareItem({
-    required IconData icon,
+    required Widget icon,
     required String label,
     required Color color,
     required VoidCallback onTap,
@@ -1199,11 +1272,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                       ),
                     ],
                   ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: SLResponsive.dp(compact ? 22 : 24, screenWidth),
-                  ),
+                  child: Center(child: icon),
                 ),
                 SizedBox(height: SLResponsive.dp(8, screenWidth)),
                 Text(
@@ -1224,7 +1293,6 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
       ),
     );
   }
-
   SnackBar _buildFeedbackSnackBar({
     required String message,
     required IconData icon,
