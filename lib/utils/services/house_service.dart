@@ -662,7 +662,7 @@ class HouseService {
         'updatedAt': nowMs,
         'settings': {
           'theme': 'theme-auto',
-          'countdownSizePx': 500,
+          'countdownSizePx': 400,
           'startDate': startDate,
           'font': "'Quicksand', sans-serif",
           'privacy': 'public',

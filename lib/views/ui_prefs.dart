@@ -123,7 +123,7 @@ class UiPrefsState {
     // Default to no falling effects.
     fallingEffectKey: 'off',
     avatarSizePx: 90,
-    countdownSizePx: 500,
+    countdownSizePx: 400,
     avatarFrameKey: 'off',
     // Default countdown visual: glass (kính mờ)
     countdownStyleKey: 'glass',
