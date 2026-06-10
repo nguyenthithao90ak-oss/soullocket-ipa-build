@@ -55,7 +55,10 @@ class UtilitiesTab extends StatefulWidget {
   State<UtilitiesTab> createState() => _UtilitiesTabState();
 }
 
-class _UtilitiesTabState extends State<UtilitiesTab> {
+class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final HouseService _houseService = HouseService();
@@ -327,6 +330,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final visibleApps = _appsForCurrentSegment();
 
     return Scaffold(

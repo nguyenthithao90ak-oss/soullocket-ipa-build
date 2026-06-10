@@ -376,7 +376,9 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
                     if (!_shouldBuildPage(index)) {
                       return const SizedBox.expand();
                     }
-                    return widget.children[index];
+                    return RepaintBoundary(
+                      child: widget.children[index],
+                    );
                   },
                   childCount: widget.children.length,
                 ),

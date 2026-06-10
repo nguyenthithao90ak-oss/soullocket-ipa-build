@@ -228,7 +228,9 @@ class CommunityTab extends StatefulWidget {
 }
 
 class _CommunityTabState extends State<CommunityTab>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final HouseService _houseService = HouseService();
@@ -1020,6 +1022,7 @@ class _CommunityTabState extends State<CommunityTab>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (_communityClosedUntilNextVersion) {
       return Scaffold(
         backgroundColor: Colors.transparent,

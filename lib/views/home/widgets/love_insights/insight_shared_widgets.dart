@@ -53,13 +53,13 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: color),
-          SLSpacing.w6,
+          const SizedBox(width: 6),
           Text(
             text,
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w900,
-              color: color.withOpacity(0.9),
+              color: color.withValues(alpha: 0.9),
             ),
           ),
         ],

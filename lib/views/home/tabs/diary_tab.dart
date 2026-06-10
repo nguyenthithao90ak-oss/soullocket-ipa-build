@@ -50,7 +50,10 @@ class DiaryTab extends StatefulWidget {
 
 typedef _PreparedMemoryFeed = PreparedDiaryMemoryFeed;
 
-class _DiaryTabState extends State<DiaryTab> {
+class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final DiaryFeedController _feedController = DiaryFeedController();
   final DiaryComposerController _composerState = DiaryComposerController();
   final DiaryMemoryController _memoryController = DiaryMemoryController();
@@ -1552,6 +1555,8 @@ class _DiaryTabState extends State<DiaryTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    context.watch<PremiumProvider>();
     return _DiaryTabShell(state: this);
   }
 }

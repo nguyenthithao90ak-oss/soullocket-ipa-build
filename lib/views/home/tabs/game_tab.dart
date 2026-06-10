@@ -24,7 +24,10 @@ class GameTab extends StatefulWidget {
   State<GameTab> createState() => _GameTabState();
 }
 
-class _GameTabState extends State<GameTab> {
+class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   static const AssetImage _soulRhythmIcon =
       AssetImage(GameTab.soulRhythmIconPath);
   bool _didPrecacheSoulRhythmIcon = false;
@@ -276,6 +279,7 @@ class _GameTabState extends State<GameTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
