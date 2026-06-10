@@ -82,6 +82,7 @@ import '../../../utils/services/admob_service.dart';
 
 import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import '../screens/global_search_screen.dart';
+import '../widgets/soul_merge_screen.dart';
 import 'dart:ui' as ui;
 
 import '../../../widgets/lottie_async_loader.dart';

@@ -101,7 +101,7 @@ abstract final class _L10nStaticData {
     'settings_security_desc':
         'Bật khóa ứng dụng, xác minh email, liên kết Google, PIN khôi phục và quản lý thiết bị đang đăng nhập.',
     'settings_theme_desc':
-        'Đổi chủ đề, font chữ, ảnh nền, nhạc nền, hiệu ứng rơi, đồ họa và công cụ AI cá nhân hóa.',
+        'Đổi chủ đề, font chữ, ảnh nền, nhạc nền, hiệu ứng rơi, đồ họa.',
     'settings_widget_label': 'Widget',
     'settings_widget_desc_web':
         'Xem trước đầy đủ giao diện widget, ảnh đôi, màu sắc và đồng bộ để mở tiếp trên điện thoại.',

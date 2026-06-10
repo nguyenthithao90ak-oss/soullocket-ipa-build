@@ -335,17 +335,18 @@ class _WavePainter extends CustomPainter {
       final t = animationValue * pi * 2 + phaseShift;
 
       // 4 control points tạo sóng bezier đơn giản phản ứng với độ nghiêng điện thoại
-      final y0 = yBase + sin(t) * amplitude - tiltX;
-      final y1 = yBase + sin(t + pi * 0.5) * amplitude - tiltX * 0.5;
+      final tiltAmount = tiltX * 3.5; // Tăng hệ số nghiêng để rõ rệt hơn
+      final y0 = yBase + sin(t) * amplitude - tiltAmount;
+      final y1 = yBase + sin(t + pi * 0.5) * amplitude - tiltAmount * 0.5;
       final y2 = yBase + sin(t + pi) * amplitude;
-      final y3 = yBase + sin(t + pi * 1.5) * amplitude + tiltX * 0.5;
-      final yLast = yBase + sin(t + pi * 2) * amplitude + tiltX;
+      final y3 = yBase + sin(t + pi * 1.5) * amplitude + tiltAmount * 0.5;
+      final yLast = yBase + sin(t + pi * 2) * amplitude + tiltAmount;
 
       final path = Path()
         ..moveTo(0, height)
         ..lineTo(0, y0)
         ..cubicTo(width * 0.25, y1, width * 0.5, y2, width * 0.75, y3)
-        ..cubicTo(width * 0.88, yBase + sin(t + pi * 1.75) * amplitude + tiltX * 0.8, width, yLast, width, yLast)
+        ..cubicTo(width * 0.88, yBase + sin(t + pi * 1.75) * amplitude + tiltAmount * 0.8, width, yLast, width, yLast)
         ..lineTo(width, height)
         ..close();
 

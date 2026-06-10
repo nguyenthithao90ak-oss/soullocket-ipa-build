@@ -18,9 +18,13 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
         icon: Icons.photo_library_rounded,
       ),
       _MetricCardData(
-        title: _isSingle ? context.tr('home_ngyhotng_367ea9') : context.tr('home_tngtc_f5f47c'),
+        title: _isSingle
+            ? context.tr('home_ngyhotng_367ea9')
+            : context.tr('home_tngtc_f5f47c'),
         value: '${insight.activeDays}',
-        subtitle: _isSingle ? context.tr('home_cdliu_81b703') : context.tr('home_ngycdun_98fd1e'),
+        subtitle: _isSingle
+            ? context.tr('home_cdliu_81b703')
+            : context.tr('home_ngycdun_98fd1e'),
         accent: const Color(0xFF0F4C81),
         icon: Icons.auto_graph_rounded,
       ),
@@ -56,9 +60,38 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
 
   Widget _buildMetricCard(_MetricCardData card) {
     return Container(
-      padding: SLSpacing.all16,
-      decoration:
-          _softCardDecoration(borderColor: card.accent.withValues(alpha: 0.14)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: card.accent.withValues(alpha: 0.15),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+          const BoxShadow(
+            color: Colors.white,
+            blurRadius: 6,
+            offset: Offset(0, -3),
+            spreadRadius: 1,
+            blurStyle: BlurStyle.inner,
+          ),
+          BoxShadow(
+            color: card.accent.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+            blurStyle: BlurStyle.inner,
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

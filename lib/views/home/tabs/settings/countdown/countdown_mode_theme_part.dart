@@ -74,7 +74,6 @@ class _CountdownModeThemeData {
           isDark: false,
         );
       case 'theme-pink-glow':
-      default:
         return const _CountdownModeThemeData(
           background: [Color(0xFFFFF3F7), Color(0xFFFFE2EC), Color(0xFFFCE8FF)],
           overlay: [Color(0x08FFFFFF), Color(0x00FFFFFF), Color(0x18000000)],
@@ -82,6 +81,15 @@ class _CountdownModeThemeData {
           orbB: Color(0xFFEAB8FF),
           foreground: Color(0xFF5D3656),
           isDark: false,
+        );
+      default:
+        return const _CountdownModeThemeData(
+          background: [Color(0xFF1A1A24), Color(0xFF252233), Color(0xFF15151D)],
+          overlay: [Color(0x44000000), Color(0x22000000), Color(0x66000000)],
+          orbA: Color(0xFFFF7DB5),
+          orbB: Color(0xFF8D7BFF),
+          foreground: Colors.white,
+          isDark: true,
         );
     }
   }

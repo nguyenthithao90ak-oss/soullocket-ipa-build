@@ -17,6 +17,27 @@ class _MainHomeHeroHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        if (!isSingle)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 4,
+            left: 14,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: UiPrefs.captureModeNotifier,
+              builder: (context, captureMode, _) {
+                if (captureMode) return const SizedBox.shrink();
+                return state._buildHeaderButton(
+                  icon: Icons.join_inner_rounded,
+                  color: const Color(0xFFFF4F93),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SoulMergeScreen(),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         Positioned(
           top: MediaQuery.of(context).padding.top + 4,
           right: 14,

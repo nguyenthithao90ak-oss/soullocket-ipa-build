@@ -38,14 +38,21 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: background.withValues(alpha: 0.6),
+        color: background,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+        border: Border.all(color: Colors.white, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.08),
+            color: color.withValues(alpha: 0.15),
             blurRadius: 8,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 4),
+          ),
+          const BoxShadow(
+            color: Colors.white,
+            blurRadius: 4,
+            offset: Offset(0, -2),
+            spreadRadius: 1,
+            blurStyle: BlurStyle.inner,
           ),
         ],
       ),
@@ -59,7 +66,7 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w900,
-              color: color.withValues(alpha: 0.9),
+              color: color.withValues(alpha: 0.95),
             ),
           ),
         ],

@@ -220,8 +220,22 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
       );
       return;
     }
-    final isProUser = await AdMobService().isProUser();
-    final memoryLimits = await _memoryShareService.fetchLimits();
+
+    // Start fetching network data early to mask latency while user picks expiry days
+    final limitsFuture = _memoryShareService.fetchLimits();
+    final isProUserFuture = AdMobService().isProUser();
+    final currentUserFuture = _guardController.resolveCurrentUser();
+
+    final expiryDays = await _pickMemoryShareExpiryDays();
+    if (expiryDays == null || !mounted) {
+      return;
+    }
+
+    // Await the pre-fired futures. In most cases, they are already complete.
+    final isProUser = await isProUserFuture;
+    final memoryLimits = await limitsFuture;
+    final currentUser = await currentUserFuture;
+
     final maxItems = isProUser ? memoryLimits.shareProMaxItems : memoryLimits.shareFreeMaxItems;
     if (photos.length > maxItems) {
       _showDiarySnackBar(
@@ -230,17 +244,11 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
       );
       return;
     }
-    final currentUser = await _guardController.resolveCurrentUser();
     if (currentUser == null) {
       _showDiarySnackBar(
         context.tr('home_phinngnhph_4893ad'),
         backgroundColor: const Color(0xFFE53935),
       );
-      return;
-    }
-
-    final expiryDays = await _pickMemoryShareExpiryDays();
-    if (expiryDays == null || !mounted) {
       return;
     }
 

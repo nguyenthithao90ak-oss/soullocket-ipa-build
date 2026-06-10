@@ -270,25 +270,8 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
     );
   }
 
-  BoxDecoration _glassCardDecoration({
-    required Color borderColor,
-    required Color shadowColor,
-  }) {
-    return BoxDecoration(
-      color: Colors.white.withValues(alpha: 0.65), // Frosted glass feel
-      borderRadius: BorderRadius.circular(32),
-      border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
-      boxShadow: [
-        BoxShadow(
-          color: shadowColor,
-          blurRadius: 28,
-          offset: const Offset(0, 14),
-        ),
-      ],
-    );
-  }
 
-  BoxDecoration _softCardDecoration({Color? borderColor}) {
+  BoxDecoration _softCardDecoration() {
     return BoxDecoration(
       color: Colors.white.withValues(alpha: 0.75),
       borderRadius: BorderRadius.circular(28),

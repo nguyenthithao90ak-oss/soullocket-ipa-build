@@ -733,11 +733,14 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           backgroundColor: SLColors.success,
         ));
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Vault upload error: $e\n$stack');
       if (mounted) {
+        final errorMsg = AppErrorMapper.resolve(e).message;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(
-                context.tr('util_chathhontt_de09e4'))));
+            content: Text(errorMsg),
+            backgroundColor: SLColors.danger,
+        ));
       }
     } finally {
       if (mounted) {

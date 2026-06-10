@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../services/single_match_service.dart';
+import 'single_match_service.dart';
 import 'activity_history_service.dart';
 import '../models/house_settings.dart';
 import '../utils/flexible_date_input.dart';

@@ -46,6 +46,7 @@ import 'tabs/main_home_tab.dart';
 import 'tabs/settings_tab.dart' show SettingsTab;
 import 'tabs/update_tab.dart';
 import 'tabs/utilities_tab.dart';
+import '../utilities/utility_sticker_icon.dart';
 import '../../utils/services/widget_service.dart';
 import '../../utils/sl_notice.dart';
 import '../../utils/app_error_mapper.dart';
@@ -322,29 +323,33 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
       return false;
     }
 
-    if (notification is! ScrollEndNotification) {
-      return false;
-    }
-
     final metrics = notification.metrics;
     if (metrics is! PageMetrics) {
       return false;
     }
 
-    final nextPage = _clampPage(
-      (metrics.page ?? widget.controller.initialPage.toDouble()).round(),
-    );
-    if (nextPage == _lastReportedPage) {
-      return false;
-    }
+    final currentPage =
+        metrics.page ?? widget.controller.initialPage.toDouble();
+    final closestPage = _clampPage(currentPage.round());
 
-    if (mounted) {
+    // Cập nhật _lastBuiltPage liên tục khi đang lướt để preload tab tiếp theo sớm hơn
+    // tránh tình trạng bị khựng khi vuốt nhanh liên tiếp
+    if (closestPage != _lastBuiltPage && mounted) {
       setState(() {
-        _lastBuiltPage = nextPage;
-        _lastReportedPage = nextPage;
+        _lastBuiltPage = closestPage;
       });
     }
-    widget.onPageChanged?.call(nextPage);
+
+    if (notification is ScrollEndNotification) {
+      if (closestPage != _lastReportedPage) {
+        if (mounted) {
+          setState(() {
+            _lastReportedPage = closestPage;
+          });
+        }
+        widget.onPageChanged?.call(closestPage);
+      }
+    }
     return false;
   }
 
@@ -583,6 +588,7 @@ class _HomeScreenState extends State<HomeScreen>
     await _maybeShowFirstSetupGuide();
     await _maybeShowPendingDeviceNotice();
     unawaited(_checkScheduleNotifs());
+    precacheUtilityStickerList(context);
 
     final houseId = await HouseService().getCurrentHouseId();
     if (!mounted || houseId == null) return;

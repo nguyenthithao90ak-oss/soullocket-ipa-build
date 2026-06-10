@@ -1795,7 +1795,7 @@ extension _CountdownModeIndependentScreenViewPart
                     ),
                     Expanded(
                       child: Text(
-                        context.tr('home_khnggianri_e16da8'),
+                        'Không gian riêng',
                         style: SLTheme.quicksand(
                           fontSize: 29,
                           fontWeight: FontWeight.w900,

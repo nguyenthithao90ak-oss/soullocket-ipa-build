@@ -287,6 +287,7 @@ extension _SettingsTabShell on _SettingsTabState {
                   child: Material(
                     color: Colors.transparent,
                     child: ListView(
+                      physics: const ClampingScrollPhysics(),
                       padding: const EdgeInsets.only(bottom: 120),
                       children: [
                         _buildSettingsSyncBanner(),
@@ -405,6 +406,7 @@ extension _SettingsTabShell on _SettingsTabState {
                               ),
                             ),
                             child: ListView(
+                              physics: const ClampingScrollPhysics(),
                               padding: const EdgeInsets.only(bottom: 120),
                               children: [
                                 _buildSettingsSyncBanner(),
@@ -674,7 +676,7 @@ extension _SettingsTabShell on _SettingsTabState {
           Icons.lock_outline_rounded,
           Icons.phonelink_lock_rounded,
         ],
-        label: 'PRO',
+        label: context.tr('settings_security_label'),
         desc: context.tr('settings_security_desc'),
         gradient: const [Color(0xFFFFD7E1), Color(0xFFF5A3B7)],
         border: const Color(0xFFFFA8BF),
@@ -815,7 +817,7 @@ extension _SettingsTabShell on _SettingsTabState {
                               ),
                             ),
                             child: SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
+                              physics: const ClampingScrollPhysics(),
                               padding:
                                   const EdgeInsets.only(top: 0, bottom: 24),
                               child: _buildStandalonePanelContent(sectionId),

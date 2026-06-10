@@ -1198,7 +1198,9 @@ class _FloatingHeartsRingOverlayState
                     child: Opacity(
                       opacity: p.opacity,
                       child: Transform.rotate(
-                        angle: t * 0.25, // Xoay nghiêng trái tim nhẹ nhàng theo chuyển động
+                        // Xoay nghiêng trái tim nhẹ nhàng theo chuyển động t
+                        // VÀ nghiêng theo độ nghiêng của điện thoại (_tiltX)
+                        angle: t * 0.25 + (_tiltX * 0.05),
                         child: Icon(
                           Icons.favorite_rounded,
                           size: p.size,

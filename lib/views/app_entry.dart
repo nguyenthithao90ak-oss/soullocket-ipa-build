@@ -304,21 +304,21 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
               await SettingsSyncService().consumePendingRestoreNotice(uid);
           if (!mounted || !shouldShow) return;
 
-          await showDialog<void>(
-            context: context,
-            builder: (dialogContext) => AlertDialog(
-              title: const Text('Tìm thấy dữ liệu cũ'),
-              content: const Text(
-                'SoulLocket đã khôi phục cài đặt đã đồng bộ từ cloud trên thiết bị này. Bạn có thể kiểm tra lại trong Cài đặt > Dữ liệu hệ thống.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Đã hiểu'),
-                ),
-              ],
-            ),
-          );
+          // await showDialog<void>(
+          //   context: context,
+          //   builder: (dialogContext) => AlertDialog(
+          //     title: const Text('Tìm thấy dữ liệu cũ'),
+          //     content: const Text(
+          //       'SoulLocket đã khôi phục cài đặt đã đồng bộ từ cloud trên thiết bị này. Bạn có thể kiểm tra lại trong Cài đặt > Dữ liệu hệ thống.',
+          //     ),
+          //     actions: [
+          //       TextButton(
+          //         onPressed: () => Navigator.of(dialogContext).pop(),
+          //         child: const Text('Đã hiểu'),
+          //       ),
+          //     ],
+          //   ),
+          // );
         } catch (e) {
           debugPrint(
             '[AppEntry] Restore notice failed: '
