@@ -84,7 +84,17 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadRememberedEmail();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkKickReason();
+      _checkFirstTimeSyncGuide();
     });
+  }
+
+  Future<void> _checkFirstTimeSyncGuide() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeen = prefs.getBool('il_has_seen_sync_guide') ?? false;
+    if (!hasSeen && mounted) {
+      await prefs.setBool('il_has_seen_sync_guide', true);
+      _showSyncGuideDialog(context, enforceDelay: true);
+    }
   }
 
   Future<void> _checkKickReason() async {
@@ -1047,109 +1057,140 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _showSyncGuideDialog(BuildContext context) {
+  void _showSyncGuideDialog(BuildContext context, {bool enforceDelay = false}) {
     final l10n = L10nService();
     showDialog(
       context: context,
+      barrierDismissible: !enforceDelay, // Prevent dismissing by tapping outside if enforced
       builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 340),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFFFFFDFE),
-                  Color(0xFFFFF2F8),
-                  Color(0xFFFCF4FF),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(
-                color: const Color(0xFFFFB6D3).withValues(alpha: 0.55),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF85B3).withValues(alpha: 0.18),
-                  blurRadius: 40,
-                  offset: const Offset(0, 20),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFEBF3),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.sync_rounded,
-                        color: SLColors.primary,
-                        size: 24,
-                      ),
+        int countdown = enforceDelay ? 5 : 0;
+        Timer? timer;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            if (enforceDelay && timer == null && countdown > 0) {
+              timer = Timer.periodic(const Duration(seconds: 1), (t) {
+                if (countdown > 1) {
+                  setState(() => countdown--);
+                } else {
+                  t.cancel();
+                  setState(() => countdown = 0);
+                }
+              });
+            }
+
+            return PopScope(
+              canPop: !enforceDelay || countdown == 0,
+              child: Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 340),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFFFFDFE),
+                        Color(0xFFFFF2F8),
+                        Color(0xFFFCF4FF),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.translate('auth_sync_guide_title'),
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(
+                      color: const Color(0xFFFFB6D3).withValues(alpha: 0.55),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF85B3).withValues(alpha: 0.18),
+                        blurRadius: 40,
+                        offset: const Offset(0, 20),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFEBF3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.sync_rounded,
+                              color: SLColors.primary,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              l10n.translate('auth_sync_guide_title'),
+                              style: SLTheme.quicksand(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                                color: SLColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        l10n.translate('auth_sync_guide_intro'),
                         style: SLTheme.quicksand(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: SLColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: SLColors.textSecond,
+                          height: 1.35,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  l10n.translate('auth_sync_guide_intro'),
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textSecond,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _buildSyncStep(
-                  number: '1',
-                  text: l10n.translate('auth_sync_guide_step1'),
-                ),
-                const SizedBox(height: 12),
-                _buildSyncStep(
-                  number: '2',
-                  text: l10n.translate('auth_sync_guide_step2'),
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  child: SLTheme.authPrimaryButton(
-                    label: l10n.translate('auth_sync_guide_gotit'),
-                    onPressed: () => Navigator.pop(context),
-                    colors: const [
-                      Color(0xFFFF69B4),
-                      Color(0xFFFF85B3),
+                      const SizedBox(height: 14),
+                      _buildSyncStep(
+                        number: '1',
+                        text: l10n.translate('auth_sync_guide_step1'),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildSyncStep(
+                        number: '2',
+                        text: l10n.translate('auth_sync_guide_step2'),
+                      ),
+                      const SizedBox(height: 22),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SLTheme.authPrimaryButton(
+                          label: countdown > 0
+                              ? '${l10n.translate('auth_sync_guide_gotit')} ($countdown)'
+                              : l10n.translate('auth_sync_guide_gotit'),
+                          onPressed: countdown > 0
+                              ? null
+                              : () {
+                                  timer?.cancel();
+                                  Navigator.pop(context);
+                                },
+                          colors: const [
+                            Color(0xFFFF69B4),
+                            Color(0xFFFF85B3),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
-    );
+    ).then((_) {
+      // Ensure timer is cancelled if dialog is somehow dismissed
+    });
   }
 
   Widget _buildSyncStep({required String number, required String text}) {

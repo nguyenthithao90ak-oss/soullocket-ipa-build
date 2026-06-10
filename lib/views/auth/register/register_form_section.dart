@@ -6,6 +6,18 @@ import '../../../utils/services/l10n_service.dart';
 import '../../../utils/flexible_date_input.dart';
 import '../login/social_auth_buttons.dart';
 
+final RegExp _registerEmailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+const List<Color> _registerButtonDisabledColors = <Color>[
+  Color(0xFFE8AFC4),
+  Color(0xFFF1C3D3),
+  Color(0xFFE8CFE0),
+];
+
+bool _isRegisterInputValid(String email, String password, bool acceptTerms) {
+  return _registerEmailRegex.hasMatch(email.trim()) && password.trim().length >= 6 && acceptTerms;
+}
+
 class RegisterForm extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
@@ -345,11 +357,29 @@ class RegisterForm extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          SLTheme.authPrimaryButton(
-            label: signupLabel,
-            onPressed: isLoading ? null : onRegister,
-            isLoading: isLoading,
-            colors: [accentRose, accentBlush, accentLavender],
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: emailController,
+            builder: (context, emailValue, _) {
+              return ValueListenableBuilder<TextEditingValue>(
+                valueListenable: passwordController,
+                builder: (context, passwordValue, _) {
+                  final isInputValid = _isRegisterInputValid(
+                    emailValue.text,
+                    passwordValue.text,
+                    acceptTerms,
+                  );
+
+                  return SLTheme.authPrimaryButton(
+                    label: signupLabel,
+                    onPressed: isLoading || !isInputValid ? null : onRegister,
+                    isLoading: isLoading,
+                    colors: isInputValid
+                        ? [accentRose, accentBlush, accentLavender]
+                        : _registerButtonDisabledColors,
+                  );
+                },
+              );
+            },
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
