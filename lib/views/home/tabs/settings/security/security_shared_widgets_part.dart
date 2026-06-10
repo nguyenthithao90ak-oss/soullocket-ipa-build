@@ -126,11 +126,19 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     final statusFg = isVerified ? const Color(0xFF2E7D32) : const Color(0xFFE65100);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FB),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEDF0F4)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -227,15 +235,6 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             color: isPrimary ? accentColor : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: isPrimary ? null : Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: isPrimary
-                ? [
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    )
-                  ]
-                : null,
           ),
           child: Text(
             label,

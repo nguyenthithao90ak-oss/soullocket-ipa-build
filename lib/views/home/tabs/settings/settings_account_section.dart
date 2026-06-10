@@ -580,15 +580,13 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     : Colors.white.withValues(alpha: 0.5),
                 width: 1.0,
               ),
-              boxShadow: [
+              boxShadow: _isVipActive ? [
                 BoxShadow(
-                  color: _isVipActive
-                      ? const Color(0xFFFFC107).withValues(alpha: 0.15)
-                      : Colors.black.withValues(alpha: 0.03),
-                  blurRadius: _isVipActive ? 10 : 8,
+                  color: const Color(0xFFFFC107).withValues(alpha: 0.15),
+                  blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
-              ],
+              ] : [],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -801,19 +799,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                border: Border.all(
-                  color: panelAccent.withValues(alpha: 0.25),
-                  width: 1.0,
-                ),
-                borderRadius: SLRadius.mdAll,
-                boxShadow: [
-                  BoxShadow(
-                    color: panelAccent.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                color: Colors.transparent,
+                border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
               ),
               child: Row(
                 children: [
@@ -844,19 +831,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              border: Border.all(
-                color: panelAccent.withValues(alpha: 0.25),
-                width: 1.0,
-              ),
-              borderRadius: SLRadius.mdAll,
-              boxShadow: [
-                BoxShadow(
-                  color: panelAccent.withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              color: Colors.transparent,
+              border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -880,19 +856,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              border: Border.all(
-                color: panelAccent.withValues(alpha: 0.25),
-                width: 1.0,
-              ),
-              borderRadius: SLRadius.mdAll,
-              boxShadow: [
-                BoxShadow(
-                  color: panelAccent.withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              color: Colors.transparent,
+              border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -929,19 +894,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                border: Border.all(
-                  color: panelAccent.withValues(alpha: 0.25),
-                  width: 1.0,
-                ),
-                borderRadius: SLRadius.mdAll,
-                boxShadow: [
-                  BoxShadow(
-                    color: panelAccent.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                color: Colors.transparent,
+                border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
               ),
               child: Row(
                 children: [
@@ -976,19 +930,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  border: Border.all(
-                    color: panelAccent.withValues(alpha: 0.25),
-                    width: 1.0,
-                  ),
-                  borderRadius: SLRadius.mdAll,
-                  boxShadow: [
-                    BoxShadow(
-                      color: panelAccent.withValues(alpha: 0.03),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: Colors.transparent,
+                  border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
                 ),
                 child: Row(
                   children: [

@@ -454,23 +454,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFFFFFFFF),
-                            Color(0xFFFFF6FA),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFF5D6E5), width: 1.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFF77A8).withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        color: Colors.transparent,
+                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -689,9 +674,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFFBFD),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFF4D3E0)),
+                        color: Colors.transparent,
+                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
                       ),
                       child: Text(
                         context.tr('theme_font_desc'),
@@ -848,9 +832,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFFFFF),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFF3D9E6)),
+                        color: Colors.transparent,
+                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -880,11 +863,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                               ],
                             ),
                           ),
-                          Checkbox(
+                          Switch.adaptive(
                             value: _draftLiteMode,
-                            activeColor: const Color(0xFFD81B60),
+                            activeThumbColor: const Color(0xFFD81B60),
                             onChanged: (value) => _updateThemeDraft(
-                                () => _draftLiteMode = value ?? false),
+                                () => _draftLiteMode = value),
                           ),
                         ],
                       ),
@@ -894,9 +877,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFFFFF),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFF3D9E6)),
+                        color: Colors.transparent,
+                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1002,9 +984,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF3F8FF),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFB3E5FC)),
+                        color: Colors.transparent,
+                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1085,26 +1066,8 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard> with SingleTickerP
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            widget.themeColor.withValues(alpha: 0.04),
-            widget.themeColor.withValues(alpha: 0.12),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: widget.themeColor.withValues(alpha: 0.18),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: widget.themeColor.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: Colors.transparent,
+        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(
