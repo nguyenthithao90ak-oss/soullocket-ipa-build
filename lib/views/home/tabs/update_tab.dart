@@ -608,22 +608,7 @@ class UpdateTab extends StatelessWidget {
             const Color(0xFFE8F5E9),
             const Color(0xFF388E3C),
           ),
-          if (!Platform.isIOS) ...[
-            SLSpacing.h12,
-            _buildRoadmapItem(
-              context,
-              Icons.public_rounded,
-              _tr(L10nService().translate('home_ngdngvtruy_f3be62'), 'App and web access'),
-              _tr(
-                'Ngoài bản app, tài liệu công khai và một số luồng hỗ trợ có thể truy cập qua web tại ${AppConfig.webHost}. Trải nghiệm và phạm vi tính năng trên web có thể khác bản ứng dụng.',
-                'Besides the app build, public documents and some support flows are available on the web at ${AppConfig.webHost}. The web experience and feature scope may differ from the app.',
-              ),
-              const Color(0xFFF8FAFC),
-              const Color(0xFF334155),
-              linkText: AppConfig.webHost,
-              linkUri: _webAppUri,
-            ),
-          ],
+
         ],
       ),
     );
