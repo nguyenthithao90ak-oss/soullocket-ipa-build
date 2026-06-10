@@ -458,21 +458,42 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required Widget child,
     bool hideBackButton = false,
     Widget? titleBadge,
+    bool flatMode = false,
   }) {
     final isStandalone = Navigator.of(context).canPop();
     final showBack = isStandalone && !hideBackButton;
     final showExpand = !isStandalone;
     return Container(
-      // Không padding horizontal để nội dung có thể sát mép màn hình
-      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
-      decoration: const BoxDecoration(
-        color: Colors.transparent,
+      margin: flatMode
+          ? const EdgeInsets.symmetric(horizontal: 6, vertical: 8)
+          : const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            borderColor.withValues(alpha: 0.04),
+            borderColor.withValues(alpha: 0.12),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: flatMode ? BorderRadius.circular(24) : BorderRadius.circular(20),
+        border: Border.all(
+          color: borderColor.withValues(alpha: 0.18),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: borderColor.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: Row(
               children: [
                 if (showBack) ...[
@@ -545,14 +566,19 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Divider(
               color: borderColor.withValues(alpha: 0.18),
               height: 1,
               thickness: 1,
             ),
           ),
-          child,
+          Padding(
+            padding: flatMode
+                ? const EdgeInsets.fromLTRB(10, 8, 10, 12)
+                : const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: child,
+          ),
         ],
       ),
     );
@@ -574,13 +600,16 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
   }
 
   Widget _buildInput(TextEditingController ctrl, String hint,
-      {int? maxLength}) {
+      {int? maxLength, Color? accentColor}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: TextField(
         controller: ctrl,
         maxLength: maxLength,
-        decoration: LegacyWebUi.softInputDecoration(hintText: hint),
+        decoration: LegacyWebUi.softInputDecoration(
+          hintText: hint,
+          accent: accentColor ?? LegacyWebUi.accentPink,
+        ),
         style: SLTheme.quicksand(
           fontSize: 14,
           fontWeight: FontWeight.w800,

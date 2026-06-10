@@ -572,6 +572,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
   }
 
   Future<void> _init() async {
+    if (!widget.isActive) return;
     final friendsErrorFallback = context.tr('home_khngthtida_063ede');
     final blockedErrorFallback = context.tr('home_khngthtida_87cfa9');
 
@@ -656,68 +657,9 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
             settings['avtUser1']?.toString() ??
             '';
       }
-      _listenCommunityMessengerPreview(houseId);
-      _friendsRequestSubscription =
-          _friendsService.streamFriendRequests(houseId).listen((requests) {
-        final sent = Map<String, String>.from(requests.sent);
-        final received = Map<String, String>.from(requests.received);
-        _updateState(() {
-          _sentFriendRequestIds = sent;
-          _receivedFriendRequestIds = received;
-          _friendRequestsRevision++;
-        });
-      });
-      _friendsSubscription = _dbRef.child('friends/$houseId').onValue.listen(
-        (event) {
-          _friendsDebounce?.cancel();
-          _friendsDebounce = Timer(const Duration(milliseconds: 200), () {
-            final v = event.snapshot.value;
-            final next = <String, dynamic>{};
-            if (v is Map) {
-              v.forEach((k, val) => next[k.toString()] = val);
-            }
-            _updateState(() {
-              _friends = next;
-              _friendsRevision++;
-              _invalidateFilteredPostsCache();
-            });
-          });
-        },
-        onError: (Object error) {
-          debugPrint(
-            'Community friends listener failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: friendsErrorFallback,
-            ).message}',
-          );
-        },
-      );
-      _blockedUsersSubscription =
-          _dbRef.child('houses/$houseId/blocked_users').onValue.listen(
-        (event) {
-          _blockedUsersDebounce?.cancel();
-          _blockedUsersDebounce = Timer(const Duration(milliseconds: 200), () {
-            final v = event.snapshot.value;
-            final next = <String, dynamic>{};
-            if (v is Map) {
-              v.forEach((k, val) => next[k.toString()] = val);
-            }
-            _updateState(() {
-              _blockedUsers = next;
-              _blockedUsersRevision++;
-              _invalidateFilteredPostsCache();
-            });
-          });
-        },
-        onError: (Object error) {
-          debugPrint(
-            'Community blocked-users listener failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: blockedErrorFallback,
-            ).message}',
-          );
-        },
-      );
+      if (widget.isActive) {
+        _subscribeToRealtimeData();
+      }
     } else {
       _communityMessengerPreviewSubscription?.cancel();
       _updateState(() {
@@ -1651,5 +1593,115 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
 
     if (!mounted || selectedPost == null) return;
     await _openComments(selectedPost);
+  }
+
+  void _subscribeToRealtimeData() {
+    final houseId = _houseId;
+    if (houseId == null || houseId.isEmpty) return;
+
+    _listenToCommunityMaintenance();
+    _listenCommunityMessengerPreview(houseId);
+
+    final friendsErrorFallback = context.tr('home_khngthtida_063ede');
+    final blockedErrorFallback = context.tr('home_khngthtida_87cfa9');
+
+    _friendsRequestSubscription?.cancel();
+    _friendsRequestSubscription =
+        _friendsService.streamFriendRequests(houseId).listen((requests) {
+      final sent = Map<String, String>.from(requests.sent);
+      final received = Map<String, String>.from(requests.received);
+      _updateState(() {
+        _sentFriendRequestIds = sent;
+        _receivedFriendRequestIds = received;
+        _friendRequestsRevision++;
+      });
+    });
+
+    _friendsSubscription?.cancel();
+    _friendsSubscription = _dbRef.child('friends/$houseId').onValue.listen(
+      (event) {
+        _friendsDebounce?.cancel();
+        _friendsDebounce = Timer(const Duration(milliseconds: 200), () {
+          final v = event.snapshot.value;
+          final next = <String, dynamic>{};
+          if (v is Map) {
+            v.forEach((k, val) => next[k.toString()] = val);
+          }
+          _updateState(() {
+            _friends = next;
+            _friendsRevision++;
+            _invalidateFilteredPostsCache();
+          });
+        });
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Community friends listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: friendsErrorFallback,
+          ).message}',
+        );
+      },
+    );
+
+    _blockedUsersSubscription?.cancel();
+    _blockedUsersSubscription =
+        _dbRef.child('houses/$houseId/blocked_users').onValue.listen(
+      (event) {
+        _blockedUsersDebounce?.cancel();
+        _blockedUsersDebounce = Timer(const Duration(milliseconds: 200), () {
+          final v = event.snapshot.value;
+          final next = <String, dynamic>{};
+          if (v is Map) {
+            v.forEach((k, val) => next[k.toString()] = val);
+          }
+          _updateState(() {
+            _blockedUsers = next;
+            _blockedUsersRevision++;
+            _invalidateFilteredPostsCache();
+          });
+        });
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Community blocked-users listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: blockedErrorFallback,
+          ).message}',
+        );
+      },
+    );
+  }
+
+  void _unsubscribeFromRealtimeData() {
+    _communityMaintenanceSub?.cancel();
+    _communityMaintenanceSub = null;
+
+    _communityMessengerPreviewSubscription?.cancel();
+    _communityMessengerPreviewSubscription = null;
+
+    _cancelFeedFilterSubscriptions();
+  }
+
+  void _activateTab() {
+    if (!_isInitialized) {
+      _isInitialized = true;
+      _init();
+    } else {
+      _subscribeToRealtimeData();
+      _syncRealtimeFeedSubscription(forceRestart: true);
+    }
+    _startAdLogic();
+  }
+
+  void _deactivateTab() {
+    _feedSub?.cancel();
+    _feedSub = null;
+    _feedPreloadThrottleTimer?.cancel();
+    _unsubscribeFromRealtimeData();
+    unawaited(_persistCommunityUsageSession());
+    _sessionTimer?.cancel();
+    _sessionTimer = null;
+    _communityUsageStartedAt = null;
   }
 }

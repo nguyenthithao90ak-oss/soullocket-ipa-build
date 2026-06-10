@@ -123,6 +123,13 @@ class WidgetService {
     await ensureInitialized(forceUpdate: refresh);
   }
 
+  /// Clears the in-memory widget data cache so that the next call to any
+  /// sync method forces a full re-write to the shared HomeWidget storage,
+  /// which ensures iOS WidgetKit receives fresh data and reloads the timeline.
+  static void invalidateRuntimeCache() {
+    _runtimeWidgetData.clear();
+  }
+
   static String resolveSeasonEffect({
     required String seasonModeKey,
     String loveDate = '',

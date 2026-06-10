@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
 
@@ -362,11 +363,18 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                       .isNotEmpty) ...[
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    updated['image_url'],
+                                  child: CachedNetworkImage(
+                                    imageUrl: updated['image_url'],
                                     width: double.infinity,
                                     fit: BoxFit.cover,
                                     filterQuality: FilterQuality.high,
+                                    placeholder: (_, __) => const Center(
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                    errorWidget: (_, __, ___) => const Icon(
+                                      Icons.image_not_supported_outlined,
+                                      color: Colors.white70,
+                                    ),
                                   ),
                                 ),
                                 SLSpacing.h16,

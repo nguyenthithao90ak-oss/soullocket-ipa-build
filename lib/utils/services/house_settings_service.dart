@@ -1,3 +1,4 @@
+// ignore_for_file: unused_field, unused_element
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -104,6 +105,9 @@ class HouseSettingsService {
       return;
     }
 
+    // 🔓 DISABLED: Bỏ kiểm tra thiết bị tin cậy — cho phép thay đổi thông tin chung trên mọi thiết bị
+    return;
+    /*
     final trustState = await _deviceManagerService.getCurrentDeviceTrustState(
         autoApprove: true);
 
@@ -119,6 +123,7 @@ class HouseSettingsService {
         unlockAtMs > 0 ? _formatDateTime(unlockAtMs) : 'sau đủ 12 giờ';
     throw 'Thiết bị này chưa đủ tin cậy để thay đổi thông tin chung. '
         'Hãy duyệt thiết bị ở máy tin cậy hoặc đợi đến $unlockLabel.';
+    */
   }
 
   Future<void> updateIdentityBundle({

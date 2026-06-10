@@ -16,15 +16,15 @@ class LocationService {
   static const int _kGpsHistoryMaxPointsPerDay = 600;
   static const Duration _kGpsHistoryCleanupInterval = Duration(hours: 6);
   static const Duration _kInitialPositionTimeout = Duration(seconds: 15);
-  static const Duration _kFirebaseMinWriteInterval = Duration(seconds: 20);
+  static const Duration _kFirebaseMinWriteInterval = Duration(seconds: 60);
   static const Duration _kLastKnownMaxAge = Duration(minutes: 5);
   static const Duration _kLiveSourceMaxAge = Duration(minutes: 2);
-  static const int _kStreamDistanceFilterMeters = 10;
+  static const int _kStreamDistanceFilterMeters = 25;
   static const double _kMaxAcceptedAccuracyMeters = 100;
   static const double _kGoodAccuracyMeters = 30;
   static const double _kFairAccuracyMeters = 75;
-  static const double _kForceWriteDistanceMeters = 25;
-  static const double _kStationaryDistanceMeters = 8;
+  static const double _kForceWriteDistanceMeters = 50;
+  static const double _kStationaryDistanceMeters = 15;
   static const double _kAccuracyImprovementMeters = 20;
   static const double _kMaxPlausibleSpeedMps = 70;
 

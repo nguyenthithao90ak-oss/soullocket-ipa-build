@@ -239,6 +239,7 @@ class _CommunityTabState extends State<CommunityTab>
   String _communityMaintenanceMsg = L10nService().translate('home_tnhnngmngx_a56b2f');
   String _communityMaintenanceEta = '';
   StreamSubscription? _communityMaintenanceSub;
+  bool _isInitialized = false;
 
   bool _isLoading = true;
   String _currentFeedType = 'foryou';
@@ -548,25 +549,30 @@ class _CommunityTabState extends State<CommunityTab>
         }
       }
     });
-    _listenToCommunityMaintenance();
-    _init();
-    _startAdLogic();
+    if (widget.isActive) {
+      _activateTab();
+    }
     unawaited(_restoreCommunityMessengerButtonOffset());
   }
 
   @override
   void dispose() {
-    unawaited(_persistCommunityUsageSession());
-    _feedSub?.cancel();
-    _cancelFeedFilterSubscriptions();
+    _deactivateTab();
     _feedCachePersistTimer?.cancel();
     _communityMessengerButtonPersistTimer?.cancel();
-    _communityMessengerPreviewSubscription?.cancel();
-    _feedPreloadThrottleTimer?.cancel();
     _scrollController.dispose();
-    _communityMaintenanceSub?.cancel();
-    _sessionTimer?.cancel();
     _heartController.dispose();
+    
+    // Hủy trực tiếp StreamSubscriptions để thỏa mãn rule cancel_subscriptions
+    _communityMaintenanceSub?.cancel();
+    _friendsSubscription?.cancel();
+    _friendsRequestSubscription?.cancel();
+    _blockedUsersSubscription?.cancel();
+    _feedSub?.cancel();
+    _communityMessengerPreviewSubscription?.cancel();
+    _friendsDebounce?.cancel();
+    _blockedUsersDebounce?.cancel();
+
     super.dispose();
   }
 
@@ -577,14 +583,11 @@ class _CommunityTabState extends State<CommunityTab>
       return;
     }
     if (!widget.isActive) {
-      _feedSub?.cancel();
-      _feedSub = null;
-      _feedPreloadThrottleTimer?.cancel();
-      return;
+      _deactivateTab();
+    } else {
+      _activateTab();
     }
-    _syncRealtimeFeedSubscription(forceRestart: true);
   }
-
   static int _adShowCount = 0;
 
   void _updateState(VoidCallback fn) {

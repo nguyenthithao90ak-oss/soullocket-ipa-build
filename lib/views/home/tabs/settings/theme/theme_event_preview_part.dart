@@ -254,7 +254,8 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
   }
 
   Widget _buildThemeEventPreview() {
-    if (_houseId == null || _houseId!.trim().isEmpty) {
+    final houseId = (_houseId ?? '').trim();
+    if (houseId.isEmpty) {
       return Text(
         context.tr('theme_event_empty_house'),
         style: SLTheme.quicksand(
@@ -265,13 +266,60 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
       );
     }
 
+    return _ThemeEventPreviewSection(
+      houseId: houseId,
+      scheduleNotifService: _scheduleNotifService,
+      eventCardBuilder: _buildThemeEventCard,
+      eventSectionBuilder: _buildThemeEventSection,
+      context: context,
+    );
+  }
+}
+
+class _ThemeEventPreviewSection extends StatefulWidget {
+  final String houseId;
+  final ScheduleNotifService scheduleNotifService;
+  final Widget Function(UpcomingEvent event) eventCardBuilder;
+  final Widget Function({
+    required String title,
+    required String subtitle,
+    required Color accent,
+    required List<UpcomingEvent> events,
+  }) eventSectionBuilder;
+  final BuildContext context;
+
+  const _ThemeEventPreviewSection({
+    required this.houseId,
+    required this.scheduleNotifService,
+    required this.eventCardBuilder,
+    required this.eventSectionBuilder,
+    required this.context,
+  });
+
+  @override
+  State<_ThemeEventPreviewSection> createState() =>
+      _ThemeEventPreviewSectionState();
+}
+
+class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
+  late final Stream<List<UpcomingEvent>> _upcomingEventsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _upcomingEventsStream =
+        widget.scheduleNotifService.streamUpcomingEvents(widget.houseId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return StreamBuilder<List<UpcomingEvent>>(
-      stream: _scheduleNotifService.streamUpcomingEvents(_houseId!),
+      stream: _upcomingEventsStream,
       builder: (context, snapshot) {
         final events = snapshot.data ?? const <UpcomingEvent>[];
         if (events.isEmpty) {
           return Text(
-            context.tr('theme_event_empty_list'),
+            widget.context.tr('theme_event_empty_list'),
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -307,14 +355,14 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
               ),
             ),
             if (anniversaryEvents.isNotEmpty)
-              _buildThemeEventSection(
+              widget.eventSectionBuilder(
                 title: 'Kỷ niệm sắp tới',
                 subtitle: 'Các mốc riêng được thêm trong phần kỷ niệm',
                 accent: const Color(0xFFD81B60),
                 events: anniversaryEvents,
               ),
             if (calendarEvents.isNotEmpty)
-              _buildThemeEventSection(
+              widget.eventSectionBuilder(
                 title: 'Lịch chung sắp tới',
                 subtitle: 'Các kế hoạch đang lấy từ mục Lịch chung',
                 accent: const Color(0xFF3366D6),

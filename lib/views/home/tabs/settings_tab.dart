@@ -1,5 +1,7 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
+import 'dart:math' as math;
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../screens/document_viewer_screen.dart';
@@ -559,6 +561,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   Timer? _settingsSyncBannerDelayTimer;
   Timer? _settingsSyncBannerHideTimer;
   final ValueNotifier<int> _widgetPreviewTickNotifier = ValueNotifier<int>(0);
+  double? _localCountdownSize;
   final List<String> _securityQuestions = [
     L10nService().translate('home_ngysinhcab_82062b'),
     L10nService().translate('home_convtutinb_658f22'),
@@ -791,6 +794,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
     // ⚡ Save any pending theme settings before dispose
     _saveThemeSettings(silent: true).ignore();
+
+    _localCountdownSize = null;
 
     _panelRebuildNotifier.dispose();
     _widgetPreviewTickNotifier.dispose();

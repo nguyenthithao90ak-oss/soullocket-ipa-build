@@ -356,6 +356,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     bool showSuccessToast = true,
     bool showPendingToast = true,
   }) async {
+    if (!mounted) {
+      return;
+    }
     final successMsg = context.tr('home_emailcxcth_eaa26d');
     final pendingMsg = context.tr('home_emailchacx_ea8f95');
     final defaultErrorMsg = context.tr('home_khngthkimt_1e513e');
@@ -377,11 +380,11 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
     try {
       await user.reload();
-      final refreshedUser = _auth.currentUser;
-      final isVerified = refreshedUser?.emailVerified ?? false;
       if (!mounted) {
         return;
       }
+      final refreshedUser = _auth.currentUser;
+      final isVerified = refreshedUser?.emailVerified ?? false;
       setState(() {
         _isMainEmailVerified = isVerified;
         _securityEmail =
@@ -390,6 +393,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
       if (isVerified) {
         await _clearPendingEmailVerificationState();
+        if (!mounted) {
+          return;
+        }
         if (showSuccessToast) {
           _showToast(successMsg, success: true);
         }
@@ -397,6 +403,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       }
 
       await _restorePendingEmailVerificationState();
+      if (!mounted) {
+        return;
+      }
       if (showPendingToast) {
         _showToast(
           pendingMsg,
@@ -404,11 +413,17 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         );
       }
     } on FirebaseAuthException catch (e) {
+      if (!mounted) {
+        return;
+      }
       _showToast(
         e.message ?? defaultErrorMsg,
         success: false,
       );
     } catch (e) {
+      if (!mounted) {
+        return;
+      }
       _showToast(
         AppErrorMapper.resolve(
           e,

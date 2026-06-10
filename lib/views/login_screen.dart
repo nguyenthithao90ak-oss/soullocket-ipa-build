@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../core/sl_theme.dart';
 import '../services/anti_spam_service.dart';
@@ -12,11 +13,13 @@ import '../services/auth_service.dart';
 import '../services/l10n_service.dart';
 import '../services/security_flow_guard.dart';
 import '../services/security_service.dart';
+import '../utils/services/house_service.dart';
 import '../utils/app_error_mapper.dart';
 import '../utils/flexible_date_input.dart';
 import '../utils/rapid_action_feedback_policy.dart';
 import '../utils/sl_notice.dart';
 import '../widgets/sensitive_content_guard.dart';
+
 import 'auth/dialogs/auth_feedback_dialogs.dart';
 import 'auth/dialogs/forgot_gmail_recovery_helper.dart';
 import 'auth/dialogs/math_captcha_dialog.dart';
@@ -449,6 +452,19 @@ class _LoginScreenState extends State<LoginScreen> {
           await prefs.setString('il_role', sessionRole!);
         }
 
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          try {
+            final houseId = await HouseService()
+                .getCurrentHouseId(preferFresh: false)
+                .timeout(const Duration(seconds: 4));
+            if (houseId != null && houseId.isNotEmpty) {
+              await prefs.setString('il_house_id', houseId);
+              await prefs.setString('il_auth_uid', user.uid);
+            }
+          } catch (_) {}
+        }
+
         if (!mounted) return;
         debugPrint('[Auth][LoginScreen] login success -> navigate AppEntry');
         handedOffToAppEntry = true;
@@ -667,9 +683,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final email = (result.user?.email ?? '').trim().toLowerCase();
       final storedRole = await _readSavedGender(email);
+      final prefs = await SharedPreferences.getInstance();
       if (storedRole == 'user1' || storedRole == 'user2') {
-        final prefs = await SharedPreferences.getInstance();
         await prefs.setString('il_role', storedRole!);
+      }
+
+      final user = result.user;
+      if (user != null) {
+        try {
+          final houseId = await HouseService()
+              .getCurrentHouseId(preferFresh: false)
+              .timeout(const Duration(seconds: 4));
+          if (houseId != null && houseId.isNotEmpty) {
+            await prefs.setString('il_house_id', houseId);
+            await prefs.setString('il_auth_uid', user.uid);
+          }
+        } catch (_) {}
       }
 
       if (!mounted) return;
@@ -764,14 +793,16 @@ class _LoginScreenState extends State<LoginScreen> {
         final l10n = L10nService();
         final backgroundColors = _isLoginTab
             ? const [
-                Color(0xFFFCFAF6),
-                Color(0xFFF6F1EA),
-                Color(0xFFFAF7F2),
+                Color(0xFFFFF0F5),
+                Color(0xFFFFD6E7),
+                Color(0xFFFCEEF7),
+                Color(0xFFEEDDF8),
               ]
             : const [
-                Color(0xFFFBF8F3),
-                Color(0xFFF5EFE7),
-                Color(0xFFF9F5EF),
+                Color(0xFFFCF0FF),
+                Color(0xFFFFD9EE),
+                Color(0xFFFDE8F6),
+                Color(0xFFE8D5FF),
               ];
 
         return SensitiveContentGuard(
@@ -792,55 +823,111 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Stack(
                   children: [
+                    // --- top-left large blush orb ---
                     AnimatedPositioned(
-                      duration: const Duration(milliseconds: 420),
+                      duration: const Duration(milliseconds: 480),
                       curve: Curves.easeOutCubic,
-                      top: _isLoginTab ? -72 : -28,
-                      left: _isLoginTab ? -44 : -8,
-                      child: IgnorePointer(
-                        child: Icon(
-                          Icons.cloud_rounded,
-                          color: Colors.white.withValues(
-                            alpha: _isLoginTab ? 0.38 : 0.26,
-                          ),
-                          size: _isLoginTab ? 196 : 154,
-                        ),
-                      ),
-                    ),
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 420),
-                      curve: Curves.easeOutCubic,
-                      top: _isLoginTab ? 82 : 48,
-                      right: _isLoginTab ? -76 : -12,
+                      top: _isLoginTab ? -100 : -60,
+                      left: _isLoginTab ? -80 : -40,
                       child: IgnorePointer(
                         child: _AuthGlowOrb(
-                          size: _isLoginTab ? 188 : 156,
+                          size: 260,
                           colors: _isLoginTab
-                              ? const [
-                                  Color(0xFFFFFEFC),
-                                  Color(0xFFF0E6DA),
-                                ]
-                              : const [
-                                  Color(0xFFFEFCF9),
-                                  Color(0xFFEDE1D5),
-                                ],
-                          opacity: _isLoginTab ? 0.62 : 0.54,
+                              ? const [Color(0xFFFFB6D3), Color(0xFFFF8FB8)]
+                              : const [Color(0xFFD4AAFF), Color(0xFFB080FF)],
+                          opacity: 0.38,
                         ),
                       ),
                     ),
+                    // --- right mid rose orb ---
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 440),
+                      curve: Curves.easeOutCubic,
+                      top: _isLoginTab ? 60 : 30,
+                      right: _isLoginTab ? -90 : -50,
+                      child: IgnorePointer(
+                        child: _AuthGlowOrb(
+                          size: 220,
+                          colors: _isLoginTab
+                              ? const [Color(0xFFFFC2DC), Color(0xFFFF85B3)]
+                              : const [Color(0xFFFFB6E8), Color(0xFFE87FD0)],
+                          opacity: 0.44,
+                        ),
+                      ),
+                    ),
+                    // --- bottom-right lavender orb ---
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 460),
+                      curve: Curves.easeOutCubic,
+                      bottom: _isLoginTab ? -60 : -30,
+                      right: _isLoginTab ? 20 : 60,
+                      child: IgnorePointer(
+                        child: _AuthGlowOrb(
+                          size: 180,
+                          colors: _isLoginTab
+                              ? const [Color(0xFFE0BBFF), Color(0xFFC49CFF)]
+                              : const [Color(0xFFFFCCF0), Color(0xFFFF9FD6)],
+                          opacity: 0.32,
+                        ),
+                      ),
+                    ),
+                    // --- decorative sparkle icons ---
                     AnimatedPositioned(
                       duration: const Duration(milliseconds: 420),
                       curve: Curves.easeOutCubic,
-                      bottom: _isLoginTab ? 42 : 12,
-                      left: _isLoginTab ? 18 : 34,
+                      bottom: _isLoginTab ? 100 : 60,
+                      left: _isLoginTab ? 12 : 28,
                       child: IgnorePointer(
                         child: Icon(
                           Icons.auto_awesome_rounded,
                           color: (_isLoginTab
-                                  ? SLColors.primaryActive
+                                  ? SLColors.primary
                                   : SLColors.accentPurpleDark)
-                              .withValues(alpha: 0.18),
-                          size: _isLoginTab ? 88 : 96,
+                              .withValues(alpha: 0.22),
+                          size: _isLoginTab ? 52 : 60,
+                        ),
+                      ),
+                    ),
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutCubic,
+                      top: _isLoginTab ? 160 : 200,
+                      left: _isLoginTab ? 30 : 14,
+                      child: IgnorePointer(
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          color: SLColors.primary.withValues(
+                              alpha: _isLoginTab ? 0.12 : 0.08),
+                          size: _isLoginTab ? 36 : 28,
+                        ),
+                      ),
+                    ),
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutCubic,
+                      top: _isLoginTab ? 300 : 260,
+                      right: _isLoginTab ? 24 : 40,
+                      child: IgnorePointer(
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          color: (_isLoginTab
+                                  ? const Color(0xFFE87AAA)
+                                  : SLColors.accentPurpleDark)
+                              .withValues(alpha: 0.10),
+                          size: _isLoginTab ? 24 : 32,
+                        ),
+                      ),
+                    ),
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 380),
+                      curve: Curves.easeOutCubic,
+                      bottom: _isLoginTab ? 180 : 220,
+                      right: _isLoginTab ? 10 : 30,
+                      child: IgnorePointer(
+                        child: Icon(
+                          Icons.auto_awesome_rounded,
+                          color: const Color(0xFFCBA4F0).withValues(alpha: 0.18),
+                          size: 20,
                         ),
                       ),
                     ),
@@ -888,14 +975,65 @@ class _LoginScreenState extends State<LoginScreen> {
                                     padding: EdgeInsets.only(
                                       bottom: isCompact ? 12 : 16,
                                     ),
-                                    child: Align(
-                                      alignment: Alignment.centerRight,
-                                      child: AuthLanguageToggle(
-                                        currentLocale: l10n.localeCode,
-                                        onSelect: (code) {
-                                          l10n.setLocale(code);
-                                        },
-                                      ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () =>
+                                              _showSyncGuideDialog(context),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.6),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: const Color(0xFFFFB6D3)
+                                                    .withValues(alpha: 0.4),
+                                                width: 1.0,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                ShaderMask(
+                                                  shaderCallback: (bounds) =>
+                                                      const LinearGradient(
+                                                    colors: [
+                                                      Color(0xFFFF9E00),
+                                                      Color(0xFFFF6B00)
+                                                    ],
+                                                  ).createShader(bounds),
+                                                  child: const Icon(
+                                                    Icons.lightbulb_rounded,
+                                                    size: 16,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  l10n.translate(
+                                                      'auth_sync_guide_button'),
+                                                  style: SLTheme.quicksand(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w900,
+                                                    color: SLColors.textPrimary,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        AuthLanguageToggle(
+                                          currentLocale: l10n.localeCode,
+                                          onSelect: (code) {
+                                            l10n.setLocale(code);
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -1014,6 +1152,148 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showSyncGuideDialog(BuildContext context) {
+    final l10n = L10nService();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 340),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFFFFFDFE),
+                  Color(0xFFFFF2F8),
+                  Color(0xFFFCF4FF),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(
+                color: const Color(0xFFFFB6D3).withValues(alpha: 0.55),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF85B3).withValues(alpha: 0.18),
+                  blurRadius: 40,
+                  offset: const Offset(0, 20),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFEBF3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.sync_rounded,
+                        color: SLColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.translate('auth_sync_guide_title'),
+                        style: SLTheme.quicksand(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: SLColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  l10n.translate('auth_sync_guide_intro'),
+                  style: SLTheme.quicksand(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: SLColors.textSecond,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _buildSyncStep(
+                  number: '1',
+                  text: l10n.translate('auth_sync_guide_step1'),
+                ),
+                const SizedBox(height: 12),
+                _buildSyncStep(
+                  number: '2',
+                  text: l10n.translate('auth_sync_guide_step2'),
+                ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  width: double.infinity,
+                  child: SLTheme.authPrimaryButton(
+                    label: l10n.translate('auth_sync_guide_gotit'),
+                    onPressed: () => Navigator.pop(context),
+                    colors: const [
+                      Color(0xFFFF69B4),
+                      Color(0xFFFF85B3),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSyncStep({required String number, required String text}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: SLColors.primary,
+          ),
+          child: Text(
+            number,
+            style: SLTheme.quicksand(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: SLTheme.quicksand(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: SLColors.textPrimary,
+              height: 1.35,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

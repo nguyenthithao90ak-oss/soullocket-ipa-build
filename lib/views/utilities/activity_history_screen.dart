@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
@@ -292,11 +293,14 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                                       borderRadius: BorderRadius.circular(previewRadius),
                                       color: const Color(0xFFF5F5F5),
                                     ),
-                                    child: Image.network(
-                                      entry.previewUrl,
+                                    child: CachedNetworkImage(
+                                      imageUrl: entry.previewUrl,
                                       fit: BoxFit.cover,
                                       filterQuality: FilterQuality.high,
-                                      errorBuilder: (_, __, ___) => const Icon(
+                                      placeholder: (_, __) => const Center(
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                      errorWidget: (_, __, ___) => const Icon(
                                           Icons.image_not_supported_outlined),
                                     ),
                                   )

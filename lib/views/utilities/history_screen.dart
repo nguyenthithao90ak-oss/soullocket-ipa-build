@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
@@ -336,11 +337,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     color: const Color(0xFF20283A),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Image.network(
-                    entry.previewUrl,
+                  child: CachedNetworkImage(
+                    imageUrl: entry.previewUrl,
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.high,
-                    errorBuilder: (_, __, ___) => const Icon(
+                    placeholder: (_, __) => const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    errorWidget: (_, __, ___) => const Icon(
                       Icons.image_not_supported_outlined,
                       color: Colors.white70,
                     ),

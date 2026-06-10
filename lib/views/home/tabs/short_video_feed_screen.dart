@@ -7,6 +7,8 @@ import 'package:video_player/video_player.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'dart:io';
 
 import '../../../models/social_post.dart';
 import '../../../services/social_service.dart';

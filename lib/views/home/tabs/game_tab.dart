@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,12 +43,20 @@ class _GameTabState extends State<GameTab> {
     super.initState();
     _loadDownloadStatus();
     _loadBannerAd();
+    // Lắng nghe thay đổi download để cập nhật state mà không tạo Future mới
+    GameDownloadService().addListener(_onDownloadServiceChanged);
   }
 
   @override
   void dispose() {
+    GameDownloadService().removeListener(_onDownloadServiceChanged);
     _bannerAd?.dispose();
     super.dispose();
+  }
+
+  void _onDownloadServiceChanged() {
+    // Khi download service thay đổi, cập nhật trạng thái từ cache thành synchronous
+    unawaited(_loadDownloadStatus());
   }
 
   Future<void> _loadBannerAd() async {
@@ -285,106 +294,89 @@ class _GameTabState extends State<GameTab> {
                   builder: (context, constraints) {
                     final crossAxisCount = constraints.maxWidth < 280 ? 2 : 3;
                     final spacing = constraints.maxWidth < 360 ? 10.0 : 14.0;
-
                     final downloadService = GameDownloadService();
-                    return ListenableBuilder(
-                        listenable: downloadService,
-                        builder: (context, _) {
-                          return FutureBuilder<Map<String, bool>>(
-                            future: Future.wait([
-                              downloadService.isGameDownloaded('soul_block'),
-                              downloadService.isGameDownloaded('soul_rhythm'),
-                              if (kDebugMode)
-                                downloadService.isGameDownloaded('caro_neon'),
-                            ]).then((results) => {
-                                  'soul_block': results[0],
-                                  'soul_rhythm': results[1],
-                                  if (kDebugMode) 'caro_neon': results[2],
-                                }),
-                            builder: (context, snapshot) {
-                              final statuses = snapshot.data ?? {};
-                              final soulBlockDownloaded =
-                                  statuses['soul_block'] ?? false;
-                              final soulRhythmDownloaded =
-                                  statuses['soul_rhythm'] ?? false;
-                              final caroNeonDownloaded =
-                                  statuses['caro_neon'] ?? false;
-                              return GridView.count(
-                                crossAxisCount: crossAxisCount,
-                                crossAxisSpacing: spacing,
-                                mainAxisSpacing: spacing + 2,
-                                childAspectRatio:
-                                    crossAxisCount == 3 ? 0.68 : 0.75,
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                children: [
-                                  _SoulBlockCard(
-                                    isDownloaded: soulBlockDownloaded,
-                                    downloadProgress: downloadService
-                                        .getProgress('soul_block'),
-                                    onTap: () => _onGameTap(
-                                        'soul_block',
-                                        'Soul Block',
-                                        () => _openSoulBlockGame(context)),
-                                    onLongPress: soulBlockDownloaded
-                                        ? () => _confirmDeleteGame(
-                                            context, 'soul_block', 'Soul Block')
-                                        : null,
-                                    onDelete: soulBlockDownloaded
-                                        ? () => _confirmDeleteGame(
-                                            context, 'soul_block', 'Soul Block')
-                                        : null,
-                                  ),
-                                  if (kDebugMode)
-                                    _SoulRhythmCard(
-                                      imagePath: GameTab.soulRhythmIconPath,
-                                      isDownloaded: soulRhythmDownloaded,
-                                      downloadProgress: downloadService
-                                          .getProgress('soul_rhythm'),
-                                      onTap: () => _onGameTap(
-                                          'soul_rhythm',
-                                          'Soul Rhythm',
-                                          () => _openSoulGame(context)),
-                                      onLongPress: soulRhythmDownloaded
-                                          ? () => _confirmDeleteGame(context,
-                                              'soul_rhythm', 'Soul Rhythm')
-                                          : null,
-                                      onDelete: soulRhythmDownloaded
-                                          ? () => _confirmDeleteGame(context,
-                                              'soul_rhythm', 'Soul Rhythm')
-                                          : null,
-                                    ),
-                                  if (kDebugMode)
-                                    _GenericGameCard(
-                                      label: 'Caro Neon',
-                                      icon: Icons.grid_4x4_rounded,
-                                      color: const Color(0xFF00E5FF),
-                                      isDownloaded: caroNeonDownloaded,
-                                      downloadProgress: downloadService
-                                          .getProgress('caro_neon'),
-                                      onLongPress: caroNeonDownloaded
-                                          ? () => _confirmDeleteGame(
-                                              context, 'caro_neon', 'Caro Neon')
-                                          : null,
-                                      onDelete: caroNeonDownloaded
-                                          ? () => _confirmDeleteGame(
-                                              context, 'caro_neon', 'Caro Neon')
-                                          : null,
-                                      onTap: () => _onGameTap(
-                                          'caro_neon',
-                                          'Caro Neon',
-                                          () => Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        const CaroNeonScreen()),
-                                              )),
-                                    ),
-                                ],
-                              );
-                            },
-                          );
-                        });
+
+                    // Dùng _downloadedGames trực tiếp thay vì FutureBuilder
+                    // Để tránh tạo Future mới mỗi lần rebuild (gây flash loading)
+                    final soulBlockDownloaded =
+                        _downloadedGames['soul_block'] ?? false;
+                    final soulRhythmDownloaded =
+                        _downloadedGames['soul_rhythm'] ?? false;
+                    final caroNeonDownloaded =
+                        _downloadedGames['caro_neon'] ?? false;
+
+                    return GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: spacing,
+                      mainAxisSpacing: spacing + 2,
+                      childAspectRatio: crossAxisCount == 3 ? 0.68 : 0.75,
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      children: [
+                        _SoulBlockCard(
+                          isDownloaded: soulBlockDownloaded,
+                          downloadProgress:
+                              downloadService.getProgress('soul_block'),
+                          onTap: () => _onGameTap(
+                              'soul_block',
+                              'Soul Block',
+                              () => _openSoulBlockGame(context)),
+                          onLongPress: soulBlockDownloaded
+                              ? () => _confirmDeleteGame(
+                                  context, 'soul_block', 'Soul Block')
+                              : null,
+                          onDelete: soulBlockDownloaded
+                              ? () => _confirmDeleteGame(
+                                  context, 'soul_block', 'Soul Block')
+                              : null,
+                        ),
+                        if (kDebugMode)
+                          _SoulRhythmCard(
+                            imagePath: GameTab.soulRhythmIconPath,
+                            isDownloaded: soulRhythmDownloaded,
+                            downloadProgress:
+                                downloadService.getProgress('soul_rhythm'),
+                            onTap: () => _onGameTap(
+                                'soul_rhythm',
+                                'Soul Rhythm',
+                                () => _openSoulGame(context)),
+                            onLongPress: soulRhythmDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'soul_rhythm', 'Soul Rhythm')
+                                : null,
+                            onDelete: soulRhythmDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'soul_rhythm', 'Soul Rhythm')
+                                : null,
+                          ),
+                        if (kDebugMode)
+                          _GenericGameCard(
+                            label: 'Caro Neon',
+                            icon: Icons.grid_4x4_rounded,
+                            color: const Color(0xFF00E5FF),
+                            isDownloaded: caroNeonDownloaded,
+                            downloadProgress:
+                                downloadService.getProgress('caro_neon'),
+                            onLongPress: caroNeonDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'caro_neon', 'Caro Neon')
+                                : null,
+                            onDelete: caroNeonDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'caro_neon', 'Caro Neon')
+                                : null,
+                            onTap: () => _onGameTap(
+                                'caro_neon',
+                                'Caro Neon',
+                                () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const CaroNeonScreen()),
+                                    )),
+                          ),
+                      ],
+                    );
                   },
                 ),
               ),
@@ -777,38 +769,63 @@ class _SoulBlockCardPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    canvas.drawRect(
-      rect,
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(size.width * 0.34)),
       Paint()
         ..shader = const LinearGradient(
-          colors: [Color(0xFF1A2749), Color(0xFF2A1D3D), Color(0xFF3D2233)],
+          colors: [Color(0xFF10172E), Color(0xFF25164A), Color(0xFF4A183F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ).createShader(rect),
     );
 
-    final panel = Paint()
-      ..color = const Color(0x14FFFFFF)
-      ..style = PaintingStyle.fill;
-    final line = Paint()
-      ..color = const Color(0x24FFFFFF)
-      ..strokeWidth = 1;
-    final boardSize = math.min(size.width, size.height);
-    final cellSize = boardSize / 6.6;
-    final gap = cellSize * 0.16;
-    final gridSize = (cellSize * 4) + (gap * 3);
-    final startX = (size.width - gridSize) / 2;
-    final startY = (size.height - gridSize) / 2;
-    final tones = <Color>[
-      const Color(0xFFFF0000),
-      const Color(0xFFFFFF00),
-      const Color(0xFF00FF00),
-      const Color(0xFF0000FF),
-      const Color(0xFFFF00FF),
-    ];
+    final glowPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFFFFD166).withValues(alpha: 0.34),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCircle(
+        center: Offset(size.width * 0.72, size.height * 0.18),
+        radius: size.width * 0.7,
+      ));
+    canvas.drawRect(rect, glowPaint);
 
-    for (var row = 0; row < 4; row++) {
-      for (var col = 0; col < 4; col++) {
+    final boardSize = math.min(size.width, size.height) * 0.78;
+    final cellSize = boardSize / 6.0;
+    final gap = cellSize * 0.14;
+    final gridSize = (cellSize * 5) + (gap * 4);
+    final startX = (size.width - gridSize) / 2;
+    final startY = size.height * 0.18;
+
+    final boardRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        startX - gap,
+        startY - gap,
+        gridSize + gap * 2,
+        gridSize + gap * 2,
+      ),
+      Radius.circular(cellSize * 0.55),
+    );
+    canvas.drawRRect(
+      boardRect,
+      Paint()..color = const Color(0x66061122),
+    );
+    canvas.drawRRect(
+      boardRect,
+      Paint()
+        ..color = const Color(0x33FFFFFF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+
+    final emptyCell = Paint()..color = const Color(0x18FFFFFF);
+    final emptyStroke = Paint()
+      ..color = const Color(0x16FFFFFF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
+    for (var row = 0; row < 5; row++) {
+      for (var col = 0; col < 5; col++) {
         final cellRect = RRect.fromRectAndRadius(
           Rect.fromLTWH(
             startX + (col * (cellSize + gap)),
@@ -816,66 +833,78 @@ class _SoulBlockCardPainter extends CustomPainter {
             cellSize,
             cellSize,
           ),
-          Radius.circular(cellSize * 0.22),
+          Radius.circular(cellSize * 0.24),
         );
-        canvas.drawRRect(cellRect, panel);
-        canvas.drawRRect(cellRect, line);
+        canvas.drawRRect(cellRect, emptyCell);
+        canvas.drawRRect(cellRect, emptyStroke);
       }
     }
 
-    void drawBlock(
-      double x,
-      double y,
-      List<Offset> cells,
-      Color color,
-    ) {
+    void drawBlock(List<Offset> cells, Color color) {
       final glow = Paint()
         ..color = color.withValues(alpha: 0.28)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
-      final fill = Paint()
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      final shine = Paint()
         ..shader = LinearGradient(
-          colors: [
-            color.withValues(alpha: 0.95),
-            color.withValues(alpha: 0.58)
-          ],
+          colors: [Colors.white.withValues(alpha: 0.26), Colors.transparent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-        ).createShader(
-          Rect.fromLTWH(x, y, cellSize * 2.6, cellSize * 2.2),
-        );
+        ).createShader(rect);
+      final fill = Paint()
+        ..shader = LinearGradient(
+          colors: [color, Color.lerp(color, Colors.black, 0.28)!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(rect);
 
       for (final cell in cells) {
         final rrect = RRect.fromRectAndRadius(
           Rect.fromLTWH(
-            x + (cell.dx * (cellSize + gap)),
-            y + (cell.dy * (cellSize + gap)),
+            startX + (cell.dx * (cellSize + gap)),
+            startY + (cell.dy * (cellSize + gap)),
             cellSize,
             cellSize,
           ),
-          Radius.circular(cellSize * 0.24),
+          Radius.circular(cellSize * 0.26),
         );
         canvas.drawRRect(rrect, glow);
         canvas.drawRRect(rrect, fill);
+        canvas.drawRRect(rrect, shine);
       }
     }
 
-    drawBlock(
-      startX + cellSize * 0.2,
-      startY + cellSize * 0.25,
-      const [Offset(0, 0), Offset(1, 0)],
-      tones[0],
+    drawBlock(const [Offset(0, 0), Offset(1, 0), Offset(0, 1)], const Color(0xFFFF4D6D));
+    drawBlock(const [Offset(3, 0), Offset(4, 0), Offset(4, 1)], const Color(0xFFFFD166));
+    drawBlock(const [Offset(1, 2), Offset(2, 2), Offset(3, 2)], const Color(0xFF4D96FF));
+    drawBlock(const [Offset(0, 3), Offset(0, 4), Offset(1, 4)], const Color(0xFF37E67F));
+    drawBlock(const [Offset(3, 3), Offset(4, 3), Offset(3, 4), Offset(4, 4)], const Color(0xFFC77DFF));
+
+    final badgeRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(size.width * 0.18, size.height * 0.74, size.width * 0.64, 16),
+      const Radius.circular(999),
     );
-    drawBlock(
-      startX + cellSize * 1.75,
-      startY + cellSize * 1.65,
-      const [Offset(0, 0), Offset(1, 0), Offset(2, 0)],
-      tones[1],
+    canvas.drawRRect(
+      badgeRect,
+      Paint()..color = const Color(0xCCFFFFFF),
     );
-    drawBlock(
-      startX + cellSize * 0.9,
-      startY + cellSize * 2.85,
-      const [Offset(0, 0), Offset(0, 1), Offset(1, 1)],
-      tones[2],
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: 'COMBO x4',
+        style: TextStyle(
+          color: Color(0xFF3B1453),
+          fontSize: 8,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.4,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    textPainter.paint(
+      canvas,
+      Offset(
+        size.width * 0.5 - textPainter.width / 2,
+        size.height * 0.74 + 3,
+      ),
     );
   }
 

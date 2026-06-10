@@ -305,11 +305,11 @@ extension _MapDetailDialogsExt on _MapScreenState {
                 SLSpacing.h12,
                 ClipRRect(
                   borderRadius: SLRadius.lgAll,
-                  child: Image.network(
-                    checkin.imageUrl,
+                  child: CachedNetworkImage(
+                    imageUrl: checkin.imageUrl,
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.high,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),
               ],
@@ -392,11 +392,11 @@ extension _MapDetailDialogsExt on _MapScreenState {
                 SLSpacing.h12,
                 ClipRRect(
                   borderRadius: SLRadius.lgAll,
-                  child: Image.network(
-                    memory.imageUrl,
+                  child: CachedNetworkImage(
+                    imageUrl: memory.imageUrl,
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.high,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),
               ],

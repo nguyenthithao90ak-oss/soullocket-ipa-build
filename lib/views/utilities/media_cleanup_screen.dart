@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../core/sl_theme.dart';
@@ -612,11 +613,11 @@ class _MediaCleanupScreenState extends State<MediaCleanupScreen>
                           height: 52,
                           color: Colors.white.withValues(alpha: 0.05),
                           child: isImage
-                              ? Image.network(
-                                  file.url,
+                              ? CachedNetworkImage(
+                                  imageUrl: file.url,
                                   fit: BoxFit.cover,
                                   filterQuality: FilterQuality.high,
-                                  errorBuilder: (_, __, ___) => const Icon(
+                                  errorWidget: (_, __, ___) => const Icon(
                                       Icons.broken_image,
                                       color: Colors.white38,
                                       size: 28),

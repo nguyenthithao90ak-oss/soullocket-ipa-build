@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../services/auth_service.dart';
 import '../../utils/sl_notice.dart';
@@ -28,8 +29,8 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
   bool _canSubmitPassword = false;
   bool _hidePassword = false;
   bool _hideConfirm = false;
-  String _title = 'Đang kiểm tra liên kết';
-  String _message = 'Vui lòng chờ trong giây lát.';
+  String _title = L10nService().translate('auth_action_checking_link');
+  String _message = L10nService().translate('auth_action_please_wait');
   String? _oobCode;
 
   @override
@@ -59,8 +60,8 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
     setState(() {
       _isBusy = false;
       _isSuccess = false;
-      _title = 'Liên kết không hợp lệ';
-      _message = 'App không nhận ra thao tác từ liên kết này.';
+      _title = L10nService().translate('auth_action_invalid_link');
+      _message = L10nService().translate('auth_action_unknown_action');
     });
   }
 
@@ -81,8 +82,8 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
       setState(() {
         _isBusy = false;
         _isSuccess = false;
-        _title = 'Link không hợp lệ';
-        _message = 'Liên kết đặt lại mật khẩu đang thiếu mã xác thực.';
+        _title = L10nService().translate('auth_action_invalid_link');
+        _message = L10nService().translate('auth_action_missing_code');
       });
       return;
     }
@@ -94,16 +95,18 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
         _isBusy = false;
         _isSuccess = false;
         _canSubmitPassword = true;
-        _title = 'Đặt lại mật khẩu';
-        _message =
-            'Liên kết hợp lệ cho ${email.trim()}. Hãy nhập mật khẩu mới để hoàn tất.';
+        _title = L10nService().translate('auth_action_reset_password');
+        _message = L10nService().format(
+          'auth_action_valid_link_for',
+          {'email': email.trim()},
+        );
       });
     } on FirebaseAuthException catch (error) {
       if (!mounted) return;
       setState(() {
         _isBusy = false;
         _isSuccess = false;
-        _title = 'Không thể đặt lại mật khẩu';
+        _title = L10nService().translate('auth_action_cannot_reset_password');
         _message = _mapResetPasswordError(error);
       });
     } catch (_) {
@@ -111,9 +114,8 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
       setState(() {
         _isBusy = false;
         _isSuccess = false;
-        _title = 'Không thể đặt lại mật khẩu';
-        _message =
-            'Liên kết đặt lại mật khẩu chưa thể dùng lúc này. Vui lòng thử lại sau.';
+        _title = L10nService().translate('auth_action_cannot_reset_password');
+        _message = L10nService().translate('auth_action_cannot_use_link');
       });
     }
   }
@@ -121,18 +123,18 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
   String _mapResetPasswordError(FirebaseAuthException error) {
     switch (error.code) {
       case 'expired-action-code':
-        return 'Liên kết đặt lại mật khẩu đã hết hạn. Bạn hãy yêu cầu liên kết mới nhé.';
+        return L10nService().translate('auth_action_expired_code');
       case 'invalid-action-code':
-        return 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã được dùng rồi.';
+        return L10nService().translate('auth_action_invalid_code');
       case 'user-disabled':
-        return 'Tài khoản này đang bị vô hiệu hóa nên chưa thể đổi mật khẩu.';
+        return L10nService().translate('auth_action_user_disabled');
       case 'user-not-found':
-        return 'Không tìm thấy tài khoản cho liên kết đặt lại mật khẩu này.';
+        return L10nService().translate('auth_action_user_not_found');
       case 'weak-password':
-        return 'Mật khẩu mới chưa đủ mạnh. Bạn thử mật khẩu dài hơn nhé.';
+        return L10nService().translate('auth_action_weak_password');
       default:
         return error.message ??
-            'Chưa thể đặt lại mật khẩu lúc này. Vui lòng thử lại sau.';
+            L10nService().translate('auth_action_generic_reset_error');
     }
   }
 
@@ -142,15 +144,15 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
     final confirm = _confirmCtrl.text.trim();
 
     if (code == null || code.isEmpty) {
-      _showSnack('Liên kết đặt lại mật khẩu không còn hợp lệ.');
+      _showSnack(L10nService().translate('auth_action_invalid_link_snack'));
       return;
     }
     if (password.length < 6) {
-      _showSnack('Mật khẩu mới phải có ít nhất 6 ký tự.');
+      _showSnack(L10nService().translate('auth_action_weak_password_snack'));
       return;
     }
     if (password != confirm) {
-      _showSnack('Mật khẩu nhập lại chưa khớp.');
+      _showSnack(L10nService().translate('auth_action_password_mismatch'));
       return;
     }
 
@@ -164,15 +166,15 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
       setState(() {
         _canSubmitPassword = false;
         _isSuccess = true;
-        _title = 'Đặt lại thành công';
+        _title = L10nService().translate('auth_action_reset_success_title');
         _message =
-            'Mật khẩu mới đã được cập nhật. Bây giờ bạn có thể quay lại màn hình đăng nhập.';
+            L10nService().translate('auth_action_reset_success_message');
       });
     } on FirebaseAuthException catch (error) {
       _showSnack(_mapResetPasswordError(error));
     } catch (_) {
       _showSnack(
-          'Chưa thể cập nhật mật khẩu mới lúc này. Vui lòng thử lại sau.');
+          L10nService().translate('auth_action_generic_reset_error'));
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -265,7 +267,7 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
                           enabled: !_isSubmitting,
                           textInputAction: TextInputAction.next,
                           decoration: InputDecoration(
-                            labelText: 'Mật khẩu mới',
+                            labelText: context.tr('auth_action_new_password_label'),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -288,7 +290,7 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
                           enabled: !_isSubmitting,
                           onSubmitted: (_) => _submitPasswordReset(),
                           decoration: InputDecoration(
-                            labelText: 'Nhập lại mật khẩu mới',
+                            labelText: context.tr('auth_action_confirm_password_label'),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -325,7 +327,7 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text('Cập nhật mật khẩu'),
+                              : Text(context.tr('auth_action_update_password_btn')),
                         ),
                       ],
                       if (!_isBusy && !_canSubmitPassword) ...[
@@ -339,7 +341,9 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
                             ),
                           ),
                           child: Text(
-                              _isSuccess ? 'Mở đăng nhập' : 'Về đăng nhập'),
+                              _isSuccess
+                                  ? context.tr('auth_action_open_login_btn')
+                                  : context.tr('auth_action_back_to_login_btn')),
                         ),
                       ],
                     ],

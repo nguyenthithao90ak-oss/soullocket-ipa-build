@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sqflite/sqflite.dart';
@@ -612,8 +613,8 @@ class SuperLoveMessengerViewState extends State<SuperLoveMessengerView>
                           if (msg.imageUrl != null)
                             ClipRRect(
                                 borderRadius: SLRadius.smAll,
-                                child: Image.network(
-                                  msg.imageUrl!,
+                                child: CachedNetworkImage(
+                                  imageUrl: msg.imageUrl!,
                                   filterQuality: FilterQuality.high,
                                 )),
                           if (msg.text.isNotEmpty)

@@ -249,8 +249,9 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   ),
                   child: !useBackdropBlur
                       ? navSurface
-                      : BackdropFilter(
+                      : FastBackdropFilter(
                           filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                          fallbackColor: Colors.transparent,
                           child: navSurface,
                         ),
                 ),

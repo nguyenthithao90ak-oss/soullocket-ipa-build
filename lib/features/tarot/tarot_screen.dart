@@ -9,19 +9,8 @@ import '../../core/sl_theme.dart';
 import '../../services/l10n_service.dart';
 import '../../services/tarot_reading_service.dart';
 
-class TarotCard {
-  final String name;
-  final String symbol;
-  final String uprightMeaning;
-  final String reversedMeaning;
-
-  const TarotCard({
-    required this.name,
-    required this.symbol,
-    required this.uprightMeaning,
-    required this.reversedMeaning,
-  });
-}
+part 'models/tarot_models.dart';
+part 'painters/tarot_painters.dart';
 
 final List<TarotCard> _allCards = [
   TarotCard(
@@ -171,18 +160,6 @@ final List<TarotCard> _allCards = [
       uprightMeaning: L10nService().translate('util_nnglngammc_24d8a1'),
       reversedMeaning: L10nService().translate('util_sbcngcthlm_7a75e1')),
 ];
-
-class PickedCard {
-  final TarotCard card;
-  final bool isReversed;
-  bool isFlipped;
-
-  PickedCard({
-    required this.card,
-    required this.isReversed,
-    this.isFlipped = false,
-  });
-}
 
 class TarotScreen extends StatefulWidget {
   final String houseId;
@@ -1633,20 +1610,3 @@ class _TarotScreenState extends State<TarotScreen>
   }
 }
 
-class _TarotDustPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final random = Random(7);
-    final paint = Paint();
-    for (var i = 0; i < 90; i++) {
-      paint.color = Colors.white.withValues(alpha: random.nextDouble() * 0.16);
-      final dx = random.nextDouble() * size.width;
-      final dy = random.nextDouble() * size.height;
-      final radius = random.nextDouble() * 1.8 + 0.4;
-      canvas.drawCircle(Offset(dx, dy), radius, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}

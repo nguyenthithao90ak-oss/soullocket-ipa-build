@@ -28,6 +28,7 @@ part 'collage_maker/panels/collage_controls_panel.dart';
 part 'collage_maker/collage_memory_source_part.dart';
 part 'collage_maker/widgets/collage_preview_widgets.dart';
 part 'collage_maker/collage_maker_helpers.dart';
+part 'collage_maker/models/collage_models.dart';
 
 const Color _paperCream = Color(0xFFF7F0E6);
 const Color _paperShell = Color(0xFFFFF9F2);
@@ -47,35 +48,6 @@ class CollageMakerScreen extends StatefulWidget {
 
   @override
   State<CollageMakerScreen> createState() => _CollageMakerScreenState();
-}
-
-class _EditableCollagePhoto {
-  final String source;
-  double scale;
-  Offset offset;
-
-  _EditableCollagePhoto({
-    required this.source,
-    this.scale = 1,
-    this.offset = Offset.zero,
-  });
-
-  CollagePhotoTransform get transform => CollagePhotoTransform(
-        scale: scale,
-        offset: offset,
-      );
-}
-
-class _FramePinchSession {
-  final int index;
-  final Offset startOffset;
-  final double startScale;
-
-  const _FramePinchSession({
-    required this.index,
-    required this.startOffset,
-    required this.startScale,
-  });
 }
 
 class _CollageMakerScreenState extends State<CollageMakerScreen> {

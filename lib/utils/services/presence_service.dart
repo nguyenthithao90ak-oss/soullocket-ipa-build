@@ -300,9 +300,10 @@ class PresenceService {
 
   void _setupConnectedListener() {
     if (_connectedSub != null) return;
-    _connectedSub = _backendProbeRef.onValue.listen(
-      (_) {
-        if (_shouldBeOnline) {
+    _connectedSub = _dbRef.child('.info/connected').onValue.listen(
+      (event) {
+        final connected = event.snapshot.value == true;
+        if (connected && _shouldBeOnline) {
           unawaited(_doGoOnline());
         }
       },

@@ -71,7 +71,14 @@ class LoginForm extends StatelessWidget {
             autofillHints: const [AutofillHints.username, AutofillHints.email],
             style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-            decoration: SLTheme.authInputDecoration(hintText: emailLabel),
+            decoration: SLTheme.authInputDecoration(
+              hintText: emailLabel,
+              prefixIcon: Icon(
+                Icons.mail_outline_rounded,
+                color: accentRose.withValues(alpha: 0.65),
+                size: 20,
+              ),
+            ),
           ),
           const SizedBox(height: 10),
           SLTheme.sectionHeader(title: passwordLabel),
@@ -95,6 +102,11 @@ class LoginForm extends StatelessWidget {
             style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
             decoration: SLTheme.authInputDecoration(
               hintText: passwordLabel,
+              prefixIcon: Icon(
+                Icons.lock_outline_rounded,
+                color: accentRose.withValues(alpha: 0.65),
+                size: 20,
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
                   obscurePassword ? Icons.visibility : Icons.visibility_off,

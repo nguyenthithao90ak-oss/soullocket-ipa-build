@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -571,18 +572,16 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                   child: Stack(
                                     fit: StackFit.expand,
                                     children: [
-                                      Image.network(
-                                        imageUrl,
+                                      CachedNetworkImage(
+                                        imageUrl: imageUrl,
                                         fit: BoxFit.cover,
                                         filterQuality: FilterQuality.high,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
+                                        errorWidget: (context, error, stackTrace) {
                                           return Container(
                                             color: palette.envelopeLight,
                                             alignment: Alignment.center,
                                             child: Icon(
-                                              Icons
-                                                  .image_not_supported_outlined,
+                                              Icons.image_not_supported_outlined,
                                               color: palette.accent,
                                               size: 34,
                                             ),

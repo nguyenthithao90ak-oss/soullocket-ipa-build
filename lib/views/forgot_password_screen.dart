@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/l10n_service.dart';
 import '../services/security_flow_guard.dart';
 import '../core/sl_theme.dart';
 import '../utils/flexible_date_input.dart';
@@ -25,11 +26,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     Icons.mail_rounded,
     Icons.password_rounded,
   ];
-  static const List<String> _recoveryStepLabels = [
-    'Nhà / Email',
-    'Bảo mật',
-    'Gửi mã',
-    'Đổi mật khẩu',
+  static List<String> recoveryStepLabels(BuildContext context) => [
+    context.tr('forgot_pwd_step_home_email'),
+    context.tr('forgot_pwd_step_security'),
+    context.tr('forgot_pwd_step_send_code'),
+    context.tr('forgot_pwd_step_change_password'),
   ];
 
   final _authService = AuthService();
@@ -70,14 +71,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Lỗi',
+        title: Text(context.tr('forgot_pwd_dialog_error_title'),
             style: SLTheme.quicksand(
                 color: Colors.red, fontWeight: FontWeight.bold)),
         content: Text(msg, style: SLTheme.quicksand()),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Đóng', style: SLTheme.quicksand()),
+            child: Text(context.tr('forgot_pwd_dialog_close'), style: SLTheme.quicksand()),
           )
         ],
       ),
@@ -153,15 +154,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           .trim();
       if (mounted) {
         setState(() {
-          houseUser1Name = n1.isNotEmpty ? n1 : 'Thành viên 1';
-          houseUser2Name = n2.isNotEmpty ? n2 : 'Thành viên 2';
+          houseUser1Name = n1.isNotEmpty ? n1 : context.tr('forgot_pwd_member_default_1');
+          houseUser2Name = n2.isNotEmpty ? n2 : context.tr('forgot_pwd_member_default_2');
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          houseUser1Name = 'Thành viên 1';
-          houseUser2Name = 'Thành viên 2';
+          houseUser1Name = context.tr('forgot_pwd_member_default_1');
+          houseUser2Name = context.tr('forgot_pwd_member_default_2');
         });
       }
     }
@@ -170,7 +171,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> handleHouseLookup() async {
     final input = houseCtrl.text.trim();
     if (input.isEmpty) {
-      _showErrorDialog('Vui lòng nhập mã nhà hoặc Email trước.');
+      _showErrorDialog(context.tr('forgot_pwd_err_enter_house_or_email'));
       return;
     }
 
@@ -206,21 +207,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         }
       } catch (e) {
         final resolvedMessage = AppErrorMapper.resolve(e).message;
-        if (mounted) {
-          setState(() {
-            isSendingRecoveryCode = false;
-            linkSentEmail = '';
-            step = 1;
-          });
-        }
+        if (!mounted) return;
+        setState(() {
+          isSendingRecoveryCode = false;
+          linkSentEmail = '';
+          step = 1;
+        });
         if (resolvedMessage.contains('không tìm thấy') ||
             resolvedMessage.contains('user-not-found') ||
             resolvedMessage.contains('không tồn tại')) {
-          _showErrorDialog(
-              'Email này không tồn tại trong hệ thống. Vui lòng kiểm tra lại.');
+          _showErrorDialog(context.tr('forgot_pwd_err_email_not_found'));
         } else {
-          _showErrorDialog(
-              'Chưa thể gửi mã khôi phục lúc này. Vui lòng thử lại sau.');
+          _showErrorDialog(context.tr('forgot_pwd_err_send_code_failed'));
         }
       } finally {
         if (mounted) setState(() => isBusy = false);
@@ -232,6 +230,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       final secData = await _authService.getHouseSecurityData(resolvedHouseId);
       final publicHint = await _loadPublicRecoveryHint(resolvedHouseId);
+      if (!mounted) return;
       final recovery = secData?['recovery'] is Map
           ? Map<String, dynamic>.from(secData!['recovery'] as Map)
           : <String, dynamic>{};
@@ -254,9 +253,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           : publicHint;
 
       if (secData == null && resolvedMaskedEmail.isEmpty) {
-        _showErrorDialog(
-          'Không tìm thấy mã nhà này hoặc nhà chưa có dữ liệu khôi phục.',
-        );
+        _showErrorDialog(context.tr('forgot_pwd_err_house_not_found'));
         return;
       }
 
@@ -281,9 +278,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         return;
       }
 
-      _showErrorDialog(
-        'Nhà này chưa có đủ dữ liệu khôi phục. Vui lòng liên hệ hỗ trợ.',
-      );
+      _showErrorDialog(context.tr('forgot_pwd_err_no_recovery_data'));
     } finally {
       if (mounted) {
         setState(() => isBusy = false);
@@ -294,7 +289,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> handleAnswerVerify() async {
     final rawAnswer = answerCtrl.text.trim();
     if (rawAnswer.isEmpty) {
-      _showErrorDialog('Vui lòng nhập câu trả lời bảo mật.');
+      _showErrorDialog(context.tr('forgot_pwd_err_enter_answer'));
       return;
     }
     if (_isBirthRecoveryQuestion) {
@@ -315,7 +310,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     FocusScope.of(context).unfocus();
     final ok = _authService.matchesRecoveryAnswer(answerHash, answer);
     if (!ok) {
-      _showErrorDialog('Câu trả lời bảo mật không chính xác.');
+      _showErrorDialog(context.tr('forgot_pwd_err_wrong_answer'));
       return;
     }
 
@@ -328,24 +323,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> handleResetLinkSend() async {
     final enteredEmail = _normalizeRecoveryEmail(emailCtrl.text.trim());
     if (!_isValidRecoveryEmail(enteredEmail)) {
-      _showErrorDialog('Vui lòng nhập email đăng ký hợp lệ.');
+      _showErrorDialog(context.tr('forgot_pwd_err_enter_valid_email'));
       return;
     }
 
     if (fullEmail.isNotEmpty &&
         enteredEmail != _normalizeRecoveryEmail(fullEmail)) {
-      _showErrorDialog(
-        'Email bạn nhập chưa khớp với email bảo mật của nhà.',
-      );
+      _showErrorDialog(context.tr('forgot_pwd_err_email_mismatch_security'));
       return;
     }
 
     if (fullEmail.isEmpty &&
         maskedEmail.isNotEmpty &&
         !_emailMatchesMaskedHint(enteredEmail, maskedEmail)) {
-      _showErrorDialog(
-        'Email bạn nhập chưa khớp với gợi ý bảo mật của nhà.',
-      );
+      _showErrorDialog(context.tr('forgot_pwd_err_email_mismatch_hint'));
       return;
     }
 
@@ -357,6 +348,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!canContinue) {
       return;
     }
+    if (!mounted) return;
     setState(() {
       linkSentEmail = enteredEmail;
       step = 4;
@@ -379,19 +371,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       }
     } catch (e) {
       final resolvedMessage = AppErrorMapper.resolve(e).message;
-      if (mounted) {
-        setState(() {
-          isBusy = false;
-          isSendingRecoveryCode = false;
-          linkSentEmail = '';
-          step = 3;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        isBusy = false;
+        isSendingRecoveryCode = false;
+        linkSentEmail = '';
+        step = 3;
+      });
       if (resolvedMessage.contains('không tìm thấy') ||
           resolvedMessage.contains('user-not-found') ||
           resolvedMessage.contains('không tồn tại')) {
-        _showErrorDialog(
-            'Email này không tồn tại trong hệ thống. Vui lòng kiểm tra lại.');
+        _showErrorDialog(context.tr('forgot_pwd_err_email_not_found'));
       } else {
         _showErrorDialog('Lỗi gửi mã khôi phục: $resolvedMessage');
       }
@@ -402,11 +392,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final otp = otpCtrl.text.trim();
     final newPwd = newPwdCtrl.text;
     if (otp.length != 6) {
-      _showErrorDialog('Vui lòng nhập đủ 6 số mã xác nhận.');
+      _showErrorDialog(context.tr('forgot_pwd_err_enter_otp'));
       return;
     }
     if (newPwd.length < 6) {
-      _showErrorDialog('Mật khẩu mới phải có ít nhất 6 ký tự.');
+      _showErrorDialog(context.tr('forgot_pwd_err_password_too_short'));
       return;
     }
 
@@ -418,6 +408,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!canContinue) {
       return;
     }
+    if (!mounted) return;
     setState(() => isBusy = true);
 
     try {
@@ -431,10 +422,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           useRootNavigator: true,
           builder: (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-            title: Text('Thành công',
+            title: Text(context.tr('forgot_pwd_success_title'),
                 style: SLTheme.quicksand(
                     color: Colors.green, fontWeight: FontWeight.bold)),
-            content: Text('Mật khẩu đã được cập nhật thành công.',
+            content: Text(context.tr('forgot_pwd_success_message'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w600)),
             actions: [
               ElevatedButton(
@@ -449,16 +440,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     Navigator.of(context).pop();
                   }
                 },
-                child: const Text('VỀ TRANG CHỦ',
-                    style: TextStyle(fontWeight: FontWeight.w800)),
+                child: Text(context.tr('forgot_pwd_btn_home'),
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
               )
             ],
           ),
         );
       }
     } catch (e) {
-      _showErrorDialog(
-          'Chưa thể đặt lại mật khẩu lúc này. Vui lòng thử lại sau.');
+      if (mounted) {
+        _showErrorDialog(context.tr('forgot_pwd_err_reset_failed'));
+      }
     } finally {
       if (mounted) setState(() => isBusy = false);
     }
@@ -473,16 +465,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF8FD), Color(0xFFFDF3FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: accent.withValues(alpha: 0.14)),
+        border: Border.all(
+          color: const Color(0xFFFFB6D3).withValues(alpha: 0.35),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: accent.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: const Color(0xFFE080BB).withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -493,41 +492,50 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.10),
+              gradient: LinearGradient(
+                colors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: accent.withValues(alpha: 0.2),
+                width: 1.0,
+              ),
             ),
-            child: Icon(icon, color: accent, size: 22),
+            child: Icon(icon, color: accent, size: 20),
           ),
-          SLSpacing.w12,
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  eyebrow,
+                  eyebrow.toUpperCase(),
                   style: SLTheme.quicksand(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: accent.withValues(alpha: 0.88),
-                    letterSpacing: 0.5,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: accent,
+                    letterSpacing: 1.0,
                   ),
                 ),
-                SLSpacing.h4,
+                const SizedBox(height: 4),
                 Text(
                   title,
                   style: SLTheme.quicksand(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF2F2A2E),
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w900,
+                    color: SLColors.textPrimary,
                   ),
                 ),
-                SLSpacing.h4,
+                const SizedBox(height: 5),
                 Text(
                   description,
                   style: SLTheme.quicksand(
-                    fontSize: 13,
-                    color: const Color(0xFF6F6670),
-                    height: 1.4,
+                    fontSize: 12.5,
+                    color: SLColors.textSecond,
+                    fontWeight: FontWeight.w700,
+                    height: 1.35,
                   ),
                 ),
               ],
@@ -545,17 +553,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Text(
           text,
           style: SLTheme.quicksand(
-            fontSize: 13.5,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            fontSize: 13,
+            color: SLColors.textPrimary,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.1,
           ),
         ),
         if (trailing != null)
           Text(
             trailing,
             style: SLTheme.quicksand(
-              fontSize: 12,
-              color: Colors.grey[600],
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              color: SLColors.primary,
             ),
           ),
       ],
@@ -570,24 +580,37 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return InputDecoration(
       hintText: hintText,
       helperText: helperText,
-      hintStyle: SLTheme.quicksand(color: Colors.grey[400]),
-      prefixIcon: Icon(icon, color: const Color(0xFFD81B60)),
-      prefixIconConstraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+      hintStyle: SLTheme.quicksand(
+        color: SLColors.textSecond.withValues(alpha: 0.70),
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+      ),
+      helperStyle: SLTheme.quicksand(
+        fontSize: 11,
+        color: SLColors.textSecond,
+        fontWeight: FontWeight.w700,
+      ),
+      prefixIcon: Icon(icon, color: const Color(0xFFD81B60), size: 20),
+      prefixIconConstraints: const BoxConstraints(minWidth: 46, minHeight: 46),
       isDense: true,
       filled: true,
-      fillColor: _recoveryAccentSoft,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
-      ),
+      fillColor: const Color(0xFFFFF8F4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFFF2C8D7), width: 1),
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: Color(0xFFE8DDD6), width: 1.25),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.5),
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.6),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: SLColors.danger, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: SLColors.danger, width: 1.6),
       ),
     );
   }
@@ -599,52 +622,68 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     required IconData icon,
   }) {
     final isEnabled = onTap != null;
-    return Container(
-      width: double.infinity,
-      height: 50,
-      decoration: BoxDecoration(
-        color: isEnabled ? _recoveryButtonColor : Colors.grey[300],
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: isEnabled
-            ? [
-                BoxShadow(
-                  color: _recoveryButtonColor.withValues(alpha: 0.2),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                )
-              ]
-            : const [],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Center(
-            child: busy
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        label,
-                        style: SLTheme.quicksand(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+    final colors = isEnabled
+        ? const [Color(0xFFD81B60), Color(0xFFFF5293), Color(0xFFFF8FB8)]
+        : const [Color(0xFFE8AFC4), Color(0xFFF1C3D3)];
+
+    return Opacity(
+      opacity: isEnabled ? 1 : 0.62,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.38),
+            width: 1.4,
+          ),
+          boxShadow: [
+            if (isEnabled)
+              BoxShadow(
+                color: colors.last.withValues(alpha: 0.20),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(22),
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              alignment: Alignment.center,
+              child: busy
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.2,
                       ),
-                      SLSpacing.w8,
-                      Icon(icon, color: Colors.white, size: 20),
-                    ],
-                  ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          label,
+                          style: SLTheme.quicksand(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16.5,
+                            letterSpacing: 0.9,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(icon, color: Colors.white, size: 20),
+                      ],
+                    ),
+            ),
           ),
         ),
       ),
@@ -707,7 +746,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _recoveryStepLabels[currentIndex],
+                      recoveryStepLabels(context)[currentIndex],
                       style: SLTheme.quicksand(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
@@ -826,7 +865,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         color: Color(0xFFD81B60), size: 18),
                     SLSpacing.w8,
                     Text(
-                      'Thành viên trong nhà',
+                      context.tr('forgot_pwd_members_label'),
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -878,7 +917,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               SLSpacing.w12,
               Expanded(
                 child: Text(
-                  'Đang chờ bạn nhập mã xác nhận trong email.\nMã có hiệu lực trong thời gian ngắn, hãy dùng mã mới nhất.',
+                  context.tr('forgot_pwd_pending_waiting'),
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     color: _recoveryAccentDark,
@@ -902,7 +941,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '💡 Lưu ý:',
+                '💡 ${context.tr('forgot_pwd_tips_note')}',
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
@@ -910,17 +949,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
               ),
               SLSpacing.h4,
-              _buildTip('Kiểm tra thư mục Spam/Junk nếu không thấy email.'),
-              _buildTip('Mã có hiệu lực trong thời gian ngắn.'),
-              _buildTip(
-                  'Nhập mã 6 số trong email để đặt lại mật khẩu trực tiếp trong app.'),
+              _buildTip(context.tr('forgot_pwd_tip_check_spam')),
+              _buildTip(context.tr('forgot_pwd_tip_code_expires')),
+              _buildTip(context.tr('forgot_pwd_tip_enter_otp_in_app')),
             ],
           ),
         ),
         SLSpacing.gapH(28),
         // ── Resend button ────────────────────────────────────────────
         _buildRecoveryActionButton(
-          label: 'Gửi lại mã khôi phục',
+          label: context.tr('forgot_pwd_btn_resend'),
           onTap: isBusy
               ? null
               : () async {
@@ -932,7 +970,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            'Đã gửi lại mã khôi phục.',
+                            context.tr('forgot_pwd_snack_resent'),
                             style: SLTheme.quicksand(color: Colors.white),
                           ),
                           backgroundColor: const Color(0xFF4CAF50),
@@ -943,8 +981,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       );
                     }
                   } catch (e) {
-                    _showErrorDialog(
-                        'Chưa thể gửi lại mã khôi phục lúc này. Vui lòng thử lại sau.');
+                    if (mounted) {
+                      _showErrorDialog(context.tr('forgot_pwd_err_resend_failed'));
+                    }
                   } finally {
                     if (mounted) setState(() => isBusy = false);
                   }
@@ -1018,18 +1057,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildRecoveryInfoCard(
-          eyebrow: 'BƯỚC 4 • ĐẶT LẠI MẬT KHẨU',
+          eyebrow: context.tr('forgot_pwd_step4_eyebrow'),
           title: isSendingRecoveryCode
-              ? 'Đang gửi mã xác nhận'
-              : 'Nhập mã xác nhận',
+              ? context.tr('forgot_pwd_step4_title_sending')
+              : context.tr('forgot_pwd_step4_title_enter'),
           description: isSendingRecoveryCode
-              ? 'Đang gửi mã xác nhận 6 số đến:\n$sentTo\nMàn hình nhập mã đã sẵn sàng, bạn chỉ cần chờ email gửi tới.'
-              : 'Mã xác nhận 6 số vừa được gửi đến:\n$sentTo',
+              ? L10nService().format('forgot_pwd_step4_desc_sending', {'email': sentTo})
+              : L10nService().format('forgot_pwd_step4_desc_sent', {'email': sentTo}),
           icon: Icons.mark_email_unread_rounded,
           accent: const Color(0xFFD81B60),
         ),
         SLSpacing.h24,
-        _buildSectionLabel('Mã xác nhận (6 số)'),
+        _buildSectionLabel(context.tr('forgot_pwd_label_otp')),
         SLSpacing.h8,
         TextField(
           controller: otpCtrl,
@@ -1046,7 +1085,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ).copyWith(counterText: ''),
         ),
         SLSpacing.h24,
-        _buildSectionLabel('Mật khẩu mới'),
+        _buildSectionLabel(context.tr('forgot_pwd_label_new_password')),
         SLSpacing.h8,
         TextField(
           controller: newPwdCtrl,
@@ -1054,7 +1093,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           obscureText: isObscure,
           style: SLTheme.quicksand(),
           decoration: _recoveryInputDecoration(
-            hintText: 'Nhập mật khẩu mới (ít nhất 6 ký tự)',
+            hintText: context.tr('forgot_pwd_hint_new_password'),
             icon: Icons.lock_rounded,
           ).copyWith(
             suffixIcon: IconButton(
@@ -1070,10 +1109,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         SLSpacing.gapH(32),
         _buildRecoveryActionButton(
           label: isSendingRecoveryCode
-              ? 'Đang gửi mã xác nhận...'
+              ? context.tr('forgot_pwd_btn_sending')
               : isBusy
-                  ? 'Đang xử lý...'
-                  : 'Xác nhận & Đổi mật khẩu',
+                  ? context.tr('forgot_pwd_btn_processing')
+                  : context.tr('forgot_pwd_btn_confirm_change'),
           onTap: isBusy ? null : handleVerifyOtpAndCreatePassword,
           busy: isBusy,
           icon: Icons.check_circle_outline_rounded,
@@ -1085,6 +1124,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ? null
                 : () async {
                     if (linkSentEmail.isEmpty) return;
+                    if (!mounted) return;
                     setState(() {
                       isBusy = true;
                       isSendingRecoveryCode = true;
@@ -1097,15 +1137,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Đã gửi lại mã xác nhận.',
+                            content: Text(context.tr('forgot_pwd_snack_otp_resent'),
                                 style: SLTheme.quicksand()),
                             backgroundColor: Colors.green,
                           ),
                         );
                       }
                     } catch (e) {
-                      _showErrorDialog(
-                          'Chưa thể gửi lại mã xác nhận lúc này. Vui lòng thử lại sau.');
+                      if (mounted) {
+                        _showErrorDialog(context.tr('forgot_pwd_err_resend_otp_failed'));
+                      }
                     } finally {
                       if (mounted) {
                         setState(() {
@@ -1115,7 +1156,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       }
                     }
                   },
-            child: Text('Chưa nhận được mã? Gửi lại',
+            child: Text(context.tr('forgot_pwd_btn_resend_otp'),
                 style: SLTheme.quicksand(
                     color: const Color(0xFFD81B60),
                     fontWeight: FontWeight.bold)),
@@ -1134,15 +1175,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildRecoveryInfoCard(
-              eyebrow: 'BƯỚC 2 • CÂU HỎI BẢO MẬT',
+              eyebrow: context.tr('forgot_pwd_step2_eyebrow'),
               title: question,
-              description:
-                  'Trả lời đúng để mở bước gửi mã khôi phục đến email đã đăng ký.',
+              description: context.tr('forgot_pwd_step2_desc'),
               icon: Icons.help_rounded,
               accent: const Color(0xFFD81B60),
             ),
             SLSpacing.h20,
-            _buildSectionLabel('Câu trả lời của bạn'),
+            _buildSectionLabel(context.tr('forgot_pwd_label_your_answer')),
             SLSpacing.h8,
             TextField(
               controller: answerCtrl,
@@ -1160,20 +1200,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               onSubmitted: (_) => isBusy ? null : handleAnswerVerify(),
               decoration: _recoveryInputDecoration(
                 hintText: _isBirthRecoveryQuestion
-                    ? 'ngày/tháng/năm'
-                    : 'Nhập câu trả lời...',
+                    ? context.tr('forgot_pwd_hint_date')
+                    : context.tr('forgot_pwd_hint_answer'),
                 icon: _isBirthRecoveryQuestion
                     ? Icons.calendar_month_rounded
                     : Icons.key_rounded,
                 helperText: _isBirthRecoveryQuestion
-                    ? 'Đang nhập ngày/tháng/năm'
+                    ? context.tr('forgot_pwd_helper_date')
                     : null,
               ),
             ),
             SLSpacing.h24,
             _buildRecoveryActionButton(
-              label:
-                  isBusy ? 'Đang kiểm tra câu trả lời...' : 'Kiểm tra đáp án',
+              label: isBusy ? context.tr('forgot_pwd_btn_checking') : context.tr('forgot_pwd_btn_check_answer'),
               onTap: isBusy ? null : handleAnswerVerify,
               busy: isBusy,
               icon: Icons.verified_user_rounded,
@@ -1182,21 +1221,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         );
       case 3:
         final description = maskedEmail.isNotEmpty
-            ? 'Gợi ý email bảo mật: $maskedEmail\nNhập đầy đủ email đăng ký để hệ thống gửi mã khôi phục.'
-            : 'Nhập email đăng ký đầy đủ để hệ thống gửi mã khôi phục.';
+            ? L10nService().format('forgot_pwd_step3_desc_with_hint', {'masked': maskedEmail})
+            : context.tr('forgot_pwd_step3_desc_no_hint');
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildRecoveryInfoCard(
-              eyebrow: 'BƯỚC 3 • GỬI MÃ KHÔI PHỤC',
-              title: 'Xác minh thành công',
+              eyebrow: context.tr('forgot_pwd_step3_eyebrow'),
+              title: context.tr('forgot_pwd_step3_title'),
               description: description,
               icon: Icons.mark_email_read_rounded,
               accent: const Color(0xFFD81B60),
             ),
             SLSpacing.h20,
             _buildSectionLabel(
-              'Email đăng ký đầy đủ',
+              context.tr('forgot_pwd_label_full_email'),
               trailing: maskedEmail.isNotEmpty ? maskedEmail : null,
             ),
             SLSpacing.h8,
@@ -1211,13 +1250,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               style: SLTheme.quicksand(),
               onSubmitted: (_) => isBusy ? null : handleResetLinkSend(),
               decoration: _recoveryInputDecoration(
-                hintText: 'Nhập email đăng ký đầy đủ...',
+                hintText: context.tr('forgot_pwd_hint_full_email'),
                 icon: Icons.alternate_email_rounded,
               ),
             ),
             SLSpacing.h24,
             _buildRecoveryActionButton(
-              label: isBusy ? 'Đang gửi mã khôi phục...' : 'Gửi mã khôi phục',
+              label: isBusy ? context.tr('forgot_pwd_btn_send_code_busy') : context.tr('forgot_pwd_btn_send_code'),
               onTap: isBusy ? null : handleResetLinkSend,
               busy: isBusy,
               icon: Icons.send_rounded,
@@ -1230,15 +1269,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildRecoveryInfoCard(
-              eyebrow: 'BƯỚC 1 • XÁC MINH NHÀ / EMAIL',
-              title: 'Nhập mã nhà hoặc Email',
-              description:
-                  'Hệ thống sẽ tự động phân tích. Nhập Email để nhận mã khôi phục, hoặc mã nhà để trả lời câu hỏi bảo mật.',
+              eyebrow: context.tr('forgot_pwd_step1_eyebrow'),
+              title: context.tr('forgot_pwd_step1_title'),
+              description: context.tr('forgot_pwd_step1_desc'),
               icon: Icons.home_rounded,
               accent: const Color(0xFFD81B60),
             ),
             SLSpacing.h20,
-            _buildSectionLabel('Mã nhà hoặc Email'),
+            _buildSectionLabel(context.tr('forgot_pwd_label_house_or_email')),
             SLSpacing.h8,
             TextField(
               controller: houseCtrl,
@@ -1253,13 +1291,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               onSubmitted: (_) => isBusy ? null : handleHouseLookup(),
               decoration: _recoveryInputDecoration(
-                hintText: 'VD: NH_K2L9... hoặc abc@gmail.com',
+                hintText: context.tr('forgot_pwd_hint_house_or_email'),
                 icon: Icons.vpn_key_rounded,
               ),
             ),
             SLSpacing.h24,
             _buildRecoveryActionButton(
-              label: isBusy ? 'Đang xử lý...' : 'Tiếp tục',
+              label: isBusy ? context.tr('forgot_pwd_btn_processing') : context.tr('forgot_pwd_btn_continue'),
               onTap: isBusy ? null : handleHouseLookup,
               busy: isBusy,
               icon: Icons.arrow_forward_rounded,
@@ -1271,104 +1309,288 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColors = const [
+      Color(0xFFFFF0F5),
+      Color(0xFFFFD6E7),
+      Color(0xFFFCEEF7),
+      Color(0xFFEEDDF8),
+    ];
+
     return SensitiveContentGuard(
       child: Scaffold(
-        backgroundColor: const Color(0xFFFFF8FB),
-        appBar: AppBar(
-          backgroundColor: const Color(0xFFFFF8FB),
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.black87),
-            onPressed: isBusy ? null : () => Navigator.of(context).pop(),
-          ),
-          title: Text(
-            'Khôi phục mật khẩu',
-            style: SLTheme.quicksand(
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: backgroundColors,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
-          centerTitle: true,
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                        color: _recoveryButtonColor.withValues(alpha: 0.14)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _recoveryButtonColor.withValues(alpha: 0.06),
-                        blurRadius: 22,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+          child: Stack(
+            children: [
+              // --- top-left large blush orb ---
+              Positioned(
+                top: -80,
+                left: -80,
+                child: IgnorePointer(
+                  child: _AuthGlowOrb(
+                    size: 260,
+                    colors: const [Color(0xFFFFB6D3), Color(0xFFFF8FB8)],
+                    opacity: 0.38,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        child: KeyedSubtree(
-                          key: ValueKey(step),
-                          child: buildStepBody(),
-                        ),
-                      ),
-                      if (step > 1) ...[
-                        SLSpacing.h20,
-                        Center(
-                          child: TextButton.icon(
-                            onPressed: isBusy
-                                ? null
-                                : () {
-                                    setState(() {
-                                      if (step == 4) {
-                                        // From step 4 go back to start
-                                        step = 1;
-                                        linkSentEmail = '';
-                                      } else if (step == 3 &&
-                                          question.isNotEmpty) {
-                                        step = 2;
-                                      } else {
-                                        step = 1;
-                                      }
-                                    });
-                                  },
-                            icon:
-                                const Icon(Icons.arrow_back_rounded, size: 18),
-                            label: Text(
-                              step == 4 ? 'Bắt đầu lại' : 'Quay lại bước trước',
-                              style: SLTheme.quicksand(
-                                fontWeight: FontWeight.bold,
+                ),
+              ),
+              // --- right mid rose orb ---
+              Positioned(
+                top: 100,
+                right: -90,
+                child: IgnorePointer(
+                  child: _AuthGlowOrb(
+                    size: 220,
+                    colors: const [Color(0xFFFFC2DC), Color(0xFFFF85B3)],
+                    opacity: 0.44,
+                  ),
+                ),
+              ),
+              // --- bottom-right lavender orb ---
+              Positioned(
+                bottom: -30,
+                right: 20,
+                child: IgnorePointer(
+                  child: _AuthGlowOrb(
+                    size: 180,
+                    colors: const [Color(0xFFE0BBFF), Color(0xFFC49CFF)],
+                    opacity: 0.32,
+                  ),
+                ),
+              ),
+              // --- decorative sparkle icons ---
+              Positioned(
+                bottom: 100,
+                left: 12,
+                child: IgnorePointer(
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    color: SLColors.primary.withValues(alpha: 0.22),
+                    size: 52,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 160,
+                left: 30,
+                child: IgnorePointer(
+                  child: Icon(
+                    Icons.favorite_rounded,
+                    color: SLColors.primary.withValues(alpha: 0.12),
+                    size: 36,
+                  ),
+                ),
+              ),
+
+              // --- Main Content ---
+              Scaffold(
+                backgroundColor: Colors.transparent,
+                appBar: AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: SLColors.primary),
+                    onPressed: isBusy ? null : () => Navigator.of(context).pop(),
+                  ),
+                  title: Text(
+                    context.tr('forgot_pwd_appbar_title').toUpperCase(),
+                    style: SLTheme.quicksand(
+                      color: SLColors.primary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  centerTitle: true,
+                ),
+                body: SafeArea(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final width = constraints.maxWidth;
+                      final isCompact = width < 380;
+                      final isTablet = width >= 600;
+                      final horizontalPadding = isCompact ? 14.0 : 18.0;
+                      final maxContentWidth = isTablet ? 520.0 : 420.0;
+
+                      return Center(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                            vertical: 12,
+                          ),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: maxContentWidth),
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFFBFD).withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(36),
+                                border: Border.all(
+                                  color: const Color(0xFFFFB6D3).withValues(alpha: 0.55),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFFF85B3).withValues(alpha: 0.16),
+                                    blurRadius: 40,
+                                    spreadRadius: -4,
+                                    offset: const Offset(0, 20),
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.white.withValues(alpha: 0.88),
+                                    blurRadius: 0,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
                               ),
-                            ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFFD81B60),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Brand Header Logo
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 14),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        ShaderMask(
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [SLColors.primary, Color(0xFFE060B0)],
+                                          ).createShader(bounds),
+                                          child: const Icon(
+                                            Icons.favorite_rounded,
+                                            size: 16,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        ShaderMask(
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [Color(0xFFE0609A), Color(0xFFA044C0)],
+                                          ).createShader(bounds),
+                                          child: Text(
+                                            'soullocket',
+                                            style: SLTheme.quicksand(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.white,
+                                              letterSpacing: 1.4,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        ShaderMask(
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [Color(0xFFE060B0), SLColors.primary],
+                                          ).createShader(bounds),
+                                          child: const Icon(
+                                            Icons.favorite_rounded,
+                                            size: 16,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    switchInCurve: Curves.easeOutCubic,
+                                    switchOutCurve: Curves.easeInCubic,
+                                    child: KeyedSubtree(
+                                      key: ValueKey(step),
+                                      child: buildStepBody(),
+                                    ),
+                                  ),
+                                  if (step > 1) ...[
+                                    SLSpacing.h20,
+                                    Center(
+                                      child: TextButton.icon(
+                                        onPressed: isBusy
+                                            ? null
+                                            : () {
+                                                setState(() {
+                                                  if (step == 4) {
+                                                    step = 1;
+                                                    linkSentEmail = '';
+                                                  } else if (step == 3 &&
+                                                      question.isNotEmpty) {
+                                                    step = 2;
+                                                  } else {
+                                                    step = 1;
+                                                  }
+                                                });
+                                              },
+                                        icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                                        label: Text(
+                                          step == 4
+                                              ? context.tr('forgot_pwd_btn_restart')
+                                              : context.tr('forgot_pwd_btn_back_step'),
+                                          style: SLTheme.quicksand(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: const Color(0xFFD81B60),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    ],
+                      );
+                    },
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthGlowOrb extends StatelessWidget {
+  final double size;
+  final List<Color> colors;
+  final double opacity;
+
+  const _AuthGlowOrb({
+    required this.size,
+    required this.colors,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            colors.first.withValues(alpha: opacity),
+            colors.last.withValues(alpha: opacity * 0.58),
+            colors.last.withValues(alpha: 0),
+          ],
         ),
       ),
     );

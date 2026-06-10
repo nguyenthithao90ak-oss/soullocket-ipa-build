@@ -33,6 +33,7 @@ import '../../services/widget_action_service.dart';
 import '../../widgets/legacy_falling_effect.dart';
 import '../../widgets/touch_effect_overlay.dart';
 import '../notifications/notification_center_screen.dart';
+import '../chat/chat_detail_screen.dart';
 import '../relationship/couple_connect_screen.dart';
 import '../relationship/video_call_screen.dart';
 import '../utilities/calendar_screen.dart';
@@ -49,6 +50,7 @@ import '../../utils/services/widget_service.dart';
 import '../../utils/sl_notice.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../widgets/first_setup_spotlight_guide.dart';
+import '../../core/fast_backdrop_filter.dart';
 
 part 'widgets/home_shell/home_screen_sync_flows.dart';
 part 'widgets/home_shell/home_screen_notice_flows.dart';
@@ -76,7 +78,7 @@ class _NavItem {
 
 typedef _HomeTabBuilder = Widget Function(bool isActive);
 
-class _TabActivationHost extends StatelessWidget {
+class _TabActivationHost extends StatefulWidget {
   final int tabIndex;
   final ValueListenable<int> activeIndexListenable;
   final _HomeTabBuilder builder;
@@ -88,16 +90,56 @@ class _TabActivationHost extends StatelessWidget {
   });
 
   @override
+  State<_TabActivationHost> createState() => _TabActivationHostState();
+}
+
+class _TabActivationHostState extends State<_TabActivationHost> {
+  late bool _isActive;
+  Widget? _cachedChild;
+
+  @override
+  void initState() {
+    super.initState();
+    _isActive = widget.activeIndexListenable.value == widget.tabIndex;
+    widget.activeIndexListenable.addListener(_onActiveIndexChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _TabActivationHost oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.activeIndexListenable != widget.activeIndexListenable ||
+        oldWidget.tabIndex != widget.tabIndex) {
+      oldWidget.activeIndexListenable.removeListener(_onActiveIndexChanged);
+      _isActive = widget.activeIndexListenable.value == widget.tabIndex;
+      widget.activeIndexListenable.addListener(_onActiveIndexChanged);
+      _cachedChild = null; // Invalidate cache
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.activeIndexListenable.removeListener(_onActiveIndexChanged);
+    super.dispose();
+  }
+
+  void _onActiveIndexChanged() {
+    final nextActive = widget.activeIndexListenable.value == widget.tabIndex;
+    if (_isActive != nextActive) {
+      setState(() {
+        _isActive = nextActive;
+        // KHÔNG xóa _cachedChild ở đây — giữ lại widget tree để tránh rebuild tốn kém
+        // TickerMode sẽ tự pause/resume animation mà không cần rebuild
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: activeIndexListenable,
-      builder: (context, activeIndex, _) {
-        final isActive = activeIndex == tabIndex;
-        return TickerMode(
-          enabled: isActive,
-          child: builder(isActive),
-        );
-      },
+    // Lazy-build lần đầu, sau đó giữ nguyên không rebuild
+    _cachedChild ??= widget.builder(_isActive);
+    return TickerMode(
+      enabled: _isActive,
+      child: _cachedChild!,
     );
   }
 }
@@ -279,21 +321,7 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
     if (notification.depth != 0 || widget.onPageChanged == null) {
       return false;
     }
-    if (notification is ScrollUpdateNotification) {
-      final metrics = notification.metrics;
-      if (metrics is! PageMetrics) {
-        return false;
-      }
-      final nextPage = _clampPage(
-        (metrics.page ?? widget.controller.initialPage.toDouble()).round(),
-      );
-      if (nextPage != _lastBuiltPage && mounted) {
-        setState(() {
-          _lastBuiltPage = nextPage;
-        });
-      }
-      return false;
-    }
+
     if (notification is! ScrollEndNotification) {
       return false;
     }
@@ -323,7 +351,8 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
   @override
   Widget build(BuildContext context) {
     final axisDirection = _axisDirectionFor(context);
-    final cacheExtent = widget.children.length <= 1 ? 1.0 : 2.0;
+    // Cache 3 viewport để tab kề luôn được giữ sẵn trong bộ nhớ, giảm lag khi swipe
+    final cacheExtent = widget.children.length <= 1 ? 1.0 : 3.0;
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -993,10 +1022,9 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
     if (_currentIndex != nextIndex) {
       HapticFeedback.selectionClick();
-      setState(() {
-        _currentIndex = nextIndex;
-        _isUserTabSwiping = false;
-      });
+      _currentIndex = nextIndex;
+      _isUserTabSwiping = false;
+      _isUserTabSwipingNotifier.value = false;
       _setActiveTabIndex(nextIndex);
     }
     unawaited(_persistCurrentTab(nextIndex));
@@ -1137,6 +1165,119 @@ class _HomeScreenState extends State<HomeScreen>
     // await prefs.setInt(_lastTabPrefsKey, index);
   }
 
+  Future<void> _openHomeMessenger() async {
+    if (!mounted) return;
+    final houseId = (await _houseService.getCurrentHouseId() ?? '').trim();
+    if (houseId.isEmpty) return;
+
+    final currentRole = await RoleUtils.currentRole();
+    final targetRole = currentRole == 'user1' ? 'user2' : 'user1';
+    var targetName = targetRole == 'user1' ? 'Bạn nam' : 'Bạn nữ';
+    var targetAvatar = '';
+
+    try {
+      final snap = await FirebaseDatabase.instance.ref('houses/$houseId').get();
+      final raw = snap.value;
+      if (raw is Map) {
+        final data = Map<dynamic, dynamic>.from(raw);
+        final nameKey = targetRole == 'user1' ? 'nameU1' : 'nameU2';
+        final avatarKey = targetRole == 'user1' ? 'avtUser1' : 'avtUser2';
+        final name = data[nameKey]?.toString().trim() ?? '';
+        final avatar = data[avatarKey]?.toString().trim() ?? '';
+        if (name.isNotEmpty) targetName = name;
+        if (avatar.isNotEmpty) targetAvatar = avatar;
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+    await slPush(
+      context,
+      ChatDetailScreen(
+        myHouseId: houseId,
+        targetHouseId: houseId,
+        targetName: targetName,
+        targetAvatar: targetAvatar,
+        isInternal: true,
+        currentRole: currentRole,
+        targetRole: targetRole,
+      ),
+    );
+  }
+
+  Widget _buildHomeMessengerBubble() {
+    return Positioned(
+      right: 16,
+      bottom: 110 + MediaQuery.of(context).padding.bottom,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _openHomeMessenger,
+          borderRadius: BorderRadius.circular(22),
+          child: Ink(
+            width: 64,
+            height: 74,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFFFF6EAD),
+                  Color(0xFFFF4D97),
+                  Color(0xFFE23C83),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.26),
+                width: 1.1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFD81B60).withValues(alpha: 0.22),
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.20),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.forum_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Iu ơi',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    color: Colors.white,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<UiPrefsState>(
@@ -1156,7 +1297,7 @@ class _HomeScreenState extends State<HomeScreen>
                 onPageChanged: _handlePageChanged,
                 dragStartBehavior: DragStartBehavior.start,
                 physics:
-                    const _HomeTabPagePhysics(parent: ClampingScrollPhysics()),
+                    const _HomeTabPagePhysics(parent: BouncingScrollPhysics()),
                 children: List<Widget>.generate(
                   _navItems.length,
                   (index) => RepaintBoundary(
@@ -1166,8 +1307,14 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
             ),
-            TickerMode(
-              enabled: !_isUserTabSwiping,
+            ValueListenableBuilder<bool>(
+              valueListenable: _isUserTabSwipingNotifier,
+              builder: (context, isSwiping, child) {
+                return TickerMode(
+                  enabled: !isSwiping,
+                  child: child ?? const SizedBox.shrink(),
+                );
+              },
               child: _buildMusicButton(),
             ),
           ],
@@ -1179,59 +1326,82 @@ class _HomeScreenState extends State<HomeScreen>
               ? 'off'
               : _resolveEffectKey(uiState.fallingEffectKey, resolvedThemeKey);
           final isDark = _isDarkTheme(resolvedThemeKey);
-          final isMainHomeTab = _currentIndex == 0;
-          final isHomeEffectsPaused = _isUserTabSwiping;
           final shouldAnimateEffects =
               effectProfile.premiumEffects && resolvedEffectKey == 'off';
           final shouldAnimateFallingEffect =
               effectProfile.animationEnabled && resolvedEffectKey != 'off';
-          final enableTouchEffects =
-              shouldAnimateEffects && !isHomeEffectsPaused;
 
           Widget bodyContent = Stack(
             children: [
               Positioned.fill(
                 child: RepaintBoundary(
-                  child: ValueListenableBuilder<int>(
-                    valueListenable: _backgroundTabIndexNotifier,
-                    builder: (context, tabIndex, _) {
-                      tabIndex.clamp(0, _navItems.length - 1);
-                      const backgroundShellTabIndex = 0;
-                      final backgroundUrl = uiState.customBackgroundUrl;
-                      return _buildShellBackground(
-                        themeKey: resolvedThemeKey,
-                        tabIndex: backgroundShellTabIndex,
-                        isDark: isDark,
-                        backgroundUrl: backgroundUrl,
-                        graphicsQualityKey: graphicsQualityKey,
-                        animateAmbientEffects: shouldAnimateEffects,
-                      );
-                    },
+                  child: _buildShellBackground(
+                    themeKey: resolvedThemeKey,
+                    tabIndex: 0,
+                    isDark: isDark,
+                    backgroundUrl: uiState.customBackgroundUrl,
+                    graphicsQualityKey: graphicsQualityKey,
+                    animateAmbientEffects: shouldAnimateEffects,
                   ),
                 ),
               ),
               foregroundChild,
-              if (isMainHomeTab &&
-                  resolvedEffectKey != 'off' &&
-                  !_isUserTabSwiping)
-                Positioned.fill(
-                  child: RepaintBoundary(
-                    child: IgnorePointer(
-                      child: LegacyFallingEffect(
-                        type: resolvedEffectKey,
-                        isDark: isDark,
-                        density: graphicsQualityKey,
-                        opacity: isDark ? 0.96 : 0.88,
-                        animate: shouldAnimateFallingEffect,
-                      ),
-                    ),
-                  ),
-                ),
+              ValueListenableBuilder<int>(
+                valueListenable: _activeTabIndexNotifier,
+                builder: (context, activeIndex, _) {
+                  final isMainHomeTab = activeIndex == 0;
+                  if (!isMainHomeTab || resolvedEffectKey == 'off') {
+                    return const SizedBox.shrink();
+                  }
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: _isUserTabSwipingNotifier,
+                    builder: (context, isSwiping, _) {
+                      if (isSwiping) {
+                        return const SizedBox.shrink();
+                      }
+                      return Positioned.fill(
+                        child: RepaintBoundary(
+                          child: IgnorePointer(
+                            child: LegacyFallingEffect(
+                              type: resolvedEffectKey,
+                              isDark: isDark,
+                              density: graphicsQualityKey,
+                              opacity: isDark ? 0.96 : 0.88,
+                              animate: shouldAnimateFallingEffect,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ],
           );
 
-          if (isMainHomeTab && enableTouchEffects) {
-            bodyContent = TouchEffectOverlay(child: bodyContent);
+          if (shouldAnimateEffects) {
+            bodyContent = ValueListenableBuilder<int>(
+              valueListenable: _activeTabIndexNotifier,
+              builder: (context, activeIndex, child) {
+                final resolvedChild = child ?? bodyContent;
+                final isMainHomeTab = activeIndex == 0;
+                if (!isMainHomeTab) {
+                  return resolvedChild;
+                }
+                return ValueListenableBuilder<bool>(
+                  valueListenable: _isUserTabSwipingNotifier,
+                  builder: (context, isSwiping, childUnderTouch) {
+                    final targetChild = childUnderTouch ?? resolvedChild;
+                    if (isSwiping) {
+                      return targetChild;
+                    }
+                    return TouchEffectOverlay(child: targetChild);
+                  },
+                  child: resolvedChild,
+                );
+              },
+              child: bodyContent,
+            );
           }
 
           return PopScope(

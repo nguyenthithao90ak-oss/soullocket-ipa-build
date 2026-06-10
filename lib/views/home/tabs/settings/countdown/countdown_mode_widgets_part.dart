@@ -1056,3 +1056,196 @@ class _CountdownModeGlowOrb extends StatelessWidget {
     );
   }
 }
+
+/// Overlay trái tim hồng bay nhẹ nhàng bên trong/ngoài vòng tròn đếm.
+/// Dùng cho style 'floating_hearts'.
+class FloatingHeartsRingOverlay extends StatefulWidget {
+  const FloatingHeartsRingOverlay({required this.size});
+  final double size;
+
+  @override
+  State<FloatingHeartsRingOverlay> createState() =>
+      _FloatingHeartsRingOverlayState();
+}
+
+class _FloatingHeartsRingOverlayState
+    extends State<FloatingHeartsRingOverlay> with TickerProviderStateMixin {
+  static const int _kCount = 8;
+
+  late final List<_HeartParticle> _particles;
+  late final List<AnimationController> _controllers;
+  late final List<Animation<double>> _floatAnims;
+
+  StreamSubscription<AccelerometerEvent>? _sensorSub;
+  double _tiltX = 0.0;
+  double _tiltY = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    final rng = Object.hashAll([widget.size, identityHashCode(this)]);
+    _particles = List.generate(_kCount, (i) {
+      final base = (i / _kCount) * 2 * 3.14159265;
+      final jitter = ((rng ^ (i * 2654435761)) & 0xFFFF) / 0xFFFF;
+      final angle = base + (jitter - 0.5) * 0.5;
+      // Vị trí xa trung tâm hơn một chút để không đè trực tiếp vào con số chính giữa quá nhiều
+      final rFrac = 0.32 + ((jitter * 17) % 1.0) * 0.22;
+      
+      // Trái tim lớn nổi bật: 24px đến 42px
+      final sz = 24.0 + ((jitter * 13) % 1.0) * 18.0;
+      
+      final delay = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF * 3.0;
+      
+      // Chu kỳ trôi động: 3.8s đến 6.8s
+      final duration = 3800 + (((rng ^ (i * 987654)) & 0xFFFF) / 0xFFFF * 3000).toInt();
+      
+      // Biên độ dao động
+      final floatAmp = 8.0 + ((jitter * 7) % 1.0) * 10.0;
+      
+      final parallax = 0.6 + ((jitter * 19) % 1.0) * 0.9;
+      
+      return _HeartParticle(
+        angle: angle,
+        rFrac: rFrac,
+        size: sz,
+        delay: delay,
+        durationMs: duration,
+        floatAmplitude: floatAmp,
+        opacity: 0.70 + ((jitter * 11) % 1.0) * 0.20,
+        parallaxFactor: parallax,
+      );
+    });
+
+    _controllers = List.generate(_kCount, (i) {
+      return AnimationController(
+        vsync: this,
+        duration: Duration(milliseconds: _particles[i].durationMs),
+      );
+    });
+
+    _floatAnims = List.generate(_kCount, (i) {
+      return Tween<double>(begin: -1.0, end: 1.0).animate(
+        CurvedAnimation(parent: _controllers[i], curve: Curves.easeInOut),
+      );
+    });
+
+    for (int i = 0; i < _kCount; i++) {
+      final delayMs = (_particles[i].delay * 1000).toInt();
+      Future.delayed(Duration(milliseconds: delayMs), () {
+        if (mounted) {
+          _controllers[i].repeat(reverse: true);
+        }
+      });
+    }
+
+    try {
+      _sensorSub = accelerometerEventStream().listen(
+        (event) {
+          if (!mounted) return;
+          final targetX = -event.x.clamp(-6.0, 6.0) * 4.0;
+          final targetY = event.y.clamp(-6.0, 6.0) * 4.0;
+          setState(() {
+            _tiltX = _tiltX * 0.85 + targetX * 0.15;
+            _tiltY = _tiltY * 0.85 + targetY * 0.15;
+          });
+        },
+        onError: (_) {},
+        cancelOnError: false,
+      );
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _sensorSub?.cancel();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = widget.size / 2;
+    return IgnorePointer(
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: Stack(
+          children: [
+            for (int i = 0; i < _kCount; i++)
+              AnimatedBuilder(
+                animation: _controllers[i],
+                builder: (_, __) {
+                  final p = _particles[i];
+                  final t = _floatAnims[i].value;
+
+                  // Sway góc: lắc lư trái phải qua lại
+                  final double currentAngle = p.angle + (t * 0.40);
+                  // Co giãn bán kính: dịch chuyển ra/vào nhẹ nhàng
+                  final double currentR = radius * (p.rFrac + (t * 0.08));
+
+                  final double cx = radius +
+                      currentR * math.cos(currentAngle) +
+                      (_tiltX * p.parallaxFactor);
+                  final double cy = radius +
+                      currentR * math.sin(currentAngle) +
+                      (_tiltY * p.parallaxFactor);
+
+                  return Positioned(
+                    left: cx - p.size / 2,
+                    top: cy - p.size / 2,
+                    child: Opacity(
+                      opacity: p.opacity,
+                      child: Transform.rotate(
+                        angle: t * 0.25, // Xoay nghiêng trái tim nhẹ nhàng theo chuyển động
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          size: p.size,
+                          color: _kHeartColors[i % _kHeartColors.length],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static const List<Color> _kHeartColors = [
+    Color(0xFFFF85C0),
+    Color(0xFFFF4D94),
+    Color(0xFFFFADD6),
+    Color(0xFFFF6BAD),
+    Color(0xFFFFC2DC),
+    Color(0xFFE8367E),
+    Color(0xFFFFD6EC),
+    Color(0xFFFF8DC7),
+  ];
+}
+
+class _HeartParticle {
+  const _HeartParticle({
+    required this.angle,
+    required this.rFrac,
+    required this.size,
+    required this.delay,
+    required this.durationMs,
+    required this.floatAmplitude,
+    required this.opacity,
+    required this.parallaxFactor,
+  });
+  final double angle;
+  final double rFrac;
+  final double size;
+  final double delay;
+  final int durationMs;
+  final double floatAmplitude;
+  final double opacity;
+  final double parallaxFactor;
+}
+
+
