@@ -88,13 +88,20 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
             ],
           ),
           SLSpacing.h12,
-          Text(
-            card.value,
-            style: SLTheme.quicksand(
-              fontSize: 31,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF172033),
-              height: 0.95,
+          ShaderMask(
+            shaderCallback: (bounds) => LinearGradient(
+              colors: [card.accent, card.accent.withValues(alpha: 0.6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds),
+            child: Text(
+              card.value,
+              style: SLTheme.quicksand(
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                height: 0.95,
+              ),
             ),
           ),
           SLSpacing.h8,

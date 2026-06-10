@@ -36,23 +36,30 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
     required Color background,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: background,
-        borderRadius: SLRadius.pillAll,
-        border: Border.all(color: color.withValues(alpha: 0.10)),
+        color: background.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: color),
-          SLSpacing.w8,
+          SLSpacing.w6,
           Text(
             text,
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w900,
-              color: color,
+              color: color.withOpacity(0.9),
             ),
           ),
         ],

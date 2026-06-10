@@ -38,23 +38,30 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          '${insight.loveScore}',
-                          style: SLTheme.quicksand(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF172033),
-                            height: 0.9,
+                        ShaderMask(
+                          shaderCallback: (bounds) => LinearGradient(
+                            colors: [scoreColor.withValues(alpha: 0.8), scoreColor],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ).createShader(bounds),
+                          child: Text(
+                            '${insight.loveScore}',
+                            style: SLTheme.quicksand(
+                              fontSize: 54,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              height: 0.9,
+                            ),
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(left: 4, bottom: 5),
+                          padding: const EdgeInsets.only(left: 4, bottom: 6),
                           child: Text(
                             '/100',
                             style: SLTheme.quicksand(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFFABB1BA),
+                              color: const Color(0xFF908C99),
                             ),
                           ),
                         ),
@@ -100,12 +107,19 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                 width: 104,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8,
-                  vertical: 14,
+                  vertical: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.96),
-                  borderRadius: SLRadius.xlAll,
-                  border: Border.all(color: const Color(0xFFF4D3DE)),
+                  color: Colors.white.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFD81B60).withValues(alpha: 0.1),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -115,17 +129,24 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF6D6872),
+                        color: const Color(0xFF9B82A1),
                       ),
                     ),
                     SLSpacing.h8,
-                    Text(
-                      '$loveDays',
-                      style: SLTheme.quicksand(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF0F4C81),
-                        height: 0.95,
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [Color(0xFFD81B60), Color(0xFF8E24AA)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: Text(
+                        '$loveDays',
+                        style: SLTheme.quicksand(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          height: 0.95,
+                        ),
                       ),
                     ),
                     SLSpacing.h8,
@@ -134,8 +155,8 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8B8390),
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFFC7B1CD),
                       ),
                     ),
                   ],
@@ -151,13 +172,42 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
             trailing: '${progress.round()}%',
           ),
           SLSpacing.h8,
-          ClipRRect(
-            borderRadius: SLRadius.pillAll,
-            child: LinearProgressIndicator(
-              minHeight: 9,
-              value: progress / 100,
-              backgroundColor: const Color(0xFFF0F1F5),
-              valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
+          SLSpacing.h8,
+          Container(
+            height: 12,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+                  FractionallySizedBox(
+                    widthFactor: progress / 100,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            scoreColor.withValues(alpha: 0.6),
+                            scoreColor,
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           SLSpacing.h16,
@@ -198,16 +248,28 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFEEF5),
-              borderRadius: SLRadius.mdAll,
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFFD1E3), Color(0xFFFFEAF2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFD81B60).withValues(alpha: 0.15),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: const Icon(
-              Icons.lightbulb_rounded,
+              Icons.tips_and_updates_rounded,
               color: Color(0xFFD81B60),
-              size: 22,
+              size: 24,
             ),
           ),
           SLSpacing.w12,
@@ -230,7 +292,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                   style: SLTheme.quicksand(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    height: 1.5,
+                    height: 1.4,
                     color: const Color(0xFF4B4650),
                   ),
                 ),
