@@ -414,35 +414,43 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
           onTap: () {
             unawaited(_handleThemeSelection(item.$2));
           },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: item.$3),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: selected
-                    ? const Color(0xFFD81B60)
-                    : Colors.white.withValues(alpha: 0.7),
-                width: selected ? 2 : 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFD81B60)
-                      .withValues(alpha: selected ? 0.18 : 0.06),
-                  blurRadius: selected ? 16 : 10,
-                  offset: const Offset(0, 6),
+          child: AnimatedScale(
+            scale: selected ? 1.08 : 1.0,
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutBack,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: item.$3),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: selected
+                      ? const Color(0xFFD81B60)
+                      : Colors.white.withValues(alpha: 0.7),
+                  width: selected ? 2.2 : 1,
                 ),
-              ],
-            ),
-            child: Text(
-              item.$1,
-              style: SLTheme.quicksand(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w900,
-                color: selected
-                    ? const Color(0xFFD81B60)
-                    : const Color(0xFF5C4B58),
+                boxShadow: [
+                  BoxShadow(
+                    color: selected
+                        ? const Color(0xFFD81B60).withValues(alpha: 0.28)
+                        : const Color(0xFFD81B60).withValues(alpha: 0.06),
+                    blurRadius: selected ? 20 : 10,
+                    spreadRadius: selected ? 1 : 0,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Text(
+                item.$1,
+                style: SLTheme.quicksand(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w900,
+                  color: selected
+                      ? const Color(0xFFD81B60)
+                      : const Color(0xFF5C4B58),
+                ),
               ),
             ),
           ),
@@ -481,33 +489,49 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
         final selected = selectedKey == item.$2;
         return GestureDetector(
           onTap: () => _updateThemeDraft(() => _draftEffectKey = item.$2),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-            decoration: BoxDecoration(
-              color: selected
-                  ? item.$4.withValues(alpha: 0.16)
-                  : Colors.white.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: selected ? item.$4 : const Color(0xFFF1D4E1),
-                width: selected ? 1.8 : 1.1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(item.$3, size: 15, color: item.$4),
-                const SizedBox(width: 5),
-                Text(
-                  item.$1,
-                  style: SLTheme.quicksand(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: selected ? item.$4 : const Color(0xFF6C5A66),
-                  ),
+          child: AnimatedScale(
+            scale: selected ? 1.06 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutBack,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+              decoration: BoxDecoration(
+                color: selected
+                    ? item.$4.withValues(alpha: 0.16)
+                    : Colors.white.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: selected ? item.$4 : const Color(0xFFF1D4E1),
+                  width: selected ? 1.8 : 1.1,
                 ),
-              ],
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: item.$4.withValues(alpha: 0.30),
+                          blurRadius: 14,
+                          spreadRadius: 0.5,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(item.$3, size: 15, color: item.$4),
+                  const SizedBox(width: 5),
+                  Text(
+                    item.$1,
+                    style: SLTheme.quicksand(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: selected ? item.$4 : const Color(0xFF6C5A66),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
