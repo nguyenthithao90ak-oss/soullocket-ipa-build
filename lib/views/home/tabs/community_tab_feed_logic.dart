@@ -573,8 +573,6 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
 
   Future<void> _init() async {
     if (!widget.isActive) return;
-    final friendsErrorFallback = context.tr('home_khngthtida_063ede');
-    final blockedErrorFallback = context.tr('home_khngthtida_87cfa9');
 
     _cancelFeedFilterSubscriptions();
     _updateState(() {

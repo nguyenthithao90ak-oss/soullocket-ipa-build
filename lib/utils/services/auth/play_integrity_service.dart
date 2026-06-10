@@ -7,10 +7,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
-import '../../core/constants/app_config.dart';
-import '../../utils/app_error_mapper.dart';
-import '../app_check_http_headers.dart';
-import '../revenue_security_telemetry_service.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/app_check_http_headers.dart';
+import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
 import 'auth_support.dart';
 
 enum PlayIntegrityRiskLevel { allow, warn, block }

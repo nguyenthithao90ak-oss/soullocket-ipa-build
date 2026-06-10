@@ -13,7 +13,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/drawing_studio_service.dart';
+import '../../utils/services/drawing_studio_service.dart';
 import '../../utils/app_error_mapper.dart';
 
 part 'drawing_studio/models/drawing_models.dart';

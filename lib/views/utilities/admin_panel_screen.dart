@@ -4,7 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
-import '../../services/auth_service.dart';
+import '../../utils/services/auth_service.dart';
 import '../../utils/sl_notice.dart';
 import '../../utils/app_error_mapper.dart';
 import 'admin_support_chat_screen.dart';

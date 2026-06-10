@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
-import '../core/constants/app_config.dart';
-import '../models/diary_post.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/models/diary_post.dart';
 import 'local_database_service.dart';
 import 'connectivity_service.dart';
 

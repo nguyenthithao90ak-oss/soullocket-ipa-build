@@ -4,7 +4,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/app_error_mapper.dart';
-import '../../services/webrtc_service.dart';
+import '../../utils/services/webrtc_service.dart';
 import '../../core/sl_theme.dart';
 
 class VideoCallScreen extends StatefulWidget {

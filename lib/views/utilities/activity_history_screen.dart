@@ -4,7 +4,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/activity_history_service.dart';
+import '../../utils/services/activity_history_service.dart';
 import '../../utils/services/critical_data_sync_service.dart';
 import '../../utils/services/house_service.dart';
 

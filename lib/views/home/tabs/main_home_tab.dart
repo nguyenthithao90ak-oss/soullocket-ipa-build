@@ -24,20 +24,20 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import '../../../services/offline_cache_service.dart';
-import '../../../services/house_service.dart';
-import '../../../services/home_startup_media_cache.dart';
-import '../../../services/love_insight_service.dart';
-import '../../../services/location_service.dart';
-import '../../../services/l10n_service.dart';
-import '../../../services/military_lock_service.dart';
-import '../../../services/presence_service.dart';
-import '../../../services/utility_service.dart';
-import '../../../services/house_settings_service.dart';
-import '../../../services/album_service.dart';
-import '../../../services/notification_service.dart';
-import '../../../services/storage_service.dart';
-import '../../../services/utilities/note_service.dart';
+import '../../../utils/services/offline_cache_service.dart';
+import '../../../utils/services/house_service.dart';
+import '../../../utils/services/home_startup_media_cache.dart';
+import '../../../utils/services/love_insight_service.dart';
+import '../../../utils/services/location_service.dart';
+import '../../../utils/services/l10n_service.dart';
+import '../../../utils/services/military_lock_service.dart';
+import '../../../utils/services/presence_service.dart';
+import '../../../utils/services/utility_service.dart';
+import '../../../utils/services/house_settings_service.dart';
+import '../../../utils/services/album_service.dart';
+import '../../../utils/services/notification_service.dart';
+import '../../../utils/services/storage_service.dart';
+import '../../../utils/services/utilities/note_service.dart';
 import '../../../utils/services/pending_upload_service.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../models/album_item.dart';
@@ -72,8 +72,8 @@ import '../../utilities/voice_screen.dart';
 import '../../../features/wheel/wheel_screen.dart';
 import '../../utilities/wishlist_screen.dart';
 import '../../../utils/zodiac_utils.dart';
-import '../../../services/widget_service.dart';
-import '../../../services/daily_quest_service.dart';
+import '../../../utils/services/widget_service.dart';
+import '../../../utils/services/daily_quest_service.dart';
 import '../../../core/constants/app_config.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../widgets/legacy_web_ui.dart';
@@ -328,34 +328,14 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     double? height,
     double? letterSpacing,
   }) {
-    final base = TextStyle(
+    return SLTheme.textStyleForKey(
+      UiPrefs.notifier.value.fontKey,
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
       height: height,
       letterSpacing: letterSpacing,
     );
-    switch (UiPrefs.notifier.value.fontKey) {
-      case 'patrickHand':
-        return GoogleFonts.patrickHand(textStyle: base);
-      case 'dancingScript':
-        return GoogleFonts.dancingScript(textStyle: base);
-      case 'caveat':
-        return GoogleFonts.caveat(textStyle: base);
-      case 'lora':
-        return GoogleFonts.lora(textStyle: base);
-      case 'nunito':
-        return GoogleFonts.nunito(textStyle: base);
-      case 'comfortaa':
-        return GoogleFonts.comfortaa(textStyle: base);
-      case 'playfair':
-        return GoogleFonts.playfairDisplay(textStyle: base);
-      case 'beVietnam':
-        return GoogleFonts.beVietnamPro(textStyle: base);
-      case 'quicksand':
-      default:
-        return SLTheme.quicksand(textStyle: base);
-    }
   }
 
   BoxDecoration _homeCardDecoration({double radius = 24}) {
@@ -516,41 +496,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _isTabActive = widget.isActive;
     unawaited(() async {
       try {
-        final fontKey = UiPrefs.notifier.value.fontKey;
-        TextStyle? selectedUiFont;
-        switch (fontKey) {
-          case 'patrickHand':
-            selectedUiFont = GoogleFonts.patrickHand();
-            break;
-          case 'dancingScript':
-            selectedUiFont = GoogleFonts.dancingScript();
-            break;
-          case 'caveat':
-            selectedUiFont = GoogleFonts.caveat();
-            break;
-          case 'lora':
-            selectedUiFont = GoogleFonts.lora();
-            break;
-          case 'nunito':
-            selectedUiFont = GoogleFonts.nunito();
-            break;
-          case 'comfortaa':
-            selectedUiFont = GoogleFonts.comfortaa();
-            break;
-          case 'playfair':
-            selectedUiFont = GoogleFonts.playfairDisplay();
-            break;
-          case 'beVietnam':
-            selectedUiFont = GoogleFonts.beVietnamPro();
-            break;
-          case 'quicksand':
-          default:
-            selectedUiFont = GoogleFonts.quicksand();
-            break;
-        }
+        final selectedUiFont = SLTheme.textStyleForKey(
+          UiPrefs.notifier.value.fontKey,
+        );
         await GoogleFonts.pendingFonts([
           GoogleFonts.comfortaa(fontWeight: FontWeight.w900),
-          if (selectedUiFont != null) selectedUiFont,
+          selectedUiFont,
         ]);
       } catch (_) {}
     }());

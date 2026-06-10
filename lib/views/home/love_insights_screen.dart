@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../services/love_insight_service.dart';
-import '../../services/offline_cache_service.dart';
+import '../../utils/services/love_insight_service.dart';
+import '../../utils/services/offline_cache_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../core/sl_theme.dart';
 
@@ -115,18 +115,18 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
       ),
       body: Stack(
         children: [
-          Positioned.fill(
+          const Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFFFFF0F5),
-                    const Color(0xFFFFE8F0),
-                    const Color(0xFFF3E5FF),
+                    Color(0xFFFFF0F5),
+                    Color(0xFFFFE8F0),
+                    Color(0xFFF3E5FF),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  stops: const [0.1, 0.5, 0.9],
+                  stops: [0.1, 0.5, 0.9],
                 ),
               ),
             ),

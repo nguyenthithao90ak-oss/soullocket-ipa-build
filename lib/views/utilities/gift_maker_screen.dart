@@ -11,13 +11,13 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../services/gift_maker_service.dart';
-import '../../services/deeplink_service.dart';
-import '../../services/image_picker_recovery_service.dart';
+import '../../utils/services/gift_maker_service.dart';
+import '../../utils/services/deeplink_service.dart';
+import '../../utils/services/image_picker_recovery_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/pending_upload_service.dart';
-import '../../services/storage_service.dart';
+import '../../utils/services/storage_service.dart';
 import '../../core/sl_theme.dart';
 
 part 'gift_maker/gift_maker_preview_dialog.dart';

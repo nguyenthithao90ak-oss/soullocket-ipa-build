@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../services/friends_service.dart';
-import '../../services/house_service.dart';
+import '../../utils/services/friends_service.dart';
+import '../../utils/services/house_service.dart';
 import '../visitors/visitor_profile_screen.dart';
 import '../../core/sl_theme.dart';
 

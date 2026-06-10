@@ -1,6 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
-import '../../models/utilities/shared_note.dart';
-import '../daily_quest_service.dart';
+import 'package:soullocket_app/models/utilities/shared_note.dart';
+import 'package:soullocket_app/utils/services/daily_quest_service.dart';
 
 class NoteService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();

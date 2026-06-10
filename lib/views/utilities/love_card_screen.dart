@@ -13,11 +13,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/activity_history_service.dart';
-import '../../services/love_card_link_service.dart';
+import '../../utils/services/activity_history_service.dart';
+import '../../utils/services/love_card_link_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/pending_upload_service.dart';
-import '../../services/storage_service.dart';
+import '../../utils/services/storage_service.dart';
 import 'love_card_public_viewer_screen.dart';
 
 part 'love_card/dialogs/love_card_overlay_dialog.dart';

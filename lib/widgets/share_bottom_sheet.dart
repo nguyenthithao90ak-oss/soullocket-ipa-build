@@ -10,7 +10,7 @@ import '../utils/services/chat_service.dart';
 import '../utils/services/group_chat_service.dart';
 import '../utils/services/social_service.dart';
 import '../core/sl_theme.dart';
-import '../services/l10n_service.dart';
+import '../utils/services/l10n_service.dart';
 
 class ShareBottomSheet extends StatefulWidget {
   final String myHouseId;

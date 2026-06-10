@@ -5,8 +5,8 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/house_service.dart';
-import '../../services/travel_planner_service.dart';
+import '../../utils/services/house_service.dart';
+import '../../utils/services/travel_planner_service.dart';
 
 class TravelPlannerScreen extends StatefulWidget {
   const TravelPlannerScreen({super.key});

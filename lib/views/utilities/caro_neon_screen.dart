@@ -8,8 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/sl_theme.dart';
 import '../../models/house_settings.dart';
-import '../../services/caro_game_service.dart';
-import '../../services/house_service.dart';
+import '../../utils/services/caro_game_service.dart';
+import '../../utils/services/house_service.dart';
 import '../ui_prefs.dart';
 
 part 'caro_neon/caro_neon_common_widgets.dart';

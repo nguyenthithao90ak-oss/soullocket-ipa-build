@@ -2,8 +2,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/album_item.dart';
-import '../core/constants/app_config.dart';
+import 'package:soullocket_app/models/album_item.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'daily_quest_service.dart';
 import 'offline_cache_service.dart';
 import 'purchase_service.dart';

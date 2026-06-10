@@ -10,7 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/love_card_link_service.dart';
+import '../../utils/services/love_card_link_service.dart';
 
 part 'love_card/love_card_public_viewer_helpers.dart';
 

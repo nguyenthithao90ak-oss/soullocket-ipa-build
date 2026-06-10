@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'offline_cache_service.dart';
 import 'secret_vault_media_policy.dart' as secret_vault_policy;
 import 'storage_app_check_helper.dart';

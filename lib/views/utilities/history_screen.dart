@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 import '../../core/fast_backdrop_filter.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/activity_history_service.dart';
+import '../../utils/services/activity_history_service.dart';
 import '../../utils/services/critical_data_sync_service.dart';
 
 class HistoryScreen extends StatefulWidget {

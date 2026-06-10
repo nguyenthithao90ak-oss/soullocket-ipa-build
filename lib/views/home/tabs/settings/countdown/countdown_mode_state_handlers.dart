@@ -425,7 +425,7 @@ extension _CountdownModeIndependentScreenStatePart
           ) ??
           ui.transparentMode;
       _countdownSizePx = (prefs.getDouble(_prefKey('size_px', scope: scope)) ??
-              UiPrefs.maxCountdownSizePx)
+              ui.countdownSizePx)
           .clamp(200.0, UiPrefs.maxCountdownSizePx)
           .toDouble();
       _customBackgroundUrl =

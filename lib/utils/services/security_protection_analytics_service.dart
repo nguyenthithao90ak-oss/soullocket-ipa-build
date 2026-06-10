@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import 'house_service.dart';
 import 'security_protection_service.dart';
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 class SecurityProtectionDailySummary {
   final String dayKey;

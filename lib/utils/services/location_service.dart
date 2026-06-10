@@ -7,8 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../utils/app_error_mapper.dart';
-import '../utils/permission_helper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/permission_helper.dart';
 import 'offline_cache_service.dart';
 
 class LocationService {

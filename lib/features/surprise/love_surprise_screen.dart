@@ -10,7 +10,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/sl_theme.dart';
-import '../../services/image_picker_recovery_service.dart';
+import '../../utils/services/image_picker_recovery_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/permission_helper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';

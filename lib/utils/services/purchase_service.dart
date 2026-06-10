@@ -7,8 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
 
-import '../core/constants/app_config.dart';
-import '../utils/app_error_mapper.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'app_check_http_headers.dart';
 import 'revenue_security_telemetry_service.dart';
 

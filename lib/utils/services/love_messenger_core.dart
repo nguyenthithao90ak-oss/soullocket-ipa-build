@@ -9,8 +9,8 @@ import 'package:path/path.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import '../core/sl_theme.dart';
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 /// ============================================================================
 /// LÕI NHẮN TIN SIÊU CẤP (SUPER LOVE MESSENGER CORE) - GRA BUILD KHÔNG CẦN TRAE

@@ -10,16 +10,16 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../services/image_picker_recovery_service.dart';
-import '../services/storage_service.dart';
-import '../services/collage_limit_service.dart';
+import '../utils/services/image_picker_recovery_service.dart';
+import '../utils/services/storage_service.dart';
+import '../utils/services/collage_limit_service.dart';
 import '../utils/collage_generator.dart';
 import '../utils/services/pending_upload_retry_coordinator.dart';
 import '../utils/services/pending_upload_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
 import '../core/sl_theme.dart';
 import '../utils/app_error_mapper.dart';
-import '../services/l10n_service.dart';
+import '../utils/services/l10n_service.dart';
 
 const Color _dialogPaperCream = Color(0xFFF7F0E6);
 const Color _dialogPaperShell = Color(0xFFFFF8F2);

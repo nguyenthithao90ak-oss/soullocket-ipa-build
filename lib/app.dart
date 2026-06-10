@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
-import 'package:soullocket_app/services/l10n_service.dart';
-import 'package:soullocket_app/services/notification_service.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/views/app_entry.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 

@@ -6,7 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../core/constants/app_config.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'app_check_http_headers.dart';
 import 'auth_service.dart';
 import 'offline_cache_service.dart';

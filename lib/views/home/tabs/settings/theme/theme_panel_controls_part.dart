@@ -1,54 +1,7 @@
 part of '../../settings_tab.dart';
 
 extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
-  Widget _buildThemeSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF7AAE), Color(0xFFD81B60)],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 16, color: Colors.white),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: SLTheme.quicksand(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFD81B60),
-                    letterSpacing: 0.6,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Container(
-            width: 84,
-            height: 3,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF7AAE), Color(0xFFFFB088)],
-              ),
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // _buildThemeSectionHeader removed because it was unused
 
 //   Widget _buildThemeLivePreview({
 //     required String themeKey,

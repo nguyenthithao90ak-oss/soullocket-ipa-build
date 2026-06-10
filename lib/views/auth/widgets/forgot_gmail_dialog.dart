@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/sl_theme.dart';
-import '../../../services/l10n_service.dart';
+import '../../../utils/services/l10n_service.dart';
 
 class ForgotGmailDialog extends StatefulWidget {
   final Function(String) onNext;

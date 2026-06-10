@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../services/l10n_service.dart';
-import '../services/security_flow_guard.dart';
+import '../utils/services/auth_service.dart';
+import '../utils/services/l10n_service.dart';
+import '../utils/services/security_flow_guard.dart';
 import '../core/sl_theme.dart';
 import '../utils/flexible_date_input.dart';
 import '../utils/app_error_mapper.dart';
@@ -1309,7 +1309,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColors = const [
+    const backgroundColors = [
       Color(0xFFFFF0F5),
       Color(0xFFFFD6E7),
       Color(0xFFFCEEF7),
@@ -1331,37 +1331,37 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: Stack(
             children: [
               // --- top-left large blush orb ---
-              Positioned(
+              const Positioned(
                 top: -80,
                 left: -80,
                 child: IgnorePointer(
                   child: _AuthGlowOrb(
                     size: 260,
-                    colors: const [Color(0xFFFFB6D3), Color(0xFFFF8FB8)],
+                    colors: [Color(0xFFFFB6D3), Color(0xFFFF8FB8)],
                     opacity: 0.38,
                   ),
                 ),
               ),
               // --- right mid rose orb ---
-              Positioned(
+              const Positioned(
                 top: 100,
                 right: -90,
                 child: IgnorePointer(
                   child: _AuthGlowOrb(
                     size: 220,
-                    colors: const [Color(0xFFFFC2DC), Color(0xFFFF85B3)],
+                    colors: [Color(0xFFFFC2DC), Color(0xFFFF85B3)],
                     opacity: 0.44,
                   ),
                 ),
               ),
               // --- bottom-right lavender orb ---
-              Positioned(
+              const Positioned(
                 bottom: -30,
                 right: 20,
                 child: IgnorePointer(
                   child: _AuthGlowOrb(
                     size: 180,
-                    colors: const [Color(0xFFE0BBFF), Color(0xFFC49CFF)],
+                    colors: [Color(0xFFE0BBFF), Color(0xFFC49CFF)],
                     opacity: 0.32,
                   ),
                 ),

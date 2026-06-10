@@ -7,9 +7,9 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../services/house_service.dart';
-import '../../services/storage_service.dart';
-import '../../services/collage_limit_service.dart';
+import '../../utils/services/house_service.dart';
+import '../../utils/services/storage_service.dart';
+import '../../utils/services/collage_limit_service.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/pending_upload_retry_coordinator.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
-import '../../services/auth_service.dart';
+import '../../utils/services/auth_service.dart';
 import 'widgets/admin_shared_widgets.dart';
 import '../../core/sl_theme.dart';
 

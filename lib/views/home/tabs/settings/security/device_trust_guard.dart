@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../../../services/device_manager_service.dart';
+import '../../../../../utils/services/device_manager_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
 
 class DeviceTrustGuardState {

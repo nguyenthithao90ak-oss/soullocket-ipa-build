@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
-import '../core/constants/app_config.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'security_service.dart';
 
 enum GiftcodeError {

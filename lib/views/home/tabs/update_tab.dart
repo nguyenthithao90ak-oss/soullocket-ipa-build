@@ -6,8 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_config.dart';
 import '../../../core/sl_theme.dart';
-import '../../../services/auth_service.dart';
-import '../../../services/l10n_service.dart';
+import '../../../utils/services/auth_service.dart';
+import '../../../utils/services/l10n_service.dart';
 import '../../utilities/user_support_chat_screen.dart';
 import '../screens/document_viewer_screen.dart';
 

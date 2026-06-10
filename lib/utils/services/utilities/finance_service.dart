@@ -1,5 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
-import '../../models/utilities/finance_transaction.dart';
+import 'package:soullocket_app/models/utilities/finance_transaction.dart';
 
 class FinanceService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();

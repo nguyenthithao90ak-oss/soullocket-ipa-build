@@ -4,7 +4,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:ui' as ui;
-import '../../services/notification_service.dart';
+import '../../utils/services/notification_service.dart';
 import '../../core/sl_theme.dart';
 import '../../core/fast_backdrop_filter.dart';
 import 'calendar/dialogs/calendar_quick_add_sheet.dart';

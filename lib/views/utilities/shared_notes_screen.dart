@@ -6,7 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import '../../core/sl_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../services/activity_history_service.dart';
+import '../../utils/services/activity_history_service.dart';
 
 class SharedNotesScreen extends StatefulWidget {
   final String houseId;

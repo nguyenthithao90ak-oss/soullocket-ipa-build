@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/ai_counselor_service.dart';
-import '../../services/device_manager_service.dart';
-import '../../services/house_service.dart';
+import '../../utils/services/ai_counselor_service.dart';
+import '../../utils/services/device_manager_service.dart';
+import '../../utils/services/house_service.dart';
 import '../../utils/services/security_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'support_ticket_shared.dart';

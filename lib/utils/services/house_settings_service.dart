@@ -3,10 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../services/single_match_service.dart';
+import '../../utils/services/single_match_service.dart';
 import 'activity_history_service.dart';
-import '../models/house_settings.dart';
-import '../utils/flexible_date_input.dart';
+import 'package:soullocket_app/models/house_settings.dart';
+import 'package:soullocket_app/utils/flexible_date_input.dart';
 import 'device_manager_service.dart';
 import 'offline_cache_service.dart';
 

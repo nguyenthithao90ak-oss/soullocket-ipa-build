@@ -270,7 +270,7 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
           ) ??
           ui.transparentMode,
       sizePx: (prefs.getDouble(_prefKey('size_px', scope: scope)) ??
-              UiPrefs.maxCountdownSizePx)
+              ui.countdownSizePx)
           .clamp(200.0, UiPrefs.maxCountdownSizePx)
           .toDouble(),
       topLabel: prefs.getString(_prefKey('top_label', scope: scope)) ??
@@ -329,7 +329,7 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     _avatarFrameKey =
         ui.avatarFrameKey.trim().isEmpty ? 'circle' : ui.avatarFrameKey.trim();
     _transparentMode = ui.transparentMode;
-    _countdownSizePx = UiPrefs.maxCountdownSizePx;
+    _countdownSizePx = ui.countdownSizePx;
     _customBackgroundUrl = ui.customBackgroundUrl.trim();
     _spaceSnapshots[_selfSpaceHouseId] = _captureCurrentSnapshot();
   }

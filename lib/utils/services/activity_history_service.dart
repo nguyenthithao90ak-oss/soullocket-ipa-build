@@ -13,7 +13,7 @@ import 'presence_service.dart';
 import 'house_service.dart';
 import 'storage_service.dart';
 import 'offline_cache_service.dart';
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 class ActivityHistoryEntry {
   final String id;

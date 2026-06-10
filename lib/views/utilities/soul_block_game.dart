@@ -16,8 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
-import '../../services/admob_service.dart';
-import '../../services/house_service.dart';
+import '../../utils/services/admob_service.dart';
+import '../../utils/services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../premium/premium_store_screen.dart';
 import '../../utils/services/game_download_service.dart';

@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/soul_locket_brand.dart';
-import '../services/offline_cache_service.dart';
-import '../services/settings_sync_service.dart';
+import '../utils/services/offline_cache_service.dart';
+import '../utils/services/settings_sync_service.dart';
 
 @immutable
 class UiPrefsState {

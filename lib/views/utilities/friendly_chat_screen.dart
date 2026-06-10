@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/ai_counselor_service.dart';
+import '../../utils/services/ai_counselor_service.dart';
 import '../chat/chat_friendly_helper.dart';
 
 class FriendlyChatScreen extends StatefulWidget {

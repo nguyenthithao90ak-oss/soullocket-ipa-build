@@ -15,12 +15,12 @@ import '../../../widgets/share_bottom_sheet.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../core/sl_route.dart';
-import '../../../services/admob_service.dart';
+import '../../../utils/services/admob_service.dart';
 
-import '../../../services/friends_service.dart';
-import '../../../services/house_service.dart';
-import '../../../services/storage_service.dart';
-import '../../../services/social_service.dart';
+import '../../../utils/services/friends_service.dart';
+import '../../../utils/services/house_service.dart';
+import '../../../utils/services/storage_service.dart';
+import '../../../utils/services/social_service.dart';
 import '../../../utils/services/chat_service.dart';
 import '../../../widgets/legacy_web_ui.dart';
 import '../../../widgets/manual_retry_cached_image.dart';
@@ -32,16 +32,16 @@ import '../../visitors/visitor_profile_screen.dart';
 import '../../community/top_hot_screen.dart';
 import '../../community/community_settings_screen.dart';
 import '../../community/house_qr_screen.dart';
-import '../../../services/offline_cache_service.dart';
-import '../../../services/recommendation_service.dart';
+import '../../../utils/services/offline_cache_service.dart';
+import '../../../utils/services/recommendation_service.dart';
 import '../../../utils/services/community_feed_service.dart';
 import '../../../utils/services/pending_upload_service.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../utils/app_error_mapper.dart';
-import '../../../services/security_service.dart';
+import '../../../utils/services/security_service.dart';
 import 'package:flutter/gestures.dart';
 import '../screens/locket_camera_screen.dart';
-import '../../../services/l10n_service.dart';
+import '../../../utils/services/l10n_service.dart';
 import '../../ui_prefs.dart';
 import 'community/rich_post_text_parser.dart';
 

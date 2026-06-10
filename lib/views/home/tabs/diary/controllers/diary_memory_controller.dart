@@ -15,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../core/constants/app_config.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
 import '../../../../../core/sl_theme.dart';
-import '../../../../../services/map_pin_limit_service.dart';
+import '../../../../../utils/services/map_pin_limit_service.dart';
 import '../../../../../utils/services/activity_history_service.dart';
 import '../../../../../utils/services/album_service.dart';
 import '../../../../../utils/services/l10n_service.dart';

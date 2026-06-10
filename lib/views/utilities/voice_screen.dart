@@ -20,7 +20,7 @@ import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/private_media_url_service.dart';
-import '../../services/activity_history_service.dart';
+import '../../utils/services/activity_history_service.dart';
 import '../../core/fast_backdrop_filter.dart';
 
 class VoiceScreen extends StatefulWidget {

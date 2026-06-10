@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
 
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 /// ============================================================
 ///  SpotifySyncService — Gra (Logic/Data)

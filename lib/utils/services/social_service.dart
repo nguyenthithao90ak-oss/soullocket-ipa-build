@@ -1,6 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/social_post.dart';
+import 'package:soullocket_app/models/social_post.dart';
 import 'push_notification_helper.dart';
 
 /// SocialService — Quản lý social feed cộng đồng

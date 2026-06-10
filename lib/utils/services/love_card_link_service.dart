@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
 
-import '../core/constants/app_config.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 
 class LoveCardLinkPayload {
   final String id;

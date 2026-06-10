@@ -3,7 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../services/house_service.dart';
+import '../../utils/services/house_service.dart';
 import '../../core/sl_theme.dart';
 
 class LockAppealScreen extends StatefulWidget {

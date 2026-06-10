@@ -5,7 +5,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import '../../core/sl_theme.dart';
-import '../../services/activity_history_service.dart';
+import '../../utils/services/activity_history_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../core/fast_backdrop_filter.dart';
 

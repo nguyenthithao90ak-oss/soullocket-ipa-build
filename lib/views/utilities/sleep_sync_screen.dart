@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import '../../services/sleep_sync_service.dart';
+import '../../utils/services/sleep_sync_service.dart';
 import '../../core/sl_theme.dart';
 
 class SleepSyncScreen extends StatefulWidget {

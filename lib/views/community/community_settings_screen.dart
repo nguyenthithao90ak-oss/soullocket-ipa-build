@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/single_match_service.dart';
+import '../../utils/services/single_match_service.dart';
 import 'settings/sections/community_settings_hero_section.dart';
 import 'settings/sections/community_settings_interaction_section.dart';
 import 'settings/sections/community_settings_privacy_section.dart';

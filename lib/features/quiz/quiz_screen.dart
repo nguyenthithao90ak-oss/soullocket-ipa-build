@@ -7,7 +7,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/mini_games_service.dart';
+import '../../utils/services/mini_games_service.dart';
 
 class QuizScreen extends StatefulWidget {
   final String houseId;

@@ -4,8 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../utils/app_error_mapper.dart';
-import '../security_service.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/security_service.dart';
 import 'auth_support.dart' as auth_support;
 
 class AuthRecoveryService {

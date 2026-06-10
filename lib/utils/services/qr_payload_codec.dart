@@ -1,4 +1,4 @@
-import '../core/constants/app_config.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 
 enum QRPayloadKind {
   login,

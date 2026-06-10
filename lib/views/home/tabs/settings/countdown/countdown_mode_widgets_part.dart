@@ -1060,7 +1060,7 @@ class _CountdownModeGlowOrb extends StatelessWidget {
 /// Overlay trái tim hồng bay nhẹ nhàng bên trong/ngoài vòng tròn đếm.
 /// Dùng cho style 'floating_hearts'.
 class FloatingHeartsRingOverlay extends StatefulWidget {
-  const FloatingHeartsRingOverlay({required this.size});
+  const FloatingHeartsRingOverlay({super.key, required this.size});
   final double size;
 
   @override

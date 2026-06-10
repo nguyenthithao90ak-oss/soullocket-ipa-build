@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../presence_service.dart';
+import 'package:soullocket_app/utils/services/presence_service.dart';
 
 class SessionConnectivityCoordinator {
   SessionConnectivityCoordinator({
