@@ -881,8 +881,8 @@ class SLTheme {
     Widget? prefixIcon,
     Widget? suffixIcon,
     String? helperText,
-    Color fillColor = const Color(0xFFFFF8F4),
-    Color borderColor = const Color(0xFFE8DDD6),
+    Color fillColor = Colors.white,
+    Color borderColor = const Color(0xFFF2E6ED),
     Color focusColor = SLColors.primary,
     double radius = 20,
   }) {
