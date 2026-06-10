@@ -551,10 +551,24 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.10),
+                              gradient: LinearGradient(
+                                colors: themeData.isDark
+                                    ? [
+                                        themeData.orbA.withValues(alpha: 0.14),
+                                        themeData.orbB.withValues(alpha: 0.10),
+                                        Colors.white.withValues(alpha: 0.06),
+                                      ]
+                                    : [
+                                        themeData.orbA.withValues(alpha: 0.12),
+                                        themeData.orbB.withValues(alpha: 0.08),
+                                        const Color(0xFFFFF5F8).withValues(alpha: 0.88),
+                                      ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.26),
+                                color: themeData.orbA.withValues(alpha: themeData.isDark ? 0.26 : 0.22),
                               ),
                             ),
                             child: Center(
@@ -614,11 +628,22 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
                           decoration: BoxDecoration(
-                            color: Colors.white
-                                .withValues(alpha: themeData.isDark ? 0.10 : 0.72),
+                            gradient: LinearGradient(
+                              colors: themeData.isDark
+                                  ? [
+                                      Colors.white.withValues(alpha: 0.10),
+                                      accent.withValues(alpha: 0.12),
+                                    ]
+                                  : [
+                                      const Color(0xFFFFF5F8).withValues(alpha: 0.88),
+                                      accent.withValues(alpha: 0.10),
+                                    ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.24)),
+                                color: accent.withValues(alpha: themeData.isDark ? 0.24 : 0.20)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -687,12 +712,12 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                   borderRadius: BorderRadius.circular(12),
                                   gradient: LinearGradient(
                                     colors: [
-                                      accent.withValues(alpha: 0.24),
-                                      Colors.white.withValues(alpha: 0.10),
+                                      accent.withValues(alpha: themeData.isDark ? 0.24 : 0.18),
+                                      themeData.orbB.withValues(alpha: themeData.isDark ? 0.10 : 0.08),
                                     ],
                                   ),
                                   border: Border.all(
-                                      color: accent.withValues(alpha: 0.34)),
+                                      color: accent.withValues(alpha: 0.28)),
                                 ),
                                 child: Center(
                                   child: Column(
