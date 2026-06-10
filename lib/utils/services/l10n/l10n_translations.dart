@@ -683,7 +683,7 @@ abstract final class _L10nStaticData {
     'security_q_locked': 'Câu hỏi đã được thiết lập và khóa lại an toàn.',
     'vault_timeout_desc':
         'Thời gian yêu cầu nhập lại mật khẩu khi không dùng kho ảnh.',
-    'security_zone_title': '🛡️ Khu Vực Bảo Mật',
+    'security_zone_title': '🛡️ Quản Lý Bảo Mật',
     'house_password': 'Mật mã nhà',
     'save_house_password': 'Lưu mật mã nhà',
     'saved_house_password': 'Đã lưu mật mã nhà!',

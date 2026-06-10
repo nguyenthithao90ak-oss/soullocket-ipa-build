@@ -91,8 +91,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _checkFirstTimeSyncGuide() async {
     final prefs = await SharedPreferences.getInstance();
     final hasSeen = prefs.getBool('il_has_seen_sync_guide') ?? false;
-    if (!hasSeen && mounted) {
+    if (!hasSeen) {
       await prefs.setBool('il_has_seen_sync_guide', true);
+      if (!mounted) return;
       _showSyncGuideDialog(context, enforceDelay: true);
     }
   }

@@ -70,39 +70,33 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: borderColor.withValues(alpha: 0.10),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: SLTheme.quicksand(
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-              color: borderColor.withValues(alpha: 0.95),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              title,
+              style: SLTheme.quicksand(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: borderColor == Colors.transparent ? const Color(0xFFD81B60) : borderColor.withValues(alpha: 0.95),
+              ),
             ),
           ),
           if (subtitle != null && subtitle.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF7A6A74),
-                height: 1.45,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                subtitle,
+                style: SLTheme.quicksand(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF7A6A74),
+                  height: 1.45,
+                ),
               ),
             ),
           ],

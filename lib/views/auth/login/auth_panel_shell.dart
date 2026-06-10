@@ -112,7 +112,7 @@ class AuthPanelShell extends StatelessWidget {
                   compact ? 12 : 14,
                   compact ? 10 : 12,
                 ),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.transparent,
                 ),
                 child: Column(
