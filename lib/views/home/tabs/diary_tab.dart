@@ -1556,7 +1556,6 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    context.watch<PremiumProvider>();
     return _DiaryTabShell(state: this);
   }
 }
