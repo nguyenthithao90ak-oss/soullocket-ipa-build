@@ -653,8 +653,6 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           children: [
                             _buildExternalShareItem(
                               icon: Container(
-                                width: SLResponsive.dp(compact ? 32 : 36, screenWidth),
-                                height: SLResponsive.dp(compact ? 32 : 36, screenWidth),
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF0068FF),
                                   shape: BoxShape.circle,
@@ -666,16 +664,17 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                     Icon(
                                       Icons.chat_bubble_rounded,
                                       color: Colors.white,
-                                      size: SLResponsive.dp(compact ? 18 : 20, screenWidth),
+                                      size: SLResponsive.dp(compact ? 30 : 34, screenWidth),
                                     ),
                                     Positioned(
-                                      top: SLResponsive.dp(compact ? 1.5 : 2.0, screenWidth),
+                                      top: SLResponsive.dp(compact ? 8 : 9, screenWidth),
                                       child: Text(
-                                        'z',
+                                        'zalo',
                                         style: TextStyle(
+                                          fontFamily: 'sans-serif',
                                           color: const Color(0xFF0068FF),
                                           fontWeight: FontWeight.w900,
-                                          fontSize: SLResponsive.sp(compact ? 10 : 11, screenWidth),
+                                          fontSize: SLResponsive.sp(compact ? 8 : 9, screenWidth),
                                         ),
                                       ),
                                     ),
@@ -683,68 +682,187 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 ),
                               ),
                               label: 'Zalo',
-                              color: const Color(0xFF0068FF),
-                              onTap: _shareToExternal,
-                              compact: compact,
-                              screenWidth: screenWidth,
-                            ),
-                            _buildExternalShareItem(
-                              icon: Icon(
-                                Icons.facebook_rounded,
-                                color: const Color(0xFF1877F2),
-                                size: SLResponsive.dp(compact ? 28 : 32, screenWidth),
-                              ),
-                              label: 'Facebook',
-                              color: const Color(0xFF1877F2),
                               onTap: _shareToExternal,
                               compact: compact,
                               screenWidth: screenWidth,
                             ),
                             _buildExternalShareItem(
                               icon: Container(
-                                width: SLResponsive.dp(compact ? 32 : 36, screenWidth),
-                                height: SLResponsive.dp(compact ? 32 : 36, screenWidth),
                                 decoration: const BoxDecoration(
+                                  color: Color(0xFF1877F2),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: const Alignment(0.15, 1.0),
+                                child: Text(
+                                  'f',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontFamily: 'sans-serif',
+                                    fontSize: SLResponsive.sp(compact ? 42 : 46, screenWidth),
+                                    height: 1.0,
+                                  ),
+                                ),
+                              ),
+                              label: 'Facebook',
+                              onTap: _shareToExternal,
+                              compact: compact,
+                              screenWidth: screenWidth,
+                            ),
+                            _buildExternalShareItem(
+                              icon: Container(
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
                                   gradient: LinearGradient(
-                                    colors: [Color(0xFF00B2FF), Color(0xFF006AFF), Color(0xFF9B30FF)],
+                                    colors: [
+                                      Color(0xFF00B2FF),
+                                      Color(0xFF006AFF),
+                                      Color(0xFFA100FF),
+                                      Color(0xFFFF2E93),
+                                    ],
                                     begin: Alignment.topRight,
                                     end: Alignment.bottomLeft,
                                   ),
+                                ),
+                                alignment: Alignment.center,
+                                child: ClipPath(
+                                  clipper: LightningBoltClipper(),
+                                  child: Container(
+                                    width: SLResponsive.dp(compact ? 20 : 22, screenWidth),
+                                    height: SLResponsive.dp(compact ? 20 : 22, screenWidth),
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              label: 'Messenger',
+                              onTap: _shareToExternal,
+                              compact: compact,
+                              screenWidth: screenWidth,
+                            ),
+                            _buildExternalShareItem(
+                              icon: Container(
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(
+                                    colors: [
+                                      Color(0xFFFFDD55),
+                                      Color(0xFFFF543F),
+                                      Color(0xFFC837AB),
+                                      Color(0xFF3770E0),
+                                    ],
+                                    center: Alignment(-0.6, 0.9),
+                                    radius: 1.3,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Container(
+                                  width: SLResponsive.dp(compact ? 22 : 24, screenWidth),
+                                  height: SLResponsive.dp(compact ? 22 : 24, screenWidth),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.white, width: 2.2),
+                                    borderRadius: BorderRadius.circular(7),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Container(
+                                        width: SLResponsive.dp(compact ? 8 : 9, screenWidth),
+                                        height: SLResponsive.dp(compact ? 8 : 9, screenWidth),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: Colors.white, width: 2.0),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 2,
+                                        right: 2,
+                                        child: Container(
+                                          width: 3,
+                                          height: 3,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              label: 'Instagram',
+                              onTap: _shareToExternal,
+                              compact: compact,
+                              screenWidth: screenWidth,
+                            ),
+                            _buildExternalShareItem(
+                              icon: Container(
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF24A1DE),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.send_rounded,
+                                  color: Colors.white,
+                                  size: SLResponsive.dp(compact ? 24 : 26, screenWidth),
+                                ),
+                              ),
+                              label: 'Telegram',
+                              onTap: _shareToExternal,
+                              compact: compact,
+                              screenWidth: screenWidth,
+                            ),
+                            _buildExternalShareItem(
+                              icon: Container(
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF34C759),
                                   shape: BoxShape.circle,
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
                                   Icons.chat_bubble_rounded,
                                   color: Colors.white,
-                                  size: SLResponsive.dp(compact ? 16 : 18, screenWidth),
+                                  size: SLResponsive.dp(compact ? 22 : 24, screenWidth),
                                 ),
                               ),
-                              label: 'Messenger',
-                              color: const Color(0xFF00B2FF),
+                              label: 'Tin nhắn',
                               onTap: _shareToExternal,
                               compact: compact,
                               screenWidth: screenWidth,
                             ),
                             _buildExternalShareItem(
-                              icon: Icon(
-                                Icons.copy_all_rounded,
-                                color: Colors.blueGrey,
-                                size: SLResponsive.dp(compact ? 22 : 24, screenWidth),
+                              icon: Container(
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF64748B),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.copy_all_rounded,
+                                  color: Colors.white,
+                                  size: SLResponsive.dp(compact ? 22 : 24, screenWidth),
+                                ),
                               ),
                               label: L10nService().translate('core_copy'),
-                              color: Colors.blueGrey,
                               onTap: _copyToClipboard,
                               compact: compact,
                               screenWidth: screenWidth,
                             ),
                             _buildExternalShareItem(
-                              icon: Icon(
-                                Icons.share_rounded,
-                                color: Colors.grey,
-                                size: SLResponsive.dp(compact ? 22 : 24, screenWidth),
+                              icon: Container(
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF94A3B8),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.share_rounded,
+                                  color: Colors.white,
+                                  size: SLResponsive.dp(compact ? 22 : 24, screenWidth),
+                                ),
                               ),
                               label: L10nService().translate('core_other'),
-                              color: Colors.grey,
                               onTap: _shareToExternal,
                               compact: compact,
                               screenWidth: screenWidth,
@@ -1223,7 +1341,6 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
   Widget _buildExternalShareItem({
     required Widget icon,
     required String label,
-    required Color color,
     required VoidCallback onTap,
     required bool compact,
     required double screenWidth,
@@ -1246,28 +1363,17 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                 Container(
                   width: SLResponsive.dp(compact ? 52 : 58, screenWidth),
                   height: SLResponsive.dp(compact ? 52 : 58, screenWidth),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        color.withValues(alpha: 0.16),
-                        color.withValues(alpha: 0.06),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(
-                      SLResponsive.dp(20, screenWidth),
-                    ),
-                    border: Border.all(color: color.withValues(alpha: 0.15)),
-                    boxShadow: const [
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x100F172A),
-                        blurRadius: 14,
-                        offset: Offset(0, 7),
+                        color: Color(0x1A000000),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
                       ),
                     ],
                   ),
-                  child: Center(child: icon),
+                  child: icon,
                 ),
                 SizedBox(height: SLResponsive.dp(8, screenWidth)),
                 Text(
