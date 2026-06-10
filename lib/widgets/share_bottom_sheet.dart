@@ -326,33 +326,28 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
       max: 1.08,
     );
 
-    final sheetHeight = (screenHeight * 0.93).clamp(320.0, screenHeight);
+    final sheetHeight = (screenHeight * 0.94).clamp(320.0, screenHeight);
 
     return MediaQuery(
       data: mediaQuery.copyWith(textScaler: textScaler),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            16,
-            16,
-            16 + mediaQuery.viewInsets.bottom,
-          ),
+          padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
           child: Container(
-            height: sheetHeight - 32,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
+            height: sheetHeight,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
                 colors: [Color(0xFFFFFBFD), Color(0xFFF8FAFC)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
-              borderRadius: BorderRadius.circular(32),
-              boxShadow: const [
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 28,
-                  offset: Offset(0, 10),
+                  color: Color(0x260F172A),
+                  blurRadius: 36,
+                  offset: Offset(0, -10),
                 ),
               ],
             ),
@@ -1342,4 +1337,23 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
       ),
     );
   }
+}
+
+class LightningBoltClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final w = size.width;
+    final h = size.height;
+    path.moveTo(w * 0.58, h * 0.15);
+    path.lineTo(w * 0.30, h * 0.55);
+    path.lineTo(w * 0.52, h * 0.55);
+    path.lineTo(w * 0.42, h * 0.85);
+    path.lineTo(w * 0.70, h * 0.45);
+    path.lineTo(w * 0.48, h * 0.45);
+    path.close();
+    return path;
+  }
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

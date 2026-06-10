@@ -140,6 +140,22 @@ struct WidgetCoupleProvider: Widget {
         }
         .configurationDisplayName("SoulLocket")
         .description("Hiển thị thông tin cặp đôi của bạn.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies(supportedFamiliesList)
+    }
+
+    private var supportedFamiliesList: [WidgetFamily] {
+        #if os(iOS)
+        if #available(iOS 16.0, *) {
+            return [
+                .systemSmall,
+                .systemMedium,
+                .systemLarge,
+                .accessoryCircular,
+                .accessoryRectangular,
+                .accessoryInline
+            ]
+        }
+        #endif
+        return [.systemSmall, .systemMedium, .systemLarge]
     }
 }

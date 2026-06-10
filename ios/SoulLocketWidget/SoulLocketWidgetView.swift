@@ -604,9 +604,29 @@ struct SoulLocketWidgetView: View {
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        let theme = WidgetTheme.from(entry.data.bgTheme)
+        #if os(iOS)
+        if #available(iOS 16.0, *) {
+            switch family {
+            case .accessoryCircular:
+                AnyView(AccessoryCircularWidgetView(data: entry.data))
+            case .accessoryRectangular:
+                AnyView(AccessoryRectangularWidgetView(data: entry.data))
+            case .accessoryInline:
+                AnyView(AccessoryInlineWidgetView(data: entry.data))
+            default:
+                AnyView(defaultWidgetView)
+            }
+        } else {
+            AnyView(defaultWidgetView)
+        }
+        #else
+        AnyView(defaultWidgetView)
+        #endif
+    }
 
-        ZStack {
+    private var defaultWidgetView: some View {
+        let theme = WidgetTheme.from(entry.data.bgTheme)
+        return ZStack {
             LinearGradient(
                 colors: theme.gradient,
                 startPoint: .topLeading,
@@ -951,6 +971,51 @@ struct StatusSection: View {
                 .padding(.horizontal, 16)
             }
         }
+    }
+}
+
+struct AccessoryCircularWidgetView: View {
+    let data: CoupleWidgetData
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Image(systemName: "heart.fill")
+                .font(.system(size: 16))
+            Text(data.resolvedDaysText().replacingOccurrences(of: " ngày", with: "d"))
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .lineLimit(1)
+        }
+    }
+}
+
+struct AccessoryRectangularWidgetView: View {
+    let data: CoupleWidgetData
+
+    var body: some View {
+        HStack(spacing: 6) {
+            VStack {
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 20))
+            }
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Together for")
+                    .font(.system(size: 9, weight: .medium, design: .rounded))
+                    .opacity(0.8)
+                Text(data.resolvedDaysText())
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct AccessoryInlineWidgetView: View {
+    let data: CoupleWidgetData
+
+    var body: some View {
+        Text("❤️ \(data.resolvedDaysText())")
     }
 }
 
