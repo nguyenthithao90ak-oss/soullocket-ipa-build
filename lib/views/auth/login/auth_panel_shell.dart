@@ -46,49 +46,24 @@ class AuthPanelShell extends StatelessWidget {
             children: [
               // --- brand micro-header ---
               Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [SLColors.primary, Color(0xFFE060B0)],
-                      ).createShader(bounds),
-                      child: const Icon(
-                        Icons.favorite_rounded,
-                        size: 16,
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Center(
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: isLoginTab
+                          ? const [Color(0xFFE0609A), Color(0xFFA044C0)]
+                          : const [Color(0xFF9030C0), Color(0xFFE060B0)],
+                    ).createShader(bounds),
+                    child: Text(
+                      'SoulLocket',
+                      style: SLTheme.quicksand(
+                        fontSize: compact ? 22 : 26,
+                        fontWeight: FontWeight.w900,
                         color: Colors.white,
+                        letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(width: 5),
-                    ShaderMask(
-                      shaderCallback: (bounds) => LinearGradient(
-                        colors: isLoginTab
-                            ? const [Color(0xFFE0609A), Color(0xFFA044C0)]
-                            : const [Color(0xFF9030C0), Color(0xFFE060B0)],
-                      ).createShader(bounds),
-                      child: Text(
-                        'soullocket',
-                        style: SLTheme.quicksand(
-                          fontSize: compact ? 12 : 13,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 1.4,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFFE060B0), SLColors.primary],
-                      ).createShader(bounds),
-                      child: const Icon(
-                        Icons.favorite_rounded,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               AuthTabSwitcher(
