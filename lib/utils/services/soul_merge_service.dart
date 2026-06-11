@@ -9,6 +9,8 @@ class SoulMergeService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final HouseService _houseService = HouseService();
 
+  Future<String?> getCurrentHouseId() => _houseService.getCurrentHouseId();
+
   /// Report a physical bump event to Firebase using server time
   Future<void> reportBump() async {
     try {

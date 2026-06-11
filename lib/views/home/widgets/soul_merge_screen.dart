@@ -1,7 +1,8 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lottie/lottie.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 import '../../../utils/helpers/bump_detector.dart';
 import '../../../utils/services/soul_merge_service.dart';
@@ -23,6 +24,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   bool _isMerged = false;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnim;
+
+  // Memory photos lists and timers
+  List<String> _memoryUrls = [];
+  final List<ExplodingPhoto> _activePhotos = [];
+  final List<({Offset position, UniqueKey id})> _activeParticleExplosions = [];
+  Timer? _explosionTimer;
+  final math.Random _random = math.Random();
 
   @override
   void initState() {
@@ -68,7 +76,41 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     HapticFeedback.mediumImpact();
   }
 
-  void _triggerMerge() {
+  Future<List<String>> _fetchMemoryUrls() async {
+    try {
+      final houseId = await _mergeService.getCurrentHouseId();
+      if (houseId == null || houseId.isEmpty) return const [];
+
+      final dbRef = FirebaseDatabase.instance.ref();
+      final memoriesSnap = await dbRef.child('houses/$houseId/memories').limitToLast(30).get();
+      final diarySnap = await dbRef.child('houses/$houseId/diary').limitToLast(30).get();
+
+      final urls = <String>{};
+      
+      void extractUrls(dynamic raw) {
+        if (raw is Map) {
+          raw.forEach((_, value) {
+            if (value is Map) {
+              final imageUrl = (value['url'] ?? value['imageUrl'] ?? value['thumbUrl'] ?? '').toString().trim();
+              if (imageUrl.isNotEmpty) {
+                urls.add(imageUrl);
+              }
+            }
+          });
+        }
+      }
+
+      extractUrls(memoriesSnap.value);
+      extractUrls(diarySnap.value);
+      return urls.toList();
+    } catch (e) {
+      debugPrint('[SoulMergeScreen] _fetchMemoryUrls error: $e');
+      return const [];
+    }
+  }
+
+  void _triggerMerge() async {
+    if (_isMerged) return;
     debugPrint('[SoulMergeScreen] Merging triggered!');
     setState(() {
       _isMerged = true;
@@ -82,6 +124,69 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     Future.delayed(const Duration(milliseconds: 400), () {
       HapticFeedback.heavyImpact();
     });
+
+    // Fetch memory urls and start explosion loop
+    final urls = await _fetchMemoryUrls();
+    if (mounted) {
+      setState(() {
+        _memoryUrls = urls;
+      });
+      if (_memoryUrls.isNotEmpty) {
+        _startPhotoExplosions();
+      }
+    }
+  }
+
+  void _startPhotoExplosions() {
+    _explosionTimer?.cancel();
+    _spawnPhotoExplosion();
+    _explosionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      _spawnPhotoExplosion();
+    });
+  }
+
+  void _spawnPhotoExplosion() {
+    if (_memoryUrls.isEmpty) return;
+    final randomUrl = _memoryUrls[_random.nextInt(_memoryUrls.length)];
+    
+    final size = MediaQuery.of(context).size;
+    final double x = 30 + _random.nextDouble() * (size.width - 200);
+    final double y = 140 + _random.nextDouble() * (size.height - 380);
+    final position = Offset(x, y);
+
+    final photo = ExplodingPhoto(
+      url: randomUrl,
+      position: position,
+      angle: (_random.nextDouble() - 0.5) * 0.4, // Slight rotation
+      targetScale: 0.8 + _random.nextDouble() * 0.4,
+    );
+
+    final particleId = UniqueKey();
+
+    setState(() {
+      _activePhotos.add(photo);
+      _activeParticleExplosions.add((position: position, id: particleId));
+    });
+
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (mounted) {
+        setState(() {
+          _activeParticleExplosions.removeWhere((item) => item.id == particleId);
+        });
+      }
+    });
+
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() {
+          _activePhotos.removeWhere((p) => p.id == photo.id);
+        });
+      }
+    });
   }
 
   @override
@@ -89,6 +194,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _bumpDetector.stop();
     _mergeTimesSub?.cancel();
     _pulseController.dispose();
+    _explosionTimer?.cancel();
     unawaited(_mergeService.clearBumps());
     super.dispose();
   }
@@ -192,50 +298,312 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 ],
               ),
             )
-          else
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.favorite_rounded,
-                    color: Colors.white,
-                    size: 120,
-                  ),
-                  const SizedBox(height: 40),
-                  Text(
-                    'Đã Kết Nối!',
-                    style: SLTheme.quicksand(
-                      color: Colors.white,
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Trái tim hai bạn đã hòa làm một.',
-                    style: SLTheme.quicksand(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          else ...[
+            // 1. Particle explosions (behind photos)
+            for (final explosion in _activeParticleExplosions)
+              ParticleExplosionWidget(key: explosion.id, position: explosion.position),
 
-          // Lottie fireworks when merged
-          if (_isMerged)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Lottie.asset(
-                  'assets/lottie/fireworks.json', // Assuming a fireworks lottie exists, if not it will fallback or just not render if we catch error. We will just use standard particles if not.
-                  errorBuilder: (context, error, stackTrace) => const SizedBox(),
-                  repeat: false,
+            // 2. Popping Polaroids (foreground)
+            for (final photo in _activePhotos)
+              ExplodingPhotoWidget(key: photo.id, photo: photo),
+
+            // 3. Merged Header Text
+            Positioned(
+              top: 100,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'Đã Kết Nối!',
+                      style: SLTheme.quicksand(
+                        color: const Color(0xFFFF4F93),
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        shadows: [
+                          Shadow(
+                            color: const Color(0xFFFF4F93).withValues(alpha: 0.5),
+                            blurRadius: 15,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Kỷ niệm đang tràn ngập tâm hồn hai bạn...',
+                      style: SLTheme.quicksand(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
+          ],
         ],
       ),
     );
   }
+}
+
+class ExplodingPhoto {
+  final String url;
+  final Offset position;
+  final double angle;
+  final double targetScale;
+  final UniqueKey id = UniqueKey();
+  
+  ExplodingPhoto({
+    required this.url,
+    required this.position,
+    required this.angle,
+    required this.targetScale,
+  });
+}
+
+class ExplodingPhotoWidget extends StatefulWidget {
+  final ExplodingPhoto photo;
+  const ExplodingPhotoWidget({super.key, required this.photo});
+
+  @override
+  State<ExplodingPhotoWidget> createState() => _ExplodingPhotoWidgetState();
+}
+
+class _ExplodingPhotoWidgetState extends State<ExplodingPhotoWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+
+    // Popping entrance and fading exit
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: widget.photo.targetScale)
+            .chain(CurveTween(curve: Curves.elasticOut)),
+        weight: 30, // Popping entrance in first 30% of time
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween<double>(widget.photo.targetScale),
+        weight: 50, // Holds size
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: widget.photo.targetScale, end: 0.5)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 20, // Shrinks out at the end
+      ),
+    ]).animate(_controller);
+
+    _opacityAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween<double>(1.0),
+        weight: 65,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 20,
+      ),
+    ]).animate(_controller);
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: widget.photo.position.dx,
+      top: widget.photo.position.dy,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Opacity(
+            opacity: _opacityAnimation.value,
+            child: Transform.scale(
+              scale: _scaleAnimation.value,
+              child: Transform.rotate(
+                angle: widget.photo.angle,
+                child: child,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          width: 140,
+          height: 170,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 15,
+                spreadRadius: 2,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    widget.photo.url,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.purple.shade100,
+                      child: const Center(
+                        child: Icon(
+                          Icons.broken_image_rounded,
+                          color: Colors.purple,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Polaroid-style bottom bar with a cute heart
+              const Icon(
+                Icons.favorite_rounded,
+                color: Color(0xFFFF4F93),
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class Particle {
+  final Offset velocity;
+  final Color color;
+  double scale;
+  
+  Particle({
+    required this.velocity,
+    required this.color,
+    this.scale = 1.0,
+  });
+}
+
+class ParticleExplosionWidget extends StatefulWidget {
+  final Offset position;
+  const ParticleExplosionWidget({super.key, required this.position});
+
+  @override
+  State<ParticleExplosionWidget> createState() => _ParticleExplosionWidgetState();
+}
+
+class _ParticleExplosionWidgetState extends State<ParticleExplosionWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  final List<Particle> _particles = [];
+  final math.Random _random = math.Random();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    // Create 16 particles spreading outwards
+    final colors = [
+      const Color(0xFFFF4F93),
+      const Color(0xFFFF8E53),
+      const Color(0xFFFFEA79),
+      const Color(0xFF84FF84),
+      const Color(0xFF84D7FF),
+    ];
+    for (int i = 0; i < 16; i++) {
+      final angle = _random.nextDouble() * math.pi * 2;
+      final speed = 2.0 + _random.nextDouble() * 4.0;
+      _particles.add(
+        Particle(
+          velocity: Offset(math.cos(angle) * speed, math.sin(angle) * speed),
+          color: colors[_random.nextInt(colors.length)],
+          scale: 3.0 + _random.nextDouble() * 4.0,
+        ),
+      );
+    }
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: widget.position.dx + 70, // Center of the 140 width polaroid
+      top: widget.position.dy + 85,  // Center of the 170 height polaroid
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final progress = _controller.value;
+          return CustomPaint(
+            painter: _ParticlePainter(
+              particles: _particles,
+              progress: progress,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ParticlePainter extends CustomPainter {
+  final List<Particle> particles;
+  final double progress;
+
+  _ParticlePainter({required this.particles, required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    
+    for (final particle in particles) {
+      final offset = particle.velocity * (progress * 40.0);
+      final opacity = 1.0 - progress;
+      paint.color = particle.color.withValues(alpha: opacity);
+      
+      final radius = particle.scale * (1.0 - progress * 0.5);
+      canvas.drawCircle(offset, radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

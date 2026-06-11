@@ -605,7 +605,8 @@ struct WidgetDaysTimerView: View {
                         .fill(theme.accentColor)
                 )
             Text(refDate, style: .timer)
-                .font(.system(size: fontSize - 4, weight: .bold, design: .monospacedDigit))
+                .font(.system(size: fontSize - 4, weight: .bold))
+                .monospacedDigit()
                 .foregroundColor(theme.secondaryTextColor)
         }
     }
@@ -1126,7 +1127,8 @@ struct AccessoryRectangularWidgetView: View {
                         .font(.system(size: 9, weight: .medium, design: .rounded))
                         .opacity(0.8)
                     Text(timerData.refDate, style: .timer)
-                        .font(.system(size: 13, weight: .bold, design: .monospacedDigit))
+                        .font(.system(size: 13, weight: .bold))
+                        .monospacedDigit()
                 } else {
                     Text(data.resolvedDaysText())
                         .font(.system(size: 14, weight: .bold, design: .rounded))
