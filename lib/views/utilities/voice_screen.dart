@@ -61,12 +61,15 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   DateTime? _recordStartedAt;
   Duration _recordElapsed = Duration.zero;
 
+  late final Stream<DatabaseEvent> _voiceStream;
+
   DatabaseReference get _voiceRef =>
       _dbRef.child('houses/${widget.houseId}/utilities/voices');
 
   @override
   void initState() {
     super.initState();
+    _voiceStream = _voiceRef.onValue;
     WidgetsBinding.instance.addObserver(this);
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
@@ -1078,7 +1081,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
 
   Widget _buildVoiceList() {
     return StreamBuilder(
-      stream: _voiceRef.onValue,
+      stream: _voiceStream,
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
         final hasData =
             snapshot.hasData && snapshot.data?.snapshot.value != null;

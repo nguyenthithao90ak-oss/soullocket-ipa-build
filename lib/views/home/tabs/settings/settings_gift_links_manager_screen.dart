@@ -30,6 +30,16 @@ class _SettingsGiftLinksManagerScreenState
   final MemoryShareService _memoryShareService = MemoryShareService();
   final FirebaseDatabase _db = FirebaseDatabase.instance;
 
+  late final Stream<List<GiftData>> _giftStream;
+  late final Stream<List<_MemoryShareLinkData>> _memoryStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _giftStream = _giftMakerService.streamSentGifts(widget.houseId);
+    _memoryStream = _streamMemoryLinks();
+  }
+
   Future<void> _deleteGiftLink(GiftData gift) async {
     final confirmed = await SLNotice.showConfirmDialog(
       context,
@@ -123,7 +133,7 @@ class _SettingsGiftLinksManagerScreenState
         ),
       ),
       body: StreamBuilder<List<GiftData>>(
-        stream: _giftMakerService.streamSentGifts(widget.houseId),
+        stream: _giftStream,
         builder: (context, giftSnapshot) {
           if (giftSnapshot.hasError) {
             return Center(
@@ -132,7 +142,7 @@ class _SettingsGiftLinksManagerScreenState
           }
 
           return StreamBuilder<List<_MemoryShareLinkData>>(
-            stream: _streamMemoryLinks(),
+            stream: _memoryStream,
             builder: (context, memorySnapshot) {
               if (memorySnapshot.hasError) {
                 return Center(

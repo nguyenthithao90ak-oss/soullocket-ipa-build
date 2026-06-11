@@ -491,10 +491,38 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                 setStateSlider(() {
                                   _localCountdownSize = value;
                                 });
+                                
+                                _draftCountdownSizePx = value;
+                                
+                                // Debounce live preview để kéo thanh trượt không bị khựng
+                                _uiPrefsDebounceTimer?.cancel();
+                                if (mounted) {
+                                  _uiPrefsDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+                                    if (!mounted) return;
+                                    _applyThemeDraftToUiPrefsPreview();
+                                  });
+                                }
                               },
-                              onChangeEnd: (value) {
-                                _updateThemeDraft(() => _draftCountdownSizePx = value);
-                              },
+                            ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton.icon(
+                                onPressed: () {
+                                  // Lưu thủ công thay vì tự động lưu
+                                  _saveThemeSettings(silent: false);
+                                },
+                                icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                                label: Text(
+                                  'Lưu kích thước',
+                                  style: SLTheme.quicksand(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: const Color(0xFFD81B60),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                ),
+                              ),
                             ),
                           ],
                         );
@@ -680,10 +708,13 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     _buildThemeDropdownField(
                       value: selection.languageKey,
                       options: config.languages,
-                      onChanged: (value) async {
-                        await L10nService().setLocale(value);
-                        if (!mounted) return;
-                        setState(() {});
+                      onChanged: (value) {
+                        // Tránh khựng UI: Đợi menu dropdown đóng mượt mà xong (300ms) rồi mới load tệp JSON ngôn ngữ nặng
+                        Future.delayed(const Duration(milliseconds: 300), () async {
+                          await L10nService().setLocale(value);
+                          if (!mounted) return;
+                          setState(() {});
+                        });
                       },
                     ),
                     const SizedBox(height: 12),

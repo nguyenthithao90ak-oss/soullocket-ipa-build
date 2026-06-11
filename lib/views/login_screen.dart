@@ -1064,7 +1064,7 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       barrierDismissible: !enforceDelay, // Prevent dismissing by tapping outside if enforced
       builder: (context) {
-        int countdown = enforceDelay ? 5 : 0;
+        int countdown = enforceDelay ? 1 : 0;
         Timer? timer;
 
         return StatefulBuilder(

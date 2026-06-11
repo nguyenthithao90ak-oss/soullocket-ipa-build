@@ -623,6 +623,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   final ValueNotifier<int> _panelRebuildNotifier = ValueNotifier<int>(0);
 
   Timer? _autoSaveThemeTimer;
+  Timer? _uiPrefsDebounceTimer;
 
   @override
   void setState(VoidCallback fn) {
@@ -790,6 +791,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   void dispose() {
     // ✅ FIX: Cancel auto-save timer to ensure settings persist
     _autoSaveThemeTimer?.cancel();
+    _uiPrefsDebounceTimer?.cancel();
     _stopWidgetPreviewTicker();
     _emailVerifyTimer?.cancel();
     _settingsSyncBannerDelayTimer?.cancel();

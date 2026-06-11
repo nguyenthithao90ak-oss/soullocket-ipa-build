@@ -45,10 +45,24 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
   void _updateThemeDraft(VoidCallback updateFn) {
     updateFn();
-    _applyThemeDraftToUiPrefsPreview();
+    
+    // 1. Cập nhật giao diện nội bộ (các nút bấm, slider, ...) ngay lập tức và mượt mà.
+    if (mounted) {
+      setState(() {});
+    }
+
+    // 2. Debounce UiPrefs (tránh lag do rebuild app khi bấm liên tục)
+    _uiPrefsDebounceTimer?.cancel();
+    if (mounted) {
+      _uiPrefsDebounceTimer = Timer(const Duration(milliseconds: 350), () {
+        if (!mounted) return;
+        _applyThemeDraftToUiPrefsPreview();
+      });
+    }
+
+    // 3. Debounce lưu lên Server (chống spam ghi dữ liệu)
     _autoSaveThemeTimer?.cancel();
     if (mounted) {
-      // Debounce 2s — đủ UI ổn định trước khi trigger auto-save + UiPrefs rebuild
       _autoSaveThemeTimer = Timer(const Duration(milliseconds: 2000), () {
         if (!mounted) return;
         unawaited(_saveThemeSettings(silent: true));

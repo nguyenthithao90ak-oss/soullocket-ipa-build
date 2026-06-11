@@ -6,11 +6,13 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart'
     show ChangeNotifier, ValueNotifier, debugPrint, kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../models/diary_post.dart';
 import '../../../../../models/house_settings.dart';
 import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../utils/services/house_service.dart';
 import '../../../../../utils/services/offline_cache_service.dart';
+import '../../../../../utils/services/diary_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
 
 class DiaryFeedController extends ChangeNotifier {
@@ -44,7 +46,7 @@ class DiaryFeedController extends ChangeNotifier {
   String _relationshipMode = 'single';
   DateTime? _startDate;
   String? _lastDiaryCacheSignature;
-  StreamSubscription<DatabaseEvent>? _diarySubscription;
+  StreamSubscription<List<DiaryPost>>? _diarySubscription;
 
   final Map<String, String> _authorNameByUid = <String, String>{};
   final Set<String> _hydratingAuthorUids = <String>{};
@@ -543,18 +545,18 @@ class DiaryFeedController extends ChangeNotifier {
       }
 
       await _diarySubscription?.cancel();
-      final diaryQuery = _dbRef
-          .child('houses/$houseId/diary')
-          .orderByChild('timestamp')
-          .limitToLast(_diaryRealtimeLimit);
-      _diarySubscription = diaryQuery.onValue.listen(
-        (event) {
+      
+      // Auto migrate old RTDB diaries to Firestore in the background
+      unawaited(DiaryService().migrateDiariesFromRTDB(houseId));
+
+      _diarySubscription = DiaryService().streamDiary(houseId).listen(
+        (loadedPosts) {
           try {
             if (_disposed) {
               return;
             }
 
-            if (event.snapshot.value == null) {
+            if (loadedPosts.isEmpty) {
               _lastDiaryCacheSignature = '0';
               unawaited(
                   OfflineCacheService.saveCache('diary_$houseId', const []));
@@ -562,28 +564,7 @@ class DiaryFeedController extends ChangeNotifier {
               return;
             }
 
-            final snapshotValue = event.snapshot.value;
-            if (snapshotValue is! Map) {
-              postsVN.value = const <DiaryPost>[];
-              return;
-            }
-            final raw = Map<dynamic, dynamic>.from(snapshotValue);
-            final loadedPosts = <DiaryPost>[];
-            final cacheList = <Map<String, dynamic>>[];
-
-            raw.forEach((key, value) {
-              if (value is! Map) {
-                return;
-              }
-              try {
-                final postMap = Map<dynamic, dynamic>.from(value);
-                loadedPosts.add(DiaryPost.fromJson(key.toString(), postMap));
-                postMap['id'] = key;
-                cacheList.add(Map<String, dynamic>.from(postMap));
-              } catch (e) {
-                debugPrint('Error parsing diary post $key: $e');
-              }
-            });
+            final cacheList = loadedPosts.map((p) => p.toJson()).toList();
 
             _sortDiaryPosts(loadedPosts);
             unawaited(_cacheDiaryPosts(houseId, cacheList));
@@ -621,7 +602,7 @@ class DiaryFeedController extends ChangeNotifier {
     if (houseId == null) {
       return;
     }
-    await _dbRef.child('houses/$houseId/diary/${post.id}').remove();
+    await FirebaseFirestore.instance.collection('houses').doc(houseId).collection('diaries').doc(post.id).delete();
   }
 
   Future<void> togglePinDiaryPost(DiaryPost post) async {
@@ -630,23 +611,20 @@ class DiaryFeedController extends ChangeNotifier {
       return;
     }
 
-    final updates = <String, dynamic>{};
-    final prefix = 'houses/$houseId/diary';
+    final batch = FirebaseFirestore.instance.batch();
+    final diariesRef = FirebaseFirestore.instance.collection('houses').doc(houseId).collection('diaries');
 
     if (post.pinned) {
-      updates['$prefix/${post.id}/pinned'] = false;
-      updates['$prefix/${post.id}/pinnedAt'] = null;
+      batch.update(diariesRef.doc(post.id), {'pinned': false, 'pinnedAt': null});
     } else {
       for (final item in postsVN.value
           .where((entry) => entry.pinned && entry.id != post.id)) {
-        updates['$prefix/${item.id}/pinned'] = false;
-        updates['$prefix/${item.id}/pinnedAt'] = null;
+        batch.update(diariesRef.doc(item.id), {'pinned': false, 'pinnedAt': null});
       }
-      updates['$prefix/${post.id}/pinned'] = true;
-      updates['$prefix/${post.id}/pinnedAt'] = ServerValue.timestamp;
+      batch.update(diariesRef.doc(post.id), {'pinned': true, 'pinnedAt': FieldValue.serverTimestamp()});
     }
 
-    await _dbRef.update(updates);
+    await batch.commit();
   }
 
   String resolvedPostAuthorName(DiaryPost post) {

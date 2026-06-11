@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
@@ -378,6 +379,15 @@ Future<void> _initializeFirebaseBootstrap() async {
     _throwIfFirebaseEnvMissing();
     await Firebase.initializeApp(options: _firebaseOptionsFromEnv())
         .timeout(const Duration(seconds: 8));
+        
+    try {
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
+    } catch (e) {
+      debugPrint('Firestore web persistence error: $e');
+    }
   } else {
     await _initializeNativeFirebaseBootstrap();
   }
@@ -396,6 +406,15 @@ Future<void> _initializeFirebaseBootstrap() async {
         e,
         fallbackMessage: L10nService().translate('core_err_firebase_cache_failed'),
       ).message}');
+    }
+
+    try {
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
+    } catch (e) {
+      debugPrint('Firestore persistence error: $e');
     }
 
     await _initializeFirebaseAppCheck();

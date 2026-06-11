@@ -44,6 +44,7 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
   bool _isLoading = true;
   bool _isBusy = false;
   String? _houseId;
+  Stream<CaroRoom?>? _roomStream;
   String _myRole = 'user1';
   String _user1Name = 'Bạn Nam';
   String _user2Name = 'Bạn Nữ';
@@ -102,6 +103,9 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
     if (!mounted) return;
     setState(() {
       _houseId = houseId?.trim().isNotEmpty == true ? houseId!.trim() : null;
+      if (_houseId != null) {
+        _roomStream = _caroService.streamRoom(_houseId!);
+      }
       _myRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       _user1Name =
           settings.nameU1.trim().isEmpty ? context.tr('util_bnnam_694d9e') : settings.nameU1.trim();
@@ -924,7 +928,7 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
     }
 
     return StreamBuilder<CaroRoom?>(
-      stream: _caroService.streamRoom(_houseId!),
+      stream: _roomStream,
       builder: (context, snapshot) {
         return _buildStageShell(room: snapshot.data, isBotMode: false);
       },

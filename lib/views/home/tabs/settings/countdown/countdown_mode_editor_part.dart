@@ -1329,6 +1329,31 @@ class _CountdownModeEditorScreenState
                                             });
                                           },
                                         ),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: TextButton.icon(
+                                            onPressed: () => Navigator.of(context).pop(
+                                              _buildResult(
+                                                _CountdownModeSettingsAction.save,
+                                              ),
+                                            ),
+                                            icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                                            label: Text(
+                                              'Lưu kích thước',
+                                              style: SLTheme.quicksand(
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: const Color(0xFFD81B60),
+                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                              backgroundColor: const Color(0xFFD81B60).withValues(alpha: 0.1),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     );
                                   },
