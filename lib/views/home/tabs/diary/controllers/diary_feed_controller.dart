@@ -549,7 +549,7 @@ class DiaryFeedController extends ChangeNotifier {
       // Auto migrate old RTDB diaries to Firestore in the background
       unawaited(DiaryService().migrateDiariesFromRTDB(houseId));
 
-      _diarySubscription = DiaryService().streamDiary(houseId).listen(
+      _diarySubscription = DiaryService().streamDiary(houseId, limit: _diaryRealtimeLimit).listen(
         (loadedPosts) {
           try {
             if (_disposed) {

@@ -11,6 +11,7 @@ import 'package:soullocket_app/utils/rapid_action_feedback_policy.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'activity_history_service.dart';
 import 'anti_spam_service.dart';
+import 'internal_chat_service.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'storage_service.dart';
@@ -1036,60 +1037,10 @@ class ChatService {
     String houseId, {
     String? afterKey,
   }) {
-    late final StreamController<ChatMessage> controller;
-    StreamSubscription<ChatMessage>? addedSub;
-    StreamSubscription<ChatMessage>? changedSub;
-
-    ChatMessage readMessage(DatabaseEvent event) {
-      final raw = event.snapshot.value;
-      if (raw is! Map) {
-        throw StateError('Tin nhắn không hợp lệ');
-      }
-      return ChatMessage.fromMap(
-        event.snapshot.key ?? '',
-        Map<dynamic, dynamic>.from(raw),
-      );
-    }
-
-    Query query =
-        _dbRef.child('houses/$houseId/chat_room/messages').orderByKey();
-    if (afterKey != null && afterKey.isNotEmpty) {
-      query = query.startAt(afterKey);
-    }
-
-    controller = StreamController<ChatMessage>(
-      onListen: () {
-        addedSub = query.onChildAdded.map(readMessage).listen(
-          controller.add,
-          onError: (Object error) {
-            debugPrint(
-              '[ChatService] internal message add stream failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: 'Không thể tải tin nhắn nội bộ.',
-              ).message}',
-            );
-          },
-        );
-        changedSub = query.onChildChanged.map(readMessage).listen(
-          controller.add,
-          onError: (Object error) {
-            debugPrint(
-              '[ChatService] internal message change stream failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: 'Không thể cập nhật tin nhắn nội bộ.',
-              ).message}',
-            );
-          },
-        );
-      },
-      onCancel: () async {
-        await addedSub?.cancel();
-        await changedSub?.cancel();
-      },
-    );
-
-    return controller.stream;
+    // afterKey is RTDB key – ignored, we use Firestore timestamp-based stream
+    return InternalChatService().streamNewMessages(houseId);
   }
+
 
   String _readMetaString(Object? raw) => raw?.toString() ?? '';
 
@@ -1310,19 +1261,9 @@ class ChatService {
       sharedUrl: message.sharedUrl,
     );
 
-    final pushRef = _dbRef.child('houses/$houseId/chat_room/messages').push();
-    final messageId = pushRef.key ?? '';
-    await _dbRef.update({
-      'houses/$houseId/chat_room/messages/$messageId':
-          _messageWriteMap(safeMessage),
-      'houses/$houseId/chat_room/lastMessage': _lastMessageWriteMap(
-        senderId: safeMessage.senderId,
-        type: safeMessage.type,
-        text: safeMessage.text,
-        messageId: messageId,
-      ),
-      'houses/$houseId/chat_room/updatedAt': ServerValue.timestamp,
-    });
+    await InternalChatService().sendMessage(houseId, safeMessage);
+    // Trigger auto-migration silently on first use
+    unawaited(InternalChatService().migrateFromRTDB(houseId));
     try {
       final role = await _resolvedActivityRole();
       await ActivityHistoryService.instance.add(
@@ -1339,12 +1280,7 @@ class ChatService {
     String senderRole,
     String emoji,
   ) async {
-    final normalizedRole = senderRole == 'user2' ? 'user2' : 'user1';
-    await _dbRef
-        .child(
-          'houses/$houseId/chat_room/messages/$messageId/reactions/$normalizedRole',
-        )
-        .set(emoji);
+    await InternalChatService().addReaction(houseId, messageId, senderRole, emoji);
   }
 
   Future<void> clearConversation(
@@ -1362,11 +1298,7 @@ class ChatService {
   }
 
   Future<void> clearInternalConversation(String houseId) async {
-    await _dbRef.update({
-      'houses/$houseId/chat_room/messages': null,
-      'houses/$houseId/chat_room/lastMessage': null,
-      'houses/$houseId/chat_room/updatedAt': ServerValue.timestamp,
-    });
+    await InternalChatService().clearConversation(houseId);
   }
 
   Future<void> updateChatBackground({

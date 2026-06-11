@@ -1,8 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/models/diary_post.dart';
-import 'connectivity_service.dart';
 
 /// DiaryService — quản lý tâm tư (nhật ký) trong Firestore
 /// Path: houses/{houseId}/diaries/{postId}
@@ -22,10 +20,10 @@ class DiaryService {
   }
 
   // ── LISTEN realtime ────────────────────────────────────────────────────
-  Stream<List<DiaryPost>> streamDiary(String houseId) {
+  Stream<List<DiaryPost>> streamDiary(String houseId, {int limit = 80}) {
     return _diariesRef(houseId)
         .orderBy('ts', descending: true)
-        .limit(AppConfig.diaryPageSize)
+        .limit(limit)
         .snapshots()
         .map((snapshot) {
       final posts = <DiaryPost>[];
@@ -104,7 +102,7 @@ class DiaryService {
   // ── LẤY 1 lần (không stream) ──────────────────────────────────────────
   Future<List<DiaryPost>> fetchDiary(
     String houseId, {
-    int limit = AppConfig.diaryPageSize,
+    int limit = 80,
   }) async {
     final snap = await _diariesRef(houseId)
         .orderBy('ts', descending: true)
@@ -118,6 +116,34 @@ class DiaryService {
       } catch (_) {}
     }
     return posts;
+  }
+
+  // ── LẤY theo trang (phân trang) ─────────────────────────────────────────
+  Future<({List<DiaryPost> posts, DocumentSnapshot<Map<String, dynamic>>? lastDoc, bool hasMore})> fetchDiaryPage(
+    String houseId, {
+    int limit = 10,
+    DocumentSnapshot<Map<String, dynamic>>? startAfter,
+  }) async {
+    Query<Map<String, dynamic>> query = _diariesRef(houseId)
+        .orderBy('ts', descending: true)
+        .limit(limit);
+
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+
+    final snap = await query.get();
+    final posts = <DiaryPost>[];
+    for (var doc in snap.docs) {
+      try {
+        posts.add(DiaryPost.fromJson(doc.id, doc.data()));
+      } catch (_) {}
+    }
+
+    final lastDoc = snap.docs.isNotEmpty ? snap.docs.last : null;
+    final hasMore = snap.docs.length == limit;
+
+    return (posts: posts, lastDoc: lastDoc, hasMore: hasMore);
   }
 
   // ── Sanitize input ────────────────────────────────────────────────────
