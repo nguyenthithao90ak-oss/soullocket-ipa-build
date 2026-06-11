@@ -141,6 +141,7 @@ class MemoryShareService {
     required String houseId,
     required List<Map<String, dynamic>> photos,
     int expiryDays = 7,
+    String? password,
   }) async {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) {
@@ -171,6 +172,8 @@ class MemoryShareService {
         'description': defaultShareDescription,
         'brandLabel': defaultBrandLabel,
         'theme': defaultTheme,
+        if (password != null && password.trim().isNotEmpty)
+          'password': password.trim(),
       });
     });
     final raw = response.data;

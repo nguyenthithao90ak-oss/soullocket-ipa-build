@@ -231,6 +231,11 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
       return;
     }
 
+    final password = await _promptPasswordOption();
+    if (password == null || !mounted) {
+      return;
+    }
+
     // Await the pre-fired futures. In most cases, they are already complete.
     final isProUser = await isProUserFuture;
     final memoryLimits = await limitsFuture;
@@ -329,6 +334,7 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
         houseId: houseId,
         photos: photos,
         expiryDays: expiryDays,
+        password: password,
       );
       if (!mounted) {
         return;
@@ -454,6 +460,118 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _promptPasswordOption() async {
+    final controller = TextEditingController();
+    bool obscureText = true;
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          backgroundColor: Colors.white,
+          title: Text(
+            'Mật khẩu bảo vệ (Tùy chọn)',
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF243041),
+              fontSize: 18,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Nhập mật khẩu nếu bạn muốn người nhận phải nhập đúng mật khẩu mới xem được album.',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF66758A),
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                obscureText: obscureText,
+                maxLength: 32,
+                onChanged: (_) => setState(() {}),
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF243041),
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Mật khẩu',
+                  labelStyle: SLTheme.quicksand(
+                    color: const Color(0xFF66758A),
+                    fontWeight: FontWeight.w700,
+                  ),
+                  hintText: 'Để trống nếu không khóa',
+                  counterText: '',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                      color: const Color(0xFF66758A),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        obscureText = !obscureText;
+                      });
+                    },
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFCFD8DC)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFCFD8DC)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Hủy',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF66758A),
+                ),
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(controller.text);
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFD81B60),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              child: Text(
+                controller.text.trim().isEmpty ? 'Bỏ qua (Không khóa)' : 'Xác nhận đặt',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1620,7 +1620,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       );
     }
     */
-    if (clearedNow > 0 && (clearedNow >= 1 || nextStreak.isEven)) {
+    final bool shouldTriggerBurst = (clearedNow >= 2) || (clearedNow == 1 && nextStreak.isEven && nextStreak >= 2);
+    if (clearedNow > 0 && shouldTriggerBurst) {
       _triggerMemoryBurstReward(
         clearedCount: clearedNow,
         streakCount: nextStreak,
