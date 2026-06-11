@@ -530,186 +530,131 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 themeColor: const Color(0xFFFF77A8),
                 child: Column(
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            context.tr('home_chthmmckni_277577'),
-                            style: SLTheme.quicksand(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFFD81B60),
-                            ),
+                          _buildInput(
+                            _anniversaryNameCtrl,
+                            '${context.tr('home_tnknim_c9204b')} — ${context.tr('home_vdngyyunha_5849f3')}',
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            context.tr('home_vdngyyucuh_d971f6'),
-                            style: SLTheme.quicksand(
-                              fontSize: 11.6,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF8A5B76),
-                              height: 1.42,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildThemeFieldCaption(
-                                      context.tr('home_tnknim_c9204b'),
-                                      Icons.favorite_border_rounded,
-                                    ),
-                                    _buildInput(
-                                      _anniversaryNameCtrl,
-                                      context.tr('home_vdngyyunha_5849f3'),
-                                    ),
+                                child: TextField(
+                                  controller: _anniversaryDateCtrl,
+                                  keyboardType: TextInputType.datetime,
+                                  inputFormatters: const [
+                                    FlexibleDateInputFormatter(),
                                   ],
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildThemeFieldCaption(
-                                      context.tr('home_ngyknim_4d03ad'),
+                                  textInputAction: TextInputAction.done,
+                                  onChanged: (value) {
+                                    _draftAnniversaryDate =
+                                        DateInputUtils.parse(
+                                      value,
+                                      firstYear: 2020,
+                                      lastYear: 2100,
+                                    );
+                                    if (_anniversaryDateErrorText != null) {
+                                      setState(() {
+                                        _anniversaryDateErrorText = null;
+                                      });
+                                    }
+                                  },
+                                  onEditingComplete: () {
+                                    final validationError =
+                                        DateInputUtils.validationError(
+                                      _anniversaryDateCtrl.text,
+                                      firstYear: 2020,
+                                      lastYear: 2100,
+                                    );
+                                    if (validationError != null) {
+                                      setState(() {
+                                        _anniversaryDateErrorText =
+                                            validationError;
+                                      });
+                                      return;
+                                    }
+                                    final parsed = DateInputUtils.parse(
+                                      _anniversaryDateCtrl.text,
+                                      firstYear: 2020,
+                                      lastYear: 2100,
+                                    );
+                                    if (parsed == null) return;
+                                    _draftAnniversaryDate = parsed;
+                                    _anniversaryDateErrorText = null;
+                                    _anniversaryDateCtrl.text =
+                                        DateInputUtils.formatDisplayDate(
+                                            parsed);
+                                    _anniversaryDateCtrl.selection =
+                                        TextSelection.collapsed(
+                                      offset: _anniversaryDateCtrl.text.length,
+                                    );
+                                  },
+                                  decoration: LegacyWebUi.softInputDecoration(
+                                    hintText: context.tr('home_ngythngnm_a697d0'),
+                                  ).copyWith(
+                                    errorText: _anniversaryDateErrorText,
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 12,
+                                    ),
+                                    prefixIcon: const Icon(
                                       Icons.calendar_month_rounded,
+                                      color: Color(0xFFD81B60),
+                                      size: 18,
                                     ),
-                                    Container(
-                                      margin: const EdgeInsets.only(bottom: 8),
-                                      child: TextField(
-                                        controller: _anniversaryDateCtrl,
-                                        keyboardType: TextInputType.datetime,
-                                        inputFormatters: const [
-                                          FlexibleDateInputFormatter(),
-                                        ],
-                                        textInputAction: TextInputAction.done,
-                                        onChanged: (value) {
-                                          _draftAnniversaryDate =
-                                              DateInputUtils.parse(
-                                            value,
-                                            firstYear: 2020,
-                                            lastYear: 2100,
-                                          );
-                                          if (_anniversaryDateErrorText != null) {
-                                            setState(() {
-                                              _anniversaryDateErrorText = null;
-                                            });
-                                          }
-                                        },
-                                        onEditingComplete: () {
-                                          final validationError =
-                                              DateInputUtils.validationError(
-                                            _anniversaryDateCtrl.text,
-                                            firstYear: 2020,
-                                            lastYear: 2100,
-                                          );
-                                          if (validationError != null) {
-                                            setState(() {
-                                              _anniversaryDateErrorText =
-                                                  validationError;
-                                            });
-                                            return;
-                                          }
-                                          final parsed = DateInputUtils.parse(
-                                            _anniversaryDateCtrl.text,
-                                            firstYear: 2020,
-                                            lastYear: 2100,
-                                          );
-                                          if (parsed == null) return;
-                                          _draftAnniversaryDate = parsed;
-                                          _anniversaryDateErrorText = null;
-                                          _anniversaryDateCtrl.text =
-                                              DateInputUtils.formatDisplayDate(
-                                                  parsed);
-                                          _anniversaryDateCtrl.selection =
-                                              TextSelection.collapsed(
-                                            offset: _anniversaryDateCtrl.text.length,
-                                          );
-                                        },
-                                        decoration: LegacyWebUi.softInputDecoration(
-                                          hintText: context.tr('home_ngythngnm_a697d0'),
-                                        ).copyWith(
-                                          helperText: context.tr('home_angnhpngyt_377d85'),
-                                          errorText: _anniversaryDateErrorText,
-                                          prefixIcon: const Icon(
-                                            Icons.calendar_month_rounded,
-                                            color: Color(0xFFD81B60),
-                                          ),
-                                          suffixIcon: IconButton(
-                                            icon: const Icon(Icons.event_rounded),
-                                            color: const Color(0xFFD81B60),
-                                            onPressed: _pickAnniversaryDate,
-                                          ),
-                                        ),
-                                        style: SLTheme.quicksand(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w800,
-                                          color: const Color(0xFF5F4C58),
-                                        ),
-                                      ),
+                                    suffixIcon: IconButton(
+                                      icon: const Icon(Icons.event_rounded, size: 18),
+                                      color: const Color(0xFFD81B60),
+                                      padding: EdgeInsets.zero,
+                                      onPressed: _pickAnniversaryDate,
                                     ),
-                                  ],
+                                  ),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF5F4C58),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 24),
-                                child: GestureDetector(
-                                  onTap: _addCustomAnniversary,
-                                  child: Container(
-                                    width: 48,
-                                    height: 66,
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFFFF5E92),
-                                          Color(0xFFD81B60)
-                                        ],
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: _addCustomAnniversary,
+                                child: Container(
+                                  height: 48,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFFF5E92), Color(0xFFD81B60)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFD81B60).withValues(alpha: 0.22),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
                                       ),
-                                      borderRadius: BorderRadius.circular(18),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFFD81B60)
-                                              .withValues(alpha: 0.24),
-                                          blurRadius: 14,
-                                          offset: const Offset(0, 8),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.add_rounded,
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.add_rounded, color: Colors.white, size: 18),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        context.tr('home_thm_d9cb42'),
+                                        style: SLTheme.quicksand(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w900,
                                           color: Colors.white,
-                                          size: 22,
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          context.tr('home_thm_d9cb42'),
-                                          style: SLTheme.quicksand(
-                                            fontSize: 10.2,
-                                            fontWeight: FontWeight.w900,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),

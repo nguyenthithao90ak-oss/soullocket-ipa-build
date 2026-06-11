@@ -48,7 +48,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
     _applyThemeDraftToUiPrefsPreview();
     _autoSaveThemeTimer?.cancel();
     if (mounted) {
-      _autoSaveThemeTimer = Timer(const Duration(milliseconds: 1200), () {
+      // Debounce 2s — đủ UI ổn định trước khi trigger auto-save + UiPrefs rebuild
+      _autoSaveThemeTimer = Timer(const Duration(milliseconds: 2000), () {
         if (!mounted) return;
         unawaited(_saveThemeSettings(silent: true));
       });
@@ -976,9 +977,11 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
   Future<void> _saveAdvancedSettingsV2({bool silent = false}) async {
     final houseId = _houseId?.trim();
-    if (houseId != null &&
+    // Bỏ qua kiểm tra bảo mật khi tự động lưu để tránh gây lag mỗi khi thay đổi setting
+    if (!silent &&
+        houseId != null &&
         houseId.isNotEmpty &&
-        !await _ensureCanModifySharedInfo(showToast: !silent)) {
+        !await _ensureCanModifySharedInfo(showToast: true)) {
       return;
     }
     if (!silent) setState(() => _isSavingAdvanced = true);

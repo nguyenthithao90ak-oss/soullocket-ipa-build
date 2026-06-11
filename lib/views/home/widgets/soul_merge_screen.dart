@@ -43,9 +43,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   bool _partnerHasBumped = false;
   bool _notificationSent = false;
 
-  // Tiny flying hearts on tap
-  final List<TinyHeart> _tapHearts = [];
-  Timer? _tapAnimationTimer;
+  final GlobalKey<_TapHeartsOverlayState> _heartsOverlayKey = GlobalKey<_TapHeartsOverlayState>();
   double _interactiveScale = 1.0;
 
   @override
@@ -113,12 +111,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     debugPrint('[SoulMergeScreen] _handleLocalBump triggered (bump or tap)');
     _mergeService.reportBump();
     HapticFeedback.mediumImpact();
-    
-    // Spawn hearts from center on physical bump if not already tapping
-    if (_tapHearts.isEmpty) {
-      final size = MediaQuery.of(context).size;
-      _spawnTapExplosion(Offset(size.width / 2, size.height / 2));
-    }
+    // NOTE: Heart spawning is handled exclusively by _onTapDown to avoid double-spawn.
   }
 
   Future<void> _initUserInfo() async {
@@ -160,63 +153,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     }
   }
 
-  void _spawnTapExplosion(Offset globalPosition) {
-    final colors = [
-      const Color(0xFFFFB7D5),
-      const Color(0xFFD8A4FF),
-      const Color(0xFFFFD6EE),
-      const Color(0xFFA8C8FF),
-      const Color(0xFFFFEAA0),
-    ];
-    
-    try {
-      final RenderBox renderBox = context.findRenderObject() as RenderBox;
-      final localPosition = renderBox.globalToLocal(globalPosition);
-
-      final random = math.Random();
-      for (int i = 0; i < 8; i++) {
-        final angle = random.nextDouble() * math.pi * 2;
-        final speed = 1.5 + random.nextDouble() * 3.0;
-        final size = 12.0 + random.nextDouble() * 16.0;
-        _tapHearts.add(
-          TinyHeart(
-            x: localPosition.dx,
-            y: localPosition.dy,
-            angle: angle,
-            speed: speed,
-            size: size,
-            color: colors[random.nextInt(colors.length)],
-          ),
-        );
-      }
-      _startTapAnimationLoop();
-    } catch (e) {
-      debugPrint('[SoulMergeScreen] _spawnTapExplosion error: $e');
-    }
-  }
-
-  void _startTapAnimationLoop() {
-    if (_tapAnimationTimer != null && _tapAnimationTimer!.isActive) return;
-    
-    _tapAnimationTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      if (!mounted || _tapHearts.isEmpty) {
-        timer.cancel();
-        return;
-      }
-      
-      setState(() {
-        for (int i = _tapHearts.length - 1; i >= 0; i--) {
-          final heart = _tapHearts[i];
-          heart.x += math.cos(heart.angle) * heart.speed;
-          heart.y += math.sin(heart.angle) * heart.speed - 1.2; // float upwards
-          heart.opacity -= 0.02;
-          if (heart.opacity <= 0) {
-            _tapHearts.removeAt(i);
-          }
-        }
-      });
-    });
-  }
+  // Tap hearts logic is now completely isolated within the _TapHeartsOverlay widget
 
   void _sendAutoNotification() async {
     if (_notificationSent) return;
@@ -263,7 +200,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     setState(() {
       _interactiveScale = 0.9;
     });
-    _spawnTapExplosion(details.globalPosition);
+    _heartsOverlayKey.currentState?.spawnExplosion(details.globalPosition);
     _handleLocalBump();
     _sendAutoNotification();
   }
@@ -468,7 +405,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _mergeTimesSub?.cancel();
     _pulseController.dispose();
     _explosionTimer?.cancel();
-    _tapAnimationTimer?.cancel();
     unawaited(_mergeService.clearBumps());
     super.dispose();
   }
@@ -500,22 +436,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             ),
           ),
           
-          // Flying tap hearts
-          for (final heart in _tapHearts)
-            Positioned(
-              left: heart.x - (heart.size / 2),
-              top: heart.y - (heart.size / 2),
-              child: IgnorePointer(
-                child: Opacity(
-                  opacity: heart.opacity.clamp(0.0, 1.0),
-                  child: Icon(
-                    Icons.favorite_rounded,
-                    color: heart.color,
-                    size: heart.size,
-                  ),
-                ),
-              ),
-            ),
+          // Isolated tap hearts particle overlay
+          _TapHeartsOverlay(key: _heartsOverlayKey),
           
           if (!_isMerged)
             Center(
@@ -603,8 +525,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                   ),
                                 ),
                               ),
-                              // Sparkle dots around the heart
-                              ..._buildSparkles(),
+                              // Sparkle dots around the heart - wrapped in AnimatedBuilder to ensure smooth continuous breathing opacity
+                              AnimatedBuilder(
+                                animation: _pulseAnim,
+                                builder: (context, _) => Stack(
+                                  children: _buildSparkles(),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -1019,4 +946,111 @@ class TinyHeart {
     required this.size,
     required this.color,
   });
+}
+
+class _TapHeartsOverlay extends StatefulWidget {
+  const _TapHeartsOverlay({super.key});
+
+  @override
+  State<_TapHeartsOverlay> createState() => _TapHeartsOverlayState();
+}
+
+class _TapHeartsOverlayState extends State<_TapHeartsOverlay> {
+  final List<TinyHeart> _hearts = [];
+  Timer? _timer;
+
+  void spawnExplosion(Offset globalPosition) {
+    if (!mounted) return;
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize || !renderBox.attached) {
+      return;
+    }
+
+    final colors = [
+      const Color(0xFFFFB7D5),
+      const Color(0xFFD8A4FF),
+      const Color(0xFFFFD6EE),
+      const Color(0xFFA8C8FF),
+      const Color(0xFFFFEAA0),
+    ];
+
+    try {
+      final localPosition = renderBox.globalToLocal(globalPosition);
+      final random = math.Random();
+      setState(() {
+        for (int i = 0; i < 8; i++) {
+          final angle = random.nextDouble() * math.pi * 2;
+          final speed = 1.5 + random.nextDouble() * 3.0;
+          final size = 12.0 + random.nextDouble() * 16.0;
+          _hearts.add(
+            TinyHeart(
+              x: localPosition.dx,
+              y: localPosition.dy,
+              angle: angle,
+              speed: speed,
+              size: size,
+              color: colors[random.nextInt(colors.length)],
+            ),
+          );
+        }
+      });
+      _startAnimationLoop();
+    } catch (e) {
+      debugPrint('[_TapHeartsOverlay] spawnExplosion error: $e');
+    }
+  }
+
+  void _startAnimationLoop() {
+    if (_timer != null && _timer!.isActive) return;
+
+    _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (!mounted || _hearts.isEmpty) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        for (int i = _hearts.length - 1; i >= 0; i--) {
+          final heart = _hearts[i];
+          heart.x += math.cos(heart.angle) * heart.speed;
+          heart.y += math.sin(heart.angle) * heart.speed - 1.2; // float upwards
+          heart.opacity -= 0.02;
+          if (heart.opacity <= 0) {
+            _hearts.removeAt(i);
+          }
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hearts.isEmpty) return const SizedBox.shrink();
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        for (final heart in _hearts)
+          Positioned(
+            left: heart.x - (heart.size / 2),
+            top: heart.y - (heart.size / 2),
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: heart.opacity.clamp(0.0, 1.0),
+                child: Icon(
+                  Icons.favorite_rounded,
+                  color: heart.color,
+                  size: heart.size,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }

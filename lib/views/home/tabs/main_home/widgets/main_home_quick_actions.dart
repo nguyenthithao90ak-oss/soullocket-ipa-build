@@ -91,8 +91,12 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
         _showDefaultHeartSuggestion &&
         _manualInteractionPresetType == null;
 
+    // Bọc icon trong SizedBox nhỏ vừa đủ, dùng deferToChild để gesture
+    // chỉ được tiêu thụ khi chạm đúng vào icon – tránh chặn swipe ngang PageView.
     return GestureDetector(
-      onTap: handleTap,
+      behavior: HitTestBehavior.deferToChild,
+      excludeFromSemantics: true,
+      onTap: canSendMissYou ? handleTap : null,
       onLongPressStart:
           canSendMissYou ? _handleInteractionLongPressStart : null,
       onLongPressMoveUpdate:
@@ -132,7 +136,7 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
                       ),
               ),
             ),
-            if (canSendMissYou) ...[
+            if (canSendMissYou) ...const [
               // Keep icon-only presentation here.
             ],
           ],
@@ -143,12 +147,13 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
 
   void _sendSuggestedInteraction() {
     final preset = _displayInteractionPreset;
+    // Khoá icon lại sau khi người dùng bấm – tránh timer tự động xoay icon
+    _setManualInteractionPreset(preset.type);
     _handleSendInteraction(
       preset.type,
       _showDefaultHeartSuggestion && _manualInteractionPresetType == null
           ? '\u{1F496}'
           : preset.emoji,
     );
-    _refreshSmartInteraction(forceRotate: true);
   }
 }

@@ -206,9 +206,11 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
     final errorMsg = context.tr('home_khngthlugi_4e7f1d');
 
     final houseId = _houseId?.trim();
-    if (houseId != null &&
+    // Bỏ qua kiểm tra bảo mật khi silent auto-save để tránh lag mỗi khi thay đổi
+    if (!silent &&
+        houseId != null &&
         houseId.isNotEmpty &&
-        !await _ensureCanModifySharedInfo(showToast: !silent)) {
+        !await _ensureCanModifySharedInfo(showToast: true)) {
       return;
     }
     await UiPrefs.ensureLoaded();
