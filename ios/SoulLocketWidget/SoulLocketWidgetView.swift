@@ -559,6 +559,58 @@ struct PremiumAuroraBackdrop: View {
     }
 }
 
+struct WidgetDaysTextView: View {
+    let days: Int
+    let unit: String
+    let theme: WidgetTheme
+    let fontSize: CGFloat
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            Text("\(days)")
+                .font(.system(size: fontSize + 12, weight: .black, design: .rounded))
+                .foregroundColor(theme.textColor)
+            Text(unit)
+                .font(.system(size: fontSize - 3, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(theme.accentColor)
+                )
+        }
+    }
+}
+
+struct WidgetDaysTimerView: View {
+    let days: Int
+    let unit: String
+    let refDate: Date
+    let theme: WidgetTheme
+    let fontSize: CGFloat
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            Text("\(days)")
+                .font(.system(size: fontSize + 12, weight: .black, design: .rounded))
+                .foregroundColor(theme.textColor)
+            Text(unit)
+                .font(.system(size: fontSize - 3, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(theme.accentColor)
+                )
+            Text(refDate, style: .timer)
+                .font(.system(size: fontSize - 4, weight: .bold, design: .monospacedDigit))
+                .foregroundColor(theme.secondaryTextColor)
+        }
+    }
+}
+
 struct PersonCard: View {
     let name: String
     let status: String
@@ -570,7 +622,7 @@ struct PersonCard: View {
     let avatarSize: CGFloat
 
     var body: some View {
-        VStack(spacing: 5) {
+        VStack(spacing: 4) {
             ZStack(alignment: .bottomTrailing) {
                 AvatarView(path: avatarPath, name: name, size: avatarSize, accentColor: theme.accentColor)
                 OnlineDot(isOnline: isOnline)
@@ -578,17 +630,13 @@ struct PersonCard: View {
             }
 
             Text(name)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.system(size: 13, weight: .bold, design: .rounded))
                 .foregroundColor(theme.textColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
-            if !weather.isEmpty {
-                InfoChip(label: weather, theme: theme)
-            }
-
             if stars != "--" && !stars.isEmpty {
-                InfoChip(label: "★ \(stars)", theme: theme)
+                InfoChip(label: stars, theme: theme)
             } else if !status.isEmpty {
                 Text(status)
                     .font(.system(size: 9, weight: .medium, design: .rounded))
@@ -691,11 +739,34 @@ struct SmallWidgetView: View {
                 diaryHeight: 54
             )
 
-            Text(data.resolvedDaysText(referenceDate: Date()))
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundColor(theme.textColor)
-                .multilineTextAlignment(.center)
-                .minimumScaleFactor(0.78)
+            if let timerData = data.getTimerData() {
+                WidgetDaysTimerView(
+                    days: timerData.days,
+                    unit: data.dayUnitText,
+                    refDate: timerData.refDate,
+                    theme: theme,
+                    fontSize: 13
+                )
+            } else {
+                if let startDate = data.getStartDate() {
+                    let calendar = Calendar.current
+                    let startOfToday = calendar.startOfDay(for: Date())
+                    let startOfAnchor = calendar.startOfDay(for: startDate)
+                    let days = max(0, calendar.dateComponents([.day], from: startOfAnchor, to: startOfToday).day ?? 0)
+                    WidgetDaysTextView(
+                        days: days,
+                        unit: data.dayUnitText,
+                        theme: theme,
+                        fontSize: 13
+                    )
+                } else {
+                    Text(data.resolvedDaysText(referenceDate: Date()))
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(theme.textColor)
+                        .multilineTextAlignment(.center)
+                        .minimumScaleFactor(0.78)
+                }
+            }
 
             HStack(spacing: 5) {
                 ZStack(alignment: .bottomTrailing) {
@@ -739,7 +810,7 @@ struct MediumWidgetView: View {
                 stars: data.stars1,
                 avatarPath: data.avatar1Path,
                 theme: theme,
-                avatarSize: 60
+                avatarSize: 85
             )
             .frame(maxWidth: .infinity)
 
@@ -753,11 +824,34 @@ struct MediumWidgetView: View {
                     diaryHeight: 78
                 )
 
-                Text(data.resolvedDaysText(referenceDate: Date()))
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundColor(theme.textColor)
-                    .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.75)
+                if let timerData = data.getTimerData() {
+                    WidgetDaysTimerView(
+                        days: timerData.days,
+                        unit: data.dayUnitText,
+                        refDate: timerData.refDate,
+                        theme: theme,
+                        fontSize: 12
+                    )
+                } else {
+                    if let startDate = data.getStartDate() {
+                        let calendar = Calendar.current
+                        let startOfToday = calendar.startOfDay(for: Date())
+                        let startOfAnchor = calendar.startOfDay(for: startDate)
+                        let days = max(0, calendar.dateComponents([.day], from: startOfAnchor, to: startOfToday).day ?? 0)
+                        WidgetDaysTextView(
+                            days: days,
+                            unit: data.dayUnitText,
+                            theme: theme,
+                            fontSize: 12
+                        )
+                    } else {
+                        Text(data.resolvedDaysText(referenceDate: Date()))
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundColor(theme.textColor)
+                            .multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.75)
+                    }
+                }
             }
             .frame(maxWidth: .infinity)
 
@@ -769,7 +863,7 @@ struct MediumWidgetView: View {
                 stars: data.stars2,
                 avatarPath: data.avatar2Path,
                 theme: theme,
-                avatarSize: 60
+                avatarSize: 85
             )
             .frame(maxWidth: .infinity)
         }
@@ -797,7 +891,7 @@ struct LargeWidgetView: View {
                     stars: data.stars1,
                     avatarPath: data.avatar1Path,
                     theme: theme,
-                    avatarSize: 60
+                    avatarSize: 85
                 )
                 .frame(maxWidth: .infinity)
 
@@ -811,11 +905,34 @@ struct LargeWidgetView: View {
                         diaryHeight: 84
                     )
 
-                    Text(data.resolvedDaysText(referenceDate: Date()))
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundColor(theme.textColor)
-                        .multilineTextAlignment(.center)
-                        .minimumScaleFactor(0.74)
+                    if let timerData = data.getTimerData() {
+                        WidgetDaysTimerView(
+                            days: timerData.days,
+                            unit: data.dayUnitText,
+                            refDate: timerData.refDate,
+                            theme: theme,
+                            fontSize: 14
+                        )
+                    } else {
+                        if let startDate = data.getStartDate() {
+                            let calendar = Calendar.current
+                            let startOfToday = calendar.startOfDay(for: Date())
+                            let startOfAnchor = calendar.startOfDay(for: startDate)
+                            let days = max(0, calendar.dateComponents([.day], from: startOfAnchor, to: startOfToday).day ?? 0)
+                            WidgetDaysTextView(
+                                days: days,
+                                unit: data.dayUnitText,
+                                theme: theme,
+                                fontSize: 14
+                            )
+                        } else {
+                            Text(data.resolvedDaysText(referenceDate: Date()))
+                                .font(.system(size: 15, weight: .bold, design: .rounded))
+                                .foregroundColor(theme.textColor)
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(0.74)
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity)
 
@@ -827,7 +944,7 @@ struct LargeWidgetView: View {
                     stars: data.stars2,
                     avatarPath: data.avatar2Path,
                     theme: theme,
-                    avatarSize: 60
+                    avatarSize: 85
                 )
                 .frame(maxWidth: .infinity)
             }
@@ -992,19 +1109,35 @@ struct AccessoryRectangularWidgetView: View {
     let data: CoupleWidgetData
 
     var body: some View {
-        HStack(spacing: 6) {
-            VStack {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) {
                 Image(systemName: "heart.fill")
-                    .font(.system(size: 20))
-            }
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Together for")
-                    .font(.system(size: 9, weight: .medium, design: .rounded))
-                    .opacity(0.8)
-                Text(data.resolvedDaysText())
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.system(size: 9))
+                Text("\(data.name1) \(resolveHeartEmoji(data.heartStyleKey)) \(data.name2)")
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+            }
+            
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                if let timerData = data.getTimerData() {
+                    Text("\(timerData.days)")
+                        .font(.system(size: 15, weight: .black, design: .rounded))
+                    Text(data.dayUnitText)
+                        .font(.system(size: 9, weight: .medium, design: .rounded))
+                        .opacity(0.8)
+                    Text(timerData.refDate, style: .timer)
+                        .font(.system(size: 13, weight: .bold, design: .monospacedDigit))
+                } else {
+                    Text(data.resolvedDaysText())
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                }
+            }
+            
+            let dateText = data.formattedStartDate()
+            if !dateText.isEmpty {
+                Text("Kỷ niệm: \(dateText)")
+                    .font(.system(size: 8, weight: .medium, design: .rounded))
+                    .opacity(0.6)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
