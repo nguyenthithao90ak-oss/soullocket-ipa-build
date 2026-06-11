@@ -98,9 +98,9 @@ class AdMobService {
       'il_daily_rewarded_ad_count_v1'; // Theo dõi số lần xem ads hôm nay
   static const String _dailyRewardedAdDatePrefsKey =
       'il_daily_rewarded_ad_date_v1'; // Ngày hiện tại (yyyy-MM-dd)
-  static const int _autoInterstitialMinMinutes = 45;
-  static const int _autoInterstitialMaxMinutes = 90;
-  static const int _autoInterstitialRetryMinutes = 15;
+  static const int _autoInterstitialMinMinutes = 15;
+  static const int _autoInterstitialMaxMinutes = 30;
+  static const int _autoInterstitialRetryMinutes = 5;
   static const int _autoMandatoryRewardedChancePercent = 40;
   static const int _appOpenMaxPerDay = 3;
   static const List<String> _debugTestDeviceIds = <String>[

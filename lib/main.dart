@@ -8,6 +8,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -279,6 +280,7 @@ void main() {
       await _initializeGoogleMobileAds();
       await _clearStaleIosAuthAfterFreshInstall();
       await _requestIosTrackingAuthorization();
+      await _initializeTikTokSdk();
 
       if (!kIsWeb) {
         FirebaseMessaging.onBackgroundMessage(
@@ -581,6 +583,46 @@ Future<void> _requestIosTrackingAuthorization() async {
     }
   } catch (e) {
     debugPrint('ATT request skipped: $e');
+  }
+}
+
+Future<void> _initializeTikTokSdk() async {
+  if (kIsWeb) {
+    return;
+  }
+
+  final bool isIos = defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS;
+
+  final appId = (isIos
+          ? AppConfig.tiktokIosAppId
+          : AppConfig.tiktokAndroidAppId)
+      .trim();
+  final accessToken = (isIos
+          ? AppConfig.tiktokIosAccessToken
+          : AppConfig.tiktokAndroidAccessToken)
+      .trim();
+  final ttAppId = (isIos
+          ? AppConfig.tiktokIosTtAppId
+          : AppConfig.tiktokAndroidTtAppId)
+      .trim();
+
+  if (appId.isEmpty || accessToken.isEmpty || ttAppId.isEmpty) {
+    debugPrint('TikTok Business SDK skipped: missing credentials in config');
+    return;
+  }
+
+  try {
+    await TiktokBusinessSdk().initTiktokBusinessSdk(
+      accessToken: accessToken,
+      appId: appId,
+      ttAppId: ttAppId,
+      openDebug: kDebugMode,
+      enableAutoIapTrack: true,
+    );
+    debugPrint('TikTok Business SDK initialized successfully [${ isIos ? "iOS" : "Android"}]');
+  } catch (e) {
+    debugPrint('TikTok Business SDK init error: $e');
   }
 }
 

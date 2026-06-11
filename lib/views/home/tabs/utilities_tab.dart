@@ -420,7 +420,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClie
       final now = DateTime.now();
       if ((_lastUtilityAdTime == null ||
               now.difference(_lastUtilityAdTime!) >
-                  const Duration(minutes: 15)) &&
+                  const Duration(minutes: 5)) &&
           !_adMob.hasRecentFullscreenAd()) {
         await _adMob.showInterstitialAd();
         _lastUtilityAdTime = DateTime.now();

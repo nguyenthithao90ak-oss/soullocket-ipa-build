@@ -12,6 +12,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
+import 'package:tiktok_business_sdk/tiktok_business_sdk_platform_interface.dart';
 
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
@@ -1318,6 +1320,13 @@ class AuthSignInService {
 
     if (!existingSnap.exists) {
       payload['createdAt'] = ServerValue.timestamp;
+      try {
+        TiktokBusinessSdk().trackTTEvent(
+          event: EventName.Registration,
+        );
+      } catch (e) {
+        debugPrint('Failed to track TikTok registration: $e');
+      }
     }
 
     await userRef.update(payload);

@@ -228,6 +228,34 @@ class AppConfig {
   static const String privacyPolicyUrl = '$webBaseUrl/privacy.html';
   static const String termsOfUseUrl = '$webBaseUrl/terms.html';
 
+  // ── TIKTOK ADS CONFIG (iOS) ─────────────────────────────────────────
+  static const String tiktokIosAppId = String.fromEnvironment(
+    'TIKTOK_IOS_APP_ID',
+    defaultValue: '6764673408',
+  );
+  static const String tiktokIosAccessToken = String.fromEnvironment(
+    'TIKTOK_IOS_ACCESS_TOKEN',
+    defaultValue: 'TTCucvMWfgFYehGYcH7s0UKRo0QDyHWC',
+  );
+  static const String tiktokIosTtAppId = String.fromEnvironment(
+    'TIKTOK_IOS_TT_APP_ID',
+    defaultValue: '7649979452251734034',
+  );
+
+  // ── TIKTOK ADS CONFIG (Android) ───────────────────────────────────
+  static const String tiktokAndroidAppId = String.fromEnvironment(
+    'TIKTOK_ANDROID_APP_ID',
+    defaultValue: 'com.soullocket.app',
+  );
+  static const String tiktokAndroidAccessToken = String.fromEnvironment(
+    'TIKTOK_ANDROID_ACCESS_TOKEN',
+    defaultValue: 'TTLOS5DXLTSh47Ya1BhGVQY5uP0VBklL',
+  );
+  static const String tiktokAndroidTtAppId = String.fromEnvironment(
+    'TIKTOK_ANDROID_TT_APP_ID',
+    defaultValue: '7649997394146230290',
+  );
+
   // ── TELEGRAM ALERTS ──────────────────────────────────────────────────
   static Uri webUri(
     String path, {
