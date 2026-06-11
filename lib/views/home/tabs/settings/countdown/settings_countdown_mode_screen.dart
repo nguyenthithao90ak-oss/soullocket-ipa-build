@@ -378,7 +378,7 @@ class _CountdownModeIndependentScreenState
                     return Stack(
                       children: [
                         SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
+                          physics: const ClampingScrollPhysics(),
                           padding: EdgeInsets.only(
                             top: constraints.maxHeight < 720 ? 28 : 36,
                             bottom: constraints.maxHeight < 720 ? 32 : 40,

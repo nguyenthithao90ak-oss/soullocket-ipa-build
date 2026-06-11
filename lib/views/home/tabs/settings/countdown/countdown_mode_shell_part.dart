@@ -273,7 +273,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                         Align(
                           alignment: Alignment.center,
                           child: SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),
+                            physics: const ClampingScrollPhysics(),
                             padding: EdgeInsets.fromLTRB(
                               24,
                               topPadding,

@@ -416,6 +416,7 @@ class _HomeScreenState extends State<HomeScreen>
   final _breakupService = BreakupService();
   late final List<_HomeTabBuilder> _tabBuilders;
   final Map<int, Widget> _tabPageCache = <int, Widget>{};
+  int _homeReloadCounter = 0;
   late final ValueNotifier<int> _activeTabIndexNotifier;
   late final ValueNotifier<int>
       _backgroundTabIndexNotifier; // ⚡ Thêm để tránh rebuild toàn bộ
@@ -478,6 +479,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    RoleUtils.roleNotifier.addListener(_handleGlobalRoleChanged);
     _currentIndex = widget.initialTab.clamp(0, _navItems.length - 1);
     _activeTabIndexNotifier = ValueNotifier<int>(_currentIndex);
     _backgroundTabIndexNotifier =
@@ -609,7 +611,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildTabPage(int index) {
     return _KeepAliveTabPage(
-      key: PageStorageKey<String>('home-tab-$index'),
+      key: PageStorageKey<String>('home-tab-$index-$_homeReloadCounter'),
       child: _TabActivationHost(
         tabIndex: index,
         activeIndexListenable: _activeTabIndexNotifier,
@@ -620,6 +622,14 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _tabPageForIndex(int index) {
     return _tabPageCache.putIfAbsent(index, () => _buildTabPage(index));
+  }
+
+  void _handleGlobalRoleChanged() {
+    if (!mounted) return;
+    setState(() {
+      _homeReloadCounter++;
+      _tabPageCache.clear();
+    });
   }
 
   void _handleMusicPlaybackChanged() {
@@ -887,6 +897,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    RoleUtils.roleNotifier.removeListener(_handleGlobalRoleChanged);
     _callSub?.cancel();
     _settingsSub?.cancel();
     _widgetActionSub?.cancel();

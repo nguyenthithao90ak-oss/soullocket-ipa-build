@@ -18,10 +18,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     with SingleTickerProviderStateMixin {
   late BumpDetector _bumpDetector;
   final SoulMergeService _mergeService = SoulMergeService();
-  StreamSubscription<DateTime?>? _partnerBumpSub;
-
-  DateTime? _myLastBump;
-  DateTime? _partnerLastBump;
+  StreamSubscription<Map<String, int>>? _mergeTimesSub;
 
   bool _isMerged = false;
   late AnimationController _pulseController;
@@ -45,33 +42,34 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     );
     _bumpDetector.start();
 
-    _partnerBumpSub = _mergeService.watchPartnerBump().listen((partnerTime) {
-      if (partnerTime == null) return;
-      _partnerLastBump = partnerTime;
-      _checkMatch();
+    // Clear previous bumps to start fresh
+    unawaited(_mergeService.clearBumps());
+
+    _mergeTimesSub = _mergeService.watchMergeTimes().listen((mergeTimes) {
+      debugPrint('[SoulMergeScreen] watchMergeTimes update: $mergeTimes');
+      if (mergeTimes.length >= 2) {
+        final uids = mergeTimes.keys.toList();
+        final time1 = mergeTimes[uids[0]]!;
+        final time2 = mergeTimes[uids[1]]!;
+        final diff = (time1 - time2).abs();
+        debugPrint('[SoulMergeScreen] Time diff between bumps: ${diff}ms');
+        // If bumped within 1.5 seconds of each other (using unified server timestamps)
+        if (diff < 1500) {
+          _triggerMerge();
+        }
+      }
     });
   }
 
   void _handleLocalBump() {
     if (_isMerged) return;
-    _myLastBump = DateTime.now();
+    debugPrint('[SoulMergeScreen] _handleLocalBump triggered (bump or tap)');
     _mergeService.reportBump();
     HapticFeedback.mediumImpact();
-    _checkMatch();
-  }
-
-  void _checkMatch() {
-    if (_isMerged) return;
-    if (_myLastBump != null && _partnerLastBump != null) {
-      final diff = _myLastBump!.difference(_partnerLastBump!).inMilliseconds.abs();
-      // If bumped within 1.5 seconds of each other
-      if (diff < 1500) {
-        _triggerMerge();
-      }
-    }
   }
 
   void _triggerMerge() {
+    debugPrint('[SoulMergeScreen] Merging triggered!');
     setState(() {
       _isMerged = true;
     });
@@ -89,8 +87,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   @override
   void dispose() {
     _bumpDetector.stop();
-    _partnerBumpSub?.cancel();
+    _mergeTimesSub?.cancel();
     _pulseController.dispose();
+    unawaited(_mergeService.clearBumps());
     super.dispose();
   }
 
@@ -126,26 +125,29 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ScaleTransition(
-                    scale: _pulseAnim,
-                    child: Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFF4F93).withValues(alpha: 0.5),
-                            blurRadius: 40,
-                            spreadRadius: 10,
+                  GestureDetector(
+                    onTap: _handleLocalBump,
+                    child: ScaleTransition(
+                      scale: _pulseAnim,
+                      child: Container(
+                        width: 180,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF4F93).withValues(alpha: 0.5),
+                              blurRadius: 40,
+                              spreadRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.favorite_rounded,
+                            color: Color(0xFFFF4F93),
+                            size: 100,
                           ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.favorite_rounded,
-                          color: Color(0xFFFF4F93),
-                          size: 100,
                         ),
                       ),
                     ),
@@ -162,14 +164,29 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      'Hãy mở màn hình này trên cả hai máy, sau đó cụng nhẹ hai điện thoại vào nhau để ghép nối linh hồn.',
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: 16,
-                        height: 1.5,
-                      ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Hãy mở màn hình này trên cả hai máy, sau đó cụng nhẹ hai điện thoại vào nhau để ghép nối linh hồn.',
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 16,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '*(Nếu thiết bị không hỗ trợ cảm biến, chạm trực tiếp vào hình trái tim trên cả 2 máy cùng lúc để ghép nối)*',
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            color: const Color(0xFFFF7FB2),
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

@@ -43,7 +43,7 @@ class PrivateMediaUrlService {
     if (user == null) {
       throw Exception('Vui lòng đăng nhập lại để xem nội dung này.');
     }
-    await user.getIdToken(true);
+    await user.getIdToken();
 
     final normalizedHouseId = houseId.trim();
     final normalizedMediaId = mediaId.trim();

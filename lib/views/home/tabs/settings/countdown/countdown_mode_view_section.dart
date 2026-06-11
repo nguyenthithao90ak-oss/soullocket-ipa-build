@@ -703,6 +703,7 @@ extension _CountdownModeIndependentScreenViewPart
                         Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
                       MediaQuery.of(sheetContext).size.width < 360 ? 14 : 18,
                       18,
@@ -874,13 +875,21 @@ extension _CountdownModeIndependentScreenViewPart
                               setSheetState(() => draftTransparent = value),
                           title: Text(context.tr('home_knhm_33b8ab')),
                         ),
-                        Slider(
-                          min: 200,
-                          max: UiPrefs.maxCountdownSizePx,
-                          value: draftSize.clamp(
-                              200.0, UiPrefs.maxCountdownSizePx),
-                          onChanged: (value) =>
-                              setSheetState(() => draftSize = value),
+                        StatefulBuilder(
+                          builder: (sheetContext, setSliderState) {
+                            return Slider(
+                              min: 200,
+                              max: UiPrefs.maxCountdownSizePx,
+                              value: draftSize.clamp(
+                                  200.0, UiPrefs.maxCountdownSizePx),
+                              onChanged: (value) {
+                                setSliderState(() {
+                                  draftSize = value;
+                                });
+                                draftSize = value;
+                              },
+                            );
+                          },
                         ),
                         const SizedBox(height: 10),
                         SizedBox(
@@ -1833,7 +1842,7 @@ extension _CountdownModeIndependentScreenViewPart
 
                       return GridView.builder(
                         padding: const EdgeInsets.only(bottom: 6),
-                        physics: const BouncingScrollPhysics(),
+                        physics: const ClampingScrollPhysics(),
                         itemCount: _spaceHouseIds.length + 1,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,

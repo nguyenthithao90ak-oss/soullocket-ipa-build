@@ -421,6 +421,29 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     );
   }
 
+  Widget _buildSubCard({
+    required List<Widget> children,
+    Color? backgroundColor,
+    Color? borderColor,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: borderColor ?? const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+
   Widget _buildPanel({
     required String id,
     required String title,
@@ -434,10 +457,21 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     final showBack = isStandalone && !hideBackButton;
     final showExpand = !isStandalone;
     return Container(
-      margin: isStandalone ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: isStandalone ? BorderRadius.zero : BorderRadius.circular(16),
+        color: Colors.white.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: borderColor.withValues(alpha: 0.18),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: borderColor.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,6 +61,8 @@ class SettingsSyncService {
 
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  Timer? _backupDebounceTimer;
+  Completer<void>? _backupCompleter;
 
   static const List<String> _syncKeys = [
     'il_theme_key',
@@ -101,6 +104,30 @@ class SettingsSyncService {
   ];
 
   Future<void> backupSettingsToCloud() async {
+    _backupDebounceTimer?.cancel();
+    if (_backupCompleter != null && !_backupCompleter!.isCompleted) {
+      _backupCompleter!.complete();
+    }
+    _backupCompleter = Completer<void>();
+    final activeCompleter = _backupCompleter!;
+
+    _backupDebounceTimer = Timer(const Duration(milliseconds: 2000), () async {
+      try {
+        await _executeBackupSettingsToCloud();
+        if (!activeCompleter.isCompleted) {
+          activeCompleter.complete();
+        }
+      } catch (e) {
+        if (!activeCompleter.isCompleted) {
+          activeCompleter.completeError(e);
+        }
+      }
+    });
+
+    return activeCompleter.future;
+  }
+
+  Future<void> _executeBackupSettingsToCloud() async {
     final user = _auth.currentUser;
     if (user == null) return;
 

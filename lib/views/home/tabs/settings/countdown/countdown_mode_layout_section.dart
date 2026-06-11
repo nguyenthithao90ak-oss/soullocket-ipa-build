@@ -146,6 +146,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                     border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
                       MediaQuery.of(sheetContext).size.width < 360 ? 14 : 18,
                       18,
@@ -317,13 +318,21 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                               setSheetState(() => draftTransparent = value),
                           title: const Text('Kính mờ'),
                         ),
-                        Slider(
-                          min: 200,
-                          max: UiPrefs.maxCountdownSizePx,
-                          value: draftSize.clamp(
-                              200.0, UiPrefs.maxCountdownSizePx),
-                          onChanged: (value) =>
-                              setSheetState(() => draftSize = value),
+                        StatefulBuilder(
+                          builder: (sheetContext, setSliderState) {
+                            return Slider(
+                              min: 200,
+                              max: UiPrefs.maxCountdownSizePx,
+                              value: draftSize.clamp(
+                                  200.0, UiPrefs.maxCountdownSizePx),
+                              onChanged: (value) {
+                                setSliderState(() {
+                                  draftSize = value;
+                                });
+                                draftSize = value;
+                              },
+                            );
+                          },
                         ),
                         const SizedBox(height: 10),
                         SizedBox(

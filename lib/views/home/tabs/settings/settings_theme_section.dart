@@ -354,6 +354,85 @@ extension _SettingsTabThemeSection on _SettingsTabState {
           (_draftCustomBackgroundUrl ?? ui.customBackgroundUrl).trim(),
     );
   }
+  Widget _buildThemeHeader(BuildContext context, {bool showBack = true}) {
+    const borderColor = Color(0xFFFF77A8);
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: borderColor.withValues(alpha: 0.25),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: borderColor.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          if (showBack) ...[
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF85A7), Color(0xFFFF5281)],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF5281).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.arrow_back_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      context.tr('home_quayli_69043b'),
+                      style: SLTheme.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+          Expanded(
+            child: Text(
+              '🎨 ${context.tr('theme_ui').toUpperCase()}',
+              style: SLTheme.quicksand(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFFD81B60),
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildThemePanel({bool hideBackButton = false}) {
     final config = _buildThemePanelConfig();
@@ -372,14 +451,15 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       builder: (context, ui, _) {
         final selection = _resolveThemePanelSelection(ui, config);
         _localCountdownSize = selection.countdownSize;
-        return _buildPanel(
-          hideBackButton: hideBackButton,
-          id: 'theme',
-          title: context.tr('theme_ui'),
-          borderColor: const Color(0xFFFF77A8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!hideBackButton) _buildThemeHeader(context, showBack: !hideBackButton),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               _ThemeSectionCard(
                 icon: Icons.aspect_ratio_rounded,
                 title: context.tr('theme_frame_size'),
@@ -1028,10 +1108,12 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               ),
             ],
           ),
-        );
-      },
+        ),
+      ],
     );
-  }
+  },
+);
+}
 
   // ignore: unused_element
   Widget _buildAIPanel({bool hideBackButton = false}) {
@@ -1064,76 +1146,90 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard> with SingleTickerP
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: widget.themeColor.withValues(alpha: 0.35),
+          width: 1.8,
         ),
-        child: ExpansionTile(
-          onExpansionChanged: (expanded) {
-            setState(() {
-              _isExpanded = expanded;
-            });
-          },
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  widget.themeColor,
-                  widget.themeColor.withValues(alpha: 0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: widget.themeColor.withValues(alpha: 0.3),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+        boxShadow: [
+          BoxShadow(
+            color: widget.themeColor.withValues(alpha: 0.10),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            dividerColor: Colors.transparent,
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+          ),
+          child: ExpansionTile(
+            onExpansionChanged: (expanded) {
+              setState(() {
+                _isExpanded = expanded;
+              });
+            },
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    widget.themeColor,
+                    widget.themeColor.withValues(alpha: 0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.themeColor.withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                widget.icon,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
-            child: Icon(
-              widget.icon,
-              color: Colors.white,
-              size: 18,
+            title: Text(
+              widget.title,
+              style: SLTheme.quicksand(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF1E293B),
+              ),
             ),
+            subtitle: Text(
+              widget.description,
+              style: SLTheme.quicksand(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+            trailing: Icon(
+              _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+              color: const Color(0xFF94A3B8),
+              size: 24,
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: widget.child,
+              ),
+            ],
           ),
-          title: Text(
-            widget.title,
-            style: SLTheme.quicksand(
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
-          subtitle: Text(
-            widget.description,
-            style: SLTheme.quicksand(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-          trailing: Icon(
-            _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-            color: const Color(0xFF94A3B8),
-            size: 24,
-          ),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: widget.child,
-            ),
-          ],
         ),
       ),
     );

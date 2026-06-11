@@ -35,6 +35,7 @@ class BumpDetector {
           final now = DateTime.now();
           if (_lastBumpTime == null || now.difference(_lastBumpTime!) > cooldown) {
             _lastBumpTime = now;
+            debugPrint('[BumpDetector] Bump detected! Acceleration: $acceleration');
             onBump();
           }
         }

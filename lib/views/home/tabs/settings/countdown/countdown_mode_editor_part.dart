@@ -728,7 +728,7 @@ class _CountdownModeEditorScreenState
                           constraints.maxWidth > 680 ? 620 : double.infinity,
                     ),
                     child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
+                      physics: const ClampingScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1289,25 +1289,37 @@ class _CountdownModeEditorScreenState
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                Text(
-                                  'Kích thước vòng đếm: ${_sizePx.round()}px',
-                                  style: SLTheme.quicksand(
-                                    fontSize: 12.8,
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF8A5B76),
-                                  ),
-                                ),
-                                Slider(
-                                  min: 200,
-                                  max: UiPrefs.maxCountdownSizePx,
-                                  activeColor: const Color(0xFFD81B60),
-                                  inactiveColor: const Color(0xFFF2C3D7),
-                                  value: _sizePx.clamp(
-                                    200.0,
-                                    UiPrefs.maxCountdownSizePx,
-                                  ),
-                                  onChanged: (value) =>
-                                      setState(() => _sizePx = value),
+                                StatefulBuilder(
+                                  builder: (context, setStateSlider) {
+                                    return Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Kích thước vòng đếm: ${_sizePx.round()}px',
+                                          style: SLTheme.quicksand(
+                                            fontSize: 12.8,
+                                            fontWeight: FontWeight.w800,
+                                            color: const Color(0xFF8A5B76),
+                                          ),
+                                        ),
+                                        Slider(
+                                          min: 200,
+                                          max: UiPrefs.maxCountdownSizePx,
+                                          activeColor: const Color(0xFFD81B60),
+                                          inactiveColor: const Color(0xFFF2C3D7),
+                                          value: _sizePx.clamp(
+                                            200.0,
+                                            UiPrefs.maxCountdownSizePx,
+                                          ),
+                                          onChanged: (value) {
+                                            setStateSlider(() {
+                                              _sizePx = value;
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
                               ],
                             ),

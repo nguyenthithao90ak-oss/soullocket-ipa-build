@@ -704,6 +704,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
     await prefs.setString('il_role', nextRole);
     await prefs.setString('il_user_name', _displayNameForRole(nextRole));
+    RoleUtils.roleNotifier.value = nextRole;
 
     final resolvedHouseId =
         (_houseId ?? await _houseService.getCurrentHouseId())?.trim();

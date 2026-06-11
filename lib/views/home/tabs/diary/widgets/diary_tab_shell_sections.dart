@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../../core/sl_theme.dart';
-import '../../../../../utils/services/export_service.dart';
 import '../diary_tab_btn.dart';
 
 class DiaryAccessLockedView extends StatelessWidget {
@@ -97,84 +96,6 @@ class DiaryHeaderSection extends StatelessWidget {
   }
 }
 
-class DiaryExportMenuButton extends StatelessWidget {
-  final String? houseId;
-
-  const DiaryExportMenuButton({
-    super.key,
-    required this.houseId,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFF7AA8),
-            Color(0xFFFF5E92),
-            Color(0xFF8ED08D),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF6A9F).withValues(alpha: 0.24),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.82), width: 1.2),
-      ),
-      child: IconButton(
-        tooltip: context.tr('home_xuthtml_c57dd1'),
-        padding: EdgeInsets.zero,
-        icon: const Icon(
-          Icons.ios_share_rounded,
-          color: Colors.white,
-          size: 20,
-        ),
-        onPressed: () async {
-          final resolvedHouseId = (houseId ?? '').trim();
-          if (resolvedHouseId.isEmpty) {
-            if (!context.mounted) {
-              return;
-            }
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(context.tr('home_chacmnhxut_151ec7')),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-            return;
-          }
-
-          try {
-            await ExportService().exportDiary(
-              houseId: resolvedHouseId,
-              format: DiaryExportFormat.html,
-            );
-          } catch (error) {
-            if (!context.mounted) {
-              return;
-            }
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(context.tr('home_chathxutdl_223d08')),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-        },
-      ),
-    );
-  }
-}
 
 class DiaryTabSectionSwitcher extends StatelessWidget {
   final String currentTab;

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -433,7 +434,7 @@ class UiPrefs {
     await prefs.setString(_kBrandMarkKey, normalized.brandMarkKey);
 
     try {
-      await SettingsSyncService().backupSettingsToCloud();
+      unawaited(SettingsSyncService().backupSettingsToCloud());
     } catch (_) {}
   }
 

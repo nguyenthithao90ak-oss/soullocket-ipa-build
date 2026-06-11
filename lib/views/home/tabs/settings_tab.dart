@@ -79,6 +79,7 @@ import '../../../utils/services/critical_data_sync_service.dart';
 import '../../../utils/services/house_service.dart';
 import '../../../utils/services/military_lock_service.dart';
 import '../../../utils/services/push_notification_helper.dart';
+import '../../../utils/services/role_utils.dart';
 import '../../../utils/services/qr_payload_codec.dart';
 import '../../../utils/services/sound_service.dart';
 import '../../../utils/services/utility_service.dart';

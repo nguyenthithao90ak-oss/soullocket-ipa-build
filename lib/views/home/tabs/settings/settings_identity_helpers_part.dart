@@ -295,7 +295,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         ),
       );
       if (_houseId != null) {
-        await _dbRef.child('houses/$_houseId/settings').update({
+        final updateFuture = _dbRef.child('houses/$_houseId/settings').update({
           'theme': themeKey,
           'fallingEffect': effectKey,
           'avatarSizePx': avatarSizePx,
@@ -309,6 +309,9 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
           'transparentMode': transparentMode,
           'updatedAt': ServerValue.timestamp,
         });
+        if (!silent) {
+          await updateFuture;
+        }
       }
 
       if (oldSavedUrl.isNotEmpty && oldSavedUrl != customBackgroundUrl) {

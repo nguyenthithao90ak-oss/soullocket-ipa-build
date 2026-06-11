@@ -68,35 +68,48 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required Color backgroundColor,
     required List<Widget> children,
   }) {
+    final cardBg = backgroundColor == Colors.white ? const Color(0xFFF8FAFC) : backgroundColor;
+    final borderTint = borderColor == Colors.transparent ? const Color(0xFFE2E8F0) : borderColor;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: borderTint.withValues(alpha: 0.18),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: borderTint.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              title,
-              style: SLTheme.quicksand(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                color: borderColor == Colors.transparent ? const Color(0xFFD81B60) : borderColor.withValues(alpha: 0.95),
-              ),
+          Text(
+            title,
+            style: SLTheme.quicksand(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: borderColor == Colors.transparent ? const Color(0xFFD81B60) : borderColor.withValues(alpha: 0.95),
             ),
           ),
           if (subtitle != null && subtitle.trim().isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                subtitle,
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF7A6A74),
-                  height: 1.45,
-                ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: SLTheme.quicksand(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF7A6A74),
+                height: 1.4,
               ),
             ),
           ],
