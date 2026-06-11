@@ -224,6 +224,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final Map<String, Future<String?>> _weatherReverseGeocodeInFlight =
       <String, Future<String?>>{};
   Timer? _interactionRotationTimer;
+  final List<String> _rotationQueue = [];
   Map<String, dynamic>? _pendingWidgetSettings;
   bool _pendingWidgetSyncIncludeDiaryMedia = false;
   bool _widgetSyncInFlight = false;
@@ -239,7 +240,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   List<String> _recentChatSignals = [];
   _PartnerInteractionPreset _smartInteractionPreset =
       _defaultSmartInteractionPreset();
-  bool _showDefaultHeartSuggestion = true;
+  bool _showDefaultHeartSuggestion = false;
   String? _manualInteractionPresetType;
   bool _incomingInteractionDialogVisible = false;
   final List<_MissYouAlertPayload> _incomingInteractionQueue =

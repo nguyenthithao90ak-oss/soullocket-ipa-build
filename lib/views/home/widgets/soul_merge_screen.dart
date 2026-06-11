@@ -3,9 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../utils/helpers/bump_detector.dart';
 import '../../../utils/services/soul_merge_service.dart';
+import '../../../utils/services/house_service.dart';
+import '../../../utils/services/notification_service.dart';
 import '../../../core/sl_theme.dart';
 
 class SoulMergeScreen extends StatefulWidget {
@@ -32,6 +36,18 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   Timer? _explosionTimer;
   final math.Random _random = math.Random();
 
+  String? _houseId;
+  String _partnerName = 'Người ấy';
+  String _myName = 'Người ấy';
+  bool _iHaveBumped = false;
+  bool _partnerHasBumped = false;
+  bool _notificationSent = false;
+
+  // Tiny flying hearts on tap
+  final List<TinyHeart> _tapHearts = [];
+  Timer? _tapAnimationTimer;
+  double _interactiveScale = 1.0;
+
   @override
   void initState() {
     super.initState();
@@ -52,9 +68,32 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
     // Clear previous bumps to start fresh
     unawaited(_mergeService.clearBumps());
+    _initUserInfo();
 
     _mergeTimesSub = _mergeService.watchMergeTimes().listen((mergeTimes) {
       debugPrint('[SoulMergeScreen] watchMergeTimes update: $mergeTimes');
+      
+      final myUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      bool iBumped = false;
+      bool partnerBumped = false;
+      
+      if (mergeTimes.containsKey(myUid)) {
+        iBumped = true;
+      }
+      
+      for (final key in mergeTimes.keys) {
+        if (key != myUid) {
+          partnerBumped = true;
+        }
+      }
+      
+      if (mounted) {
+        setState(() {
+          _iHaveBumped = iBumped;
+          _partnerHasBumped = partnerBumped;
+        });
+      }
+
       if (mergeTimes.length >= 2) {
         final uids = mergeTimes.keys.toList();
         final time1 = mergeTimes[uids[0]]!;
@@ -74,6 +113,189 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     debugPrint('[SoulMergeScreen] _handleLocalBump triggered (bump or tap)');
     _mergeService.reportBump();
     HapticFeedback.mediumImpact();
+    
+    // Spawn hearts from center on physical bump if not already tapping
+    if (_tapHearts.isEmpty) {
+      final size = MediaQuery.of(context).size;
+      _spawnTapExplosion(Offset(size.width / 2, size.height / 2));
+    }
+  }
+
+  Future<void> _initUserInfo() async {
+    try {
+      _houseId = await _mergeService.getCurrentHouseId();
+      if (_houseId != null && _houseId!.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final myRole = prefs.getString('il_role') ?? 'user1';
+        final partnerRole = myRole == 'user2' ? 'user1' : 'user2';
+        
+        final defaultMyName = myRole == 'user2' ? 'bạn nữ' : 'bạn nam';
+        final defaultPartnerName = partnerRole == 'user2' ? 'bạn nữ' : 'bạn nam';
+        setState(() {
+          _myName = defaultMyName;
+          _partnerName = defaultPartnerName;
+        });
+
+        final settings = await HouseService().getHouseSettings(_houseId!);
+        if (settings != null) {
+          final myNameKey = myRole == 'user2' ? 'nameU2' : 'nameU1';
+          final myCustomName = settings[myNameKey]?.toString().trim() ?? '';
+          if (myCustomName.isNotEmpty) {
+            setState(() {
+              _myName = myCustomName;
+            });
+          }
+
+          final partnerNameKey = partnerRole == 'user2' ? 'nameU2' : 'nameU1';
+          final name = settings[partnerNameKey]?.toString().trim() ?? '';
+          if (name.isNotEmpty) {
+            setState(() {
+              _partnerName = name;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[SoulMergeScreen] _initUserInfo error: $e');
+    }
+  }
+
+  void _spawnTapExplosion(Offset globalPosition) {
+    final colors = [
+      const Color(0xFFFF4F93),
+      const Color(0xFFFF8E53),
+      const Color(0xFFFFEA79),
+      const Color(0xFFFFB2D6),
+    ];
+    
+    try {
+      final RenderBox renderBox = context.findRenderObject() as RenderBox;
+      final localPosition = renderBox.globalToLocal(globalPosition);
+
+      final random = math.Random();
+      for (int i = 0; i < 8; i++) {
+        final angle = random.nextDouble() * math.pi * 2;
+        final speed = 1.5 + random.nextDouble() * 3.0;
+        final size = 12.0 + random.nextDouble() * 16.0;
+        _tapHearts.add(
+          TinyHeart(
+            x: localPosition.dx,
+            y: localPosition.dy,
+            angle: angle,
+            speed: speed,
+            size: size,
+            color: colors[random.nextInt(colors.length)],
+          ),
+        );
+      }
+      _startTapAnimationLoop();
+    } catch (e) {
+      debugPrint('[SoulMergeScreen] _spawnTapExplosion error: $e');
+    }
+  }
+
+  void _startTapAnimationLoop() {
+    if (_tapAnimationTimer != null && _tapAnimationTimer!.isActive) return;
+    
+    _tapAnimationTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (!mounted || _tapHearts.isEmpty) {
+        timer.cancel();
+        return;
+      }
+      
+      setState(() {
+        for (int i = _tapHearts.length - 1; i >= 0; i--) {
+          final heart = _tapHearts[i];
+          heart.x += math.cos(heart.angle) * heart.speed;
+          heart.y += math.sin(heart.angle) * heart.speed - 1.2; // float upwards
+          heart.opacity -= 0.02;
+          if (heart.opacity <= 0) {
+            _tapHearts.removeAt(i);
+          }
+        }
+      });
+    });
+  }
+
+  void _sendAutoNotification() async {
+    if (_notificationSent) return;
+    if (_partnerHasBumped) return;
+    if (_houseId == null || _houseId!.isEmpty) return;
+    
+    _notificationSent = true;
+    await NotificationService().sendPartnerNotification(
+      houseId: _houseId!,
+      title: '💕 $_myName đang nhớ bạn!',
+      body: 'Mở Soul Locket để ghép đôi tâm hồn cùng $_myName ngay nhé! 💖',
+      data: const {'screen': 'soul_merge', 'type': 'soul_merge'},
+    );
+    debugPrint('[SoulMergeScreen] Automatic partner notification sent.');
+  }
+
+  void _sendManualNudgeNotification() async {
+    if (_houseId == null || _houseId!.isEmpty) return;
+    
+    await NotificationService().sendPartnerNotification(
+      houseId: _houseId!,
+      title: '💕 Bạn ơi, $_myName đang nhớ bạn!',
+      body: '$_myName đang đợi bạn chạm vào trái tim để ghép đôi tâm hồn trong ứng dụng đó! 💖',
+      data: const {'screen': 'soul_merge', 'type': 'soul_merge'},
+    );
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Đã gửi tín hiệu nhớ thương đến $_partnerName! 💕',
+            style: SLTheme.quicksand(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: const Color(0xFFFF4F93),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    setState(() {
+      _interactiveScale = 0.9;
+    });
+    _spawnTapExplosion(details.globalPosition);
+    _handleLocalBump();
+    _sendAutoNotification();
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    setState(() {
+      _interactiveScale = 1.0;
+    });
+  }
+
+  void _onTapCancel() {
+    setState(() {
+      _interactiveScale = 1.0;
+    });
+  }
+
+  String _getConnectionStatusText() {
+    if (!_iHaveBumped && !_partnerHasBumped) {
+      return 'Đang chờ hai bạn chạm... 💫';
+    } else if (_iHaveBumped && !_partnerHasBumped) {
+      return 'Bạn đã chạm! Đang chờ $_partnerName chạm cùng lúc... 💕';
+    } else if (!_iHaveBumped && _partnerHasBumped) {
+      return '$_partnerName đã chạm! Chạm vào trái tim để kết nối ngay nhé! 💞';
+    } else {
+      return 'Đang kết nối... 💖';
+    }
+  }
+
+  Color _getConnectionStatusColor() {
+    if (_iHaveBumped || _partnerHasBumped) {
+      return const Color(0xFFFF7FB2);
+    }
+    return Colors.white70;
   }
 
   Future<List<String>> _fetchMemoryUrls() async {
@@ -195,6 +417,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _mergeTimesSub?.cancel();
     _pulseController.dispose();
     _explosionTimer?.cancel();
+    _tapAnimationTimer?.cancel();
     unawaited(_mergeService.clearBumps());
     super.dispose();
   }
@@ -226,39 +449,63 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             ),
           ),
           
+          // Flying tap hearts
+          for (final heart in _tapHearts)
+            Positioned(
+              left: heart.x - (heart.size / 2),
+              top: heart.y - (heart.size / 2),
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: heart.opacity.clamp(0.0, 1.0),
+                  child: Icon(
+                    Icons.favorite_rounded,
+                    color: heart.color,
+                    size: heart.size,
+                  ),
+                ),
+              ),
+            ),
+          
           if (!_isMerged)
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   GestureDetector(
-                    onTap: _handleLocalBump,
-                    child: ScaleTransition(
-                      scale: _pulseAnim,
-                      child: Container(
-                        width: 180,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF4F93).withValues(alpha: 0.5),
-                              blurRadius: 40,
-                              spreadRadius: 10,
+                    onTapDown: _onTapDown,
+                    onTapUp: _onTapUp,
+                    onTapCancel: _onTapCancel,
+                    child: AnimatedScale(
+                      scale: _interactiveScale,
+                      duration: const Duration(milliseconds: 100),
+                      curve: Curves.easeOut,
+                      child: ScaleTransition(
+                        scale: _pulseAnim,
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF4F93).withValues(alpha: 0.5),
+                                blurRadius: 40,
+                                spreadRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.favorite_rounded,
+                              color: Color(0xFFFF4F93),
+                              size: 100,
                             ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.favorite_rounded,
-                            color: Color(0xFFFF4F93),
-                            size: 100,
                           ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 50),
                   Text(
                     'Soul Merge',
                     style: SLTheme.quicksand(
@@ -267,7 +514,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Column(
@@ -277,21 +524,61 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                           textAlign: TextAlign.center,
                           style: SLTheme.quicksand(
                             color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 16,
+                            fontSize: 15,
                             height: 1.5,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         Text(
                           '*(Nếu thiết bị không hỗ trợ cảm biến, chạm trực tiếp vào hình trái tim trên cả 2 máy cùng lúc để ghép nối)*',
                           textAlign: TextAlign.center,
                           style: SLTheme.quicksand(
                             color: const Color(0xFFFF7FB2),
-                            fontSize: 13,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                             height: 1.4,
                           ),
                         ),
+                        const SizedBox(height: 24),
+                        // Connection Status Line
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          child: Text(
+                            _getConnectionStatusText(),
+                            textAlign: TextAlign.center,
+                            style: SLTheme.quicksand(
+                              color: _getConnectionStatusColor(),
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        if (!_partnerHasBumped && _houseId != null && _houseId!.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: _sendManualNudgeNotification,
+                            icon: const Icon(Icons.favorite_rounded, size: 14),
+                            label: Text(
+                              'Nhắc $_partnerName chạm',
+                              style: SLTheme.quicksand(
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                                fontSize: 13,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFFFF7FB2),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -606,4 +893,24 @@ class _ParticlePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class TinyHeart {
+  final double angle;
+  final double speed;
+  final double size;
+  final Color color;
+  final UniqueKey id = UniqueKey();
+  double x;
+  double y;
+  double opacity = 1.0;
+
+  TinyHeart({
+    required this.x,
+    required this.y,
+    required this.angle,
+    required this.speed,
+    required this.size,
+    required this.color,
+  });
 }

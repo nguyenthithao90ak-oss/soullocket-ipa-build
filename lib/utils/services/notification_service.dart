@@ -15,6 +15,7 @@ import 'package:soullocket_app/views/app_entry.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
 import 'package:soullocket_app/views/chat/watch_together_screen.dart';
 import 'package:soullocket_app/views/home/home_screen.dart';
+import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/views/utilities/creative_diary_screen.dart';
 import 'package:soullocket_app/views/utilities/cinema_screen.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
@@ -338,6 +339,9 @@ class NotificationService {
         break;
       case 'creative_diary':
         destination = const CreativeDiaryScreen();
+        break;
+      case 'soul_merge':
+        destination = const SoulMergeScreen();
         break;
       case 'feed':
         destination = const HomeScreen(initialTab: 1);

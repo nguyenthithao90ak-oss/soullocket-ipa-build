@@ -225,7 +225,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
   ),
 ];
 
-const Duration _kInteractionSuggestionRefreshInterval = Duration(minutes: 2);
+const Duration _kInteractionSuggestionRefreshInterval = Duration(minutes: 1);
 const int _kReactionThrowBurstLimit = 30;
 const Duration _kReactionThrowWindow = Duration(seconds: 15);
 const Duration _kReactionFlightMaxReplayAge = Duration(seconds: 45);

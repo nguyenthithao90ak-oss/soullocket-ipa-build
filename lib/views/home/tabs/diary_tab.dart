@@ -577,157 +577,6 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     );
   }
 
-  Future<List<String>> _findActiveMemoryShareTokensForPhoto(
-    Map<String, dynamic> item,
-  ) async {
-    final houseId = _houseId?.trim() ?? '';
-    final photoId = item['id']?.toString().trim() ?? '';
-    if (houseId.isEmpty || photoId.isEmpty) {
-      return const <String>[];
-    }
-
-    final sharesIndexSnap = await FirebaseDatabase.instance
-        .ref('houses/$houseId/memoryShares')
-        .get();
-    if (!sharesIndexSnap.exists || sharesIndexSnap.value is! Map) {
-      return const <String>[];
-    }
-
-    final shareIndex = Map<dynamic, dynamic>.from(
-        sharesIndexSnap.value as Map<dynamic, dynamic>);
-    if (shareIndex.isEmpty) {
-      return const <String>[];
-    }
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final tokens = <String>[];
-    for (final entry in shareIndex.entries) {
-      final token = entry.key?.toString().trim() ?? '';
-      if (token.isEmpty) {
-        continue;
-      }
-      final shareMeta = entry.value is Map
-          ? Map<dynamic, dynamic>.from(entry.value as Map)
-          : const <dynamic, dynamic>{};
-      final revoked = shareMeta['revoked'] == true;
-      final expiresAt = (shareMeta['expiresAt'] as num?)?.toInt() ?? 0;
-      if (revoked || (expiresAt > 0 && expiresAt <= now)) {
-        continue;
-      }
-
-      final shareSnap =
-          await FirebaseDatabase.instance.ref('memory_shares/$token').get();
-      if (!shareSnap.exists || shareSnap.value is! Map) {
-        continue;
-      }
-      final share =
-          Map<dynamic, dynamic>.from(shareSnap.value as Map<dynamic, dynamic>);
-      if (share['revoked'] == true) {
-        continue;
-      }
-      final rootExpiresAt = (share['expiresAt'] as num?)?.toInt() ?? 0;
-      if (rootExpiresAt > 0 && rootExpiresAt <= now) {
-        continue;
-      }
-      final photos = share['photos'];
-      if (photos is! List) {
-        continue;
-      }
-      final containsPhoto = photos.any((photo) {
-        if (photo is! Map) {
-          return false;
-        }
-        final normalized = Map<dynamic, dynamic>.from(photo);
-        return (normalized['id']?.toString().trim() ?? '') == photoId;
-      });
-      if (containsPhoto) {
-        tokens.add(token);
-      }
-    }
-    return tokens;
-  }
-
-  Future<void> _revokeMemoryShareLinksForPhoto(
-    BuildContext dialogContext,
-    Map<String, dynamic> item,
-  ) async {
-    final tokens = await _findActiveMemoryShareTokensForPhoto(item);
-    if (tokens.isEmpty) {
-      _showDiarySnackBar(
-        context.tr('home_nhnyhincha_0362e9'),
-        backgroundColor: const Color(0xFFE53935),
-      );
-      return;
-    }
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          context.tr('home_thuhilinkt_d5bcf0'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
-        content: Text(
-          tokens.length > 1
-              ? 'Ảnh này đang nằm trong ${tokens.length} liên kết chia sẻ còn hiệu lực. Thu hồi tất cả các liên kết này?'
-              : context.tr('home_nhnyangc1l_3d102c'),
-          style: SLTheme.quicksand(height: 1.4),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(context.tr('home_hy_1e4050')),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: Text(context.tr('home_thuhi_b8c669')),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) {
-      return;
-    }
-
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-
-    try {
-      for (final token in tokens) {
-        await _memoryShareService.revokeShareLink(token);
-      }
-      if (!mounted) {
-        return;
-      }
-      Navigator.of(context).pop();
-      Navigator.of(dialogContext).pop();
-      _showDiarySnackBar(
-        tokens.length > 1
-            ? 'Đã thu hồi ${tokens.length} liên kết chia sẻ của ảnh này.'
-            : context.tr('home_thuhilinkt_e806cf'),
-      );
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      Navigator.of(context).pop();
-      _showDiarySnackBar(
-        AppErrorMapper.resolve(
-          error,
-          fallbackMessage: context.tr('home_khngththuh_4e5dfa'),
-        ).message,
-        backgroundColor: const Color(0xFFE53935),
-      );
-    }
-  }
-
   Future<void> _showMemoryViewerActions(
     BuildContext dialogContext,
     Map<String, dynamic> item,
@@ -751,7 +600,7 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                 onTap: () => Navigator.of(sheetContext).pop('save'),
               ),
               ListTile(
-                leading: const Icon(Icons.ios_share_rounded),
+                leading: const Icon(Icons.link_rounded),
                 title: Text(context.tr('home_chiasnh_003604')),
                 onTap: () => Navigator.of(sheetContext).pop('share'),
               ),
@@ -1417,7 +1266,7 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                 child: Row(
                                   children: [
                                     const Icon(
-                                      Icons.ios_share_rounded,
+                                      Icons.link_rounded,
                                       color: Colors.white,
                                       size: 19,
                                     ),
@@ -1452,28 +1301,7 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                   ],
                                 ),
                               ),
-                              if ((currentItem['id']?.toString().trim() ?? '')
-                                  .isNotEmpty)
-                                PopupMenuItem<String>(
-                                  value: 'revoke_share',
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.link_off_rounded,
-                                        color: Color(0xFFFFB074),
-                                        size: 19,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        context.tr('home_thuhilinkt_8e3e83'),
-                                        style: SLTheme.quicksand(
-                                          color: const Color(0xFFFFB074),
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+
                               PopupMenuItem<String>(
                                 value: 'delete',
                                 child: Row(
@@ -1508,12 +1336,6 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                 case 'info':
                                   await _showMemoryInfoSheet(
                                       dialogContext, currentItem);
-                                  break;
-                                case 'revoke_share':
-                                  await _revokeMemoryShareLinksForPhoto(
-                                    dialogContext,
-                                    currentItem,
-                                  );
                                   break;
                                 case 'delete':
                                   Navigator.pop(dialogContext);
