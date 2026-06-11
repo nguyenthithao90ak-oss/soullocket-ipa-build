@@ -96,12 +96,14 @@ class _TabActivationHost extends StatefulWidget {
 
 class _TabActivationHostState extends State<_TabActivationHost> {
   late bool _isActive;
+  Widget? _cachedChild;
 
   @override
   void initState() {
     super.initState();
     _isActive = widget.activeIndexListenable.value == widget.tabIndex;
     widget.activeIndexListenable.addListener(_onActiveIndexChanged);
+    _cachedChild = widget.builder(_isActive);
   }
 
   @override
@@ -112,6 +114,10 @@ class _TabActivationHostState extends State<_TabActivationHost> {
       oldWidget.activeIndexListenable.removeListener(_onActiveIndexChanged);
       _isActive = widget.activeIndexListenable.value == widget.tabIndex;
       widget.activeIndexListenable.addListener(_onActiveIndexChanged);
+    }
+    // Update cache if the builder itself changes (e.g., from a hot reload or parent rebuild)
+    if (oldWidget.builder != widget.builder) {
+      _cachedChild = widget.builder(_isActive);
     }
   }
 
@@ -126,6 +132,7 @@ class _TabActivationHostState extends State<_TabActivationHost> {
     if (_isActive != nextActive) {
       setState(() {
         _isActive = nextActive;
+        // Do NOT update _cachedChild here! This prevents heavy tab rebuilds during swipe.
       });
     }
   }
@@ -134,7 +141,7 @@ class _TabActivationHostState extends State<_TabActivationHost> {
   Widget build(BuildContext context) {
     return TickerMode(
       enabled: _isActive,
-      child: widget.builder(_isActive),
+      child: _cachedChild ?? widget.builder(_isActive),
     );
   }
 }

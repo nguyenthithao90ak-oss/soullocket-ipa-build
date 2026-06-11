@@ -181,6 +181,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   String? _houseId;
   String _currentRole = 'user1';
   String? _uploadingAvatarRole;
+  double? _avatarUploadProgress;
   bool _didPromptPendingAvatarRetry = false;
   String _homeDistanceText = 'Đang định vị...';
   String? _homeMapAlert;
@@ -1324,7 +1325,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     final role = isUser1 ? 'user1' : 'user2';
     final field = isUser1 ? 'avtUser1' : 'avtUser2';
     final pendingKey = _pendingAvatarUploadKeyForHouse(houseId);
-    setState(() => _uploadingAvatarRole = role);
+    setState(() {
+      _uploadingAvatarRole = role;
+      _avatarUploadProgress = 0.0;
+    });
 
     try {
       if (presetFile == null) {
@@ -1345,6 +1349,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         quality: 84,
         minWidth: 512,
         minHeight: 512,
+        onProgress: (p) {
+          if (mounted) {
+            setState(() => _avatarUploadProgress = p);
+          }
+        },
       );
       final sessionId = upload?.sessionId?.trim() ?? '';
       final url = upload?.downloadUrl.trim() ?? '';
@@ -1362,10 +1371,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       await PendingUploadService.instance.clear(pendingKey);
 
       if (mounted) {
-        if (!mounted) return;
         setState(() {
           _houseSettings ??= {};
           _houseSettings![field] = url;
+          _avatarUploadProgress = 1.0;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1391,7 +1400,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       }
     } finally {
       if (mounted) {
-        setState(() => _uploadingAvatarRole = null);
+        setState(() {
+          _uploadingAvatarRole = null;
+          _avatarUploadProgress = null;
+        });
       }
     }
   }

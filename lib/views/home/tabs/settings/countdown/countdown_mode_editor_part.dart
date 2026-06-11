@@ -160,7 +160,6 @@ class _CountdownModeEditorScreenState
   String? _uploadingAvatarRole;
   double? _avatarUploadProgress;
   bool _isUploadingBackground = false;
-  double? _backgroundUploadProgress;
   bool _isUnlockingCountdownStyle = false;
   bool _didPromptPendingUploadRetry = false;
   Set<String> _unlockedStyles = {};
@@ -628,7 +627,7 @@ class _CountdownModeEditorScreenState
         minWidth: 900,
         minHeight: 900,
         onProgress: (p) {
-          if (mounted) setState(() => _backgroundUploadProgress = p);
+          // Progress updates can be handled here when UI is ready
         },
       );
       if (!mounted || url == null || url.trim().isEmpty) {
@@ -652,7 +651,6 @@ class _CountdownModeEditorScreenState
       if (mounted) {
         setState(() {
           _isUploadingBackground = false;
-          _backgroundUploadProgress = null;
         });
       }
     }

@@ -43,6 +43,7 @@ import '../../utilities/calculator_screen.dart';
 import '../../utilities/creative_diary_screen.dart';
 import '../../utilities/sticker_library_screen.dart';
 import '../../utilities/utility_sticker_icon.dart';
+import '../../utilities/health_screen.dart';
 
 // import '../../utils/sl_notice.dart';
 
@@ -543,6 +544,9 @@ class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClie
         break;
       case 'creative_diary':
         screen = CreativeDiaryScreen(houseId: houseId);
+        break;
+      case 'health':
+        screen = HealthScreen(houseId: houseId);
         break;
     }
     if (screen != null) {

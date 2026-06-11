@@ -709,23 +709,5 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
     );
   }
 
-  Widget _buildThemeFieldCaption(String label, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 6),
-      child: Row(
-        children: [
-          Icon(icon, size: 14, color: const Color(0xFFD81B60)),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: SLTheme.quicksand(
-              fontSize: 11.6,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF8A5B76),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

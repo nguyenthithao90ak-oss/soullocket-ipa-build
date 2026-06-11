@@ -29,6 +29,7 @@ typedef StorageSignedUploadExecutor = Future<void> Function({
   required String uploadUrl,
   required Uint8List bytes,
   required Map<String, String> headers,
+  ValueChanged<double>? onProgress,
 });
 
 class StorageSignedUploadRequest {
@@ -42,6 +43,7 @@ class StorageSignedUploadRequest {
     required this.errorLabel,
     required this.errorMessage,
     required this.mapResult,
+    this.onProgress,
   });
 
   final XFile file;
@@ -53,6 +55,7 @@ class StorageSignedUploadRequest {
   final String errorLabel;
   final String errorMessage;
   final StorageSignedResultMapper mapResult;
+  final ValueChanged<double>? onProgress;
 }
 
 class StorageSignedUploadHelper {
@@ -81,11 +84,14 @@ class StorageSignedUploadHelper {
 
       if (!kIsWeb && request.file.path.isNotEmpty && fileExtension != '.gif') {
         try {
+          if (request.onProgress != null) request.onProgress!(0.05);
           final tempDir = await getTemporaryDirectory();
           tempCompressedPath = p.join(
             tempDir.path,
             '${request.tempPrefix}_${nowMs}_${DateTime.now().microsecondsSinceEpoch}.webp',
           );
+
+          if (request.onProgress != null) request.onProgress!(0.1);
 
           final compressedFile = await FlutterImageCompress.compressAndGetFile(
             request.file.path,
@@ -95,6 +101,8 @@ class StorageSignedUploadHelper {
             quality: request.quality,
             format: CompressFormat.webp,
           );
+
+          if (request.onProgress != null) request.onProgress!(0.35);
 
           if (compressedFile != null) {
             uploadFile = compressedFile;
@@ -117,6 +125,8 @@ class StorageSignedUploadHelper {
         fileExtension = '.jpg';
       }
 
+      if (request.onProgress != null) request.onProgress!(0.4);
+
       try {
         final uploadBytes = await uploadFile.readAsBytes();
         final preferredFileName = p.basename(
@@ -131,7 +141,12 @@ class StorageSignedUploadHelper {
           uploadUrl: session['uploadUrl'].toString(),
           bytes: uploadBytes,
           headers: headers,
+          onProgress: request.onProgress != null 
+              ? (p) => request.onProgress!(0.4 + (p * 0.6))
+              : null,
         );
+
+        if (request.onProgress != null) request.onProgress!(1.0);
 
         final blurHash = await BlurHashHelper.generateBlurHashFromBytes(uploadBytes);
         final sessionWithBlur = Map<String, dynamic>.from(session);

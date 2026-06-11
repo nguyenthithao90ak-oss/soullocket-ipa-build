@@ -1072,16 +1072,30 @@ class StorageService {
     required String uploadUrl,
     required Uint8List bytes,
     required Map<String, String> headers,
+    ValueChanged<double>? onProgress,
   }) async {
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
-        final response = await http
-            .put(
-              Uri.parse(uploadUrl),
-              headers: headers,
-              body: bytes,
-            )
-            .timeout(const Duration(minutes: 2));
+        final request = http.StreamedRequest('PUT', Uri.parse(uploadUrl));
+        request.headers.addAll(headers);
+        request.contentLength = bytes.length;
+
+        () async {
+          try {
+            final chunkSize = 64 * 1024; // 64KB per chunk
+            for (var i = 0; i < bytes.length; i += chunkSize) {
+              final end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
+              request.sink.add(bytes.sublist(i, end));
+              if (onProgress != null) onProgress(end / bytes.length);
+              await Future.delayed(const Duration(milliseconds: 2));
+            }
+          } finally {
+            request.sink.close();
+          }
+        }();
+
+        final streamedResponse = await request.send().timeout(const Duration(minutes: 2));
+        final response = await http.Response.fromStream(streamedResponse);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return;
@@ -1270,23 +1284,31 @@ class StorageService {
     int minWidth = 1080,
     int minHeight = 1080,
     int quality = 75,
+    ValueChanged<double>? onProgress,
   }) {
     return _uploadSignedImageWithCompression(
-      file: file,
-      sessionBuilder: (contentType, preferredFileName) =>
-          _createPublicImageUploadSession(
-        houseId: houseId,
-        target: target,
-        contentType: contentType,
-        fileName: preferredFileName,
+      request: StorageSignedUploadRequest(
+        file: file,
+        sessionBuilder: (contentType, preferredFileName) =>
+            _createPublicImageUploadSession(
+          houseId: houseId,
+          target: target,
+          contentType: contentType,
+          fileName: preferredFileName,
+        ),
+        minWidth: minWidth,
+        minHeight: minHeight,
+        quality: quality,
+        tempPrefix: 'sl_public',
+        errorLabel: 'Public image',
+        mapResult: mapPublicStorageUploadResult,
+        errorMessage: 'Không thể tải ảnh công khai lên máy chủ.',
+        onProgress: onProgress,
       ),
-      minWidth: minWidth,
-      minHeight: minHeight,
-      quality: quality,
-      tempPrefix: 'sl_public',
-      errorLabel: 'Public image',
-      mapResult: mapPublicStorageUploadResult,
-      errorMessage: 'Không thể tải ảnh công khai lên máy chủ.',
+      requireCurrentUid: _requireCurrentUid,
+      detectContentType: detectContentType,
+      stringMapFromDynamicMap: _stringMapFromDynamicMap,
+      uploadBytesToSignedUrl: _uploadBytesToSignedUrl,
     );
   }
 

@@ -193,6 +193,7 @@ class _CountdownModeIndependentScreenState
   bool _spaceChromeVisible = true;
   Set<String> _unlockedCountdownStyleKeys = <String>{};
   String? _uploadingAvatarRole;
+  double? _avatarUploadProgress;
   bool _didPromptPendingSpaceAvatarRetry = false;
 
   @override
