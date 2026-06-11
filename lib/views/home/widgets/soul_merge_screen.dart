@@ -162,10 +162,11 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   void _spawnTapExplosion(Offset globalPosition) {
     final colors = [
-      const Color(0xFFFF4F93),
-      const Color(0xFFFF8E53),
-      const Color(0xFFFFEA79),
-      const Color(0xFFFFB2D6),
+      const Color(0xFFFFB7D5),
+      const Color(0xFFD8A4FF),
+      const Color(0xFFFFD6EE),
+      const Color(0xFFA8C8FF),
+      const Color(0xFFFFEAA0),
     ];
     
     try {
@@ -296,6 +297,56 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       return const Color(0xFFFF7FB2);
     }
     return Colors.white70;
+  }
+
+  List<Widget> _buildSparkles() {
+    const double radius = 78;
+    // Fixed sizes for each sparkle — do NOT change with pulse to avoid position jumping
+    const fixedSizes = [6.0, 4.5, 6.0, 4.5, 6.0, 4.5];
+    const sparkleColors = [
+      Color(0xFFFF80B3),
+      Color(0xFFD8A4FF),
+      Color(0xFFFFD6EE),
+      Color(0xFFA8C8FF),
+      Color(0xFFFFEAA0),
+      Color(0xFFFFB7D5),
+    ];
+    final sparkleAngles = [0.0, 60.0, 120.0, 180.0, 240.0, 300.0];
+    final pulseVal = _pulseAnim.value; // 0.0 → 1.0
+    return List.generate(sparkleAngles.length, (i) {
+      final angleRad = sparkleAngles[i] * math.pi / 180;
+      final dx = math.cos(angleRad) * radius;
+      final dy = math.sin(angleRad) * radius;
+      // Use FIXED size for position math — positions never shift
+      final size = fixedSizes[i];
+      // Alternate sparkles breathe in/out opposite phases
+      final opacity = (i % 2 == 0 ? (0.3 + 0.65 * pulseVal) : (0.95 - 0.65 * pulseVal)).clamp(0.0, 1.0);
+      return Positioned(
+        // 100 = half of the 200px SizedBox — static center
+        left: 100 + dx - size / 2,
+        top: 100 + dy - size / 2,
+        child: IgnorePointer(
+          child: Opacity(
+            opacity: opacity,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: sparkleColors[i % sparkleColors.length],
+                boxShadow: [
+                  BoxShadow(
+                    color: sparkleColors[i % sparkleColors.length].withValues(alpha: 0.7),
+                    blurRadius: size * 2.0,
+                    spreadRadius: 0.5,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    });
   }
 
   Future<List<String>> _fetchMemoryUrls() async {
@@ -481,25 +532,80 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       curve: Curves.easeOut,
                       child: ScaleTransition(
                         scale: _pulseAnim,
-                        child: Container(
-                          width: 180,
-                          height: 180,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFFF4F93).withValues(alpha: 0.5),
-                                blurRadius: 40,
-                                spreadRadius: 10,
+                        child: SizedBox(
+                          width: 200,
+                          height: 200,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Outermost soft glow ring
+                              Container(
+                                width: 190,
+                                height: 190,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFFE879A0).withValues(alpha: 0.12),
+                                      blurRadius: 36,
+                                      spreadRadius: 2,
+                                    ),
+                                    BoxShadow(
+                                      color: const Color(0xFFBF70FF).withValues(alpha: 0.08),
+                                      blurRadius: 60,
+                                      spreadRadius: 8,
+                                    ),
+                                  ],
+                                ),
                               ),
+                              // Subtle ring 1
+                              Container(
+                                width: 162,
+                                height: 162,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFFFF80B3).withValues(alpha: 0.18),
+                                    width: 1.5,
+                                  ),
+                                ),
+                              ),
+                              // Subtle ring 2
+                              Container(
+                                width: 136,
+                                height: 136,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFFFF80B3).withValues(alpha: 0.10),
+                                    width: 1.0,
+                                  ),
+                                ),
+                              ),
+                              // Cute sticker heart
+                              Image.asset(
+                                'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.contain,
+                                isAntiAlias: true,
+                                filterQuality: FilterQuality.high,
+                                errorBuilder: (_, __, ___) => ShaderMask(
+                                  shaderCallback: (bounds) => const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [Color(0xFFFF80B3), Color(0xFFD454A0)],
+                                  ).createShader(bounds),
+                                  child: const Icon(
+                                    Icons.favorite_rounded,
+                                    color: Colors.white,
+                                    size: 90,
+                                  ),
+                                ),
+                              ),
+                              // Sparkle dots around the heart
+                              ..._buildSparkles(),
                             ],
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.favorite_rounded,
-                              color: Color(0xFFFF4F93),
-                              size: 100,
-                            ),
                           ),
                         ),
                       ),
