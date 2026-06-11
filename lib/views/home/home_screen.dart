@@ -96,7 +96,6 @@ class _TabActivationHost extends StatefulWidget {
 
 class _TabActivationHostState extends State<_TabActivationHost> {
   late bool _isActive;
-  Widget? _cachedChild;
 
   @override
   void initState() {
@@ -113,7 +112,6 @@ class _TabActivationHostState extends State<_TabActivationHost> {
       oldWidget.activeIndexListenable.removeListener(_onActiveIndexChanged);
       _isActive = widget.activeIndexListenable.value == widget.tabIndex;
       widget.activeIndexListenable.addListener(_onActiveIndexChanged);
-      _cachedChild = null; // Invalidate cache
     }
   }
 
@@ -128,19 +126,15 @@ class _TabActivationHostState extends State<_TabActivationHost> {
     if (_isActive != nextActive) {
       setState(() {
         _isActive = nextActive;
-        // KHÔNG xóa _cachedChild ở đây — giữ lại widget tree để tránh rebuild tốn kém
-        // TickerMode sẽ tự pause/resume animation mà không cần rebuild
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Lazy-build lần đầu, sau đó giữ nguyên không rebuild
-    _cachedChild ??= widget.builder(_isActive);
     return TickerMode(
       enabled: _isActive,
-      child: _cachedChild!,
+      child: widget.builder(_isActive),
     );
   }
 }
@@ -356,8 +350,8 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
   @override
   Widget build(BuildContext context) {
     final axisDirection = _axisDirectionFor(context);
-    // Cache 3 viewport để tab kề luôn được giữ sẵn trong bộ nhớ, giảm lag khi swipe
-    final cacheExtent = widget.children.length <= 1 ? 1.0 : 3.0;
+    // Cache 1.2 viewports để tab kề luôn được giữ sẵn trong bộ nhớ, giảm lag khi swipe mà không gây quá tải GPU/CPU
+    final cacheExtent = widget.children.length <= 1 ? 1.0 : 1.2;
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -1111,19 +1105,13 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     if (shouldStartTracking && !_isUserTabSwiping && mounted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _isUserTabSwiping) return;
-        _isUserTabSwiping = true;
-        _isUserTabSwipingNotifier.value = true;
-        _syncMusicAnimationState();
-      });
+      _isUserTabSwiping = true;
+      _isUserTabSwipingNotifier.value = true;
+      _syncMusicAnimationState();
     } else if (shouldStopTracking && _isUserTabSwiping && mounted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || !_isUserTabSwiping) return;
-        _isUserTabSwiping = false;
-        _isUserTabSwipingNotifier.value = false;
-        _syncMusicAnimationState();
-      });
+      _isUserTabSwiping = false;
+      _isUserTabSwipingNotifier.value = false;
+      _syncMusicAnimationState();
     }
     return false;
   }

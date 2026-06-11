@@ -755,7 +755,7 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     final resolvedHouseId = await _feedController.resolveHouseId();
     _handleFeedControllerChange();
 
-    final canPreloadContent = await _guardController.prepareAccessState(
+    await _guardController.prepareAccessState(
       houseId: resolvedHouseId,
     );
     if (!mounted) {
@@ -764,8 +764,6 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
 
     if (_isTabActive) {
       await _activateDiaryTab();
-    } else if (canPreloadContent) {
-      await _fetchDiaryPosts(allowInactive: true);
     }
 
     if (!mounted) {

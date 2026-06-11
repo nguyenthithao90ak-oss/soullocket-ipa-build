@@ -177,6 +177,7 @@ flutter:
     - assets/3d.html
     - assets/games/rhythm-tiles/
     - assets/images/
+    - assets/images/utility_stickers/
     - assets/images/interaction_stickers/
     - assets/images/interaction_stickers/custom/numbered/
     - assets/images/sticker_import/cutout/sheet_02/
