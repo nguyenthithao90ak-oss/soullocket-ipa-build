@@ -778,7 +778,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                         Expanded(
                           child: _buildGradientBtn(
                             label: _isUploadingThemeBackground
-                                ? context.tr('theme_uploading_img')
+                                ? (_themeUploadProgress != null 
+                                    ? 'ĐANG TẢI... ${(_themeUploadProgress! * 100).toInt()}%' 
+                                    : context.tr('theme_uploading_img'))
                                 : context.tr('theme_upload_web_bg'),
                             gradient: const [Color(0xFFFF7EA8), Color(0xFFFF5E92)],
                             onTap: _isUploadingThemeBackground

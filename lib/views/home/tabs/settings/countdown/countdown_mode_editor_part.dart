@@ -158,7 +158,9 @@ class _CountdownModeEditorScreenState
   late bool _transparentMode;
   late double _sizePx;
   String? _uploadingAvatarRole;
+  double? _avatarUploadProgress;
   bool _isUploadingBackground = false;
+  double? _backgroundUploadProgress;
   bool _isUnlockingCountdownStyle = false;
   bool _didPromptPendingUploadRetry = false;
   Set<String> _unlockedStyles = {};
@@ -546,6 +548,9 @@ class _CountdownModeEditorScreenState
         quality: 84,
         minWidth: 512,
         minHeight: 512,
+        onProgress: (p) {
+          if (mounted) setState(() => _avatarUploadProgress = p);
+        },
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (mounted) {
@@ -569,6 +574,7 @@ class _CountdownModeEditorScreenState
       if (mounted) {
         setState(() {
           _uploadingAvatarRole = null;
+          _avatarUploadProgress = null;
         });
       }
     }
@@ -621,6 +627,9 @@ class _CountdownModeEditorScreenState
         quality: 78,
         minWidth: 900,
         minHeight: 900,
+        onProgress: (p) {
+          if (mounted) setState(() => _backgroundUploadProgress = p);
+        },
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (mounted) {
@@ -643,6 +652,7 @@ class _CountdownModeEditorScreenState
       if (mounted) {
         setState(() {
           _isUploadingBackground = false;
+          _backgroundUploadProgress = null;
         });
       }
     }
@@ -905,7 +915,9 @@ class _CountdownModeEditorScreenState
                                                 Icons.upload_rounded,
                                                 size: 18,
                                               ),
-                                        label: Text(context.tr('home_tinhtri_3bb821')),
+                                        label: Text(_uploadingAvatarRole == 'left' && _avatarUploadProgress != null
+                                            ? 'ĐANG TẢI... ${(_avatarUploadProgress! * 100).toInt()}%'
+                                            : context.tr('home_tinhtri_3bb821')),
                                       ),
                                     ),
                                   ],
@@ -947,7 +959,9 @@ class _CountdownModeEditorScreenState
                                                 Icons.upload_rounded,
                                                 size: 18,
                                               ),
-                                        label: Text(context.tr('home_tinhphi_3b6cd5')),
+                                        label: Text(_uploadingAvatarRole == 'right' && _avatarUploadProgress != null
+                                            ? 'ĐANG TẢI... ${(_avatarUploadProgress! * 100).toInt()}%'
+                                            : context.tr('home_tinhphi_3b6cd5')),
                                       ),
                                     ),
                                   ],

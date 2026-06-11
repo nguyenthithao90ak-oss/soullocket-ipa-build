@@ -29,6 +29,7 @@ class StorageRawUploadHelper {
     required StorageVideoUploadRejector rejectVideoUpload,
     required StorageUploadCachePurger purgeLegacyCache,
     required StorageRefBuilder buildStorageRef,
+    ValueChanged<double>? onProgress,
   }) async {
     final originalFileName = file.name.isNotEmpty ? file.name : file.path;
     rejectVideoUpload(
@@ -55,11 +56,31 @@ class StorageRawUploadHelper {
             resolvedContentType,
           );
           uploadTask = await _retryUpload(
-            () => ref.putData(compressed, metadata),
+            () {
+              final task = ref.putData(compressed, metadata);
+              if (onProgress != null) {
+                task.snapshotEvents.listen((event) {
+                  if (event.totalBytes > 0) {
+                    onProgress(event.bytesTransferred / event.totalBytes);
+                  }
+                });
+              }
+              return task;
+            },
           );
         } else {
           uploadTask = await _retryUpload(
-            () => ref.putFile(File(file.path), metadata),
+            () {
+              final task = ref.putFile(File(file.path), metadata);
+              if (onProgress != null) {
+                task.snapshotEvents.listen((event) {
+                  if (event.totalBytes > 0) {
+                    onProgress(event.bytesTransferred / event.totalBytes);
+                  }
+                });
+              }
+              return task;
+            },
           );
         }
       } else {
@@ -68,7 +89,17 @@ class StorageRawUploadHelper {
             ? await _compressImageBytes(fileBytes, resolvedContentType)
             : fileBytes;
         uploadTask = await _retryUpload(
-          () => ref.putData(dataToUpload, metadata),
+          () {
+            final task = ref.putData(dataToUpload, metadata);
+            if (onProgress != null) {
+              task.snapshotEvents.listen((event) {
+                if (event.totalBytes > 0) {
+                  onProgress(event.bytesTransferred / event.totalBytes);
+                }
+              });
+            }
+            return task;
+          },
         );
       }
 

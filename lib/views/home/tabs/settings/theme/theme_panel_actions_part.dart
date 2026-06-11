@@ -416,7 +416,10 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       }
 
       if (mounted) {
-        setState(() => _isUploadingThemeBackground = true);
+        setState(() {
+          _isUploadingThemeBackground = true;
+          _themeUploadProgress = 0.0;
+        });
       }
 
       final previousDraftUrl = _draftCustomBackgroundUrl;
@@ -435,6 +438,13 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         quality: 95, // 95 WebP = Gần như không mất chất lượng, nét nhất
         minWidth: 1440, // 1440p cho màn hình 2K
         minHeight: 1440,
+        onProgress: (progress) {
+          if (mounted) {
+            setState(() {
+              _themeUploadProgress = progress;
+            });
+          }
+        },
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (!mounted) return;
@@ -461,7 +471,10 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       _showToast('Không thể tải ảnh nền: $e', success: false);
     } finally {
       if (mounted) {
-        setState(() => _isUploadingThemeBackground = false);
+        setState(() {
+          _isUploadingThemeBackground = false;
+          _themeUploadProgress = null;
+        });
       }
     }
   }

@@ -500,6 +500,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isSavingAdvanced = false;
   bool _isSavingTheme = false;
   bool _isUploadingThemeBackground = false;
+  double? _themeUploadProgress;
+  double? _avatarUploadProgress;
   bool _didPromptPendingThemeBackgroundRetry = false;
   bool _isUnlockingStyle = false;
   int _countdownAdUnlockExpiryMs = 0;

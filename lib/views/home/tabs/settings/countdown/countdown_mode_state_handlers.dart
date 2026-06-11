@@ -874,6 +874,7 @@ extension _CountdownModeIndependentScreenStatePart
 
     _safeSetState(() {
       _uploadingAvatarRole = role;
+      _avatarUploadProgress = 0.0;
     });
 
     try {
@@ -897,6 +898,13 @@ extension _CountdownModeIndependentScreenStatePart
         quality: 88,
         minWidth: 720,
         minHeight: 720,
+        onProgress: (progress) {
+          if (mounted) {
+            _safeSetState(() {
+              _avatarUploadProgress = progress;
+            });
+          }
+        },
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (mounted) {
@@ -920,6 +928,7 @@ extension _CountdownModeIndependentScreenStatePart
       if (mounted) {
         _safeSetState(() {
           _uploadingAvatarRole = null;
+          _avatarUploadProgress = null;
         });
       }
     }

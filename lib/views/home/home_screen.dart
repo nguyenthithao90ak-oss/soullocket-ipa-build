@@ -276,21 +276,17 @@ class _HomePreloadPageView extends StatefulWidget {
 }
 
 class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
-  late int _lastBuiltPage;
   late int _lastReportedPage;
 
   @override
   void initState() {
     super.initState();
-    final initialPage = _clampPage(widget.controller.initialPage);
-    _lastBuiltPage = initialPage;
-    _lastReportedPage = initialPage;
+    _lastReportedPage = _clampPage(widget.controller.initialPage);
   }
 
   @override
   void didUpdateWidget(covariant _HomePreloadPageView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _lastBuiltPage = _clampPage(_lastBuiltPage);
     _lastReportedPage = _clampPage(_lastReportedPage);
   }
 
@@ -299,13 +295,6 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
       return 0;
     }
     return page.clamp(0, widget.children.length - 1);
-  }
-
-  bool _shouldBuildPage(int index) {
-    if (widget.children.length <= 1 || index == 0) {
-      return true;
-    }
-    return (index - _lastBuiltPage).abs() <= 1;
   }
 
   AxisDirection _axisDirectionFor(BuildContext context) {
@@ -322,19 +311,10 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
       return false;
     }
 
-    final currentPage =
-        metrics.page ?? widget.controller.initialPage.toDouble();
-    final closestPage = _clampPage(currentPage.round());
-
-    // Cập nhật _lastBuiltPage liên tục khi đang lướt để preload tab tiếp theo sớm hơn
-    // tránh tình trạng bị khựng khi vuốt nhanh liên tiếp
-    if (closestPage != _lastBuiltPage && mounted) {
-      setState(() {
-        _lastBuiltPage = closestPage;
-      });
-    }
-
     if (notification is ScrollEndNotification) {
+      final currentPage =
+          metrics.page ?? widget.controller.initialPage.toDouble();
+      final closestPage = _clampPage(currentPage.round());
       if (closestPage != _lastReportedPage) {
         if (mounted) {
           setState(() {
@@ -350,8 +330,8 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
   @override
   Widget build(BuildContext context) {
     final axisDirection = _axisDirectionFor(context);
-    // Cache 1.2 viewports để tab kề luôn được giữ sẵn trong bộ nhớ, giảm lag khi swipe mà không gây quá tải GPU/CPU
-    final cacheExtent = widget.children.length <= 1 ? 1.0 : 1.2;
+    // Render all tabs upfront so they are warmed in layout, preventing any build overhead during swipe transitions.
+    final cacheExtent = widget.children.length.toDouble();
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -372,9 +352,6 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
                 viewportFraction: widget.controller.viewportFraction,
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    if (!_shouldBuildPage(index)) {
-                      return const SizedBox.expand();
-                    }
                     return RepaintBoundary(
                       child: widget.children[index],
                     );
@@ -1304,7 +1281,7 @@ class _HomeScreenState extends State<HomeScreen>
                 onPageChanged: _handlePageChanged,
                 dragStartBehavior: DragStartBehavior.start,
                 physics:
-                    const _HomeTabPagePhysics(parent: BouncingScrollPhysics()),
+                    const _HomeTabPagePhysics(parent: ClampingScrollPhysics()),
                 children: List<Widget>.generate(
                   _navItems.length,
                   (index) => RepaintBoundary(

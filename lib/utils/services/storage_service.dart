@@ -1107,7 +1107,8 @@ class StorageService {
     String storagePath,
     XFile file, {
     String? contentType,
-  }) {
+    ValueChanged<double>? onProgress,
+  }) async {
     final safeStoragePath = _normalizeStorageWritePath(storagePath);
     final originalFileName = file.name.isNotEmpty ? file.name : file.path;
     final resolvedContentType = contentType ??
@@ -1122,6 +1123,7 @@ class StorageService {
       rejectVideoUpload: _rejectVideoUpload,
       purgeLegacyCache: _purgeLegacyImgBBKeyCache,
       buildStorageRef: (path) => _storage.ref().child(path),
+      onProgress: onProgress,
     );
   }
 
@@ -1221,6 +1223,7 @@ class StorageService {
     int minWidth = 960,
     int minHeight = 960,
     int quality = 70,
+    ValueChanged<double>? onProgress,
   }) {
     return _managedUploadHelper.uploadManagedImage(
       request: StorageManagedUploadRequest(
@@ -1235,6 +1238,7 @@ class StorageService {
       detectContentType: detectContentType,
       normalizeStorageWritePath: _normalizeStorageWritePath,
       uploadFileToPath: uploadFileToPath,
+      onProgress: onProgress,
     );
   }
 
@@ -1245,6 +1249,7 @@ class StorageService {
     int minWidth = 1080,
     int minHeight = 1080,
     int quality = 75,
+    ValueChanged<double>? onProgress,
   }) async {
     final result = await uploadManagedImage(
       houseId,
@@ -1253,6 +1258,7 @@ class StorageService {
       minWidth: minWidth,
       minHeight: minHeight,
       quality: quality,
+      onProgress: onProgress,
     );
     return result?.downloadUrl;
   }

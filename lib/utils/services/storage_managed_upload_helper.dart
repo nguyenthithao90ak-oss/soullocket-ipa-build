@@ -18,6 +18,7 @@ typedef StorageFileUploader = Future<String> Function(
   String storagePath,
   XFile file, {
   String? contentType,
+  ValueChanged<double>? onProgress,
 });
 
 class StorageManagedUploadRequest {
@@ -47,6 +48,7 @@ class StorageManagedUploadHelper {
     required StorageContentTypeDetector detectContentType,
     required StorageWritePathNormalizer normalizeStorageWritePath,
     required StorageFileUploader uploadFileToPath,
+    ValueChanged<double>? onProgress,
   }) async {
     try {
       final nowMs = DateTime.now().millisecondsSinceEpoch;
@@ -112,11 +114,13 @@ class StorageManagedUploadHelper {
                     path,
                     XFile(tempCompressedPath),
                     contentType: finalContentType,
+                    onProgress: onProgress,
                   )
                 : await uploadFileToPath(
                     path,
                     uploadFile,
                     contentType: finalContentType,
+                    onProgress: onProgress,
                   );
 
         return StorageUploadResult(

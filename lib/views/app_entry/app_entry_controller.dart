@@ -15,7 +15,6 @@ import '../../utils/services/house_service.dart';
 import '../../utils/services/interaction_metrics_service.dart';
 import '../../utils/services/love_insight_service.dart';
 import '../../utils/services/military_lock_service.dart';
-import '../../utils/services/location_service.dart';
 import '../../utils/services/notification_service.dart';
 import '../../utils/services/presence_service.dart';
 import '../../utils/services/security_service.dart';
@@ -76,12 +75,8 @@ class AppEntryController {
         _interactionMetricsService =
             interactionMetricsService ?? InteractionMetricsService();
 
-  static const String _startupPermissionPromptedPrefsKey =
-      'il_startup_permission_prompted_v2';
   static const String _notificationPermissionPromptedPrefsKey =
       'il_notification_permission_prompted_v1';
-  static const String _locationPermissionPromptedPrefsKey =
-      'il_location_permission_prompted_v1';
   static const Duration _deviceRegistrationCooldown = Duration(seconds: 15);
 
   final HouseService _houseService;
@@ -476,33 +471,13 @@ class AppEntryController {
     final activeContext = context;
 
     final prefs = await getPrefs();
-    final hasLegacyPrompted =
-        prefs.getBool(_startupPermissionPromptedPrefsKey) ?? false;
     final hasPromptedNotification =
         prefs.getBool(_notificationPermissionPromptedPrefsKey) ?? false;
-    final hasPromptedLocation =
-        prefs.getBool(_locationPermissionPromptedPrefsKey) ?? false;
     if (!activeContext.mounted) return;
 
-    if (!activeContext.mounted) return;
-
-    var notificationGranted = false;
     if (!hasPromptedNotification) {
-      notificationGranted =
-          await NotificationService().requestPermissionAndInit();
+      await NotificationService().requestPermissionAndInit();
       await prefs.setBool(_notificationPermissionPromptedPrefsKey, true);
-      if (!activeContext.mounted) return;
-    }
-
-    var locationGranted = false;
-    if (!hasPromptedLocation) {
-      locationGranted =
-          await LocationService().requestPermission(context: activeContext);
-      await prefs.setBool(_locationPermissionPromptedPrefsKey, true);
-    }
-
-    if ((locationGranted || notificationGranted) && !hasLegacyPrompted) {
-      await prefs.setBool(_startupPermissionPromptedPrefsKey, true);
     }
   }
 
