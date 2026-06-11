@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -61,6 +62,41 @@ class StorageSignedUploadRequest {
 class StorageSignedUploadHelper {
   const StorageSignedUploadHelper();
 
+  Future<T> _runWithSmoothProgress<T>(
+    Future<T> Function() task,
+    double start,
+    double end,
+    Duration expectedDuration,
+    ValueChanged<double>? onProgress,
+  ) async {
+    if (onProgress == null) return task();
+
+    bool isDone = false;
+    final tick = const Duration(milliseconds: 50);
+    double current = start;
+    final step = (end - start) / (expectedDuration.inMilliseconds / tick.inMilliseconds);
+    
+    final timer = Timer.periodic(tick, (t) {
+      if (isDone) {
+        t.cancel();
+        return;
+      }
+      current += step;
+      if (current >= end) {
+        current = end - 0.01;
+      }
+      onProgress(current);
+    });
+
+    try {
+      return await task();
+    } finally {
+      isDone = true;
+      timer.cancel();
+      onProgress(end);
+    }
+  }
+
   Future<StorageUploadResult?> uploadSignedImageWithCompression({
     required StorageSignedUploadRequest request,
     required StorageCurrentUidEnsurer requireCurrentUid,
@@ -84,25 +120,27 @@ class StorageSignedUploadHelper {
 
       if (!kIsWeb && request.file.path.isNotEmpty && fileExtension != '.gif') {
         try {
-          if (request.onProgress != null) request.onProgress!(0.05);
+          if (request.onProgress != null) request.onProgress!(0.02);
           final tempDir = await getTemporaryDirectory();
           tempCompressedPath = p.join(
             tempDir.path,
             '${request.tempPrefix}_${nowMs}_${DateTime.now().microsecondsSinceEpoch}.webp',
           );
 
-          if (request.onProgress != null) request.onProgress!(0.1);
-
-          final compressedFile = await FlutterImageCompress.compressAndGetFile(
-            request.file.path,
-            tempCompressedPath,
-            minWidth: request.minWidth,
-            minHeight: request.minHeight,
-            quality: request.quality,
-            format: CompressFormat.webp,
+          final compressedFile = await _runWithSmoothProgress(
+            () => FlutterImageCompress.compressAndGetFile(
+              request.file.path,
+              tempCompressedPath!,
+              minWidth: request.minWidth,
+              minHeight: request.minHeight,
+              quality: request.quality,
+              format: CompressFormat.webp,
+            ),
+            0.02,
+            0.15,
+            const Duration(milliseconds: 500),
+            request.onProgress,
           );
-
-          if (request.onProgress != null) request.onProgress!(0.35);
 
           if (compressedFile != null) {
             uploadFile = compressedFile;
@@ -125,15 +163,20 @@ class StorageSignedUploadHelper {
         fileExtension = '.jpg';
       }
 
-      if (request.onProgress != null) request.onProgress!(0.4);
-
       try {
         final uploadBytes = await uploadFile.readAsBytes();
         final preferredFileName = p.basename(
           uploadFile.name.isNotEmpty ? uploadFile.name : '$nowMs$fileExtension',
         );
-        final session =
-            await request.sessionBuilder(finalContentType, preferredFileName);
+
+        final session = await _runWithSmoothProgress(
+          () => request.sessionBuilder(finalContentType, preferredFileName),
+          0.15,
+          0.35,
+          const Duration(milliseconds: 1000),
+          request.onProgress,
+        );
+
         final headers = stringMapFromDynamicMap(session['headers']);
         headers.putIfAbsent('Content-Type', () => finalContentType);
 
@@ -142,11 +185,11 @@ class StorageSignedUploadHelper {
           bytes: uploadBytes,
           headers: headers,
           onProgress: request.onProgress != null 
-              ? (p) => request.onProgress!(0.4 + (p * 0.6))
+              ? (p) => request.onProgress!(0.35 + (p * 0.40))
               : null,
         );
 
-        if (request.onProgress != null) request.onProgress!(1.0);
+        if (request.onProgress != null) request.onProgress!(0.75);
 
         final blurHash = await BlurHashHelper.generateBlurHashFromBytes(uploadBytes);
         final sessionWithBlur = Map<String, dynamic>.from(session);
@@ -154,7 +197,17 @@ class StorageSignedUploadHelper {
           sessionWithBlur['blurHash'] = blurHash;
         }
 
-        return request.mapResult(sessionWithBlur);
+        final result = await _runWithSmoothProgress(
+          () async => request.mapResult(sessionWithBlur),
+          0.75,
+          0.99,
+          const Duration(milliseconds: 1200),
+          request.onProgress,
+        );
+
+        if (request.onProgress != null) request.onProgress!(1.0);
+
+        return result;
       } finally {
         if (tempCompressedPath != null) {
           final tempFile = File(tempCompressedPath);

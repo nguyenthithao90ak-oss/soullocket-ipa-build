@@ -2449,19 +2449,23 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }
 
   void _hideSettingsButtonForSession() {
-    if (_hideSettingsButtonUntilRestart || !mounted) return;
-    setState(() => _hideSettingsButtonUntilRestart = true);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Đã ẩn nút cài đặt. Mở lại màn hình hoặc vào lại app để hiện lại.',
+    if (!mounted) return;
+    final isCurrentlyHidden = _hideSettingsButtonUntilRestart;
+    setState(() => _hideSettingsButtonUntilRestart = !isCurrentlyHidden);
+    
+    if (!isCurrentlyHidden) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Đã làm mờ nút cài đặt. Bạn vẫn có thể nhấn vào góc này để mở cài đặt, hoặc nhấn giữ để hiện lại.',
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 3),
           ),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 3),
-        ),
-      );
+        );
+    }
   }
 
   String _resolveMyName() => _resolveNameForRole(_currentRole);

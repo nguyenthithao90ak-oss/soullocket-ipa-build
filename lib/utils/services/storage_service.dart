@@ -1287,28 +1287,22 @@ class StorageService {
     ValueChanged<double>? onProgress,
   }) {
     return _uploadSignedImageWithCompression(
-      request: StorageSignedUploadRequest(
-        file: file,
-        sessionBuilder: (contentType, preferredFileName) =>
-            _createPublicImageUploadSession(
-          houseId: houseId,
-          target: target,
-          contentType: contentType,
-          fileName: preferredFileName,
-        ),
-        minWidth: minWidth,
-        minHeight: minHeight,
-        quality: quality,
-        tempPrefix: 'sl_public',
-        errorLabel: 'Public image',
-        mapResult: mapPublicStorageUploadResult,
-        errorMessage: 'Không thể tải ảnh công khai lên máy chủ.',
-        onProgress: onProgress,
+      file: file,
+      sessionBuilder: (contentType, preferredFileName) =>
+          _createPublicImageUploadSession(
+        houseId: houseId,
+        target: target,
+        contentType: contentType,
+        fileName: preferredFileName,
       ),
-      requireCurrentUid: _requireCurrentUid,
-      detectContentType: detectContentType,
-      stringMapFromDynamicMap: _stringMapFromDynamicMap,
-      uploadBytesToSignedUrl: _uploadBytesToSignedUrl,
+      minWidth: minWidth,
+      minHeight: minHeight,
+      quality: quality,
+      tempPrefix: 'sl_public',
+      errorLabel: 'Public image',
+      mapResult: mapPublicStorageUploadResult,
+      errorMessage: 'Không thể tải ảnh công khai lên máy chủ.',
+      onProgress: onProgress,
     );
   }
 
@@ -1455,6 +1449,7 @@ class StorageService {
     required StorageUploadResult Function(Map<String, dynamic> session)
         mapResult,
     required String errorMessage,
+    ValueChanged<double>? onProgress,
   }) {
     return _signedUploadHelper.uploadSignedImageWithCompression(
       request: StorageSignedUploadRequest(
@@ -1467,6 +1462,7 @@ class StorageService {
         errorLabel: errorLabel,
         errorMessage: errorMessage,
         mapResult: mapResult,
+        onProgress: onProgress,
       ),
       requireCurrentUid: _requireCurrentUid,
       detectContentType: detectContentType,

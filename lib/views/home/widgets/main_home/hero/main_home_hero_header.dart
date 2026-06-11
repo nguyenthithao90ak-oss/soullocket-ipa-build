@@ -47,15 +47,15 @@ class _MainHomeHeroHeader extends StatelessWidget {
               final hideButton =
                   state._hideSettingsButtonUntilRestart || captureMode;
               return IgnorePointer(
-                ignoring: hideButton,
+                ignoring: captureMode,
                 child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOutCubic,
-                  opacity: hideButton ? 0 : 1,
+                  opacity: hideButton ? 0.0 : 1.0,
                   child: AnimatedScale(
                     duration: const Duration(milliseconds: 180),
                     curve: Curves.easeOutCubic,
-                    scale: hideButton ? 0.92 : 1,
+                    scale: hideButton ? 0.92 : 1.0,
                     child: state._buildHeaderButton(
                       key: firstGuideSettingsKey,
                       icon: Icons.settings_rounded,

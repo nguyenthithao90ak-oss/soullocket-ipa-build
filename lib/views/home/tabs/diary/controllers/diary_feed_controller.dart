@@ -549,45 +549,52 @@ class DiaryFeedController extends ChangeNotifier {
           .limitToLast(_diaryRealtimeLimit);
       _diarySubscription = diaryQuery.onValue.listen(
         (event) {
-          if (_disposed) {
-            return;
-          }
-
-          if (event.snapshot.value == null) {
-            _lastDiaryCacheSignature = '0';
-            unawaited(
-                OfflineCacheService.saveCache('diary_$houseId', const []));
-            postsVN.value = const <DiaryPost>[];
-            _setLoading(false);
-            return;
-          }
-
-          final snapshotValue = event.snapshot.value;
-          if (snapshotValue is! Map) {
-            postsVN.value = const <DiaryPost>[];
-            _setLoading(false);
-            return;
-          }
-          final raw = Map<dynamic, dynamic>.from(snapshotValue);
-          final loadedPosts = <DiaryPost>[];
-          final cacheList = <Map<String, dynamic>>[];
-
-          raw.forEach((key, value) {
-            if (value is! Map) {
+          try {
+            if (_disposed) {
               return;
             }
-            final postMap = Map<dynamic, dynamic>.from(value);
-            loadedPosts.add(DiaryPost.fromJson(key.toString(), postMap));
-            postMap['id'] = key;
-            cacheList.add(Map<String, dynamic>.from(postMap));
-          });
 
-          _sortDiaryPosts(loadedPosts);
-          unawaited(_cacheDiaryPosts(houseId, cacheList));
+            if (event.snapshot.value == null) {
+              _lastDiaryCacheSignature = '0';
+              unawaited(
+                  OfflineCacheService.saveCache('diary_$houseId', const []));
+              postsVN.value = const <DiaryPost>[];
+              return;
+            }
 
-          postsVN.value = loadedPosts;
-          unawaited(_hydrateAuthorNames(loadedPosts));
-          _setLoading(false);
+            final snapshotValue = event.snapshot.value;
+            if (snapshotValue is! Map) {
+              postsVN.value = const <DiaryPost>[];
+              return;
+            }
+            final raw = Map<dynamic, dynamic>.from(snapshotValue);
+            final loadedPosts = <DiaryPost>[];
+            final cacheList = <Map<String, dynamic>>[];
+
+            raw.forEach((key, value) {
+              if (value is! Map) {
+                return;
+              }
+              try {
+                final postMap = Map<dynamic, dynamic>.from(value);
+                loadedPosts.add(DiaryPost.fromJson(key.toString(), postMap));
+                postMap['id'] = key;
+                cacheList.add(Map<String, dynamic>.from(postMap));
+              } catch (e) {
+                debugPrint('Error parsing diary post $key: $e');
+              }
+            });
+
+            _sortDiaryPosts(loadedPosts);
+            unawaited(_cacheDiaryPosts(houseId, cacheList));
+
+            postsVN.value = loadedPosts;
+            unawaited(_hydrateAuthorNames(loadedPosts));
+          } catch (e, stack) {
+            debugPrint('Error processing diary realtime event: $e\n$stack');
+          } finally {
+            _setLoading(false);
+          }
         },
         onError: (Object error) {
           debugPrint(

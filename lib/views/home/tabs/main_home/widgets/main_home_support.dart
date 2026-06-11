@@ -103,18 +103,18 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 2400), // Increased duration for smoothness
       vsync: this,
     );
 
     final random = Random();
-    const particleCount = 3;
+    const particleCount = 4; // Slightly more particles
     for (int i = 0; i < particleCount; i++) {
       _particles.add(_ParticleData(
-        delay: random.nextDouble() * 0.22,
-        flightDuration: 0.62,
-        peakHeight: random.nextDouble() * 0.9 + 0.72,
-        size: random.nextDouble() * 10 + 27,
+        delay: random.nextDouble() * 0.35, // More spread out
+        flightDuration: 0.65,
+        peakHeight: random.nextDouble() * 1.1 + 0.8, // Slightly higher arch
+        size: random.nextDouble() * 20 + 45, // Significantly larger size (45-65)
         baseRotation: (random.nextDouble() - 0.5) * 0.72,
       ));
     }
@@ -136,6 +136,11 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
 
   @override
   Widget build(BuildContext context) {
+    // Cache the screen size to avoid layout thrashing
+    final screenSize = MediaQuery.of(context).size;
+    final halfWidth = screenSize.width / 2;
+    final halfHeight = screenSize.height / 2;
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -167,50 +172,60 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
               currentOpacity = (1.0 - (t - 0.8) * 5).clamp(0.0, 1.0);
             }
 
-            return Align(
-              alignment: Alignment(currentX, currentY - 0.25),
-              child: Opacity(
-                opacity: currentOpacity,
-                child: Transform.rotate(
-                  angle: p.baseRotation +
-                      (t * 3.14 * 2 * (widget.shootToRight ? 1 : -1)),
-                  child: Transform.scale(
-                    scale: currentScale,
-                    child: widget.assetPath != null &&
-                            widget.assetPath!.trim().isNotEmpty
-                        ? Image.asset(
-                            widget.assetPath!,
-                            width: p.size,
-                            height: p.size,
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.high,
-                            errorBuilder: (_, __, ___) => Text(
-                              widget.emoji,
-                              style: TextStyle(
-                                fontSize: p.size,
-                                height: 1,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.pinkAccent.withValues(alpha: 0.5),
-                                    blurRadius: 10,
+            // Calculate pixel translation instead of alignment
+            final translateX = currentX * halfWidth;
+            final translateY = (currentY - 0.25) * halfHeight;
+
+            return Positioned.fill(
+              child: Center(
+                child: Transform.translate(
+                  offset: Offset(translateX, translateY),
+                  child: Opacity(
+                    opacity: currentOpacity,
+                    child: Transform.rotate(
+                      angle: p.baseRotation +
+                          (t * 3.14 * 2 * (widget.shootToRight ? 1 : -1)),
+                      child: Transform.scale(
+                        scale: currentScale,
+                        child: widget.assetPath != null &&
+                                widget.assetPath!.trim().isNotEmpty
+                            ? Image.asset(
+                                widget.assetPath!,
+                                width: p.size,
+                                height: p.size,
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.medium, // Optimized
+                                errorBuilder: (_, __, ___) => Text(
+                                  widget.emoji,
+                                  style: TextStyle(
+                                    fontSize: p.size,
+                                    height: 1,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.pinkAccent
+                                            .withValues(alpha: 0.5),
+                                        blurRadius: 10,
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : Text(
-                            widget.emoji,
-                            style: TextStyle(
-                              fontSize: p.size,
-                              height: 1,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.pinkAccent.withValues(alpha: 0.5),
-                                  blurRadius: 10,
                                 ),
-                              ],
-                            ),
-                          ),
+                              )
+                            : Text(
+                                widget.emoji,
+                                style: TextStyle(
+                                  fontSize: p.size,
+                                  height: 1,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.pinkAccent
+                                          .withValues(alpha: 0.5),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                      ),
+                    ),
                   ),
                 ),
               ),
