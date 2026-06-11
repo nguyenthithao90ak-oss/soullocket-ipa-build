@@ -263,6 +263,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                       : context.tr('settings_check_now'),
                   gradient: const [Color(0xFFE3F2FD), Color(0xFF90CAF9)],
                   textColor: const Color(0xFF1565C0),
+                  contentColor: const Color(0xFF1565C0),
                   onTap: _isCheckingBackupStatus
                       ? () {}
                       : () => _refreshSettingsBackupStatus(showFeedback: true),
@@ -277,6 +278,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                       : context.tr('settings_sync_now'),
                   gradient: const [Color(0xFFE8F5E9), Color(0xFF81C784)],
                   textColor: const Color(0xFF2E7D32),
+                  contentColor: const Color(0xFF2E7D32),
                   onTap:
                       _isManualBackupSyncing ? () {} : _syncSettingsBackupNow,
                 ),
@@ -291,6 +293,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                 : context.tr('settings_restore_from_cloud'),
             gradient: const [Color(0xFFFFF3E0), Color(0xFFFFB74D)],
             textColor: const Color(0xFFE65100),
+            contentColor: const Color(0xFFE65100),
             onTap: _isRestoringSettingsBackup
                 ? () {}
                 : _restoreSettingsBackupFromCloud,
@@ -616,6 +619,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   label: context.tr('settings_security_label'),
                   gradient: const [Color(0xFFE8F5E9), Color(0xFF81C784)],
                   textColor: const Color(0xFF2E7D32),
+                  contentColor: const Color(0xFF2E7D32),
                   onTap: () => _togglePanel('security'),
                 ),
               ),
@@ -626,6 +630,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   label: context.tr('settings_devices_short'),
                   gradient: const [Color(0xFFE3F2FD), Color(0xFF90CAF9)],
                   textColor: const Color(0xFF1565C0),
+                  contentColor: const Color(0xFF1565C0),
                   onTap: _openPrivacyDeviceManager,
                 ),
               ),
@@ -640,6 +645,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   label: context.tr('settings_download_data'),
                   gradient: const [Color(0xFFF3E5F5), Color(0xFFCE93D8)],
                   textColor: const Color(0xFF7B1FA2),
+                  contentColor: const Color(0xFF7B1FA2),
                   onTap: _requestUserDataExportFromHealthCenter,
                 ),
               ),
@@ -650,6 +656,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   label: context.tr('settings_account_label'),
                   gradient: const [Color(0xFFFFEBEE), Color(0xFFEF9A9A)],
                   textColor: const Color(0xFFC62828),
+                  contentColor: const Color(0xFFC62828),
                   onTap: () => _togglePanel('supportLegal'),
                 ),
               ),

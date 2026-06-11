@@ -654,11 +654,13 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required String label,
     required List<Color> gradient,
     required Color textColor,
+    Color? contentColor,
     required VoidCallback onTap,
   }) {
     final effectiveLabel = icon == Icons.heart_broken
         ? (_isBreakupBusy ? context.tr('home_angxlyucu_0b316c') : _breakupActionLabel)
         : label;
+    final color = contentColor ?? Colors.white;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -691,10 +693,10 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: color.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(icon, color: Colors.white, size: 20),
+                    child: Icon(icon, color: color, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -705,13 +707,13 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: color,
                       ),
                     ),
                   ),
                   Icon(
                     Icons.arrow_forward_ios_rounded,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: color.withValues(alpha: 0.8),
                     size: 13,
                   ),
                 ],
