@@ -1,5 +1,6 @@
-import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/foundation.dart';
+import 'package:firebase_database/firebase_database.dart' hide Query, Transaction;
+import 'package:firebase_database/firebase_database.dart' as rtdb show Transaction;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/models/album_item.dart';
@@ -80,7 +81,7 @@ class AlbumService {
     if (delta == 0) return;
     await _albumCountRef(houseId).runTransaction((current) {
       final next = ((current as num?)?.toInt() ?? 0) + delta;
-      return Transaction.success(next < 0 ? 0 : next);
+      return rtdb.Transaction.success(next < 0 ? 0 : next);
     });
   }
 
@@ -156,33 +157,21 @@ class AlbumService {
   }
 
   Stream<List<AlbumItem>> streamAlbum(String houseId) {
-    return _dbRef
-        .child('houses/$houseId/album')
-        .orderByChild('ts')
-        .limitToLast(albumStreamPageSize)
-        .onValue
+    return FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album')
+        .orderBy('ts', descending: true)
+        .limit(albumStreamPageSize)
+        .snapshots()
         .map((event) {
-      if (event.snapshot.value == null) return <AlbumItem>[];
-      final raw = event.snapshot.value;
-      if (raw is! Map) return <AlbumItem>[];
-
       final items = <AlbumItem>[];
-      raw.forEach((key, value) {
-        if (value is Map) {
-          try {
-            items.add(AlbumItem.fromJson(key.toString(), value));
-          } catch (_) {}
-        }
-      });
-      items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      return items;
-    }).handleError((error) {
-      final code = (error as dynamic).code?.toString();
-      if (code == 'permission-denied') {
-        debugPrint('Album stream permission denied for house $houseId');
-        return;
+      for (var doc in event.docs) {
+        try {
+          items.add(AlbumItem.fromJson(doc.id, doc.data()));
+        } catch (_) {}
       }
-      throw error;
+      return items;
     });
   }
 
@@ -191,38 +180,24 @@ class AlbumService {
     int limit = 30,
     int? endBeforeTs,
   }) async {
-    Query query = _dbRef.child('houses/$houseId/album').orderByChild('ts');
+    Query<Map<String, dynamic>> query = FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album')
+        .orderBy('ts', descending: true)
+        .limit(limit);
+
     if (endBeforeTs != null) {
-      query = query.endAt(endBeforeTs - 1);
-    }
-    DataSnapshot snapshot;
-    try {
-      snapshot = await query.limitToLast(limit).get();
-    } catch (error) {
-      final code = (error as dynamic).code?.toString();
-      if (code == 'permission-denied') {
-        debugPrint('Album page permission denied for house $houseId');
-        return const <AlbumItem>[];
-      }
-      rethrow;
-    }
-    if (!snapshot.exists || snapshot.value == null) {
-      return const <AlbumItem>[];
-    }
-    final raw = snapshot.value;
-    if (raw is! Map) {
-      return const <AlbumItem>[];
+      query = query.where('ts', isLessThan: endBeforeTs);
     }
 
+    final snap = await query.get();
     final items = <AlbumItem>[];
-    raw.forEach((key, value) {
-      if (value is Map) {
-        try {
-          items.add(AlbumItem.fromJson(key.toString(), value));
-        } catch (_) {}
-      }
-    });
-    items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    for (var doc in snap.docs) {
+      try {
+        items.add(AlbumItem.fromJson(doc.id, doc.data()));
+      } catch (_) {}
+    }
     return items;
   }
 
@@ -238,9 +213,7 @@ class AlbumService {
     if (url.trim().isEmpty) throw 'URL không được để trống.';
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final newRef = _dbRef.child('houses/$houseId/album').push();
-
-    await newRef.set({
+    final data = {
       'url': url.trim(),
       'thumbUrl': thumbUrl,
       'caption': caption.trim(),
@@ -250,30 +223,52 @@ class AlbumService {
       'timestamp': now,
       'type': type,
       'likes': 0,
-    });
+    };
+
+    final docRef = await FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album')
+        .add(data);
+
     await _changeAlbumCount(houseId, 1);
 
     // Record daily quest progress
     DailyQuestService().recordProgress('diary_entry');
 
-    return newRef.key!;
+    return docRef.id;
   }
 
   Future<void> moveToTrash({
     required String houseId,
     required String itemId,
   }) async {
-    final snap = await _dbRef.child('houses/$houseId/album/$itemId').get();
+    final docRef = FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album')
+        .doc(itemId);
+    final snap = await docRef.get();
     if (!snap.exists) throw 'Ảnh không tồn tại.';
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final data = Map<String, dynamic>.from(snap.value as Map);
+    final data = Map<String, dynamic>.from(snap.data()!);
     data['deletedAt'] = now;
     data['purgeAt'] = now + trashExpiryMs;
     data['id'] = itemId;
 
-    await _dbRef.child('houses/$houseId/album_trash/$itemId').set(data);
-    await _dbRef.child('houses/$houseId/album/$itemId').remove();
+    final batch = FirebaseFirestore.instance.batch();
+    batch.set(
+      FirebaseFirestore.instance
+          .collection('houses')
+          .doc(houseId)
+          .collection('album_trash')
+          .doc(itemId),
+      data,
+    );
+    batch.delete(docRef);
+    await batch.commit();
+
     await _changeAlbumCount(houseId, -1);
   }
 
@@ -281,30 +276,32 @@ class AlbumService {
     required String houseId,
     required String itemId,
   }) async {
-    final snap = await _dbRef.child('houses/$houseId/album/$itemId').get();
-    if (!snap.exists) return;
-    await _dbRef.child('houses/$houseId/album/$itemId').remove();
+    await FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album')
+        .doc(itemId)
+        .delete();
     await _changeAlbumCount(houseId, -1);
   }
 
   Stream<List<Map<String, dynamic>>> streamTrash(String houseId) {
-    return _dbRef.child('houses/$houseId/album_trash').onValue.map((event) {
-      if (event.snapshot.value == null) return [];
-      final raw = event.snapshot.value;
-      if (raw is! Map) return [];
-
+    return FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album_trash')
+        .snapshots()
+        .map((event) {
       final now = DateTime.now().millisecondsSinceEpoch;
       final items = <Map<String, dynamic>>[];
-      raw.forEach((key, value) {
-        if (value is Map) {
-          final item = Map<String, dynamic>.from(value);
-          item['id'] = key;
-          final purgeAt = item['purgeAt'] as int? ?? 0;
-          if (purgeAt > now) {
-            items.add(item);
-          }
+      for (var doc in event.docs) {
+        final item = Map<String, dynamic>.from(doc.data());
+        item['id'] = doc.id;
+        final purgeAt = item['purgeAt'] as int? ?? 0;
+        if (purgeAt > now) {
+          items.add(item);
         }
-      });
+      }
       items.sort((a, b) =>
           (b['deletedAt'] as int? ?? 0).compareTo(a['deletedAt'] as int? ?? 0));
       return items;
@@ -313,25 +310,26 @@ class AlbumService {
 
   Future<void> cleanupExpiredTrash(String houseId) async {
     try {
-      final snap = await _dbRef.child('houses/$houseId/album_trash').get();
-      if (!snap.exists) return;
-      final raw = snap.value;
-      if (raw is! Map) return;
+      final snap = await FirebaseFirestore.instance
+          .collection('houses')
+          .doc(houseId)
+          .collection('album_trash')
+          .get();
 
       final now = DateTime.now().millisecondsSinceEpoch;
-      final updates = <String, dynamic>{};
+      final batch = FirebaseFirestore.instance.batch();
+      int count = 0;
 
-      raw.forEach((key, value) {
-        if (value is Map) {
-          final purgeAt = value['purgeAt'] as int? ?? 0;
-          if (purgeAt <= now) {
-            updates[key.toString()] = null;
-          }
+      for (var doc in snap.docs) {
+        final purgeAt = doc.data()['purgeAt'] as int? ?? 0;
+        if (purgeAt <= now) {
+          batch.delete(doc.reference);
+          count++;
         }
-      });
+      }
 
-      if (updates.isNotEmpty) {
-        await _dbRef.child('houses/$houseId/album_trash').update(updates);
+      if (count > 0) {
+        await batch.commit();
       }
     } catch (_) {}
   }
@@ -340,19 +338,33 @@ class AlbumService {
     required String houseId,
     required String itemId,
   }) async {
-    final snap =
-        await _dbRef.child('houses/$houseId/album_trash/$itemId').get();
+    final trashRef = FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album_trash')
+        .doc(itemId);
+    final snap = await trashRef.get();
     if (!snap.exists) throw 'Không tìm thấy ảnh trong thùng rác.';
 
-    final data = Map<String, dynamic>.from(snap.value as Map);
+    final data = Map<String, dynamic>.from(snap.data()!);
     data.remove('deletedAt');
     data.remove('purgeAt');
 
     final now = DateTime.now().millisecondsSinceEpoch;
     data['ts'] = data['ts'] ?? now;
 
-    await _dbRef.child('houses/$houseId/album').push().set(data);
-    await _dbRef.child('houses/$houseId/album_trash/$itemId').remove();
+    final batch = FirebaseFirestore.instance.batch();
+    batch.set(
+      FirebaseFirestore.instance
+          .collection('houses')
+          .doc(houseId)
+          .collection('album')
+          .doc(itemId),
+      data,
+    );
+    batch.delete(trashRef);
+    await batch.commit();
+
     await _changeAlbumCount(houseId, 1);
   }
 
@@ -360,7 +372,12 @@ class AlbumService {
     required String houseId,
     required String itemId,
   }) async {
-    await _dbRef.child('houses/$houseId/album_trash/$itemId').remove();
+    await FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album_trash')
+        .doc(itemId)
+        .delete();
   }
 
   Future<void> toggleLike({
@@ -368,8 +385,14 @@ class AlbumService {
     required String itemId,
     required bool currentLiked,
   }) async {
-    final ref = _dbRef.child('houses/$houseId/album/$itemId/likes');
-    await ref.set(ServerValue.increment(currentLiked ? -1 : 1));
+    await FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album')
+        .doc(itemId)
+        .update({
+      'likes': FieldValue.increment(currentLiked ? -1 : 1),
+    });
   }
 
   Future<void> updateCaption({
@@ -377,33 +400,63 @@ class AlbumService {
     required String itemId,
     required String newCaption,
   }) async {
-    await _dbRef.child('houses/$houseId/album/$itemId').update({
+    await FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album')
+        .doc(itemId)
+        .update({
       'caption': newCaption.trim(),
       'editedAt': DateTime.now().millisecondsSinceEpoch,
     });
   }
 
   Future<List<AlbumItem>> fetchAlbum(String houseId, {int limit = 60}) async {
-    final snap = await _dbRef
-        .child('houses/$houseId/album')
-        .orderByChild('ts')
-        .limitToLast(limit)
+    final snap = await FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album')
+        .orderBy('ts', descending: true)
+        .limit(limit)
         .get();
 
-    if (!snap.exists || snap.value == null) return [];
-    final raw = snap.value;
-    if (raw is! Map) return [];
-
     final items = <AlbumItem>[];
+    for (var doc in snap.docs) {
+      try {
+        items.add(AlbumItem.fromJson(doc.id, doc.data()));
+      } catch (_) {}
+    }
+    return items;
+  }
+
+  // ── SCRIPT MIGRATION TỰ ĐỘNG ──────────────────────────────────────────
+  Future<void> migrateAlbumFromRTDB(String houseId) async {
+    final snap = await _dbRef.child('houses/$houseId/album').get();
+    if (!snap.exists || snap.value == null) return;
+
+    final raw = snap.value;
+    if (raw is! Map) return;
+
+    final batch = FirebaseFirestore.instance.batch();
+    int count = 0;
+
     raw.forEach((key, value) {
       if (value is Map) {
-        try {
-          items.add(AlbumItem.fromJson(key.toString(), value));
-        } catch (_) {}
+        final docRef = FirebaseFirestore.instance
+            .collection('houses')
+            .doc(houseId)
+            .collection('album')
+            .doc(key.toString());
+        batch.set(docRef, Map<String, dynamic>.from(value), SetOptions(merge: true));
+        count++;
       }
     });
-    items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    return items;
+
+    if (count > 0) {
+      await batch.commit();
+      // Optional: Delete from RTDB after migration
+      // await _dbRef.child('houses/$houseId/album').remove();
+    }
   }
 
   static String formatTrashRemain(int purgeAt) {

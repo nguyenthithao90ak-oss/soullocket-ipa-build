@@ -1,4 +1,4 @@
-import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_database/firebase_database.dart' hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soullocket_app/models/diary_post.dart';
 
@@ -24,6 +24,23 @@ class DiaryService {
     return _diariesRef(houseId)
         .orderBy('ts', descending: true)
         .limit(limit)
+        .snapshots()
+        .map((snapshot) {
+      final posts = <DiaryPost>[];
+      for (var doc in snapshot.docs) {
+        try {
+          posts.add(DiaryPost.fromJson(doc.id, doc.data()));
+        } catch (_) {}
+      }
+      return posts;
+    });
+  }
+
+  // ── LISTEN bài viết được ghim realtime ───────────────────────────────────
+  Stream<List<DiaryPost>> streamPinnedDiary(String houseId) {
+    return _diariesRef(houseId)
+        .where('pinned', isEqualTo: true)
+        .limit(1)
         .snapshots()
         .map((snapshot) {
       final posts = <DiaryPost>[];

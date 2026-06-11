@@ -63,6 +63,7 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
   final MemoryShareService _memoryShareService = MemoryShareService();
   final MemoryShareAllowanceService _memoryShareAllowanceService =
       MemoryShareAllowanceService();
+  final ScrollController _diaryScrollController = ScrollController();
   bool _isTabActive = false;
   bool _isActivatingTab = false;
   bool _lastSelectionOverlayVisible = false;
@@ -667,6 +668,16 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     );
   }
 
+  void _onDiaryScroll() {
+    if (_currentTab == 'memory') return;
+    if (!_diaryScrollController.hasClients) return;
+    final maxScroll = _diaryScrollController.position.maxScrollExtent;
+    final currentScroll = _diaryScrollController.position.pixels;
+    if (maxScroll - currentScroll <= 200) {
+      unawaited(_feedController.fetchNextDiaryPage());
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -674,6 +685,7 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     _feedController.addListener(_handleFeedControllerChange);
     _memoryController.addListener(_handleControllerChange);
     _guardController.addListener(_handleControllerChange);
+    _diaryScrollController.addListener(_onDiaryScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncSelectionOverlayVisibility();
@@ -700,6 +712,8 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     _feedController.removeListener(_handleFeedControllerChange);
     _memoryController.removeListener(_handleControllerChange);
     _guardController.removeListener(_handleControllerChange);
+    _diaryScrollController.removeListener(_onDiaryScroll);
+    _diaryScrollController.dispose();
     _feedController.dispose();
     _memoryController.dispose();
     _guardController.dispose();

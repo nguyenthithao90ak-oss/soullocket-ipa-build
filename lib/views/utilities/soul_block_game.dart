@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Source;
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
@@ -891,20 +892,45 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     _isRefreshingMemoryBurstGallery = true;
     try {
-      final DatabaseReference baseRef =
-          FirebaseDatabase.instance.ref('houses/$normalizedHouseId');
-      final DataSnapshot memoriesSnapshot =
-          await baseRef.child('memories').limitToLast(48).get();
-      final List<String> nextGallery =
-          _extractMediaUrls(memoriesSnapshot.value);
-      final Set<String> seenUrls = nextGallery.toSet();
+      final List<String> nextGallery = [];
+      final Set<String> seenUrls = {};
+
+      final memoriesSnap = await FirebaseFirestore.instance
+          .collection('houses')
+          .doc(normalizedHouseId)
+          .collection('memories')
+          .orderBy('ts', descending: true)
+          .limit(48)
+          .get();
+
+      for (var doc in memoriesSnap.docs) {
+        final data = doc.data();
+        for (final key in <String>['url', 'imageUrl', 'photoUrl', 'mediaUrl']) {
+          final url = (data[key] as String? ?? '').trim();
+          if (url.isNotEmpty && url.startsWith('http') && seenUrls.add(url)) {
+            nextGallery.add(url);
+            break;
+          }
+        }
+      }
 
       if (nextGallery.length < 8) {
-        final DataSnapshot albumSnapshot =
-            await baseRef.child('album').limitToLast(48).get();
-        for (final String url in _extractMediaUrls(albumSnapshot.value)) {
-          if (seenUrls.add(url)) {
-            nextGallery.add(url);
+        final albumSnap = await FirebaseFirestore.instance
+            .collection('houses')
+            .doc(normalizedHouseId)
+            .collection('album')
+            .orderBy('ts', descending: true)
+            .limit(48)
+            .get();
+
+        for (var doc in albumSnap.docs) {
+          final data = doc.data();
+          for (final key in <String>['url', 'imageUrl', 'photoUrl', 'mediaUrl', 'thumbUrl']) {
+            final url = (data[key] as String? ?? '').trim();
+            if (url.isNotEmpty && url.startsWith('http') && seenUrls.add(url)) {
+              nextGallery.add(url);
+              break;
+            }
           }
           if (nextGallery.length >= 18) {
             break;
