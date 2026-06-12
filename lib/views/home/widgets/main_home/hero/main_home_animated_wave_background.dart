@@ -79,9 +79,7 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
 
   void _onUiPrefsChanged() {
     if (!mounted) return;
-    setState(() {
-      _syncAnimationState(_shouldAnimateFor());
-    });
+    _syncAnimationState(_shouldAnimateFor());
   }
 
   bool _shouldAnimateFor() {
@@ -119,8 +117,7 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
     );
     final quality = effectProfile.graphicsQualityKey;
 
-    final shouldAnimate = _shouldAnimateFor();
-    _syncAnimationState(shouldAnimate);
+    final shouldAnimate = _controller.isAnimating;
     if (!shouldAnimate) {
       return RepaintBoundary(
         child: CustomPaint(

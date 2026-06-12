@@ -168,12 +168,22 @@ class DiaryItem extends StatelessWidget {
                   placeholderFadeInDuration: Duration.zero,
                   placeholder: (context, url) => Container(
                     height: 120,
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: Colors.white.withValues(alpha: 0.08),
+                    alignment: Alignment.center,
+                    child: const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.0,
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE98FB1)),
+                      ),
+                    ),
                   ),
                   errorWidget: (_, __, ___) => Container(
                     height: 120,
-                    color: Colors.white.withValues(alpha: 0.3),
-                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                    color: Colors.white.withValues(alpha: 0.08),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.broken_image_rounded, color: Color(0xFFE98FB1), size: 26),
                   ),
                 ),
               ),

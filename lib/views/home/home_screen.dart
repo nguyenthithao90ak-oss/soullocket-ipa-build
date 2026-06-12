@@ -1293,9 +1293,7 @@ class _HomeScreenState extends State<HomeScreen>
                     const _HomeTabPagePhysics(parent: ClampingScrollPhysics()),
                 children: List<Widget>.generate(
                   _navItems.length,
-                  (index) => RepaintBoundary(
-                    child: _tabPageForIndex(index),
-                  ),
+                  _tabPageForIndex,
                   growable: false,
                 ),
               ),

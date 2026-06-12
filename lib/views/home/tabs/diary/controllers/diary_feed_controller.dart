@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart'
@@ -554,16 +553,6 @@ class DiaryFeedController extends ChangeNotifier {
           unawaited(_hydrateAuthorNames(initialPosts));
           _setLoading(false);
         }
-      }
-
-      final connectivityResult = await Connectivity().checkConnectivity().then(
-            (results) =>
-                results.isNotEmpty ? results.first : ConnectivityResult.none,
-          );
-
-      if (connectivityResult == ConnectivityResult.none) {
-        _setLoading(false);
-        return;
       }
 
       if (houseId == null) {
