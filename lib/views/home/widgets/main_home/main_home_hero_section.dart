@@ -119,27 +119,55 @@ class _ModernHomeBody extends StatelessWidget {
                     children: [
                       SizedBox(height: MediaQuery.of(context).padding.top + 36),
                       RepaintBoundary(
-                        child: _MainHomeHeroCountdownSection(
-                          state: state,
-                          isSingle: isSingle,
-                          houseName: houseName,
-                          smartGreeting: smartGreeting,
-                          circleValue: circleValue,
-                          circleTopLabel: circleTopLabel,
-                          circleBottomLabel: circleBottomLabel,
-                          startDate: startDate,
-                          circleSize: circleSize,
-                          homeShowHouseName: homeShowHouseName,
-                          showDayCounter: showDayCounter,
-                          showLoveTimeDetail: showLoveTimeDetail,
-                          countdownStyleKey: countdownStyleKey,
-                          enableMotion: effectProfile.animationEnabled &&
-                              !state._deferHeavyHomeMotion,
-                          onEditStartDate: onEditStartDate,
-                          onEditTopLabel: onEditTopLabel,
-                          onEditBottomLabel: onEditBottomLabel,
-                          firstGuideHeroKey: state.widget.firstGuideHeroKey,
-                        ),
+                        child: state.widget.isSwipingListenable == null
+                            ? _MainHomeHeroCountdownSection(
+                                state: state,
+                                isSingle: isSingle,
+                                houseName: houseName,
+                                smartGreeting: smartGreeting,
+                                circleValue: circleValue,
+                                circleTopLabel: circleTopLabel,
+                                circleBottomLabel: circleBottomLabel,
+                                startDate: startDate,
+                                circleSize: circleSize,
+                                homeShowHouseName: homeShowHouseName,
+                                showDayCounter: showDayCounter,
+                                showLoveTimeDetail: showLoveTimeDetail,
+                                countdownStyleKey: countdownStyleKey,
+                                enableMotion: effectProfile.animationEnabled &&
+                                    !state._deferHeavyHomeMotion,
+                                onEditStartDate: onEditStartDate,
+                                onEditTopLabel: onEditTopLabel,
+                                onEditBottomLabel: onEditBottomLabel,
+                                firstGuideHeroKey: state.widget.firstGuideHeroKey,
+                              )
+                            : ValueListenableBuilder<bool>(
+                                valueListenable: state.widget.isSwipingListenable!,
+                                builder: (context, isSwiping, _) {
+                                  return _MainHomeHeroCountdownSection(
+                                    state: state,
+                                    isSingle: isSingle,
+                                    houseName: houseName,
+                                    smartGreeting: smartGreeting,
+                                    circleValue: circleValue,
+                                    circleTopLabel: circleTopLabel,
+                                    circleBottomLabel: circleBottomLabel,
+                                    startDate: startDate,
+                                    circleSize: circleSize,
+                                    homeShowHouseName: homeShowHouseName,
+                                    showDayCounter: showDayCounter,
+                                    showLoveTimeDetail: showLoveTimeDetail,
+                                    countdownStyleKey: countdownStyleKey,
+                                    enableMotion: effectProfile.animationEnabled &&
+                                        !state._deferHeavyHomeMotion &&
+                                        !isSwiping,
+                                    onEditStartDate: onEditStartDate,
+                                    onEditTopLabel: onEditTopLabel,
+                                    onEditBottomLabel: onEditBottomLabel,
+                                    firstGuideHeroKey: state.widget.firstGuideHeroKey,
+                                  );
+                                },
+                              ),
                       ),
                       SLSpacing.h8,
                       RepaintBoundary(

@@ -471,6 +471,7 @@ class _HomeScreenState extends State<HomeScreen>
       (isActive) => MainHomeTab(
             isActive: isActive,
             onOpenSettings: _openSettings,
+            isSwipingListenable: _isUserTabSwipingNotifier,
           ),
       if (_communityTabEnabled) (isActive) => CommunityTab(isActive: isActive),
       (isActive) => DiaryTab(

@@ -131,18 +131,30 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
               ),
             ],
           ),
-          for (final flight in _reactionFlights)
-            Positioned.fill(
-              key: ValueKey('reaction-flight-${flight.id}'),
-              child: IgnorePointer(
-                child: ShootingHeartEffect(
-                  shootToRight: flight.shootToRight,
-                  emoji: flight.emoji,
-                  assetPath: flight.assetPath,
-                  onComplete: () => _removeReactionFlight(flight.id),
-                ),
-              ),
+          Positioned.fill(
+            child: ValueListenableBuilder<List<_HomeReactionFlight>>(
+              valueListenable: _reactionFlightsNotifier,
+              builder: (context, flights, _) {
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    for (final flight in flights)
+                      Positioned.fill(
+                        key: ValueKey('reaction-flight-${flight.id}'),
+                        child: IgnorePointer(
+                          child: ShootingHeartEffect(
+                            shootToRight: flight.shootToRight,
+                            emoji: flight.emoji,
+                            assetPath: flight.assetPath,
+                            onComplete: () => _removeReactionFlight(flight.id),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
+          ),
         ],
       ),
     );

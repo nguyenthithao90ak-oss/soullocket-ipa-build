@@ -110,23 +110,26 @@ extension _MainHomeInteractions on _MainHomeTabState {
     }
     if (!mounted) return;
 
-    _safeSetState(() {
-      _reactionFlights.removeWhere((item) => item.id == flight.id);
-      _reactionFlights.add(flight);
-      if (_reactionFlights.length > _kMaxVisibleReactionFlights) {
-        _reactionFlights.removeRange(
-          0,
-          _reactionFlights.length - _kMaxVisibleReactionFlights,
-        );
-      }
-    });
+    final currentList = List<_HomeReactionFlight>.from(_reactionFlightsNotifier.value);
+    currentList.removeWhere((item) => item.id == flight.id);
+    currentList.add(flight);
+    if (currentList.length > _kMaxVisibleReactionFlights) {
+      currentList.removeRange(
+        0,
+        currentList.length - _kMaxVisibleReactionFlights,
+      );
+    }
+    _reactionFlightsNotifier.value = currentList;
   }
 
   void _removeReactionFlight(String id) {
     if (!mounted) return;
-    _safeSetState(() {
-      _reactionFlights.removeWhere((item) => item.id == id);
-    });
+    final currentList = List<_HomeReactionFlight>.from(_reactionFlightsNotifier.value);
+    final initialLength = currentList.length;
+    currentList.removeWhere((item) => item.id == id);
+    if (currentList.length != initialLength) {
+      _reactionFlightsNotifier.value = currentList;
+    }
   }
 
   void _triggerMissYouEffect(String interactionType) {

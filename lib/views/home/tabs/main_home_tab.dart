@@ -9,7 +9,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb;
+    show kDebugMode, kIsWeb, ValueListenable;
 import 'package:http/http.dart' as http;
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
@@ -127,6 +127,7 @@ class MainHomeTab extends StatefulWidget {
   final VoidCallback? onOpenSettings;
   final GlobalKey? firstGuideHeroKey;
   final GlobalKey? firstGuideSettingsKey;
+  final ValueListenable<bool>? isSwipingListenable;
 
   const MainHomeTab({
     super.key,
@@ -134,6 +135,7 @@ class MainHomeTab extends StatefulWidget {
     this.onOpenSettings,
     this.firstGuideHeroKey,
     this.firstGuideSettingsKey,
+    this.isSwipingListenable,
   });
 
   @override
@@ -211,7 +213,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   List<SharedNote> _noteHighlights = [];
   List<_HomeHighlightItem> _highlightItems = [];
   String? _selectedHomeToolId;
-  final List<_HomeReactionFlight> _reactionFlights = <_HomeReactionFlight>[];
+  late final ValueNotifier<List<_HomeReactionFlight>> _reactionFlightsNotifier;
   final Set<String> _seenReactionFlightIds = <String>{};
   final List<int> _localReactionThrowMs = <int>[];
   bool _isCoupleConnected = false;
@@ -497,6 +499,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _isTabActive = widget.isActive;
+    _reactionFlightsNotifier = ValueNotifier<List<_HomeReactionFlight>>([]);
     unawaited(() async {
       try {
         final selectedUiFont = SLTheme.textStyleForKey(
@@ -544,6 +547,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _homeMediaWarmupToken++;
     _fallingEffectTypeNotifier.dispose();
     _interactionDragHoveredNotifier.dispose();
+    _reactionFlightsNotifier.dispose();
     super.dispose();
   }
 
@@ -2632,7 +2636,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
                     !effectProfile.animationEnabled) {
                   return const SizedBox.shrink();
                 }
-                return Positioned.fill(
+                final fallingEffectWidget = Positioned.fill(
                   child: IgnorePointer(
                     child: FallingEffect(
                       type: effectType,
@@ -2640,6 +2644,18 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
                       density: effectProfile.graphicsQualityKey,
                     ),
                   ),
+                );
+                if (widget.isSwipingListenable == null) {
+                  return fallingEffectWidget;
+                }
+                return ValueListenableBuilder<bool>(
+                  valueListenable: widget.isSwipingListenable!,
+                  builder: (context, isSwiping, _) {
+                    if (isSwiping) {
+                      return const SizedBox.shrink();
+                    }
+                    return fallingEffectWidget;
+                  },
                 );
               },
             ),

@@ -341,7 +341,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       _hasLoadedPresenceSnapshot = false;
       _homeMapPreviewSignature = '';
       _cachedWidgetDiaryImageUrls = const <String>[];
-      _reactionFlights.clear();
+      _reactionFlightsNotifier.value = const [];
       _seenReactionFlightIds.clear();
       _localReactionThrowMs.clear();
       _showDefaultHeartSuggestion = false;
