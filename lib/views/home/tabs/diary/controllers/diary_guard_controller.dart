@@ -132,7 +132,7 @@ class DiaryGuardController extends ChangeNotifier {
       // Silently ensure token is fresh — handles emulator clock drift / expired
       // cached tokens without breaking the caller. Errors surface later if unresolvable.
       try {
-        await currentUser.getIdToken(false);
+        await currentUser.getIdToken(false).timeout(const Duration(seconds: 3));
       } catch (_) {}
       return currentUser;
     }

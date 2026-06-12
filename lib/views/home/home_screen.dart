@@ -132,7 +132,7 @@ class _TabActivationHostState extends State<_TabActivationHost> {
     if (_isActive != nextActive) {
       setState(() {
         _isActive = nextActive;
-        // Do NOT update _cachedChild here! This prevents heavy tab rebuilds during swipe.
+        _cachedChild = widget.builder(_isActive);
       });
     }
   }
