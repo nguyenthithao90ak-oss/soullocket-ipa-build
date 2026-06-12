@@ -628,9 +628,11 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   @override
   void setState(VoidCallback fn) {
     if (!mounted) return;
-    super.setState(fn);
     if (_hasActiveStandalonePanel) {
+      fn();
       _panelRebuildNotifier.value++;
+    } else {
+      super.setState(fn);
     }
   }
 

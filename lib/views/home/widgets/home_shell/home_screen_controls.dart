@@ -411,9 +411,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
             height: 42,
             padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
             decoration: BoxDecoration(
-              color: isActive
-                  ? item.activeColor.withValues(alpha: isDark ? 0.2 : 0.12)
-                  : Colors.transparent,
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(24),
             ),
             child: Center(

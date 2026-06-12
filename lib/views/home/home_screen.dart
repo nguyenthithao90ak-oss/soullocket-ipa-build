@@ -1273,43 +1273,45 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final foregroundContent = Stack(
+      children: [
+        NotificationListener<ScrollNotification>(
+          onNotification: _handlePageScrollNotification,
+          child: _HomePreloadPageView(
+            controller: _pageController,
+            onPageChanged: _handlePageChanged,
+            dragStartBehavior: DragStartBehavior.start,
+            physics:
+                const _HomeTabPagePhysics(parent: ClampingScrollPhysics()),
+            children: List<Widget>.generate(
+              _navItems.length,
+              _tabPageForIndex,
+              growable: false,
+            ),
+          ),
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: _isUserTabSwipingNotifier,
+          builder: (context, isSwiping, child) {
+            return TickerMode(
+              enabled: !isSwiping,
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
+          child: _buildMusicButton(),
+        ),
+      ],
+    );
+
     return ValueListenableBuilder<UiPrefsState>(
       valueListenable: UiPrefs.notifier,
-      builder: (context, uiState, _) {
+      child: foregroundContent,
+      builder: (context, uiState, cachedForegroundChild) {
         final effectProfile = _resolveHomeEffectProfile(
           uiState,
           pauseAnimations: _isUserTabSwiping,
         );
         final graphicsQualityKey = effectProfile.graphicsQualityKey;
-        final foregroundContent = Stack(
-          children: [
-            NotificationListener<ScrollNotification>(
-              onNotification: _handlePageScrollNotification,
-              child: _HomePreloadPageView(
-                controller: _pageController,
-                onPageChanged: _handlePageChanged,
-                dragStartBehavior: DragStartBehavior.start,
-                physics:
-                    const _HomeTabPagePhysics(parent: ClampingScrollPhysics()),
-                children: List<Widget>.generate(
-                  _navItems.length,
-                  _tabPageForIndex,
-                  growable: false,
-                ),
-              ),
-            ),
-            ValueListenableBuilder<bool>(
-              valueListenable: _isUserTabSwipingNotifier,
-              builder: (context, isSwiping, child) {
-                return TickerMode(
-                  enabled: !isSwiping,
-                  child: child ?? const SizedBox.shrink(),
-                );
-              },
-              child: _buildMusicButton(),
-            ),
-          ],
-        );
 
         Widget buildShell({required Widget foregroundChild}) {
           final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
@@ -1347,18 +1349,18 @@ class _HomeScreenState extends State<HomeScreen>
                   return ValueListenableBuilder<bool>(
                     valueListenable: _isUserTabSwipingNotifier,
                     builder: (context, isSwiping, _) {
-                      if (isSwiping) {
-                        return const SizedBox.shrink();
-                      }
                       return Positioned.fill(
                         child: RepaintBoundary(
                           child: IgnorePointer(
-                            child: LegacyFallingEffect(
-                              type: resolvedEffectKey,
-                              isDark: isDark,
-                              density: graphicsQualityKey,
-                              opacity: isDark ? 0.96 : 0.88,
-                              animate: shouldAnimateFallingEffect,
+                            child: Offstage(
+                              offstage: isSwiping,
+                              child: LegacyFallingEffect(
+                                type: resolvedEffectKey,
+                                isDark: isDark,
+                                density: graphicsQualityKey,
+                                opacity: isDark ? 0.96 : 0.88,
+                                animate: shouldAnimateFallingEffect && !isSwiping,
+                              ),
                             ),
                           ),
                         ),
@@ -1413,12 +1415,12 @@ class _HomeScreenState extends State<HomeScreen>
         }
 
         if (uiState.themeKey.trim() != 'theme-vip-rotate') {
-          return buildShell(foregroundChild: foregroundContent);
+          return buildShell(foregroundChild: cachedForegroundChild!);
         }
 
         return ValueListenableBuilder<int>(
           valueListenable: _vipThemeRotationTickNotifier,
-          child: foregroundContent,
+          child: cachedForegroundChild,
           builder: (context, _, foregroundChild) {
             return buildShell(
               foregroundChild: foregroundChild ?? const SizedBox.shrink(),

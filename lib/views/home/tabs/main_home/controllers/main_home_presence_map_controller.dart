@@ -57,9 +57,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   }
 
   String? _ignoredPresenceUidForRole(String role) {
-    if (role == _currentRole) return null;
-    final uid = _auth.currentUser?.uid.trim();
-    return uid == null || uid.isEmpty ? null : uid;
+    return null;
   }
 
   bool _isPresenceDataOnlineForRole(

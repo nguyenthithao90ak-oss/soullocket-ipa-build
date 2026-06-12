@@ -289,6 +289,40 @@ class AuthHouseContextService {
     };
   }
 
+  Future<void> _restoreRoleFromDatabase(
+    String houseId,
+    String uid,
+    SharedPreferences prefs,
+  ) async {
+    final localRole = prefs.getString('il_role');
+    if (localRole != null && (localRole == 'user1' || localRole == 'user2')) {
+      return;
+    }
+    try {
+      final memberSnap = await _db.child('houses/$houseId/members/$uid').get();
+      if (memberSnap.exists) {
+        final data = memberSnap.value;
+        if (data is Map) {
+          final role = data['role']?.toString().trim();
+          if (role == 'user1' || role == 'user2') {
+            await prefs.setString('il_role', role!);
+            return;
+          }
+        }
+      }
+      final houseSnap = await _db.child('houses/$houseId').get();
+      if (houseSnap.exists) {
+        final houseData = _asStringDynamicMap(houseSnap.value);
+        if (houseData != null) {
+          final ownerUid = houseData['owner_uid']?.toString().trim() ??
+              houseData['ownerUid']?.toString().trim();
+          final resolvedRole = (ownerUid == uid) ? 'user1' : 'user2';
+          await prefs.setString('il_role', resolvedRole);
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<String?> resolveCurrentHouseId({firebase_auth.User? user}) async {
     final prefs = await _prefs;
     final cachedHouseId = prefs.getString('il_house_id')?.trim() ?? '';
@@ -296,6 +330,10 @@ class AuthHouseContextService {
     final resolvedUser = user ?? _auth.currentUser;
     if (cachedHouseId.isNotEmpty) {
       if (resolvedUser != null && cachedAuthUid == resolvedUser.uid) {
+        final localRole = prefs.getString('il_role');
+        if (localRole == null || (localRole != 'user1' && localRole != 'user2')) {
+          await _restoreRoleFromDatabase(cachedHouseId, resolvedUser.uid, prefs);
+        }
         return cachedHouseId;
       }
       await prefs.remove('il_house_id');
@@ -311,6 +349,7 @@ class AuthHouseContextService {
       if (primaryValue.isNotEmpty) {
         await prefs.setString('il_house_id', primaryValue);
         await prefs.setString(_authUidPrefsKey, resolvedUser.uid);
+        await _restoreRoleFromDatabase(primaryValue, resolvedUser.uid, prefs);
         return primaryValue;
       }
     } catch (_) {}
@@ -325,6 +364,7 @@ class AuthHouseContextService {
             .update({'houseId': legacyValue});
         await prefs.setString('il_house_id', legacyValue);
         await prefs.setString(_authUidPrefsKey, resolvedUser.uid);
+        await _restoreRoleFromDatabase(legacyValue, resolvedUser.uid, prefs);
         return legacyValue;
       }
     } catch (_) {}

@@ -235,6 +235,11 @@ void main() {
     }
 
     FlutterError.onError = (details) {
+      final errStr = details.exception.toString().toLowerCase();
+      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
+        debugPrint('Ignored fatal asset error in main: $errStr');
+        return;
+      }
       FlutterError.presentError(details);
       debugPrint(kDebugMode ? details.toString() : details.exceptionAsString());
       unawaited(ErrorLoggerService.instance.logError(
@@ -256,6 +261,11 @@ void main() {
     };
 
     PlatformDispatcher.instance.onError = (error, stackTrace) {
+      final errStr = error.toString().toLowerCase();
+      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
+        debugPrint('Ignored async asset error in main: $errStr');
+        return true;
+      }
       final mappedError = AppErrorMapper.resolve(
         error,
         fallbackMessage: L10nService().translate('core_err_system_bg'),

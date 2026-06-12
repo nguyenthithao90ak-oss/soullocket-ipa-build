@@ -422,6 +422,12 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
     } else {
       sessionRole = await _readSavedGender(email);
+      if (sessionRole == null && mounted) {
+        sessionRole = await _askGender(email);
+        if (sessionRole == null) {
+          return;
+        }
+      }
     }
 
     if (!mounted) return;
@@ -693,7 +699,19 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       final email = (result.user?.email ?? '').trim().toLowerCase();
-      final storedRole = await _readSavedGender(email);
+      var storedRole = await _readSavedGender(email);
+      if (storedRole == null && mounted) {
+        storedRole = await _askGender(email);
+        if (storedRole == null) {
+          await _authService.signOut();
+          if (mounted) {
+            _showErrorDialog(
+              L10nService().translate('Bạn cần chọn vai trò tài khoản trước khi tiếp tục.'),
+            );
+          }
+          return;
+        }
+      }
       final prefs = await SharedPreferences.getInstance();
       if (storedRole == 'user1' || storedRole == 'user2') {
         await prefs.setString('il_role', storedRole!);

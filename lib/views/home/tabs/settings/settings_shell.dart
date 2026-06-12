@@ -778,46 +778,41 @@ extension _SettingsTabShell on _SettingsTabState {
     return ValueListenableBuilder<int>(
       valueListenable: _panelRebuildNotifier,
       builder: (context, _, __) {
-        return ValueListenableBuilder<UiPrefsState>(
-          valueListenable: UiPrefs.notifier,
-          builder: (context, uiState, _) {
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                const _SettingsBackgroundLayer(),
-                Scaffold(
-                  backgroundColor: Colors.transparent,
-                  body: SafeArea(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return Align(
-                          alignment: Alignment.topCenter,
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: SLResponsive.maxContentWidthForWidth(
-                                constraints.maxWidth,
-                                handsetMax: 560,
-                                tabletMax: 980,
-                                desktopMax: 1080,
-                              ),
-                            ),
-                            child: RepaintBoundary(
-                              child: SingleChildScrollView(
-                                physics: const ClampingScrollPhysics(),
-                                padding:
-                                    const EdgeInsets.only(top: 0, bottom: 24),
-                                child: _buildStandalonePanelContent(sectionId),
-                              ),
-                            ),
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            const _SettingsBackgroundLayer(),
+            Scaffold(
+              backgroundColor: Colors.transparent,
+              body: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: SLResponsive.maxContentWidthForWidth(
+                            constraints.maxWidth,
+                            handsetMax: 560,
+                            tabletMax: 980,
+                            desktopMax: 1080,
                           ),
-                        );
-                      },
-                    ),
-                  ),
+                        ),
+                        child: RepaintBoundary(
+                          child: SingleChildScrollView(
+                            physics: const ClampingScrollPhysics(),
+                            padding:
+                                const EdgeInsets.only(top: 0, bottom: 24),
+                            child: _buildStandalonePanelContent(sectionId),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ],
-            );
-          },
+              ),
+            ),
+          ],
         );
       },
     );

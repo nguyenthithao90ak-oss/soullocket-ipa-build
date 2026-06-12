@@ -300,7 +300,7 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
             image: placeholderProvider,
             fit: widget.fit,
             gaplessPlayback: true,
-            filterQuality: FilterQuality.high,
+            filterQuality: FilterQuality.medium,
           )
         : Image.asset(
             widget.fallbackAsset,
@@ -320,7 +320,7 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
           image: _currentProvider!,
           fit: widget.fit,
           gaplessPlayback: true,
-          filterQuality: FilterQuality.high,
+          filterQuality: FilterQuality.medium,
           frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
             if (wasSynchronouslyLoaded || frame != null) {
               _markCurrentImageReady();

@@ -9,6 +9,8 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:in_app_review/in_app_review.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../models/house_settings.dart';
 import '../../../utils/services/admob_service.dart';
@@ -397,6 +399,25 @@ class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClie
     setState(() => _isEditMode = value);
   }
 
+  Future<void> _checkAndShowAppReviewForUtility() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int openCount = (prefs.getInt('app_review_utility_open_count') ?? 0) + 1;
+      await prefs.setInt('app_review_utility_open_count', openCount);
+
+      if (openCount == 6 || openCount == 30 || openCount == 90 || openCount == 200) {
+        final InAppReview inAppReview = InAppReview.instance;
+        if (await inAppReview.isAvailable()) {
+          Future.delayed(const Duration(seconds: 2), () async {
+            try {
+              await inAppReview.requestReview();
+            } catch (_) {}
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
   static DateTime? _lastUtilityAdTime;
 
   Future<void> _navigateToApp(String id) async {
@@ -439,6 +460,8 @@ class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClie
         _recentApps = updatedRecentApps;
       });
     }
+
+    unawaited(_checkAndShowAppReviewForUtility());
 
     Widget? screen;
     switch (id) {

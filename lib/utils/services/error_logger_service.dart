@@ -19,11 +19,21 @@ class ErrorLoggerService {
 
     // Pass all uncaught "fatal" errors from the framework to Crashlytics
     FlutterError.onError = (errorDetails) {
+      final errStr = errorDetails.exception.toString().toLowerCase();
+      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
+        debugPrint('Ignored fatal asset error in ErrorLoggerService: $errStr');
+        return;
+      }
       FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
     };
 
     // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
     PlatformDispatcher.instance.onError = (error, stack) {
+      final errStr = error.toString().toLowerCase();
+      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
+        debugPrint('Ignored async asset error in ErrorLoggerService: $errStr');
+        return true;
+      }
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
@@ -32,6 +42,11 @@ class ErrorLoggerService {
   }
 
   Future<void> logError(dynamic error, StackTrace? stack, {String? reason, bool fatal = false}) async {
+    final errStr = error.toString().toLowerCase();
+    if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
+      debugPrint('Ignored asset loading error from logger: $errStr');
+      return;
+    }
     debugPrint('Logging error: ${AppErrorMapper.resolve(error).message}');
     await FirebaseCrashlytics.instance.recordError(
       error,

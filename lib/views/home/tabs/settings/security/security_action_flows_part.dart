@@ -743,6 +743,12 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         'Chế độ độc thân không hỗ trợ đổi vai Nam/Nữ.',
         success: false,
       );
+    } else {
+      final roleTerm = nextRole == 'user2' ? context.tr('role_wife') : context.tr('role_husband');
+      _showToast(
+        'Đã đổi thành công sang vai $roleTerm 🎉',
+        success: true,
+      );
     }
   }
 

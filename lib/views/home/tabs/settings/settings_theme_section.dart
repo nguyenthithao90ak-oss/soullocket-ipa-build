@@ -446,650 +446,646 @@ extension _SettingsTabThemeSection on _SettingsTabState {
     final graphicsOptions = config.graphicsOptions;
     final widgetThemes = config.widgetThemes;
 
-    return ValueListenableBuilder<UiPrefsState>(
-      valueListenable: UiPrefs.notifier,
-      builder: (context, ui, _) {
-        final selection = _resolveThemePanelSelection(ui, config);
-        _localCountdownSize = selection.countdownSize;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!hideBackButton) _buildThemeHeader(context, showBack: !hideBackButton),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-              _ThemeSectionCard(
-                icon: Icons.aspect_ratio_rounded,
-                title: context.tr('theme_frame_size'),
-                description: context.tr('theme_frame_size_desc'),
-                themeColor: const Color(0xFFFF4D73),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    StatefulBuilder(
-                      builder: (context, setStateSlider) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${context.tr('theme_countdown_size')}: ${_localCountdownSize!.round()}px',
-                              style: SLTheme.quicksand(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF8A5B76),
-                              ),
-                            ),
-                            Slider(
-                              value: _localCountdownSize!,
-                              min: 200,
-                              max: UiPrefs.maxCountdownSizePx,
-                              activeColor: const Color(0xFFD81B60),
-                              inactiveColor: const Color(0xFFE6E6E6),
-                              onChanged: (value) {
-                                setStateSlider(() {
-                                  _localCountdownSize = value;
-                                });
-                                
-                                _draftCountdownSizePx = value;
-                                
-                                // Debounce live preview để kéo thanh trượt không bị khựng
-                                _uiPrefsDebounceTimer?.cancel();
-                                if (mounted) {
-                                  _uiPrefsDebounceTimer = Timer(const Duration(milliseconds: 150), () {
-                                    if (!mounted) return;
-                                    _applyThemeDraftToUiPrefsPreview();
-                                  });
-                                }
-                              },
-                            ),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton.icon(
-                                onPressed: () {
-                                  // Lưu thủ công thay vì tự động lưu
-                                  _saveThemeSettings(silent: false);
-                                },
-                                icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                                label: Text(
-                                  context.tr('theme_save_size'),
-                                  style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: const Color(0xFFD81B60),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _buildLabel(context.tr('theme_frame_type')),
-                    _buildThemeDropdownField(
-                      value: selection.avatarFrameKey,
-                      options: config.avatarFrames,
-                      onChanged: _handleAvatarFrameSelection,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildLabel(context.tr('theme_countdown_style')),
-                    _buildThemeDropdownField(
-                      value: selection.countdownStyleKey,
-                      options: config.countdownStyles.map((s) {
-                        final locked = s.$3 &&
-                            !_isVipActive &&
-                            !selection.hasCountdownAdPass;
-                        final label = locked ? '${s.$1}${context.tr('theme_countdown_label_ad')}' : s.$1;
-                        return (locked ? '${s.$1}${context.tr('theme_countdown_label_locked')}' : label, s.$2);
-                      }).toList(),
-                      onChanged: (value) => _handleCountdownStyleChange(value),
-                    ),
-                  ],
-                ),
-              ),
-              _ThemeSectionCard(
-                icon: Icons.calendar_month_rounded,
-                title: context.tr('theme_add_new_memory'),
-                description: context.tr('theme_memory_desc'),
-                themeColor: const Color(0xFFFF77A8),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildInput(
-                            _anniversaryNameCtrl,
-                            '${context.tr('home_tnknim_c9204b')} — ${context.tr('home_vdngyyunha_5849f3')}',
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _anniversaryDateCtrl,
-                                  keyboardType: TextInputType.datetime,
-                                  inputFormatters: const [
-                                    FlexibleDateInputFormatter(),
-                                  ],
-                                  textInputAction: TextInputAction.done,
-                                  onChanged: (value) {
-                                    _draftAnniversaryDate =
-                                        DateInputUtils.parse(
-                                      value,
-                                      firstYear: 2020,
-                                      lastYear: 2100,
-                                    );
-                                    if (_anniversaryDateErrorText != null) {
-                                      setState(() {
-                                        _anniversaryDateErrorText = null;
-                                      });
-                                    }
-                                  },
-                                  onEditingComplete: () {
-                                    final validationError =
-                                        DateInputUtils.validationError(
-                                      _anniversaryDateCtrl.text,
-                                      firstYear: 2020,
-                                      lastYear: 2100,
-                                    );
-                                    if (validationError != null) {
-                                      setState(() {
-                                        _anniversaryDateErrorText =
-                                            validationError;
-                                      });
-                                      return;
-                                    }
-                                    final parsed = DateInputUtils.parse(
-                                      _anniversaryDateCtrl.text,
-                                      firstYear: 2020,
-                                      lastYear: 2100,
-                                    );
-                                    if (parsed == null) return;
-                                    _draftAnniversaryDate = parsed;
-                                    _anniversaryDateErrorText = null;
-                                    _anniversaryDateCtrl.text =
-                                        DateInputUtils.formatDisplayDate(
-                                            parsed);
-                                    _anniversaryDateCtrl.selection =
-                                        TextSelection.collapsed(
-                                      offset: _anniversaryDateCtrl.text.length,
-                                    );
-                                  },
-                                  decoration: LegacyWebUi.softInputDecoration(
-                                    hintText: context.tr('home_ngythngnm_a697d0'),
-                                  ).copyWith(
-                                    errorText: _anniversaryDateErrorText,
-                                    isDense: true,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 12,
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Icons.calendar_month_rounded,
-                                      color: Color(0xFFD81B60),
-                                      size: 18,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: const Icon(Icons.event_rounded, size: 18),
-                                      color: const Color(0xFFD81B60),
-                                      padding: EdgeInsets.zero,
-                                      onPressed: _pickAnniversaryDate,
-                                    ),
-                                  ),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF5F4C58),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: _addCustomAnniversary,
-                                child: Container(
-                                  height: 48,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFFFF5E92), Color(0xFFD81B60)],
-                                    ),
-                                    borderRadius: BorderRadius.circular(14),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFFD81B60).withValues(alpha: 0.22),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.add_rounded, color: Colors.white, size: 18),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        context.tr('home_thm_d9cb42'),
-                                        style: SLTheme.quicksand(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildThemeEventPreview(),
-                  ],
-                ),
-              ),
-              _ThemeSectionCard(
-                icon: Icons.font_download_rounded,
-                title: '${context.tr('font_label')} & ${context.tr('lang_label')}',
-                description: context.tr('theme_font_lang_desc'),
-                themeColor: const Color(0xFF00C8FF),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel(context.tr('lang_label')),
-                    _buildThemeDropdownField(
-                      value: selection.languageKey,
-                      options: config.languages,
-                      onChanged: (value) {
-                        // Tránh khựng UI: Đợi menu dropdown đóng mượt mà xong (300ms) rồi mới load tệp JSON ngôn ngữ nặng
-                        Future.delayed(const Duration(milliseconds: 300), () async {
-                          await L10nService().setLocale(value);
-                          if (!mounted) return;
-                          setState(() {});
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildLabel(context.tr('font_label')),
-                    _buildThemeFontDropdownField(
-                      value: selection.fontKey,
-                      fonts: config.fonts,
-                      onChanged: (value) =>
-                          _updateThemeDraft(() => _draftFontKey = value),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
-                      ),
-                      child: Text(
-                        context.tr('theme_font_desc'),
-                        style: _themeFontStyle(
-                          selection.fontKey,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFD81B60),
-                          height: 1.45,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _ThemeSectionCard(
-                icon: Icons.palette_rounded,
-                title: context.tr('theme_bg_effect_title'),
-                description: context.tr('theme_bg_effect_desc'),
-                themeColor: const Color(0xFF9C27B0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel(context.tr('theme_falling_effect')),
-                    const SizedBox(height: 6),
-                    _buildEffectPresetStrip(selection.effectKey),
-                    const SizedBox(height: 12),
-                    _buildLabel(context.tr('theme_color_theme')),
-                    const SizedBox(height: 6),
-                    selection.previewBackground.isNotEmpty
-                        ? Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                              horizontal: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF2F2F2),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: const Color(0xFFE0E0E0),
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                context.tr('theme_bg_in_use'),
-                                textAlign: TextAlign.center,
-                                style: SLTheme.quicksand(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF757575),
-                                ),
-                              ),
-                            ),
-                          )
-                        : _buildThemePaletteStrip(selection.themeKey),
-                    const SizedBox(height: 12),
-                    _buildLabel(context.tr('theme_home_block_tone')),
-                    _buildThemeDropdownField(
-                      value: selection.homeToneKey,
-                      options: config.homeTones,
-                      onChanged: (value) =>
-                          _updateThemeDraft(() => _draftHomeBlockToneKey = value),
-                    ),
-                    const SizedBox(height: 14),
-                    _buildThemeHomeLikePreviewCard(
-                      selection.previewBackground,
-                      themeKey: selection.themeKey,
-                      effectKey: selection.effectKey,
-                      graphicsKey: selection.graphicsKey,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
+    final ui = UiPrefs.notifier.value;
+    final selection = _resolveThemePanelSelection(ui, config);
+    _localCountdownSize = selection.countdownSize;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!hideBackButton) _buildThemeHeader(context, showBack: !hideBackButton),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+          _ThemeSectionCard(
+            icon: Icons.aspect_ratio_rounded,
+            title: context.tr('theme_frame_size'),
+            description: context.tr('theme_frame_size_desc'),
+            themeColor: const Color(0xFFFF4D73),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                StatefulBuilder(
+                  builder: (context, setStateSlider) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: _buildGradientBtn(
-                            label: _isUploadingThemeBackground
-                                ? (_themeUploadProgress != null 
-                                    ? context.tr('theme_uploading_pct').replaceAll('{pct}', (_themeUploadProgress! * 100).toInt().toString())
-                                    : context.tr('theme_uploading_img'))
-                                : context.tr('theme_upload_web_bg'),
-                            gradient: const [Color(0xFFFF7EA8), Color(0xFFFF5E92)],
-                            onTap: _isUploadingThemeBackground
-                                ? () {}
-                                : _pickThemeBackgroundImage,
+                        Text(
+                          '${context.tr('theme_countdown_size')}: ${_localCountdownSize!.round()}px',
+                          style: SLTheme.quicksand(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF8A5B76),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildGradientBtn(
-                            label: context.tr('theme_remove_bg'),
-                            gradient: const [Color(0xFFFF5B6A), Color(0xFFFF4343)],
-                            onTap: _clearThemeBackgroundImage,
+                        Slider(
+                          value: _localCountdownSize!,
+                          min: 200,
+                          max: UiPrefs.maxCountdownSizePx,
+                          activeColor: const Color(0xFFD81B60),
+                          inactiveColor: const Color(0xFFE6E6E6),
+                          onChanged: (value) {
+                            setStateSlider(() {
+                              _localCountdownSize = value;
+                            });
+                            
+                            _draftCountdownSizePx = value;
+                            
+                            // Debounce live preview để kéo thanh trượt không bị khựng
+                            _uiPrefsDebounceTimer?.cancel();
+                            if (mounted) {
+                              _uiPrefsDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+                                if (!mounted) return;
+                                _applyThemeDraftToUiPrefsPreview();
+                              });
+                            }
+                          },
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              // Lưu thủ công thay vì tự động lưu
+                              _saveThemeSettings(silent: false);
+                            },
+                            icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                            label: Text(
+                              context.tr('theme_save_size'),
+                              style: SLTheme.quicksand(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFFD81B60),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              ),
-              _ThemeSectionCard(
-                icon: Icons.settings_suggest_rounded,
-                title: context.tr('theme_perf_title'),
-                description: context.tr('theme_perf_desc'),
-                themeColor: const Color(0xFF0288D1),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFFFF),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFF3D9E6)),
+                const SizedBox(height: 8),
+                _buildLabel(context.tr('theme_frame_type')),
+                _buildThemeDropdownField(
+                  value: selection.avatarFrameKey,
+                  options: config.avatarFrames,
+                  onChanged: _handleAvatarFrameSelection,
+                ),
+                const SizedBox(height: 12),
+                _buildLabel(context.tr('theme_countdown_style')),
+                _buildThemeDropdownField(
+                  value: selection.countdownStyleKey,
+                  options: config.countdownStyles.map((s) {
+                    final locked = s.$3 &&
+                        !_isVipActive &&
+                        !selection.hasCountdownAdPass;
+                    final label = locked ? '${s.$1}${context.tr('theme_countdown_label_ad')}' : s.$1;
+                    return (locked ? '${s.$1}${context.tr('theme_countdown_label_locked')}' : label, s.$2);
+                  }).toList(),
+                  onChanged: (value) => _handleCountdownStyleChange(value),
+                ),
+              ],
+            ),
+          ),
+          _ThemeSectionCard(
+            icon: Icons.calendar_month_rounded,
+            title: context.tr('theme_add_new_memory'),
+            description: context.tr('theme_memory_desc'),
+            themeColor: const Color(0xFFFF77A8),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInput(
+                        _anniversaryNameCtrl,
+                        '${context.tr('home_tnknim_c9204b')} — ${context.tr('home_vdngyyunha_5849f3')}',
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  context.tr('home_trongsut_38b9d1'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFFD81B60),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  context.tr('home_lmcckhihin_df481f'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF777777),
-                                    height: 1.45,
-                                  ),
-                                ),
+                            child: TextField(
+                              controller: _anniversaryDateCtrl,
+                              keyboardType: TextInputType.datetime,
+                              inputFormatters: const [
+                                FlexibleDateInputFormatter(),
                               ],
-                            ),
-                          ),
-                          Checkbox(
-                            value: _draftTransparentMode ?? ui.transparentMode,
-                            activeColor: const Color(0xFFD81B60),
-                            onChanged: (value) => _updateThemeDraft(
-                                () => _draftTransparentMode = value ?? false),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  context.tr('theme_lite_mode_title'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFFD81B60),
-                                  ),
+                              textInputAction: TextInputAction.done,
+                              onChanged: (value) {
+                                _draftAnniversaryDate =
+                                    DateInputUtils.parse(
+                                  value,
+                                  firstYear: 2020,
+                                  lastYear: 2100,
+                                );
+                                if (_anniversaryDateErrorText != null) {
+                                  setState(() {
+                                    _anniversaryDateErrorText = null;
+                                  });
+                                }
+                              },
+                              onEditingComplete: () {
+                                final validationError =
+                                    DateInputUtils.validationError(
+                                  _anniversaryDateCtrl.text,
+                                  firstYear: 2020,
+                                  lastYear: 2100,
+                                );
+                                if (validationError != null) {
+                                  setState(() {
+                                    _anniversaryDateErrorText =
+                                        validationError;
+                                  });
+                                  return;
+                                }
+                                final parsed = DateInputUtils.parse(
+                                  _anniversaryDateCtrl.text,
+                                  firstYear: 2020,
+                                  lastYear: 2100,
+                                );
+                                if (parsed == null) return;
+                                _draftAnniversaryDate = parsed;
+                                _anniversaryDateErrorText = null;
+                                _anniversaryDateCtrl.text =
+                                    DateInputUtils.formatDisplayDate(
+                                        parsed);
+                                _anniversaryDateCtrl.selection =
+                                    TextSelection.collapsed(
+                                  offset: _anniversaryDateCtrl.text.length,
+                                );
+                              },
+                              decoration: LegacyWebUi.softInputDecoration(
+                                hintText: context.tr('home_ngythngnm_a697d0'),
+                              ).copyWith(
+                                errorText: _anniversaryDateErrorText,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  context.tr('theme_lite_mode_desc'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF777777),
-                                    height: 1.45,
-                                  ),
+                                prefixIcon: const Icon(
+                                  Icons.calendar_month_rounded,
+                                  color: Color(0xFFD81B60),
+                                  size: 18,
                                 ),
-                              ],
-                            ),
-                          ),
-                          Switch.adaptive(
-                            value: _draftLiteMode,
-                            activeThumbColor: const Color(0xFFD81B60),
-                            onChanged: (value) => _updateThemeDraft(
-                                () => _draftLiteMode = value),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                context.tr('theme_graphics_quality'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFFFF4D73),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.event_rounded, size: 18),
+                                  color: const Color(0xFFD81B60),
+                                  padding: EdgeInsets.zero,
+                                  onPressed: _pickAnniversaryDate,
                                 ),
                               ),
-                              const Spacer(),
-                              GestureDetector(
-                                onTap: () => _updateThemeDraft(
-                                  () => _draftGraphicsQualityKey = 'auto',
+                              style: SLTheme.quicksand(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF5F4C58),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: _addCustomAnniversary,
+                            child: Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFFF5E92), Color(0xFFD81B60)],
                                 ),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    gradient: (_draftGraphicsQualityKey ??
-                                                ui.graphicsQualityKey) ==
-                                            'auto'
-                                        ? const LinearGradient(
-                                            colors: [
-                                              Color(0xFF4EA3FF),
-                                              Color(0xFF2877FF)
-                                            ],
-                                          )
-                                        : const LinearGradient(
-                                            colors: [
-                                              Color(0xFFE0E0E0),
-                                              Color(0xFFBDBDBD)
-                                            ],
-                                          ),
-                                    borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFD81B60).withValues(alpha: 0.22),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
                                   ),
-                                  child: Text(
-                                    context.tr('theme_graphics_auto'),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.add_rounded, color: Colors.white, size: 18),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    context.tr('home_thm_d9cb42'),
                                     style: SLTheme.quicksand(
-                                      fontSize: 11,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.w900,
                                       color: Colors.white,
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            context.tr('theme_graphics_desc'),
-                            style: SLTheme.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF777777),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: graphicsOptions.map((item) {
-                              final selected = selection.graphicsKey == item.$2;
-                              return Expanded(
-                                child: GestureDetector(
-                                  onTap: () => _updateThemeDraft(
-                                    () => _draftGraphicsQualityKey = item.$2,
-                                  ),
-                                  child: Container(
-                                    margin: EdgeInsets.only(
-                                      right: item == graphicsOptions.last ? 0 : 8,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: selected
-                                          ? const Color(0xFFFF4D8D)
-                                          : const Color(0xFFF8F8F8),
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: Text(
-                                      item.$1,
-                                      textAlign: TextAlign.center,
-                                      style: SLTheme.quicksand(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w900,
-                                        color: selected
-                                            ? Colors.white
-                                            : const Color(0xFF666666),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
                         ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildThemeEventPreview(),
+              ],
+            ),
+          ),
+          _ThemeSectionCard(
+            icon: Icons.font_download_rounded,
+            title: '${context.tr('font_label')} & ${context.tr('lang_label')}',
+            description: context.tr('theme_font_lang_desc'),
+            themeColor: const Color(0xFF00C8FF),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLabel(context.tr('lang_label')),
+                _buildThemeDropdownField(
+                  value: selection.languageKey,
+                  options: config.languages,
+                  onChanged: (value) {
+                    // Tránh khựng UI: Đợi menu dropdown đóng mượt mà xong (300ms) rồi mới load tệp JSON ngôn ngữ nặng
+                    Future.delayed(const Duration(milliseconds: 300), () async {
+                      await L10nService().setLocale(value);
+                      if (!mounted) return;
+                      setState(() {});
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildLabel(context.tr('font_label')),
+                _buildThemeFontDropdownField(
+                  value: selection.fontKey,
+                  fonts: config.fonts,
+                  onChanged: (value) =>
+                      _updateThemeDraft(() => _draftFontKey = value),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+                  ),
+                  child: Text(
+                    context.tr('theme_font_desc'),
+                    style: _themeFontStyle(
+                      selection.fontKey,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFFD81B60),
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _ThemeSectionCard(
+            icon: Icons.palette_rounded,
+            title: context.tr('theme_bg_effect_title'),
+            description: context.tr('theme_bg_effect_desc'),
+            themeColor: const Color(0xFF9C27B0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLabel(context.tr('theme_falling_effect')),
+                const SizedBox(height: 6),
+                _buildEffectPresetStrip(selection.effectKey),
+                const SizedBox(height: 12),
+                _buildLabel(context.tr('theme_color_theme')),
+                const SizedBox(height: 6),
+                selection.previewBackground.isNotEmpty
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF2F2F2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFFE0E0E0),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            context.tr('theme_bg_in_use'),
+                            textAlign: TextAlign.center,
+                            style: SLTheme.quicksand(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF757575),
+                            ),
+                          ),
+                        ),
+                      )
+                    : _buildThemePaletteStrip(selection.themeKey),
+                const SizedBox(height: 12),
+                _buildLabel(context.tr('theme_home_block_tone')),
+                _buildThemeDropdownField(
+                  value: selection.homeToneKey,
+                  options: config.homeTones,
+                  onChanged: (value) =>
+                      _updateThemeDraft(() => _draftHomeBlockToneKey = value),
+                ),
+                const SizedBox(height: 14),
+                _buildThemeHomeLikePreviewCard(
+                  selection.previewBackground,
+                  themeKey: selection.themeKey,
+                  effectKey: selection.effectKey,
+                  graphicsKey: selection.graphicsKey,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildGradientBtn(
+                        label: _isUploadingThemeBackground
+                            ? (_themeUploadProgress != null 
+                                ? context.tr('theme_uploading_pct').replaceAll('{pct}', (_themeUploadProgress! * 100).toInt().toString())
+                                : context.tr('theme_uploading_img'))
+                            : context.tr('theme_upload_web_bg'),
+                        gradient: const [Color(0xFFFF7EA8), Color(0xFFFF5E92)],
+                        onTap: _isUploadingThemeBackground
+                            ? () {}
+                            : _pickThemeBackgroundImage,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.tr('theme_permission_center'),
-                            style: SLTheme.quicksand(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF0277BD),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            context.tr('theme_permission_desc'),
-                            style: SLTheme.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF546E7A),
-                              height: 1.45,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          _buildGradientBtn(
-                            label: _isGrantingPermissions
-                                ? context.tr('home_angxinquyn_8dc1d1')
-                                : Platform.isIOS
-                                    ? context.tr('home_thitlpquyn_942e97')
-                                    : context.tr('theme_grant_all_perms'),
-                            gradient: const [Color(0xFF57C96C), Color(0xFF78D884)],
-                            onTap: _isGrantingPermissions
-                                ? () {}
-                                : _requestAllPermissions,
-                          ),
-                        ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildGradientBtn(
+                        label: context.tr('theme_remove_bg'),
+                        gradient: const [Color(0xFFFF5B6A), Color(0xFFFF4343)],
+                        onTap: _clearThemeBackgroundImage,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
-    );
-  },
+          _ThemeSectionCard(
+            icon: Icons.settings_suggest_rounded,
+            title: context.tr('theme_perf_title'),
+            description: context.tr('theme_perf_desc'),
+            themeColor: const Color(0xFF0288D1),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFFFF),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFF3D9E6)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.tr('home_trongsut_38b9d1'),
+                              style: SLTheme.quicksand(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFFD81B60),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              context.tr('home_lmcckhihin_df481f'),
+                              style: SLTheme.quicksand(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF777777),
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Checkbox(
+                        value: _draftTransparentMode ?? ui.transparentMode,
+                        activeColor: const Color(0xFFD81B60),
+                        onChanged: (value) => _updateThemeDraft(
+                            () => _draftTransparentMode = value ?? false),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.tr('theme_lite_mode_title'),
+                              style: SLTheme.quicksand(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFFD81B60),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              context.tr('theme_lite_mode_desc'),
+                              style: SLTheme.quicksand(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF777777),
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch.adaptive(
+                        value: _draftLiteMode,
+                        activeThumbColor: const Color(0xFFD81B60),
+                        onChanged: (value) => _updateThemeDraft(
+                            () => _draftLiteMode = value),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            context.tr('theme_graphics_quality'),
+                            style: SLTheme.quicksand(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFFFF4D73),
+                            ),
+                          ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () => _updateThemeDraft(
+                              () => _draftGraphicsQualityKey = 'auto',
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                gradient: (_draftGraphicsQualityKey ??
+                                            ui.graphicsQualityKey) ==
+                                        'auto'
+                                    ? const LinearGradient(
+                                        colors: [
+                                          Color(0xFF4EA3FF),
+                                          Color(0xFF2877FF)
+                                        ],
+                                      )
+                                    : const LinearGradient(
+                                        colors: [
+                                          Color(0xFFE0E0E0),
+                                          Color(0xFFBDBDBD)
+                                        ],
+                                      ),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                context.tr('theme_graphics_auto'),
+                                style: SLTheme.quicksand(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        context.tr('theme_graphics_desc'),
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF777777),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: graphicsOptions.map((item) {
+                          final selected = selection.graphicsKey == item.$2;
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () => _updateThemeDraft(
+                                () => _draftGraphicsQualityKey = item.$2,
+                              ),
+                              child: Container(
+                                margin: EdgeInsets.only(
+                                  right: item == graphicsOptions.last ? 0 : 8,
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? const Color(0xFFFF4D8D)
+                                      : const Color(0xFFF8F8F8),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Text(
+                                  item.$1,
+                                  textAlign: TextAlign.center,
+                                  style: SLTheme.quicksand(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: selected
+                                        ? Colors.white
+                                        : const Color(0xFF666666),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.tr('theme_permission_center'),
+                        style: SLTheme.quicksand(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF0277BD),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        context.tr('theme_permission_desc'),
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF546E7A),
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildGradientBtn(
+                        label: _isGrantingPermissions
+                            ? context.tr('home_angxinquyn_8dc1d1')
+                            : Platform.isIOS
+                                ? context.tr('home_thitlpquyn_942e97')
+                                : context.tr('theme_grant_all_perms'),
+                        gradient: const [Color(0xFF57C96C), Color(0xFF78D884)],
+                        onTap: _isGrantingPermissions
+                            ? () {}
+                            : _requestAllPermissions,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
 );
 }
 

@@ -264,37 +264,44 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     if (item.isHeader) {
                                       final highlights = item.highlights;
                                       if (highlights.isNotEmpty) {
-                                        return _DiaryMemorySpecialHeader(
-                                          icon:
-                                              highlights.first['icon'] ?? '💖',
-                                          title: highlights.first['text'] ?? '',
-                                          dateString: item.dateString ?? '',
-                                          totalPhotos: item.totalPhotos ?? 0,
+                                        return RepaintBoundary(
+                                          child: _DiaryMemorySpecialHeader(
+                                            icon:
+                                                highlights.first['icon'] ?? '💖',
+                                            title: highlights.first['text'] ?? '',
+                                            dateString: item.dateString ?? '',
+                                            totalPhotos: item.totalPhotos ?? 0,
+                                          ),
                                         );
                                       }
 
-                                      return _DiaryMemoryDateHeader(
-                                        dateString: item.dateString ?? '',
-                                        totalPhotos: item.totalPhotos ?? 0,
+                                      return RepaintBoundary(
+                                        child: _DiaryMemoryDateHeader(
+                                          dateString: item.dateString ?? '',
+                                          totalPhotos: item.totalPhotos ?? 0,
+                                        ),
                                       );
                                     }
 
-                                    return _DiaryMemoryPhotoRow(
-                                      rowPhotos: item.photosRow ?? const [],
-                                      thumbnailCacheWidth:
-                                          widget.thumbnailCacheWidth,
-                                      selectionListenable:
-                                          widget.selectionListenable,
-                                      selectedMemories: widget.selectedMemories,
-                                      isSelectionMode: widget.isSelectionMode,
-                                      onToggleSelection:
-                                          widget.onToggleSelection,
-                                      onOpenMemory: widget.onOpenMemory,
-                                      allPhotos: photos,
-                                      onEnsurePhotoUrl: widget.onEnsurePhotoUrl,
+                                    return RepaintBoundary(
+                                      child: _DiaryMemoryPhotoRow(
+                                        rowPhotos: item.photosRow ?? const [],
+                                        thumbnailCacheWidth:
+                                            widget.thumbnailCacheWidth,
+                                        selectionListenable:
+                                            widget.selectionListenable,
+                                        selectedMemories: widget.selectedMemories,
+                                        isSelectionMode: widget.isSelectionMode,
+                                        onToggleSelection:
+                                            widget.onToggleSelection,
+                                        onOpenMemory: widget.onOpenMemory,
+                                        allPhotos: photos,
+                                        onEnsurePhotoUrl: widget.onEnsurePhotoUrl,
+                                      ),
                                     );
                                   },
                                   childCount: flattenedItems.length,
+                                  addRepaintBoundaries: false,
                                 ),
                               ),
                             );
@@ -704,30 +711,29 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                 child: ValueListenableBuilder<int>(
                   valueListenable: widget.selectionListenable,
                   child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(18)),
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              const Color(0xFF5C71D8).withValues(alpha: 0.14),
+                          color: Color(0x245C71D8),
                           blurRadius: 14,
-                          offset: const Offset(0, 6),
+                          offset: Offset(0, 6),
                         ),
                         BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.72),
+                          color: Color(0xB8FFFFFF),
                           blurRadius: 8,
-                          offset: const Offset(0, -2),
+                          offset: Offset(0, -2),
                         ),
                       ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.all(Radius.circular(18)),
                       child: Hero(
                         tag: 'memory_image_${photo['id']}',
                         child: Image(
                           image: imageProvider,
                           fit: BoxFit.cover,
-                          filterQuality: FilterQuality.high,
+                          filterQuality: FilterQuality.medium,
                           gaplessPlayback: true,
                           frameBuilder:
                               (context, child, frame, wasSynchronouslyLoaded) =>

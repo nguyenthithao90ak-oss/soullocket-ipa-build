@@ -240,7 +240,13 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
     super.didChangeDependencies();
     if (_didPrecacheSoulRhythmIcon) return;
     _didPrecacheSoulRhythmIcon = true;
-    precacheImage(_soulRhythmIcon, context);
+    precacheImage(
+      _soulRhythmIcon,
+      context,
+      onError: (exception, stackTrace) {
+        debugPrint('Failed to precache soul rhythm icon: $exception');
+      },
+    );
   }
 
   void _openSoulGame(BuildContext context) {
