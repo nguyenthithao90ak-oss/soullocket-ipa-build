@@ -1069,16 +1069,14 @@ class FloatingHeartsRingOverlay extends StatefulWidget {
 }
 
 class _FloatingHeartsRingOverlayState
-    extends State<FloatingHeartsRingOverlay> with TickerProviderStateMixin {
+    extends State<FloatingHeartsRingOverlay> with SingleTickerProviderStateMixin {
   static const int _kCount = 14; // Tăng lượng hạt để trông ảo diệu hơn
 
   late final List<_HeartParticle> _particles;
-  late final List<AnimationController> _controllers;
-  late final List<Animation<double>> _floatAnims;
+  late final AnimationController _mainController;
+  final ValueNotifier<Offset> _tiltNotifier = ValueNotifier<Offset>(Offset.zero);
 
   StreamSubscription<AccelerometerEvent>? _sensorSub;
-  double _tiltX = 0.0;
-  double _tiltY = 0.0;
 
   // Lọc nhiễu cảm biến
   double _filteredAccelX = 0.0;
@@ -1099,10 +1097,11 @@ class _FloatingHeartsRingOverlayState
       // Kích thước đa dạng tạo chiều sâu (18 -> 48)
       final sz = 18.0 + ((jitter * 13) % 1.0) * 30.0;
       
-      final delay = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF * 3.0;
+      // Độ lệch pha bắt đầu (0.0 -> 1.0)
+      final phase = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF;
       
-      // Tốc độ xoay và quỹ đạo bay
-      final duration = 2800 + (((rng ^ (i * 987654)) & 0xFFFF) / 0xFFFF * 4500).toInt();
+      // Hệ số nhân tốc độ để hạt chuyển động nhanh chậm khác nhau
+      final speed = 0.8 + ((jitter * 15) % 1.0) * 0.7;
       
       final floatAmp = 12.0 + ((jitter * 7) % 1.0) * 18.0;
       final parallax = 0.8 + ((jitter * 19) % 1.0) * 1.5;
@@ -1114,8 +1113,8 @@ class _FloatingHeartsRingOverlayState
         angle: angle,
         rFrac: rFrac,
         size: sz,
-        delay: delay,
-        durationMs: duration,
+        phaseOffset: phase,
+        speedMultiplier: speed,
         floatAmplitude: floatAmp,
         opacity: 0.65 + ((jitter * 11) % 1.0) * 0.35,
         parallaxFactor: parallax,
@@ -1123,39 +1122,15 @@ class _FloatingHeartsRingOverlayState
       );
     });
 
-    _controllers = List.generate(_kCount, (i) {
-      return AnimationController(
-        vsync: this,
-        duration: Duration(milliseconds: _particles[i].durationMs),
-      );
-    });
-
-    _floatAnims = List.generate(_kCount, (i) {
-      return Tween<double>(begin: -1.0, end: 1.0).animate(
-        CurvedAnimation(parent: _controllers[i], curve: Curves.easeInOutSine),
-      );
-    });
-
-    for (int i = 0; i < _kCount; i++) {
-      final delayMs = (_particles[i].delay * 1000).toInt();
-      Future.delayed(Duration(milliseconds: delayMs), () {
-        if (mounted) {
-          _controllers[i].repeat(reverse: true);
-        }
-      });
-    }
+    _mainController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 6000), // Chu kỳ vòng lặp 6 giây
+    )..repeat();
 
     try {
       _sensorSub = accelerometerEventStream().listen(
         (event) {
           if (!mounted) return;
-          // Hệ quy chiếu chuẩn: x>0 nghiêng trái, y>0 nghiêng xuống (trên Android)
-          // Để hạt chạy THEO trọng lực (xuống dưới/về phía nghiêng):
-          // Nghiêng trái (x dương) -> Hạt dạt trái -> targetX âm.
-          // Nghiêng phải (x âm) -> Hạt dạt phải -> targetX dương.
-          // Do đó targetX = event.x * factor.
-          // Nghiêng lên (y âm) -> Hạt dạt lên -> targetY âm.
-          // Nghiêng xuống (y dương) -> Hạt dạt xuống -> targetY dương.
           final rawX = event.x.clamp(-8.0, 8.0);
           final rawY = event.y.clamp(-8.0, 8.0);
 
@@ -1167,10 +1142,11 @@ class _FloatingHeartsRingOverlayState
           final targetX = _filteredAccelX * 6.0;
           final targetY = _filteredAccelY * 6.0;
 
-          setState(() {
-            _tiltX = _tiltX * 0.92 + targetX * 0.08;
-            _tiltY = _tiltY * 0.92 + targetY * 0.08;
-          });
+          // Cập nhật ValueNotifier trực tiếp, không gọi setState của Widget cha
+          _tiltNotifier.value = Offset(
+            _tiltNotifier.value.dx * 0.92 + targetX * 0.08,
+            _tiltNotifier.value.dy * 0.92 + targetY * 0.08,
+          );
         },
         onError: (_) {},
         cancelOnError: false,
@@ -1181,9 +1157,8 @@ class _FloatingHeartsRingOverlayState
   @override
   void dispose() {
     _sensorSub?.cancel();
-    for (final c in _controllers) {
-      c.dispose();
-    }
+    _mainController.dispose();
+    _tiltNotifier.dispose();
     super.dispose();
   }
 
@@ -1214,61 +1189,74 @@ class _FloatingHeartsRingOverlayState
           clipBehavior: Clip.none,
           children: [
             centerGlow,
-            for (int i = 0; i < _kCount; i++)
-              AnimatedBuilder(
-                animation: _controllers[i],
-                builder: (_, __) {
-                  final p = _particles[i];
-                  final t = _floatAnims[i].value; // -1 to 1
+            AnimatedBuilder(
+              animation: Listenable.merge([_mainController, _tiltNotifier]),
+              builder: (context, _) {
+                final tilt = _tiltNotifier.value;
+                final tiltX = tilt.dx;
+                final tiltY = tilt.dy;
+                final progress = _mainController.value;
 
-                  // Chuyển động xoắn ốc (swirl) + dập dềnh
-                  final double swirlAngle = p.angle + (t * 0.6);
-                  final double currentR = radius * p.rFrac + (t * p.floatAmplitude);
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: List.generate(_kCount, (i) {
+                    final p = _particles[i];
+                    
+                    // Tính toán thời gian cục bộ dựa trên phaseOffset và speedMultiplier
+                    final double localProgress = (progress * p.speedMultiplier + p.phaseOffset) % 1.0;
+                    // Chuyển động hình sin dao động mượt từ -1.0 đến 1.0 (nhịp dập dềnh)
+                    final double t = math.sin(localProgress * 2 * math.pi);
 
-                  // Vị trí vật lý thực tế có cộng dồn trọng lực 360 độ
-                  final double cx = radius +
-                      currentR * math.cos(swirlAngle) +
-                      (_tiltX * p.parallaxFactor);
-                  final double cy = radius +
-                      currentR * math.sin(swirlAngle) +
-                      (_tiltY * p.parallaxFactor);
+                    // Chuyển động xoắn ốc (swirl) + dập dềnh
+                    final double swirlAngle = p.angle + (t * 0.6);
+                    final double currentR = radius * p.rFrac + (t * p.floatAmplitude);
 
-                  // Hiệu ứng lật 3D (Nước xoay)
-                  final flipT = (_controllers[i].value * 2 * math.pi * p.flipSpeed) + p.angle;
-                  final scaleX = math.cos(flipT).abs() * 0.4 + 0.6; 
-                  final scaleY = math.sin(flipT).abs() * 0.2 + 0.8;
-                  
-                  // Xoay nghiêng theo hướng rớt
-                  final dropRotation = math.atan2(_tiltY, _tiltX) + math.pi / 2;
-                  // Kết hợp xoay tự nhiên và xoay theo trọng lực
-                  final finalRotation = t * 0.5 + (_tiltX * 0.03) + (math.sqrt(_tiltX*_tiltX + _tiltY*_tiltY) > 2 ? dropRotation * 0.1 : 0);
+                    // Vị trí vật lý thực tế có cộng dồn trọng lực 360 độ
+                    final double cx = radius +
+                        currentR * math.cos(swirlAngle) +
+                        (tiltX * p.parallaxFactor);
+                    final double cy = radius +
+                        currentR * math.sin(swirlAngle) +
+                        (tiltY * p.parallaxFactor);
 
-                  return Positioned(
-                    left: cx - p.size / 2,
-                    top: cy - p.size / 2,
-                    child: Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.identity()
-                        ..setEntry(3, 2, 0.002) // Perspective 3D
-                        ..rotateZ(finalRotation)
-                        ..scale(scaleX, scaleY),
-                      child: Icon(
-                        i % 3 == 0 ? Icons.favorite_rounded : Icons.bubble_chart_rounded,
-                        size: p.size,
-                        // Tích hợp độ trong suốt trực tiếp vào màu để bỏ Widget Opacity (rất nặng)
-                        color: _kHeartColors[i % _kHeartColors.length].withValues(alpha: p.opacity),
-                        // Dùng Shadow của Icon siêu nhẹ thay cho BoxShadow của Container
-                        shadows: [
-                          Shadow(
-                            color: _kHeartColors[i % _kHeartColors.length].withValues(alpha: p.opacity * 0.3),
-                            blurRadius: p.size * 0.25, 
-                          ),
-                        ],
+                    // Hiệu ứng lật 3D (Nước xoay)
+                    final flipT = (localProgress * 2 * math.pi * p.flipSpeed) + p.angle;
+                    final scaleX = math.cos(flipT).abs() * 0.4 + 0.6; 
+                    final scaleY = math.sin(flipT).abs() * 0.2 + 0.8;
+                    
+                    // Xoay nghiêng theo hướng rớt
+                    final dropRotation = math.atan2(tiltY, tiltX) + math.pi / 2;
+                    // Kết hợp xoay tự nhiên và xoay theo trọng lực
+                    final finalRotation = t * 0.5 + (tiltX * 0.03) + (math.sqrt(tiltX*tiltX + tiltY*tiltY) > 2 ? dropRotation * 0.1 : 0);
+
+                    return Positioned(
+                      left: cx - p.size / 2,
+                      top: cy - p.size / 2,
+                      child: Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.identity()
+                          ..setEntry(3, 2, 0.002) // Perspective 3D
+                          ..rotateZ(finalRotation)
+                          ..scale(scaleX, scaleY, 1.0),
+                        child: Icon(
+                          i % 3 == 0 ? Icons.favorite_rounded : Icons.bubble_chart_rounded,
+                          size: p.size,
+                          // Tích hợp độ trong suốt trực tiếp vào màu để bỏ Widget Opacity (rất nặng)
+                          color: _kHeartColors[i % _kHeartColors.length].withValues(alpha: p.opacity),
+                          // Dùng Shadow của Icon siêu nhẹ thay cho BoxShadow của Container
+                          shadows: [
+                            Shadow(
+                              color: _kHeartColors[i % _kHeartColors.length].withValues(alpha: p.opacity * 0.3),
+                              blurRadius: p.size * 0.25, 
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  }),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -1292,8 +1280,8 @@ class _HeartParticle {
     required this.angle,
     required this.rFrac,
     required this.size,
-    required this.delay,
-    required this.durationMs,
+    required this.phaseOffset,
+    required this.speedMultiplier,
     required this.floatAmplitude,
     required this.opacity,
     required this.parallaxFactor,
@@ -1302,8 +1290,8 @@ class _HeartParticle {
   final double angle;
   final double rFrac;
   final double size;
-  final double delay;
-  final int durationMs;
+  final double phaseOffset;
+  final double speedMultiplier;
   final double floatAmplitude;
   final double opacity;
   final double parallaxFactor;

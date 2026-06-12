@@ -30,6 +30,7 @@ import '../../utils/services/role_utils.dart';
 import '../../utils/services/schedule_notif_service.dart';
 import '../../utils/services/webrtc_service.dart';
 import '../../utils/services/widget_action_service.dart';
+import '../../utils/services/update_checker_service.dart';
 import '../../widgets/legacy_falling_effect.dart';
 import '../../widgets/touch_effect_overlay.dart';
 import '../notifications/notification_center_screen.dart';
@@ -513,6 +514,7 @@ class _HomeScreenState extends State<HomeScreen>
         if (!mounted) return;
         unawaited(_runDeferredStartupTasks());
       });
+      unawaited(UpdateCheckerService.checkUpdate(context));
     });
     _widgetActionSub = WidgetActionService().actions.listen((action) {
       unawaited(_handleWidgetLaunchAction(action));
