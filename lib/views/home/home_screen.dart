@@ -318,10 +318,14 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
     if (notification.depth != 0) {
       return false;
     }
+    if (notification is ScrollStartNotification) {
+      _onTabSwipingStateChanged(true);
+    }
     if (notification is ScrollUpdateNotification) {
       final metrics = notification.metrics;
       if (metrics is PageMetrics) {
         final pageVal = metrics.page ?? widget.controller.initialPage.toDouble();
+        _onPageScrolled(pageVal);
         final nextPage = _clampPage(pageVal.round());
         if (nextPage != _lastBuiltPage && mounted) {
           setState(() {
@@ -331,6 +335,7 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
       }
     }
     if (notification is ScrollEndNotification) {
+      _onTabSwipingStateChanged(false);
       final metrics = notification.metrics;
       if (metrics is PageMetrics) {
         final nextPage = _clampPage(
@@ -1336,6 +1341,15 @@ class _HomeScreenState extends State<HomeScreen>
             children: [
               Positioned.fill(
                 child: RepaintBoundary(
+<<<<<<< HEAD
+                  child: _buildShellBackground(
+                    themeKey: resolvedThemeKey,
+                    tabIndex: 0,
+                    isDark: isDark,
+                    backgroundUrl: uiState.customBackgroundUrl,
+                    graphicsQualityKey: graphicsQualityKey,
+                    animateAmbientEffects: shouldAnimateEffects,
+=======
                   child: ValueListenableBuilder<bool>(
                     valueListenable: _isUserTabSwipingNotifier,
                     builder: (context, isSwiping, child) {
@@ -1351,6 +1365,7 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       );
                     },
+>>>>>>> origin/main
                   ),
                 ),
               ),
