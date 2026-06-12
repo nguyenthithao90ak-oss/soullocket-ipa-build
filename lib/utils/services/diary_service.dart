@@ -1,54 +1,43 @@
-import 'package:firebase_database/firebase_database.dart' hide Query, Transaction;
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:soullocket_app/models/diary_post.dart';
+import 'dart:convert';
+import 'package:firebase_database/firebase_database.dart';
+import '../core/constants/app_config.dart';
+import '../models/diary_post.dart';
+import 'local_database_service.dart';
+import 'connectivity_service.dart';
 
-/// DiaryService — quản lý tâm tư (nhật ký) trong Firestore
-/// Path: houses/{houseId}/diaries/{postId}
-/// Hỗ trợ Offline: Firestore tự động hỗ trợ bộ nhớ đệm (offline persistence).
+/// DiaryService — quản lý tâm tư (nhật ký) trong Firebase
+/// Path: houses/{houseId}/diary/{postId}
+/// Hỗ trợ Offline: Khi mất mạng, bài viết sẽ được lưu vào hàng đợi SQLite
+/// và tự đồng bộ khi có mạng trở lại.
 class DiaryService {
   static final DiaryService _instance = DiaryService._internal();
 
   factory DiaryService() => _instance;
   DiaryService._internal();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final DatabaseReference _rtdb = FirebaseDatabase.instance.ref();
-
-  // ── LẤY Collection Reference ───────────────────────────────────────────
-  CollectionReference<Map<String, dynamic>> _diariesRef(String houseId) {
-    return _firestore.collection('houses').doc(houseId).collection('diaries');
-  }
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
   // ── LISTEN realtime ────────────────────────────────────────────────────
-  Stream<List<DiaryPost>> streamDiary(String houseId, {int limit = 80}) {
-    return _diariesRef(houseId)
-        .orderBy('ts', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map((snapshot) {
-      final posts = <DiaryPost>[];
-      for (var doc in snapshot.docs) {
-        try {
-          posts.add(DiaryPost.fromJson(doc.id, doc.data()));
-        } catch (_) {}
-      }
-      return posts;
-    });
-  }
+  Stream<List<DiaryPost>> streamDiary(String houseId) {
+    return _dbRef
+        .child('houses/$houseId/diary')
+        .orderByChild('ts')
+        .limitToLast(AppConfig.diaryPageSize)
+        .onValue
+        .map((event) {
+      if (event.snapshot.value == null) return <DiaryPost>[];
+      final raw = event.snapshot.value;
+      if (raw is! Map) return <DiaryPost>[];
 
-  // ── LISTEN bài viết được ghim realtime ───────────────────────────────────
-  Stream<List<DiaryPost>> streamPinnedDiary(String houseId) {
-    return _diariesRef(houseId)
-        .where('pinned', isEqualTo: true)
-        .limit(1)
-        .snapshots()
-        .map((snapshot) {
       final posts = <DiaryPost>[];
-      for (var doc in snapshot.docs) {
-        try {
-          posts.add(DiaryPost.fromJson(doc.id, doc.data()));
-        } catch (_) {}
-      }
+      raw.forEach((key, value) {
+        if (value is Map) {
+          try {
+            posts.add(DiaryPost.fromJson(key.toString(), value));
+          } catch (_) {}
+        }
+      });
+      posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
       return posts;
     });
   }
@@ -80,9 +69,24 @@ class DiaryService {
       'role': authorRole.trim().isNotEmpty ? authorRole.trim() : authorId,
     };
 
-    // Firestore tự động hỗ trợ offline queue!
-    final docRef = await _diariesRef(houseId).add(postData);
-    return docRef.id;
+    // Nếu đang online → ghi lên Firebase bình thường
+    if (ConnectivityService().isOnline) {
+      final newRef = _dbRef.child('houses/$houseId/diary').push();
+      await newRef.set(postData);
+      return newRef.key!;
+    } else {
+      // Offline → lưu vào SQLite hàng đợi, đồng bộ sau
+      final tempId = 'offline_${now}_$authorId';
+      postData['_tempId'] = tempId;
+      await LocalDatabaseService().enqueueSync(
+        'houses/$houseId/diary',
+        'PUSH',
+        jsonEncode(postData),
+        operationId: tempId,
+        entityType: 'diary_post',
+      );
+      return tempId; // ID tạm, không dùng để query Firebase
+    }
   }
 
   // ── XÓA nhật ký ───────────────────────────────────────────────────────
@@ -91,16 +95,14 @@ class DiaryService {
     required String postId,
     required String requestingAuthorId,
   }) async {
-    final docRef = _diariesRef(houseId).doc(postId);
-    final snap = await docRef.get();
+    final snap = await _dbRef.child('houses/$houseId/diary/$postId').get();
     if (!snap.exists) throw 'Bài viết không tồn tại.';
-    
-    final data = snap.data()!;
+    final data = Map<dynamic, dynamic>.from(snap.value as Map);
     final owner = (data['authorId'] ?? '').toString();
     if (owner.isNotEmpty && owner != requestingAuthorId) {
       throw 'Bạn không có quyền xóa bài viết này.';
     }
-    await docRef.delete();
+    await _dbRef.child('houses/$houseId/diary/$postId').remove();
   }
 
   // ── SỬA caption nhật ký ───────────────────────────────────────────────
@@ -110,7 +112,7 @@ class DiaryService {
     required String newContent,
   }) async {
     if (newContent.trim().isEmpty) throw 'Nội dung không được để trống.';
-    await _diariesRef(houseId).doc(postId).update({
+    await _dbRef.child('houses/$houseId/diary/$postId').update({
       'content': _sanitize(newContent),
       'editedAt': DateTime.now().millisecondsSinceEpoch,
     });
@@ -119,78 +121,32 @@ class DiaryService {
   // ── LẤY 1 lần (không stream) ──────────────────────────────────────────
   Future<List<DiaryPost>> fetchDiary(
     String houseId, {
-    int limit = 80,
+    int limit = AppConfig.diaryPageSize,
   }) async {
-    final snap = await _diariesRef(houseId)
-        .orderBy('ts', descending: true)
-        .limit(limit)
+    final snap = await _dbRef
+        .child('houses/$houseId/diary')
+        .orderByChild('ts')
+        .limitToLast(limit)
         .get();
 
+    if (!snap.exists || snap.value == null) return [];
+    final raw = snap.value;
+    if (raw is! Map) return [];
+
     final posts = <DiaryPost>[];
-    for (var doc in snap.docs) {
-      try {
-        posts.add(DiaryPost.fromJson(doc.id, doc.data()));
-      } catch (_) {}
-    }
+    raw.forEach((key, value) {
+      if (value is Map) {
+        try {
+          posts.add(DiaryPost.fromJson(key.toString(), value));
+        } catch (_) {}
+      }
+    });
+    posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return posts;
-  }
-
-  // ── LẤY theo trang (phân trang) ─────────────────────────────────────────
-  Future<({List<DiaryPost> posts, DocumentSnapshot<Map<String, dynamic>>? lastDoc, bool hasMore})> fetchDiaryPage(
-    String houseId, {
-    int limit = 10,
-    DocumentSnapshot<Map<String, dynamic>>? startAfter,
-  }) async {
-    Query<Map<String, dynamic>> query = _diariesRef(houseId)
-        .orderBy('ts', descending: true)
-        .limit(limit);
-
-    if (startAfter != null) {
-      query = query.startAfterDocument(startAfter);
-    }
-
-    final snap = await query.get();
-    final posts = <DiaryPost>[];
-    for (var doc in snap.docs) {
-      try {
-        posts.add(DiaryPost.fromJson(doc.id, doc.data()));
-      } catch (_) {}
-    }
-
-    final lastDoc = snap.docs.isNotEmpty ? snap.docs.last : null;
-    final hasMore = snap.docs.length == limit;
-
-    return (posts: posts, lastDoc: lastDoc, hasMore: hasMore);
   }
 
   // ── Sanitize input ────────────────────────────────────────────────────
   String _sanitize(String input) {
     return input.replaceAll('<', '&lt;').replaceAll('>', '&gt;').trim();
-  }
-
-  // ── SCRIPT MIGRATION TỰ ĐỘNG ──────────────────────────────────────────
-  Future<void> migrateDiariesFromRTDB(String houseId) async {
-    final snap = await _rtdb.child('houses/$houseId/diary').get();
-    if (!snap.exists || snap.value == null) return;
-    
-    final raw = snap.value;
-    if (raw is! Map) return;
-
-    final batch = _firestore.batch();
-    int count = 0;
-
-    raw.forEach((key, value) {
-      if (value is Map) {
-        final docRef = _diariesRef(houseId).doc(key.toString());
-        batch.set(docRef, Map<String, dynamic>.from(value), SetOptions(merge: true));
-        count++;
-      }
-    });
-
-    if (count > 0) {
-      await batch.commit();
-      // Optional: Delete from RTDB after migration to save bandwidth
-      // await _rtdb.child('houses/$houseId/diary').remove();
-    }
   }
 }

@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import '../../core/fast_backdrop_filter.dart';
 
 import '../../core/sl_theme.dart';
-import '../../utils/services/giftcode_service.dart';
+import '../../services/giftcode_service.dart';
 import '../../utils/services/security_service.dart';
 
 class GiftcodeScreen extends StatefulWidget {

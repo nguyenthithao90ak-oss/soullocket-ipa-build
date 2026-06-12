@@ -140,85 +140,81 @@ class _CinemaScreenState extends State<CinemaScreen> {
   }
 
   void _listenToSettings() {
-    _loadSettingsOnce();
-  }
-
-  Future<void> _loadSettingsOnce() async {
-    try {
-      final snapshot =
-          await _dbRef.child('houses/${widget.houseId}/settings').get();
-      final data = _asMap(snapshot.value);
-      final nextHouseName = _readTrimmedString(data['houseName']);
-      _houseName = nextHouseName.isEmpty ? _msgHouseNameDefault : nextHouseName;
-      _startDate = _parseDate(data['startDate']);
-      _didLoadSettings = true;
-      if (mounted) {
-        setState(() {});
-      }
-      unawaited(_ensureDailyReel());
-    } catch (error) {
-      debugPrint(
-        'Cinema settings load failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: _msgSettingsLoadFail,
-        ).message}',
-      );
-    }
+    _settingsSub =
+        _dbRef.child('houses/${widget.houseId}/settings').onValue.listen(
+      (event) {
+        final data = _asMap(event.snapshot.value);
+        final nextHouseName = _readTrimmedString(data['houseName']);
+        _houseName = nextHouseName.isEmpty ? _msgHouseNameDefault : nextHouseName;
+        _startDate = _parseDate(data['startDate']);
+        _didLoadSettings = true;
+        if (mounted) {
+          setState(() {});
+        }
+        unawaited(_ensureDailyReel());
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Cinema settings listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: _msgSettingsLoadFail,
+          ).message}',
+        );
+      },
+    );
   }
 
   void _listenToMemories() {
-    _loadMemoriesOnce();
-  }
+    _memoriesSub =
+        _dbRef.child('houses/${widget.houseId}/memories').onValue.listen(
+      (event) {
+        final raw = event.snapshot.value;
+        final records = <_CinemaMemoryRecord>[];
 
-  Future<void> _loadMemoriesOnce() async {
-    try {
-      final snapshot =
-          await _dbRef.child('houses/${widget.houseId}/memories').get();
-      final raw = snapshot.value;
-      final records = <_CinemaMemoryRecord>[];
+        if (raw is Map) {
+          final memories = Map<dynamic, dynamic>.from(raw);
+          memories.forEach((key, value) {
+            if (value is! Map) {
+              return;
+            }
+            final item =
+                Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
+            final imageUrl = _resolveMemoryImage(item);
+            if (imageUrl == null) {
+              return;
+            }
 
-      if (raw is Map) {
-        final memories = Map<dynamic, dynamic>.from(raw);
-        memories.forEach((key, value) {
-          if (value is! Map) {
-            return;
-          }
-          final item =
-              Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
-          final imageUrl = _resolveMemoryImage(item);
-          if (imageUrl == null) {
-            return;
-          }
-
-          records.add(
-            _CinemaMemoryRecord(
-              id: key.toString(),
-              imageUrl: imageUrl,
-              thumbnailUrl: _readTrimmedString(item['thumbUrl']),
-              authorName: _readTrimmedString(
-                item['authorName'] ?? item['author'],
+            records.add(
+              _CinemaMemoryRecord(
+                id: key.toString(),
+                imageUrl: imageUrl,
+                thumbnailUrl: _readTrimmedString(item['thumbUrl']),
+                authorName: _readTrimmedString(
+                  item['authorName'] ?? item['author'],
+                ),
+                timestamp: _parseMemoryTimestamp(item),
               ),
-              timestamp: _parseMemoryTimestamp(item),
-            ),
-          );
-        });
-      }
+            );
+          });
+        }
 
-      records.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-      _records = records;
-      _didLoadMemories = true;
-      if (mounted) {
-        setState(() {});
-      }
-      unawaited(_ensureDailyReel());
-    } catch (error) {
-      debugPrint(
-        'Cinema memories load failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: _msgMemoriesLoadFail,
-        ).message}',
-      );
-    }
+        records.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        _records = records;
+        _didLoadMemories = true;
+        if (mounted) {
+          setState(() {});
+        }
+        unawaited(_ensureDailyReel());
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Cinema memories listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: _msgMemoriesLoadFail,
+          ).message}',
+        );
+      },
+    );
   }
 
   void _listenToDailyReel() {

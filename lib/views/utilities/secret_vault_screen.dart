@@ -15,11 +15,11 @@ import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/storage_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'dart:ui' as ui;
-import '../../utils/services/activity_history_service.dart';
-import '../../utils/services/auth_service.dart';
-import '../../utils/services/connectivity_service.dart';
-import '../../utils/services/encryption_service.dart';
-import '../../utils/services/secret_vault_reset_service.dart';
+import '../../services/activity_history_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/connectivity_service.dart';
+import '../../services/encryption_service.dart';
+import '../../services/secret_vault_reset_service.dart';
 import '../../core/fast_backdrop_filter.dart';
 import '../../core/sl_theme.dart';
 import '../home/tabs/settings/security/security_otp_dialogs.dart';
@@ -315,7 +315,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     }
   }
 
-  Future<void> _loadPhotos() async {
+  void _loadPhotos() {
+    _photosSub?.cancel();
     final legacyPasswordRequiredText =
         context.tr('util_cnnhpmtkhu_b5f391');
     final legacyMigrationText = context.tr('util_cnidungccn_44f5ff');
@@ -324,81 +325,81 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         .child('houses/${widget.houseId}/private_secure')
         .orderByChild('ts')
         .limitToLast(_initialVisiblePhotoLimit);
-    try {
-      final event = await query.get();
-      final raw = event.value;
-      if (raw is Map) {
-        final data = Map<dynamic, dynamic>.from(raw);
-        bool needsLegacyMigrationLocal = false;
-        final loaded = await Future.wait(
-          data.entries.map((entry) async {
-            final value = entry.value;
-            if (value is! Map) {
-              return <String, dynamic>{'id': entry.key};
-            }
-            final item = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
-            item['id'] = entry.key;
-
-            if (item['caption'] != null &&
-                item['caption'].toString().isNotEmpty) {
-              try {
-                final decrypted = await _enc.decryptMessage(
-                  widget.houseId,
-                  item['caption'].toString(),
-                );
-                item['caption_plain'] = decrypted;
-                if (decrypted == legacyPasswordRequiredText) {
-                  needsLegacyMigrationLocal = true;
-                }
-              } catch (_) {
-                item['caption_plain'] = item['caption'];
+    _photosSub = query.onValue.listen(
+      (event) async {
+        final raw = event.snapshot.value;
+        if (raw is Map) {
+          final data = Map<dynamic, dynamic>.from(raw);
+          bool needsLegacyMigrationLocal = false;
+          final loaded = await Future.wait(
+            data.entries.map((entry) async {
+              final value = entry.value;
+              if (value is! Map) {
+                return <String, dynamic>{'id': entry.key};
               }
-            }
+              final item = Map<String, dynamic>.from(value);
+              item['id'] = entry.key;
 
-            return item;
-          }),
+              if (item['caption'] != null &&
+                  item['caption'].toString().isNotEmpty) {
+                try {
+                  final decrypted = await _enc.decryptMessage(
+                    widget.houseId,
+                    item['caption'].toString(),
+                  );
+                  item['caption_plain'] = decrypted;
+                  if (decrypted == legacyPasswordRequiredText) {
+                    needsLegacyMigrationLocal = true;
+                  }
+                } catch (_) {
+                  item['caption_plain'] = item['caption'];
+                }
+              }
+
+              return item;
+            }),
+          );
+
+          if (needsLegacyMigrationLocal && mounted) {
+            setState(() => _encStatusMsg = legacyMigrationText);
+          }
+
+          loaded.sort(
+              (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
+          if (mounted) {
+            final oldestTs =
+                loaded.isEmpty ? null : (loaded.last['ts'] as num?)?.toInt();
+            setState(() {
+              _photos = loaded;
+              _oldestLoadedPhotoTs = oldestTs;
+              _hasMorePhotos = loaded.length >= _initialVisiblePhotoLimit;
+              _isLoadingMorePhotos = false;
+            });
+          }
+        } else {
+          if (mounted) {
+            setState(() {
+              _photos = [];
+              _oldestLoadedPhotoTs = null;
+              _hasMorePhotos = false;
+              _isLoadingMorePhotos = false;
+            });
+          }
+        }
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Secret vault listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: loadFailedText,
+          ).message}',
         );
-
-        if (needsLegacyMigrationLocal && mounted) {
-          setState(() => _encStatusMsg = legacyMigrationText);
+        if (!mounted) {
+          return;
         }
-
-        loaded.sort((a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
-        if (mounted) {
-          final oldestTs =
-              loaded.isEmpty ? null : (loaded.last['ts'] as num?)?.toInt();
-          setState(() {
-            _photos = loaded;
-            _oldestLoadedPhotoTs = oldestTs;
-            _hasMorePhotos = loaded.length >= _initialVisiblePhotoLimit;
-            _isLoadingMorePhotos = false;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            _photos = [];
-            _oldestLoadedPhotoTs = null;
-            _hasMorePhotos = false;
-            _isLoadingMorePhotos = false;
-          });
-        }
-      }
-    } catch (error) {
-      debugPrint(
-        'Secret vault load failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: loadFailedText,
-        ).message}',
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Lỗi tải ảnh: $error'),
-          backgroundColor: SLColors.danger,
-        ));
         setState(() => _isLoadingMorePhotos = false);
-      }
-    }
+      },
+    );
   }
 
   void _loadMorePhotos() async {
@@ -732,13 +733,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           backgroundColor: SLColors.success,
         ));
       }
-    } catch (e, stack) {
-      debugPrint('Vault upload error: $e\n$stack');
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Lỗi tải lên: $e'),
-            backgroundColor: SLColors.danger,
-        ));
+            content: Text(
+                context.tr('util_chathhontt_de09e4'))));
       }
     } finally {
       if (mounted) {

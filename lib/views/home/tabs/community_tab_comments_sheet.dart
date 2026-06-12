@@ -29,7 +29,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
   bool _isLoading = true;
   bool _isLoadingMore = false;
   bool _hasMore = true;
-  int? _oldestTs;
+  String? _oldestKey;
   StreamSubscription? _newCommentsSub;
   String? _activeHouseId;
 
@@ -49,7 +49,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
       _comments.addAll(page);
       _isLoading = false;
       if (page.isNotEmpty) {
-        _oldestTs = _readTimestamp(page.last['ts']);
+        _oldestKey = page.last['id'];
         _hasMore = page.length >= 20;
       } else {
         _hasMore = false;
@@ -59,52 +59,40 @@ class _CommentsSheetState extends State<_CommentsSheet> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchCommentsPage(
-      int? endBeforeTs) async {
-    try {
-      var query = FirebaseFirestore.instance
-          .collection('social_posts')
-          .doc(widget.postId)
-          .collection('comments')
-          .orderBy('ts', descending: true)
-          .limit(20);
-      if (endBeforeTs != null) {
-        query = query.where('ts', isLessThan: endBeforeTs);
-      }
-      final snap = await query.get();
-      return snap.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        return data;
-      }).toList();
-    } catch (_) {
-      // Fallback RTDB
-      Query query = widget.dbRef
-          .child('social_feed/${widget.postId}/comments')
-          .orderByKey();
-      final snap = await query.get();
-      if (!snap.exists || snap.value is! Map) return [];
-
-      final data = Map<String, dynamic>.from(
-        Map<dynamic, dynamic>.from(snap.value as Map),
-      );
-      final List<Map<String, dynamic>> items = [];
-      data.forEach((key, value) {
-        if (value is Map) {
-          final item = Map<String, dynamic>.from(value);
-          item['id'] = key;
-          items.add(item);
-        }
-      });
-
-      items.sort(
-          (a, b) => _readTimestamp(b['ts']).compareTo(_readTimestamp(a['ts'])));
-
-      if (endBeforeTs != null) {
-        items.removeWhere((item) => _readTimestamp(item['ts']) >= endBeforeTs);
-      }
-
-      return items.take(20).toList();
+      String? endBeforeKey) async {
+    Query query = widget.dbRef
+        .child('social_feed/${widget.postId}/comments')
+        .orderByKey();
+    final fetchLimit = endBeforeKey == null ? 20 : 21;
+    if (endBeforeKey != null) {
+      query = query.endAt(endBeforeKey);
     }
+    final snap = await query.limitToLast(fetchLimit).get();
+    if (!snap.exists || snap.value is! Map) return [];
+
+    final data = Map<String, dynamic>.from(
+      Map<dynamic, dynamic>.from(snap.value as Map),
+    );
+    final List<Map<String, dynamic>> items = [];
+    data.forEach((key, value) {
+      if (value is Map) {
+        final item = Map<String, dynamic>.from(value);
+        item['id'] = key;
+        items.add(item);
+      }
+    });
+
+    if (endBeforeKey != null) {
+      items.removeWhere((item) => item['id'] == endBeforeKey);
+    }
+
+    items.sort(
+        (a, b) => _readTimestamp(b['ts']).compareTo(_readTimestamp(a['ts'])));
+
+    if (items.length > 20) {
+      return items.sublist(0, 20);
+    }
+    return items;
   }
 
   void _listenForNewComments() {
@@ -142,9 +130,9 @@ class _CommentsSheetState extends State<_CommentsSheet> {
   }
 
   Future<void> _loadMoreComments() async {
-    if (_isLoadingMore || !_hasMore || _oldestTs == null) return;
+    if (_isLoadingMore || !_hasMore || _oldestKey == null) return;
     setState(() => _isLoadingMore = true);
-    final page = await _fetchCommentsPage(_oldestTs);
+    final page = await _fetchCommentsPage(_oldestKey);
     if (!mounted) return;
     setState(() {
       _isLoadingMore = false;
@@ -152,7 +140,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
         _hasMore = false;
       } else {
         _comments.addAll(page);
-        _oldestTs = _readTimestamp(page.last['ts']);
+        _oldestKey = page.last['id'];
         _hasMore = page.length >= 20;
       }
     });
@@ -361,16 +349,49 @@ class _CommentsSheetState extends State<_CommentsSheet> {
         ? _ct('Nha', 'Home')
         : widget.currentHouseName.trim();
 
+    final payload = <String, dynamic>{
+      'uid': myHouseId,
+      'houseId': myHouseId,
+      'u': author,
+      'name': author,
+      'author': author,
+      'content': text,
+      'c': text,
+      'text': text,
+      'ts': ServerValue.timestamp,
+      'reacts': 0,
+      'isHidden': hasViolations,
+    };
+    if (widget.currentHouseAvatar.trim().isNotEmpty) {
+      payload['avt'] = widget.currentHouseAvatar.trim();
+    }
+    if (_replyingToCommentId != null) {
+      payload['replyTo'] = _replyingToCommentId;
+    }
+    if (_replyingToAuthorName != null &&
+        _replyingToAuthorName!.trim().isNotEmpty) {
+      payload['replyToName'] = _replyingToAuthorName!.trim();
+    }
+
     try {
-      await SocialService().postComment(
-        postId: widget.postId,
-        houseId: myHouseId,
-        content: text,
-        authorName: author,
-        authorAvt: widget.currentHouseAvatar.trim(),
-        replyTo: _replyingToCommentId,
-        replyToName: _replyingToAuthorName,
-      );
+      await widget.dbRef
+          .child('social_feed/${widget.postId}/comments')
+          .push()
+          .set(payload);
+
+      await widget.dbRef
+          .child('social_feed/${widget.postId}/commentCount')
+          .set(ServerValue.increment(1));
+
+      if (!hasViolations) {
+        try {
+          await SocialService().notifyPostCommented(
+            postId: widget.postId,
+            actorHouseId: myHouseId,
+            commentText: text,
+          );
+        } catch (_) {}
+      }
 
       _commentCtrl.clear();
       _focusNode.unfocus();
@@ -398,12 +419,27 @@ class _CommentsSheetState extends State<_CommentsSheet> {
     final myHouseId = await _resolveCurrentHouseId();
     if (myHouseId == null) return;
 
+    final commentLikeRef = widget.dbRef.child(
+        'social_feed/${widget.postId}/comments/$commentId/likes_map/$myHouseId');
+    final isLiked = likeMap.containsKey(myHouseId);
+
     try {
-      await SocialService().toggleLikeComment(
-        postId: widget.postId,
-        commentId: commentId,
-        myHouseId: myHouseId,
-      );
+      if (isLiked) {
+        await commentLikeRef.remove();
+      } else {
+        await commentLikeRef.set({
+          'ts': ServerValue.timestamp,
+          'by': myHouseId,
+        });
+
+        try {
+          await SocialService().notifyCommentLiked(
+            postId: widget.postId,
+            commentId: commentId,
+            actorHouseId: myHouseId,
+          );
+        } catch (_) {}
+      }
     } catch (e) {
       _showMessage(_communityActionErrorMessage(
         e,

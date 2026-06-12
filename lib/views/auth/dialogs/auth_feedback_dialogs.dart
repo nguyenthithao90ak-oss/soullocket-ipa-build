@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
-import '../../../utils/services/l10n_service.dart';
+import '../../../services/l10n_service.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../utils/services/notification_service.dart';
 import '../../app_entry.dart';

@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'activity_history_service.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../app_error_mapper.dart';
 import 'offline_cache_service.dart';
 
 /// ============================================================

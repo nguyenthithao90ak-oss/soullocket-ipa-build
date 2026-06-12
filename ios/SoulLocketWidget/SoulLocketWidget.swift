@@ -26,60 +26,6 @@ struct CoupleWidgetData {
     var startDateRaw: String
     var dayUnitText: String
 
-    func getStartDate() -> Date? {
-        let raw = startDateRaw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !raw.isEmpty else { return nil }
-
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        var startDate = formatter.date(from: raw)
-        if startDate == nil {
-            formatter.formatOptions = [.withInternetDateTime]
-            startDate = formatter.date(from: raw)
-        }
-        if startDate == nil {
-            let fallbackFormatter = DateFormatter()
-            fallbackFormatter.locale = Locale(identifier: "en_US_POSIX")
-            fallbackFormatter.dateFormat = "yyyy-MM-dd"
-            startDate = fallbackFormatter.date(from: raw)
-        }
-        return startDate
-    }
-
-    func formattedStartDate() -> String {
-        guard let startDate = getStartDate() else { return "" }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd/MM/yyyy"
-        return formatter.string(from: startDate)
-    }
-
-    func getTimerData(referenceDate: Date = Date()) -> (days: Int, refDate: Date)? {
-        guard let startDate = getStartDate() else { return nil }
-        
-        let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: referenceDate)
-        let startOfAnchor = calendar.startOfDay(for: startDate)
-        let days = max(0, calendar.dateComponents([.day], from: startOfAnchor, to: startOfToday).day ?? 0)
-        
-        let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: startDate)
-        
-        var refComponents = calendar.dateComponents([.year, .month, .day], from: referenceDate)
-        refComponents.hour = timeComponents.hour
-        refComponents.minute = timeComponents.minute
-        refComponents.second = timeComponents.second
-        
-        guard let targetRefToday = calendar.date(from: refComponents) else {
-            return (days, startOfToday)
-        }
-        
-        if referenceDate >= targetRefToday {
-            return (days, targetRefToday)
-        } else {
-            let yesterday = calendar.date(byAdding: .day, value: -1, to: targetRefToday) ?? targetRefToday
-            return (days - 1, yesterday)
-        }
-    }
-
     func resolvedDaysText(referenceDate: Date = Date()) -> String {
         let unit = dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? "ngày"
@@ -194,22 +140,6 @@ struct WidgetCoupleProvider: Widget {
         }
         .configurationDisplayName("SoulLocket")
         .description("Hiển thị thông tin cặp đôi của bạn.")
-        .supportedFamilies(supportedFamiliesList)
-    }
-
-    private var supportedFamiliesList: [WidgetFamily] {
-        #if os(iOS)
-        if #available(iOS 16.0, *) {
-            return [
-                .systemSmall,
-                .systemMedium,
-                .systemLarge,
-                .accessoryCircular,
-                .accessoryRectangular,
-                .accessoryInline
-            ]
-        }
-        #endif
-        return [.systemSmall, .systemMedium, .systemLarge]
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }

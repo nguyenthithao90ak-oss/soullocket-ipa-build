@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import '../../../../../utils/services/breakup_service.dart';
-import '../../../../../utils/services/notification_service.dart';
+import '../../../../../services/breakup_service.dart';
+import '../../../../../services/notification_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
 
 class RelationshipActionDescriptor {

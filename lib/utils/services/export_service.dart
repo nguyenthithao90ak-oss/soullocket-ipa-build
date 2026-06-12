@@ -7,7 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
-import 'package:soullocket_app/utils/web_helpers.dart';
+import '../utils/web_helpers.dart';
 
 enum DiaryExportFormat {
   pdf,

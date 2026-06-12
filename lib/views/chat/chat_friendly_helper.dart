@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import '../../utils/services/l10n_service.dart';
+import '../../services/l10n_service.dart';
 
 class ChatFriendlyHelper {
   static List<String> get greetings => [

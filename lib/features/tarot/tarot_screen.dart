@@ -6,8 +6,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/sl_theme.dart';
-import '../../utils/services/l10n_service.dart';
-import '../../utils/services/tarot_reading_service.dart';
+import '../../services/l10n_service.dart';
+import '../../services/tarot_reading_service.dart';
 
 part 'models/tarot_models.dart';
 part 'painters/tarot_painters.dart';

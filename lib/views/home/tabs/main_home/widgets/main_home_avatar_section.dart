@@ -424,7 +424,6 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
     VoidCallback? onTap,
     VoidCallback? onLongPress,
     bool isUploading = false,
-    double? uploadProgress,
     bool isSinglePlaceholder = false,
   }) {
     // Nếu tham số size được truyền vào (từ _LegacyAvatarSection), dùng luôn size đó.
@@ -545,30 +544,14 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                       color: Colors.black.withValues(alpha: 0.3),
                     ),
                     child: Center(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              value: uploadProgress,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white.withValues(alpha: 0.9)),
-                              backgroundColor: Colors.white.withValues(alpha: 0.2),
-                            ),
-                          ),
-                          if (uploadProgress != null)
-                            Text(
-                              '${(uploadProgress * 100).toInt()}%',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                        ],
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white.withValues(alpha: 0.9)),
+                        ),
                       ),
                     ),
                   ),

@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'package:soullocket_app/views/ui_prefs.dart';
+import '../views/ui_prefs.dart';
 
 class SoundService {
   static final SoundService _instance = SoundService._internal();

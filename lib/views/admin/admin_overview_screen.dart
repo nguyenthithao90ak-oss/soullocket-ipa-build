@@ -5,7 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
-import '../../utils/services/auth_service.dart';
+import '../../services/auth_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 

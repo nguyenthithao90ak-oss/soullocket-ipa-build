@@ -192,7 +192,13 @@ import ActivityKit
       let sourcePath = args["sourcePath"] as? String,
       let fileName = args["fileName"] as? String
     else {
-      result(FlutterError(code: "invalid_args", message: "copyFileToAppGroup requires groupId, sourcePath, and fileName.", details: nil))
+      result(
+        FlutterError(
+          code: "invalid_args",
+          message: "copyFileToAppGroup requires groupId, sourcePath, and fileName.",
+          details: nil
+        )
+      )
       return
     }
 
@@ -200,27 +206,54 @@ import ActivityKit
     let sourceURL = URL(fileURLWithPath: sourcePath)
 
     guard fileManager.fileExists(atPath: sourceURL.path) else {
-      result(FlutterError(code: "source_missing", message: "Source file does not exist.", details: sourcePath))
+      result(
+        FlutterError(
+          code: "source_missing",
+          message: "Source file does not exist.",
+          details: sourcePath
+        )
+      )
       return
     }
 
-    guard let containerURL = fileManager.containerURL(forSecurityApplicationGroupIdentifier: groupId) else {
-      result(FlutterError(code: "container_unavailable", message: "Unable to resolve the App Group container.", details: groupId))
+    guard
+      let containerURL = fileManager.containerURL(
+        forSecurityApplicationGroupIdentifier: groupId
+      )
+    else {
+      result(
+        FlutterError(
+          code: "container_unavailable",
+          message: "Unable to resolve the App Group container.",
+          details: groupId
+        )
+      )
       return
     }
 
-    let widgetAssetsURL = containerURL.appendingPathComponent("widget_assets", isDirectory: true)
+    let widgetAssetsURL = containerURL.appendingPathComponent(
+      "widget_assets",
+      isDirectory: true
+    )
     let destinationURL = widgetAssetsURL.appendingPathComponent(fileName, isDirectory: false)
 
     do {
-      try fileManager.createDirectory(at: widgetAssetsURL, withIntermediateDirectories: true)
+      try fileManager.createDirectory(
+        at: widgetAssetsURL,
+        withIntermediateDirectories: true
+      )
       if fileManager.fileExists(atPath: destinationURL.path) {
         try fileManager.removeItem(at: destinationURL)
       }
       try fileManager.copyItem(at: sourceURL, to: destinationURL)
       result(destinationURL.path)
     } catch {
-      result(FlutterError(code: "copy_failed", message: "Failed to copy asset into the App Group container.", details: error.localizedDescription))
+      result(
+        FlutterError(
+          code: "copy_failed",
+          message: "Failed to copy asset into the App Group container.",
+          details: error.localizedDescription
+        )
     }
   }
 
@@ -231,7 +264,13 @@ import ActivityKit
             let title = args["title"] as? String,
             let label = args["label"] as? String,
             let endTimeMs = args["endTimeMs"] as? Double else {
-        result(FlutterError(code: "invalid_args", message: "startLiveActivity requires title, label, and endTimeMs.", details: nil))
+        result(
+          FlutterError(
+            code: "invalid_args",
+            message: "startLiveActivity requires title, label, and endTimeMs.",
+            details: nil
+          )
+        )
         return
       }
 
@@ -252,14 +291,32 @@ import ActivityKit
           pushType: nil
         )
         result(activity.id)
-      } catch let err {
-        result(FlutterError(code: "start_failed", message: "Failed to start live activity.", details: err.localizedDescription))
+      } catch {
+        result(
+          FlutterError(
+            code: "start_failed",
+            message: "Failed to start live activity: \(error.localizedDescription)",
+            details: nil
+          )
+        )
       }
     } else {
-      result(FlutterError(code: "unsupported", message: "Live Activities require iOS 16.1 or later.", details: nil))
+      result(
+        FlutterError(
+          code: "unsupported",
+          message: "Live Activities require iOS 16.1 or later.",
+          details: nil
+        )
+      )
     }
     #else
-    result(FlutterError(code: "unsupported", message: "ActivityKit is not available on this platform compilation.", details: nil))
+    result(
+      FlutterError(
+        code: "unsupported",
+        message: "ActivityKit is not available on this platform compilation.",
+        details: nil
+      )
+    )
     #endif
   }
 
@@ -270,7 +327,13 @@ import ActivityKit
             let activityId = args["activityId"] as? String,
             let label = args["label"] as? String,
             let endTimeMs = args["endTimeMs"] as? Double else {
-        result(FlutterError(code: "invalid_args", message: "updateLiveActivity requires activityId, label, and endTimeMs.", details: nil))
+        result(
+          FlutterError(
+            code: "invalid_args",
+            message: "updateLiveActivity requires activityId, label, and endTimeMs.",
+            details: nil
+          )
+        )
         return
       }
 
@@ -292,10 +355,22 @@ import ActivityKit
         result(false)
       }
     } else {
-      result(FlutterError(code: "unsupported", message: "Live Activities require iOS 16.1 or later.", details: nil))
+      result(
+        FlutterError(
+          code: "unsupported",
+          message: "Live Activities require iOS 16.1 or later.",
+          details: nil
+        )
+      )
     }
     #else
-    result(FlutterError(code: "unsupported", message: "ActivityKit is not available on this platform compilation.", details: nil))
+    result(
+      FlutterError(
+        code: "unsupported",
+        message: "ActivityKit is not available on this platform compilation.",
+        details: nil
+      )
+    )
     #endif
   }
 
@@ -304,7 +379,13 @@ import ActivityKit
     if #available(iOS 16.1, *) {
       guard let args = call.arguments as? [String: Any],
             let activityId = args["activityId"] as? String else {
-        result(FlutterError(code: "invalid_args", message: "endLiveActivity requires activityId.", details: nil))
+        result(
+          FlutterError(
+            code: "invalid_args",
+            message: "endLiveActivity requires activityId.",
+            details: nil
+          )
+        )
         return
       }
 
@@ -323,10 +404,22 @@ import ActivityKit
         result(false)
       }
     } else {
-      result(FlutterError(code: "unsupported", message: "Live Activities require iOS 16.1 or later.", details: nil))
+      result(
+        FlutterError(
+          code: "unsupported",
+          message: "Live Activities require iOS 16.1 or later.",
+          details: nil
+        )
+      )
     }
     #else
-    result(FlutterError(code: "unsupported", message: "ActivityKit is not available on this platform compilation.", details: nil))
+    result(
+      FlutterError(
+        code: "unsupported",
+        message: "ActivityKit is not available on this platform compilation.",
+        details: nil
+      )
+    )
     #endif
   }
 }

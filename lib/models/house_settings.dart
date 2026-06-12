@@ -54,7 +54,7 @@ class HouseSettings {
     this.homeBlockTone = 'theme',
     this.fallingEffect = 'off',
     this.avatarSizePx = 90,
-    this.countdownSizePx = 400,
+    this.countdownSizePx = 500,
     this.avatarFrame = 'circle',
     this.countdownStyle = 'default',
     this.countdownTopLabel = '',

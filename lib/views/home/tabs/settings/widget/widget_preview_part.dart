@@ -303,7 +303,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                             Flexible(
                               child: GridView.builder(
                                 shrinkWrap: true,
-                                physics: const ClampingScrollPhysics(),
+                                physics: const BouncingScrollPhysics(),
                                 itemCount: _widgetHeartStyleKeys.length,
                                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 4,

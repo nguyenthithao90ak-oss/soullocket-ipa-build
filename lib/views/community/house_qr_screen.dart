@@ -11,9 +11,9 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
-import '../../utils/services/friends_service.dart';
-import '../../utils/services/image_picker_recovery_service.dart';
-import '../../utils/services/qr_payload_codec.dart';
+import '../../services/friends_service.dart';
+import '../../services/image_picker_recovery_service.dart';
+import '../../services/qr_payload_codec.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/sl_notice.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';

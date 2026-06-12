@@ -6,13 +6,11 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart'
     show ChangeNotifier, ValueNotifier, debugPrint, kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../models/diary_post.dart';
 import '../../../../../models/house_settings.dart';
 import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../utils/services/house_service.dart';
 import '../../../../../utils/services/offline_cache_service.dart';
-import '../../../../../utils/services/diary_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
 
 class DiaryFeedController extends ChangeNotifier {
@@ -24,6 +22,8 @@ class DiaryFeedController extends ChangeNotifier {
         _dbRef = dbRef ?? FirebaseDatabase.instance.ref(),
         _houseService = houseService ?? HouseService();
 
+  static const int _webDiaryRealtimeLimit = 40;
+  static const int _appDiaryRealtimeLimit = 80;
   static const int _webDiaryCacheLimit = 28;
   static const int _appDiaryCacheLimit = 60;
 
@@ -44,17 +44,7 @@ class DiaryFeedController extends ChangeNotifier {
   String _relationshipMode = 'single';
   DateTime? _startDate;
   String? _lastDiaryCacheSignature;
-  StreamSubscription<List<DiaryPost>>? _diarySubscription;
-  StreamSubscription<List<DiaryPost>>? _pinnedSubscription;
-  DocumentSnapshot<Map<String, dynamic>>? _lastDocument;
-  bool _hasMore = true;
-  bool _isLoadingMore = false;
-  List<DiaryPost> _latestPosts = const [];
-  List<DiaryPost> _pinnedPosts = const [];
-  List<DiaryPost> _paginatedPosts = const [];
-
-  bool get hasMore => _hasMore;
-  bool get isLoadingMore => _isLoadingMore;
+  StreamSubscription<DatabaseEvent>? _diarySubscription;
 
   final Map<String, String> _authorNameByUid = <String, String>{};
   final Set<String> _hydratingAuthorUids = <String>{};
@@ -72,6 +62,9 @@ class DiaryFeedController extends ChangeNotifier {
   String get currentAuthorRole => _activeRoleKey == 'user1' ? 'user1' : 'user2';
   String get currentRoleName =>
       _activeRoleKey == 'user1' ? _nameU1.trim() : _nameU2.trim();
+
+  int get _diaryRealtimeLimit =>
+      kIsWeb ? _webDiaryRealtimeLimit : _appDiaryRealtimeLimit;
 
   int get _diaryCacheLimit =>
       kIsWeb ? _webDiaryCacheLimit : _appDiaryCacheLimit;
@@ -482,29 +475,6 @@ class DiaryFeedController extends ChangeNotifier {
     return posts;
   }
 
-  void _updatePostsVN() {
-    final all = <DiaryPost>[];
-
-    all.addAll(_pinnedPosts);
-
-    final pinnedIds = _pinnedPosts.map((p) => p.id).toSet();
-    for (final post in _latestPosts) {
-      if (!pinnedIds.contains(post.id)) {
-        all.add(post);
-      }
-    }
-
-    final existingIds = {...pinnedIds, ..._latestPosts.map((p) => p.id)};
-    for (final post in _paginatedPosts) {
-      if (!existingIds.contains(post.id)) {
-        all.add(post);
-      }
-    }
-
-    _sortDiaryPosts(all);
-    postsVN.value = all;
-  }
-
   Future<void> fetchDiaryPosts({
     required Future<User?> Function() resolveCurrentUser,
   }) async {
@@ -517,8 +487,6 @@ class DiaryFeedController extends ChangeNotifier {
     if (user == null) {
       await _diarySubscription?.cancel();
       _diarySubscription = null;
-      await _pinnedSubscription?.cancel();
-      _pinnedSubscription = null;
       _applyHouseId(null);
       postsVN.value = const <DiaryPost>[];
       _setLoading(false);
@@ -569,64 +537,57 @@ class DiaryFeedController extends ChangeNotifier {
       if (houseId == null) {
         await _diarySubscription?.cancel();
         _diarySubscription = null;
-        await _pinnedSubscription?.cancel();
-        _pinnedSubscription = null;
         postsVN.value = const <DiaryPost>[];
         _setLoading(false);
         return;
       }
 
-      _lastDocument = null;
-      _hasMore = true;
-      _isLoadingMore = false;
-      _latestPosts = const [];
-      _pinnedPosts = const [];
-      _paginatedPosts = const [];
-
       await _diarySubscription?.cancel();
-      await _pinnedSubscription?.cancel();
-      
-      // Auto migrate old RTDB diaries to Firestore in the background
-      unawaited(DiaryService().migrateDiariesFromRTDB(houseId));
-
-      _pinnedSubscription = DiaryService().streamPinnedDiary(houseId).listen(
-        (loadedPinned) {
-          if (_disposed) return;
-          _pinnedPosts = loadedPinned;
-          _updatePostsVN();
-        },
-        onError: (Object error) {
-          debugPrint('Pinned diary stream failed: $error');
-        }
-      );
-
-      _diarySubscription = DiaryService().streamDiary(houseId, limit: 10).listen(
-        (loadedPosts) {
-          try {
-            if (_disposed) {
-              return;
-            }
-
-            if (loadedPosts.isEmpty) {
-              _latestPosts = const [];
-              _updatePostsVN();
-              _lastDiaryCacheSignature = '0';
-              unawaited(
-                  OfflineCacheService.saveCache('diary_$houseId', const []));
-              return;
-            }
-
-            _latestPosts = loadedPosts;
-            _updatePostsVN();
-
-            final cacheList = loadedPosts.map((p) => p.toJson()).toList();
-            unawaited(_cacheDiaryPosts(houseId, cacheList));
-            unawaited(_hydrateAuthorNames(loadedPosts));
-          } catch (e, stack) {
-            debugPrint('Error processing diary realtime event: $e\n$stack');
-          } finally {
-            _setLoading(false);
+      final diaryQuery = _dbRef
+          .child('houses/$houseId/diary')
+          .orderByChild('timestamp')
+          .limitToLast(_diaryRealtimeLimit);
+      _diarySubscription = diaryQuery.onValue.listen(
+        (event) {
+          if (_disposed) {
+            return;
           }
+
+          if (event.snapshot.value == null) {
+            _lastDiaryCacheSignature = '0';
+            unawaited(
+                OfflineCacheService.saveCache('diary_$houseId', const []));
+            postsVN.value = const <DiaryPost>[];
+            _setLoading(false);
+            return;
+          }
+
+          final snapshotValue = event.snapshot.value;
+          if (snapshotValue is! Map) {
+            postsVN.value = const <DiaryPost>[];
+            _setLoading(false);
+            return;
+          }
+          final raw = Map<dynamic, dynamic>.from(snapshotValue);
+          final loadedPosts = <DiaryPost>[];
+          final cacheList = <Map<String, dynamic>>[];
+
+          raw.forEach((key, value) {
+            if (value is! Map) {
+              return;
+            }
+            final postMap = Map<dynamic, dynamic>.from(value);
+            loadedPosts.add(DiaryPost.fromJson(key.toString(), postMap));
+            postMap['id'] = key;
+            cacheList.add(Map<String, dynamic>.from(postMap));
+          });
+
+          _sortDiaryPosts(loadedPosts);
+          unawaited(_cacheDiaryPosts(houseId, cacheList));
+
+          postsVN.value = loadedPosts;
+          unawaited(_hydrateAuthorNames(loadedPosts));
+          _setLoading(false);
         },
         onError: (Object error) {
           debugPrint(
@@ -643,51 +604,9 @@ class DiaryFeedController extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchNextDiaryPage() async {
-    if (_isLoadingMore || !_hasMore) return;
-    final houseId = _houseId;
-    if (houseId == null) return;
-
-    _isLoadingMore = true;
-    _notifySafely();
-
-    try {
-      if (_lastDocument == null) {
-        final firstPageResult = await DiaryService().fetchDiaryPage(houseId, limit: 10);
-        _lastDocument = firstPageResult.lastDoc;
-        if (_lastDocument == null) {
-          _hasMore = false;
-          _isLoadingMore = false;
-          _notifySafely();
-          return;
-        }
-      }
-
-      final result = await DiaryService().fetchDiaryPage(
-        houseId,
-        limit: 10,
-        startAfter: _lastDocument,
-      );
-
-      if (result.posts.isNotEmpty) {
-        _lastDocument = result.lastDoc;
-        _paginatedPosts = [..._paginatedPosts, ...result.posts];
-        _updatePostsVN();
-      }
-      _hasMore = result.hasMore;
-    } catch (e) {
-      debugPrint('Error fetching next diary page: $e');
-    } finally {
-      _isLoadingMore = false;
-      _notifySafely();
-    }
-  }
-
   Future<void> pauseRealtime() async {
     await _diarySubscription?.cancel();
     _diarySubscription = null;
-    await _pinnedSubscription?.cancel();
-    _pinnedSubscription = null;
   }
 
   Future<void> deleteDiaryPost(DiaryPost post) async {
@@ -695,7 +614,7 @@ class DiaryFeedController extends ChangeNotifier {
     if (houseId == null) {
       return;
     }
-    await FirebaseFirestore.instance.collection('houses').doc(houseId).collection('diaries').doc(post.id).delete();
+    await _dbRef.child('houses/$houseId/diary/${post.id}').remove();
   }
 
   Future<void> togglePinDiaryPost(DiaryPost post) async {
@@ -704,20 +623,23 @@ class DiaryFeedController extends ChangeNotifier {
       return;
     }
 
-    final batch = FirebaseFirestore.instance.batch();
-    final diariesRef = FirebaseFirestore.instance.collection('houses').doc(houseId).collection('diaries');
+    final updates = <String, dynamic>{};
+    final prefix = 'houses/$houseId/diary';
 
     if (post.pinned) {
-      batch.update(diariesRef.doc(post.id), {'pinned': false, 'pinnedAt': null});
+      updates['$prefix/${post.id}/pinned'] = false;
+      updates['$prefix/${post.id}/pinnedAt'] = null;
     } else {
       for (final item in postsVN.value
           .where((entry) => entry.pinned && entry.id != post.id)) {
-        batch.update(diariesRef.doc(item.id), {'pinned': false, 'pinnedAt': null});
+        updates['$prefix/${item.id}/pinned'] = false;
+        updates['$prefix/${item.id}/pinnedAt'] = null;
       }
-      batch.update(diariesRef.doc(post.id), {'pinned': true, 'pinnedAt': FieldValue.serverTimestamp()});
+      updates['$prefix/${post.id}/pinned'] = true;
+      updates['$prefix/${post.id}/pinnedAt'] = ServerValue.timestamp;
     }
 
-    await batch.commit();
+    await _dbRef.update(updates);
   }
 
   String resolvedPostAuthorName(DiaryPost post) {
@@ -799,7 +721,6 @@ class DiaryFeedController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _diarySubscription?.cancel();
-    _pinnedSubscription?.cancel();
     postsVN.dispose();
     super.dispose();
   }

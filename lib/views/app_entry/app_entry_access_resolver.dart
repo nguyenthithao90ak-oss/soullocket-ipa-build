@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../utils/services/offline_cache_service.dart';
-import '../../utils/services/auth_service.dart';
-import '../../utils/services/house_service.dart';
+import '../../services/offline_cache_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
 
 class AppEntryAccessState {

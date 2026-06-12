@@ -116,12 +116,6 @@ Future<void> precacheUtilityStickerList(
   );
 }
 
-/// Builds the sticker icon for a utility tile.
-///
-/// [devicePixelRatio] — when provided by the caller (who already has a
-/// BuildContext), the image provider is created directly without wrapping
-/// in a [Builder] widget. This eliminates one extra widget per tile and
-/// avoids redundant MediaQuery lookups.
 Widget buildUtilityStickerIcon({
   required String utilityId,
   required IconData fallbackIcon,
@@ -129,7 +123,6 @@ Widget buildUtilityStickerIcon({
   double fallbackSize = 24,
   EdgeInsetsGeometry padding = EdgeInsets.zero,
   BoxFit fit = BoxFit.contain,
-  double? devicePixelRatio, // FIX #3: caller passes DPR → no Builder needed.
 }) {
   final fallback = Center(
     child: Icon(
@@ -144,33 +137,6 @@ Widget buildUtilityStickerIcon({
     return fallback;
   }
 
-  // Fast path: DPR known at call site → build image directly, no extra widget.
-  if (devicePixelRatio != null) {
-    final provider = utilityStickerImageProviderForId(
-      utilityId,
-      devicePixelRatio: devicePixelRatio,
-    );
-    if (provider == null) return fallback;
-    return SizedBox.expand(
-      child: Padding(
-        padding: padding,
-        child: Image(
-          image: provider,
-          fit: fit,
-          alignment: Alignment.center,
-          filterQuality: FilterQuality.low,
-          gaplessPlayback: true,
-          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-            if (wasSynchronouslyLoaded || frame != null) return child;
-            return fallback;
-          },
-          errorBuilder: (_, __, ___) => fallback,
-        ),
-      ),
-    );
-  }
-
-  // Fallback path: no DPR provided → use Builder (for other callers).
   return Builder(
     builder: (context) {
       final provider = utilityStickerImageProviderForId(
@@ -188,7 +154,7 @@ Widget buildUtilityStickerIcon({
             image: provider,
             fit: fit,
             alignment: Alignment.center,
-            filterQuality: FilterQuality.low,
+            filterQuality: FilterQuality.low, // Lowering filter quality from High to Low optimizes GPU texture processing for small assets
             gaplessPlayback: true,
             frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
               if (wasSynchronouslyLoaded || frame != null) {

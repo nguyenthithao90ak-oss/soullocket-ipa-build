@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
-import '../../../utils/services/l10n_service.dart';
+import '../../../services/l10n_service.dart';
 
 class AuthTabSwitcher extends StatelessWidget {
   final bool isLoginTab;

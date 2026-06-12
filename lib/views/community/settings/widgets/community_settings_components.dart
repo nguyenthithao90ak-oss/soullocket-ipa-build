@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/sl_theme.dart';
 
@@ -696,11 +695,11 @@ class CommunitySettingsAvatarPreview extends StatelessWidget {
         ),
         child: ClipOval(
           child: avatarUrl.isNotEmpty
-              ? CachedNetworkImage(
-                  imageUrl: avatarUrl,
+              ? Image.network(
+                  avatarUrl,
                   fit: BoxFit.cover,
                   filterQuality: FilterQuality.high,
-                  errorWidget: (_, __, ___) =>
+                  errorBuilder: (_, __, ___) =>
                       _CommunitySettingsAvatarFallback(text: fallbackText),
                 )
               : _CommunitySettingsAvatarFallback(text: fallbackText),

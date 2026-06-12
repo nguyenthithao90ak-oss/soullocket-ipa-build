@@ -17,27 +17,6 @@ class _MainHomeHeroHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        if (!isSingle)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 4,
-            left: 14,
-            child: ValueListenableBuilder<bool>(
-              valueListenable: UiPrefs.captureModeNotifier,
-              builder: (context, captureMode, _) {
-                if (captureMode) return const SizedBox.shrink();
-                return state._buildHeaderButton(
-                  icon: Icons.join_inner_rounded,
-                  color: const Color(0xFFFF4F93),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const SoulMergeScreen(),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
         Positioned(
           top: MediaQuery.of(context).padding.top + 4,
           right: 14,
@@ -47,15 +26,15 @@ class _MainHomeHeroHeader extends StatelessWidget {
               final hideButton =
                   state._hideSettingsButtonUntilRestart || captureMode;
               return IgnorePointer(
-                ignoring: captureMode,
+                ignoring: hideButton,
                 child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOutCubic,
-                  opacity: hideButton ? 0.0 : 1.0,
+                  opacity: hideButton ? 0 : 1,
                   child: AnimatedScale(
                     duration: const Duration(milliseconds: 180),
                     curve: Curves.easeOutCubic,
-                    scale: hideButton ? 0.92 : 1.0,
+                    scale: hideButton ? 0.92 : 1,
                     child: state._buildHeaderButton(
                       key: firstGuideSettingsKey,
                       icon: Icons.settings_rounded,

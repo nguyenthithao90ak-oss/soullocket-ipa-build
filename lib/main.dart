@@ -6,10 +6,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -20,12 +18,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:soullocket_app/core/constants/app_config.dart';
-import 'package:soullocket_app/utils/services/connectivity_service.dart';
-import 'package:soullocket_app/utils/services/local_database_service.dart';
-import 'package:soullocket_app/utils/services/music_service.dart';
-import 'package:soullocket_app/utils/services/offline_cache_service.dart';
-import 'package:soullocket_app/utils/services/security_service.dart';
-import 'package:soullocket_app/utils/services/widget_service.dart';
+import 'package:soullocket_app/services/connectivity_service.dart';
+import 'package:soullocket_app/services/l10n_service.dart';
+import 'package:soullocket_app/services/local_database_service.dart';
+import 'package:soullocket_app/services/music_service.dart';
+import 'package:soullocket_app/services/offline_cache_service.dart';
+import 'package:soullocket_app/services/security_service.dart';
+import 'package:soullocket_app/services/widget_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
@@ -281,7 +280,6 @@ void main() {
       await _initializeGoogleMobileAds();
       await _clearStaleIosAuthAfterFreshInstall();
       await _requestIosTrackingAuthorization();
-      await _initializeTikTokSdk();
 
       if (!kIsWeb) {
         FirebaseMessaging.onBackgroundMessage(
@@ -379,15 +377,6 @@ Future<void> _initializeFirebaseBootstrap() async {
     _throwIfFirebaseEnvMissing();
     await Firebase.initializeApp(options: _firebaseOptionsFromEnv())
         .timeout(const Duration(seconds: 8));
-        
-    try {
-      FirebaseFirestore.instance.settings = const Settings(
-        persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-      );
-    } catch (e) {
-      debugPrint('Firestore web persistence error: $e');
-    }
   } else {
     await _initializeNativeFirebaseBootstrap();
   }
@@ -406,15 +395,6 @@ Future<void> _initializeFirebaseBootstrap() async {
         e,
         fallbackMessage: L10nService().translate('core_err_firebase_cache_failed'),
       ).message}');
-    }
-
-    try {
-      FirebaseFirestore.instance.settings = const Settings(
-        persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-      );
-    } catch (e) {
-      debugPrint('Firestore persistence error: $e');
     }
 
     await _initializeFirebaseAppCheck();
@@ -602,46 +582,6 @@ Future<void> _requestIosTrackingAuthorization() async {
     }
   } catch (e) {
     debugPrint('ATT request skipped: $e');
-  }
-}
-
-Future<void> _initializeTikTokSdk() async {
-  if (kIsWeb) {
-    return;
-  }
-
-  final bool isIos = defaultTargetPlatform == TargetPlatform.iOS ||
-      defaultTargetPlatform == TargetPlatform.macOS;
-
-  final appId = (isIos
-          ? AppConfig.tiktokIosAppId
-          : AppConfig.tiktokAndroidAppId)
-      .trim();
-  final accessToken = (isIos
-          ? AppConfig.tiktokIosAccessToken
-          : AppConfig.tiktokAndroidAccessToken)
-      .trim();
-  final ttAppId = (isIos
-          ? AppConfig.tiktokIosTtAppId
-          : AppConfig.tiktokAndroidTtAppId)
-      .trim();
-
-  if (appId.isEmpty || accessToken.isEmpty || ttAppId.isEmpty) {
-    debugPrint('TikTok Business SDK skipped: missing credentials in config');
-    return;
-  }
-
-  try {
-    await TiktokBusinessSdk().initTiktokBusinessSdk(
-      accessToken: accessToken,
-      appId: appId,
-      ttAppId: ttAppId,
-      openDebug: kDebugMode,
-      enableAutoIapTrack: true,
-    );
-    debugPrint('TikTok Business SDK initialized successfully [${ isIos ? "iOS" : "Android"}]');
-  } catch (e) {
-    debugPrint('TikTok Business SDK init error: $e');
   }
 }
 

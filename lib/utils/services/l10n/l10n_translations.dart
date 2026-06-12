@@ -101,7 +101,7 @@ abstract final class _L10nStaticData {
     'settings_security_desc':
         'Bật khóa ứng dụng, xác minh email, liên kết Google, PIN khôi phục và quản lý thiết bị đang đăng nhập.',
     'settings_theme_desc':
-        'Đổi chủ đề, font chữ, ảnh nền, nhạc nền, hiệu ứng rơi, đồ họa.',
+        'Đổi chủ đề, font chữ, ảnh nền, nhạc nền, hiệu ứng rơi, đồ họa và công cụ AI cá nhân hóa.',
     'settings_widget_label': 'Widget',
     'settings_widget_desc_web':
         'Xem trước đầy đủ giao diện widget, ảnh đôi, màu sắc và đồng bộ để mở tiếp trên điện thoại.',
@@ -683,7 +683,7 @@ abstract final class _L10nStaticData {
     'security_q_locked': 'Câu hỏi đã được thiết lập và khóa lại an toàn.',
     'vault_timeout_desc':
         'Thời gian yêu cầu nhập lại mật khẩu khi không dùng kho ảnh.',
-    'security_zone_title': '🛡️ Quản Lý Bảo Mật',
+    'security_zone_title': '🛡️ Khu Vực Bảo Mật',
     'house_password': 'Mật mã nhà',
     'save_house_password': 'Lưu mật mã nhà',
     'saved_house_password': 'Đã lưu mật mã nhà!',

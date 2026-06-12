@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../utils/services/l10n_service.dart';
+import '../../services/l10n_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import '../../utils/services/webrtc_service.dart';
+import '../../services/webrtc_service.dart';
 import '../../core/sl_theme.dart';
 
 /// ============================================================

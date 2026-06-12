@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-import '../../utils/services/deeplink_service.dart';
-import '../../utils/services/gift_maker_service.dart';
-import '../../utils/services/house_service.dart';
-import '../../utils/services/love_card_link_service.dart';
+import '../../services/deeplink_service.dart';
+import '../../services/gift_maker_service.dart';
+import '../../services/house_service.dart';
+import '../../services/love_card_link_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../auth/auth_action_screen.dart';
 import '../relationship/couple_connect_screen.dart';

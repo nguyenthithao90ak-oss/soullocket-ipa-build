@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-import '../../utils/services/export_service.dart';
+import '../../services/export_service.dart';
 import '../../core/sl_theme.dart';
 
 class DiaryExportScreen extends StatefulWidget {

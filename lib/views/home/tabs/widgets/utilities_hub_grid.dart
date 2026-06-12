@@ -70,13 +70,15 @@ class UtilitiesHubGrid extends StatelessWidget {
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final app = apps[index];
-                    return UtilitiesHubItem(
-                      key: ValueKey<String>(app.id),
-                      app: app,
-                      isEditMode: isEditMode,
-                      onTap: () => onAppTap(app.id),
-                      onReorder: onReorder,
-                      onEditModeChanged: onEditModeChanged,
+                    return RepaintBoundary(
+                      child: UtilitiesHubItem(
+                        key: ValueKey<String>(app.id),
+                        app: app,
+                        isEditMode: isEditMode,
+                        onTap: () => onAppTap(app.id),
+                        onReorder: onReorder,
+                        onEditModeChanged: onEditModeChanged,
+                      ),
                     );
                   },
                   childCount: apps.length,

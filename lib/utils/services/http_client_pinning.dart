@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart' as http_io;
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../app_error_mapper.dart';
 
 /// SSL/TLS certificate public-key pinning for HTTP clients.
 class PinnedHttpClient {
@@ -83,8 +83,8 @@ class PinnedHttpClient {
       if (certEnd > der.length) return null;
       if (reader.readTag() != 0x30) return null;
       final tbsEnd = reader.offset + reader.readLength();
-      if (reader.offset < tbsEnd && der[reader.offset] == 0xA0) { reader.skipTagged(); }
-      for (int i = 0; i < 5 && reader.offset < tbsEnd; i++) { reader.skipTlv(); }
+      if (reader.offset < tbsEnd && der[reader.offset] == 0xA0) reader.skipTagged();
+      for (int i = 0; i < 5 && reader.offset < tbsEnd; i++) reader.skipTlv();
       if (reader.offset >= tbsEnd || reader.readTag() != 0x30) return null;
       final spkiLen = reader.readLength();
       if (reader.offset + spkiLen > tbsEnd) return null;

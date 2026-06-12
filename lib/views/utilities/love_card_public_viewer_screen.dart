@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,7 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/sl_theme.dart';
-import '../../utils/services/love_card_link_service.dart';
+import '../../services/love_card_link_service.dart';
 
 part 'love_card/love_card_public_viewer_helpers.dart';
 
@@ -572,16 +571,18 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                   child: Stack(
                                     fit: StackFit.expand,
                                     children: [
-                                      CachedNetworkImage(
-                                        imageUrl: imageUrl,
+                                      Image.network(
+                                        imageUrl,
                                         fit: BoxFit.cover,
                                         filterQuality: FilterQuality.high,
-                                        errorWidget: (context, error, stackTrace) {
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
                                           return Container(
                                             color: palette.envelopeLight,
                                             alignment: Alignment.center,
                                             child: Icon(
-                                              Icons.image_not_supported_outlined,
+                                              Icons
+                                                  .image_not_supported_outlined,
                                               color: palette.accent,
                                               size: 34,
                                             ),

@@ -5,21 +5,22 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../utils/services/offline_cache_service.dart';
+import '../../services/offline_cache_service.dart';
 
-import '../../utils/services/admob_service.dart';
-import '../../utils/services/critical_data_sync_service.dart';
-import '../../utils/services/device_manager_service.dart';
-import '../../utils/services/encryption_service.dart';
-import '../../utils/services/house_service.dart';
-import '../../utils/services/interaction_metrics_service.dart';
-import '../../utils/services/love_insight_service.dart';
-import '../../utils/services/military_lock_service.dart';
-import '../../utils/services/notification_service.dart';
-import '../../utils/services/presence_service.dart';
-import '../../utils/services/security_service.dart';
-import '../../utils/services/session/app_background_session_tracker.dart';
-import '../../utils/services/session/session_connectivity_coordinator.dart';
+import '../../services/admob_service.dart';
+import '../../services/critical_data_sync_service.dart';
+import '../../services/device_manager_service.dart';
+import '../../services/encryption_service.dart';
+import '../../services/house_service.dart';
+import '../../services/interaction_metrics_service.dart';
+import '../../services/love_insight_service.dart';
+import '../../services/military_lock_service.dart';
+import '../../services/location_service.dart';
+import '../../services/notification_service.dart';
+import '../../services/presence_service.dart';
+import '../../services/security_service.dart';
+import '../../services/session/app_background_session_tracker.dart';
+import '../../services/session/session_connectivity_coordinator.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/widget_service.dart';
 import '../../utils/services/role_utils.dart';
@@ -75,8 +76,12 @@ class AppEntryController {
         _interactionMetricsService =
             interactionMetricsService ?? InteractionMetricsService();
 
+  static const String _startupPermissionPromptedPrefsKey =
+      'il_startup_permission_prompted_v2';
   static const String _notificationPermissionPromptedPrefsKey =
       'il_notification_permission_prompted_v1';
+  static const String _locationPermissionPromptedPrefsKey =
+      'il_location_permission_prompted_v1';
   static const Duration _deviceRegistrationCooldown = Duration(seconds: 15);
 
   final HouseService _houseService;
@@ -471,13 +476,33 @@ class AppEntryController {
     final activeContext = context;
 
     final prefs = await getPrefs();
+    final hasLegacyPrompted =
+        prefs.getBool(_startupPermissionPromptedPrefsKey) ?? false;
     final hasPromptedNotification =
         prefs.getBool(_notificationPermissionPromptedPrefsKey) ?? false;
+    final hasPromptedLocation =
+        prefs.getBool(_locationPermissionPromptedPrefsKey) ?? false;
     if (!activeContext.mounted) return;
 
+    if (!activeContext.mounted) return;
+
+    var notificationGranted = false;
     if (!hasPromptedNotification) {
-      await NotificationService().requestPermissionAndInit();
+      notificationGranted =
+          await NotificationService().requestPermissionAndInit();
       await prefs.setBool(_notificationPermissionPromptedPrefsKey, true);
+      if (!activeContext.mounted) return;
+    }
+
+    var locationGranted = false;
+    if (!hasPromptedLocation) {
+      locationGranted =
+          await LocationService().requestPermission(context: activeContext);
+      await prefs.setBool(_locationPermissionPromptedPrefsKey, true);
+    }
+
+    if ((locationGranted || notificationGranted) && !hasLegacyPrompted) {
+      await prefs.setBool(_startupPermissionPromptedPrefsKey, true);
     }
   }
 

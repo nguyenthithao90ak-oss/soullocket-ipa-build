@@ -7,12 +7,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../utils/services/chat_service.dart';
+import '../../services/chat_service.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import '../../utils/services/webrtc_service.dart';
+import '../../services/webrtc_service.dart';
 
 class WatchTogetherScreen extends StatefulWidget {
   final String myHouseId;

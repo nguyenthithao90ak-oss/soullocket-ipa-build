@@ -7,14 +7,12 @@ class FastBackdropFilter extends StatelessWidget {
   final ImageFilter filter;
   final Widget? child;
   final BlendMode blendMode;
-  final Color? fallbackColor;
 
   const FastBackdropFilter({
     super.key,
     required this.filter,
     this.child,
     this.blendMode = BlendMode.srcOver,
-    this.fallbackColor,
   });
 
   @override
@@ -30,7 +28,7 @@ class FastBackdropFilter extends StatelessWidget {
         (kIsWeb && resolvedGraphicsQuality != 'high');
     if (useLiteFallback) {
       return ColoredBox(
-        color: fallbackColor ?? Colors.black.withValues(alpha: kIsWeb ? 0.04 : 0.05),
+        color: Colors.black.withValues(alpha: kIsWeb ? 0.04 : 0.05),
         child: child,
       );
     }

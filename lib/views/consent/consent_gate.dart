@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-import '../../utils/services/consent_service.dart';
+import '../../services/consent_service.dart';
 import '../home/screens/document_viewer_screen.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';

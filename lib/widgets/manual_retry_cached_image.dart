@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'cute_loading_indicator.dart';
 import '../core/sl_theme.dart';
-import '../utils/services/l10n_service.dart';
+import '../services/l10n_service.dart';
 
 class ManualRetryCachedImage extends StatefulWidget {
   final String imageUrl;

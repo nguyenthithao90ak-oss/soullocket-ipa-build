@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-import '../../utils/services/auth_service.dart';
+import '../../services/auth_service.dart';
 import '../../utils/sl_notice.dart';
 import '../login_screen.dart';
 

@@ -3,10 +3,10 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import '../../core/sl_theme.dart';
-import '../../utils/services/friends_service.dart';
-import '../../utils/services/house_service.dart';
-import '../../utils/services/schedule_notification_presenter.dart';
-import '../../utils/services/l10n_service.dart';
+import '../../services/friends_service.dart';
+import '../../services/house_service.dart';
+import '../../services/schedule_notification_presenter.dart';
+import '../../services/l10n_service.dart';
 import '../../utils/app_error_mapper.dart';
 
 part 'notification_screen_types.dart';

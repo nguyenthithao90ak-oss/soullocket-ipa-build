@@ -1,11 +1,10 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/soul_locket_brand.dart';
-import '../utils/services/offline_cache_service.dart';
-import '../utils/services/settings_sync_service.dart';
+import '../services/offline_cache_service.dart';
+import '../services/settings_sync_service.dart';
 
 @immutable
 class UiPrefsState {
@@ -124,7 +123,7 @@ class UiPrefsState {
     // Default to no falling effects.
     fallingEffectKey: 'off',
     avatarSizePx: 90,
-    countdownSizePx: 400,
+    countdownSizePx: 500,
     avatarFrameKey: 'off',
     // Default countdown visual: glass (kính mờ)
     countdownStyleKey: 'glass',
@@ -434,7 +433,7 @@ class UiPrefs {
     await prefs.setString(_kBrandMarkKey, normalized.brandMarkKey);
 
     try {
-      unawaited(SettingsSyncService().backupSettingsToCloud());
+      await SettingsSyncService().backupSettingsToCloud();
     } catch (_) {}
   }
 

@@ -4,7 +4,6 @@ import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../utils/services/activity_history_service.dart';
 import '../../../../../utils/services/diary_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
-import '../../../../../utils/services/notification_service.dart';
 import 'diary_feed_controller.dart';
 
 class DiaryComposerController {
@@ -110,15 +109,6 @@ class DiaryComposerController {
           role: authorRole,
           isPrivate: false,
         );
-        // Gửi push notification tới người bên kia kèm nội dung nhật ký
-        final mood = selectedMoodVN.value;
-        final preview = content.length > 60 ? '${content.substring(0, 60)}...' : content;
-        NotificationService().sendPartnerNotification(
-          houseId: houseId,
-          title: '$authorName $mood vừa viết tâm sự!',
-          body: preview,
-          data: const {'screen': 'diary', 'type': 'diary_post'},
-        ).ignore();
       }
     } catch (e) {
       showSnackBar(

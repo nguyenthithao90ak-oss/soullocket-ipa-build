@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/sl_theme.dart';
-import '../../utils/services/auth_service.dart';
+import '../../services/auth_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 

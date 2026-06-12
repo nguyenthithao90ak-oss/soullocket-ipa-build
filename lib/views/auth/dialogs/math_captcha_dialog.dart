@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
-import '../../../utils/services/l10n_service.dart';
+import '../../../services/l10n_service.dart';
 
 class MathCaptchaDialog {
   const MathCaptchaDialog._();

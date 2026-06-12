@@ -158,7 +158,6 @@ class _CountdownModeEditorScreenState
   late bool _transparentMode;
   late double _sizePx;
   String? _uploadingAvatarRole;
-  double? _avatarUploadProgress;
   bool _isUploadingBackground = false;
   bool _isUnlockingCountdownStyle = false;
   bool _didPromptPendingUploadRetry = false;
@@ -547,9 +546,6 @@ class _CountdownModeEditorScreenState
         quality: 84,
         minWidth: 512,
         minHeight: 512,
-        onProgress: (p) {
-          if (mounted) setState(() => _avatarUploadProgress = p);
-        },
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (mounted) {
@@ -573,7 +569,6 @@ class _CountdownModeEditorScreenState
       if (mounted) {
         setState(() {
           _uploadingAvatarRole = null;
-          _avatarUploadProgress = null;
         });
       }
     }
@@ -626,9 +621,6 @@ class _CountdownModeEditorScreenState
         quality: 78,
         minWidth: 900,
         minHeight: 900,
-        onProgress: (p) {
-          // Progress updates can be handled here when UI is ready
-        },
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (mounted) {
@@ -736,7 +728,7 @@ class _CountdownModeEditorScreenState
                           constraints.maxWidth > 680 ? 620 : double.infinity,
                     ),
                     child: SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
+                      physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -913,9 +905,7 @@ class _CountdownModeEditorScreenState
                                                 Icons.upload_rounded,
                                                 size: 18,
                                               ),
-                                        label: Text(_uploadingAvatarRole == 'left' && _avatarUploadProgress != null
-                                            ? 'ĐANG TẢI... ${(_avatarUploadProgress! * 100).toInt()}%'
-                                            : context.tr('home_tinhtri_3bb821')),
+                                        label: Text(context.tr('home_tinhtri_3bb821')),
                                       ),
                                     ),
                                   ],
@@ -957,9 +947,7 @@ class _CountdownModeEditorScreenState
                                                 Icons.upload_rounded,
                                                 size: 18,
                                               ),
-                                        label: Text(_uploadingAvatarRole == 'right' && _avatarUploadProgress != null
-                                            ? 'ĐANG TẢI... ${(_avatarUploadProgress! * 100).toInt()}%'
-                                            : context.tr('home_tinhphi_3b6cd5')),
+                                        label: Text(context.tr('home_tinhphi_3b6cd5')),
                                       ),
                                     ),
                                   ],
@@ -1301,62 +1289,25 @@ class _CountdownModeEditorScreenState
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                StatefulBuilder(
-                                  builder: (context, setStateSlider) {
-                                    return Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Kích thước vòng đếm: ${_sizePx.round()}px',
-                                          style: SLTheme.quicksand(
-                                            fontSize: 12.8,
-                                            fontWeight: FontWeight.w800,
-                                            color: const Color(0xFF8A5B76),
-                                          ),
-                                        ),
-                                        Slider(
-                                          min: 200,
-                                          max: UiPrefs.maxCountdownSizePx,
-                                          activeColor: const Color(0xFFD81B60),
-                                          inactiveColor: const Color(0xFFF2C3D7),
-                                          value: _sizePx.clamp(
-                                            200.0,
-                                            UiPrefs.maxCountdownSizePx,
-                                          ),
-                                          onChanged: (value) {
-                                            setStateSlider(() {
-                                              _sizePx = value;
-                                            });
-                                          },
-                                        ),
-                                        Align(
-                                          alignment: Alignment.centerRight,
-                                          child: TextButton.icon(
-                                            onPressed: () => Navigator.of(context).pop(
-                                              _buildResult(
-                                                _CountdownModeSettingsAction.save,
-                                              ),
-                                            ),
-                                            icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                                            label: Text(
-                                              'Lưu kích thước',
-                                              style: SLTheme.quicksand(
-                                                fontWeight: FontWeight.w800,
-                                              ),
-                                            ),
-                                            style: TextButton.styleFrom(
-                                              foregroundColor: const Color(0xFFD81B60),
-                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                              backgroundColor: const Color(0xFFD81B60).withValues(alpha: 0.1),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
+                                Text(
+                                  'Kích thước vòng đếm: ${_sizePx.round()}px',
+                                  style: SLTheme.quicksand(
+                                    fontSize: 12.8,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF8A5B76),
+                                  ),
+                                ),
+                                Slider(
+                                  min: 200,
+                                  max: UiPrefs.maxCountdownSizePx,
+                                  activeColor: const Color(0xFFD81B60),
+                                  inactiveColor: const Color(0xFFF2C3D7),
+                                  value: _sizePx.clamp(
+                                    200.0,
+                                    UiPrefs.maxCountdownSizePx,
+                                  ),
+                                  onChanged: (value) =>
+                                      setState(() => _sizePx = value),
                                 ),
                               ],
                             ),

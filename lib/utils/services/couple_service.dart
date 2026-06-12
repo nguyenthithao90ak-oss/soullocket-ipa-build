@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../utils/services/single_match_service.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../../services/single_match_service.dart';
+import '../app_error_mapper.dart';
 import 'offline_cache_service.dart';
 
 class JoinHouseResult {

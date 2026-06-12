@@ -5,9 +5,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:soullocket_app/utils/services/consent_service.dart';
-import 'package:soullocket_app/utils/services/presence_service.dart';
-import 'package:soullocket_app/utils/services/security_service.dart';
+import '../consent_service.dart';
+import '../presence_service.dart';
+import '../security_service.dart';
 import 'auth_support.dart';
 
 class AuthHouseContextService {

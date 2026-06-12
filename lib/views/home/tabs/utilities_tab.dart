@@ -11,11 +11,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../models/house_settings.dart';
-import '../../../utils/services/admob_service.dart';
-import '../../../utils/services/house_service.dart';
-import '../../../utils/services/military_lock_service.dart';
-import '../../../utils/services/utility_service.dart';
-import '../../../utils/services/offline_cache_service.dart';
+import '../../../services/admob_service.dart';
+import '../../../services/house_service.dart';
+import '../../../services/military_lock_service.dart';
+import '../../../services/utility_service.dart';
+import '../../../services/offline_cache_service.dart';
 import '../../../core/sl_theme.dart';
 import '../../utilities/bucket_list_screen.dart';
 import '../../utilities/shared_notes_screen.dart';
@@ -43,7 +43,6 @@ import '../../utilities/calculator_screen.dart';
 import '../../utilities/creative_diary_screen.dart';
 import '../../utilities/sticker_library_screen.dart';
 import '../../utilities/utility_sticker_icon.dart';
-import '../../utilities/health_screen.dart';
 
 // import '../../utils/sl_notice.dart';
 
@@ -56,10 +55,7 @@ class UtilitiesTab extends StatefulWidget {
   State<UtilitiesTab> createState() => _UtilitiesTabState();
 }
 
-class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
+class _UtilitiesTabState extends State<UtilitiesTab> {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final HouseService _houseService = HouseService();
@@ -331,7 +327,6 @@ class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClie
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final visibleApps = _appsForCurrentSegment();
 
     return Scaffold(
@@ -421,7 +416,7 @@ class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClie
       final now = DateTime.now();
       if ((_lastUtilityAdTime == null ||
               now.difference(_lastUtilityAdTime!) >
-                  const Duration(minutes: 5)) &&
+                  const Duration(minutes: 15)) &&
           !_adMob.hasRecentFullscreenAd()) {
         await _adMob.showInterstitialAd();
         _lastUtilityAdTime = DateTime.now();
@@ -544,9 +539,6 @@ class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClie
         break;
       case 'creative_diary':
         screen = CreativeDiaryScreen(houseId: houseId);
-        break;
-      case 'health':
-        screen = HealthScreen(houseId: houseId);
         break;
     }
     if (screen != null) {

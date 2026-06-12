@@ -1,6 +1,5 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers, cancel_subscriptions
 import 'package:flutter/material.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -24,20 +23,20 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import '../../../utils/services/offline_cache_service.dart';
-import '../../../utils/services/house_service.dart';
-import '../../../utils/services/home_startup_media_cache.dart';
-import '../../../utils/services/love_insight_service.dart';
-import '../../../utils/services/location_service.dart';
-import '../../../utils/services/l10n_service.dart';
-import '../../../utils/services/military_lock_service.dart';
-import '../../../utils/services/presence_service.dart';
-import '../../../utils/services/utility_service.dart';
-import '../../../utils/services/house_settings_service.dart';
-import '../../../utils/services/album_service.dart';
-import '../../../utils/services/notification_service.dart';
-import '../../../utils/services/storage_service.dart';
-import '../../../utils/services/utilities/note_service.dart';
+import '../../../services/offline_cache_service.dart';
+import '../../../services/house_service.dart';
+import '../../../services/home_startup_media_cache.dart';
+import '../../../services/love_insight_service.dart';
+import '../../../services/location_service.dart';
+import '../../../services/l10n_service.dart';
+import '../../../services/military_lock_service.dart';
+import '../../../services/presence_service.dart';
+import '../../../services/utility_service.dart';
+import '../../../services/house_settings_service.dart';
+import '../../../services/album_service.dart';
+import '../../../services/notification_service.dart';
+import '../../../services/storage_service.dart';
+import '../../../services/utilities/note_service.dart';
 import '../../../utils/services/pending_upload_service.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../models/album_item.dart';
@@ -72,8 +71,8 @@ import '../../utilities/voice_screen.dart';
 import '../../../features/wheel/wheel_screen.dart';
 import '../../utilities/wishlist_screen.dart';
 import '../../../utils/zodiac_utils.dart';
-import '../../../utils/services/widget_service.dart';
-import '../../../utils/services/daily_quest_service.dart';
+import '../../../services/widget_service.dart';
+import '../../../services/daily_quest_service.dart';
 import '../../../core/constants/app_config.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../widgets/legacy_web_ui.dart';
@@ -82,11 +81,9 @@ import '../../../utils/services/admob_service.dart';
 
 import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import '../screens/global_search_screen.dart';
-import '../widgets/soul_merge_screen.dart';
 import 'dart:ui' as ui;
 
 import '../../../widgets/lottie_async_loader.dart';
-import '../../../core/fast_backdrop_filter.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
 part '../widgets/main_home/main_home_hero_section.dart';
@@ -140,7 +137,7 @@ class MainHomeTab extends StatefulWidget {
   State<MainHomeTab> createState() => _MainHomeTabState();
 }
 
-class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
+class _MainHomeTabState extends State<MainHomeTab> {
   static const String _pendingAvatarUploadKeyPrefix = 'main_home_avatar_';
   static const String _mapCardFirstTapSeenPrefsKey =
       'il_home_map_card_first_tap_seen_v1';
@@ -181,7 +178,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   String? _houseId;
   String _currentRole = 'user1';
   String? _uploadingAvatarRole;
-  double? _avatarUploadProgress;
   bool _didPromptPendingAvatarRetry = false;
   String _homeDistanceText = 'Đang định vị...';
   String? _homeMapAlert;
@@ -225,7 +221,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final Map<String, Future<String?>> _weatherReverseGeocodeInFlight =
       <String, Future<String?>>{};
   Timer? _interactionRotationTimer;
-  final List<String> _rotationQueue = [];
   Map<String, dynamic>? _pendingWidgetSettings;
   bool _pendingWidgetSyncIncludeDiaryMedia = false;
   bool _widgetSyncInFlight = false;
@@ -241,7 +236,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   List<String> _recentChatSignals = [];
   _PartnerInteractionPreset _smartInteractionPreset =
       _defaultSmartInteractionPreset();
-  bool _showDefaultHeartSuggestion = false;
+  bool _showDefaultHeartSuggestion = true;
   String? _manualInteractionPresetType;
   bool _incomingInteractionDialogVisible = false;
   final List<_MissYouAlertPayload> _incomingInteractionQueue =
@@ -331,14 +326,34 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     double? height,
     double? letterSpacing,
   }) {
-    return SLTheme.textStyleForKey(
-      UiPrefs.notifier.value.fontKey,
+    final base = TextStyle(
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
       height: height,
       letterSpacing: letterSpacing,
     );
+    switch (UiPrefs.notifier.value.fontKey) {
+      case 'patrickHand':
+        return GoogleFonts.patrickHand(textStyle: base);
+      case 'dancingScript':
+        return GoogleFonts.dancingScript(textStyle: base);
+      case 'caveat':
+        return GoogleFonts.caveat(textStyle: base);
+      case 'lora':
+        return GoogleFonts.lora(textStyle: base);
+      case 'nunito':
+        return GoogleFonts.nunito(textStyle: base);
+      case 'comfortaa':
+        return GoogleFonts.comfortaa(textStyle: base);
+      case 'playfair':
+        return GoogleFonts.playfairDisplay(textStyle: base);
+      case 'beVietnam':
+        return GoogleFonts.beVietnamPro(textStyle: base);
+      case 'quicksand':
+      default:
+        return SLTheme.quicksand(textStyle: base);
+    }
   }
 
   BoxDecoration _homeCardDecoration({double radius = 24}) {
@@ -495,16 +510,44 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _isTabActive = widget.isActive;
     unawaited(() async {
       try {
-        final selectedUiFont = SLTheme.textStyleForKey(
-          UiPrefs.notifier.value.fontKey,
-        );
+        final fontKey = UiPrefs.notifier.value.fontKey;
+        TextStyle? selectedUiFont;
+        switch (fontKey) {
+          case 'patrickHand':
+            selectedUiFont = GoogleFonts.patrickHand();
+            break;
+          case 'dancingScript':
+            selectedUiFont = GoogleFonts.dancingScript();
+            break;
+          case 'caveat':
+            selectedUiFont = GoogleFonts.caveat();
+            break;
+          case 'lora':
+            selectedUiFont = GoogleFonts.lora();
+            break;
+          case 'nunito':
+            selectedUiFont = GoogleFonts.nunito();
+            break;
+          case 'comfortaa':
+            selectedUiFont = GoogleFonts.comfortaa();
+            break;
+          case 'playfair':
+            selectedUiFont = GoogleFonts.playfairDisplay();
+            break;
+          case 'beVietnam':
+            selectedUiFont = GoogleFonts.beVietnamPro();
+            break;
+          case 'quicksand':
+          default:
+            selectedUiFont = GoogleFonts.quicksand();
+            break;
+        }
         await GoogleFonts.pendingFonts([
           GoogleFonts.comfortaa(fontWeight: FontWeight.w900),
-          selectedUiFont,
+          if (selectedUiFont != null) selectedUiFont,
         ]);
       } catch (_) {}
     }());
@@ -538,21 +581,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _invalidateLiveWorkSession();
     _cancelLiveWorkBindings();
     _homeMediaWarmupToken++;
     _fallingEffectTypeNotifier.dispose();
     _interactionDragHoveredNotifier.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _isTabActive && _houseId != null) {
-      unawaited(_ensureAppWideLocationTracking(_houseId!));
-      unawaited(_refreshCurrentRoleWeather());
-    }
   }
 
   void _handleTabActivityChanged(bool isActive) {
@@ -1325,10 +1359,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     final role = isUser1 ? 'user1' : 'user2';
     final field = isUser1 ? 'avtUser1' : 'avtUser2';
     final pendingKey = _pendingAvatarUploadKeyForHouse(houseId);
-    setState(() {
-      _uploadingAvatarRole = role;
-      _avatarUploadProgress = 0.0;
-    });
+    setState(() => _uploadingAvatarRole = role);
 
     try {
       if (presetFile == null) {
@@ -1349,11 +1380,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         quality: 84,
         minWidth: 512,
         minHeight: 512,
-        onProgress: (p) {
-          if (mounted) {
-            setState(() => _avatarUploadProgress = p);
-          }
-        },
       );
       final sessionId = upload?.sessionId?.trim() ?? '';
       final url = upload?.downloadUrl.trim() ?? '';
@@ -1371,10 +1397,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       await PendingUploadService.instance.clear(pendingKey);
 
       if (mounted) {
+        if (!mounted) return;
         setState(() {
           _houseSettings ??= {};
           _houseSettings![field] = url;
-          _avatarUploadProgress = 1.0;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1400,10 +1426,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _uploadingAvatarRole = null;
-          _avatarUploadProgress = null;
-        });
+        setState(() => _uploadingAvatarRole = null);
       }
     }
   }
@@ -2449,23 +2472,19 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }
 
   void _hideSettingsButtonForSession() {
-    if (!mounted) return;
-    final isCurrentlyHidden = _hideSettingsButtonUntilRestart;
-    setState(() => _hideSettingsButtonUntilRestart = !isCurrentlyHidden);
-    
-    if (!isCurrentlyHidden) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Đã làm mờ nút cài đặt. Bạn vẫn có thể nhấn vào góc này để mở cài đặt, hoặc nhấn giữ để hiện lại.',
-            ),
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 3),
+    if (_hideSettingsButtonUntilRestart || !mounted) return;
+    setState(() => _hideSettingsButtonUntilRestart = true);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Đã ẩn nút cài đặt. Mở lại màn hình hoặc vào lại app để hiện lại.',
           ),
-        );
-    }
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
   }
 
   String _resolveMyName() => _resolveNameForRole(_currentRole);

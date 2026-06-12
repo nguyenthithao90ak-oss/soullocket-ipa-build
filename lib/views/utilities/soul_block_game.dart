@@ -6,8 +6,7 @@ import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
-import 'package:cloud_firestore/cloud_firestore.dart' hide Source;
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
@@ -17,8 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
-import '../../utils/services/admob_service.dart';
-import '../../utils/services/house_service.dart';
+import '../../services/admob_service.dart';
+import '../../services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../premium/premium_store_screen.dart';
 import '../../utils/services/game_download_service.dart';
@@ -892,45 +891,20 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     _isRefreshingMemoryBurstGallery = true;
     try {
-      final List<String> nextGallery = [];
-      final Set<String> seenUrls = {};
-
-      final memoriesSnap = await FirebaseFirestore.instance
-          .collection('houses')
-          .doc(normalizedHouseId)
-          .collection('memories')
-          .orderBy('ts', descending: true)
-          .limit(48)
-          .get();
-
-      for (var doc in memoriesSnap.docs) {
-        final data = doc.data();
-        for (final key in <String>['url', 'imageUrl', 'photoUrl', 'mediaUrl']) {
-          final url = (data[key] as String? ?? '').trim();
-          if (url.isNotEmpty && url.startsWith('http') && seenUrls.add(url)) {
-            nextGallery.add(url);
-            break;
-          }
-        }
-      }
+      final DatabaseReference baseRef =
+          FirebaseDatabase.instance.ref('houses/$normalizedHouseId');
+      final DataSnapshot memoriesSnapshot =
+          await baseRef.child('memories').limitToLast(48).get();
+      final List<String> nextGallery =
+          _extractMediaUrls(memoriesSnapshot.value);
+      final Set<String> seenUrls = nextGallery.toSet();
 
       if (nextGallery.length < 8) {
-        final albumSnap = await FirebaseFirestore.instance
-            .collection('houses')
-            .doc(normalizedHouseId)
-            .collection('album')
-            .orderBy('ts', descending: true)
-            .limit(48)
-            .get();
-
-        for (var doc in albumSnap.docs) {
-          final data = doc.data();
-          for (final key in <String>['url', 'imageUrl', 'photoUrl', 'mediaUrl', 'thumbUrl']) {
-            final url = (data[key] as String? ?? '').trim();
-            if (url.isNotEmpty && url.startsWith('http') && seenUrls.add(url)) {
-              nextGallery.add(url);
-              break;
-            }
+        final DataSnapshot albumSnapshot =
+            await baseRef.child('album').limitToLast(48).get();
+        for (final String url in _extractMediaUrls(albumSnapshot.value)) {
+          if (seenUrls.add(url)) {
+            nextGallery.add(url);
           }
           if (nextGallery.length >= 18) {
             break;
@@ -974,7 +948,51 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
   }
 
+  List<String> _extractMediaUrls(Object? rawSource) {
+    if (rawSource is! Map) {
+      return <String>[];
+    }
 
+    final List<Map<String, dynamic>> entries = <Map<String, dynamic>>[];
+    final Map<dynamic, dynamic> data = Map<dynamic, dynamic>.from(rawSource);
+    data.forEach((dynamic key, dynamic value) {
+      if (value is! Map) {
+        return;
+      }
+      final Map<String, dynamic> item =
+          Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
+      item['id'] = key.toString();
+      entries.add(item);
+    });
+
+    entries.sort((Map<String, dynamic> a, Map<String, dynamic> b) {
+      final int tsA = (a['ts'] as num?)?.toInt() ?? 0;
+      final int tsB = (b['ts'] as num?)?.toInt() ?? 0;
+      return tsB.compareTo(tsA);
+    });
+
+    final List<String> urls = <String>[];
+    final Set<String> seenUrls = <String>{};
+    for (final Map<String, dynamic> item in entries) {
+      for (final String key in <String>[
+        'url',
+        'imageUrl',
+        'photoUrl',
+        'mediaUrl'
+      ]) {
+        final String url = (item[key] as String? ?? '').trim();
+        if (url.isEmpty || !url.startsWith('http') || !seenUrls.add(url)) {
+          continue;
+        }
+        urls.add(url);
+        break;
+      }
+      if (urls.length >= 18) {
+        break;
+      }
+    }
+    return urls;
+  }
 
   List<List<_SoulTile?>> _createEmptyBoard() {
     return List<List<_SoulTile?>>.generate(
@@ -1602,8 +1620,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       );
     }
     */
-    final bool shouldTriggerBurst = (clearedNow >= 2) || (clearedNow == 1 && nextStreak.isEven && nextStreak >= 2);
-    if (clearedNow > 0 && shouldTriggerBurst) {
+    if (clearedNow > 0 && (clearedNow >= 1 || nextStreak.isEven)) {
       _triggerMemoryBurstReward(
         clearedCount: clearedNow,
         streakCount: nextStreak,

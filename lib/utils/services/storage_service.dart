@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../app_error_mapper.dart';
 import 'offline_cache_service.dart';
 import 'secret_vault_media_policy.dart' as secret_vault_policy;
 import 'storage_app_check_helper.dart';
@@ -1072,30 +1072,16 @@ class StorageService {
     required String uploadUrl,
     required Uint8List bytes,
     required Map<String, String> headers,
-    ValueChanged<double>? onProgress,
   }) async {
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
-        final request = http.StreamedRequest('PUT', Uri.parse(uploadUrl));
-        request.headers.addAll(headers);
-        request.contentLength = bytes.length;
-
-        () async {
-          try {
-            final chunkSize = 64 * 1024; // 64KB per chunk
-            for (var i = 0; i < bytes.length; i += chunkSize) {
-              final end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
-              request.sink.add(bytes.sublist(i, end));
-              if (onProgress != null) onProgress(end / bytes.length);
-              await Future.delayed(const Duration(milliseconds: 2));
-            }
-          } finally {
-            request.sink.close();
-          }
-        }();
-
-        final streamedResponse = await request.send().timeout(const Duration(minutes: 2));
-        final response = await http.Response.fromStream(streamedResponse);
+        final response = await http
+            .put(
+              Uri.parse(uploadUrl),
+              headers: headers,
+              body: bytes,
+            )
+            .timeout(const Duration(minutes: 2));
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return;
@@ -1121,8 +1107,7 @@ class StorageService {
     String storagePath,
     XFile file, {
     String? contentType,
-    ValueChanged<double>? onProgress,
-  }) async {
+  }) {
     final safeStoragePath = _normalizeStorageWritePath(storagePath);
     final originalFileName = file.name.isNotEmpty ? file.name : file.path;
     final resolvedContentType = contentType ??
@@ -1137,7 +1122,6 @@ class StorageService {
       rejectVideoUpload: _rejectVideoUpload,
       purgeLegacyCache: _purgeLegacyImgBBKeyCache,
       buildStorageRef: (path) => _storage.ref().child(path),
-      onProgress: onProgress,
     );
   }
 
@@ -1237,7 +1221,6 @@ class StorageService {
     int minWidth = 960,
     int minHeight = 960,
     int quality = 70,
-    ValueChanged<double>? onProgress,
   }) {
     return _managedUploadHelper.uploadManagedImage(
       request: StorageManagedUploadRequest(
@@ -1252,7 +1235,6 @@ class StorageService {
       detectContentType: detectContentType,
       normalizeStorageWritePath: _normalizeStorageWritePath,
       uploadFileToPath: uploadFileToPath,
-      onProgress: onProgress,
     );
   }
 
@@ -1263,7 +1245,6 @@ class StorageService {
     int minWidth = 1080,
     int minHeight = 1080,
     int quality = 75,
-    ValueChanged<double>? onProgress,
   }) async {
     final result = await uploadManagedImage(
       houseId,
@@ -1272,7 +1253,6 @@ class StorageService {
       minWidth: minWidth,
       minHeight: minHeight,
       quality: quality,
-      onProgress: onProgress,
     );
     return result?.downloadUrl;
   }
@@ -1284,7 +1264,6 @@ class StorageService {
     int minWidth = 1080,
     int minHeight = 1080,
     int quality = 75,
-    ValueChanged<double>? onProgress,
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
@@ -1302,7 +1281,6 @@ class StorageService {
       errorLabel: 'Public image',
       mapResult: mapPublicStorageUploadResult,
       errorMessage: 'Không thể tải ảnh công khai lên máy chủ.',
-      onProgress: onProgress,
     );
   }
 
@@ -1449,7 +1427,6 @@ class StorageService {
     required StorageUploadResult Function(Map<String, dynamic> session)
         mapResult,
     required String errorMessage,
-    ValueChanged<double>? onProgress,
   }) {
     return _signedUploadHelper.uploadSignedImageWithCompression(
       request: StorageSignedUploadRequest(
@@ -1462,7 +1439,6 @@ class StorageService {
         errorLabel: errorLabel,
         errorMessage: errorMessage,
         mapResult: mapResult,
-        onProgress: onProgress,
       ),
       requireCurrentUid: _requireCurrentUid,
       detectContentType: detectContentType,

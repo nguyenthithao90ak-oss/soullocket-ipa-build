@@ -1,5 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
-import 'package:soullocket_app/models/utilities/bucket_item.dart';
+import '../../models/utilities/bucket_item.dart';
 
 class BucketService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();

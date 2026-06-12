@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sqflite/sqflite.dart';
@@ -9,8 +8,8 @@ import 'package:path/path.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'package:soullocket_app/core/sl_theme.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../core/sl_theme.dart';
+import '../app_error_mapper.dart';
 
 /// ============================================================================
 /// LÕI NHẮN TIN SIÊU CẤP (SUPER LOVE MESSENGER CORE) - GRA BUILD KHÔNG CẦN TRAE
@@ -613,8 +612,8 @@ class SuperLoveMessengerViewState extends State<SuperLoveMessengerView>
                           if (msg.imageUrl != null)
                             ClipRRect(
                                 borderRadius: SLRadius.smAll,
-                                child: CachedNetworkImage(
-                                  imageUrl: msg.imageUrl!,
+                                child: Image.network(
+                                  msg.imageUrl!,
                                   filterQuality: FilterQuality.high,
                                 )),
                           if (msg.text.isNotEmpty)

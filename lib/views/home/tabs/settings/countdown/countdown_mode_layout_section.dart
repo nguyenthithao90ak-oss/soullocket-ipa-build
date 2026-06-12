@@ -146,7 +146,6 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                     border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
                       MediaQuery.of(sheetContext).size.width < 360 ? 14 : 18,
                       18,
@@ -318,21 +317,13 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                               setSheetState(() => draftTransparent = value),
                           title: const Text('Kính mờ'),
                         ),
-                        StatefulBuilder(
-                          builder: (sheetContext, setSliderState) {
-                            return Slider(
-                              min: 200,
-                              max: UiPrefs.maxCountdownSizePx,
-                              value: draftSize.clamp(
-                                  200.0, UiPrefs.maxCountdownSizePx),
-                              onChanged: (value) {
-                                setSliderState(() {
-                                  draftSize = value;
-                                });
-                                draftSize = value;
-                              },
-                            );
-                          },
+                        Slider(
+                          min: 200,
+                          max: UiPrefs.maxCountdownSizePx,
+                          value: draftSize.clamp(
+                              200.0, UiPrefs.maxCountdownSizePx),
+                          onChanged: (value) =>
+                              setSheetState(() => draftSize = value),
                         ),
                         const SizedBox(height: 10),
                         SizedBox(
@@ -560,24 +551,10 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: themeData.isDark
-                                    ? [
-                                        themeData.orbA.withValues(alpha: 0.14),
-                                        themeData.orbB.withValues(alpha: 0.10),
-                                        Colors.white.withValues(alpha: 0.06),
-                                      ]
-                                    : [
-                                        themeData.orbA.withValues(alpha: 0.12),
-                                        themeData.orbB.withValues(alpha: 0.08),
-                                        const Color(0xFFFFF5F8).withValues(alpha: 0.88),
-                                      ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                              color: Colors.white.withValues(alpha: 0.10),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: themeData.orbA.withValues(alpha: themeData.isDark ? 0.26 : 0.22),
+                                color: Colors.white.withValues(alpha: 0.26),
                               ),
                             ),
                             child: Center(
@@ -637,22 +614,11 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: themeData.isDark
-                                  ? [
-                                      Colors.white.withValues(alpha: 0.10),
-                                      accent.withValues(alpha: 0.12),
-                                    ]
-                                  : [
-                                      const Color(0xFFFFF5F8).withValues(alpha: 0.88),
-                                      accent.withValues(alpha: 0.10),
-                                    ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: Colors.white
+                                .withValues(alpha: themeData.isDark ? 0.10 : 0.72),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: accent.withValues(alpha: themeData.isDark ? 0.24 : 0.20)),
+                                color: Colors.white.withValues(alpha: 0.24)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -721,12 +687,12 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                   borderRadius: BorderRadius.circular(12),
                                   gradient: LinearGradient(
                                     colors: [
-                                      accent.withValues(alpha: themeData.isDark ? 0.24 : 0.18),
-                                      themeData.orbB.withValues(alpha: themeData.isDark ? 0.10 : 0.08),
+                                      accent.withValues(alpha: 0.24),
+                                      Colors.white.withValues(alpha: 0.10),
                                     ],
                                   ),
                                   border: Border.all(
-                                      color: accent.withValues(alpha: 0.28)),
+                                      color: accent.withValues(alpha: 0.34)),
                                 ),
                                 child: Center(
                                   child: Column(

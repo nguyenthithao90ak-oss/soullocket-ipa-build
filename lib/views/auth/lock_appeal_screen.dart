@@ -3,7 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../utils/services/house_service.dart';
+import '../../services/house_service.dart';
 import '../../core/sl_theme.dart';
 
 class LockAppealScreen extends StatefulWidget {
@@ -28,7 +28,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
   String _lockType = 'permanent';
   int _lockedUntil = 0;
 
-  Stream<DatabaseEvent>? _appealsStream;
+  Query? _appealsQuery;
 
   @override
   void initState() {
@@ -101,11 +101,10 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
         _lockType = lockType;
         _lockedUntil = lockedUntil;
         _isLoadingProfile = false;
-        _appealsStream = FirebaseDatabase.instance
+        _appealsQuery = FirebaseDatabase.instance
             .ref('appeals')
             .orderByChild('uid')
-            .equalTo(user.uid)
-            .onValue;
+            .equalTo(user.uid);
         if (_contactCtrl.text.trim().isEmpty && contactSeed.isNotEmpty) {
           _contactCtrl.text = contactSeed;
         }
@@ -503,11 +502,11 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
   }
 
   Widget _buildHistoryCard() {
-    final stream = _appealsStream;
+    final query = _appealsQuery;
     return _buildGlassCard(
       title: 'Lịch sử yêu cầu',
       subtitle: 'Theo dõi phản hồi từ admin mà không cần rời khỏi màn này.',
-      child: stream == null
+      child: query == null
           ? Text(
               'Không đọc được lịch sử kháng nghị lúc này.',
               style: SLTheme.quicksand(
@@ -516,7 +515,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
               ),
             )
           : StreamBuilder<DatabaseEvent>(
-              stream: stream,
+              stream: query.onValue,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Padding(

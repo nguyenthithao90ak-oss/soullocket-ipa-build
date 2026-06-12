@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-import '../../../../../utils/services/military_lock_service.dart';
+import '../../../../../services/military_lock_service.dart';
 import '../security/device_trust_guard.dart';
 
 class SettingsSecurityShellState {

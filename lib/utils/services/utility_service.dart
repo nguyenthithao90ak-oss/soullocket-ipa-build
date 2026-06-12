@@ -258,12 +258,6 @@ class UtilityService {
       icon: Icons.menu_book_rounded,
       colors: [const Color(0xFF4CAF50), const Color(0xFF1B5E20)],
     ),
-    UtilityApp(
-      id: 'health',
-      title: 'Sức khỏe',
-      icon: Icons.health_and_safety_rounded,
-      colors: [const Color(0xFFFF80AB), const Color(0xFFF06292)],
-    ),
   ];
 
   List<String> _sanitizeAppIds(Iterable<String> rawIds) {

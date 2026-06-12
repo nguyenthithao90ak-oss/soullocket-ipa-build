@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../app_error_mapper.dart';
 
 /// ============================================================
 ///  RankingService - GRA (Phase 41)

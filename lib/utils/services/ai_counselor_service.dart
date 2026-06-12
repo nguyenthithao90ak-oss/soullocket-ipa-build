@@ -3,7 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../app_error_mapper.dart';
 
 class AiCounselorService {
   static final AiCounselorService _instance = AiCounselorService._internal();

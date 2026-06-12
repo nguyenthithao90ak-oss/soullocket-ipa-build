@@ -88,26 +88,7 @@ class _LegacyMediaFeedReferencePostCardState
     }
     final loadToken = ++_videoLoadToken;
     _isPreparingVideo = true;
-
-    VideoPlayerController controller;
-    File? cachedFile;
-    try {
-      final fileInfo = await DefaultCacheManager().getFileFromCache(_mediaUrl);
-      if (fileInfo != null) {
-        cachedFile = fileInfo.file;
-      } else {
-        cachedFile = await DefaultCacheManager().getSingleFile(_mediaUrl);
-      }
-    } catch (e) {
-      debugPrint('Failed to cache video: $e');
-    }
-
-    if (cachedFile != null) {
-      controller = VideoPlayerController.file(cachedFile);
-    } else {
-      controller = VideoPlayerController.networkUrl(Uri.parse(_mediaUrl));
-    }
-
+    final controller = VideoPlayerController.networkUrl(Uri.parse(_mediaUrl));
     try {
       await controller.initialize();
       await controller.setLooping(true);

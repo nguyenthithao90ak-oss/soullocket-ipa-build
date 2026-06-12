@@ -1,11 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'offline_cache_service.dart';
 
 class RoleUtils {
-  static final ValueNotifier<String?> roleNotifier = ValueNotifier<String?>(null);
-
   static String normalize(String? value) {
     return value?.trim() == 'user2' ? 'user2' : 'user1';
   }

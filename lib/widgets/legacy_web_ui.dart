@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import '../utils/services/l10n_service.dart';
+import '../services/l10n_service.dart';
 import '../core/sl_theme.dart';
 
 class LegacyWebUi {

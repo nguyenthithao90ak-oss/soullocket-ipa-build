@@ -113,15 +113,7 @@ class MemoryShareService {
   final FirebaseFunctions _functions;
   final FirebaseAuth _auth;
 
-  static MemoryLimits? _cachedLimits;
-  static DateTime? _lastFetchTime;
-
   Future<MemoryLimits> fetchLimits() async {
-    if (_cachedLimits != null && _lastFetchTime != null) {
-      if (DateTime.now().difference(_lastFetchTime!) < const Duration(hours: 1)) {
-        return _cachedLimits!;
-      }
-    }
     try {
       final response = await _callWithAuthAndAppCheckRetry(() {
         final callable = _functions.httpsCallable('getMemoryLimits');
@@ -129,9 +121,7 @@ class MemoryShareService {
       });
       final raw = response.data;
       if (raw is Map) {
-        _cachedLimits = MemoryLimits.fromMap(raw);
-        _lastFetchTime = DateTime.now();
-        return _cachedLimits!;
+        return MemoryLimits.fromMap(raw);
       }
     } catch (_) {}
     return fallbackMemoryLimits;
@@ -141,7 +131,6 @@ class MemoryShareService {
     required String houseId,
     required List<Map<String, dynamic>> photos,
     int expiryDays = 7,
-    String? password,
   }) async {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) {
@@ -172,8 +161,6 @@ class MemoryShareService {
         'description': defaultShareDescription,
         'brandLabel': defaultBrandLabel,
         'theme': defaultTheme,
-        if (password != null && password.trim().isNotEmpty)
-          'password': password.trim(),
       });
     });
     final raw = response.data;

@@ -4,7 +4,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:ui' as ui;
-import '../../utils/services/notification_service.dart';
+import '../../services/notification_service.dart';
 import '../../core/sl_theme.dart';
 import '../../core/fast_backdrop_filter.dart';
 import 'calendar/dialogs/calendar_quick_add_sheet.dart';
@@ -32,7 +32,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  late Stream<DatabaseEvent> _selectedDayStream;
 
   final TextEditingController _eventController = TextEditingController();
 
@@ -44,9 +43,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-    _selectedDayStream = _dbRef
-        .child('houses/${widget.houseId}/calendar/${_getDateKey(_focusedDay)}')
-        .onValue;
     _loadEvents();
   }
 
@@ -312,9 +308,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() {
       _selectedDay = selected;
       _focusedDay = focused;
-      _selectedDayStream = _dbRef
-          .child('houses/${widget.houseId}/calendar/${_getDateKey(selected)}')
-          .onValue;
     });
   }
 
@@ -737,7 +730,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     ),
                     SizedBox(height: compact ? 12 : 16),
                     CalendarEventListSection(
-                      stream: _selectedDayStream,
+                      stream: _dbRef
+                          .child(
+                            'houses/${widget.houseId}/calendar/${_getDateKey(selectedDay)}',
+                          )
+                          .onValue,
                       horizontalInset: horizontalInset,
                       compact: compact,
                       accent: _selectedAccent(selectedDay),

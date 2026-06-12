@@ -36,12 +36,7 @@ class DiaryPost {
     final tsRaw = json['ts'] ?? json['timestamp'];
     final ts = tsRaw is int
         ? DateTime.fromMillisecondsSinceEpoch(tsRaw)
-        : (tsRaw is num)
-            ? DateTime.fromMillisecondsSinceEpoch(tsRaw.toInt())
-            : int.tryParse(tsRaw?.toString() ?? '') != null
-                ? DateTime.fromMillisecondsSinceEpoch(
-                    int.parse(tsRaw.toString()))
-                : DateTime.now();
+        : DateTime.now();
     final rawAuthorId = (json['authorId'] ?? '').toString().trim();
     final rawAuthorRole =
         (json['authorRole'] ?? json['role'] ?? '').toString().trim();
@@ -66,11 +61,7 @@ class DiaryPost {
       authorName: (json['authorName'] ?? json['a'] ?? L10nService().translate('core_partner')).toString(),
       mood: (json['mood'] ?? '😊').toString(),
       timestamp: ts,
-      editedAt: json['editedAt'] is int
-          ? json['editedAt'] as int
-          : (json['editedAt'] is num)
-              ? (json['editedAt'] as num).toInt()
-              : int.tryParse('${json['editedAt'] ?? ''}'),
+      editedAt: json['editedAt'] as int?,
       pinned: json['pinned'] == true,
       pinnedAt: json['pinnedAt'] is int
           ? json['pinnedAt'] as int

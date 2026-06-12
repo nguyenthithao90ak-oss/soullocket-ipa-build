@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:soullocket_app/utils/rapid_action_feedback_policy.dart';
+import '../rapid_action_feedback_policy.dart';
 import 'device_manager_service.dart';
 import 'local_action_throttle_service.dart';
 import 'security_protection_service.dart';

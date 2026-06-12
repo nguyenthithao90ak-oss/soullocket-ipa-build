@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:soullocket_app/core/constants/app_config.dart';
+import '../core/constants/app_config.dart';
 import 'app_check_http_headers.dart';
 
 class PushNotificationHelper {

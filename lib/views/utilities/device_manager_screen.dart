@@ -5,7 +5,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
-import '../../utils/services/device_manager_service.dart';
+import '../../services/device_manager_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/sl_notice.dart';
 

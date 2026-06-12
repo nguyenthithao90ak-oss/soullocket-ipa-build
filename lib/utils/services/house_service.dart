@@ -10,9 +10,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../utils/services/device_manager_service.dart';
-import '../../utils/services/single_match_service.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../../services/device_manager_service.dart';
+import '../../services/single_match_service.dart';
+import '../app_error_mapper.dart';
 import 'offline_cache_service.dart';
 
 class HouseCreationOtpRequiredException implements Exception {
@@ -662,7 +662,7 @@ class HouseService {
         'updatedAt': nowMs,
         'settings': {
           'theme': 'theme-auto',
-          'countdownSizePx': 400,
+          'countdownSizePx': 500,
           'startDate': startDate,
           'font': "'Quicksand', sans-serif",
           'privacy': 'public',

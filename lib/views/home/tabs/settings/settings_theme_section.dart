@@ -354,85 +354,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
           (_draftCustomBackgroundUrl ?? ui.customBackgroundUrl).trim(),
     );
   }
-  Widget _buildThemeHeader(BuildContext context, {bool showBack = true}) {
-    const borderColor = Color(0xFFFF77A8);
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: borderColor.withValues(alpha: 0.25),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: borderColor.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          if (showBack) ...[
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF85A7), Color(0xFFFF5281)],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF5281).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      context.tr('home_quayli_69043b'),
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-          ],
-          Expanded(
-            child: Text(
-              '🎨 ${context.tr('theme_ui').toUpperCase()}',
-              style: SLTheme.quicksand(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFFD81B60),
-                letterSpacing: 0.8,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildThemePanel({bool hideBackButton = false}) {
     final config = _buildThemePanelConfig();
@@ -451,15 +372,14 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       builder: (context, ui, _) {
         final selection = _resolveThemePanelSelection(ui, config);
         _localCountdownSize = selection.countdownSize;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!hideBackButton) _buildThemeHeader(context, showBack: !hideBackButton),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+        return _buildPanel(
+          hideBackButton: hideBackButton,
+          id: 'theme',
+          title: context.tr('theme_ui'),
+          borderColor: const Color(0xFFFF77A8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               _ThemeSectionCard(
                 icon: Icons.aspect_ratio_rounded,
                 title: context.tr('theme_frame_size'),
@@ -491,38 +411,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                 setStateSlider(() {
                                   _localCountdownSize = value;
                                 });
-                                
-                                _draftCountdownSizePx = value;
-                                
-                                // Debounce live preview để kéo thanh trượt không bị khựng
-                                _uiPrefsDebounceTimer?.cancel();
-                                if (mounted) {
-                                  _uiPrefsDebounceTimer = Timer(const Duration(milliseconds: 150), () {
-                                    if (!mounted) return;
-                                    _applyThemeDraftToUiPrefsPreview();
-                                  });
-                                }
                               },
-                            ),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton.icon(
-                                onPressed: () {
-                                  // Lưu thủ công thay vì tự động lưu
-                                  _saveThemeSettings(silent: false);
-                                },
-                                icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                                label: Text(
-                                  'Lưu kích thước',
-                                  style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: const Color(0xFFD81B60),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                ),
-                              ),
+                              onChangeEnd: (value) {
+                                _updateThemeDraft(() => _draftCountdownSizePx = value);
+                              },
                             ),
                           ],
                         );
@@ -558,131 +450,201 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 themeColor: const Color(0xFFFF77A8),
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFFFFFFFF),
+                            Color(0xFFFFF6FA),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFF5D6E5), width: 1.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF77A8).withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildInput(
-                            _anniversaryNameCtrl,
-                            '${context.tr('home_tnknim_c9204b')} — ${context.tr('home_vdngyyunha_5849f3')}',
+                          Text(
+                            context.tr('home_chthmmckni_277577'),
+                            style: SLTheme.quicksand(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFFD81B60),
+                            ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
+                          Text(
+                            context.tr('home_vdngyyucuh_d971f6'),
+                            style: SLTheme.quicksand(
+                              fontSize: 11.6,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF8A5B76),
+                              height: 1.42,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
-                                child: TextField(
-                                  controller: _anniversaryDateCtrl,
-                                  keyboardType: TextInputType.datetime,
-                                  inputFormatters: const [
-                                    FlexibleDateInputFormatter(),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildThemeFieldCaption(
+                                      context.tr('home_tnknim_c9204b'),
+                                      Icons.favorite_border_rounded,
+                                    ),
+                                    _buildInput(
+                                      _anniversaryNameCtrl,
+                                      context.tr('home_vdngyyunha_5849f3'),
+                                    ),
                                   ],
-                                  textInputAction: TextInputAction.done,
-                                  onChanged: (value) {
-                                    _draftAnniversaryDate =
-                                        DateInputUtils.parse(
-                                      value,
-                                      firstYear: 2020,
-                                      lastYear: 2100,
-                                    );
-                                    if (_anniversaryDateErrorText != null) {
-                                      setState(() {
-                                        _anniversaryDateErrorText = null;
-                                      });
-                                    }
-                                  },
-                                  onEditingComplete: () {
-                                    final validationError =
-                                        DateInputUtils.validationError(
-                                      _anniversaryDateCtrl.text,
-                                      firstYear: 2020,
-                                      lastYear: 2100,
-                                    );
-                                    if (validationError != null) {
-                                      setState(() {
-                                        _anniversaryDateErrorText =
-                                            validationError;
-                                      });
-                                      return;
-                                    }
-                                    final parsed = DateInputUtils.parse(
-                                      _anniversaryDateCtrl.text,
-                                      firstYear: 2020,
-                                      lastYear: 2100,
-                                    );
-                                    if (parsed == null) return;
-                                    _draftAnniversaryDate = parsed;
-                                    _anniversaryDateErrorText = null;
-                                    _anniversaryDateCtrl.text =
-                                        DateInputUtils.formatDisplayDate(
-                                            parsed);
-                                    _anniversaryDateCtrl.selection =
-                                        TextSelection.collapsed(
-                                      offset: _anniversaryDateCtrl.text.length,
-                                    );
-                                  },
-                                  decoration: LegacyWebUi.softInputDecoration(
-                                    hintText: context.tr('home_ngythngnm_a697d0'),
-                                  ).copyWith(
-                                    errorText: _anniversaryDateErrorText,
-                                    isDense: true,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 12,
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Icons.calendar_month_rounded,
-                                      color: Color(0xFFD81B60),
-                                      size: 18,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: const Icon(Icons.event_rounded, size: 18),
-                                      color: const Color(0xFFD81B60),
-                                      padding: EdgeInsets.zero,
-                                      onPressed: _pickAnniversaryDate,
-                                    ),
-                                  ),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF5F4C58),
-                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: _addCustomAnniversary,
-                                child: Container(
-                                  height: 48,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFFFF5E92), Color(0xFFD81B60)],
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildThemeFieldCaption(
+                                      context.tr('home_ngyknim_4d03ad'),
+                                      Icons.calendar_month_rounded,
                                     ),
-                                    borderRadius: BorderRadius.circular(14),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFFD81B60).withValues(alpha: 0.22),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.add_rounded, color: Colors.white, size: 18),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        context.tr('home_thm_d9cb42'),
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      child: TextField(
+                                        controller: _anniversaryDateCtrl,
+                                        keyboardType: TextInputType.datetime,
+                                        inputFormatters: const [
+                                          FlexibleDateInputFormatter(),
+                                        ],
+                                        textInputAction: TextInputAction.done,
+                                        onChanged: (value) {
+                                          _draftAnniversaryDate =
+                                              DateInputUtils.parse(
+                                            value,
+                                            firstYear: 2020,
+                                            lastYear: 2100,
+                                          );
+                                          if (_anniversaryDateErrorText != null) {
+                                            setState(() {
+                                              _anniversaryDateErrorText = null;
+                                            });
+                                          }
+                                        },
+                                        onEditingComplete: () {
+                                          final validationError =
+                                              DateInputUtils.validationError(
+                                            _anniversaryDateCtrl.text,
+                                            firstYear: 2020,
+                                            lastYear: 2100,
+                                          );
+                                          if (validationError != null) {
+                                            setState(() {
+                                              _anniversaryDateErrorText =
+                                                  validationError;
+                                            });
+                                            return;
+                                          }
+                                          final parsed = DateInputUtils.parse(
+                                            _anniversaryDateCtrl.text,
+                                            firstYear: 2020,
+                                            lastYear: 2100,
+                                          );
+                                          if (parsed == null) return;
+                                          _draftAnniversaryDate = parsed;
+                                          _anniversaryDateErrorText = null;
+                                          _anniversaryDateCtrl.text =
+                                              DateInputUtils.formatDisplayDate(
+                                                  parsed);
+                                          _anniversaryDateCtrl.selection =
+                                              TextSelection.collapsed(
+                                            offset: _anniversaryDateCtrl.text.length,
+                                          );
+                                        },
+                                        decoration: LegacyWebUi.softInputDecoration(
+                                          hintText: context.tr('home_ngythngnm_a697d0'),
+                                        ).copyWith(
+                                          helperText: context.tr('home_angnhpngyt_377d85'),
+                                          errorText: _anniversaryDateErrorText,
+                                          prefixIcon: const Icon(
+                                            Icons.calendar_month_rounded,
+                                            color: Color(0xFFD81B60),
+                                          ),
+                                          suffixIcon: IconButton(
+                                            icon: const Icon(Icons.event_rounded),
+                                            color: const Color(0xFFD81B60),
+                                            onPressed: _pickAnniversaryDate,
+                                          ),
+                                        ),
                                         style: SLTheme.quicksand(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                          color: const Color(0xFF5F4C58),
                                         ),
                                       ),
-                                    ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 24),
+                                child: GestureDetector(
+                                  onTap: _addCustomAnniversary,
+                                  child: Container(
+                                    width: 48,
+                                    height: 66,
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFFFF5E92),
+                                          Color(0xFFD81B60)
+                                        ],
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                      ),
+                                      borderRadius: BorderRadius.circular(18),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFFD81B60)
+                                              .withValues(alpha: 0.24),
+                                          blurRadius: 14,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.add_rounded,
+                                          color: Colors.white,
+                                          size: 22,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          context.tr('home_thm_d9cb42'),
+                                          style: SLTheme.quicksand(
+                                            fontSize: 10.2,
+                                            fontWeight: FontWeight.w900,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -708,13 +670,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     _buildThemeDropdownField(
                       value: selection.languageKey,
                       options: config.languages,
-                      onChanged: (value) {
-                        // Tránh khựng UI: Đợi menu dropdown đóng mượt mà xong (300ms) rồi mới load tệp JSON ngôn ngữ nặng
-                        Future.delayed(const Duration(milliseconds: 300), () async {
-                          await L10nService().setLocale(value);
-                          if (!mounted) return;
-                          setState(() {});
-                        });
+                      onChanged: (value) async {
+                        await L10nService().setLocale(value);
+                        if (!mounted) return;
+                        setState(() {});
                       },
                     ),
                     const SizedBox(height: 12),
@@ -730,8 +689,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+                        color: const Color(0xFFFFFBFD),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFFF4D3E0)),
                       ),
                       child: Text(
                         context.tr('theme_font_desc'),
@@ -809,9 +769,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                         Expanded(
                           child: _buildGradientBtn(
                             label: _isUploadingThemeBackground
-                                ? (_themeUploadProgress != null 
-                                    ? 'ĐANG TẢI... ${(_themeUploadProgress! * 100).toInt()}%' 
-                                    : context.tr('theme_uploading_img'))
+                                ? context.tr('theme_uploading_img')
                                 : context.tr('theme_upload_web_bg'),
                             gradient: const [Color(0xFFFF7EA8), Color(0xFFFF5E92)],
                             onTap: _isUploadingThemeBackground
@@ -890,8 +848,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+                        color: const Color(0xFFFFFFFF),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFFF3D9E6)),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -921,11 +880,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                               ],
                             ),
                           ),
-                          Switch.adaptive(
+                          Checkbox(
                             value: _draftLiteMode,
-                            activeThumbColor: const Color(0xFFD81B60),
+                            activeColor: const Color(0xFFD81B60),
                             onChanged: (value) => _updateThemeDraft(
-                                () => _draftLiteMode = value),
+                                () => _draftLiteMode = value ?? false),
                           ),
                         ],
                       ),
@@ -935,8 +894,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+                        color: const Color(0xFFFFFFFF),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFFF3D9E6)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1042,8 +1002,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+                        color: const Color(0xFFF3F8FF),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFFB3E5FC)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1086,12 +1047,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               ),
             ],
           ),
-        ),
-      ],
+        );
+      },
     );
-  },
-);
-}
+  }
 
   // ignore: unused_element
   Widget _buildAIPanel({bool hideBackButton = false}) {
@@ -1124,90 +1083,94 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard> with SingleTickerP
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
+        gradient: LinearGradient(
+          colors: [
+            widget.themeColor.withValues(alpha: 0.04),
+            widget.themeColor.withValues(alpha: 0.12),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: widget.themeColor.withValues(alpha: 0.35),
-          width: 1.8,
+          color: widget.themeColor.withValues(alpha: 0.18),
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: widget.themeColor.withValues(alpha: 0.10),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: widget.themeColor.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            dividerColor: Colors.transparent,
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-          ),
-          child: ExpansionTile(
-            onExpansionChanged: (expanded) {
-              setState(() {
-                _isExpanded = expanded;
-              });
-            },
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    widget.themeColor,
-                    widget.themeColor.withValues(alpha: 0.8),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.themeColor.withValues(alpha: 0.3),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          onExpansionChanged: (expanded) {
+            setState(() {
+              _isExpanded = expanded;
+            });
+          },
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  widget.themeColor,
+                  widget.themeColor.withValues(alpha: 0.8),
                 ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: Icon(
-                widget.icon,
-                color: Colors.white,
-                size: 18,
-              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: widget.themeColor.withValues(alpha: 0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            title: Text(
-              widget.title,
-              style: SLTheme.quicksand(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF1E293B),
-              ),
+            child: Icon(
+              widget.icon,
+              color: Colors.white,
+              size: 18,
             ),
-            subtitle: Text(
-              widget.description,
-              style: SLTheme.quicksand(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF64748B),
-              ),
-            ),
-            trailing: Icon(
-              _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-              color: const Color(0xFF94A3B8),
-              size: 24,
-            ),
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: widget.child,
-              ),
-            ],
           ),
+          title: Text(
+            widget.title,
+            style: SLTheme.quicksand(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          subtitle: Text(
+            widget.description,
+            style: SLTheme.quicksand(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          trailing: Icon(
+            _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+            color: const Color(0xFF94A3B8),
+            size: 24,
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: widget.child,
+            ),
+          ],
         ),
       ),
     );

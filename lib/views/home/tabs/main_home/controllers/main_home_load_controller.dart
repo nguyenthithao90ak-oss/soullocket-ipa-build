@@ -344,10 +344,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
       _reactionFlights.clear();
       _seenReactionFlightIds.clear();
       _localReactionThrowMs.clear();
-      _showDefaultHeartSuggestion = false;
+      _showDefaultHeartSuggestion = true;
       _smartInteractionPreset = _defaultSmartInteractionPreset();
       _manualInteractionPresetType = null;
-      _rotationQueue.clear();
     }
 
     final user = _auth.currentUser;

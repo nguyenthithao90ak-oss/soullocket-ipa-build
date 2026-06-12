@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../utils/services/l10n_service.dart';
+import '../../../services/l10n_service.dart';
 
 class AuthLanguageToggle extends StatelessWidget {
   final String currentLocale;

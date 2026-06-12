@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../utils/services/love_insight_service.dart';
-import '../../utils/services/offline_cache_service.dart';
+import '../../services/love_insight_service.dart';
+import '../../services/offline_cache_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../core/sl_theme.dart';
 
@@ -115,46 +115,36 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
       ),
       body: Stack(
         children: [
-          const Positioned.fill(
+          Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFFFFF0F5),
-                    Color(0xFFFFE8F0),
-                    Color(0xFFF3E5FF),
+                    const Color(0xFFFFF7FB),
+                    const Color(0xFFFFEEF5).withValues(alpha: 0.95),
+                    const Color(0xFFF9F1FF),
                   ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  stops: [0.1, 0.5, 0.9],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
             ),
           ),
           Positioned(
-            top: -40,
-            right: -50,
+            top: -20,
+            right: -30,
             child: _buildBackdropOrb(
-              size: 220,
-              colors: const [Color(0xFFFF94C2), Color(0xFFDCA3FF)],
+              size: 170,
+              colors: const [Color(0xFFFFB4D2), Color(0xFFE9C8FF)],
             ),
           ),
           Positioned(
-            left: -60,
-            top: 150,
+            left: -34,
+            top: 130,
             child: _buildBackdropOrb(
-              size: 180,
-              colors: const [Color(0xFFFFB3CA), Color(0xFFFF9EB7)],
+              size: 120,
+              colors: const [Color(0xFFFFE0EA), Color(0xFFFFC4D8)],
               delayItem: 1500,
-            ),
-          ),
-          Positioned(
-            right: -20,
-            top: 400,
-            child: _buildBackdropOrb(
-              size: 140,
-              colors: const [Color(0xFFE8B2FF), Color(0xFFFFD1E3)],
-              delayItem: 800,
             ),
           ),
           SafeArea(
@@ -270,17 +260,41 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
     );
   }
 
-
-  BoxDecoration _softCardDecoration() {
+  BoxDecoration _glassCardDecoration({
+    required Color borderColor,
+    required Color shadowColor,
+  }) {
     return BoxDecoration(
-      color: Colors.white.withValues(alpha: 0.75),
+      gradient: LinearGradient(
+        colors: [
+          Colors.white.withValues(alpha: 0.96),
+          const Color(0xFFFFF2F7).withValues(alpha: 0.96),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
       borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.2),
+      border: Border.all(color: borderColor),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFFCEBCD0).withValues(alpha: 0.15),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
+          color: shadowColor,
+          blurRadius: 22,
+          offset: const Offset(0, 12),
+        ),
+      ],
+    );
+  }
+
+  BoxDecoration _softCardDecoration({Color? borderColor}) {
+    return BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.96),
+      borderRadius: SLRadius.xlAll,
+      border: Border.all(color: borderColor ?? const Color(0xFFF2E7EE)),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFFCEBCD0).withValues(alpha: 0.12),
+          blurRadius: 18,
+          offset: const Offset(0, 10),
         ),
       ],
     );
@@ -413,7 +427,7 @@ class _FloatingOrbState extends State<_FloatingOrb>
       animation: _animation,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, -20.0 * _animation.value),
+          offset: Offset(0, -15.0 * _animation.value), // Lên xuống 15px
           child: child,
         );
       },
@@ -423,11 +437,12 @@ class _FloatingOrbState extends State<_FloatingOrb>
           height: widget.size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                widget.colors.first.withValues(alpha: 0.8),
-                widget.colors.last.withValues(alpha: 0.0),
-              ],
+            gradient: LinearGradient(
+              colors: widget.colors
+                  .map((color) => color.withValues(alpha: 0.38))
+                  .toList(),
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
         ),

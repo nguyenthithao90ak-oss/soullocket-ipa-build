@@ -1,14 +1,13 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/fast_backdrop_filter.dart';
 
 import '../../core/sl_theme.dart';
-import '../../utils/services/activity_history_service.dart';
+import '../../services/activity_history_service.dart';
 import '../../utils/services/critical_data_sync_service.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -337,14 +336,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     color: const Color(0xFF20283A),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: CachedNetworkImage(
-                    imageUrl: entry.previewUrl,
+                  child: Image.network(
+                    entry.previewUrl,
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.high,
-                    placeholder: (_, __) => const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    errorWidget: (_, __, ___) => const Icon(
+                    errorBuilder: (_, __, ___) => const Icon(
                       Icons.image_not_supported_outlined,
                       color: Colors.white70,
                     ),

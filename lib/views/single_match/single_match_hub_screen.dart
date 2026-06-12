@@ -7,7 +7,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
 import '../../models/single_match_models.dart';
-import '../../utils/services/single_match_service.dart';
+import '../../services/single_match_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../community/community_settings_screen.dart';
 import '../relationship/video_call_screen.dart';

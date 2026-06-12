@@ -7,6 +7,35 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
     return raw?.toString().trim() ?? '';
   }
 
+  List<Map<String, dynamic>> _extractPhotosFromValue(Object? value) {
+    final List<Map<String, dynamic>> photos = [];
+    if (value is Map) {
+      for (final entry in value.entries) {
+        final raw = entry.value;
+        if (raw is Map) {
+          final item = Map<String, dynamic>.from(raw);
+          item.putIfAbsent('id', () => entry.key.toString());
+          final normalized = _normalizePhotoItem(item);
+          if (normalized != null) {
+            photos.add(normalized);
+          }
+        }
+      }
+    } else if (value is List) {
+      for (int index = 0; index < value.length; index++) {
+        final raw = value[index];
+        if (raw is Map) {
+          final item = Map<String, dynamic>.from(raw);
+          item.putIfAbsent('id', () => index.toString());
+          final normalized = _normalizePhotoItem(item);
+          if (normalized != null) {
+            photos.add(normalized);
+          }
+        }
+      }
+    }
+    return photos;
+  }
 
   Map<String, dynamic>? _normalizePhotoItem(Map<String, dynamic> item) {
     final rawUrl = item['url'] ?? item['imageUrl'] ?? item['downloadUrl'];
@@ -54,40 +83,30 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
 
   Future<void> _fetchMemoryPhotos() async {
     try {
+      final baseRef = FirebaseDatabase.instance.ref('houses/${widget.houseId}');
       final results = await Future.wait([
-        FirebaseFirestore.instance
-            .collection('houses')
-            .doc(widget.houseId)
-            .collection('album')
-            .get(),
-        FirebaseFirestore.instance
-            .collection('houses')
-            .doc(widget.houseId)
-            .collection('memories')
-            .get(),
+        baseRef.child('album').get(),
+        baseRef.child('memories').get(),
       ]);
 
       final Map<String, Map<String, dynamic>> dedupedPhotos = {};
       final Set<String> monthsSet = {};
 
       for (final snap in results) {
-        for (final doc in snap.docs) {
-          final raw = doc.data();
-          final item = Map<String, dynamic>.from(raw);
-          item.putIfAbsent('id', () => doc.id);
-          final normalized = _normalizePhotoItem(item);
-          if (normalized == null) {
-            continue;
-          }
-          final url = (normalized['url'] as String).trim();
+        if (!snap.exists || snap.value == null) {
+          continue;
+        }
+        final photos = _extractPhotosFromValue(snap.value);
+        for (final item in photos) {
+          final url = (item['url'] as String).trim();
           if (url.isEmpty) {
             continue;
           }
           final existing = dedupedPhotos[url];
-          final currentTs = normalized['ts'] as int? ?? 0;
+          final currentTs = item['ts'] as int? ?? 0;
           final existingTs = existing?['ts'] as int? ?? 0;
           if (existing == null || currentTs > existingTs) {
-            dedupedPhotos[url] = normalized;
+            dedupedPhotos[url] = item;
           }
           if (currentTs > 0) {
             final date = DateTime.fromMillisecondsSinceEpoch(currentTs);

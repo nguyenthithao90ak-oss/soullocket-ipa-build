@@ -16,20 +16,20 @@ import '../../utils/services/offline_cache_service.dart';
 
 import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';
-import '../../utils/services/auth_service.dart';
-import '../../utils/services/device_manager_service.dart';
-import '../../utils/services/friends_service.dart';
-import '../../utils/services/house_service.dart';
-import '../../utils/services/home_startup_media_cache.dart';
-import '../../utils/services/house_settings_service.dart';
-import '../../utils/services/music_service.dart';
-import '../../utils/services/breakup_service.dart';
-import '../../utils/services/military_lock_service.dart';
-import '../../utils/services/notification_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/device_manager_service.dart';
+import '../../services/friends_service.dart';
+import '../../services/house_service.dart';
+import '../../services/home_startup_media_cache.dart';
+import '../../services/house_settings_service.dart';
+import '../../services/music_service.dart';
+import '../../services/breakup_service.dart';
+import '../../services/military_lock_service.dart';
+import '../../services/notification_service.dart';
 import '../../utils/services/role_utils.dart';
-import '../../utils/services/schedule_notif_service.dart';
-import '../../utils/services/webrtc_service.dart';
-import '../../utils/services/widget_action_service.dart';
+import '../../services/schedule_notif_service.dart';
+import '../../services/webrtc_service.dart';
+import '../../services/widget_action_service.dart';
 import '../../widgets/legacy_falling_effect.dart';
 import '../../widgets/touch_effect_overlay.dart';
 import '../notifications/notification_center_screen.dart';
@@ -46,12 +46,10 @@ import 'tabs/main_home_tab.dart';
 import 'tabs/settings_tab.dart' show SettingsTab;
 import 'tabs/update_tab.dart';
 import 'tabs/utilities_tab.dart';
-import '../utilities/utility_sticker_icon.dart';
 import '../../utils/services/widget_service.dart';
 import '../../utils/sl_notice.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../widgets/first_setup_spotlight_guide.dart';
-import '../../core/fast_backdrop_filter.dart';
 
 part 'widgets/home_shell/home_screen_sync_flows.dart';
 part 'widgets/home_shell/home_screen_notice_flows.dart';
@@ -103,7 +101,6 @@ class _TabActivationHostState extends State<_TabActivationHost> {
     super.initState();
     _isActive = widget.activeIndexListenable.value == widget.tabIndex;
     widget.activeIndexListenable.addListener(_onActiveIndexChanged);
-    _cachedChild = widget.builder(_isActive);
   }
 
   @override
@@ -114,10 +111,7 @@ class _TabActivationHostState extends State<_TabActivationHost> {
       oldWidget.activeIndexListenable.removeListener(_onActiveIndexChanged);
       _isActive = widget.activeIndexListenable.value == widget.tabIndex;
       widget.activeIndexListenable.addListener(_onActiveIndexChanged);
-    }
-    // Update cache if the builder itself changes (e.g., from a hot reload or parent rebuild)
-    if (oldWidget.builder != widget.builder) {
-      _cachedChild = widget.builder(_isActive);
+      _cachedChild = null; // Invalidate cache
     }
   }
 
@@ -132,16 +126,17 @@ class _TabActivationHostState extends State<_TabActivationHost> {
     if (_isActive != nextActive) {
       setState(() {
         _isActive = nextActive;
-        // Do NOT update _cachedChild here! This prevents heavy tab rebuilds during swipe.
+        _cachedChild = null; // Force rebuild child with new isActive status
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    _cachedChild ??= widget.builder(_isActive);
     return TickerMode(
       enabled: _isActive,
-      child: _cachedChild ?? widget.builder(_isActive),
+      child: _cachedChild!,
     );
   }
 }
@@ -283,17 +278,21 @@ class _HomePreloadPageView extends StatefulWidget {
 }
 
 class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
+  late int _lastBuiltPage;
   late int _lastReportedPage;
 
   @override
   void initState() {
     super.initState();
-    _lastReportedPage = _clampPage(widget.controller.initialPage);
+    final initialPage = _clampPage(widget.controller.initialPage);
+    _lastBuiltPage = initialPage;
+    _lastReportedPage = initialPage;
   }
 
   @override
   void didUpdateWidget(covariant _HomePreloadPageView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _lastBuiltPage = _clampPage(_lastBuiltPage);
     _lastReportedPage = _clampPage(_lastReportedPage);
   }
 
@@ -304,31 +303,48 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
     return page.clamp(0, widget.children.length - 1);
   }
 
+  bool _shouldBuildPage(int index) {
+    if (widget.children.length <= 1 || index == 0) {
+      return true;
+    }
+    return (index - _lastBuiltPage).abs() <= 1;
+  }
+
   AxisDirection _axisDirectionFor(BuildContext context) {
     return textDirectionToAxisDirection(Directionality.of(context));
   }
 
   bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification.depth != 0 || widget.onPageChanged == null) {
+    if (notification.depth != 0) {
       return false;
     }
-
-    final metrics = notification.metrics;
-    if (metrics is! PageMetrics) {
-      return false;
-    }
-
-    if (notification is ScrollEndNotification) {
-      final currentPage =
-          metrics.page ?? widget.controller.initialPage.toDouble();
-      final closestPage = _clampPage(currentPage.round());
-      if (closestPage != _lastReportedPage) {
-        if (mounted) {
+    if (notification is ScrollUpdateNotification) {
+      final metrics = notification.metrics;
+      if (metrics is PageMetrics) {
+        final pageVal = metrics.page ?? widget.controller.initialPage.toDouble();
+        final nextPage = _clampPage(pageVal.round());
+        if (nextPage != _lastBuiltPage && mounted) {
           setState(() {
-            _lastReportedPage = closestPage;
+            _lastBuiltPage = nextPage;
           });
         }
-        widget.onPageChanged?.call(closestPage);
+      }
+    }
+    if (notification is ScrollEndNotification) {
+      final metrics = notification.metrics;
+      if (metrics is PageMetrics) {
+        final nextPage = _clampPage(
+          (metrics.page ?? widget.controller.initialPage.toDouble()).round(),
+        );
+        if (nextPage != _lastReportedPage) {
+          if (mounted) {
+            setState(() {
+              _lastBuiltPage = nextPage;
+              _lastReportedPage = nextPage;
+            });
+          }
+          widget.onPageChanged?.call(nextPage);
+        }
       }
     }
     return false;
@@ -337,8 +353,7 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
   @override
   Widget build(BuildContext context) {
     final axisDirection = _axisDirectionFor(context);
-    // Render all tabs upfront so they are warmed in layout, preventing any build overhead during swipe transitions.
-    final cacheExtent = widget.children.length.toDouble();
+    final cacheExtent = widget.children.length <= 1 ? 1.0 : 2.0;
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -359,9 +374,10 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
                 viewportFraction: widget.controller.viewportFraction,
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    return RepaintBoundary(
-                      child: widget.children[index],
-                    );
+                    if (!_shouldBuildPage(index)) {
+                      return const SizedBox.expand();
+                    }
+                    return widget.children[index];
                   },
                   childCount: widget.children.length,
                 ),
@@ -394,7 +410,6 @@ class _HomeScreenState extends State<HomeScreen>
   final _breakupService = BreakupService();
   late final List<_HomeTabBuilder> _tabBuilders;
   final Map<int, Widget> _tabPageCache = <int, Widget>{};
-  int _homeReloadCounter = 0;
   late final ValueNotifier<int> _activeTabIndexNotifier;
   late final ValueNotifier<int>
       _backgroundTabIndexNotifier; // ⚡ Thêm để tránh rebuild toàn bộ
@@ -457,7 +472,6 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    RoleUtils.roleNotifier.addListener(_handleGlobalRoleChanged);
     _currentIndex = widget.initialTab.clamp(0, _navItems.length - 1);
     _activeTabIndexNotifier = ValueNotifier<int>(_currentIndex);
     _backgroundTabIndexNotifier =
@@ -568,7 +582,6 @@ class _HomeScreenState extends State<HomeScreen>
     await _maybeShowFirstSetupGuide();
     await _maybeShowPendingDeviceNotice();
     unawaited(_checkScheduleNotifs());
-    precacheUtilityStickerList(context);
 
     final houseId = await HouseService().getCurrentHouseId();
     if (!mounted || houseId == null) return;
@@ -589,7 +602,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildTabPage(int index) {
     return _KeepAliveTabPage(
-      key: PageStorageKey<String>('home-tab-$index-$_homeReloadCounter'),
+      key: PageStorageKey<String>('home-tab-$index'),
       child: _TabActivationHost(
         tabIndex: index,
         activeIndexListenable: _activeTabIndexNotifier,
@@ -600,14 +613,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _tabPageForIndex(int index) {
     return _tabPageCache.putIfAbsent(index, () => _buildTabPage(index));
-  }
-
-  void _handleGlobalRoleChanged() {
-    if (!mounted) return;
-    setState(() {
-      _homeReloadCounter++;
-      _tabPageCache.clear();
-    });
   }
 
   void _handleMusicPlaybackChanged() {
@@ -875,7 +880,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
-    RoleUtils.roleNotifier.removeListener(_handleGlobalRoleChanged);
     _callSub?.cancel();
     _settingsSub?.cancel();
     _widgetActionSub?.cancel();
@@ -1089,13 +1093,19 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     if (shouldStartTracking && !_isUserTabSwiping && mounted) {
-      _isUserTabSwiping = true;
-      _isUserTabSwipingNotifier.value = true;
-      _syncMusicAnimationState();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _isUserTabSwiping) return;
+        _isUserTabSwiping = true;
+        _isUserTabSwipingNotifier.value = true;
+        _syncMusicAnimationState();
+      });
     } else if (shouldStopTracking && _isUserTabSwiping && mounted) {
-      _isUserTabSwiping = false;
-      _isUserTabSwipingNotifier.value = false;
-      _syncMusicAnimationState();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_isUserTabSwiping) return;
+        _isUserTabSwiping = false;
+        _isUserTabSwipingNotifier.value = false;
+        _syncMusicAnimationState();
+      });
     }
     return false;
   }
@@ -1288,7 +1298,7 @@ class _HomeScreenState extends State<HomeScreen>
                 onPageChanged: _handlePageChanged,
                 dragStartBehavior: DragStartBehavior.start,
                 physics:
-                    const _HomeTabPagePhysics(parent: ClampingScrollPhysics()),
+                    const _HomeTabPagePhysics(parent: BouncingScrollPhysics()),
                 children: List<Widget>.generate(
                   _navItems.length,
                   (index) => RepaintBoundary(
@@ -1326,13 +1336,21 @@ class _HomeScreenState extends State<HomeScreen>
             children: [
               Positioned.fill(
                 child: RepaintBoundary(
-                  child: _buildShellBackground(
-                    themeKey: resolvedThemeKey,
-                    tabIndex: 0,
-                    isDark: isDark,
-                    backgroundUrl: uiState.customBackgroundUrl,
-                    graphicsQualityKey: graphicsQualityKey,
-                    animateAmbientEffects: shouldAnimateEffects,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _isUserTabSwipingNotifier,
+                    builder: (context, isSwiping, child) {
+                      return TickerMode(
+                        enabled: !isSwiping,
+                        child: _buildShellBackground(
+                          themeKey: resolvedThemeKey,
+                          tabIndex: 0,
+                          isDark: isDark,
+                          backgroundUrl: uiState.customBackgroundUrl,
+                          graphicsQualityKey: graphicsQualityKey,
+                          animateAmbientEffects: shouldAnimateEffects && !isSwiping,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../../core/sl_theme.dart';
+import '../../../../../utils/services/export_service.dart';
 import '../diary_tab_btn.dart';
 
 class DiaryAccessLockedView extends StatelessWidget {
@@ -78,17 +79,47 @@ class DiaryHeaderSection extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
         10,
-        MediaQuery.of(context).padding.top + 10,
+        MediaQuery.of(context).padding.top + 20,
         10,
-        6,
+        12,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: DiaryTabSectionSwitcher(
-              currentTab: currentTab,
-              onTabChanged: onTabChanged,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [SLColors.primary, SLColors.secondary],
+                ).createShader(bounds),
+                child: Text(
+                  context.tr('diary_memories_title').toUpperCase(),
+                  style: SLTheme.quicksand(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+              SLSpacing.h4,
+              Container(
+                width: 100,
+                height: 3,
+                decoration: BoxDecoration(
+                  borderRadius: SLRadius.pillAll,
+                  gradient: const LinearGradient(
+                    colors: [SLColors.primary, SLColors.secondary],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SLSpacing.h20,
+          DiaryTabSectionSwitcher(
+            currentTab: currentTab,
+            onTabChanged: onTabChanged,
           ),
         ],
       ),
@@ -96,6 +127,84 @@ class DiaryHeaderSection extends StatelessWidget {
   }
 }
 
+class DiaryExportMenuButton extends StatelessWidget {
+  final String? houseId;
+
+  const DiaryExportMenuButton({
+    super.key,
+    required this.houseId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFFF7AA8),
+            Color(0xFFFF5E92),
+            Color(0xFF8ED08D),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF6A9F).withValues(alpha: 0.24),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.82), width: 1.2),
+      ),
+      child: IconButton(
+        tooltip: context.tr('home_xuthtml_c57dd1'),
+        padding: EdgeInsets.zero,
+        icon: const Icon(
+          Icons.ios_share_rounded,
+          color: Colors.white,
+          size: 20,
+        ),
+        onPressed: () async {
+          final resolvedHouseId = (houseId ?? '').trim();
+          if (resolvedHouseId.isEmpty) {
+            if (!context.mounted) {
+              return;
+            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.tr('home_chacmnhxut_151ec7')),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            return;
+          }
+
+          try {
+            await ExportService().exportDiary(
+              houseId: resolvedHouseId,
+              format: DiaryExportFormat.html,
+            );
+          } catch (error) {
+            if (!context.mounted) {
+              return;
+            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.tr('home_chathxutdl_223d08')),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+}
 
 class DiaryTabSectionSwitcher extends StatelessWidget {
   final String currentTab;
@@ -274,45 +383,65 @@ class DiaryHouseSetupCard extends StatelessWidget {
 class DiaryPostsEmptyStateCard extends StatelessWidget {
   const DiaryPostsEmptyStateCard({super.key});
 
+  BoxDecoration _softDiaryCard({
+    Color color = const Color(0xFFFDFDFE),
+    Color borderColor = const Color(0x52FFFFFF),
+    double radius = 24,
+    bool strongShadow = false,
+  }) {
+    return BoxDecoration(
+      color: color.withValues(alpha: 0.94),
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(color: borderColor, width: 1.4),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFFFF73A6)
+              .withValues(alpha: strongShadow ? 0.18 : 0.11),
+          blurRadius: strongShadow ? 28 : 18,
+          offset: const Offset(0, 10),
+        ),
+        BoxShadow(
+          color: const Color(0xFF6BC6FF)
+              .withValues(alpha: strongShadow ? 0.12 : 0.08),
+          blurRadius: strongShadow ? 22 : 16,
+          offset: const Offset(0, 6),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      decoration: BoxDecoration(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 34),
+      decoration: _softDiaryCard(
         color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0x52FFFFFF), width: 1.4),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF73A6).withValues(alpha: 0.11),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        strongShadow: true,
+        radius: 20,
       ),
       child: Column(
         children: [
-          const Text('💌', style: TextStyle(fontSize: 32)),
-          SLSpacing.h8,
+          const Text('💌', style: TextStyle(fontSize: 42)),
+          SLSpacing.h12,
           Text(
             context.tr('home_chactmsno_a4ad4d'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: const Color(0xFF6F7B90),
               fontWeight: FontWeight.w900,
-              fontSize: 15,
+              fontSize: 18,
             ),
           ),
-          SLSpacing.h4,
+          SLSpacing.h8,
           Text(
             context.tr('home_vitdngcmxc_6ac761'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: const Color(0xFF8A97A9),
               fontWeight: FontWeight.w700,
-              fontSize: 12,
+              height: 1.45,
             ),
           ),
         ],
@@ -326,32 +455,40 @@ class DiaryMemoryEmptyStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('🖼️', style: TextStyle(fontSize: 36)),
-          SLSpacing.h16,
-          Text(
-            context.tr('home_chacknimno_c1df72'),
-            style: SLTheme.quicksand(
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
-              color: SLColors.textPrimary,
+    return Center(
+      child: SLTheme.glassCard(
+        margin: EdgeInsets.zero,
+        radius: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 48),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.image_not_supported_outlined,
+              size: 64,
+              color: SLColors.textTertiary.withValues(alpha: 0.3),
             ),
-          ),
-          SLSpacing.h4,
-          Text(
-            context.tr('home_btulugikho_acb3de'),
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              color: SLColors.textSecondary,
-              fontWeight: FontWeight.w600,
+            SLSpacing.h24,
+            Text(
+              context.tr('home_chacknimno_c1df72'),
+              style: SLTheme.quicksand(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: SLColors.textPrimary,
+              ),
             ),
-          ),
-        ],
+            SLSpacing.h8,
+            Text(
+              context.tr('home_btulugikho_acb3de'),
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                color: SLColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -508,50 +508,23 @@ extension _MapPanelSectionsExt on _MapScreenState {
                         ),
                         if (!_isBootstrappingLocation) ...[
                           SLSpacing.h12,
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF10B981),
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
-                                  ),
-                                  onPressed: () => _bootstrapLocationTracking(),
-                                  icon: const Icon(Icons.gps_fixed_rounded, size: 18),
-                                  label: Text(
-                                    context.tr('map_btcpnhtgps_66414d'),
-                                    style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF10B981),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
                               ),
-                              if (!kIsWeb) ...[
-                                SLSpacing.w8,
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF334155),
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                      shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
-                                    ),
-                                    onPressed: () => app_permission.openAppSettings(),
-                                    icon: const Icon(Icons.settings_rounded, size: 18),
-                                    label: Text(
-                                      'Cài đặt quyền',
-                                      style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
+                              onPressed: () => _bootstrapLocationTracking(),
+                              icon: const Icon(Icons.gps_fixed_rounded, size: 18),
+                              label: Text(
+                                context.tr('map_btcpnhtgps_66414d'),
+                                style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
+                              ),
+                            ),
                           ),
                         ],
                       ],

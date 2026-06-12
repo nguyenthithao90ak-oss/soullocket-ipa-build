@@ -6,7 +6,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../app_error_mapper.dart';
 import 'storage_media_constants.dart';
 
 typedef StorageVideoUploadRejector = void Function({
@@ -29,7 +29,6 @@ class StorageRawUploadHelper {
     required StorageVideoUploadRejector rejectVideoUpload,
     required StorageUploadCachePurger purgeLegacyCache,
     required StorageRefBuilder buildStorageRef,
-    ValueChanged<double>? onProgress,
   }) async {
     final originalFileName = file.name.isNotEmpty ? file.name : file.path;
     rejectVideoUpload(
@@ -56,31 +55,11 @@ class StorageRawUploadHelper {
             resolvedContentType,
           );
           uploadTask = await _retryUpload(
-            () {
-              final task = ref.putData(compressed, metadata);
-              if (onProgress != null) {
-                task.snapshotEvents.listen((event) {
-                  if (event.totalBytes > 0) {
-                    onProgress(event.bytesTransferred / event.totalBytes);
-                  }
-                });
-              }
-              return task;
-            },
+            () => ref.putData(compressed, metadata),
           );
         } else {
           uploadTask = await _retryUpload(
-            () {
-              final task = ref.putFile(File(file.path), metadata);
-              if (onProgress != null) {
-                task.snapshotEvents.listen((event) {
-                  if (event.totalBytes > 0) {
-                    onProgress(event.bytesTransferred / event.totalBytes);
-                  }
-                });
-              }
-              return task;
-            },
+            () => ref.putFile(File(file.path), metadata),
           );
         }
       } else {
@@ -89,17 +68,7 @@ class StorageRawUploadHelper {
             ? await _compressImageBytes(fileBytes, resolvedContentType)
             : fileBytes;
         uploadTask = await _retryUpload(
-          () {
-            final task = ref.putData(dataToUpload, metadata);
-            if (onProgress != null) {
-              task.snapshotEvents.listen((event) {
-                if (event.totalBytes > 0) {
-                  onProgress(event.bytesTransferred / event.totalBytes);
-                }
-              });
-            }
-            return task;
-          },
+          () => ref.putData(dataToUpload, metadata),
         );
       }
 

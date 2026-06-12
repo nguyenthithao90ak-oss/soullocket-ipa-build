@@ -30,16 +30,6 @@ class _SettingsGiftLinksManagerScreenState
   final MemoryShareService _memoryShareService = MemoryShareService();
   final FirebaseDatabase _db = FirebaseDatabase.instance;
 
-  late final Stream<List<GiftData>> _giftStream;
-  late final Stream<List<_MemoryShareLinkData>> _memoryStream;
-
-  @override
-  void initState() {
-    super.initState();
-    _giftStream = _giftMakerService.streamSentGifts(widget.houseId);
-    _memoryStream = _streamMemoryLinks();
-  }
-
   Future<void> _deleteGiftLink(GiftData gift) async {
     final confirmed = await SLNotice.showConfirmDialog(
       context,
@@ -133,7 +123,7 @@ class _SettingsGiftLinksManagerScreenState
         ),
       ),
       body: StreamBuilder<List<GiftData>>(
-        stream: _giftStream,
+        stream: _giftMakerService.streamSentGifts(widget.houseId),
         builder: (context, giftSnapshot) {
           if (giftSnapshot.hasError) {
             return Center(
@@ -142,7 +132,7 @@ class _SettingsGiftLinksManagerScreenState
           }
 
           return StreamBuilder<List<_MemoryShareLinkData>>(
-            stream: _memoryStream,
+            stream: _streamMemoryLinks(),
             builder: (context, memorySnapshot) {
               if (memorySnapshot.hasError) {
                 return Center(
@@ -385,25 +375,13 @@ class _SettingsGiftLinksManagerScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Memory album',
-                          style: SLTheme.quicksand(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF243041),
-                          ),
-                        ),
-                        if (link.hasPassword) ...[
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.lock_outline_rounded,
-                            size: 15,
-                            color: Color(0xFFD81B60),
-                          ),
-                        ],
-                      ],
+                    Text(
+                      'Memory album',
+                      style: SLTheme.quicksand(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF243041),
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -513,7 +491,6 @@ class _MemoryShareLinkData {
     required this.expiresAt,
     required this.photoCount,
     required this.revoked,
-    this.hasPassword = false,
   });
 
   final String token;
@@ -521,7 +498,6 @@ class _MemoryShareLinkData {
   final int expiresAt;
   final int photoCount;
   final bool revoked;
-  final bool hasPassword;
 
   factory _MemoryShareLinkData.fromMap(
     String token,
@@ -533,7 +509,6 @@ class _MemoryShareLinkData {
       expiresAt: _asInt(map['expiresAt']),
       photoCount: _asInt(map['photoCount']),
       revoked: map['revoked'] == true,
-      hasPassword: map['hasPassword'] == true,
     );
   }
 

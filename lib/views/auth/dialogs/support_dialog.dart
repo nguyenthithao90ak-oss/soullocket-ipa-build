@@ -3,7 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
-import '../../../utils/services/l10n_service.dart';
+import '../../../services/l10n_service.dart';
 import '../../../utils/sl_notice.dart';
 import 'auth_feedback_dialogs.dart';
 

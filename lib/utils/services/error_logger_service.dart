@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../app_error_mapper.dart';
 
 class ErrorLoggerService {
   static final ErrorLoggerService instance = ErrorLoggerService._internal();

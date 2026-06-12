@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/sl_theme.dart';
-import '../utils/services/l10n_service.dart';
+import '../services/l10n_service.dart';
 import 'sensitive_content_guard.dart';
 
 part 'pin_pad_setup/pin_pad_background_part.dart';

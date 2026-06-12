@@ -573,6 +573,8 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
 
   Future<void> _init() async {
     if (!widget.isActive) return;
+    final friendsErrorFallback = context.tr('home_khngthtida_063ede');
+    final blockedErrorFallback = context.tr('home_khngthtida_87cfa9');
 
     _cancelFeedFilterSubscriptions();
     _updateState(() {
@@ -644,9 +646,6 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
     _houseId = houseId;
 
     if (houseId != null && houseId.isNotEmpty) {
-      // Auto migrate old RTDB social posts and comments to Firestore in the background
-      unawaited(_socialService.migrateSocialFeedFromRTDB(houseId));
-
       final settings = await _houseService.getHouseSettings(houseId);
       if (settings != null) {
         _houseSettings = settings;

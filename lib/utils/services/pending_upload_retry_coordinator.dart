@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../app_error_mapper.dart';
 import 'pending_upload_service.dart';
 
 typedef PendingUploadRetryHandler = Future<bool> Function(

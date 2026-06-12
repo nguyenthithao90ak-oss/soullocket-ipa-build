@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
 
-import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
+import '../core/constants/app_firebase_paths.dart';
 
 class CleanupService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();

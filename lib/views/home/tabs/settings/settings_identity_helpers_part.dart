@@ -206,11 +206,9 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
     final errorMsg = context.tr('home_khngthlugi_4e7f1d');
 
     final houseId = _houseId?.trim();
-    // Bỏ qua kiểm tra bảo mật khi silent auto-save để tránh lag mỗi khi thay đổi
-    if (!silent &&
-        houseId != null &&
+    if (houseId != null &&
         houseId.isNotEmpty &&
-        !await _ensureCanModifySharedInfo(showToast: true)) {
+        !await _ensureCanModifySharedInfo(showToast: !silent)) {
       return;
     }
     await UiPrefs.ensureLoaded();
@@ -297,7 +295,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         ),
       );
       if (_houseId != null) {
-        final updateFuture = _dbRef.child('houses/$_houseId/settings').update({
+        await _dbRef.child('houses/$_houseId/settings').update({
           'theme': themeKey,
           'fallingEffect': effectKey,
           'avatarSizePx': avatarSizePx,
@@ -311,9 +309,6 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
           'transparentMode': transparentMode,
           'updatedAt': ServerValue.timestamp,
         });
-        if (!silent) {
-          await updateFuture;
-        }
       }
 
       if (oldSavedUrl.isNotEmpty && oldSavedUrl != customBackgroundUrl) {
@@ -323,29 +318,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       }
 
       if (!mounted) return;
-      if (!silent) {
-        setState(() {
-          _draftThemeKey = themeKey;
-          _draftEffectKey = effectKey;
-          _draftAvatarSizePx = avatarSizePx;
-          _draftCountdownSizePx = countdownSizePx;
-          _draftAvatarFrameKey = avatarFrameKey;
-          _draftCountdownStyleKey = countdownStyleKey;
-          _draftFontKey = fontKey;
-          _draftHomeBlockToneKey = homeBlockToneKey;
-          _draftGraphicsQualityKey = graphicsQualityKey;
-          _draftCustomBackgroundUrl = customBackgroundUrl;
-          _draftTransparentMode = transparentMode;
-          _showSettingsSyncBanner = false;
-        });
-
-        UiPrefs.notifier.value = UiPrefs.notifier.value.copyWith();
-        _showToast(
-          successMsg,
-          success: true,
-        );
-      } else {
-        // Silent save: update drafts without triggering rebuild
+      setState(() {
         _draftThemeKey = themeKey;
         _draftEffectKey = effectKey;
         _draftAvatarSizePx = avatarSizePx;
@@ -358,7 +331,13 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         _draftCustomBackgroundUrl = customBackgroundUrl;
         _draftTransparentMode = transparentMode;
         _showSettingsSyncBanner = false;
-      }
+      });
+
+      UiPrefs.notifier.value = UiPrefs.notifier.value.copyWith();
+      _showToast(
+        successMsg,
+        success: true,
+      );
     } catch (e) {
       if (!mounted) return;
       if (!silent) {

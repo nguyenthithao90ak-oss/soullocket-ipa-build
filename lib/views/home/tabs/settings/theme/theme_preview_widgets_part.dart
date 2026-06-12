@@ -753,11 +753,11 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     String name,
   ) {
     if (avatarUrl.trim().isNotEmpty) {
-      return CachedNetworkImage(
-        imageUrl: avatarUrl.trim(),
+      return Image.network(
+        avatarUrl.trim(),
         fit: BoxFit.cover,
         filterQuality: FilterQuality.high,
-        errorWidget: (_, __, ___) =>
+        errorBuilder: (_, __, ___) =>
             _buildThemePreviewAvatarFallback(accent, name),
       );
     }

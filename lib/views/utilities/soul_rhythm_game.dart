@@ -11,7 +11,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../utils/services/admob_service.dart';
+import '../../services/admob_service.dart';
 import '../ui_prefs.dart';
 import '../../core/sl_theme.dart';
 import 'soul_rhythm_music_config.dart';

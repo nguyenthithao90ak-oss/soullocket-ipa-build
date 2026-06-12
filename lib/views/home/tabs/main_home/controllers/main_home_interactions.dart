@@ -7,8 +7,6 @@ extension _MainHomeInteractions on _MainHomeTabState {
   void _setManualInteractionPreset(String type) {
     final preset = _maybePresetForInteractionType(type);
     if (preset == null) return;
-    _interactionRotationTimer?.cancel();
-    _interactionRotationTimer = null;
     if (!mounted) {
       _manualInteractionPresetType = preset.type;
       _showDefaultHeartSuggestion = false;
@@ -22,9 +20,30 @@ extension _MainHomeInteractions on _MainHomeTabState {
     });
   }
 
+  List<_PartnerInteractionPreset> _interactionRotationPresets() {
+    return _kPartnerInteractionPresets;
+  }
 
+  _PartnerInteractionPreset _pickRandomInteractionPreset({String? avoidType}) {
+    final presets = _interactionRotationPresets();
+    if (presets.isEmpty) {
+      return _defaultSmartInteractionPreset();
+    }
 
+    final filtered = avoidType == null || presets.length == 1
+        ? presets
+        : presets.where((preset) => preset.type != avoidType).toList();
+    final pool = filtered.isNotEmpty ? filtered : presets;
+    return pool[_random.nextInt(pool.length)];
+  }
 
+  Future<String?> _readLastInteractionRotationType() async {
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    final value = prefs.getString(_kInteractionRotationLastTypePrefsKey);
+    final normalized = value?.trim() ?? '';
+    return normalized.isEmpty ? null : normalized;
+  }
 
   Future<void> _rememberInteractionRotationType(String type) async {
     final normalized = type.trim();
@@ -34,73 +53,66 @@ extension _MainHomeInteractions on _MainHomeTabState {
     await prefs.setString(_kInteractionRotationLastTypePrefsKey, normalized);
   }
 
-  void _refillRotationQueue() {
-    final allTypes = _kPartnerInteractionPresets.map((e) => e.type).toList();
-    allTypes.shuffle(_random);
-    final currentType = _smartInteractionPreset.type;
-    if (allTypes.isNotEmpty && allTypes.first == currentType) {
-      final swapIdx = 1 + _random.nextInt(allTypes.length - 1);
-      final temp = allTypes[0];
-      allTypes[0] = allTypes[swapIdx];
-      allTypes[swapIdx] = temp;
-    }
-    _rotationQueue.clear();
-    _rotationQueue.addAll(allTypes);
-  }
-
   void _startInteractionRotationLoop() {
     if (!_isTabActive) return;
     _interactionRotationTimer?.cancel();
     _interactionRotationTimer = null;
-    _showDefaultHeartSuggestion = false;
-
-    if (_manualInteractionPresetType != null) {
-      return;
-    }
-
-    if (_rotationQueue.isEmpty) {
-      _refillRotationQueue();
-    }
-
-    if (_rotationQueue.isNotEmpty) {
-      final nextType = _rotationQueue.removeAt(0);
-      final nextPreset = _maybePresetForInteractionType(nextType) ?? _defaultSmartInteractionPreset();
+    _showDefaultHeartSuggestion = true;
+    unawaited(() async {
+      final lastType = await _readLastInteractionRotationType();
+      final nextPreset = _pickRandomInteractionPreset(avoidType: lastType);
       if (!mounted) {
+        _showDefaultHeartSuggestion = false;
         _smartInteractionPreset = nextPreset;
-      } else {
-        _safeSetState(() {
-          _smartInteractionPreset = nextPreset;
-        });
-      }
-      unawaited(_rememberInteractionRotationType(nextPreset.type));
-    }
-
-    _interactionRotationTimer = Timer.periodic(
-      _kInteractionSuggestionRefreshInterval,
-      (_) => _refreshSmartInteraction(forceRotate: true),
-    );
-  }
-
-  void _refreshSmartInteraction({bool forceRotate = false}) {
-    if (_manualInteractionPresetType != null) {
-      return;
-    }
-    if (_rotationQueue.isEmpty) {
-      _refillRotationQueue();
-    }
-    if (_rotationQueue.isNotEmpty) {
-      final nextType = _rotationQueue.removeAt(0);
-      final nextPreset = _maybePresetForInteractionType(nextType) ?? _defaultSmartInteractionPreset();
-      if (!mounted) {
-        _smartInteractionPreset = nextPreset;
-        unawaited(_rememberInteractionRotationType(nextPreset.type));
         return;
       }
       _safeSetState(() {
+        _showDefaultHeartSuggestion = false;
         _smartInteractionPreset = nextPreset;
       });
+      await _rememberInteractionRotationType(nextPreset.type);
+    }());
+    _interactionRotationTimer =
+        Timer(_kInteractionSuggestionRefreshInterval, () {
+      final nextPreset = _pickRandomInteractionPreset(
+        avoidType: _smartInteractionPreset.type,
+      );
+      if (mounted) {
+        _safeSetState(() {
+          _showDefaultHeartSuggestion = false;
+          _smartInteractionPreset = nextPreset;
+        });
+      } else {
+        _showDefaultHeartSuggestion = false;
+        _smartInteractionPreset = nextPreset;
+      }
       unawaited(_rememberInteractionRotationType(nextPreset.type));
+      _interactionRotationTimer = Timer.periodic(
+        _kInteractionSuggestionRefreshInterval,
+        (_) => _refreshSmartInteraction(forceRotate: true),
+      );
+    });
+  }
+
+  void _refreshSmartInteraction({bool forceRotate = false}) {
+    if (_showDefaultHeartSuggestion) {
+      return;
     }
+    final nextPreset = _pickRandomInteractionPreset(
+      avoidType: forceRotate ? _smartInteractionPreset.type : null,
+    );
+    if (!mounted) {
+      _smartInteractionPreset = nextPreset;
+      unawaited(_rememberInteractionRotationType(nextPreset.type));
+      return;
+    }
+    if (!forceRotate && nextPreset.type == _smartInteractionPreset.type) {
+      return;
+    }
+    _safeSetState(() {
+      _smartInteractionPreset = nextPreset;
+    });
+    unawaited(_rememberInteractionRotationType(nextPreset.type));
   }
 
   void _showReactionFlight(_HomeReactionFlight flight) {

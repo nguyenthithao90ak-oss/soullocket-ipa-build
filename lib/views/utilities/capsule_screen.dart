@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
 
@@ -10,8 +9,8 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/app_error_mapper.dart';
-import '../../utils/services/time_capsule_service.dart';
-import '../../utils/services/storage_service.dart';
+import '../../services/time_capsule_service.dart';
+import '../../services/storage_service.dart';
 import '../../core/sl_theme.dart';
 import '../../core/fast_backdrop_filter.dart';
 
@@ -363,18 +362,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                       .isNotEmpty) ...[
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: CachedNetworkImage(
-                                    imageUrl: updated['image_url'],
+                                  child: Image.network(
+                                    updated['image_url'],
                                     width: double.infinity,
                                     fit: BoxFit.cover,
                                     filterQuality: FilterQuality.high,
-                                    placeholder: (_, __) => const Center(
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                    errorWidget: (_, __, ___) => const Icon(
-                                      Icons.image_not_supported_outlined,
-                                      color: Colors.white70,
-                                    ),
                                   ),
                                 ),
                                 SLSpacing.h16,

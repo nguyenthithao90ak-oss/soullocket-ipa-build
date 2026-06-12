@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../core/sl_theme.dart';
@@ -67,11 +66,11 @@ class CommunitySettingsHeroSection extends StatelessWidget {
               ),
               if (headerImageUrl.isNotEmpty)
                 Positioned.fill(
-                  child: CachedNetworkImage(
-                    imageUrl: headerImageUrl,
+                  child: Image.network(
+                    headerImageUrl,
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.high,
-                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),
               Positioned.fill(
