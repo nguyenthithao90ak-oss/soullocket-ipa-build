@@ -644,6 +644,9 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
     _houseId = houseId;
 
     if (houseId != null && houseId.isNotEmpty) {
+      // Auto migrate old RTDB social posts and comments to Firestore in the background
+      unawaited(_socialService.migrateSocialFeedFromRTDB(houseId));
+
       final settings = await _houseService.getHouseSettings(houseId);
       if (settings != null) {
         _houseSettings = settings;

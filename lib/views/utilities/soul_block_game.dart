@@ -6,7 +6,7 @@ import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_database/firebase_database.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart' hide Source;
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -974,51 +974,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
   }
 
-  List<String> _extractMediaUrls(Object? rawSource) {
-    if (rawSource is! Map) {
-      return <String>[];
-    }
 
-    final List<Map<String, dynamic>> entries = <Map<String, dynamic>>[];
-    final Map<dynamic, dynamic> data = Map<dynamic, dynamic>.from(rawSource);
-    data.forEach((dynamic key, dynamic value) {
-      if (value is! Map) {
-        return;
-      }
-      final Map<String, dynamic> item =
-          Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
-      item['id'] = key.toString();
-      entries.add(item);
-    });
-
-    entries.sort((Map<String, dynamic> a, Map<String, dynamic> b) {
-      final int tsA = (a['ts'] as num?)?.toInt() ?? 0;
-      final int tsB = (b['ts'] as num?)?.toInt() ?? 0;
-      return tsB.compareTo(tsA);
-    });
-
-    final List<String> urls = <String>[];
-    final Set<String> seenUrls = <String>{};
-    for (final Map<String, dynamic> item in entries) {
-      for (final String key in <String>[
-        'url',
-        'imageUrl',
-        'photoUrl',
-        'mediaUrl'
-      ]) {
-        final String url = (item[key] as String? ?? '').trim();
-        if (url.isEmpty || !url.startsWith('http') || !seenUrls.add(url)) {
-          continue;
-        }
-        urls.add(url);
-        break;
-      }
-      if (urls.length >= 18) {
-        break;
-      }
-    }
-    return urls;
-  }
 
   List<List<_SoulTile?>> _createEmptyBoard() {
     return List<List<_SoulTile?>>.generate(
