@@ -107,10 +107,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
 
     final confirmed = await SLNotice.showConfirmDialog(
       context,
-      title: 'Khôi phục cài đặt',
-      message:
-          'App sẽ khôi phục cài đặt đã đồng bộ từ cloud về máy này. Một số giao diện/cài đặt hiện tại trên máy có thể được thay bằng bản cloud.',
-      confirmText: 'Khôi phục',
+      title: context.tr('settings_restore_title'),
+      message: context.tr('settings_restore_message'),
+      confirmText: context.tr('settings_restore_confirm_btn'),
       cancelText: context.tr('cancel'),
     );
     if (confirmed != true || !mounted) return;
@@ -305,12 +304,14 @@ extension _SettingsDataHealthSection on _SettingsTabState {
 
   Widget _buildRestoreDataGroupsCard() {
     final cloudStatus = _isCheckingBackupStatus
-        ? 'Đang kiểm tra...'
+        ? context.tr('settings_data_status_checking')
         : _hasSettingsCloudBackup
-            ? 'Có bản cloud'
-            : 'Chưa thấy bản cloud';
+            ? context.tr('settings_data_status_cloud_found')
+            : context.tr('settings_data_status_cloud_not_found');
     final houseStatus =
-        (_houseId ?? '').trim().isNotEmpty ? 'Đã liên kết' : 'Chưa có house';
+        (_houseId ?? '').trim().isNotEmpty
+            ? context.tr('settings_data_status_linked')
+            : context.tr('settings_data_status_no_house');
 
     return _buildSectionBlock(
       colorTint: const Color(0xFFFF9800),
@@ -338,7 +339,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Nhóm dữ liệu có thể khôi phục',
+                      context.tr('settings_restore_groups_title'),
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
@@ -347,7 +348,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'App chỉ hiển thị trạng thái từng nhóm, không tự ghi đè dữ liệu cá nhân khi chưa xác nhận.',
+                      context.tr('settings_restore_groups_desc'),
                       style: SLTheme.quicksand(
                         fontSize: 11.8,
                         fontWeight: FontWeight.w700,
@@ -363,38 +364,38 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           const SizedBox(height: 12),
           _buildRestoreDataGroupTile(
             icon: Icons.tune_rounded,
-            title: 'Cài đặt, theme, thông báo',
+            title: context.tr('settings_group_config_title'),
             status: cloudStatus,
             isReady: _hasSettingsCloudBackup,
           ),
           _buildRestoreDataGroupTile(
             icon: Icons.home_rounded,
-            title: 'Nhà chung / couple profile',
+            title: context.tr('settings_group_house_title'),
             status: houseStatus,
             isReady: (_houseId ?? '').trim().isNotEmpty,
           ),
           _buildRestoreDataGroupTile(
             icon: Icons.menu_book_rounded,
-            title: 'Nhật ký',
-            status: 'Chưa hỗ trợ khôi phục sâu',
+            title: context.tr('settings_group_diary_title'),
+            status: context.tr('settings_status_deep_restore_unsupported'),
             isReady: false,
           ),
           _buildRestoreDataGroupTile(
             icon: Icons.photo_library_rounded,
-            title: 'Ảnh, video, kỷ niệm',
-            status: 'Chưa hỗ trợ khôi phục sâu',
+            title: context.tr('settings_group_media_title'),
+            status: context.tr('settings_status_deep_restore_unsupported'),
             isReady: false,
           ),
           _buildRestoreDataGroupTile(
             icon: Icons.lock_clock_rounded,
-            title: 'Time capsule, love card, widget',
-            status: 'Chưa hỗ trợ khôi phục sâu',
+            title: context.tr('settings_group_utilities_title'),
+            status: context.tr('settings_status_deep_restore_unsupported'),
             isReady: false,
           ),
           const SizedBox(height: 12),
           _buildActionBtn(
             icon: Icons.fact_check_rounded,
-            label: 'Xem chi tiết restore',
+            label: context.tr('settings_restore_groups_details_btn'),
             gradient: const [Color(0xFFFFB74D), Color(0xFFF57C00)],
             textColor: Colors.white,
             onTap: _showRestoreDataGroupsDetail,
@@ -408,42 +409,41 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     final groups = [
       _RestoreDataGroupInfo(
         icon: Icons.tune_rounded,
-        title: 'Cài đặt, theme, thông báo',
-        status: _hasSettingsCloudBackup ? 'Sẵn sàng' : 'Chưa thấy cloud',
-        description:
-            'Có thể khôi phục theme, hiệu ứng, thông báo, widget và các lựa chọn giao diện đã đồng bộ.',
+        title: context.tr('settings_group_config_title'),
+        status: _hasSettingsCloudBackup
+            ? context.tr('settings_status_ready')
+            : context.tr('settings_status_cloud_missing'),
+        description: context.tr('settings_group_config_desc'),
         isReady: _hasSettingsCloudBackup,
       ),
       _RestoreDataGroupInfo(
         icon: Icons.home_rounded,
-        title: 'Nhà chung / couple profile',
-        status: (_houseId ?? '').trim().isNotEmpty ? 'Đã liên kết' : 'Chưa có',
-        description:
-            'Dùng house/couple hiện tại để đối chiếu dữ liệu chung. Không tạo house mới trong bước này.',
+        title: context.tr('settings_group_house_title'),
+        status: (_houseId ?? '').trim().isNotEmpty
+            ? context.tr('settings_status_linked')
+            : context.tr('settings_status_missing'),
+        description: context.tr('settings_group_house_desc'),
         isReady: (_houseId ?? '').trim().isNotEmpty,
       ),
-      const _RestoreDataGroupInfo(
+      _RestoreDataGroupInfo(
         icon: Icons.menu_book_rounded,
-        title: 'Nhật ký',
-        status: 'Chưa bật restore sâu',
-        description:
-            'Cần bước đối chiếu riêng để tránh ghi đè nhật ký đang có trên máy.',
+        title: context.tr('settings_group_diary_title'),
+        status: context.tr('settings_status_deep_restore_disabled'),
+        description: context.tr('settings_group_diary_desc'),
         isReady: false,
       ),
-      const _RestoreDataGroupInfo(
+      _RestoreDataGroupInfo(
         icon: Icons.photo_library_rounded,
-        title: 'Ảnh, video, kỷ niệm',
-        status: 'Chưa bật restore sâu',
-        description:
-            'Media cần kiểm tra link, quyền truy cập và cache trước khi khôi phục hàng loạt.',
+        title: context.tr('settings_group_media_title'),
+        status: context.tr('settings_status_deep_restore_disabled'),
+        description: context.tr('settings_group_media_desc'),
         isReady: false,
       ),
-      const _RestoreDataGroupInfo(
+      _RestoreDataGroupInfo(
         icon: Icons.lock_clock_rounded,
-        title: 'Time capsule, love card, widget',
-        status: 'Chưa bật restore sâu',
-        description:
-            'Sẽ tách thành từng nhóm nhỏ để người dùng chọn khôi phục khi mở rộng.',
+        title: context.tr('settings_group_utilities_title'),
+        status: context.tr('settings_status_deep_restore_disabled'),
+        description: context.tr('settings_group_utilities_desc'),
         isReady: false,
       ),
     ];
@@ -454,7 +454,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
         title: Text(
-          'Chi tiết restore dữ liệu',
+          context.tr('settings_restore_details_dialog_title'),
           style: SLTheme.quicksand(
             fontSize: 18,
             fontWeight: FontWeight.w900,
@@ -473,7 +473,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
-              'Đã hiểu',
+              context.tr('settings_restore_details_dialog_ok'),
               style: SLTheme.quicksand(fontWeight: FontWeight.w900),
             ),
           ),

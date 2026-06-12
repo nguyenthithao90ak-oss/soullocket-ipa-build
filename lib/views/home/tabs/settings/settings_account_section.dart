@@ -118,8 +118,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               }
               if (normalized.isBefore(minDate) || normalized.isAfter(maxDate)) {
                 setDialogState(() {
-                  errorText =
-                      'Ngày phải trong khoảng ${DateInputUtils.formatDisplayDate(minDate)} - ${DateInputUtils.formatDisplayDate(maxDate)}.';
+                  errorText = context.tr('settings_date_range_error')
+                      .replaceAll('{min}', DateInputUtils.formatDisplayDate(minDate))
+                      .replaceAll('{max}', DateInputUtils.formatDisplayDate(maxDate));
                 });
                 return;
               }
@@ -192,7 +193,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     backgroundColor: _settingsAccountAccentColor,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Lưu'),
+                  child: Text(context.tr('save')),
                 ),
               ],
             );
@@ -467,7 +468,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
 
     if (!_isSupportedSettingsEmail(normalized)) {
       _showToast(
-        'Hệ thống chỉ hỗ trợ đổi sang các loại email: ${_settingsSupportedEmailDomainsLabel()}',
+        context.tr('settings_supported_emails_only')
+            .replaceAll('{domains}', _settingsSupportedEmailDomainsLabel()),
         success: false,
       );
       return;

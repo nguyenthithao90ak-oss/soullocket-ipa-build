@@ -425,8 +425,8 @@ extension _SettingsTabShell on _SettingsTabState {
                                         _buildActionBtn(
                                           icon: Icons.swap_horiz_rounded,
                                           label: _activeRoleKey == 'user1'
-                                              ? 'Đổi vai Bạn Nữ'
-                                              : 'Đổi vai Bạn Nam',
+                                              ? context.tr('settings_swap_role_to_female')
+                                              : context.tr('settings_swap_role_to_male'),
                                           gradient: const [
                                             Color(0xFF42A5F5),
                                             Color(0xFF1E88E5),
@@ -471,7 +471,7 @@ extension _SettingsTabShell on _SettingsTabState {
                                       const SizedBox(height: 12),
                                       _buildActionBtn(
                                         icon: Icons.delete_forever_rounded,
-                                        label: 'Xóa tài khoản và dữ liệu',
+                                        label: context.tr('settings_delete_account_data'),
                                         gradient: const [
                                           Color(0xFFB71C1C),
                                           Color(0xFF7F0000),
@@ -640,21 +640,6 @@ extension _SettingsTabShell on _SettingsTabState {
     );
   }
 
-//     if (!_isAppLockEnabled && mounted) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text(
-//             'Lưu ý: Bạn nên bật khóa app để Cài đặt an toàn hơn.',
-//             style: SLTheme.quicksand(fontWeight: FontWeight.bold),
-//           ),
-//           backgroundColor: Colors.orange.shade800,
-//           behavior: SnackBarBehavior.floating,
-//           duration: const Duration(seconds: 4),
-//         ),
-//       );
-//     }
-//   }
-
   Widget _buildSettingsCategoryGrid() {
     final cards = <Widget>[
       _buildControlCard(
@@ -731,8 +716,8 @@ extension _SettingsTabShell on _SettingsTabState {
           Icons.notifications_active_rounded,
           Icons.storage_rounded,
         ],
-        label: 'Dữ liệu hệ thống',
-        desc: 'Quản lý thông báo, liên kết dữ liệu và các tích hợp hệ thống.',
+        label: context.tr('settings_data_system_label'),
+        desc: context.tr('settings_data_system_desc'),
         gradient: const [Color(0xFFE3F2FD), Color(0xFF90CAF9)],
         border: const Color(0xFF90CAF9),
         textColor: const Color(0xFF1565C0),
@@ -773,7 +758,7 @@ extension _SettingsTabShell on _SettingsTabState {
               ),
               const SizedBox(height: 4),
               Text(
-                'Lưu giữ từng khoảnh khắc',
+                context.tr('settings_footer_tagline'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 10.5,
@@ -816,11 +801,13 @@ extension _SettingsTabShell on _SettingsTabState {
                                 desktopMax: 1080,
                               ),
                             ),
-                            child: SingleChildScrollView(
-                              physics: const ClampingScrollPhysics(),
-                              padding:
-                                  const EdgeInsets.only(top: 0, bottom: 24),
-                              child: _buildStandalonePanelContent(sectionId),
+                            child: RepaintBoundary(
+                              child: SingleChildScrollView(
+                                physics: const ClampingScrollPhysics(),
+                                padding:
+                                    const EdgeInsets.only(top: 0, bottom: 24),
+                                child: _buildStandalonePanelContent(sectionId),
+                              ),
                             ),
                           ),
                         );
@@ -961,7 +948,7 @@ extension _SettingsTabShell on _SettingsTabState {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Quay lại',
+                          context.tr('settings_back_btn'),
                           style: SLTheme.quicksand(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -1043,7 +1030,7 @@ extension _SettingsTabShell on _SettingsTabState {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Quay lại',
+                        context.tr('settings_back_btn'),
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,

@@ -10,7 +10,9 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
   }
 
   String _themeEventSourceLabel(UpcomingEvent event) {
-    return event.source == 'calendar' ? 'Lịch chung' : 'Kỷ niệm';
+    return event.source == 'calendar'
+        ? context.tr('theme_event_calendar_label')
+        : context.tr('theme_event_anniversary_label');
   }
 
   Color _themeEventSourceColor(UpcomingEvent event) {
@@ -77,7 +79,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
-                  title.contains('Lịch')
+                  accent == const Color(0xFF3366D6)
                       ? Icons.calendar_view_day_rounded
                       : Icons.favorite_rounded,
                   color: accent,
@@ -197,7 +199,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'Ngày diễn ra: $dateLabel',
+                        context.tr('theme_event_date_label').replaceAll('{date}', dateLabel),
                         style: SLTheme.quicksand(
                           fontSize: 11.4,
                           fontWeight: FontWeight.w700,
@@ -345,7 +347,7 @@ class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
                 border: Border.all(color: const Color(0xFFF6D9E6)),
               ),
               child: Text(
-                'Bên dưới đã tách rõ: khối hồng là kỷ niệm bạn thêm ở đây, khối xanh là lịch chung lấy từ mục Lịch.',
+                widget.context.tr('theme_event_description_hint'),
                 style: SLTheme.quicksand(
                   fontSize: 11.4,
                   fontWeight: FontWeight.w800,
@@ -356,15 +358,15 @@ class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
             ),
             if (anniversaryEvents.isNotEmpty)
               widget.eventSectionBuilder(
-                title: 'Kỷ niệm sắp tới',
-                subtitle: 'Các mốc riêng được thêm trong phần kỷ niệm',
+                title: widget.context.tr('theme_event_anniversary_section_title'),
+                subtitle: widget.context.tr('theme_event_anniversary_section_desc'),
                 accent: const Color(0xFFD81B60),
                 events: anniversaryEvents,
               ),
             if (calendarEvents.isNotEmpty)
               widget.eventSectionBuilder(
-                title: 'Lịch chung sắp tới',
-                subtitle: 'Các kế hoạch đang lấy từ mục Lịch chung',
+                title: widget.context.tr('theme_event_calendar_section_title'),
+                subtitle: widget.context.tr('theme_event_calendar_section_desc'),
                 accent: const Color(0xFF3366D6),
                 events: calendarEvents,
               ),

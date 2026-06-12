@@ -155,9 +155,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       });
       LegacyWebUi.showNotice(
         context,
-        message: 'Đã tắt ảnh nền tùy chỉnh để áp dụng chủ đề mới.',
+        message: context.tr('theme_applied_msg'),
         success: true,
-        title: 'Đã áp dụng chủ đề',
+        title: context.tr('theme_applied'),
         icon: Icons.palette_rounded,
       );
       return;
@@ -463,7 +463,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               _ThemeSectionCard(
                 icon: Icons.aspect_ratio_rounded,
                 title: context.tr('theme_frame_size'),
-                description: 'Kích thước vòng đếm, kiểu khung avatar',
+                description: context.tr('theme_frame_size_desc'),
                 themeColor: const Color(0xFFFF4D73),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,7 +513,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                 },
                                 icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
                                 label: Text(
-                                  'Lưu kích thước',
+                                  context.tr('theme_save_size'),
                                   style: SLTheme.quicksand(
                                     fontWeight: FontWeight.w800,
                                   ),
@@ -543,8 +543,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                         final locked = s.$3 &&
                             !_isVipActive &&
                             !selection.hasCountdownAdPass;
-                        final label = locked ? '${s.$1} • Quảng cáo' : s.$1;
-                        return (locked ? '${s.$1} • Khóa' : label, s.$2);
+                        final label = locked ? '${s.$1}${context.tr('theme_countdown_label_ad')}' : s.$1;
+                        return (locked ? '${s.$1}${context.tr('theme_countdown_label_locked')}' : label, s.$2);
                       }).toList(),
                       onChanged: (value) => _handleCountdownStyleChange(value),
                     ),
@@ -554,7 +554,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               _ThemeSectionCard(
                 icon: Icons.calendar_month_rounded,
                 title: context.tr('theme_add_new_memory'),
-                description: 'Thêm và quản lý các mốc kỷ niệm sắp tới',
+                description: context.tr('theme_memory_desc'),
                 themeColor: const Color(0xFFFF77A8),
                 child: Column(
                   children: [
@@ -699,7 +699,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               _ThemeSectionCard(
                 icon: Icons.font_download_rounded,
                 title: '${context.tr('font_label')} & ${context.tr('lang_label')}',
-                description: 'Điều chỉnh phông chữ hiển thị & ngôn ngữ',
+                description: context.tr('theme_font_lang_desc'),
                 themeColor: const Color(0xFF00C8FF),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -749,8 +749,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               ),
               _ThemeSectionCard(
                 icon: Icons.palette_rounded,
-                title: 'Hình Nền & Hiệu Ứng',
-                description: 'Hiệu ứng rơi, màu chủ đề và hình nền tùy chỉnh',
+                title: context.tr('theme_bg_effect_title'),
+                description: context.tr('theme_bg_effect_desc'),
                 themeColor: const Color(0xFF9C27B0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -777,7 +777,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                             ),
                             child: Center(
                               child: Text(
-                                'Bạn đang sử dụng nền tải lên, không thể sử dụng nền hệ thống',
+                                context.tr('theme_bg_in_use'),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   fontSize: 13,
@@ -810,7 +810,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                           child: _buildGradientBtn(
                             label: _isUploadingThemeBackground
                                 ? (_themeUploadProgress != null 
-                                    ? 'ĐANG TẢI... ${(_themeUploadProgress! * 100).toInt()}%' 
+                                    ? context.tr('theme_uploading_pct').replaceAll('{pct}', (_themeUploadProgress! * 100).toInt().toString())
                                     : context.tr('theme_uploading_img'))
                                 : context.tr('theme_upload_web_bg'),
                             gradient: const [Color(0xFFFF7EA8), Color(0xFFFF5E92)],
@@ -834,8 +834,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               ),
               _ThemeSectionCard(
                 icon: Icons.settings_suggest_rounded,
-                title: 'Hiệu Năng & Quyền Hạn',
-                description: 'Chế độ mượt mà, quyền hệ thống, chế độ trong suốt',
+                title: context.tr('theme_perf_title'),
+                description: context.tr('theme_perf_desc'),
                 themeColor: const Color(0xFF0288D1),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

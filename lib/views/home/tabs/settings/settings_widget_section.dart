@@ -383,7 +383,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 Color(0xFFFF7A59),
               ],
               child: Text(
-                'Đang dùng kiểu: ${_widgetStyleLabel(_widgetStyleKey)}',
+                context.tr('widget_using_style').replaceAll('{style}', _widgetStyleLabel(_widgetStyleKey)),
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w800,
@@ -491,7 +491,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Để thêm Widget trên iOS:\n1. Nhấn giữ vào màn hình chính\n2. Bấm nút dấu [+] ở góc màn hình\n3. Tìm "SoulLocket" và Thêm tiện ích',
+                                  context.tr('widget_ios_guide'),
                                   style: SLTheme.quicksand(
                                     fontSize: 11.8,
                                     fontWeight: FontWeight.w700,

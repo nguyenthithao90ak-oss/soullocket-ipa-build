@@ -482,7 +482,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     if (quickDiff.isNegative) {
       final expiredDate =
           '${quickDt.day.toString().padLeft(2, '0')}/${quickDt.month.toString().padLeft(2, '0')}/${quickDt.year}';
-      return 'ÄÃ£ háº¿t háº¡n vÃ o $expiredDate';
+      return context.tr('vip_expired_on').replaceAll('{date}', expiredDate);
     }
 
     final daysLeft = quickDiff.inDays;
@@ -491,16 +491,23 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
     if (daysLeft > 0) {
       return hoursLeft > 0
-          ? 'CÃ²n láº¡i: $daysLeft ngÃ y $hoursLeft giá»'
-          : 'CÃ²n láº¡i: $daysLeft ngÃ y';
+          ? context.tr('vip_remaining_days_hours')
+              .replaceAll('{days}', daysLeft.toString())
+              .replaceAll('{hours}', hoursLeft.toString())
+          : context.tr('vip_remaining_days')
+              .replaceAll('{days}', daysLeft.toString());
     }
     if (hoursLeft > 0) {
       return minutesLeft > 0
-          ? 'CÃ²n láº¡i: $hoursLeft giá» $minutesLeft phÃºt'
-          : 'CÃ²n láº¡i: $hoursLeft giá»';
+          ? context.tr('vip_remaining_hours_minutes')
+              .replaceAll('{hours}', hoursLeft.toString())
+              .replaceAll('{minutes}', minutesLeft.toString())
+          : context.tr('vip_remaining_hours')
+              .replaceAll('{hours}', hoursLeft.toString());
     }
     if (minutesLeft > 0) {
-      return 'CÃ²n láº¡i: $minutesLeft phÃºt';
+      return context.tr('vip_remaining_minutes')
+          .replaceAll('{minutes}', minutesLeft.toString());
     }
     return context.tr('home_sphthnhmna_470d6c');
 
@@ -713,6 +720,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     final enterEmailReq = context.tr('home_hynhpemail_7509cc');
     final invalidEmailErr = context.tr('home_emailphkhn_2e049e');
     final duplicateEmailErr = context.tr('home_emailphkhn_ca4585');
+    final supportedEmailsOnlyMsg = context.tr('settings_supported_emails_only');
 
     if (!await _ensureCanModifySharedInfo()) return;
     final currentUser = _auth.currentUser;
@@ -734,7 +742,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
     if (!_isSupportedSettingsEmail(normalized)) {
       _showToast(
-          'Há»‡ thá»‘ng chá»‰ há»— trá»£ sá»­ dá»¥ng cÃ¡c loáº¡i email: ${_settingsSupportedEmailDomainsLabel()}',
+          supportedEmailsOnlyMsg
+              .replaceAll('{domains}', _settingsSupportedEmailDomainsLabel()),
           success: false);
       return;
     }

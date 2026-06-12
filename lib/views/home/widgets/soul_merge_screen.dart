@@ -45,6 +45,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   final GlobalKey<_TapHeartsOverlayState> _heartsOverlayKey = GlobalKey<_TapHeartsOverlayState>();
   double _interactiveScale = 1.0;
+  Timer? _continuousHeartsTimer;
+  Offset _lastTapPosition = Offset.zero;
 
   @override
   void initState() {
@@ -196,25 +198,51 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     }
   }
 
-  void _onTapDown(TapDownDetails details) {
+  void _onTapDown(Offset globalPosition) {
     setState(() {
       _interactiveScale = 0.9;
     });
-    _heartsOverlayKey.currentState?.spawnExplosion(details.globalPosition);
+    _lastTapPosition = globalPosition;
+    _heartsOverlayKey.currentState?.spawnExplosion(globalPosition);
     _handleLocalBump();
     _sendAutoNotification();
+
+    // Speed up heart beating pulse
+    _pulseController.duration = const Duration(milliseconds: 400);
+    _pulseController.repeat(reverse: true);
+
+    // Continuous heart spawning & haptic feedback timer
+    _continuousHeartsTimer?.cancel();
+    _continuousHeartsTimer = Timer.periodic(const Duration(milliseconds: 140), (timer) {
+      if (!mounted || _isMerged) {
+        timer.cancel();
+        return;
+      }
+      _heartsOverlayKey.currentState?.spawnExplosion(_lastTapPosition);
+      HapticFeedback.lightImpact();
+    });
   }
 
-  void _onTapUp(TapUpDetails details) {
+  void _onTapUp() {
+    _continuousHeartsTimer?.cancel();
+    _continuousHeartsTimer = null;
     setState(() {
       _interactiveScale = 1.0;
     });
+    // Reset heart beating pulse to normal speed
+    _pulseController.duration = const Duration(milliseconds: 1500);
+    _pulseController.repeat(reverse: true);
   }
 
   void _onTapCancel() {
+    _continuousHeartsTimer?.cancel();
+    _continuousHeartsTimer = null;
     setState(() {
       _interactiveScale = 1.0;
     });
+    // Reset heart beating pulse to normal speed
+    _pulseController.duration = const Duration(milliseconds: 1500);
+    _pulseController.repeat(reverse: true);
   }
 
   String _getConnectionStatusText() {
@@ -401,6 +429,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   @override
   void dispose() {
+    _continuousHeartsTimer?.cancel();
     _bumpDetector.stop();
     _mergeTimesSub?.cancel();
     _pulseController.dispose();
@@ -444,10 +473,19 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  GestureDetector(
-                    onTapDown: _onTapDown,
-                    onTapUp: _onTapUp,
-                    onTapCancel: _onTapCancel,
+                  Listener(
+                    onPointerDown: (event) {
+                      _onTapDown(event.position);
+                    },
+                    onPointerMove: (event) {
+                      _lastTapPosition = event.position;
+                    },
+                    onPointerUp: (event) {
+                      _onTapUp();
+                    },
+                    onPointerCancel: (event) {
+                      _onTapCancel();
+                    },
                     child: AnimatedScale(
                       scale: _interactiveScale,
                       duration: const Duration(milliseconds: 100),
@@ -966,17 +1004,21 @@ class _TapHeartsOverlayState extends State<_TapHeartsOverlay> {
       return;
     }
 
-    final colors = [
-      const Color(0xFFFFB7D5),
-      const Color(0xFFD8A4FF),
-      const Color(0xFFFFD6EE),
-      const Color(0xFFA8C8FF),
-      const Color(0xFFFFEAA0),
+    // 6 palette pastel nhẹ — mỗi đợt spawn chọn 1 palette
+    const palettes = [
+      [Color(0xFFFFB7D5), Color(0xFFFF8FB7), Color(0xFFFFD6EE), Color(0xFFFF6BA8)], // hồng
+      [Color(0xFFD8A4FF), Color(0xFFC680FF), Color(0xFFEDD5FF), Color(0xFFB85EFF)], // tím
+      [Color(0xFFA8C8FF), Color(0xFF7AABFF), Color(0xFFCCE0FF), Color(0xFF5591FF)], // xanh dương
+      [Color(0xFFFFEAA0), Color(0xFFFFD966), Color(0xFFFFF3CC), Color(0xFFFFCB33)], // vàng
+      [Color(0xFFA8F0D0), Color(0xFF6EDBB4), Color(0xFFCCF7E5), Color(0xFF3DC98E)], // xanh lá
+      [Color(0xFFFFCBA4), Color(0xFFFFAA77), Color(0xFFFFE3CC), Color(0xFFFF8844)], // cam
     ];
 
     try {
       final localPosition = renderBox.globalToLocal(globalPosition);
       final random = math.Random();
+      // Chọn 1 palette cho toàn bộ đợt này
+      final palette = palettes[random.nextInt(palettes.length)];
       setState(() {
         for (int i = 0; i < 8; i++) {
           final angle = random.nextDouble() * math.pi * 2;
@@ -989,7 +1031,7 @@ class _TapHeartsOverlayState extends State<_TapHeartsOverlay> {
               angle: angle,
               speed: speed,
               size: size,
-              color: colors[random.nextInt(colors.length)],
+              color: palette[random.nextInt(palette.length)],
             ),
           );
         }

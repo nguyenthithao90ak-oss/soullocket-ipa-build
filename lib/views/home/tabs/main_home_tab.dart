@@ -559,11 +559,14 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _isTabActive = isActive;
     if (isActive) {
       _warmHomeMedia();
-      unawaited(
-        _fetchHouseData(
-          preserveVisibleState: true,
-        ),
-      );
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted || !_isTabActive) return;
+        unawaited(
+          _fetchHouseData(
+            preserveVisibleState: true,
+          ),
+        );
+      });
       return;
     }
     _invalidateLiveWorkSession();

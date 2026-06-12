@@ -725,7 +725,10 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     _isTabActive = isActive;
     _syncSelectionOverlayVisibility();
     if (isActive) {
-      unawaited(_activateDiaryTab());
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted || !_isTabActive) return;
+        unawaited(_activateDiaryTab());
+      });
       return;
     }
     unawaited(_feedController.pauseRealtime());
