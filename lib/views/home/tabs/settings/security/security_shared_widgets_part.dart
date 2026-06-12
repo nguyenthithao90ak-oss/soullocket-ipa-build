@@ -68,18 +68,25 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required Color backgroundColor,
     required List<Widget> children,
   }) {
+    final cardBg = backgroundColor == Colors.white ? const Color(0xFFF8FAFC) : backgroundColor;
+    final borderTint = borderColor == Colors.transparent ? const Color(0xFFE2E8F0) : borderColor;
+
     return Container(
       width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: borderColor),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: borderTint.withValues(alpha: 0.18),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: borderColor.withValues(alpha: 0.10),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: borderTint.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -89,20 +96,20 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
           Text(
             title,
             style: SLTheme.quicksand(
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w900,
-              color: borderColor.withValues(alpha: 0.95),
+              color: borderColor == Colors.transparent ? const Color(0xFFD81B60) : borderColor.withValues(alpha: 0.95),
             ),
           ),
           if (subtitle != null && subtitle.trim().isNotEmpty) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               subtitle,
               style: SLTheme.quicksand(
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF7A6A74),
-                height: 1.45,
+                height: 1.4,
               ),
             ),
           ],
@@ -132,11 +139,19 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     final statusFg = isVerified ? const Color(0xFF2E7D32) : const Color(0xFFE65100);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FB),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEDF0F4)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -233,15 +248,6 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             color: isPrimary ? accentColor : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: isPrimary ? null : Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: isPrimary
-                ? [
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    )
-                  ]
-                : null,
           ),
           child: Text(
             label,

@@ -4,7 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'offline_cache_service.dart';
 
 class GameDataManager {

@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 class RevenueSecurityTelemetryService {
   RevenueSecurityTelemetryService._();

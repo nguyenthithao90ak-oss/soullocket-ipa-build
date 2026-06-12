@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
@@ -13,10 +14,10 @@ import 'package:vision_gallery_saver/vision_gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/creative_diary_service.dart';
-import '../../services/house_service.dart';
-import '../../services/image_picker_recovery_service.dart';
-import '../../services/storage_service.dart';
+import '../../utils/services/creative_diary_service.dart';
+import '../../utils/services/house_service.dart';
+import '../../utils/services/image_picker_recovery_service.dart';
+import '../../utils/services/storage_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/admob_service.dart';
 import '../home/tabs/diary/controllers/diary_guard_controller.dart';
@@ -759,11 +760,11 @@ class _DiaryAttachmentStrip extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.network(
-                firstImage,
+              CachedNetworkImage(
+                imageUrl: firstImage,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.high,
-                errorBuilder: (_, __, ___) => Container(
+                errorWidget: (_, __, ___) => Container(
                   color: page.surface,
                   alignment: Alignment.center,
                   child: Icon(Icons.broken_image_rounded, color: page.accent),
@@ -822,11 +823,11 @@ class _DiaryAttachmentStrip extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
           child: InteractiveViewer(
-            child: Image.network(
-              imageUrl,
+            child: CachedNetworkImage(
+              imageUrl: imageUrl,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.high,
-              errorBuilder: (_, __, ___) => Container(
+              errorWidget: (_, __, ___) => Container(
                 height: 260,
                 color: Colors.white,
                 alignment: Alignment.center,

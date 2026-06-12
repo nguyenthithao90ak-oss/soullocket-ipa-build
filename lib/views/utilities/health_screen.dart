@@ -6,7 +6,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 import '../../core/sl_theme.dart';
-import '../../services/health_period_service.dart';
+import '../../utils/services/health_period_service.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
 class HealthScreen extends StatefulWidget {

@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'critical_data_sync_service.dart';
 import 'local_database_service.dart';
 import 'presence_service.dart';
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 enum ConnectivityStatus {
   online,

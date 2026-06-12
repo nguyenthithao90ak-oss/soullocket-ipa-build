@@ -59,6 +59,9 @@ extension _SettingsTabShell on _SettingsTabState {
     if (shouldAnimateWidgetPreview) {
       _startWidgetPreviewTicker();
     }
+    if (sectionId == 'dataHealth') {
+      unawaited(_refreshSettingsBackupStatus());
+    }
     try {
       await slPush(
         context,
@@ -284,6 +287,7 @@ extension _SettingsTabShell on _SettingsTabState {
                   child: Material(
                     color: Colors.transparent,
                     child: ListView(
+                      physics: const ClampingScrollPhysics(),
                       padding: const EdgeInsets.only(bottom: 120),
                       children: [
                         _buildSettingsSyncBanner(),
@@ -402,6 +406,7 @@ extension _SettingsTabShell on _SettingsTabState {
                               ),
                             ),
                             child: ListView(
+                              physics: const ClampingScrollPhysics(),
                               padding: const EdgeInsets.only(bottom: 120),
                               children: [
                                 _buildSettingsSyncBanner(),
@@ -735,25 +740,14 @@ extension _SettingsTabShell on _SettingsTabState {
       ),
     ];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxWidth = constraints.maxWidth;
-        final crossAxisCount = maxWidth >= 840 ? 3 : 2;
-        final childAspectRatio = crossAxisCount == 3 ? 0.94 : 1.0;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: GridView.count(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 14,
-            crossAxisSpacing: 14,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: childAspectRatio,
-            children: cards,
-          ),
-        );
-      },
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: cards.map((card) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: card,
+        )).toList(),
+      ),
     );
   }
 
@@ -823,9 +817,9 @@ extension _SettingsTabShell on _SettingsTabState {
                               ),
                             ),
                             child: SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
+                              physics: const ClampingScrollPhysics(),
                               padding:
-                                  const EdgeInsets.only(top: 8, bottom: 24),
+                                  const EdgeInsets.only(top: 0, bottom: 24),
                               child: _buildStandalonePanelContent(sectionId),
                             ),
                           ),

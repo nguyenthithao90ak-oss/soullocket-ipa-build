@@ -15,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../core/constants/app_config.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
 import '../../../../../core/sl_theme.dart';
-import '../../../../../services/map_pin_limit_service.dart';
+import '../../../../../utils/services/map_pin_limit_service.dart';
 import '../../../../../utils/services/activity_history_service.dart';
 import '../../../../../utils/services/album_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
@@ -101,6 +101,8 @@ class DiaryMemoryController extends ChangeNotifier {
   String? _pendingUploadMessage;
   bool _isUploadingMemories = false;
   bool _isDisposed = false;
+  final Map<String, Future<void>> _pendingUrlResolves = <String, Future<void>>{};
+  final Map<String, int> _lastUrlRefreshTimes = <String, int>{};
 
   bool get isSelectionMode => _isSelectionMode;
   int get selectedMemoriesCount => _selectedMemories.length;
@@ -583,28 +585,52 @@ class DiaryMemoryController extends ChangeNotifier {
     if (existingUrl.isNotEmpty && !_isMemoryUrlExpired(item)) {
       return;
     }
+
+    if (_pendingUrlResolves.containsKey(memoryId)) {
+      await _pendingUrlResolves[memoryId];
+      return;
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final lastRefresh = _lastUrlRefreshTimes[memoryId] ?? 0;
+    if (now - lastRefresh < 120000) {
+      return;
+    }
+    _lastUrlRefreshTimes[memoryId] = now;
+
     debugPrint(
       '[DiaryMemory] refreshing signed url id=$memoryId urlEmpty=${existingUrl.isEmpty}',
     );
+
+    final future = () async {
+      try {
+        final result = await _privateMediaUrlService.resolve(
+          houseId: houseId,
+          mediaId: memoryId,
+          kind: 'memory_image',
+        );
+        item['url'] = result.url;
+        item['urlExpiresAt'] = result.expiresAt;
+        debugPrint(
+          '[DiaryMemory] signed url refreshed id=$memoryId urlLen=${result.url.length}',
+        );
+      } catch (e) {
+        _lastUrlRefreshTimes.remove(memoryId);
+        final message = AppErrorMapper.resolve(
+          e,
+          fallbackMessage: L10nService().translate('home_khngthtili_5b2994'),
+        ).message;
+        debugPrint(
+          '[DiaryMemory] signed url refresh failed id=$memoryId message=$message',
+        );
+      }
+    }();
+
+    _pendingUrlResolves[memoryId] = future;
     try {
-      final result = await _privateMediaUrlService.resolve(
-        houseId: houseId,
-        mediaId: memoryId,
-        kind: 'memory_image',
-      );
-      item['url'] = result.url;
-      item['urlExpiresAt'] = result.expiresAt;
-      debugPrint(
-        '[DiaryMemory] signed url refreshed id=$memoryId urlLen=${result.url.length}',
-      );
-    } catch (e) {
-      final message = AppErrorMapper.resolve(
-        e,
-        fallbackMessage: L10nService().translate('home_khngthtili_5b2994'),
-      ).message;
-      debugPrint(
-        '[DiaryMemory] signed url refresh failed id=$memoryId message=$message',
-      );
+      await future;
+    } finally {
+      _pendingUrlResolves.remove(memoryId);
     }
   }
 

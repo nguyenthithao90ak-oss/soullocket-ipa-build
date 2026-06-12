@@ -23,13 +23,13 @@ extension _CountdownModeIndependentScreenViewPart
   }
 
   Color _titleColor(_CountdownModeThemeData themeData) {
-    return themeData.isDark ? Colors.white : const Color(0xFF263242);
+    return themeData.isDark ? Colors.white : const Color(0xFF3D2B40);
   }
 
   Color _subtitleColor(_CountdownModeThemeData themeData) {
     return themeData.isDark
         ? Colors.white.withValues(alpha: 0.68)
-        : const Color(0xFF8A94A6);
+        : const Color(0xFF8A6B88);
   }
 
   Color _surfaceFillColor(_CountdownModeThemeData themeData) {
@@ -38,13 +38,13 @@ extension _CountdownModeIndependentScreenViewPart
     }
     switch (UiPrefs.notifier.value.homeBlockToneKey) {
       case 'mist':
-        return const Color(0xFFF7FBFF).withValues(alpha: 0.78);
+        return const Color(0xFFEEF4FF).withValues(alpha: 0.88);
       case 'rose':
-        return const Color(0xFFFFF2F7).withValues(alpha: 0.80);
+        return const Color(0xFFFFE8F0).withValues(alpha: 0.90);
       case 'glass':
         return Colors.white.withValues(alpha: 0.66);
       default:
-        return Colors.white.withValues(alpha: 0.78);
+        return const Color(0xFFFFF0F6).withValues(alpha: 0.88);
     }
   }
 
@@ -703,6 +703,7 @@ extension _CountdownModeIndependentScreenViewPart
                         Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
                       MediaQuery.of(sheetContext).size.width < 360 ? 14 : 18,
                       18,
@@ -874,13 +875,21 @@ extension _CountdownModeIndependentScreenViewPart
                               setSheetState(() => draftTransparent = value),
                           title: Text(context.tr('home_knhm_33b8ab')),
                         ),
-                        Slider(
-                          min: 200,
-                          max: UiPrefs.maxCountdownSizePx,
-                          value: draftSize.clamp(
-                              200.0, UiPrefs.maxCountdownSizePx),
-                          onChanged: (value) =>
-                              setSheetState(() => draftSize = value),
+                        StatefulBuilder(
+                          builder: (sheetContext, setSliderState) {
+                            return Slider(
+                              min: 200,
+                              max: UiPrefs.maxCountdownSizePx,
+                              value: draftSize.clamp(
+                                  200.0, UiPrefs.maxCountdownSizePx),
+                              onChanged: (value) {
+                                setSliderState(() {
+                                  draftSize = value;
+                                });
+                                draftSize = value;
+                              },
+                            );
+                          },
                         ),
                         const SizedBox(height: 10),
                         SizedBox(
@@ -1092,17 +1101,23 @@ extension _CountdownModeIndependentScreenViewPart
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
           gradient: LinearGradient(
-            colors: [
-              Colors.white.withValues(alpha: themeData.isDark ? 0.12 : 0.80),
-              accent.withValues(alpha: themeData.isDark ? 0.18 : 0.20),
-              themeData.orbB.withValues(alpha: themeData.isDark ? 0.12 : 0.16),
-            ],
+            colors: themeData.isDark
+                ? [
+                    accent.withValues(alpha: 0.16),
+                    themeData.orbB.withValues(alpha: 0.12),
+                    Colors.white.withValues(alpha: 0.06),
+                  ]
+                : [
+                    accent.withValues(alpha: 0.14),
+                    themeData.orbB.withValues(alpha: 0.12),
+                    const Color(0xFFFFF5F8).withValues(alpha: 0.92),
+                  ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           border: Border.all(
-            color: accent.withValues(alpha: 0.34),
-            width: 1.3,
+            color: accent.withValues(alpha: themeData.isDark ? 0.34 : 0.28),
+            width: 1.6,
           ),
           boxShadow: [
             BoxShadow(
@@ -1111,35 +1126,46 @@ extension _CountdownModeIndependentScreenViewPart
               offset: const Offset(0, 12),
             ),
             BoxShadow(
-              color: accent.withValues(alpha: themeData.isDark ? 0.14 : 0.12),
-              blurRadius: 26,
-              offset: const Offset(0, 12),
+              color: accent.withValues(alpha: themeData.isDark ? 0.14 : 0.16),
+              blurRadius: 32,
+              offset: const Offset(0, 14),
             ),
           ],
         ),
         child: Stack(
+          clipBehavior: Clip.hardEdge,
           children: [
             Positioned(
-              top: -22,
-              right: -12,
+              top: -28,
+              right: -16,
               child: Container(
-                width: 88,
-                height: 88,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: accent.withValues(alpha: 0.10),
+                  gradient: RadialGradient(
+                    colors: [
+                      accent.withValues(alpha: themeData.isDark ? 0.16 : 0.18),
+                      accent.withValues(alpha: 0.02),
+                    ],
+                  ),
                 ),
               ),
             ),
             Positioned(
-              bottom: -18,
-              left: -10,
+              bottom: -22,
+              left: -14,
               child: Container(
-                width: 72,
-                height: 72,
+                width: 86,
+                height: 86,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: themeData.orbB.withValues(alpha: 0.10),
+                  gradient: RadialGradient(
+                    colors: [
+                      themeData.orbB.withValues(alpha: themeData.isDark ? 0.14 : 0.16),
+                      themeData.orbB.withValues(alpha: 0.02),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1156,13 +1182,13 @@ extension _CountdownModeIndependentScreenViewPart
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(
-                          alpha: themeData.isDark ? 0.10 : 0.60,
-                        ),
+                        color: themeData.isDark
+                            ? accent.withValues(alpha: 0.14)
+                            : accent.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: Colors.white.withValues(
-                            alpha: themeData.isDark ? 0.14 : 0.72,
+                          color: accent.withValues(
+                            alpha: themeData.isDark ? 0.22 : 0.20,
                           ),
                         ),
                       ),
@@ -1171,7 +1197,7 @@ extension _CountdownModeIndependentScreenViewPart
                         style: SLTheme.quicksand(
                           fontSize: 9.6,
                           fontWeight: FontWeight.w800,
-                          color: subtitleColor,
+                          color: themeData.isDark ? accent : accent.withValues(alpha: 0.90),
                         ),
                       ),
                     ),
@@ -1182,29 +1208,47 @@ extension _CountdownModeIndependentScreenViewPart
                         ? CircularProgressIndicator(
                             strokeWidth: 2.2,
                             valueColor:
-                                AlwaysStoppedAnimation<Color>(titleColor),
+                                AlwaysStoppedAnimation<Color>(accent),
                           )
                         : Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                width: 64,
-                                height: 64,
+                                width: 68,
+                                height: 68,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withValues(
-                                    alpha: themeData.isDark ? 0.10 : 0.58,
+                                  gradient: LinearGradient(
+                                    colors: themeData.isDark
+                                        ? [
+                                            accent.withValues(alpha: 0.22),
+                                            themeData.orbB.withValues(alpha: 0.14),
+                                          ]
+                                        : [
+                                            accent.withValues(alpha: 0.16),
+                                            themeData.orbB.withValues(alpha: 0.10),
+                                          ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
                                   border: Border.all(
-                                    color: accent.withValues(alpha: 0.30),
+                                    color: accent.withValues(alpha: 0.32),
+                                    width: 1.6,
                                   ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: accent.withValues(alpha: themeData.isDark ? 0.20 : 0.18),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
                                 ),
                                 child: Icon(
                                   _hasReachedSpaceLimit
                                       ? Icons.info_outline_rounded
                                       : Icons.add_rounded,
                                   size: 36,
-                                  color: titleColor,
+                                  color: themeData.isDark ? accent : titleColor,
                                 ),
                               ),
                               const SizedBox(height: 14),
@@ -1274,17 +1318,23 @@ extension _CountdownModeIndependentScreenViewPart
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           gradient: LinearGradient(
-            colors: [
-              Colors.white.withValues(alpha: themeData.isDark ? 0.12 : 0.82),
-              accent.withValues(alpha: themeData.isDark ? 0.14 : 0.14),
-              themeData.orbB.withValues(alpha: themeData.isDark ? 0.08 : 0.10),
-            ],
+            colors: themeData.isDark
+                ? [
+                    Colors.white.withValues(alpha: 0.12),
+                    accent.withValues(alpha: 0.14),
+                    themeData.orbB.withValues(alpha: 0.08),
+                  ]
+                : [
+                    const Color(0xFFFFF5F8).withValues(alpha: 0.90),
+                    accent.withValues(alpha: 0.10),
+                    themeData.orbB.withValues(alpha: 0.08),
+                  ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           border: Border.all(
-            color: accent.withValues(alpha: 0.28),
-            width: 1.2,
+            color: accent.withValues(alpha: themeData.isDark ? 0.28 : 0.22),
+            width: 1.4,
           ),
           boxShadow: [
             BoxShadow(
@@ -1296,6 +1346,11 @@ extension _CountdownModeIndependentScreenViewPart
               color: accent.withValues(alpha: themeData.isDark ? 0.14 : 0.10),
               blurRadius: 28,
               offset: const Offset(0, 12),
+            ),
+            BoxShadow(
+              color: themeData.orbB.withValues(alpha: 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -1364,13 +1419,13 @@ extension _CountdownModeIndependentScreenViewPart
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(
-                      alpha: themeData.isDark ? 0.08 : 0.62,
-                    ),
+                    color: themeData.isDark
+                        ? accent.withValues(alpha: 0.14)
+                        : accent.withValues(alpha: 0.10),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withValues(
-                        alpha: themeData.isDark ? 0.12 : 0.74,
+                      color: accent.withValues(
+                        alpha: themeData.isDark ? 0.22 : 0.20,
                       ),
                     ),
                   ),
@@ -1628,18 +1683,19 @@ extension _CountdownModeIndependentScreenViewPart
           ),
         ),
         Positioned(
-          top: -46,
-          right: -12,
+          top: -54,
+          right: -18,
           child: IgnorePointer(
             child: Container(
-              width: 180,
-              height: 180,
+              width: 220,
+              height: 220,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
                     themeData.orbB
-                        .withValues(alpha: themeData.isDark ? 0.18 : 0.24),
+                        .withValues(alpha: themeData.isDark ? 0.22 : 0.28),
+                    themeData.orbB.withValues(alpha: 0.04),
                     Colors.transparent,
                   ],
                 ),
@@ -1648,22 +1704,51 @@ extension _CountdownModeIndependentScreenViewPart
           ),
         ),
         Positioned(
-          bottom: 120,
-          left: -38,
+          bottom: 100,
+          left: -44,
           child: IgnorePointer(
             child: Container(
-              width: 160,
-              height: 160,
+              width: 200,
+              height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
                     themeData.orbA
-                        .withValues(alpha: themeData.isDark ? 0.14 : 0.20),
+                        .withValues(alpha: themeData.isDark ? 0.18 : 0.24),
+                    themeData.orbA.withValues(alpha: 0.04),
                     Colors.transparent,
                   ],
                 ),
               ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: -30,
+          right: 40,
+          child: IgnorePointer(
+            child: Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    themeData.orbB
+                        .withValues(alpha: themeData.isDark ? 0.10 : 0.14),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: themeData.isDark ? 0.06 : 0.10,
+              child: SLTheme.meshPattern(),
             ),
           ),
         ),
@@ -1683,13 +1768,23 @@ extension _CountdownModeIndependentScreenViewPart
                         height: 38,
                         margin: const EdgeInsets.only(right: 10, top: 1),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(
-                            alpha: themeData.isDark ? 0.10 : 0.58,
+                          gradient: LinearGradient(
+                            colors: themeData.isDark
+                                ? [
+                                    themeData.orbA.withValues(alpha: 0.16),
+                                    themeData.orbB.withValues(alpha: 0.10),
+                                  ]
+                                : [
+                                    themeData.orbA.withValues(alpha: 0.14),
+                                    themeData.orbB.withValues(alpha: 0.08),
+                                  ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withValues(
-                              alpha: themeData.isDark ? 0.14 : 0.72,
+                            color: themeData.orbA.withValues(
+                              alpha: themeData.isDark ? 0.24 : 0.22,
                             ),
                           ),
                           boxShadow: [
@@ -1709,7 +1804,7 @@ extension _CountdownModeIndependentScreenViewPart
                     ),
                     Expanded(
                       child: Text(
-                        context.tr('home_khnggianri_e16da8'),
+                        'Không gian riêng',
                         style: SLTheme.quicksand(
                           fontSize: 29,
                           fontWeight: FontWeight.w900,
@@ -1747,7 +1842,7 @@ extension _CountdownModeIndependentScreenViewPart
 
                       return GridView.builder(
                         padding: const EdgeInsets.only(bottom: 6),
-                        physics: const BouncingScrollPhysics(),
+                        physics: const ClampingScrollPhysics(),
                         itemCount: _spaceHouseIds.length + 1,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,

@@ -3,23 +3,23 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../services/image_picker_recovery_service.dart';
-import '../services/storage_service.dart';
-import '../services/collage_limit_service.dart';
+import '../utils/services/image_picker_recovery_service.dart';
+import '../utils/services/storage_service.dart';
+import '../utils/services/collage_limit_service.dart';
 import '../utils/collage_generator.dart';
 import '../utils/services/pending_upload_retry_coordinator.dart';
 import '../utils/services/pending_upload_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
 import '../core/sl_theme.dart';
 import '../utils/app_error_mapper.dart';
-import '../services/l10n_service.dart';
+import '../utils/services/l10n_service.dart';
 
 const Color _dialogPaperCream = Color(0xFFF7F0E6);
 const Color _dialogPaperShell = Color(0xFFFFF8F2);
@@ -253,34 +253,47 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
 
   Future<void> _fetchMemoryPhotos() async {
     try {
-      final snap = await FirebaseDatabase.instance
-          .ref('houses/${widget.houseId}/album')
-          .get();
-      final rawAlbum = snap.value;
-      if (!snap.exists || rawAlbum is! Map) {
-        return;
-      }
+      final results = await Future.wait([
+        FirebaseFirestore.instance
+            .collection('houses')
+            .doc(widget.houseId)
+            .collection('album')
+            .get(),
+        FirebaseFirestore.instance
+            .collection('houses')
+            .doc(widget.houseId)
+            .collection('memories')
+            .get(),
+      ]);
 
-      final data = Map<dynamic, dynamic>.from(rawAlbum);
       final List<Map<String, dynamic>> photos = [];
       final Set<String> monthsSet = {};
 
-      data.forEach((key, value) {
-        if (value is! Map) return;
-        final item =
-            Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
-        final url = item['url']?.toString().trim() ?? '';
-        if (url.isEmpty) return;
+      for (final snap in results) {
+        for (final doc in snap.docs) {
+          final item = Map<String, dynamic>.from(doc.data());
+          final url = item['url']?.toString().trim() ??
+              item['imageUrl']?.toString().trim() ??
+              item['photoUrl']?.toString().trim() ??
+              item['mediaUrl']?.toString().trim() ??
+              '';
+          if (url.isEmpty) continue;
 
-        item['url'] = url;
-        photos.add(item);
-        final ts = item['ts'] is int ? item['ts'] as int : 0;
-        if (ts > 0) {
-          final date = DateTime.fromMillisecondsSinceEpoch(ts);
-          monthsSet
-              .add('${date.year}-${date.month.toString().padLeft(2, '0')}');
+          item['url'] = url;
+          item['id'] = doc.id;
+          photos.add(item);
+          final ts = item['ts'] is int
+              ? item['ts'] as int
+              : item['timestamp'] is int
+                  ? item['timestamp'] as int
+                  : 0;
+          if (ts > 0) {
+            final date = DateTime.fromMillisecondsSinceEpoch(ts);
+            monthsSet
+                .add('${date.year}-${date.month.toString().padLeft(2, '0')}');
+          }
         }
-      });
+      }
 
       photos.sort((a, b) {
         final bTs = b['ts'] is int ? b['ts'] as int : 0;

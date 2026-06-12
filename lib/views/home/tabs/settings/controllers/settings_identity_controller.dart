@@ -1,7 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../../services/house_settings_service.dart';
+import '../../../../../utils/services/house_settings_service.dart';
 import '../../../../../utils/flexible_date_input.dart';
 import '../../../../../utils/services/l10n_service.dart';
 

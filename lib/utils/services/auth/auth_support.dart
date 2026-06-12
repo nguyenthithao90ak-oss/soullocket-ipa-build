@@ -7,9 +7,9 @@ import 'package:http/http.dart' as http;
 import 'package:pointycastle/digests/sha256.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/constants/app_config.dart';
-import '../../utils/app_error_mapper.dart';
-import '../../utils/flexible_date_input.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/flexible_date_input.dart';
 
 typedef SharedPreferencesProvider = Future<SharedPreferences> Function();
 typedef NowProvider = DateTime Function();

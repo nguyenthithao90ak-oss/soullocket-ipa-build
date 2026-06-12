@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../services/house_service.dart';
+import '../../utils/services/house_service.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';
 

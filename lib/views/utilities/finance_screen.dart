@@ -6,7 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/sl_theme.dart';
-import '../../services/l10n_service.dart';
+import '../../utils/services/l10n_service.dart';
 import '../../utils/app_error_mapper.dart';
 
 /// Finance Screen - Visual parity 100% với Web gốc hhaaluutru5h49

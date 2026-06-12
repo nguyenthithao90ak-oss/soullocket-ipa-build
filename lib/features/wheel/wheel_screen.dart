@@ -10,7 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../core/sl_theme.dart';
-import '../../services/location_service.dart';
+import '../../utils/services/location_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/love_wheel_service.dart';
 

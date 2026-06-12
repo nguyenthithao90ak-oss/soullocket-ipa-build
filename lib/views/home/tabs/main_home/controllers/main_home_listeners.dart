@@ -5,6 +5,8 @@ extension _MainHomeListeners on _MainHomeTabState {
     _albumSubscription?.cancel();
     _noteSubscription?.cancel();
 
+    unawaited(_albumService.migrateAlbumFromRTDB(houseId));
+
     _albumSubscription = _albumService.streamAlbum(houseId).listen((items) {
       final nextAlbumHighlights = items
           .where((item) => item.type.trim().toLowerCase() == 'image')

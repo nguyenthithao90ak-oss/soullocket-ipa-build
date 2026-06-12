@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 class StorageDownloadCacheHelper {
   const StorageDownloadCacheHelper();
 

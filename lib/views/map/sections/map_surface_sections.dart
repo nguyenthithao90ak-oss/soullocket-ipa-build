@@ -628,6 +628,12 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                                   : context.tr('map_btgps_cf7e84'),
                             ),
                           ),
+                          if (!kIsWeb)
+                            OutlinedButton.icon(
+                              onPressed: () => app_permission.openAppSettings(),
+                              icon: const Icon(Icons.settings_rounded),
+                              label: const Text('Cài đặt quyền'),
+                            ),
                         ],
                       ),
                     ],

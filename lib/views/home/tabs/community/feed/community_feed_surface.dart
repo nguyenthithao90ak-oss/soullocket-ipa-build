@@ -48,17 +48,13 @@ extension _CommunityFeedSurface on _CommunityTabState {
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(
-          child: RepaintBoundary(
-            child: _CommunityHeaderActionStrip(
-              state: this,
-              includeTopPadding: true,
-            ),
+          child: _CommunityHeaderActionStrip(
+            state: this,
+            includeTopPadding: true,
           ),
         ),
         SliverToBoxAdapter(
-          child: RepaintBoundary(
-            child: _FeedTabSelector(state: this),
-          ),
+          child: _FeedTabSelector(state: this),
         ),
         SliverFillRemaining(
           hasScrollBody: false,
@@ -72,7 +68,8 @@ extension _CommunityFeedSurface on _CommunityTabState {
                 border: Border.all(color: _borderColor),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: _isLight ? 0.06 : 0.18),
+                    color:
+                        Colors.black.withValues(alpha: _isLight ? 0.06 : 0.18),
                     blurRadius: 20,
                     spreadRadius: -14,
                     offset: const Offset(0, 12),
@@ -131,20 +128,23 @@ extension _CommunityFeedSurface on _CommunityTabState {
                     children: [
                       _buildClosedFeedChip(
                         icon: Icons.rocket_launch_outlined,
-                        label: _ct(context.tr('home_angphttrin_0830a2'), 'In development'),
+                        label: _ct(context.tr('home_angphttrin_0830a2'),
+                            'In development'),
                       ),
                       _buildClosedFeedChip(
                         icon: Icons.auto_awesome_outlined,
-                        label: _ct(context.tr('home_spmli_3acdcb'), 'Coming soon'),
+                        label:
+                            _ct(context.tr('home_spmli_3acdcb'), 'Coming soon'),
                       ),
                       _buildClosedFeedChip(
                         icon: Icons.view_carousel_outlined,
-                        label:
-                            _ct(context.tr('home_ginguyn6kh_8880f8'), 'Top 6 blocks stay'),
+                        label: _ct(context.tr('home_ginguyn6kh_8880f8'),
+                            'Top 6 blocks stay'),
                       ),
                       _buildClosedFeedChip(
                         icon: Icons.hourglass_bottom_rounded,
-                        label: _ct(context.tr('home_mlisau_a08e61'), 'Reopens later'),
+                        label: _ct(
+                            context.tr('home_mlisau_a08e61'), 'Reopens later'),
                       ),
                     ],
                   ),
@@ -260,22 +260,16 @@ extension _CommunityFeedSurface on _CommunityTabState {
         itemCount: 3 + contentCount,
         itemBuilder: (context, index) {
           if (index == 0) {
-            return RepaintBoundary(
-              child: _CommunityHeaderActionStrip(
-                state: this,
-                includeTopPadding: true,
-              ),
+            return _CommunityHeaderActionStrip(
+              state: this,
+              includeTopPadding: true,
             );
           }
           if (index == 1) {
-            return RepaintBoundary(
-              child: _FeedTabSelector(state: this),
-            );
+            return _FeedTabSelector(state: this);
           }
           if (index == 2) {
-            return RepaintBoundary(
-              child: _FeedComposer(state: this),
-            );
+            return _FeedComposer(state: this);
           }
 
           if (_isLoading) {
@@ -298,12 +292,10 @@ extension _CommunityFeedSurface on _CommunityTabState {
 
           final post = posts[index - 3];
           final postId = (post['id'] ?? '').toString();
-          return RepaintBoundary(
-            child: _FeedPostCard(
-              key: ValueKey<String>('$_feedPostItemKeyPrefix$postId'),
-              state: this,
-              post: post,
-            ),
+          return _FeedPostCard(
+            key: ValueKey<String>('$_feedPostItemKeyPrefix$postId'),
+            state: this,
+            post: post,
           );
         },
       ),

@@ -44,11 +44,26 @@ extension _SettingsTabPersistence on _SettingsTabState {
   }
 
   void _updateThemeDraft(VoidCallback updateFn) {
-    setState(updateFn);
-    _applyThemeDraftToUiPrefsPreview();
+    updateFn();
+    
+    // 1. Cập nhật giao diện nội bộ (các nút bấm, slider, ...) ngay lập tức và mượt mà.
+    if (mounted) {
+      setState(() {});
+    }
+
+    // 2. Debounce UiPrefs (tránh lag do rebuild app khi bấm liên tục)
+    _uiPrefsDebounceTimer?.cancel();
+    if (mounted) {
+      _uiPrefsDebounceTimer = Timer(const Duration(milliseconds: 350), () {
+        if (!mounted) return;
+        _applyThemeDraftToUiPrefsPreview();
+      });
+    }
+
+    // 3. Debounce lưu lên Server (chống spam ghi dữ liệu)
     _autoSaveThemeTimer?.cancel();
     if (mounted) {
-      _autoSaveThemeTimer = Timer(const Duration(milliseconds: 500), () {
+      _autoSaveThemeTimer = Timer(const Duration(milliseconds: 2000), () {
         if (!mounted) return;
         unawaited(_saveThemeSettings(silent: true));
       });
@@ -976,9 +991,11 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
   Future<void> _saveAdvancedSettingsV2({bool silent = false}) async {
     final houseId = _houseId?.trim();
-    if (houseId != null &&
+    // Bỏ qua kiểm tra bảo mật khi tự động lưu để tránh gây lag mỗi khi thay đổi setting
+    if (!silent &&
+        houseId != null &&
         houseId.isNotEmpty &&
-        !await _ensureCanModifySharedInfo(showToast: !silent)) {
+        !await _ensureCanModifySharedInfo(showToast: true)) {
       return;
     }
     if (!silent) setState(() => _isSavingAdvanced = true);

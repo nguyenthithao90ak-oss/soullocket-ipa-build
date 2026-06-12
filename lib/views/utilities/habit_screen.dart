@@ -6,9 +6,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'dart:ui' as ui;
 import '../../core/sl_theme.dart';
 import '../../core/fast_backdrop_filter.dart';
-import '../../services/notification_service.dart';
+import '../../utils/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../services/activity_history_service.dart';
+import '../../utils/services/activity_history_service.dart';
 
 class HabitScreen extends StatefulWidget {
   final String houseId;

@@ -8,11 +8,12 @@ import 'dart:ui' as ui;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/drawing_studio_service.dart';
+import '../../utils/services/drawing_studio_service.dart';
 import '../../utils/app_error_mapper.dart';
 
 part 'drawing_studio/models/drawing_models.dart';
@@ -740,12 +741,16 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
 
   Widget _buildGalleryImage(DrawingStudioGalleryItem item, BoxFit fit) {
     if ((item.remoteUrl ?? '').isNotEmpty) {
-      return Image.network(
-        item.remoteUrl!,
+      return CachedNetworkImage(
+        imageUrl: item.remoteUrl!,
         fit: fit,
         filterQuality: FilterQuality.high,
-        gaplessPlayback: true,
-        errorBuilder: (_, __, ___) => _buildLocalFallbackImage(item, fit),
+        imageBuilder: (context, imageProvider) => Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(image: imageProvider, fit: fit),
+          ),
+        ),
+        errorWidget: (_, __, ___) => _buildLocalFallbackImage(item, fit),
       );
     }
     return _buildLocalFallbackImage(item, fit);

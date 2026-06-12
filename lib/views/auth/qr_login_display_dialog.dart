@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/qr_login_service.dart';
-import '../../services/qr_payload_codec.dart';
-import '../../services/security_flow_guard.dart';
+import '../../utils/services/qr_login_service.dart';
+import '../../utils/services/qr_payload_codec.dart';
+import '../../utils/services/security_flow_guard.dart';
 import '../../widgets/sensitive_content_guard.dart';
 
 class QRLoginDisplayDialog extends StatefulWidget {

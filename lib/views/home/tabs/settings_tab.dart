@@ -19,23 +19,23 @@ import 'package:image_cropper/image_cropper.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart'
     show kDebugMode, kIsWeb, defaultTargetPlatform, TargetPlatform;
-import '../../../services/notification_service.dart';
+import '../../../utils/services/notification_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/sl_theme.dart';
 import '../../../core/sl_route.dart';
-import '../../../services/house_settings_service.dart';
-import '../../../services/location_service.dart';
-import '../../../services/music_service.dart';
-import '../../../services/purchase_service.dart';
-import '../../../services/schedule_notif_service.dart';
-import '../../../services/settings_sync_service.dart';
-import '../../../services/storage_service.dart';
-import '../../../services/countdown_space_service.dart';
+import '../../../utils/services/house_settings_service.dart';
+import '../../../utils/services/location_service.dart';
+import '../../../utils/services/music_service.dart';
+import '../../../utils/services/purchase_service.dart';
+import '../../../utils/services/schedule_notif_service.dart';
+import '../../../utils/services/settings_sync_service.dart';
+import '../../../utils/services/storage_service.dart';
+import '../../../utils/services/countdown_space_service.dart';
 import '../../../models/data_export_result.dart';
 import '../../../utils/services/data_export_service.dart';
-import '../../../services/friends_service.dart';
+import '../../../utils/services/friends_service.dart';
 import '../../relationship/couple_connect_screen.dart';
 import '../../ui_prefs.dart';
 import '../../premium/premium_store_screen.dart';
@@ -68,26 +68,27 @@ import '../../utilities/device_manager_screen.dart';
 // import '../../auth/qr_authorize_scanner_screen.dart';
 import '../../utilities/user_support_chat_screen.dart';
 import 'settings/settings_gift_links_manager_screen.dart';
-import '../../../services/l10n_service.dart';
-import '../../../services/auth_service.dart';
-import '../../../services/device_manager_service.dart';
-import '../../../services/presence_service.dart';
-import '../../../services/security_flow_guard.dart';
-import '../../../services/admob_service.dart';
-import '../../../services/breakup_service.dart';
-import '../../../services/critical_data_sync_service.dart';
-import '../../../services/house_service.dart';
-import '../../../services/military_lock_service.dart';
-import '../../../services/push_notification_helper.dart';
-import '../../../services/qr_payload_codec.dart';
-import '../../../services/sound_service.dart';
-import '../../../services/utility_service.dart';
+import '../../../utils/services/l10n_service.dart';
+import '../../../utils/services/auth_service.dart';
+import '../../../utils/services/device_manager_service.dart';
+import '../../../utils/services/presence_service.dart';
+import '../../../utils/services/security_flow_guard.dart';
+import '../../../utils/services/admob_service.dart';
+import '../../../utils/services/breakup_service.dart';
+import '../../../utils/services/critical_data_sync_service.dart';
+import '../../../utils/services/house_service.dart';
+import '../../../utils/services/military_lock_service.dart';
+import '../../../utils/services/push_notification_helper.dart';
+import '../../../utils/services/role_utils.dart';
+import '../../../utils/services/qr_payload_codec.dart';
+import '../../../utils/services/sound_service.dart';
+import '../../../utils/services/utility_service.dart';
 import 'settings/controllers/settings_security_controller.dart';
 import 'settings/security/security_otp_dialogs.dart';
 import '../../../widgets/first_setup_spotlight_guide.dart';
 import '../../../widgets/legacy_web_ui.dart';
 import '../../../widgets/pin_pad_setup_modal.dart';
-import '../../../services/widget_service.dart';
+import '../../../utils/services/widget_service.dart';
 import '../../../models/house_settings.dart';
 
 import '../../../core/constants/app_config.dart';
@@ -499,6 +500,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isSavingAdvanced = false;
   bool _isSavingTheme = false;
   bool _isUploadingThemeBackground = false;
+  double? _themeUploadProgress;
+  double? _avatarUploadProgress;
   bool _didPromptPendingThemeBackgroundRetry = false;
   bool _isUnlockingStyle = false;
   int _countdownAdUnlockExpiryMs = 0;
@@ -620,6 +623,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   final ValueNotifier<int> _panelRebuildNotifier = ValueNotifier<int>(0);
 
   Timer? _autoSaveThemeTimer;
+  Timer? _uiPrefsDebounceTimer;
 
   @override
   void setState(VoidCallback fn) {
@@ -787,6 +791,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   void dispose() {
     // ✅ FIX: Cancel auto-save timer to ensure settings persist
     _autoSaveThemeTimer?.cancel();
+    _uiPrefsDebounceTimer?.cancel();
     _stopWidgetPreviewTicker();
     _emailVerifyTimer?.cancel();
     _settingsSyncBannerDelayTimer?.cancel();

@@ -261,6 +261,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         return;
       }
       try {
+        // Invalidate the runtime cache so every value is force-written to
+        // shared HomeWidget storage, ensuring iOS WidgetKit sees the update.
+        WidgetService.invalidateRuntimeCache();
         await _persistAndSyncWidgetAppearance();
         if (!mounted) return;
         _showToast(context.tr('widget_updated_success'), success: true);
@@ -275,259 +278,238 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       id: 'widget',
       title: context.tr('widget_utility'),
       borderColor: const Color(0xFF80DEEA),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFFFEFF), Color(0xFFF6FAFE)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      flatMode: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              context.tr('home_xemtrcwidg_189f43'),
+              style: SLTheme.quicksand(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF1F2A37),
+              ),
             ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFE4EBF3)),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF101828).withValues(alpha: 0.14),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  context.tr('home_xemtrcwidg_189f43'),
-                  style: SLTheme.quicksand(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF1F2A37),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              _buildWidgetPreview(),
-              const SizedBox(height: 14),
-              _buildWidgetPanelTabBar(),
-              const SizedBox(height: 12),
-                _buildWidgetSectionCard(
-                  icon: Icons.palette_outlined,
-                  title: context.tr('theme_widget_bg'),
-                  subtitle: null,
-                  iconGradient: const [
-                    Color(0xFFFF9A9E),
-                    Color(0xFFFECF6A),
-                  ],
-                  child: _buildWidgetThemeSwatchGrid(config),
-                ),
-              if (_widgetStyleKey == WidgetService.defaultWidgetStyleKey) ...[
-                const SizedBox(height: 12),
-                _buildWidgetSectionCard(
-                  icon: Icons.favorite_rounded,
-                  title: context.tr('home_tritimvnid_67f35f'),
-                  subtitle: null,
-                  iconGradient: const [
-                    Color(0xFFFF86A8),
-                    Color(0xFFFF5B8A),
-                  ],
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.tr('home_kiutritim_87a57e'),
-                        style: SLTheme.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF243041),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildWidgetHeartStylePicker(),
-                      const SizedBox(height: 14),
-                      Text(
-                        context.tr('home_mutritim_6406c9'),
-                        style: SLTheme.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF243041),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildThemeDropdownField(
-                        value: _widgetHeartColorKey,
-                        options: config.heartColorOptions,
-                        onChanged: (value) async =>
-                            _handleWidgetHeartColorChanged(value),
-                      ),
-                      const SizedBox(height: 14),
-                      const Divider(height: 1, color: Color(0xFFE5ECF4)),
-                      const SizedBox(height: 14),
-                      _buildWidgetToggleTile(
-                        icon: Icons.photo_library_outlined,
-                        title: context.tr('widget_show_diary_photos'),
-                        subtitle: null,
-                        value: _showDiaryOnWidget,
-                        accentColor: const Color(0xFF0EA5C6),
-                        onChanged: _handleWidgetDiaryVisibilityChanged,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildWidgetToggleTile(
-                        icon: Icons.favorite_outline_rounded,
-                        title: context.tr('widget_animated_heart'),
-                        subtitle: null,
-                        value: _widgetHeartAnimated,
-                        accentColor: const Color(0xFFFF5B8A),
-                        onChanged: _handleWidgetHeartAnimatedChanged,
-                      ),
-                    ],
-                  ),
-                ),
+          const SizedBox(height: 10),
+          _buildWidgetPreview(),
+          const SizedBox(height: 14),
+          _buildWidgetPanelTabBar(),
+          const SizedBox(height: 14),
+            _buildWidgetSectionCard(
+              icon: Icons.palette_outlined,
+              title: context.tr('theme_widget_bg'),
+              subtitle: null,
+              iconGradient: const [
+                Color(0xFFFF9A9E),
+                Color(0xFFFECF6A),
               ],
-              if (_widgetStyleKey == 'countdown') ...[
-                const SizedBox(height: 12),
-                _buildWidgetSectionCard(
-                  icon: Icons.timer_rounded,
-                  title: context.tr('home_widgetmngy_92c2bc'),
-                  subtitle:
-                      context.tr('home_chnyutinsn_20a566'),
-                  iconGradient: const [
-                    Color(0xFFFFB84D),
-                    Color(0xFFFF7A59),
-                  ],
-                  child: Text(
-                    'Đang dùng kiểu: ${_widgetStyleLabel(_widgetStyleKey)}',
+              child: _buildWidgetThemeSwatchGrid(config),
+            ),
+          if (_widgetStyleKey == WidgetService.defaultWidgetStyleKey) ...[
+            const SizedBox(height: 14),
+            _buildWidgetSectionCard(
+              icon: Icons.favorite_rounded,
+              title: context.tr('home_tritimvnid_67f35f'),
+              subtitle: null,
+              iconGradient: const [
+                Color(0xFFFF86A8),
+                Color(0xFFFF5B8A),
+              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr('home_kiutritim_87a57e'),
                     style: SLTheme.quicksand(
-                      fontSize: 12.8,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF475467),
-                      height: 1.45,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF243041),
                     ),
                   ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              _buildWidgetSectionCard(
-                  icon: Icons.add_to_home_screen_rounded,
-                  title: Theme.of(context).platform == TargetPlatform.iOS
-                      ? '${context.tr('settings_widget_label')}:'
-                      : context.tr('android_real_widget'),
-                  subtitle: context.tr('add_widget_desc'),
-                  iconGradient: const [
-                    Color(0xFF14B8A6),
-                    Color(0xFF06B6D4),
-                  ],
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final useColumn = constraints.maxWidth < 330;
-                          final showPinButton =
-                              Theme.of(context).platform != TargetPlatform.iOS;
-                          final updateButton = _buildGradientBtn(
-                            label: context.tr('update_widget'),
-                            gradient: const [
-                              Color(0xFFFF7898),
-                              Color(0xFFD81B60),
-                            ],
-                            onTap: handleRefreshWidget,
-                          );
-                          if (!showPinButton) {
-                            return updateButton;
-                          }
-                          final addButton = _buildGradientBtn(
-                            label: context.tr('add_widget'),
-                            gradient: const [
-                              Color(0xFF10C8E6),
-                              Color(0xFF0E9EB0),
-                            ],
-                            onTap: handlePinWidget,
-                          );
-                          if (useColumn) {
-                            return Column(
-                              children: [
-                                addButton,
-                                const SizedBox(height: 10),
-                                updateButton,
-                              ],
-                            );
-                          }
-
-                          return Row(
-                            children: [
-                              Expanded(child: addButton),
-                              const SizedBox(width: 12),
-                              Expanded(child: updateButton),
-                            ],
-                          );
-                        },
-                      ),
-                      if (Theme.of(context).platform == TargetPlatform.iOS) ...[
-                        const SizedBox(height: 12),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF5FBFF),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFCAEAF3)),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color:
-                                      const Color(0xFF0EA5C6).withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.info_outline_rounded,
-                                  color: Color(0xFF0B7285),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      context.tr('home_hngdnios_522391'),
-                                      style: SLTheme.quicksand(
-                                        fontSize: 12.6,
-                                        fontWeight: FontWeight.w900,
-                                        color: const Color(0xFF0B7285),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Để thêm Widget trên iOS:\n1. Nhấn giữ vào màn hình chính\n2. Bấm nút dấu [+] ở góc màn hình\n3. Tìm "SoulLocket" và Thêm tiện ích',
-                                      style: SLTheme.quicksand(
-                                        fontSize: 11.8,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF667085),
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
+                  const SizedBox(height: 8),
+                  _buildWidgetHeartStylePicker(),
+                  const SizedBox(height: 14),
+                  Text(
+                    context.tr('home_mutritim_6406c9'),
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF243041),
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                  _buildThemeDropdownField(
+                    value: _widgetHeartColorKey,
+                    options: config.heartColorOptions,
+                    onChanged: (value) async =>
+                        _handleWidgetHeartColorChanged(value),
+                  ),
+                  const SizedBox(height: 14),
+                  const Divider(height: 1, color: Color(0xFFE5ECF4)),
+                  const SizedBox(height: 14),
+                  _buildWidgetToggleTile(
+                    icon: Icons.photo_library_outlined,
+                    title: context.tr('widget_show_diary_photos'),
+                    subtitle: null,
+                    value: _showDiaryOnWidget,
+                    accentColor: const Color(0xFF0EA5C6),
+                    onChanged: _handleWidgetDiaryVisibilityChanged,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildWidgetToggleTile(
+                    icon: Icons.favorite_outline_rounded,
+                    title: context.tr('widget_animated_heart'),
+                    subtitle: null,
+                    value: _widgetHeartAnimated,
+                    accentColor: const Color(0xFFFF5B8A),
+                    onChanged: _handleWidgetHeartAnimatedChanged,
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (_widgetStyleKey == 'countdown') ...[
+            const SizedBox(height: 14),
+            _buildWidgetSectionCard(
+              icon: Icons.timer_rounded,
+              title: context.tr('home_widgetmngy_92c2bc'),
+              subtitle:
+                  context.tr('home_chnyutinsn_20a566'),
+              iconGradient: const [
+                Color(0xFFFFB84D),
+                Color(0xFFFF7A59),
+              ],
+              child: Text(
+                'Đang dùng kiểu: ${_widgetStyleLabel(_widgetStyleKey)}',
+                style: SLTheme.quicksand(
+                  fontSize: 12.8,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF475467),
+                  height: 1.45,
                 ),
-            ],
-          ),
-        ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          _buildWidgetSectionCard(
+              icon: Icons.add_to_home_screen_rounded,
+              title: Theme.of(context).platform == TargetPlatform.iOS
+                  ? '${context.tr('settings_widget_label')}:'
+                  : context.tr('android_real_widget'),
+              subtitle: context.tr('add_widget_desc'),
+              iconGradient: const [
+                Color(0xFF14B8A6),
+                Color(0xFF06B6D4),
+              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final useColumn = constraints.maxWidth < 330;
+                      final showPinButton =
+                          Theme.of(context).platform != TargetPlatform.iOS;
+                      final updateButton = _buildGradientBtn(
+                        label: context.tr('update_widget'),
+                        gradient: const [
+                          Color(0xFFFF7898),
+                          Color(0xFFD81B60),
+                        ],
+                        onTap: handleRefreshWidget,
+                      );
+                      if (!showPinButton) {
+                        return updateButton;
+                      }
+                      final addButton = _buildGradientBtn(
+                        label: context.tr('add_widget'),
+                        gradient: const [
+                          Color(0xFF10C8E6),
+                          Color(0xFF0E9EB0),
+                        ],
+                        onTap: handlePinWidget,
+                      );
+                      if (useColumn) {
+                        return Column(
+                          children: [
+                            addButton,
+                            const SizedBox(height: 10),
+                            updateButton,
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        children: [
+                          Expanded(child: addButton),
+                          const SizedBox(width: 12),
+                          Expanded(child: updateButton),
+                        ],
+                      );
+                    },
+                  ),
+                  if (Theme.of(context).platform == TargetPlatform.iOS) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5FBFF),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFCAEAF3)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color:
+                                  const Color(0xFF0EA5C6).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.info_outline_rounded,
+                              color: Color(0xFF0B7285),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  context.tr('home_hngdnios_522391'),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 12.6,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF0B7285),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Để thêm Widget trên iOS:\n1. Nhấn giữ vào màn hình chính\n2. Bấm nút dấu [+] ở góc màn hình\n3. Tìm "SoulLocket" và Thêm tiện ích',
+                                  style: SLTheme.quicksand(
+                                    fontSize: 11.8,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF667085),
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

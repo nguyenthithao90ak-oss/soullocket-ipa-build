@@ -131,6 +131,8 @@ class _DiaryTabShell extends StatelessWidget {
                                 ),
                                 isLoading: state._isLoading &&
                                     !state._isAnimatingTabSwitch,
+                                isLoadingMore: state._feedController.isLoadingMore,
+                                hasMore: state._feedController.hasMore,
                                 houseId: state._houseId,
                                 buildHouseSetupState: ({
                                   required String title,
@@ -156,6 +158,7 @@ class _DiaryTabShell extends StatelessWidget {
                                   onConfirmDelete:
                                       state._confirmDeleteDiaryPost,
                                 ),
+                                scrollController: state._diaryScrollController,
                               );
                             },
                           ),

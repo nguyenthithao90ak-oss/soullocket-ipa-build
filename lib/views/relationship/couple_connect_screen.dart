@@ -8,9 +8,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/couple_service.dart';
-import '../../services/image_picker_recovery_service.dart';
-import '../../services/qr_payload_codec.dart';
+import '../../utils/services/couple_service.dart';
+import '../../utils/services/image_picker_recovery_service.dart';
+import '../../utils/services/qr_payload_codec.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 

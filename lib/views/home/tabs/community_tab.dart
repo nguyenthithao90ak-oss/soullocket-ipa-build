@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:flutter/services.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:intl/intl.dart';
@@ -15,12 +16,12 @@ import '../../../widgets/share_bottom_sheet.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../core/sl_route.dart';
-import '../../../services/admob_service.dart';
+import '../../../utils/services/admob_service.dart';
 
-import '../../../services/friends_service.dart';
-import '../../../services/house_service.dart';
-import '../../../services/storage_service.dart';
-import '../../../services/social_service.dart';
+import '../../../utils/services/friends_service.dart';
+import '../../../utils/services/house_service.dart';
+import '../../../utils/services/storage_service.dart';
+import '../../../utils/services/social_service.dart';
 import '../../../utils/services/chat_service.dart';
 import '../../../widgets/legacy_web_ui.dart';
 import '../../../widgets/manual_retry_cached_image.dart';
@@ -32,16 +33,16 @@ import '../../visitors/visitor_profile_screen.dart';
 import '../../community/top_hot_screen.dart';
 import '../../community/community_settings_screen.dart';
 import '../../community/house_qr_screen.dart';
-import '../../../services/offline_cache_service.dart';
-import '../../../services/recommendation_service.dart';
+import '../../../utils/services/offline_cache_service.dart';
+import '../../../utils/services/recommendation_service.dart';
 import '../../../utils/services/community_feed_service.dart';
 import '../../../utils/services/pending_upload_service.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../utils/app_error_mapper.dart';
-import '../../../services/security_service.dart';
+import '../../../utils/services/security_service.dart';
 import 'package:flutter/gestures.dart';
 import '../screens/locket_camera_screen.dart';
-import '../../../services/l10n_service.dart';
+import '../../../utils/services/l10n_service.dart';
 import '../../ui_prefs.dart';
 import 'community/rich_post_text_parser.dart';
 
@@ -228,7 +229,9 @@ class CommunityTab extends StatefulWidget {
 }
 
 class _CommunityTabState extends State<CommunityTab>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final HouseService _houseService = HouseService();
@@ -562,6 +565,17 @@ class _CommunityTabState extends State<CommunityTab>
     _communityMessengerButtonPersistTimer?.cancel();
     _scrollController.dispose();
     _heartController.dispose();
+    
+    // Hủy trực tiếp StreamSubscriptions để thỏa mãn rule cancel_subscriptions
+    _communityMaintenanceSub?.cancel();
+    _friendsSubscription?.cancel();
+    _friendsRequestSubscription?.cancel();
+    _blockedUsersSubscription?.cancel();
+    _feedSub?.cancel();
+    _communityMessengerPreviewSubscription?.cancel();
+    _friendsDebounce?.cancel();
+    _blockedUsersDebounce?.cancel();
+
     super.dispose();
   }
 
@@ -1009,6 +1023,7 @@ class _CommunityTabState extends State<CommunityTab>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (_communityClosedUntilNextVersion) {
       return Scaffold(
         backgroundColor: Colors.transparent,

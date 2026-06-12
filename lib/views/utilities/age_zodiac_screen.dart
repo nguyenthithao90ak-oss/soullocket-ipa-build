@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import '../../services/house_settings_service.dart';
+import '../../utils/services/house_settings_service.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/zodiac_utils.dart';
 

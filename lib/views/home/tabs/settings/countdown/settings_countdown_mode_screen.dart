@@ -193,6 +193,7 @@ class _CountdownModeIndependentScreenState
   bool _spaceChromeVisible = true;
   Set<String> _unlockedCountdownStyleKeys = <String>{};
   String? _uploadingAvatarRole;
+  double? _avatarUploadProgress;
   bool _didPromptPendingSpaceAvatarRetry = false;
 
   @override
@@ -378,7 +379,7 @@ class _CountdownModeIndependentScreenState
                     return Stack(
                       children: [
                         SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
+                          physics: const ClampingScrollPhysics(),
                           padding: EdgeInsets.only(
                             top: constraints.maxHeight < 720 ? 28 : 36,
                             bottom: constraints.maxHeight < 720 ? 32 : 40,

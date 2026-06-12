@@ -262,154 +262,124 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     String? badgeText,
     Widget? footer,
   }) {
-    return GestureDetector(
-      key: key,
-      onTap: onTap,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 180;
-          final labelMaxLines = isNarrow ? 2 : 1;
-          final descMaxLines = isNarrow ? 4 : 3;
-          final labelFontSize = isNarrow ? 15.0 : 16.0;
-          final descFontSize = isNarrow ? 10.9 : 11.4;
-          final iconSize = isNarrow ? 26.0 : 30.0;
-          final miniIconSize = isNarrow ? 15.0 : 16.5;
-
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: gradient,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border:
-                  Border.all(color: border.withValues(alpha: 0.45), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: textColor.withValues(alpha: 0.15),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: border, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: border.withValues(alpha: 0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          key: key,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
               children: [
-                Positioned(
-                  right: -12,
-                  bottom: -16,
-                  child: IgnorePointer(
-                    child: Icon(
-                      accentIcons.isNotEmpty ? accentIcons.first : icon,
-                      size: isNarrow ? 62 : 72,
-                      color: textColor.withValues(alpha: 0.08),
-                    ),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  child: Icon(icon, color: textColor, size: 26),
                 ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    isNarrow ? 12 : 14,
-                    isNarrow ? 13 : 15,
-                    isNarrow ? 12 : 14,
-                    isNarrow ? 13 : 14,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(width: 16),
+                Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: isNarrow ? 50 : 58,
-                            height: isNarrow ? 50 : 58,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.96),
-                                  Colors.white.withValues(alpha: 0.74),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              border: Border.all(
-                                color: textColor.withValues(alpha: 0.14),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: textColor.withValues(alpha: 0.20),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Icon(icon, color: textColor, size: iconSize),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: SLTheme.quicksand(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF243041),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Wrap(
-                              spacing: 6,
-                              runSpacing: 6,
-                              children: accentIcons.take(2).map((item) {
-                                return Container(
-                                  width: isNarrow ? 26 : 30,
-                                  height: isNarrow ? 26 : 30,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.56),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: textColor.withValues(alpha: 0.12),
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    item,
-                                    color: textColor.withValues(alpha: 0.92),
-                                    size: miniIconSize,
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        label.trim(),
-                        textAlign: TextAlign.left,
-                        maxLines: labelMaxLines,
-                        overflow: TextOverflow.ellipsis,
-                        style: SLTheme.quicksand(
-                          color: textColor,
-                          fontSize: labelFontSize,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.2,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        desc.trim(),
-                        textAlign: TextAlign.left,
-                        maxLines: descMaxLines,
-                        overflow: TextOverflow.ellipsis,
-                        style: SLTheme.quicksand(
-                          color: textColor.withValues(alpha: 0.72),
-                          fontSize: descFontSize,
-                          fontWeight: FontWeight.w700,
-                          height: 1.18,
+                      if (badgeText != null)
+                        Container(
+                          margin: const EdgeInsets.only(left: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF5252),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            badgeText,
+                            style: SLTheme.quicksand(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                      ),
-                      if (footer != null) ...[
-                        const SizedBox(height: 6),
-                        footer,
-                      ],
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 3),
+                  Text(
+                    desc,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF66758A),
+                      height: 1.3,
+                    ),
+                  ),
+                  if (footer != null) ...[
+                    const SizedBox(height: 6),
+                    footer,
+                  ],
+                ],
+              ),
             ),
-          );
-        },
+            const SizedBox(width: 10),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFC1C8D4)),
+          ],
+        ),
       ),
+    )));
+  }
+
+  Widget _buildSectionBlock({
+    required Widget child,
+    required Color colorTint,
+    EdgeInsetsGeometry padding = const EdgeInsets.all(16),
+  }) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: colorTint.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorTint.withValues(alpha: 0.4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: colorTint.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 
@@ -451,6 +421,29 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     );
   }
 
+  Widget _buildSubCard({
+    required List<Widget> children,
+    Color? backgroundColor,
+    Color? borderColor,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: borderColor ?? const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+
   Widget _buildPanel({
     required String id,
     required String title,
@@ -458,31 +451,25 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required Widget child,
     bool hideBackButton = false,
     Widget? titleBadge,
+    bool flatMode = false,
   }) {
     final isStandalone = Navigator.of(context).canPop();
     final showBack = isStandalone && !hideBackButton;
     final showExpand = !isStandalone;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            borderColor.withValues(alpha: 0.04),
-            borderColor.withValues(alpha: 0.12),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: borderColor.withValues(alpha: 0.18),
-          width: 1.0,
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: borderColor.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
+            color: borderColor.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -571,7 +558,9 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: flatMode
+                ? const EdgeInsets.fromLTRB(10, 8, 10, 12)
+                : const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: child,
           ),
         ],
@@ -665,93 +654,72 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required String label,
     required List<Color> gradient,
     required Color textColor,
+    Color? contentColor,
     required VoidCallback onTap,
   }) {
     final effectiveLabel = icon == Icons.heart_broken
         ? (_isBreakupBusy ? context.tr('home_angxlyucu_0b316c') : _breakupActionLabel)
         : label;
-    const baseSurface = Color(0xFF343A45);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.alphaBlend(
-                  gradient.first.withValues(alpha: 0.12), baseSurface),
-              Color.alphaBlend(
-                  gradient.last.withValues(alpha: 0.18), baseSurface),
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border:
-              Border.all(color: textColor.withValues(alpha: 0.32), width: 1.1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+    final color = contentColor ?? Colors.white;
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 4,
-              height: 38,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [gradient.first, gradient.last],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [gradient.first, gradient.last],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: gradient.last.withValues(alpha: 0.22),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: textColor.withValues(alpha: 0.4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: gradient.first.withValues(alpha: 0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: color, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      effectiveLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: color.withValues(alpha: 0.8),
+                    size: 13,
                   ),
                 ],
               ),
-              child: Icon(icon, color: Colors.white, size: 18),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                effectiveLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: SLTheme.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white.withValues(alpha: 0.96),
-                ),
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: textColor.withValues(alpha: 0.9),
-              size: 13,
-            ),
-          ],
+          ),
         ),
       ),
     );

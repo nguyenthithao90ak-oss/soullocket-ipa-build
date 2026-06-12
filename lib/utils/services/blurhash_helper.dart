@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image/image.dart' as img;
 
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 class BlurHashHelper {
   /// Generates a BlurHash from an image file path.

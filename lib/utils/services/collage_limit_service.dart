@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 import 'admob_service.dart';
 import 'offline_cache_service.dart';
 

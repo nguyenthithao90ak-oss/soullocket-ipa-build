@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/ai_counselor_service.dart';
-import '../../services/device_manager_service.dart';
-import '../../services/house_service.dart';
+import '../../utils/services/ai_counselor_service.dart';
+import '../../utils/services/device_manager_service.dart';
+import '../../utils/services/house_service.dart';
 import '../../utils/services/security_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'support_ticket_shared.dart';
@@ -71,56 +71,74 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   }
 
   Future<void> _init() async {
-    final msgNoUser = context.tr('util_bncnngnhpd_e2e83c');
-    final msgAnonName = context.tr('util_ngidng_3bf886');
-    final msgNoHouse = context.tr('util_thitbnycha_71ad75');
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      if (!mounted) return;
-      setState(() {
-        _supportStatusMessage = msgNoUser;
-      });
-      _showGreeting();
-      return;
-    }
+    try {
+      final msgNoUser = L10nService().translate('util_bncnngnhpd_e2e83c');
+      final msgAnonName = L10nService().translate('util_ngidng_3bf886');
+      final msgNoHouse = L10nService().translate('util_thitbnycha_71ad75');
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        if (!mounted) return;
+        setState(() {
+          _supportStatusMessage = msgNoUser;
+        });
+        _showGreeting();
+        return;
+      }
 
-    _houseId = await _houseService.getCurrentHouseId();
-    _ticketId = (_houseId != null && _houseId!.trim().isNotEmpty)
-        ? _houseId
-        : 'user_${user.uid}';
+      try {
+        _houseId = await _houseService.getCurrentHouseId();
+      } catch (e) {
+        debugPrint('Error getting house ID in support chat init: $e');
+      }
 
-    _myName = (user.displayName?.trim().isNotEmpty ?? false)
-        ? user.displayName!.trim()
-        : (user.email?.trim().isNotEmpty ?? false)
-            ? user.email!.trim()
-            : msgAnonName;
+      _ticketId = (_houseId != null && _houseId!.trim().isNotEmpty)
+          ? _houseId
+          : 'user_${user.uid}';
 
-    if (_houseId == null || _houseId!.trim().isEmpty) {
-      if (!mounted) return;
-      setState(() {
-        _supportStatusMessage = msgNoHouse;
-      });
-    } else {
-      final houseNameSnap =
-          await _db.ref('houses/$_houseId/settings/houseName').get();
-      if (houseNameSnap.exists && mounted) {
-        final houseName = houseNameSnap.value?.toString().trim() ?? '';
-        if (houseName.isNotEmpty) {
-          setState(() => _myName = houseName);
+      _myName = (user.displayName?.trim().isNotEmpty ?? false)
+          ? user.displayName!.trim()
+          : (user.email?.trim().isNotEmpty ?? false)
+              ? user.email!.trim()
+              : msgAnonName;
+
+      if (_houseId == null || _houseId!.trim().isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _supportStatusMessage = msgNoHouse;
+        });
+      } else {
+        try {
+          final houseNameSnap =
+              await _db.ref('houses/$_houseId/settings/houseName').get().timeout(const Duration(seconds: 4));
+          if (houseNameSnap.exists && mounted) {
+            final houseName = houseNameSnap.value?.toString().trim() ?? '';
+            if (houseName.isNotEmpty) {
+              setState(() => _myName = houseName);
+            }
+          }
+        } catch (e) {
+          debugPrint('Error getting house name in support chat init: $e');
         }
       }
-    }
 
-    _listenTicket();
-    await _loadSupportContext(user);
-
-    final initialTopic = supportTopicByText(widget.initialTopic);
-    if (initialTopic != null) {
-      if (mounted) {
-        setState(() => _selectedTopicId = initialTopic.id);
-      } else {
-        _selectedTopicId = initialTopic.id;
+      _listenTicket();
+      try {
+        await _loadSupportContext(user);
+      } catch (e) {
+        debugPrint('Error loading support context: $e');
       }
+
+      final initialTopic = supportTopicByText(widget.initialTopic);
+      if (initialTopic != null) {
+        if (mounted) {
+          setState(() => _selectedTopicId = initialTopic.id);
+        } else {
+          _selectedTopicId = initialTopic.id;
+        }
+      }
+    } catch (e) {
+      debugPrint('General error in user support chat init: $e');
+      _showGreeting();
     }
   }
 
@@ -130,7 +148,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       return;
     }
 
-    final msgStatusErr = context.tr('util_khngththeo_d103bb');
+    final msgStatusErr = L10nService().translate('util_khngththeo_d103bb');
     _statusSub = _db.ref('support_tickets/$_ticketId/status').onValue.listen(
       (event) {
         if (!mounted || !event.snapshot.exists) return;
@@ -153,7 +171,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       },
     );
 
-    final msgMsgErr = context.tr('util_khngthtini_9fd6cd');
+    final msgMsgErr = L10nService().translate('util_khngthtini_9fd6cd');
     _messagesSub = _db
         .ref('support_tickets/$_ticketId/messages')
         .orderByChild('ts')
@@ -310,7 +328,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               '6. Góp ý / Báo lỗi kỹ thuật khác\n'
               '7. Tư vấn gỡ rối tình cảm\n'
               '8. Hướng dẫn xóa tài khoản / Xóa nhà\n'
-              '${context.tr('util_9gpadminht_8eebd4')}',
+              '${L10nService().translate('util_9gpadminht_8eebd4')}',
           isBot: true,
           isAdmin: false,
           isMenuCommand: false,
@@ -381,152 +399,161 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       _selectedTopicId = commandId;
     }
 
-    final ticketSnapshot = await _db.ref('support_tickets/$_ticketId').get();
-    final rawTicketData = ticketSnapshot.value;
-    final ticketData = rawTicketData is Map
-        ? Map<String, dynamic>.from(rawTicketData)
-        : <String, dynamic>{};
-    if (wasAlreadyWaiting &&
-        !isMenuCommand &&
-        _countWaitingAdminFollowUpsFromRaw(ticketData['messages']) >=
-            _maxWaitingAdminFollowUps) {
+    try {
+      final ticketSnapshot = await _db.ref('support_tickets/$_ticketId').get();
+      final rawTicketData = ticketSnapshot.value;
+      final ticketData = rawTicketData is Map
+          ? Map<String, dynamic>.from(rawTicketData)
+          : <String, dynamic>{};
+      if (wasAlreadyWaiting &&
+          !isMenuCommand &&
+          _countWaitingAdminFollowUpsFromRaw(ticketData['messages']) >=
+              _maxWaitingAdminFollowUps) {
+        if (mounted) {
+          setState(() => _isSending = false);
+        }
+        _showWaitingAdminLimitSnackBar();
+        return;
+      }
+
+      final msgRef = _db.ref('support_tickets/$_ticketId/messages').push();
+
+      await msgRef.set({
+        'text': text,
+        'is_bot': false,
+        'is_admin': false,
+        'is_menu_command': isMenuCommand,
+        'sender': _myName,
+        'house_id': _houseId,
+        'ticket_id': _ticketId,
+        'user_uid': currentUser?.uid,
+        'user_email': currentUser?.email?.trim(),
+        'topic_id': topic?.id,
+        'topic_label': topic?.title,
+        'summary': summary,
+        'context': _buildMessageContext(summary: summary, topic: topic),
+        'ts': ServerValue.timestamp,
+      });
+
+      final updates = <String, dynamic>{
+        'last_message': summary,
+        'last_ts': ServerValue.timestamp,
+        'status': isMenuCommand ? 'bot_handled' : 'waiting_for_admin',
+      };
+
+      if (!isMenuCommand) {
+        updates['unread_admin'] = ServerValue.increment(1);
+      }
+
+      final hasTicketId =
+          (ticketData['ticket_id']?.toString().trim() ?? '').isNotEmpty;
+      final hasHouseId =
+          (ticketData['house_id']?.toString().trim() ?? '').isNotEmpty;
+      final hasName = (ticketData['name']?.toString().trim() ?? '').isNotEmpty;
+      final hasEmail = (ticketData['email']?.toString().trim() ?? '').isNotEmpty;
+      final hasReason =
+          (ticketData['reason']?.toString().trim() ?? '').isNotEmpty;
+      final hasCategory =
+          (ticketData['category']?.toString().trim() ?? '').isNotEmpty;
+      final hasPriority =
+          (ticketData['priority']?.toString().trim() ?? '').isNotEmpty;
+      final hasUserUid =
+          (ticketData['user_uid']?.toString().trim() ?? '').isNotEmpty;
+      final hasTopicId =
+          (ticketData['topic_id']?.toString().trim() ?? '').isNotEmpty;
+      final hasDeviceModel =
+          (ticketData['device_model']?.toString().trim() ?? '').isNotEmpty;
+      final hasDeviceOs =
+          (ticketData['device_os']?.toString().trim() ?? '').isNotEmpty;
+      final hasDevicePlatform =
+          (ticketData['device_platform']?.toString().trim() ?? '').isNotEmpty;
+      final hasAppVersion =
+          (ticketData['app_version']?.toString().trim() ?? '').isNotEmpty;
+      final hasBuildName =
+          (ticketData['build_name']?.toString().trim() ?? '').isNotEmpty;
+      final hasBuildNumber =
+          (ticketData['build_number']?.toString().trim() ?? '').isNotEmpty;
+      final hasOpenedFrom =
+          (ticketData['opened_from']?.toString().trim() ?? '').isNotEmpty;
+
+      if (!hasTicketId) {
+        updates['ticket_id'] = _ticketId;
+      }
+      if (!hasHouseId && (_houseId?.trim().isNotEmpty ?? false)) {
+        updates['house_id'] = _houseId;
+      }
+      if (!hasName) {
+        updates['name'] = _myName;
+      }
+      if (!hasEmail && (currentUser?.email?.trim().isNotEmpty ?? false)) {
+        updates['email'] = currentUser!.email!.trim();
+      }
+      if (!hasCategory) {
+        updates['category'] = topic?.title ?? msgNoCategory;
+      }
+      if (!hasPriority && topic != null) {
+        updates['priority'] = topic.priority;
+      }
+      if (!hasReason && !isMenuCommand) {
+        updates['reason'] = summary;
+      }
+      if (!hasUserUid && (currentUser?.uid.trim().isNotEmpty ?? false)) {
+        updates['user_uid'] = currentUser!.uid.trim();
+      }
+      if (!hasTopicId && topic != null) {
+        updates['topic_id'] = topic.id;
+      }
+      if (!hasDeviceModel &&
+          (_supportContext['deviceModel']?.trim().isNotEmpty ?? false)) {
+        updates['device_model'] = _supportContext['deviceModel']!.trim();
+      }
+      if (!hasDeviceOs &&
+          (_supportContext['deviceOs']?.trim().isNotEmpty ?? false)) {
+        updates['device_os'] = _supportContext['deviceOs']!.trim();
+      }
+      if (!hasDevicePlatform &&
+          (_supportContext['devicePlatform']?.trim().isNotEmpty ?? false)) {
+        updates['device_platform'] = _supportContext['devicePlatform']!.trim();
+      }
+      if (!hasAppVersion &&
+          (_supportContext['appVersion']?.trim().isNotEmpty ?? false)) {
+        updates['app_version'] = _supportContext['appVersion']!.trim();
+      }
+      if (!hasBuildName && supportBuildName.trim().isNotEmpty) {
+        updates['build_name'] = supportBuildName.trim();
+      }
+      if (!hasBuildNumber && supportBuildNumber.trim().isNotEmpty) {
+        updates['build_number'] = supportBuildNumber.trim();
+      }
+      if (!hasOpenedFrom && (widget.initialTopic?.trim().isNotEmpty ?? false)) {
+        updates['opened_from'] = widget.initialTopic!.trim();
+      }
+
+      await _db.ref('support_tickets/$_ticketId').update(updates);
+
+      await _generateReply(
+        text,
+        isMenuCommand,
+        commandId,
+        wasAlreadyWaiting: wasAlreadyWaiting,
+      );
+
+      if (mounted) {
+        setState(() {
+          if (topic != null) {
+            _selectedTopicId = topic.id;
+          }
+        });
+        _scrollToBottom();
+      }
+    } catch (e) {
+      debugPrint('Error sending support message: $e');
+    } finally {
+      // Luôn đặt lại _isSending về false dù có lỗi hay không
       if (mounted) {
         setState(() => _isSending = false);
       }
-      _showWaitingAdminLimitSnackBar();
-      return;
     }
-
-    final msgRef = _db.ref('support_tickets/$_ticketId/messages').push();
-
-    await msgRef.set({
-      'text': text,
-      'is_bot': false,
-      'is_admin': false,
-      'is_menu_command': isMenuCommand,
-      'sender': _myName,
-      'house_id': _houseId,
-      'ticket_id': _ticketId,
-      'user_uid': currentUser?.uid,
-      'user_email': currentUser?.email?.trim(),
-      'topic_id': topic?.id,
-      'topic_label': topic?.title,
-      'summary': summary,
-      'context': _buildMessageContext(summary: summary, topic: topic),
-      'ts': ServerValue.timestamp,
-    });
-
-    final updates = <String, dynamic>{
-      'last_message': summary,
-      'last_ts': ServerValue.timestamp,
-      'status': isMenuCommand ? 'bot_handled' : 'waiting_for_admin',
-    };
-
-    if (!isMenuCommand) {
-      updates['unread_admin'] = ServerValue.increment(1);
-    }
-
-    final hasTicketId =
-        (ticketData['ticket_id']?.toString().trim() ?? '').isNotEmpty;
-    final hasHouseId =
-        (ticketData['house_id']?.toString().trim() ?? '').isNotEmpty;
-    final hasName = (ticketData['name']?.toString().trim() ?? '').isNotEmpty;
-    final hasEmail = (ticketData['email']?.toString().trim() ?? '').isNotEmpty;
-    final hasReason =
-        (ticketData['reason']?.toString().trim() ?? '').isNotEmpty;
-    final hasCategory =
-        (ticketData['category']?.toString().trim() ?? '').isNotEmpty;
-    final hasPriority =
-        (ticketData['priority']?.toString().trim() ?? '').isNotEmpty;
-    final hasUserUid =
-        (ticketData['user_uid']?.toString().trim() ?? '').isNotEmpty;
-    final hasTopicId =
-        (ticketData['topic_id']?.toString().trim() ?? '').isNotEmpty;
-    final hasDeviceModel =
-        (ticketData['device_model']?.toString().trim() ?? '').isNotEmpty;
-    final hasDeviceOs =
-        (ticketData['device_os']?.toString().trim() ?? '').isNotEmpty;
-    final hasDevicePlatform =
-        (ticketData['device_platform']?.toString().trim() ?? '').isNotEmpty;
-    final hasAppVersion =
-        (ticketData['app_version']?.toString().trim() ?? '').isNotEmpty;
-    final hasBuildName =
-        (ticketData['build_name']?.toString().trim() ?? '').isNotEmpty;
-    final hasBuildNumber =
-        (ticketData['build_number']?.toString().trim() ?? '').isNotEmpty;
-    final hasOpenedFrom =
-        (ticketData['opened_from']?.toString().trim() ?? '').isNotEmpty;
-
-    if (!hasTicketId) {
-      updates['ticket_id'] = _ticketId;
-    }
-    if (!hasHouseId && (_houseId?.trim().isNotEmpty ?? false)) {
-      updates['house_id'] = _houseId;
-    }
-    if (!hasName) {
-      updates['name'] = _myName;
-    }
-    if (!hasEmail && (currentUser?.email?.trim().isNotEmpty ?? false)) {
-      updates['email'] = currentUser!.email!.trim();
-    }
-    if (!hasCategory) {
-      updates['category'] = topic?.title ?? msgNoCategory;
-    }
-    if (!hasPriority && topic != null) {
-      updates['priority'] = topic.priority;
-    }
-    if (!hasReason && !isMenuCommand) {
-      updates['reason'] = summary;
-    }
-    if (!hasUserUid && (currentUser?.uid.trim().isNotEmpty ?? false)) {
-      updates['user_uid'] = currentUser!.uid.trim();
-    }
-    if (!hasTopicId && topic != null) {
-      updates['topic_id'] = topic.id;
-    }
-    if (!hasDeviceModel &&
-        (_supportContext['deviceModel']?.trim().isNotEmpty ?? false)) {
-      updates['device_model'] = _supportContext['deviceModel']!.trim();
-    }
-    if (!hasDeviceOs &&
-        (_supportContext['deviceOs']?.trim().isNotEmpty ?? false)) {
-      updates['device_os'] = _supportContext['deviceOs']!.trim();
-    }
-    if (!hasDevicePlatform &&
-        (_supportContext['devicePlatform']?.trim().isNotEmpty ?? false)) {
-      updates['device_platform'] = _supportContext['devicePlatform']!.trim();
-    }
-    if (!hasAppVersion &&
-        (_supportContext['appVersion']?.trim().isNotEmpty ?? false)) {
-      updates['app_version'] = _supportContext['appVersion']!.trim();
-    }
-    if (!hasBuildName && supportBuildName.trim().isNotEmpty) {
-      updates['build_name'] = supportBuildName.trim();
-    }
-    if (!hasBuildNumber && supportBuildNumber.trim().isNotEmpty) {
-      updates['build_number'] = supportBuildNumber.trim();
-    }
-    if (!hasOpenedFrom && (widget.initialTopic?.trim().isNotEmpty ?? false)) {
-      updates['opened_from'] = widget.initialTopic!.trim();
-    }
-
-    await _db.ref('support_tickets/$_ticketId').update(updates);
-
-    await _generateReply(
-      text,
-      isMenuCommand,
-      commandId,
-      wasAlreadyWaiting: wasAlreadyWaiting,
-    );
-
-    if (!mounted) return;
-    setState(() {
-      _isSending = false;
-      if (topic != null) {
-        _selectedTopicId = topic.id;
-      }
-    });
-    _scrollToBottom();
   }
 
   Future<void> _generateReply(
@@ -1015,7 +1042,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               itemBuilder: (_, index) => _buildBubble(_messages[index]),
             ),
           ),
-          if (_isSending) _buildTypingIndicator(),
+          // Chỉ hiển thị typing indicator khi đang gửi VÀ chat chưa bị khóa
+          if (_isSending && !_isWaitingAdminInputLocked) _buildTypingIndicator(),
           _buildInputBar(),
         ],
       ),

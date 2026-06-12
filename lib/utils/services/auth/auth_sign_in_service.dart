@@ -12,18 +12,20 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
+import 'package:tiktok_business_sdk/tiktok_business_sdk_platform_interface.dart';
 
-import '../../core/constants/app_config.dart';
-import '../../utils/app_error_mapper.dart';
-import '../../views/ui_prefs.dart';
-import '../critical_data_sync_service.dart';
-import '../device_manager_service.dart';
-import '../encryption_service.dart';
-import '../offline_cache_service.dart';
-import '../app_check_http_headers.dart';
-import '../revenue_security_telemetry_service.dart';
-import '../settings_sync_service.dart';
-import '../security_verdict_cache_service.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/views/ui_prefs.dart';
+import 'package:soullocket_app/utils/services/critical_data_sync_service.dart';
+import 'package:soullocket_app/utils/services/device_manager_service.dart';
+import 'package:soullocket_app/utils/services/encryption_service.dart';
+import 'package:soullocket_app/utils/services/offline_cache_service.dart';
+import 'package:soullocket_app/utils/services/app_check_http_headers.dart';
+import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
+import 'package:soullocket_app/utils/services/settings_sync_service.dart';
+import 'package:soullocket_app/utils/services/security_verdict_cache_service.dart';
 import 'play_integrity_service.dart';
 import 'auth_admin_service.dart';
 import 'auth_house_context_service.dart';
@@ -1318,6 +1320,13 @@ class AuthSignInService {
 
     if (!existingSnap.exists) {
       payload['createdAt'] = ServerValue.timestamp;
+      try {
+        TiktokBusinessSdk().trackTTEvent(
+          event: EventName.Registration,
+        );
+      } catch (e) {
+        debugPrint('Failed to track TikTok registration: $e');
+      }
     }
 
     await userRef.update(payload);

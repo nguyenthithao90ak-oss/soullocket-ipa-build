@@ -7,12 +7,13 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../services/device_manager_service.dart';
-import '../../services/single_match_service.dart';
-import '../app_error_mapper.dart';
+import '../../utils/services/device_manager_service.dart';
+import '../../utils/services/single_match_service.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'offline_cache_service.dart';
 
 class HouseCreationOtpRequiredException implements Exception {
@@ -52,6 +53,17 @@ class HouseService {
 
   firebase_auth.User? get currentUser => _auth.currentUser;
   bool get _allowLegacyDirectCreateFallback => false;
+
+  Future<void> _syncHouseIdToFirestore(String uid, String houseId) async {
+    if (houseId.isEmpty) return;
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'houseId': houseId,
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[HouseService] Firestore houseId sync failed: $e');
+    }
+  }
 
   Future<Map<String, String>> _safeCurrentDeviceSnapshot() async {
     try {
@@ -426,10 +438,12 @@ class HouseService {
           validateMembership: true,
         );
         if (fresh != null && fresh.isNotEmpty) {
+          _syncHouseIdToFirestore(user.uid, fresh).catchError((_) => null);
           return fresh;
         }
 
         if (await _validateHouseMembership(user.uid, cachedHouseId)) {
+          _syncHouseIdToFirestore(user.uid, cachedHouseId).catchError((_) => null);
           return cachedHouseId;
         }
 
@@ -440,15 +454,20 @@ class HouseService {
           prefs,
           validateMembership: true,
         ).catchError((_) => null);
+        _syncHouseIdToFirestore(user.uid, cachedHouseId).catchError((_) => null);
         return cachedHouseId;
       }
     }
 
-    return _fetchAndCacheHouseId(
+    final resolved = await _fetchAndCacheHouseId(
       user.uid,
       prefs,
       validateMembership: preferFresh,
     );
+    if (resolved != null && resolved.isNotEmpty) {
+      _syncHouseIdToFirestore(user.uid, resolved).catchError((_) => null);
+    }
+    return resolved;
   }
 
   Future<String?> _fetchAndCacheHouseId(
@@ -478,6 +497,7 @@ class HouseService {
               await _validateHouseMembership(uid, primaryValue))) {
         await prefs.setString('il_house_id', primaryValue);
         await prefs.setString(_authUidPrefsKey, uid);
+        _syncHouseIdToFirestore(uid, primaryValue).catchError((_) => null);
         return primaryValue;
       }
 
@@ -491,6 +511,7 @@ class HouseService {
         await _dbRef.child('users/$uid').update({'houseId': legacyValue});
         await prefs.setString('il_house_id', legacyValue);
         await prefs.setString(_authUidPrefsKey, uid);
+        _syncHouseIdToFirestore(uid, legacyValue).catchError((_) => null);
         return legacyValue;
       }
     } on TimeoutException {
@@ -508,6 +529,7 @@ class HouseService {
     }
     if (!validateMembership || await _validateHouseMembership(uid, fallback)) {
       await prefs.setString(_authUidPrefsKey, uid);
+      _syncHouseIdToFirestore(uid, fallback).catchError((_) => null);
       return fallback;
     }
     return null;
@@ -662,7 +684,7 @@ class HouseService {
         'updatedAt': nowMs,
         'settings': {
           'theme': 'theme-auto',
-          'countdownSizePx': 500,
+          'countdownSizePx': 400,
           'startDate': startDate,
           'font': "'Quicksand', sans-serif",
           'privacy': 'public',

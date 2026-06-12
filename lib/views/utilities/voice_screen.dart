@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
@@ -9,6 +9,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -20,7 +21,7 @@ import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/private_media_url_service.dart';
-import '../../services/activity_history_service.dart';
+import '../../utils/services/activity_history_service.dart';
 import '../../core/fast_backdrop_filter.dart';
 
 class VoiceScreen extends StatefulWidget {
@@ -54,10 +55,13 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   bool _isRestoringUpload = false;
   Map<String, dynamic>? _pendingRetryUpload;
   String? _playingKey;
+  String? _loadingKey;
   Timer? _recordTicker;
   Timer? _recordLimitTimer;
   DateTime? _recordStartedAt;
   Duration _recordElapsed = Duration.zero;
+
+  late final Stream<DatabaseEvent> _voiceStream;
 
   DatabaseReference get _voiceRef =>
       _dbRef.child('houses/${widget.houseId}/utilities/voices');
@@ -65,10 +69,14 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _voiceStream = _voiceRef.onValue;
     WidgetsBinding.instance.addObserver(this);
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
-      setState(() => _playingKey = null);
+      setState(() {
+        _playingKey = null;
+        _loadingKey = null;
+      });
     });
     unawaited(_restorePendingUploadStateIfNeeded());
   }
@@ -542,20 +550,37 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     if (_playingKey == key) {
       await _player.stop();
       if (!mounted) return;
-      setState(() => _playingKey = null);
+      setState(() {
+        _playingKey = null;
+        _loadingKey = null;
+      });
       return;
     }
 
-    final url = await _resolveVoiceUrl(item);
-    if (url.isEmpty) {
-      _showMessage(errNoUrl);
-      return;
-    }
+    setState(() {
+      _loadingKey = key;
+    });
 
-    await _player.stop();
-    await _player.play(UrlSource(url));
-    if (!mounted) return;
-    setState(() => _playingKey = key);
+    try {
+      final url = await _resolveVoiceUrl(item);
+      if (url.isEmpty) {
+        _showMessage(errNoUrl);
+        setState(() => _loadingKey = null);
+        return;
+      }
+
+      await _player.stop();
+      await _player.play(UrlSource(url));
+      if (!mounted) return;
+      setState(() {
+        _playingKey = key;
+        _loadingKey = null;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loadingKey = null);
+      }
+    }
   }
 
   Future<void> _deleteVoice(String key, String? url) async {
@@ -819,9 +844,9 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
         elevation: 0,
         flexibleSpace: ClipRect(
           child: FastBackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: Container(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.black.withValues(alpha: 0.25),
             ),
           ),
         ),
@@ -839,9 +864,12 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF009688), Color(0xFF80CBC4)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0F3E38), // Rich dark deep green
+              Color(0xFF071F1B), // Deeper forest green/black
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: SafeArea(
@@ -859,12 +887,26 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   Widget _buildRecordArea() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       margin: SLSpacing.all20,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.08),
+            Colors.white.withValues(alpha: 0.02),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -880,7 +922,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                   filled: _isRecording,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.upload_file_rounded,
@@ -979,24 +1021,49 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     required VoidCallback? onTap,
     required bool filled,
   }) {
-    return InkWell(
+    return _AnimatedPressButton(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: 16,
       child: Container(
-        height: 48,
+        height: 50,
         decoration: BoxDecoration(
-          color: onTap == null
-              ? Colors.white.withValues(alpha: 0.08)
+          gradient: onTap == null
+              ? null
               : filled
-                  ? Colors.redAccent
-                  : Colors.white.withValues(alpha: 0.14),
+                  ? const LinearGradient(
+                      colors: [Color(0xFFFF5252), Color(0xFFFF1744)],
+                    )
+                  : LinearGradient(
+                      colors: [
+                        const Color(0xFF00BFA5).withValues(alpha: 0.8),
+                        const Color(0xFF00E676).withValues(alpha: 0.8),
+                      ],
+                    ),
+          color: onTap == null ? Colors.white.withValues(alpha: 0.05) : null,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+          border: Border.all(
+            color: filled
+                ? const Color(0xFFFF5252).withValues(alpha: 0.3)
+                : const Color(0xFF00E676).withValues(alpha: 0.3),
+          ),
+          boxShadow: onTap == null || filled
+              ? []
+              : [
+                  BoxShadow(
+                    color: const Color(0xFF00E676).withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Colors.white, size: 18),
+            if (filled) ...[
+              _PulseIcon(icon: icon),
+            ] else ...[
+              Icon(icon, color: Colors.white, size: 18),
+            ],
             const SizedBox(width: 8),
             Text(
               label,
@@ -1014,7 +1081,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
 
   Widget _buildVoiceList() {
     return StreamBuilder(
-      stream: _voiceRef.onValue,
+      stream: _voiceStream,
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
         final hasData =
             snapshot.hasData && snapshot.data?.snapshot.value != null;
@@ -1078,24 +1145,42 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
             Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '${items.length} bản ghi',
-                        style: SLTheme.quicksand(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00E676).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          '${items.length} bản ghi',
+                          style: SLTheme.quicksand(
+                            color: const Color(0xFF00E676),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                      Text(
-                        '${_formatDuration(totalDurationMs)}/05:00',
-                        style: SLTheme.quicksand(
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${_formatDuration(totalDurationMs)}/05:00',
+                          style: SLTheme.quicksand(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -1103,7 +1188,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                 ),
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final item = items[index];
@@ -1116,86 +1201,155 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                       final timeStr = DateFormat('dd/MM HH:mm').format(date);
                       final durationStr =
                           _formatDuration(item['duration'] as int? ?? 0);
+                      final isPlaying = _playingKey == key;
+                      final isLoading = _loadingKey == key;
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3)),
-                            ),
-                            child: Row(
-                              children: [
-                                GestureDetector(
-                                  onTap: hasPlayableSource
-                                      ? () => _togglePlay(item)
-                                      : null,
-                                  child: Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.15),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      _playingKey == key
-                                          ? Icons.pause_rounded
-                                          : Icons.play_arrow,
-                                      color: Colors.white,
-                                    ),
+                      return _AnimatedPressButton(
+                        onTap: hasPlayableSource ? () => _togglePlay(item) : null,
+                        borderRadius: 18,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            gradient: isPlaying
+                                ? LinearGradient(
+                                    colors: [
+                                      const Color(0xFF004D40).withValues(alpha: 0.75),
+                                      const Color(0xFF00796B).withValues(alpha: 0.65),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : LinearGradient(
+                                    colors: [
+                                      Colors.white.withValues(alpha: 0.08),
+                                      Colors.white.withValues(alpha: 0.03),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: isPlaying
+                                  ? const Color(0xFF00E676).withValues(alpha: 0.45)
+                                  : Colors.white.withValues(alpha: 0.12),
+                              width: isPlaying ? 1.5 : 1.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: isPlaying
+                                    ? const Color(0xFF00E676).withValues(alpha: 0.15)
+                                    : Colors.black.withValues(alpha: 0.15),
+                                blurRadius: isPlaying ? 14 : 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  gradient: isPlaying
+                                      ? const LinearGradient(
+                                          colors: [Color(0xFF00E676), Color(0xFF00BFA5)],
+                                        )
+                                      : LinearGradient(
+                                          colors: [
+                                            Colors.white.withValues(alpha: 0.12),
+                                            Colors.white.withValues(alpha: 0.05),
+                                          ],
+                                        ),
+                                  shape: BoxShape.circle,
+                                  boxShadow: isPlaying
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF00E676).withValues(alpha: 0.4),
+                                            blurRadius: 10,
+                                          )
+                                        ]
+                                      : [],
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Lời nhắn từ ${item['a']}',
-                                        style: SLTheme.quicksand(
+                                child: Center(
+                                  child: isLoading
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
                                             color: Colors.white,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 14),
-                                      ),
-                                      SLSpacing.h4,
-                                      Text(
-                                        '$timeStr • $durationStr',
-                                        style: SLTheme.quicksand(
-                                            color: Colors.white70,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 10.5),
-                                      ),
-                                      if ((item['name']?.toString() ?? '')
-                                          .isNotEmpty) ...[
-                                        SLSpacing.h4,
+                                          ),
+                                        )
+                                      : Icon(
+                                          isPlaying
+                                              ? Icons.pause_rounded
+                                              : Icons.play_arrow_rounded,
+                                          color: Colors.white,
+                                          size: 26,
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Lời nhắn từ ${item['a']}',
+                                      style: SLTheme.quicksand(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14.5),
+                                    ),
+                                    SLSpacing.h4,
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.access_time_rounded,
+                                          color: Colors.white54,
+                                          size: 11,
+                                        ),
+                                        const SizedBox(width: 4),
                                         Text(
-                                          item['name'].toString(),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                          '$timeStr  •  $durationStr',
                                           style: SLTheme.quicksand(
                                               color: Colors.white54,
                                               fontWeight: FontWeight.w600,
-                                              fontSize: 10.5),
+                                              fontSize: 11),
                                         ),
                                       ],
+                                    ),
+                                    if ((item['name']?.toString() ?? '')
+                                        .isNotEmpty) ...[
+                                      SLSpacing.h4,
+                                      Text(
+                                        item['name'].toString(),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: SLTheme.quicksand(
+                                            color: Colors.white38,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 10.5),
+                                      ),
                                     ],
-                                  ),
+                                  ],
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline,
-                                      color: Colors.white70, size: 20),
-                                  onPressed: () => _deleteVoice(
-                                      key, item['aud']?.toString()),
-                                )
+                              ),
+                              const SizedBox(width: 10),
+                              if (isPlaying) ...[
+                                const _VoiceVisualizer(),
+                                const SizedBox(width: 12),
                               ],
-                            ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded,
+                                    color: Colors.white38, size: 20),
+                                onPressed: () => _deleteVoice(
+                                    key, item['aud']?.toString()),
+                              )
+                            ],
                           ),
                         ),
                       );
@@ -1214,6 +1368,172 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
           ],
         );
       },
+    );
+  }
+}
+
+class _AnimatedPressButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final double borderRadius;
+
+  const _AnimatedPressButton({
+    required this.child,
+    required this.onTap,
+    this.borderRadius = 0,
+  });
+
+  @override
+  State<_AnimatedPressButton> createState() => _AnimatedPressButtonState();
+}
+
+class _AnimatedPressButtonState extends State<_AnimatedPressButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      reverseDuration: const Duration(milliseconds: 160),
+      lowerBound: 0.0,
+      upperBound: 1.0,
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails _) {
+    if (widget.onTap == null) return;
+    _ctrl.forward();
+    HapticFeedback.lightImpact();
+  }
+
+  void _onTapUp(TapUpDetails _) {
+    _ctrl.reverse();
+    widget.onTap?.call();
+  }
+
+  void _onTapCancel() {
+    _ctrl.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedBuilder(
+        animation: _scaleAnim,
+        builder: (context, child) => Transform.scale(
+          scale: _scaleAnim.value,
+          child: child,
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _VoiceVisualizer extends StatefulWidget {
+  const _VoiceVisualizer();
+
+  @override
+  State<_VoiceVisualizer> createState() => _VoiceVisualizerState();
+}
+
+class _VoiceVisualizerState extends State<_VoiceVisualizer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(4, (index) {
+            final double value = math.sin((_controller.value * 2 * math.pi) + (index * 1.5)) * 0.5 + 0.5;
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 1.5),
+              width: 3,
+              height: 4 + (value * 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00E676),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+}
+
+class _PulseIcon extends StatefulWidget {
+  final IconData icon;
+
+  const _PulseIcon({required this.icon});
+
+  @override
+  State<_PulseIcon> createState() => _PulseIconState();
+}
+
+class _PulseIconState extends State<_PulseIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.15).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Icon(widget.icon, color: Colors.white, size: 18),
     );
   }
 }

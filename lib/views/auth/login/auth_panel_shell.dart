@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
-import '../../../services/l10n_service.dart';
+import '../../../utils/services/l10n_service.dart';
 import 'auth_tab_switcher.dart';
 
 class AuthPanelShell extends StatelessWidget {
@@ -38,118 +38,32 @@ class AuthPanelShell extends StatelessWidget {
         compact ? 18 : 28,
         compact ? 18 : 24,
       ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isLoginTab
-              ? const [
-                  Color(0xFFFFFBFD),
-                  Color(0xFFFFF2F8),
-                  Color(0xFFFCF4FF),
-                ]
-              : const [
-                  Color(0xFFFFF8FE),
-                  Color(0xFFFFF0FA),
-                  Color(0xFFF8F0FF),
-                ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(compact ? 32 : 40),
-        border: Border.all(
-          color: isLoginTab
-              ? const Color(0xFFFFB6D3).withValues(alpha: 0.55)
-              : const Color(0xFFD4AAFF).withValues(alpha: 0.50),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isLoginTab
-                ? const Color(0xFFFF85B3).withValues(alpha: 0.18)
-                : const Color(0xFFB080FF).withValues(alpha: 0.16),
-            blurRadius: 40,
-            spreadRadius: -4,
-            offset: const Offset(0, 20),
-          ),
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.88),
-            blurRadius: 0,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
       child: Stack(
         children: [
-          // top-right glow orb inside card
-          Positioned(
-            top: compact ? -36 : -48,
-            right: compact ? -28 : -18,
-            child: IgnorePointer(
-              child: Container(
-                width: compact ? 120 : 148,
-                height: compact ? 120 : 148,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      isLoginTab
-                          ? const Color(0xFFFF85B3).withValues(alpha: 0.22)
-                          : const Color(0xFFB080FF).withValues(alpha: 0.18),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
           Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // --- brand micro-header ---
               Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [SLColors.primary, Color(0xFFE060B0)],
-                      ).createShader(bounds),
-                      child: const Icon(
-                        Icons.favorite_rounded,
-                        size: 16,
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Center(
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: isLoginTab
+                          ? const [Color(0xFFE0609A), Color(0xFFA044C0)]
+                          : const [Color(0xFF9030C0), Color(0xFFE060B0)],
+                    ).createShader(bounds),
+                    child: Text(
+                      'SoulLocket',
+                      style: SLTheme.quicksand(
+                        fontSize: compact ? 22 : 26,
+                        fontWeight: FontWeight.w900,
                         color: Colors.white,
+                        letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(width: 5),
-                    ShaderMask(
-                      shaderCallback: (bounds) => LinearGradient(
-                        colors: isLoginTab
-                            ? const [Color(0xFFE0609A), Color(0xFFA044C0)]
-                            : const [Color(0xFF9030C0), Color(0xFFE060B0)],
-                      ).createShader(bounds),
-                      child: Text(
-                        'soullocket',
-                        style: SLTheme.quicksand(
-                          fontSize: compact ? 12 : 13,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 1.4,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFFE060B0), SLColors.primary],
-                      ).createShader(bounds),
-                      child: const Icon(
-                        Icons.favorite_rounded,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               AuthTabSwitcher(
@@ -198,24 +112,8 @@ class AuthPanelShell extends StatelessWidget {
                   compact ? 12 : 14,
                   compact ? 10 : 12,
                 ),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFFF8FD), Color(0xFFFDF3FF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: const Color(0xFFE8B8D8).withValues(alpha: 0.55),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFE080BB).withValues(alpha: 0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                decoration: const BoxDecoration(
+                  color: Colors.transparent,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

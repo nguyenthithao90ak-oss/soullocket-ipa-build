@@ -1,7 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 class PrivateMediaUrlResult {
   const PrivateMediaUrlResult({
@@ -43,7 +43,7 @@ class PrivateMediaUrlService {
     if (user == null) {
       throw Exception('Vui lòng đăng nhập lại để xem nội dung này.');
     }
-    await user.getIdToken(true);
+    await user.getIdToken();
 
     final normalizedHouseId = houseId.trim();
     final normalizedMediaId = mediaId.trim();

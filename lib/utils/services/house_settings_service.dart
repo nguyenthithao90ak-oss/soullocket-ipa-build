@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../services/single_match_service.dart';
+import 'single_match_service.dart';
 import 'activity_history_service.dart';
 import '../models/house_settings.dart';
 import '../utils/flexible_date_input.dart';
@@ -210,32 +210,6 @@ class HouseSettingsService {
       'houses/$houseId/settings/countdownBottomLabel': safeDayUnit,
       'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
       'houses/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/houseName': safeHouseName,
-      'house_profiles/$houseId/nameU1': safeNameU1,
-      'house_profiles/$houseId/nameU2': safeNameU2,
-      'house_profiles/$houseId/startDate': safeStartDate,
-      'house_profiles/$houseId/dayUnit': safeDayUnit,
-      'house_profiles/$houseId/settings/houseName': safeHouseName,
-      'house_profiles/$houseId/settings/nameU1': safeNameU1,
-      'house_profiles/$houseId/settings/nameU2': safeNameU2,
-      'house_profiles/$houseId/settings/startDate': safeStartDate,
-      'house_profiles/$houseId/settings/dayUnit': safeDayUnit,
-      'house_profiles/$houseId/settings/greetingQuote': safeGreetingQuote,
-      'house_profiles/$houseId/settings/countdownTopLabel': safeGreetingQuote,
-      'house_profiles/$houseId/settings/countdownBottomLabel': safeDayUnit,
-      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
-      'houses_public/$houseId/houseName': safeHouseName,
-      'houses_public/$houseId/startDate': safeStartDate,
-      'houses_public/$houseId/dayUnit': safeDayUnit,
-      'houses_public/$houseId/settings/houseName': safeHouseName,
-      'houses_public/$houseId/settings/startDate': safeStartDate,
-      'houses_public/$houseId/settings/dayUnit': safeDayUnit,
-      'houses_public/$houseId/settings/greetingQuote': safeGreetingQuote,
-      'houses_public/$houseId/settings/countdownTopLabel': safeGreetingQuote,
-      'houses_public/$houseId/settings/countdownBottomLabel': safeDayUnit,
-      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
-      'houses_public/$houseId/updated_at': ServerValue.timestamp,
       ...SingleMatchService.profileIndexUpdates(
         houseId: houseId,
         displayName: safeNameU1,
@@ -278,13 +252,7 @@ class HouseSettingsService {
     final field = role == 'user1' ? 'avtUser1' : 'avtUser2';
     final updates = <String, dynamic>{
       'houses/$houseId/settings/$field': refreshedUrl,
-      'house_profiles/$houseId/$field': refreshedUrl,
-      'house_profiles/$houseId/settings/$field': refreshedUrl,
       'houses/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
-      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
-      'houses_public/$houseId/updated_at': ServerValue.timestamp,
     };
 
     if (syncHouseAvatar) {
@@ -292,12 +260,6 @@ class HouseSettingsService {
         'houses/$houseId/settings/houseAvatar': refreshedUrl,
         'houses/$houseId/avatar': refreshedUrl,
         'houses/$houseId/houseAvatar': refreshedUrl,
-        'house_profiles/$houseId/avatar': refreshedUrl,
-        'house_profiles/$houseId/houseAvatar': refreshedUrl,
-        'house_profiles/$houseId/settings/houseAvatar': refreshedUrl,
-        'houses_public/$houseId/avatar': refreshedUrl,
-        'houses_public/$houseId/houseAvatar': refreshedUrl,
-        'houses_public/$houseId/settings/houseAvatar': refreshedUrl,
         ...SingleMatchService.profileIndexUpdates(
           houseId: houseId,
           avatarUrl: refreshedUrl,
@@ -327,17 +289,7 @@ class HouseSettingsService {
       'houses/$houseId/settings/houseAvatar': safeAvatarUrl,
       'houses/$houseId/avatar': safeAvatarUrl,
       'houses/$houseId/houseAvatar': safeAvatarUrl,
-      'house_profiles/$houseId/avatar': safeAvatarUrl,
-      'house_profiles/$houseId/houseAvatar': safeAvatarUrl,
-      'house_profiles/$houseId/settings/houseAvatar': safeAvatarUrl,
-      'houses_public/$houseId/avatar': safeAvatarUrl,
-      'houses_public/$houseId/houseAvatar': safeAvatarUrl,
-      'houses_public/$houseId/settings/houseAvatar': safeAvatarUrl,
       'houses/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
-      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
-      'houses_public/$houseId/updated_at': ServerValue.timestamp,
       ...SingleMatchService.profileIndexUpdates(
         houseId: houseId,
         avatarUrl: safeAvatarUrl,
@@ -359,10 +311,6 @@ class HouseSettingsService {
 
     final updates = <String, dynamic>{
       'houses/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
-      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
-      'houses_public/$houseId/updated_at': ServerValue.timestamp,
     };
 
     if (headerImageUrl != null) {
@@ -372,12 +320,6 @@ class HouseSettingsService {
       }
       updates.addAll({
         'houses/$houseId/settings/profileHeaderImageUrl': safeHeaderImageUrl,
-        'house_profiles/$houseId/profileHeaderImageUrl': safeHeaderImageUrl,
-        'house_profiles/$houseId/settings/profileHeaderImageUrl':
-            safeHeaderImageUrl,
-        'houses_public/$houseId/profileHeaderImageUrl': safeHeaderImageUrl,
-        'houses_public/$houseId/settings/profileHeaderImageUrl':
-            safeHeaderImageUrl,
       });
     }
 
@@ -388,12 +330,6 @@ class HouseSettingsService {
       }
       updates.addAll({
         'houses/$houseId/settings/profileHeaderThemeKey': safeHeaderThemeKey,
-        'house_profiles/$houseId/profileHeaderThemeKey': safeHeaderThemeKey,
-        'house_profiles/$houseId/settings/profileHeaderThemeKey':
-            safeHeaderThemeKey,
-        'houses_public/$houseId/profileHeaderThemeKey': safeHeaderThemeKey,
-        'houses_public/$houseId/settings/profileHeaderThemeKey':
-            safeHeaderThemeKey,
       });
     }
 
@@ -401,10 +337,6 @@ class HouseSettingsService {
       final safeAvatarSize = avatarSizePx.clamp(60, 180).toDouble();
       updates.addAll({
         'houses/$houseId/settings/profileAvatarSizePx': safeAvatarSize,
-        'house_profiles/$houseId/profileAvatarSizePx': safeAvatarSize,
-        'house_profiles/$houseId/settings/profileAvatarSizePx': safeAvatarSize,
-        'houses_public/$houseId/profileAvatarSizePx': safeAvatarSize,
-        'houses_public/$houseId/settings/profileAvatarSizePx': safeAvatarSize,
       });
     }
 
@@ -425,15 +357,7 @@ class HouseSettingsService {
     await _dbRef.update({
       'houses/$houseId/houseName': trimmed,
       'houses/$houseId/settings/houseName': trimmed,
-      'house_profiles/$houseId/houseName': trimmed,
-      'house_profiles/$houseId/settings/houseName': trimmed,
-      'houses_public/$houseId/houseName': trimmed,
-      'houses_public/$houseId/settings/houseName': trimmed,
       'houses/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
-      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
-      'houses_public/$houseId/updated_at': ServerValue.timestamp,
       ...SingleMatchService.profileIndexUpdates(
         houseId: houseId,
         houseName: trimmed,
@@ -478,14 +402,6 @@ class HouseSettingsService {
         'houses/$houseId/settings/startDateCooldownUntil': nextCooldownUntil,
         'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
         'houses/$houseId/updatedAt': ServerValue.timestamp,
-        'house_profiles/$houseId/startDate': safeDate,
-        'house_profiles/$houseId/settings/startDate': safeDate,
-        'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
-        'house_profiles/$houseId/updated_at': ServerValue.timestamp,
-        'houses_public/$houseId/startDate': safeDate,
-        'houses_public/$houseId/settings/startDate': safeDate,
-        'houses_public/$houseId/updatedAt': ServerValue.timestamp,
-        'houses_public/$houseId/updated_at': ServerValue.timestamp,
       });
     } on FirebaseException catch (fe) {
       if (fe.code == 'permission-denied') {
@@ -523,20 +439,12 @@ class HouseSettingsService {
     final updates = <String, dynamic>{
       'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
       'houses/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$houseId/updated_at': ServerValue.timestamp,
-      'houses_public/$houseId/updatedAt': ServerValue.timestamp,
-      'houses_public/$houseId/updated_at': ServerValue.timestamp,
     };
 
     if (hasTopLabel) {
       updates.addAll({
         'houses/$houseId/settings/greetingQuote': safeTopLabel,
         'houses/$houseId/settings/countdownTopLabel': safeTopLabel,
-        'house_profiles/$houseId/settings/greetingQuote': safeTopLabel,
-        'house_profiles/$houseId/settings/countdownTopLabel': safeTopLabel,
-        'houses_public/$houseId/settings/greetingQuote': safeTopLabel,
-        'houses_public/$houseId/settings/countdownTopLabel': safeTopLabel,
       });
     }
 
@@ -544,13 +452,6 @@ class HouseSettingsService {
       updates.addAll({
         'houses/$houseId/settings/dayUnit': safeBottomLabel,
         'houses/$houseId/settings/countdownBottomLabel': safeBottomLabel,
-        'house_profiles/$houseId/dayUnit': safeBottomLabel,
-        'house_profiles/$houseId/settings/dayUnit': safeBottomLabel,
-        'house_profiles/$houseId/settings/countdownBottomLabel':
-            safeBottomLabel,
-        'houses_public/$houseId/dayUnit': safeBottomLabel,
-        'houses_public/$houseId/settings/dayUnit': safeBottomLabel,
-        'houses_public/$houseId/settings/countdownBottomLabel': safeBottomLabel,
       });
     }
 
@@ -575,28 +476,16 @@ class HouseSettingsService {
     final updates = <String, dynamic>{
       'houses/$safeHouseId/settings/updatedAt': ServerValue.timestamp,
       'houses/$safeHouseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$safeHouseId/updatedAt': ServerValue.timestamp,
-      'house_profiles/$safeHouseId/updated_at': ServerValue.timestamp,
-      'houses_public/$safeHouseId/updatedAt': ServerValue.timestamp,
-      'houses_public/$safeHouseId/updated_at': ServerValue.timestamp,
     };
 
     if (safeFallingEffectKey != null && safeFallingEffectKey.isNotEmpty) {
       updates.addAll({
         'houses/$safeHouseId/settings/fallingEffect': safeFallingEffectKey,
-        'house_profiles/$safeHouseId/settings/fallingEffect':
-            safeFallingEffectKey,
-        'houses_public/$safeHouseId/settings/fallingEffect':
-            safeFallingEffectKey,
       });
     }
     if (safeCountdownStyleKey != null && safeCountdownStyleKey.isNotEmpty) {
       updates.addAll({
         'houses/$safeHouseId/settings/countdownStyle': safeCountdownStyleKey,
-        'house_profiles/$safeHouseId/settings/countdownStyle':
-            safeCountdownStyleKey,
-        'houses_public/$safeHouseId/settings/countdownStyle':
-            safeCountdownStyleKey,
       });
     }
 
@@ -610,7 +499,6 @@ class HouseSettingsService {
   Future<Map<String, dynamic>?> fetchHouseProfile(String houseId) async {
     try {
       final snap = await _dbRef
-          .child('house_profiles/$houseId')
           .get()
           .timeout(const Duration(seconds: 3));
       if (!snap.exists || snap.value == null) return null;

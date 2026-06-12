@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
-import '../../services/house_service.dart';
-import '../../services/social_service.dart';
+import '../../utils/services/house_service.dart';
+import '../../utils/services/social_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../visitors/visitor_profile_screen.dart';
 

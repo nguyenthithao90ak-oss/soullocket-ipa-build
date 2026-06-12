@@ -8,7 +8,7 @@ import 'package:flutter/painting.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 class CommunityFeedService {
   static final CommunityFeedService _instance =

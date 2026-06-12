@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
-import '../../services/auth_service.dart';
+import '../../utils/services/auth_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 import 'widgets/security_protection_rollout_panel.dart';

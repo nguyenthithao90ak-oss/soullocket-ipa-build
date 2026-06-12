@@ -15,17 +15,18 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart' as ll;
+import 'package:permission_handler/permission_handler.dart' as app_permission;
 import '../../utils/services/offline_cache_service.dart';
 
 
 import '../../core/constants/app_config.dart';
 import '../../core/fast_backdrop_filter.dart';
 import '../../core/sl_theme.dart';
-import '../../services/daily_quest_service.dart';
-import '../../services/gps_tracker_service.dart';
-import '../../services/location_service.dart';
-import '../../services/map_pin_limit_service.dart';
-import '../../services/notification_service.dart';
+import '../../utils/services/daily_quest_service.dart';
+import '../../utils/services/gps_tracker_service.dart';
+import '../../utils/services/location_service.dart';
+import '../../utils/services/map_pin_limit_service.dart';
+import '../../utils/services/notification_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 

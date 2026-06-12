@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
-import '../utils/zodiac_utils.dart';
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/zodiac_utils.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'love_insight_service.dart';
 
 String _t(bool isEnglish, String vi, String en) => isEnglish ? en : vi;

@@ -1057,10 +1057,10 @@ class _CountdownModeGlowOrb extends StatelessWidget {
   }
 }
 
-/// Overlay trái tim hồng bay nhẹ nhàng bên trong/ngoài vòng tròn đếm.
-/// Dùng cho style 'floating_hearts'.
+/// Overlay trái tim hồng bay bổng, xoay lật 3D đa chiều như giọt nước.
+/// Cảm biến trọng trường 360 độ cực nhạy và chân thực.
 class FloatingHeartsRingOverlay extends StatefulWidget {
-  const FloatingHeartsRingOverlay({required this.size});
+  const FloatingHeartsRingOverlay({super.key, required this.size});
   final double size;
 
   @override
@@ -1070,7 +1070,7 @@ class FloatingHeartsRingOverlay extends StatefulWidget {
 
 class _FloatingHeartsRingOverlayState
     extends State<FloatingHeartsRingOverlay> with TickerProviderStateMixin {
-  static const int _kCount = 8;
+  static const int _kCount = 14; // Tăng lượng hạt để trông ảo diệu hơn
 
   late final List<_HeartParticle> _particles;
   late final List<AnimationController> _controllers;
@@ -1080,30 +1080,36 @@ class _FloatingHeartsRingOverlayState
   double _tiltX = 0.0;
   double _tiltY = 0.0;
 
+  // Lọc nhiễu cảm biến
+  double _filteredAccelX = 0.0;
+  double _filteredAccelY = 0.0;
+
   @override
   void initState() {
     super.initState();
     final rng = Object.hashAll([widget.size, identityHashCode(this)]);
     _particles = List.generate(_kCount, (i) {
-      final base = (i / _kCount) * 2 * 3.14159265;
+      final base = (i / _kCount) * 2 * math.pi;
       final jitter = ((rng ^ (i * 2654435761)) & 0xFFFF) / 0xFFFF;
-      final angle = base + (jitter - 0.5) * 0.5;
-      // Vị trí xa trung tâm hơn một chút để không đè trực tiếp vào con số chính giữa quá nhiều
-      final rFrac = 0.32 + ((jitter * 17) % 1.0) * 0.22;
+      final angle = base + (jitter - 0.5) * 1.5;
       
-      // Trái tim lớn nổi bật: 24px đến 42px
-      final sz = 24.0 + ((jitter * 13) % 1.0) * 18.0;
+      // Phân bổ ngẫu nhiên từ trong ra ngoài (rộng hơn)
+      final rFrac = 0.20 + ((jitter * 17) % 1.0) * 0.45;
+      
+      // Kích thước đa dạng tạo chiều sâu (18 -> 48)
+      final sz = 18.0 + ((jitter * 13) % 1.0) * 30.0;
       
       final delay = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF * 3.0;
       
-      // Chu kỳ trôi động: 3.8s đến 6.8s
-      final duration = 3800 + (((rng ^ (i * 987654)) & 0xFFFF) / 0xFFFF * 3000).toInt();
+      // Tốc độ xoay và quỹ đạo bay
+      final duration = 2800 + (((rng ^ (i * 987654)) & 0xFFFF) / 0xFFFF * 4500).toInt();
       
-      // Biên độ dao động
-      final floatAmp = 8.0 + ((jitter * 7) % 1.0) * 10.0;
+      final floatAmp = 12.0 + ((jitter * 7) % 1.0) * 18.0;
+      final parallax = 0.8 + ((jitter * 19) % 1.0) * 1.5;
       
-      final parallax = 0.6 + ((jitter * 19) % 1.0) * 0.9;
-      
+      // Tốc độ lật 3D (flip)
+      final flipSpeed = 0.5 + ((jitter * 23) % 1.0) * 2.0;
+
       return _HeartParticle(
         angle: angle,
         rFrac: rFrac,
@@ -1111,8 +1117,9 @@ class _FloatingHeartsRingOverlayState
         delay: delay,
         durationMs: duration,
         floatAmplitude: floatAmp,
-        opacity: 0.70 + ((jitter * 11) % 1.0) * 0.20,
+        opacity: 0.65 + ((jitter * 11) % 1.0) * 0.35,
         parallaxFactor: parallax,
+        flipSpeed: flipSpeed,
       );
     });
 
@@ -1125,7 +1132,7 @@ class _FloatingHeartsRingOverlayState
 
     _floatAnims = List.generate(_kCount, (i) {
       return Tween<double>(begin: -1.0, end: 1.0).animate(
-        CurvedAnimation(parent: _controllers[i], curve: Curves.easeInOut),
+        CurvedAnimation(parent: _controllers[i], curve: Curves.easeInOutSine),
       );
     });
 
@@ -1142,11 +1149,27 @@ class _FloatingHeartsRingOverlayState
       _sensorSub = accelerometerEventStream().listen(
         (event) {
           if (!mounted) return;
-          final targetX = -event.x.clamp(-6.0, 6.0) * 4.0;
-          final targetY = event.y.clamp(-6.0, 6.0) * 4.0;
+          // Hệ quy chiếu chuẩn: x>0 nghiêng trái, y>0 nghiêng xuống (trên Android)
+          // Để hạt chạy THEO trọng lực (xuống dưới/về phía nghiêng):
+          // Nghiêng trái (x dương) -> Hạt dạt trái -> targetX âm.
+          // Nghiêng phải (x âm) -> Hạt dạt phải -> targetX dương.
+          // Do đó targetX = event.x * factor.
+          // Nghiêng lên (y âm) -> Hạt dạt lên -> targetY âm.
+          // Nghiêng xuống (y dương) -> Hạt dạt xuống -> targetY dương.
+          final rawX = event.x.clamp(-8.0, 8.0);
+          final rawY = event.y.clamp(-8.0, 8.0);
+
+          // Áp dụng bộ lọc Low-pass filter để chuyển động mượt như nước
+          _filteredAccelX = _filteredAccelX * 0.90 + rawX * 0.10;
+          _filteredAccelY = _filteredAccelY * 0.90 + rawY * 0.10;
+
+          // Nhân hệ số khuếch đại cho cảm giác 360 độ rõ rệt
+          final targetX = _filteredAccelX * 6.0;
+          final targetY = _filteredAccelY * 6.0;
+
           setState(() {
-            _tiltX = _tiltX * 0.85 + targetX * 0.15;
-            _tiltY = _tiltY * 0.85 + targetY * 0.15;
+            _tiltX = _tiltX * 0.92 + targetX * 0.08;
+            _tiltY = _tiltY * 0.92 + targetY * 0.08;
           });
         },
         onError: (_) {},
@@ -1167,43 +1190,80 @@ class _FloatingHeartsRingOverlayState
   @override
   Widget build(BuildContext context) {
     final radius = widget.size / 2;
+    // Điểm nhấn sáng ở trung tâm tạo hiệu ứng bóng bẩy
+    final centerGlow = Container(
+      width: widget.size,
+      height: widget.size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.15),
+            Colors.white.withValues(alpha: 0.0),
+          ],
+          stops: const [0.0, 0.7],
+        ),
+      ),
+    );
+
     return IgnorePointer(
       child: SizedBox(
         width: widget.size,
         height: widget.size,
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
+            centerGlow,
             for (int i = 0; i < _kCount; i++)
               AnimatedBuilder(
                 animation: _controllers[i],
                 builder: (_, __) {
                   final p = _particles[i];
-                  final t = _floatAnims[i].value;
+                  final t = _floatAnims[i].value; // -1 to 1
 
-                  // Sway góc: lắc lư trái phải qua lại
-                  final double currentAngle = p.angle + (t * 0.40);
-                  // Co giãn bán kính: dịch chuyển ra/vào nhẹ nhàng
-                  final double currentR = radius * (p.rFrac + (t * 0.08));
+                  // Chuyển động xoắn ốc (swirl) + dập dềnh
+                  final double swirlAngle = p.angle + (t * 0.6);
+                  final double currentR = radius * p.rFrac + (t * p.floatAmplitude);
 
+                  // Vị trí vật lý thực tế có cộng dồn trọng lực 360 độ
                   final double cx = radius +
-                      currentR * math.cos(currentAngle) +
+                      currentR * math.cos(swirlAngle) +
                       (_tiltX * p.parallaxFactor);
                   final double cy = radius +
-                      currentR * math.sin(currentAngle) +
+                      currentR * math.sin(swirlAngle) +
                       (_tiltY * p.parallaxFactor);
+
+                  // Hiệu ứng lật 3D (Nước xoay)
+                  final flipT = (_controllers[i].value * 2 * math.pi * p.flipSpeed) + p.angle;
+                  final scaleX = math.cos(flipT).abs() * 0.4 + 0.6; 
+                  final scaleY = math.sin(flipT).abs() * 0.2 + 0.8;
+                  
+                  // Xoay nghiêng theo hướng rớt
+                  final dropRotation = math.atan2(_tiltY, _tiltX) + math.pi / 2;
+                  // Kết hợp xoay tự nhiên và xoay theo trọng lực
+                  final finalRotation = t * 0.5 + (_tiltX * 0.03) + (math.sqrt(_tiltX*_tiltX + _tiltY*_tiltY) > 2 ? dropRotation * 0.1 : 0);
 
                   return Positioned(
                     left: cx - p.size / 2,
                     top: cy - p.size / 2,
-                    child: Opacity(
-                      opacity: p.opacity,
-                      child: Transform.rotate(
-                        angle: t * 0.25, // Xoay nghiêng trái tim nhẹ nhàng theo chuyển động
-                        child: Icon(
-                          Icons.favorite_rounded,
-                          size: p.size,
-                          color: _kHeartColors[i % _kHeartColors.length],
-                        ),
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.002) // Perspective 3D
+                        ..rotateZ(finalRotation)
+                        ..scale(scaleX, scaleY),
+                      child: Icon(
+                        i % 3 == 0 ? Icons.favorite_rounded : Icons.bubble_chart_rounded,
+                        size: p.size,
+                        // Tích hợp độ trong suốt trực tiếp vào màu để bỏ Widget Opacity (rất nặng)
+                        color: _kHeartColors[i % _kHeartColors.length].withValues(alpha: p.opacity),
+                        // Dùng Shadow của Icon siêu nhẹ thay cho BoxShadow của Container
+                        shadows: [
+                          Shadow(
+                            color: _kHeartColors[i % _kHeartColors.length].withValues(alpha: p.opacity * 0.3),
+                            blurRadius: p.size * 0.25, 
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -1218,9 +1278,9 @@ class _FloatingHeartsRingOverlayState
   static const List<Color> _kHeartColors = [
     Color(0xFFFF85C0),
     Color(0xFFFF4D94),
-    Color(0xFFFFADD6),
+    Color(0xFF8C52FF), // Thêm sắc tím ảo diệu
     Color(0xFFFF6BAD),
-    Color(0xFFFFC2DC),
+    Color(0xFF5CE1E6), // Thêm sắc xanh nước biển lấp lánh
     Color(0xFFE8367E),
     Color(0xFFFFD6EC),
     Color(0xFFFF8DC7),
@@ -1237,6 +1297,7 @@ class _HeartParticle {
     required this.floatAmplitude,
     required this.opacity,
     required this.parallaxFactor,
+    required this.flipSpeed,
   });
   final double angle;
   final double rFrac;
@@ -1246,6 +1307,7 @@ class _HeartParticle {
   final double floatAmplitude;
   final double opacity;
   final double parallaxFactor;
+  final double flipSpeed;
 }
 
 

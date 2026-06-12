@@ -10,7 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_config.dart';
 import '../../utils/app_error_mapper.dart';
 import 'storage_service.dart';
-import '../utils/flexible_date_input.dart';
+import 'package:soullocket_app/utils/flexible_date_input.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -121,6 +121,13 @@ class WidgetService {
     _runtimeWidgetData.clear();
     _didBootstrap = false;
     await ensureInitialized(forceUpdate: refresh);
+  }
+
+  /// Clears the in-memory widget data cache so that the next call to any
+  /// sync method forces a full re-write to the shared HomeWidget storage,
+  /// which ensures iOS WidgetKit receives fresh data and reloads the timeline.
+  static void invalidateRuntimeCache() {
+    _runtimeWidgetData.clear();
   }
 
   static String resolveSeasonEffect({

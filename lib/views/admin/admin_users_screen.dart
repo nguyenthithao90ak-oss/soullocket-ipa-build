@@ -9,7 +9,7 @@ import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io' as io;
-import '../../services/auth_service.dart';
+import '../../utils/services/auth_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/web_helpers.dart';
 import 'widgets/admin_shared_widgets.dart';

@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../core/sl_route.dart';
-import '../../../services/global_search_service.dart';
+import '../../../utils/services/global_search_service.dart';
 import '../../utilities/history_screen.dart';
 
 class GlobalSearchScreen extends StatefulWidget {

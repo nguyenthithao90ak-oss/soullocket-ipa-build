@@ -11,7 +11,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../models/diary_post.dart';
-import '../../../services/interaction_metrics_service.dart';
+import '../../../utils/services/interaction_metrics_service.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/admob_service.dart';
 import '../../../utils/services/memory_share_allowance_service.dart';
@@ -50,7 +50,10 @@ class DiaryTab extends StatefulWidget {
 
 typedef _PreparedMemoryFeed = PreparedDiaryMemoryFeed;
 
-class _DiaryTabState extends State<DiaryTab> {
+class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final DiaryFeedController _feedController = DiaryFeedController();
   final DiaryComposerController _composerState = DiaryComposerController();
   final DiaryMemoryController _memoryController = DiaryMemoryController();
@@ -60,6 +63,7 @@ class _DiaryTabState extends State<DiaryTab> {
   final MemoryShareService _memoryShareService = MemoryShareService();
   final MemoryShareAllowanceService _memoryShareAllowanceService =
       MemoryShareAllowanceService();
+  final ScrollController _diaryScrollController = ScrollController();
   bool _isTabActive = false;
   bool _isActivatingTab = false;
   bool _lastSelectionOverlayVisible = false;
@@ -217,8 +221,27 @@ class _DiaryTabState extends State<DiaryTab> {
       );
       return;
     }
-    final isProUser = await AdMobService().isProUser();
-    final memoryLimits = await _memoryShareService.fetchLimits();
+
+    // Start fetching network data early to mask latency while user picks expiry days
+    final limitsFuture = _memoryShareService.fetchLimits();
+    final isProUserFuture = AdMobService().isProUser();
+    final currentUserFuture = _guardController.resolveCurrentUser();
+
+    final expiryDays = await _pickMemoryShareExpiryDays();
+    if (expiryDays == null || !mounted) {
+      return;
+    }
+
+    final password = await _promptPasswordOption();
+    if (password == null || !mounted) {
+      return;
+    }
+
+    // Await the pre-fired futures. In most cases, they are already complete.
+    final isProUser = await isProUserFuture;
+    final memoryLimits = await limitsFuture;
+    final currentUser = await currentUserFuture;
+
     final maxItems = isProUser ? memoryLimits.shareProMaxItems : memoryLimits.shareFreeMaxItems;
     if (photos.length > maxItems) {
       _showDiarySnackBar(
@@ -227,17 +250,11 @@ class _DiaryTabState extends State<DiaryTab> {
       );
       return;
     }
-    final currentUser = await _guardController.resolveCurrentUser();
     if (currentUser == null) {
       _showDiarySnackBar(
         context.tr('home_phinngnhph_4893ad'),
         backgroundColor: const Color(0xFFE53935),
       );
-      return;
-    }
-
-    final expiryDays = await _pickMemoryShareExpiryDays();
-    if (expiryDays == null || !mounted) {
       return;
     }
 
@@ -318,6 +335,7 @@ class _DiaryTabState extends State<DiaryTab> {
         houseId: houseId,
         photos: photos,
         expiryDays: expiryDays,
+        password: password,
       );
       if (!mounted) {
         return;
@@ -448,155 +466,116 @@ class _DiaryTabState extends State<DiaryTab> {
     );
   }
 
-  Future<List<String>> _findActiveMemoryShareTokensForPhoto(
-    Map<String, dynamic> item,
-  ) async {
-    final houseId = _houseId?.trim() ?? '';
-    final photoId = item['id']?.toString().trim() ?? '';
-    if (houseId.isEmpty || photoId.isEmpty) {
-      return const <String>[];
-    }
+  Future<String?> _promptPasswordOption() async {
+    final controller = TextEditingController();
+    bool obscureText = true;
 
-    final sharesIndexSnap = await FirebaseDatabase.instance
-        .ref('houses/$houseId/memoryShares')
-        .get();
-    if (!sharesIndexSnap.exists || sharesIndexSnap.value is! Map) {
-      return const <String>[];
-    }
-
-    final shareIndex = Map<dynamic, dynamic>.from(
-        sharesIndexSnap.value as Map<dynamic, dynamic>);
-    if (shareIndex.isEmpty) {
-      return const <String>[];
-    }
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final tokens = <String>[];
-    for (final entry in shareIndex.entries) {
-      final token = entry.key?.toString().trim() ?? '';
-      if (token.isEmpty) {
-        continue;
-      }
-      final shareMeta = entry.value is Map
-          ? Map<dynamic, dynamic>.from(entry.value as Map)
-          : const <dynamic, dynamic>{};
-      final revoked = shareMeta['revoked'] == true;
-      final expiresAt = (shareMeta['expiresAt'] as num?)?.toInt() ?? 0;
-      if (revoked || (expiresAt > 0 && expiresAt <= now)) {
-        continue;
-      }
-
-      final shareSnap =
-          await FirebaseDatabase.instance.ref('memory_shares/$token').get();
-      if (!shareSnap.exists || shareSnap.value is! Map) {
-        continue;
-      }
-      final share =
-          Map<dynamic, dynamic>.from(shareSnap.value as Map<dynamic, dynamic>);
-      if (share['revoked'] == true) {
-        continue;
-      }
-      final rootExpiresAt = (share['expiresAt'] as num?)?.toInt() ?? 0;
-      if (rootExpiresAt > 0 && rootExpiresAt <= now) {
-        continue;
-      }
-      final photos = share['photos'];
-      if (photos is! List) {
-        continue;
-      }
-      final containsPhoto = photos.any((photo) {
-        if (photo is! Map) {
-          return false;
-        }
-        final normalized = Map<dynamic, dynamic>.from(photo);
-        return (normalized['id']?.toString().trim() ?? '') == photoId;
-      });
-      if (containsPhoto) {
-        tokens.add(token);
-      }
-    }
-    return tokens;
-  }
-
-  Future<void> _revokeMemoryShareLinksForPhoto(
-    BuildContext dialogContext,
-    Map<String, dynamic> item,
-  ) async {
-    final tokens = await _findActiveMemoryShareTokensForPhoto(item);
-    if (tokens.isEmpty) {
-      _showDiarySnackBar(
-        context.tr('home_nhnyhincha_0362e9'),
-        backgroundColor: const Color(0xFFE53935),
-      );
-      return;
-    }
-
-    final confirmed = await showDialog<bool>(
+    return showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          context.tr('home_thuhilinkt_d5bcf0'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
-        content: Text(
-          tokens.length > 1
-              ? 'Ảnh này đang nằm trong ${tokens.length} liên kết chia sẻ còn hiệu lực. Thu hồi tất cả các liên kết này?'
-              : context.tr('home_nhnyangc1l_3d102c'),
-          style: SLTheme.quicksand(height: 1.4),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(context.tr('home_hy_1e4050')),
+      barrierDismissible: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          backgroundColor: Colors.white,
+          title: Text(
+            'Mật khẩu bảo vệ (Tùy chọn)',
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF243041),
+              fontSize: 18,
+            ),
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: Text(context.tr('home_thuhi_b8c669')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Nhập mật khẩu nếu bạn muốn người nhận phải nhập đúng mật khẩu mới xem được album.',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF66758A),
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                obscureText: obscureText,
+                maxLength: 32,
+                onChanged: (_) => setState(() {}),
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF243041),
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Mật khẩu',
+                  labelStyle: SLTheme.quicksand(
+                    color: const Color(0xFF66758A),
+                    fontWeight: FontWeight.w700,
+                  ),
+                  hintText: 'Để trống nếu không khóa',
+                  counterText: '',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                      color: const Color(0xFF66758A),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        obscureText = !obscureText;
+                      });
+                    },
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFCFD8DC)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFCFD8DC)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.8),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Hủy',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF66758A),
+                ),
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(controller.text);
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFD81B60),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              child: Text(
+                controller.text.trim().isEmpty ? 'Bỏ qua (Không khóa)' : 'Xác nhận đặt',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
-    if (confirmed != true || !mounted) {
-      return;
-    }
-
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-
-    try {
-      for (final token in tokens) {
-        await _memoryShareService.revokeShareLink(token);
-      }
-      if (!mounted) {
-        return;
-      }
-      Navigator.of(context).pop();
-      Navigator.of(dialogContext).pop();
-      _showDiarySnackBar(
-        tokens.length > 1
-            ? 'Đã thu hồi ${tokens.length} liên kết chia sẻ của ảnh này.'
-            : context.tr('home_thuhilinkt_e806cf'),
-      );
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      Navigator.of(context).pop();
-      _showDiarySnackBar(
-        AppErrorMapper.resolve(
-          error,
-          fallbackMessage: context.tr('home_khngththuh_4e5dfa'),
-        ).message,
-        backgroundColor: const Color(0xFFE53935),
-      );
-    }
   }
 
   Future<void> _showMemoryViewerActions(
@@ -622,7 +601,7 @@ class _DiaryTabState extends State<DiaryTab> {
                 onTap: () => Navigator.of(sheetContext).pop('save'),
               ),
               ListTile(
-                leading: const Icon(Icons.ios_share_rounded),
+                leading: const Icon(Icons.link_rounded),
                 title: Text(context.tr('home_chiasnh_003604')),
                 onTap: () => Navigator.of(sheetContext).pop('share'),
               ),
@@ -689,6 +668,16 @@ class _DiaryTabState extends State<DiaryTab> {
     );
   }
 
+  void _onDiaryScroll() {
+    if (_currentTab == 'memory') return;
+    if (!_diaryScrollController.hasClients) return;
+    final maxScroll = _diaryScrollController.position.maxScrollExtent;
+    final currentScroll = _diaryScrollController.position.pixels;
+    if (maxScroll - currentScroll <= 200) {
+      unawaited(_feedController.fetchNextDiaryPage());
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -696,6 +685,7 @@ class _DiaryTabState extends State<DiaryTab> {
     _feedController.addListener(_handleFeedControllerChange);
     _memoryController.addListener(_handleControllerChange);
     _guardController.addListener(_handleControllerChange);
+    _diaryScrollController.addListener(_onDiaryScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncSelectionOverlayVisibility();
@@ -722,6 +712,8 @@ class _DiaryTabState extends State<DiaryTab> {
     _feedController.removeListener(_handleFeedControllerChange);
     _memoryController.removeListener(_handleControllerChange);
     _guardController.removeListener(_handleControllerChange);
+    _diaryScrollController.removeListener(_onDiaryScroll);
+    _diaryScrollController.dispose();
     _feedController.dispose();
     _memoryController.dispose();
     _guardController.dispose();
@@ -744,7 +736,7 @@ class _DiaryTabState extends State<DiaryTab> {
     final resolvedHouseId = await _feedController.resolveHouseId();
     _handleFeedControllerChange();
 
-    final canPreloadContent = await _guardController.prepareAccessState(
+    await _guardController.prepareAccessState(
       houseId: resolvedHouseId,
     );
     if (!mounted) {
@@ -753,8 +745,6 @@ class _DiaryTabState extends State<DiaryTab> {
 
     if (_isTabActive) {
       await _activateDiaryTab();
-    } else if (canPreloadContent) {
-      await _fetchDiaryPosts(allowInactive: true);
     }
 
     if (!mounted) {
@@ -1290,7 +1280,7 @@ class _DiaryTabState extends State<DiaryTab> {
                                 child: Row(
                                   children: [
                                     const Icon(
-                                      Icons.ios_share_rounded,
+                                      Icons.link_rounded,
                                       color: Colors.white,
                                       size: 19,
                                     ),
@@ -1325,28 +1315,7 @@ class _DiaryTabState extends State<DiaryTab> {
                                   ],
                                 ),
                               ),
-                              if ((currentItem['id']?.toString().trim() ?? '')
-                                  .isNotEmpty)
-                                PopupMenuItem<String>(
-                                  value: 'revoke_share',
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.link_off_rounded,
-                                        color: Color(0xFFFFB074),
-                                        size: 19,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        context.tr('home_thuhilinkt_8e3e83'),
-                                        style: SLTheme.quicksand(
-                                          color: const Color(0xFFFFB074),
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+
                               PopupMenuItem<String>(
                                 value: 'delete',
                                 child: Row(
@@ -1381,12 +1350,6 @@ class _DiaryTabState extends State<DiaryTab> {
                                 case 'info':
                                   await _showMemoryInfoSheet(
                                       dialogContext, currentItem);
-                                  break;
-                                case 'revoke_share':
-                                  await _revokeMemoryShareLinksForPhoto(
-                                    dialogContext,
-                                    currentItem,
-                                  );
                                   break;
                                 case 'delete':
                                   Navigator.pop(dialogContext);
@@ -1552,6 +1515,7 @@ class _DiaryTabState extends State<DiaryTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return _DiaryTabShell(state: this);
   }
 }

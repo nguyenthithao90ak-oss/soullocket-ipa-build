@@ -1,11 +1,13 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lottie/lottie.dart';
 
 import '../views/ui_prefs.dart';
 
-/// Lazy-loads Lottie animations only when the widget is rendered.
-/// Saves 50-200KB per animation by deferring network requests.
+/// Lazy-loads and caches Lottie animations.
+/// Resolves and caches network requests on disk for instant subsequent loading and offline playback.
 class LottieAsyncLoader extends StatefulWidget {
   final String url;
   final double? width;
@@ -30,6 +32,7 @@ class LottieAsyncLoader extends StatefulWidget {
 
 class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
   bool _shouldLoad = false;
+  File? _cachedFile;
 
   @override
   void initState() {
@@ -37,8 +40,21 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         setState(() => _shouldLoad = true);
+        _preloadLottie();
       }
     });
+  }
+
+  Future<void> _preloadLottie() async {
+    if (kIsWeb) return;
+    try {
+      final file = await DefaultCacheManager().getSingleFile(widget.url);
+      if (mounted) {
+        setState(() {
+          _cachedFile = file;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -60,6 +76,17 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
         child: const Center(
           child: SizedBox.shrink(),
         ),
+      );
+    }
+
+    if (_cachedFile != null) {
+      return Lottie.file(
+        _cachedFile!,
+        width: widget.width,
+        height: widget.height,
+        fit: widget.fit,
+        errorBuilder: (context, error, stackTrace) =>
+            widget.errorWidget ?? const SizedBox.shrink(),
       );
     }
 

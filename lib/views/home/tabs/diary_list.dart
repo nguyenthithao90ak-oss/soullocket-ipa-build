@@ -10,12 +10,15 @@ class DiaryList extends StatelessWidget {
   final Widget Function() buildDiaryPrivacyNotice;
   final Widget Function() buildDiaryComposerCard;
   final bool isLoading;
+  final bool isLoadingMore;
+  final bool hasMore;
   final String? houseId;
   final Widget Function({required String title, required String message})
       buildHouseSetupState;
   final List<DiaryPost> posts;
   final Widget Function() buildDiaryEmptyState;
   final Widget Function(DiaryPost) buildPostCard;
+  final ScrollController? scrollController;
 
   const DiaryList({
     super.key,
@@ -23,11 +26,14 @@ class DiaryList extends StatelessWidget {
     required this.buildDiaryPrivacyNotice,
     required this.buildDiaryComposerCard,
     required this.isLoading,
+    this.isLoadingMore = false,
+    this.hasMore = true,
     required this.houseId,
     required this.buildHouseSetupState,
     required this.posts,
     required this.buildDiaryEmptyState,
     required this.buildPostCard,
+    this.scrollController,
   });
 
   @override
@@ -38,6 +44,7 @@ class DiaryList extends StatelessWidget {
     return CustomScrollView(
       key: const ValueKey('diary_content'),
       physics: const BouncingScrollPhysics(),
+      controller: scrollController,
       slivers: [
         SliverToBoxAdapter(
           child: Column(
@@ -91,11 +98,38 @@ class DiaryList extends StatelessWidget {
         ),
         if (houseId != null && hasPosts)
           SliverPadding(
-            padding: const EdgeInsets.only(bottom: 128),
+            padding: EdgeInsets.only(bottom: isLoadingMore || !hasMore ? 16 : 128),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) => buildPostCard(posts[index]),
                 childCount: posts.length,
+              ),
+            ),
+          ),
+        if (isLoadingMore)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+                ),
+              ),
+            ),
+          ),
+        if (!hasMore && hasPosts)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Text(
+                  '— Đã tải hết nhật ký của hai bạn —',
+                  style: TextStyle(
+                    color: Colors.grey.withValues(alpha: 0.6),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ),

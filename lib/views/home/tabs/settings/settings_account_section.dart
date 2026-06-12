@@ -580,15 +580,13 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     : Colors.white.withValues(alpha: 0.5),
                 width: 1.0,
               ),
-              boxShadow: [
+              boxShadow: _isVipActive ? [
                 BoxShadow(
-                  color: _isVipActive
-                      ? const Color(0xFFFFC107).withValues(alpha: 0.15)
-                      : Colors.black.withValues(alpha: 0.03),
-                  blurRadius: _isVipActive ? 10 : 8,
+                  color: const Color(0xFFFFC107).withValues(alpha: 0.15),
+                  blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
-              ],
+              ] : [],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,238 +790,212 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildLabel(isSingle
-              ? context.tr('birth_year_or_start')
-              : context.tr('start_love_date')),
-          GestureDetector(
-            onTap: panelActions.onPickLoveDate,
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                border: Border.all(
-                  color: panelAccent.withValues(alpha: 0.25),
-                  width: 1.0,
-                ),
-                borderRadius: SLRadius.mdAll,
-                boxShadow: [
-                  BoxShadow(
-                    color: panelAccent.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+          _buildSubCard(
+            borderColor: const Color(0xFFFBC8D4),
+            backgroundColor: const Color(0xFFFFF0F3),
+            children: [
+              _buildLabel(isSingle
+                  ? context.tr('birth_year_or_start')
+                  : context.tr('start_love_date')),
+              GestureDetector(
+                onTap: panelActions.onPickLoveDate,
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today,
-                      color: Color(0xFFD81B60), size: 20),
-                  SLSpacing.w8,
-                  Expanded(
-                    child: Text(
-                      !panelState.hasLoveDate
-                          ? context.tr('select_date')
-                          : panelState.loveDateDisplay,
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          _buildLabel('${context.tr('house_name')} (${context.tr('home_khngbtbuc_0a1fee')})'),
-          _buildInput(
-            _houseNameCtrl,
-            context.tr('house_name_hint'),
-            maxLength: 30,
-            accentColor: panelAccent,
-          ),
-          Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              border: Border.all(
-                color: panelAccent.withValues(alpha: 0.25),
-                width: 1.0,
-              ),
-              borderRadius: SLRadius.mdAll,
-              boxShadow: [
-                BoxShadow(
-                  color: panelAccent.withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    context.tr('show_house_name_home'),
-                    style: SLTextStyles.quicksand(
-                        fontSize: 14, fontWeight: FontWeight.w700),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today,
+                          color: Color(0xFFD81B60), size: 20),
+                      SLSpacing.w8,
+                      Expanded(
+                        child: Text(
+                          !panelState.hasLoveDate
+                              ? context.tr('select_date')
+                              : panelState.loveDateDisplay,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Switch(
-                  value: panelState.homeShowHouseName,
-                  activeThumbColor: const Color(0xFFD81B60),
-                  onChanged: panelActions.onToggleShowHouseName,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              border: Border.all(
-                color: panelAccent.withValues(alpha: 0.25),
-                width: 1.0,
               ),
-              borderRadius: SLRadius.mdAll,
-              boxShadow: [
-                BoxShadow(
-                  color: panelAccent.withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    context.tr('show_timer_home'),
-                    style: SLTextStyles.quicksand(
-                        fontSize: 14, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                Switch(
-                  value: panelState.homeShowTimer,
-                  activeThumbColor: const Color(0xFFD81B60),
-                  onChanged: panelActions.onToggleShowTimer,
-                ),
-              ],
-            ),
-          ),
-          _buildLabel(isSingle
-              ? context.tr('your_nickname')
-              : context.tr('male_nickname')),
-          _buildInput(
-            _nameU1Ctrl,
-            context.tr('your_name'),
-            maxLength: 20,
-            accentColor: panelAccent,
-          ),
-          _buildLabel(
-              isSingle ? context.tr('your_dob') : context.tr('male_dob')),
-          GestureDetector(
-            onTap: panelActions.onPickDobU1,
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                border: Border.all(
-                  color: panelAccent.withValues(alpha: 0.25),
-                  width: 1.0,
-                ),
-                borderRadius: SLRadius.mdAll,
-                boxShadow: [
-                  BoxShadow(
-                    color: panelAccent.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+              _buildLabel('${context.tr('house_name')} (${context.tr('home_khngbtbuc_0a1fee')})'),
+              _buildInput(
+                _houseNameCtrl,
+                context.tr('house_name_hint'),
+                maxLength: 30,
+                accentColor: panelAccent,
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.cake, color: Color(0xFFD81B60), size: 20),
-                  SLSpacing.w8,
-                  Expanded(
-                    child: Text(
-                      !panelState.hasDobU1
-                          ? context.tr('select_dob')
-                          : panelState.dobU1Display,
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (panelState.showPartnerFields) ...[
-            _buildLabel(context.tr('female_nickname')),
-            _buildInput(
-              _nameU2Ctrl,
-              context.tr('partner_name'),
-              maxLength: 20,
-              accentColor: panelAccent,
-            ),
-            _buildLabel(context.tr('female_dob')),
-            GestureDetector(
-              onTap: panelActions.onPickDobU2,
-              child: Container(
+              Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  border: Border.all(
-                    color: panelAccent.withValues(alpha: 0.25),
-                    width: 1.0,
-                  ),
-                  borderRadius: SLRadius.mdAll,
-                  boxShadow: [
-                    BoxShadow(
-                      color: panelAccent.withValues(alpha: 0.03),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.cake, color: Color(0xFFD81B60), size: 20),
-                    SLSpacing.w8,
                     Expanded(
                       child: Text(
-                        !panelState.hasDobU2
-                            ? context.tr('select_dob')
-                            : panelState.dobU2Display,
-                        style: const TextStyle(
+                        context.tr('show_house_name_home'),
+                        style: SLTextStyles.quicksand(
                             fontSize: 14, fontWeight: FontWeight.w700),
                       ),
                     ),
+                    Switch(
+                      value: panelState.homeShowHouseName,
+                      activeThumbColor: const Color(0xFFD81B60),
+                      onChanged: panelActions.onToggleShowHouseName,
+                    ),
                   ],
                 ),
               ),
+              Container(
+                margin: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        context.tr('show_timer_home'),
+                        style: SLTextStyles.quicksand(
+                            fontSize: 14, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Switch(
+                      value: panelState.homeShowTimer,
+                      activeThumbColor: const Color(0xFFD81B60),
+                      onChanged: panelActions.onToggleShowTimer,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          _buildSubCard(
+            borderColor: const Color(0xFFC5DCF4),
+            backgroundColor: const Color(0xFFEBF3FC),
+            children: [
+              _buildLabel(isSingle
+                  ? context.tr('your_nickname')
+                  : context.tr('male_nickname')),
+              _buildInput(
+                _nameU1Ctrl,
+                context.tr('your_name'),
+                maxLength: 20,
+                accentColor: const Color(0xFF90CAF9),
+              ),
+              _buildLabel(
+                  isSingle ? context.tr('your_dob') : context.tr('male_dob')),
+              GestureDetector(
+                onTap: panelActions.onPickDobU1,
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.cake, color: Color(0xFF1976D2), size: 20),
+                      SLSpacing.w8,
+                      Expanded(
+                        child: Text(
+                          !panelState.hasDobU1
+                              ? context.tr('select_dob')
+                              : panelState.dobU1Display,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (panelState.showPartnerFields) ...[
+            _buildSubCard(
+              borderColor: const Color(0xFFFBC5D8),
+              backgroundColor: const Color(0xFFFFF0F5),
+              children: [
+                _buildLabel(context.tr('female_nickname')),
+                _buildInput(
+                  _nameU2Ctrl,
+                  context.tr('partner_name'),
+                  maxLength: 20,
+                  accentColor: panelAccent,
+                ),
+                _buildLabel(context.tr('female_dob')),
+                GestureDetector(
+                  onTap: panelActions.onPickDobU2,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.cake, color: Color(0xFFD81B60), size: 20),
+                        SLSpacing.w8,
+                        Expanded(
+                          child: Text(
+                            !panelState.hasDobU2
+                                ? context.tr('select_dob')
+                                : panelState.dobU2Display,
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            _buildLabel(context.tr('greeting_quote')),
-            _buildInput(
-              _autoReplyCtrl,
-              context.tr('quote_hint'),
-              maxLength: 22,
-              accentColor: panelAccent,
-            ),
-            _buildLabel(context.tr('count_unit')),
-            _buildInput(
-              _loveUnitCtrl,
-              context.tr('unit_hint'),
-              maxLength: 14,
-              accentColor: panelAccent,
+            _buildSubCard(
+              borderColor: const Color(0xFFE2C9F3),
+              backgroundColor: const Color(0xFFF6EEFA),
+              children: [
+                _buildLabel(context.tr('greeting_quote')),
+                _buildInput(
+                  _autoReplyCtrl,
+                  context.tr('quote_hint'),
+                  maxLength: 22,
+                  accentColor: const Color(0xFFCE93D8),
+                ),
+                _buildLabel(context.tr('count_unit')),
+                _buildInput(
+                  _loveUnitCtrl,
+                  context.tr('unit_hint'),
+                  maxLength: 14,
+                  accentColor: const Color(0xFFCE93D8),
+                ),
+              ],
             ),
           ],
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 8, left: 4),
             child: Text(
               context.tr('name_change_notice'),
               style: SLTheme.quicksand(
@@ -1056,8 +1028,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       id: 'language',
       title: '🌐 ${context.tr('language')}',
       borderColor: const Color(0xFF6a1b9a),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: _buildSubCard(
+        borderColor: const Color(0xFFD9C4F2),
+        backgroundColor: const Color(0xFFF7F2FD),
         children: [
           Text(
             hint,
@@ -1070,10 +1043,10 @@ extension _SettingsTabAccountSection on _SettingsTabState {
           const SizedBox(height: 14),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: const Color(0xFFD9C4F2),
+                color: const Color(0xFFD9C4F2).withValues(alpha: 0.6),
                 width: 1.2,
               ),
             ),

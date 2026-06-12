@@ -184,6 +184,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             onTap: customOnTap,
             onLongPress: customOnLongPress,
             isUploading: _uploadingAvatarRole == role,
+            uploadProgress: _uploadingAvatarRole == role ? _avatarUploadProgress : null,
             size: avatarSize,
             isSinglePlaceholder: true,
           )
@@ -195,6 +196,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             onTap: customOnTap,
             onLongPress: customOnLongPress,
             isUploading: _uploadingAvatarRole == role,
+            uploadProgress: _uploadingAvatarRole == role ? _avatarUploadProgress : null,
             size: avatarSize,
           ),
         SizedBox(height: compactMeta ? 8 : 12),

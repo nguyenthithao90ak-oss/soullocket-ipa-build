@@ -6,17 +6,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
-import '../services/auth_service.dart';
-import '../services/deeplink_service.dart';
-import '../services/house_service.dart';
-import '../services/image_picker_recovery_service.dart';
-import '../services/military_lock_service.dart';
-import '../services/offline_cache_service.dart';
-import '../services/storage_service.dart';
-import '../services/texas_age_gate_service.dart';
-import '../services/widget_action_service.dart';
+import '../utils/services/auth_service.dart';
+import '../utils/services/deeplink_service.dart';
+import '../utils/services/house_service.dart';
+import '../utils/services/image_picker_recovery_service.dart';
+import '../utils/services/military_lock_service.dart';
+import '../utils/services/offline_cache_service.dart';
+import '../utils/services/storage_service.dart';
+import '../utils/services/texas_age_gate_service.dart';
+import '../utils/services/widget_action_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
 import '../utils/services/settings_sync_service.dart';
+import '../utils/services/role_utils.dart';
 import '../utils/app_error_mapper.dart';
 import 'app_entry/app_entry_access_resolver.dart';
 import 'app_entry/app_entry_home_asset_preparer.dart';
@@ -73,6 +74,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     _appEntryController = AppEntryController(houseService: _houseService);
+    RoleUtils.roleNotifier.addListener(_handleRoleChangedEvent);
     _accessResolver = AppEntryAccessResolver(
       authService: _authService,
       houseService: _houseService,
@@ -304,21 +306,21 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
               await SettingsSyncService().consumePendingRestoreNotice(uid);
           if (!mounted || !shouldShow) return;
 
-          await showDialog<void>(
-            context: context,
-            builder: (dialogContext) => AlertDialog(
-              title: const Text('Tìm thấy dữ liệu cũ'),
-              content: const Text(
-                'SoulLocket đã khôi phục cài đặt đã đồng bộ từ cloud trên thiết bị này. Bạn có thể kiểm tra lại trong Cài đặt > Dữ liệu hệ thống.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Đã hiểu'),
-                ),
-              ],
-            ),
-          );
+          // await showDialog<void>(
+          //   context: context,
+          //   builder: (dialogContext) => AlertDialog(
+          //     title: const Text('Tìm thấy dữ liệu cũ'),
+          //     content: const Text(
+          //       'SoulLocket đã khôi phục cài đặt đã đồng bộ từ cloud trên thiết bị này. Bạn có thể kiểm tra lại trong Cài đặt > Dữ liệu hệ thống.',
+          //     ),
+          //     actions: [
+          //       TextButton(
+          //         onPressed: () => Navigator.of(dialogContext).pop(),
+          //         child: const Text('Đã hiểu'),
+          //       ),
+          //     ],
+          //   ),
+          // );
         } catch (e) {
           debugPrint(
             '[AppEntry] Restore notice failed: '
@@ -402,11 +404,17 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    RoleUtils.roleNotifier.removeListener(_handleRoleChangedEvent);
     WidgetsBinding.instance.removeObserver(this);
     _maintenanceSub?.cancel();
     _appEntryController.dispose();
     _removePrivacyGuard();
     super.dispose();
+  }
+
+  void _handleRoleChangedEvent() {
+    if (!mounted) return;
+    unawaited(_appEntryController.refreshForegroundPresence());
   }
 
   void _showPrivacyGuard() {

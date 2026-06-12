@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../services/l10n_service.dart';
-import '../services/security_flow_guard.dart';
+import '../utils/services/auth_service.dart';
+import '../utils/services/l10n_service.dart';
+import '../utils/services/security_flow_guard.dart';
 import '../core/sl_theme.dart';
 import '../utils/flexible_date_input.dart';
 import '../utils/app_error_mapper.dart';
@@ -207,13 +207,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         }
       } catch (e) {
         final resolvedMessage = AppErrorMapper.resolve(e).message;
-        if (mounted) {
-          setState(() {
-            isSendingRecoveryCode = false;
-            linkSentEmail = '';
-            step = 1;
-          });
-        }
+        if (!mounted) return;
+        setState(() {
+          isSendingRecoveryCode = false;
+          linkSentEmail = '';
+          step = 1;
+        });
         if (resolvedMessage.contains('không tìm thấy') ||
             resolvedMessage.contains('user-not-found') ||
             resolvedMessage.contains('không tồn tại')) {
@@ -231,6 +230,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       final secData = await _authService.getHouseSecurityData(resolvedHouseId);
       final publicHint = await _loadPublicRecoveryHint(resolvedHouseId);
+      if (!mounted) return;
       final recovery = secData?['recovery'] is Map
           ? Map<String, dynamic>.from(secData!['recovery'] as Map)
           : <String, dynamic>{};
@@ -348,6 +348,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!canContinue) {
       return;
     }
+    if (!mounted) return;
     setState(() {
       linkSentEmail = enteredEmail;
       step = 4;
@@ -370,14 +371,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       }
     } catch (e) {
       final resolvedMessage = AppErrorMapper.resolve(e).message;
-      if (mounted) {
-        setState(() {
-          isBusy = false;
-          isSendingRecoveryCode = false;
-          linkSentEmail = '';
-          step = 3;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        isBusy = false;
+        isSendingRecoveryCode = false;
+        linkSentEmail = '';
+        step = 3;
+      });
       if (resolvedMessage.contains('không tìm thấy') ||
           resolvedMessage.contains('user-not-found') ||
           resolvedMessage.contains('không tồn tại')) {
@@ -408,6 +408,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!canContinue) {
       return;
     }
+    if (!mounted) return;
     setState(() => isBusy = true);
 
     try {
@@ -447,7 +448,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         );
       }
     } catch (e) {
-      _showErrorDialog(context.tr('forgot_pwd_err_reset_failed'));
+      if (mounted) {
+        _showErrorDialog(context.tr('forgot_pwd_err_reset_failed'));
+      }
     } finally {
       if (mounted) setState(() => isBusy = false);
     }
@@ -978,7 +981,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       );
                     }
                   } catch (e) {
-                    _showErrorDialog(context.tr('forgot_pwd_err_resend_failed'));
+                    if (mounted) {
+                      _showErrorDialog(context.tr('forgot_pwd_err_resend_failed'));
+                    }
                   } finally {
                     if (mounted) setState(() => isBusy = false);
                   }
@@ -1119,6 +1124,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ? null
                 : () async {
                     if (linkSentEmail.isEmpty) return;
+                    if (!mounted) return;
                     setState(() {
                       isBusy = true;
                       isSendingRecoveryCode = true;
@@ -1138,7 +1144,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         );
                       }
                     } catch (e) {
-                      _showErrorDialog(context.tr('forgot_pwd_err_resend_otp_failed'));
+                      if (mounted) {
+                        _showErrorDialog(context.tr('forgot_pwd_err_resend_otp_failed'));
+                      }
                     } finally {
                       if (mounted) {
                         setState(() {
@@ -1301,7 +1309,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColors = const [
+    const backgroundColors = [
       Color(0xFFFFF0F5),
       Color(0xFFFFD6E7),
       Color(0xFFFCEEF7),
@@ -1313,7 +1321,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         body: Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: backgroundColors,
               begin: Alignment.topCenter,
@@ -1323,37 +1331,37 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: Stack(
             children: [
               // --- top-left large blush orb ---
-              Positioned(
+              const Positioned(
                 top: -80,
                 left: -80,
                 child: IgnorePointer(
                   child: _AuthGlowOrb(
                     size: 260,
-                    colors: const [Color(0xFFFFB6D3), Color(0xFFFF8FB8)],
+                    colors: [Color(0xFFFFB6D3), Color(0xFFFF8FB8)],
                     opacity: 0.38,
                   ),
                 ),
               ),
               // --- right mid rose orb ---
-              Positioned(
+              const Positioned(
                 top: 100,
                 right: -90,
                 child: IgnorePointer(
                   child: _AuthGlowOrb(
                     size: 220,
-                    colors: const [Color(0xFFFFC2DC), Color(0xFFFF85B3)],
+                    colors: [Color(0xFFFFC2DC), Color(0xFFFF85B3)],
                     opacity: 0.44,
                   ),
                 ),
               ),
               // --- bottom-right lavender orb ---
-              Positioned(
+              const Positioned(
                 bottom: -30,
                 right: 20,
                 child: IgnorePointer(
                   child: _AuthGlowOrb(
                     size: 180,
-                    colors: const [Color(0xFFE0BBFF), Color(0xFFC49CFF)],
+                    colors: [Color(0xFFE0BBFF), Color(0xFFC49CFF)],
                     opacity: 0.32,
                   ),
                 ),

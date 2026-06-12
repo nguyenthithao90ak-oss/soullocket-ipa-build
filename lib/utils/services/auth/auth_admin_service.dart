@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 
-import '../../core/constants/app_config.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'auth_support.dart';
 
 class AuthAdminService {

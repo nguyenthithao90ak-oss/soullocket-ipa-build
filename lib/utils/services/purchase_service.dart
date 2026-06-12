@@ -6,9 +6,11 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
+import 'package:tiktok_business_sdk/tiktok_business_sdk_platform_interface.dart';
 
-import '../core/constants/app_config.dart';
-import '../utils/app_error_mapper.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'app_check_http_headers.dart';
 import 'revenue_security_telemetry_service.dart';
 
@@ -444,6 +446,14 @@ class PurchaseService {
       }
 
       _statusController.add(VipPurchaseState.success);
+      try {
+        TiktokBusinessSdk().trackTTEvent(
+          event: EventName.Subscribe,
+          eventId: purchase.purchaseID,
+        );
+      } catch (e) {
+        debugPrint('Failed to track TikTok subscription: $e');
+      }
       return true;
     } catch (e) {
       debugPrint(

@@ -98,64 +98,62 @@ class _FeedImagePreviewState extends State<_FeedImagePreview> {
             final previewHeight = (constraints.maxWidth / aspectRatio)
                 .clamp(260.0, mediaHeightCap);
 
-            return RepaintBoundary(
-              child: Container(
-                width: double.infinity,
-                height: previewHeight,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: 0.98),
-                      const Color(0xFFF7F9FE).withValues(alpha: 0.96),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(26),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.96),
-                    width: 1.4,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-                      blurRadius: 24,
-                      spreadRadius: -12,
-                      offset: const Offset(0, 14),
-                    ),
+            return Container(
+              width: double.infinity,
+              height: previewHeight,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0.98),
+                    const Color(0xFFF7F9FE).withValues(alpha: 0.96),
                   ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        ManualRetryCachedImage(
-                          imageUrl: widget.imageUrl,
-                          width: double.infinity,
-                          height: previewHeight,
-                          fit: BoxFit.cover,
-                          backgroundColor: const Color(0xFFF3F5FB),
-                        ),
-                        IgnorePointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.02),
-                                  Colors.transparent,
-                                  const Color(0xFF0F172A).withValues(alpha: 0.08),
-                                ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                stops: const [0, 0.58, 1],
-                              ),
-                            ),
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.96),
+                  width: 1.4,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+                    blurRadius: 24,
+                    spreadRadius: -12,
+                    offset: const Offset(0, 14),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ManualRetryCachedImage(
+                      imageUrl: widget.imageUrl,
+                      width: double.infinity,
+                      height: previewHeight,
+                      fit: BoxFit.cover,
+                      backgroundColor: const Color(0xFFF3F5FB),
+                    ),
+                    IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0.02),
+                              Colors.transparent,
+                              const Color(0xFF0F172A).withValues(alpha: 0.08),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: const [0, 0.58, 1],
                           ),
                         ),
-                      ],
+                      ),
                     ),
+                  ],
                 ),
               ),
             );

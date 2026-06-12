@@ -1,5 +1,5 @@
-import '../../../services/l10n_service.dart';
-import '../../../services/security_flow_guard.dart';
+import '../../../utils/services/l10n_service.dart';
+import '../../../utils/services/security_flow_guard.dart';
 
 class SocialAuthActionHelper {
   const SocialAuthActionHelper._();

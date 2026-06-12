@@ -5,7 +5,7 @@ import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pointycastle/export.dart';
 import 'package:firebase_database/firebase_database.dart';
-import '../views/ui_prefs.dart';
+import 'package:soullocket_app/views/ui_prefs.dart';
 
 /// ============================================================
 ///  EncryptionService — Bảo mật / Mã hóa

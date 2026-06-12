@@ -8,11 +8,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../core/sl_theme.dart';
-import '../services/anti_spam_service.dart';
-import '../services/auth_service.dart';
-import '../services/l10n_service.dart';
-import '../services/security_flow_guard.dart';
-import '../services/security_service.dart';
+import '../utils/services/anti_spam_service.dart';
+import '../utils/services/auth_service.dart';
+import '../utils/services/l10n_service.dart';
+import '../utils/services/security_flow_guard.dart';
+import '../utils/services/security_service.dart';
 import '../utils/services/house_service.dart';
 import '../utils/app_error_mapper.dart';
 import '../utils/flexible_date_input.dart';
@@ -84,7 +84,18 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadRememberedEmail();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkKickReason();
+      _checkFirstTimeSyncGuide();
     });
+  }
+
+  Future<void> _checkFirstTimeSyncGuide() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeen = prefs.getBool('il_has_seen_sync_guide') ?? false;
+    if (!hasSeen) {
+      await prefs.setBool('il_has_seen_sync_guide', true);
+      if (!mounted) return;
+      _showSyncGuideDialog(context, enforceDelay: true);
+    }
   }
 
   Future<void> _checkKickReason() async {
@@ -793,16 +804,16 @@ class _LoginScreenState extends State<LoginScreen> {
         final l10n = L10nService();
         final backgroundColors = _isLoginTab
             ? const [
-                Color(0xFFFFF0F5),
-                Color(0xFFFFD6E7),
-                Color(0xFFFCEEF7),
-                Color(0xFFEEDDF8),
+                Color(0xFFFDF7FA), // Very light soft pink-white
+                Color(0xFFFCF3F8), // Soft pink-white
+                Color(0xFFFFF0F7),
+                Color(0xFFFCECF6),
               ]
             : const [
-                Color(0xFFFCF0FF),
-                Color(0xFFFFD9EE),
-                Color(0xFFFDE8F6),
-                Color(0xFFE8D5FF),
+                Color(0xFFFDF8FC),
+                Color(0xFFFCF4FA),
+                Color(0xFFFBF0F8),
+                Color(0xFFF9EBF6),
               ];
 
         return SensitiveContentGuard(
@@ -823,114 +834,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Stack(
                   children: [
-                    // --- top-left large blush orb ---
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 480),
-                      curve: Curves.easeOutCubic,
-                      top: _isLoginTab ? -100 : -60,
-                      left: _isLoginTab ? -80 : -40,
-                      child: IgnorePointer(
-                        child: _AuthGlowOrb(
-                          size: 260,
-                          colors: _isLoginTab
-                              ? const [Color(0xFFFFB6D3), Color(0xFFFF8FB8)]
-                              : const [Color(0xFFD4AAFF), Color(0xFFB080FF)],
-                          opacity: 0.38,
-                        ),
-                      ),
-                    ),
-                    // --- right mid rose orb ---
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 440),
-                      curve: Curves.easeOutCubic,
-                      top: _isLoginTab ? 60 : 30,
-                      right: _isLoginTab ? -90 : -50,
-                      child: IgnorePointer(
-                        child: _AuthGlowOrb(
-                          size: 220,
-                          colors: _isLoginTab
-                              ? const [Color(0xFFFFC2DC), Color(0xFFFF85B3)]
-                              : const [Color(0xFFFFB6E8), Color(0xFFE87FD0)],
-                          opacity: 0.44,
-                        ),
-                      ),
-                    ),
-                    // --- bottom-right lavender orb ---
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 460),
-                      curve: Curves.easeOutCubic,
-                      bottom: _isLoginTab ? -60 : -30,
-                      right: _isLoginTab ? 20 : 60,
-                      child: IgnorePointer(
-                        child: _AuthGlowOrb(
-                          size: 180,
-                          colors: _isLoginTab
-                              ? const [Color(0xFFE0BBFF), Color(0xFFC49CFF)]
-                              : const [Color(0xFFFFCCF0), Color(0xFFFF9FD6)],
-                          opacity: 0.32,
-                        ),
-                      ),
-                    ),
-                    // --- decorative sparkle icons ---
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 420),
-                      curve: Curves.easeOutCubic,
-                      bottom: _isLoginTab ? 100 : 60,
-                      left: _isLoginTab ? 12 : 28,
-                      child: IgnorePointer(
-                        child: Icon(
-                          Icons.auto_awesome_rounded,
-                          color: (_isLoginTab
-                                  ? SLColors.primary
-                                  : SLColors.accentPurpleDark)
-                              .withValues(alpha: 0.22),
-                          size: _isLoginTab ? 52 : 60,
-                        ),
-                      ),
-                    ),
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeOutCubic,
-                      top: _isLoginTab ? 160 : 200,
-                      left: _isLoginTab ? 30 : 14,
-                      child: IgnorePointer(
-                        child: Icon(
-                          Icons.favorite_rounded,
-                          color: SLColors.primary.withValues(
-                              alpha: _isLoginTab ? 0.12 : 0.08),
-                          size: _isLoginTab ? 36 : 28,
-                        ),
-                      ),
-                    ),
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeOutCubic,
-                      top: _isLoginTab ? 300 : 260,
-                      right: _isLoginTab ? 24 : 40,
-                      child: IgnorePointer(
-                        child: Icon(
-                          Icons.favorite_rounded,
-                          color: (_isLoginTab
-                                  ? const Color(0xFFE87AAA)
-                                  : SLColors.accentPurpleDark)
-                              .withValues(alpha: 0.10),
-                          size: _isLoginTab ? 24 : 32,
-                        ),
-                      ),
-                    ),
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 380),
-                      curve: Curves.easeOutCubic,
-                      bottom: _isLoginTab ? 180 : 220,
-                      right: _isLoginTab ? 10 : 30,
-                      child: IgnorePointer(
-                        child: Icon(
-                          Icons.auto_awesome_rounded,
-                          color: const Color(0xFFCBA4F0).withValues(alpha: 0.18),
-                          size: 20,
-                        ),
-                      ),
-                    ),
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final isDesktop = constraints.maxWidth >= 920;
@@ -1155,109 +1058,140 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _showSyncGuideDialog(BuildContext context) {
+  void _showSyncGuideDialog(BuildContext context, {bool enforceDelay = false}) {
     final l10n = L10nService();
     showDialog(
       context: context,
+      barrierDismissible: !enforceDelay, // Prevent dismissing by tapping outside if enforced
       builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 340),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFFFFFDFE),
-                  Color(0xFFFFF2F8),
-                  Color(0xFFFCF4FF),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(
-                color: const Color(0xFFFFB6D3).withValues(alpha: 0.55),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF85B3).withValues(alpha: 0.18),
-                  blurRadius: 40,
-                  offset: const Offset(0, 20),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFEBF3),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.sync_rounded,
-                        color: SLColors.primary,
-                        size: 24,
-                      ),
+        int countdown = enforceDelay ? 1 : 0;
+        Timer? timer;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            if (enforceDelay && timer == null && countdown > 0) {
+              timer = Timer.periodic(const Duration(seconds: 1), (t) {
+                if (countdown > 1) {
+                  setState(() => countdown--);
+                } else {
+                  t.cancel();
+                  setState(() => countdown = 0);
+                }
+              });
+            }
+
+            return PopScope(
+              canPop: !enforceDelay || countdown == 0,
+              child: Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 340),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFFFFDFE),
+                        Color(0xFFFFF2F8),
+                        Color(0xFFFCF4FF),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.translate('auth_sync_guide_title'),
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(
+                      color: const Color(0xFFFFB6D3).withValues(alpha: 0.55),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF85B3).withValues(alpha: 0.18),
+                        blurRadius: 40,
+                        offset: const Offset(0, 20),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFEBF3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.sync_rounded,
+                              color: SLColors.primary,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              l10n.translate('auth_sync_guide_title'),
+                              style: SLTheme.quicksand(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                                color: SLColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        l10n.translate('auth_sync_guide_intro'),
                         style: SLTheme.quicksand(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: SLColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: SLColors.textSecond,
+                          height: 1.35,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  l10n.translate('auth_sync_guide_intro'),
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textSecond,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _buildSyncStep(
-                  number: '1',
-                  text: l10n.translate('auth_sync_guide_step1'),
-                ),
-                const SizedBox(height: 12),
-                _buildSyncStep(
-                  number: '2',
-                  text: l10n.translate('auth_sync_guide_step2'),
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  child: SLTheme.authPrimaryButton(
-                    label: l10n.translate('auth_sync_guide_gotit'),
-                    onPressed: () => Navigator.pop(context),
-                    colors: const [
-                      Color(0xFFFF69B4),
-                      Color(0xFFFF85B3),
+                      const SizedBox(height: 14),
+                      _buildSyncStep(
+                        number: '1',
+                        text: l10n.translate('auth_sync_guide_step1'),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildSyncStep(
+                        number: '2',
+                        text: l10n.translate('auth_sync_guide_step2'),
+                      ),
+                      const SizedBox(height: 22),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SLTheme.authPrimaryButton(
+                          label: countdown > 0
+                              ? '${l10n.translate('auth_sync_guide_gotit')} ($countdown)'
+                              : l10n.translate('auth_sync_guide_gotit'),
+                          onPressed: countdown > 0
+                              ? null
+                              : () {
+                                  timer?.cancel();
+                                  Navigator.pop(context);
+                                },
+                          colors: const [
+                            Color(0xFFFF69B4),
+                            Color(0xFFFF85B3),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
-    );
+    ).then((_) {
+      // Ensure timer is cancelled if dialog is somehow dismissed
+    });
   }
 
   Widget _buildSyncStep({required String number, required String text}) {

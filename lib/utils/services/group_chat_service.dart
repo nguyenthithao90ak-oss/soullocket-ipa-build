@@ -8,8 +8,8 @@ import 'package:flutter/foundation.dart';
 import '../../models/chat_message.dart';
 import '../../models/group_chat_room.dart';
 import 'chat_service.dart';
-import '../rapid_action_feedback_policy.dart';
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/rapid_action_feedback_policy.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'anti_spam_service.dart';
 
 class GroupChatService {

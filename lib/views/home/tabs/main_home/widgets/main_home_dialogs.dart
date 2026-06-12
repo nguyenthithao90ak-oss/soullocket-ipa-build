@@ -314,98 +314,108 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
 
     _interactionDragOverlayEntry = OverlayEntry(
       builder: (context) {
-        return IgnorePointer(
-          child: Material(
-            color: Colors.transparent,
-            child: Stack(
-              children: [
-                Positioned.fill(
+        return Material(
+          color: Colors.transparent,
+          child: Stack(
+            children: [
+              // Nền mờ – chạm vào để đóng menu
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _hideInteractionDragOverlay,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.14),
                     ),
                   ),
                 ),
-                SafeArea(
-                  child: Center(
-                    child: Transform.translate(
-                      offset: const Offset(0, 56),
-                      child: RepaintBoundary(
-                        child: ValueListenableBuilder<String?>(
-                          valueListenable: _interactionDragHoveredNotifier,
-                          builder: (context, hoveredType, _) {
-                            return Container(
-                              constraints: const BoxConstraints(
-                                maxWidth: 404,
-                                minHeight: 224,
+              ),
+              SafeArea(
+                child: Center(
+                  child: Transform.translate(
+                    offset: const Offset(0, 56),
+                    child: RepaintBoundary(
+                      child: ValueListenableBuilder<String?>(
+                        valueListenable: _interactionDragHoveredNotifier,
+                        builder: (context, hoveredType, _) {
+                          return Container(
+                            constraints: const BoxConstraints(
+                              maxWidth: 404,
+                              minHeight: 224,
+                            ),
+                            margin:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.fromLTRB(
+                              20,
+                              20,
+                              20,
+                              20,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFFBFC).withValues(
+                                alpha: 0.98,
                               ),
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              padding: const EdgeInsets.fromLTRB(
-                                20,
-                                20,
-                                20,
-                                20,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFFBFC).withValues(alpha: 
-                                  0.98,
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF1F2937)
+                                      .withValues(alpha: 0.08),
+                                  blurRadius: 18,
+                                  offset: const Offset(0, 10),
                                 ),
-                                borderRadius: BorderRadius.circular(30),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF1F2937)
-                                        .withValues(alpha: 0.08),
-                                    blurRadius: 18,
-                                    offset: const Offset(0, 10),
+                              ],
+                              border: Border.all(
+                                color: const Color(0xFFF1DDE5),
+                                width: 1.2,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                GridView.builder(
+                                  shrinkWrap: true,
+                                  physics:
+                                      const NeverScrollableScrollPhysics(),
+                                  itemCount:
+                                      _interactionDragMenuOptions.length,
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 4,
+                                    crossAxisSpacing: 8,
+                                    mainAxisSpacing: 12,
+                                    childAspectRatio: 0.92,
                                   ),
-                                ],
-                                border: Border.all(
-                                  color: const Color(0xFFF1DDE5),
-                                  width: 1.2,
+                                  itemBuilder: (context, index) {
+                                    final preset =
+                                        _interactionDragMenuOptions[index];
+                                    final isHovered =
+                                        hoveredType == preset.type;
+                                    return _buildInteractionDragOption(
+                                      preset,
+                                      key: _interactionDragOptionKeys[
+                                          preset.type],
+                                      highlighted: isHovered,
+                                      onTap: () {
+                                        _setManualInteractionPreset(
+                                            preset.type);
+                                        _hideInteractionDragOverlay();
+                                        _handleSendInteraction(
+                                            preset.type, preset.emoji);
+                                      },
+                                    );
+                                  },
                                 ),
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  GridView.builder(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount:
-                                        _interactionDragMenuOptions.length,
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 4,
-                                      crossAxisSpacing: 8,
-                                      mainAxisSpacing: 12,
-                                      childAspectRatio: 0.92,
-                                    ),
-                                    itemBuilder: (context, index) {
-                                      final preset =
-                                          _interactionDragMenuOptions[index];
-                                      final isHovered =
-                                          hoveredType == preset.type;
-                                      return _buildInteractionDragOption(
-                                        preset,
-                                        key: _interactionDragOptionKeys[
-                                            preset.type],
-                                        highlighted: isHovered,
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -480,66 +490,68 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     _PartnerInteractionPreset preset, {
     required Key? key,
     required bool highlighted,
+    VoidCallback? onTap,
   }) {
     return RepaintBoundary(
-      child: SizedBox(
-        key: key,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final tileSize = constraints.biggest.shortestSide;
-            final visualSize =
-                (tileSize * (highlighted ? 0.94 : 0.88)).clamp(56.0, 72.0);
-            final emojiSize =
-                (visualSize * (highlighted ? 0.62 : 0.58)).clamp(28.0, 36.0);
-            final padding = highlighted ? 8.0 : 10.0;
+      child: GestureDetector(
+        onTap: onTap,
+        child: SizedBox(
+          key: key,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final tileSize = constraints.biggest.shortestSide;
+              final visualSize = (tileSize * 0.88).clamp(56.0, 72.0);
+              final emojiSize = (visualSize * 0.58).clamp(28.0, 36.0);
+              const padding = 10.0;
 
-            return Center(
-              child: AnimatedScale(
-                scale: highlighted ? 1.06 : 1.0,
-                duration: const Duration(milliseconds: 120),
-                curve: Curves.easeOut,
-                child: AnimatedContainer(
+              return Center(
+                child: AnimatedScale(
+                  scale: highlighted ? 1.12 : 1.0,
                   duration: const Duration(milliseconds: 120),
-                  width: visualSize,
-                  height: visualSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: preset.gradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    border: Border.all(
-                      color: highlighted
-                          ? preset.accent.withValues(alpha: 0.78)
-                          : const Color(0xFFF3E6EC),
-                      width: highlighted ? 2.1 : 1.4,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: preset.accent.withValues(alpha: 
-                          highlighted ? 0.18 : 0.08,
-                        ),
-                        blurRadius: highlighted ? 16 : 10,
-                        offset: const Offset(0, 8),
+                  curve: Curves.easeOut,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 120),
+                    width: visualSize,
+                    height: visualSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: preset.gradient,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: EdgeInsets.all(padding),
-                    child: _buildInteractionVisual(
-                      visual: preset.emoji,
-                      assetPath: preset.assetPath,
-                      size: visualSize,
-                      emojiSize: emojiSize,
-                      preferAsset: true,
+                      border: Border.all(
+                        color: highlighted
+                            ? preset.accent.withValues(alpha: 0.78)
+                            : const Color(0xFFF3E6EC),
+                        width: highlighted ? 2.1 : 1.4,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: preset.accent.withValues(
+                            alpha: highlighted ? 0.18 : 0.08,
+                          ),
+                          blurRadius: highlighted ? 16 : 10,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Padding(
+                      padding: const EdgeInsets.all(padding),
+                      child: _buildInteractionVisual(
+                        visual: preset.emoji,
+                        assetPath: preset.assetPath,
+                        size: visualSize,
+                        emojiSize: emojiSize,
+                        preferAsset: true,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -17,8 +17,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../utils/collage_generator.dart';
 import '../../core/sl_theme.dart';
-import '../../services/collage_limit_service.dart';
-import '../../services/image_picker_recovery_service.dart';
+import '../../utils/services/collage_limit_service.dart';
+import '../../utils/services/image_picker_recovery_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import 'sticker_library_screen.dart';

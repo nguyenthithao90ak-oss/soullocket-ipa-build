@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
-import '../../services/auth_service.dart';
+import '../../utils/services/auth_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../core/sl_theme.dart';
 import 'widgets/admin_shared_widgets.dart';
@@ -479,11 +480,11 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                 padding: const EdgeInsets.only(top: 8.0),
                 child: ClipRRect(
                   borderRadius: SLRadius.smAll,
-                  child: Image.network(
-                    url,
+                  child: CachedNetworkImage(
+                    imageUrl: url,
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.high,
-                    errorBuilder: (context, error, stackTrace) => Container(
+                    errorWidget: (context, error, stackTrace) => Container(
                       height: 100,
                       color: Colors.grey[800],
                       alignment: Alignment.center,

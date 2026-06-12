@@ -7,12 +7,14 @@ import 'package:video_player/video_player.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'dart:io';
 
 import '../../../models/social_post.dart';
-import '../../../services/social_service.dart';
+import '../../../utils/services/social_service.dart';
 import '../../ui_prefs.dart';
 import '../../visitors/visitor_profile_screen.dart';
-import 'package:soullocket_app/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../utils/app_error_mapper.dart';

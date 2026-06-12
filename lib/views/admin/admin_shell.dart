@@ -5,7 +5,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 import '../../core/sl_theme.dart';
-import '../../services/auth_service.dart';
+import '../../utils/services/auth_service.dart';
 import 'widgets/admin_shared_widgets.dart';
 import 'admin_login_screen.dart';
 import 'admin_overview_screen.dart';

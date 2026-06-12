@@ -5,7 +5,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'storage_upload_result.dart';
 
 typedef StorageCurrentUidProvider = String Function();
@@ -18,6 +18,7 @@ typedef StorageFileUploader = Future<String> Function(
   String storagePath,
   XFile file, {
   String? contentType,
+  ValueChanged<double>? onProgress,
 });
 
 class StorageManagedUploadRequest {
@@ -47,6 +48,7 @@ class StorageManagedUploadHelper {
     required StorageContentTypeDetector detectContentType,
     required StorageWritePathNormalizer normalizeStorageWritePath,
     required StorageFileUploader uploadFileToPath,
+    ValueChanged<double>? onProgress,
   }) async {
     try {
       final nowMs = DateTime.now().millisecondsSinceEpoch;
@@ -63,11 +65,14 @@ class StorageManagedUploadHelper {
 
       if (!kIsWeb && request.file.path.isNotEmpty && fileExtension != '.gif') {
         try {
+          if (onProgress != null) onProgress(0.05); // Start compression
           final tempDir = await getTemporaryDirectory();
           tempCompressedPath = p.join(
             tempDir.path,
             'sl_upload_${nowMs}_${DateTime.now().microsecondsSinceEpoch}.webp',
           );
+
+          if (onProgress != null) onProgress(0.1); // Preparing to compress
 
           final compressedFile = await FlutterImageCompress.compressAndGetFile(
             request.file.path,
@@ -77,6 +82,8 @@ class StorageManagedUploadHelper {
             quality: request.quality,
             format: CompressFormat.webp,
           );
+
+          if (onProgress != null) onProgress(0.35); // Compression finished
 
           if (compressedFile != null) {
             uploadFile = compressedFile;
@@ -105,6 +112,9 @@ class StorageManagedUploadHelper {
       final path =
           'uploads/$currentUid/houses/${request.houseId}/${request.folderName}/$nowMs$fileExtension';
       final normalizedStoragePath = normalizeStorageWritePath(path);
+      
+      if (onProgress != null) onProgress(0.4); // Start network upload
+
       try {
         final downloadUrl =
             tempCompressedPath != null && uploadFile.path == tempCompressedPath
@@ -112,12 +122,20 @@ class StorageManagedUploadHelper {
                     path,
                     XFile(tempCompressedPath),
                     contentType: finalContentType,
+                    onProgress: onProgress != null 
+                        ? (p) => onProgress(0.4 + (p * 0.6))
+                        : null,
                   )
                 : await uploadFileToPath(
                     path,
                     uploadFile,
                     contentType: finalContentType,
+                    onProgress: onProgress != null 
+                        ? (p) => onProgress(0.4 + (p * 0.6))
+                        : null,
                   );
+
+        if (onProgress != null) onProgress(1.0); // Finished
 
         return StorageUploadResult(
           downloadUrl: downloadUrl,

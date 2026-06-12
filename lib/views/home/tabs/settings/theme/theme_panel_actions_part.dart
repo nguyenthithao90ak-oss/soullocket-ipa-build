@@ -393,9 +393,9 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
             sourcePath: file.path,
             aspectRatio: _themeBackgroundAspectRatio,
             compressFormat: ImageCompressFormat.jpg,
-            compressQuality: 85,
-            maxWidth: 1080,
-            maxHeight: 2560,
+            compressQuality: 95,
+            maxWidth: 1440,
+            maxHeight: 3200,
             uiSettings: [
               IOSUiSettings(
                 title: 'Chỉnh sửa ảnh nền',
@@ -416,7 +416,10 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       }
 
       if (mounted) {
-        setState(() => _isUploadingThemeBackground = true);
+        setState(() {
+          _isUploadingThemeBackground = true;
+          _themeUploadProgress = 0.0;
+        });
       }
 
       final previousDraftUrl = _draftCustomBackgroundUrl;
@@ -432,9 +435,16 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         _houseId!,
         'themes',
         file,
-        quality: 82, // 82 WebP = Nhẹ nhưng vẫn rất nét (Sharp)
-        minWidth: 1080, // Giảm từ 1280 xuống 1080 để tránh OOM
-        minHeight: 1080,
+        quality: 95, // 95 WebP = Gần như không mất chất lượng, nét nhất
+        minWidth: 1440, // 1440p cho màn hình 2K
+        minHeight: 1440,
+        onProgress: (progress) {
+          if (mounted) {
+            setState(() {
+              _themeUploadProgress = progress;
+            });
+          }
+        },
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (!mounted) return;
@@ -461,7 +471,10 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       _showToast('Không thể tải ảnh nền: $e', success: false);
     } finally {
       if (mounted) {
-        setState(() => _isUploadingThemeBackground = false);
+        setState(() {
+          _isUploadingThemeBackground = false;
+          _themeUploadProgress = null;
+        });
       }
     }
   }

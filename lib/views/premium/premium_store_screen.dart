@@ -10,8 +10,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
-import '../../services/l10n_service.dart';
-import '../../services/purchase_service.dart';
+import '../../utils/services/l10n_service.dart';
+import '../../utils/services/purchase_service.dart';
 
 class PremiumStoreScreen extends StatefulWidget {
   final String houseId;

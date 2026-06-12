@@ -493,53 +493,7 @@ class SLTheme {
     ),
   ];
 
-  static List<SLFontOption> get cleanFontOptions => [
-    SLFontOption(
-      key: defaultFontKey,
-      label: L10nService().translate('core_theme_font_quicksand'),
-      sampleText: L10nService().translate('core_theme_font_sample'),
-    ),
-    SLFontOption(
-      key: 'nunito',
-      label: 'Nunito',
-      sampleText: L10nService().translate('core_theme_font_sample'),
-    ),
-    SLFontOption(
-      key: 'comfortaa',
-      label: 'Comfortaa',
-      sampleText: L10nService().translate('core_theme_font_sample'),
-    ),
-    SLFontOption(
-      key: 'playfair',
-      label: 'Playfair Display',
-      sampleText: L10nService().translate('core_theme_font_sample'),
-    ),
-    SLFontOption(
-      key: 'beVietnam',
-      label: 'Be Vietnam Pro',
-      sampleText: L10nService().translate('core_theme_font_sample'),
-    ),
-    SLFontOption(
-      key: 'patrickHand',
-      label: 'Patrick Hand',
-      sampleText: L10nService().translate('core_theme_font_sample'),
-    ),
-    SLFontOption(
-      key: 'dancingScript',
-      label: 'Dancing Script',
-      sampleText: L10nService().translate('core_theme_font_sample'),
-    ),
-    SLFontOption(
-      key: 'caveat',
-      label: 'Caveat',
-      sampleText: L10nService().translate('core_theme_font_sample'),
-    ),
-    SLFontOption(
-      key: 'lora',
-      label: 'Lora',
-      sampleText: L10nService().translate('core_theme_font_sample'),
-    ),
-  ];
+  static List<SLFontOption> get cleanFontOptions => fontOptions;
 
   static String normalizeFontKey(String? fontKey) {
     final normalized = (fontKey ?? '').trim();
@@ -927,8 +881,8 @@ class SLTheme {
     Widget? prefixIcon,
     Widget? suffixIcon,
     String? helperText,
-    Color fillColor = const Color(0xFFFFF8F4),
-    Color borderColor = const Color(0xFFE8DDD6),
+    Color fillColor = Colors.white,
+    Color borderColor = const Color(0xFFF2E6ED),
     Color focusColor = SLColors.primary,
     double radius = 20,
   }) {

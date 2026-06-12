@@ -10,9 +10,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/constants/app_config.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'app_check_http_headers.dart';
-import '../app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'app_lifecycle_presence_guard.dart';
 import 'consent_service.dart';
 import 'house_service.dart';
@@ -98,9 +98,9 @@ class AdMobService {
       'il_daily_rewarded_ad_count_v1'; // Theo dõi số lần xem ads hôm nay
   static const String _dailyRewardedAdDatePrefsKey =
       'il_daily_rewarded_ad_date_v1'; // Ngày hiện tại (yyyy-MM-dd)
-  static const int _autoInterstitialMinMinutes = 45;
-  static const int _autoInterstitialMaxMinutes = 90;
-  static const int _autoInterstitialRetryMinutes = 15;
+  static const int _autoInterstitialMinMinutes = 15;
+  static const int _autoInterstitialMaxMinutes = 30;
+  static const int _autoInterstitialRetryMinutes = 5;
   static const int _autoMandatoryRewardedChancePercent = 40;
   static const int _appOpenMaxPerDay = 3;
   static const List<String> _debugTestDeviceIds = <String>[
@@ -705,7 +705,7 @@ class AdMobService {
     }
 
     final completer = Completer<bool>();
-    var _didEarnReward = false;
+    var didEarnReward = false;
     AppLifecyclePresenceGuard.arm();
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
@@ -714,13 +714,17 @@ class AdMobService {
         _lastFullscreenAdShownMs = _lastRewardedShownMs;
         _sendAdImpressionPing('rewarded', rewardedMainId);
       },
-      onAdDismissedFullScreenContent: (ad) {
-        debugPrint('AdMobService: rewarded dismissed (earned=$_didEarnReward).');
+      onAdDismissedFullScreenContent: (ad) async {
+        debugPrint('AdMobService: rewarded dismissed (earned=$didEarnReward).');
         ad.dispose();
         _rewardedAd = null;
         _loadRewardedAd();
         AppLifecyclePresenceGuard.settle();
-        if (!completer.isCompleted) completer.complete(_didEarnReward);
+        if (Platform.isIOS) {
+          // Delay to ensure that if onUserEarnedReward is scheduled slightly after dismissal on iOS, it has time to register.
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+        }
+        if (!completer.isCompleted) completer.complete(didEarnReward);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         final errorInfo = AppErrorMapper.resolve(
@@ -742,7 +746,10 @@ class AdMobService {
       _rewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
           debugPrint('AdMobService: rewarded earned.');
-          _didEarnReward = true;
+          didEarnReward = true;
+          if (!completer.isCompleted) {
+            completer.complete(true);
+          }
         },
       );
     } catch (error) {
@@ -791,7 +798,7 @@ class AdMobService {
     }
 
     final completer = Completer<bool>();
-    var _didEarnReward = false;
+    var didEarnReward = false;
     AppLifecyclePresenceGuard.arm();
     _soulGameRewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
@@ -799,12 +806,16 @@ class AdMobService {
         _lastFullscreenAdShownMs = _lastRewardedShownMs;
         _sendAdImpressionPing('rewarded', rewardedSoulGameId);
       },
-      onAdDismissedFullScreenContent: (ad) {
+      onAdDismissedFullScreenContent: (ad) async {
         ad.dispose();
         _soulGameRewardedAd = null;
         _loadSoulGameRewardedAd();
         AppLifecyclePresenceGuard.settle();
-        if (!completer.isCompleted) completer.complete(_didEarnReward);
+        if (Platform.isIOS) {
+          // Delay to ensure that if onUserEarnedReward is scheduled slightly after dismissal on iOS, it has time to register.
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+        }
+        if (!completer.isCompleted) completer.complete(didEarnReward);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
@@ -819,7 +830,10 @@ class AdMobService {
       _soulGameRewardedAd!.setImmersiveMode(true);
       _soulGameRewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-          _didEarnReward = true;
+          didEarnReward = true;
+          if (!completer.isCompleted) {
+            completer.complete(true);
+          }
         },
       );
     } catch (_) {

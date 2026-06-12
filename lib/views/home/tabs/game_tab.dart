@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,7 +13,7 @@ import '../../utilities/soul_rhythm_game.dart';
 import '../../utilities/caro_neon_screen.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/game_download_service.dart';
-import '../../../services/admob_service.dart';
+import '../../../utils/services/admob_service.dart';
 
 class GameTab extends StatefulWidget {
   const GameTab({super.key});
@@ -23,7 +24,10 @@ class GameTab extends StatefulWidget {
   State<GameTab> createState() => _GameTabState();
 }
 
-class _GameTabState extends State<GameTab> {
+class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   static const AssetImage _soulRhythmIcon =
       AssetImage(GameTab.soulRhythmIconPath);
   bool _didPrecacheSoulRhythmIcon = false;
@@ -42,12 +46,20 @@ class _GameTabState extends State<GameTab> {
     super.initState();
     _loadDownloadStatus();
     _loadBannerAd();
+    // Lắng nghe thay đổi download để cập nhật state mà không tạo Future mới
+    GameDownloadService().addListener(_onDownloadServiceChanged);
   }
 
   @override
   void dispose() {
+    GameDownloadService().removeListener(_onDownloadServiceChanged);
     _bannerAd?.dispose();
     super.dispose();
+  }
+
+  void _onDownloadServiceChanged() {
+    // Khi download service thay đổi, cập nhật trạng thái từ cache thành synchronous
+    unawaited(_loadDownloadStatus());
   }
 
   Future<void> _loadBannerAd() async {
@@ -267,6 +279,7 @@ class _GameTabState extends State<GameTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -285,106 +298,89 @@ class _GameTabState extends State<GameTab> {
                   builder: (context, constraints) {
                     final crossAxisCount = constraints.maxWidth < 280 ? 2 : 3;
                     final spacing = constraints.maxWidth < 360 ? 10.0 : 14.0;
-
                     final downloadService = GameDownloadService();
-                    return ListenableBuilder(
-                        listenable: downloadService,
-                        builder: (context, _) {
-                          return FutureBuilder<Map<String, bool>>(
-                            future: Future.wait([
-                              downloadService.isGameDownloaded('soul_block'),
-                              downloadService.isGameDownloaded('soul_rhythm'),
-                              if (kDebugMode)
-                                downloadService.isGameDownloaded('caro_neon'),
-                            ]).then((results) => {
-                                  'soul_block': results[0],
-                                  'soul_rhythm': results[1],
-                                  if (kDebugMode) 'caro_neon': results[2],
-                                }),
-                            builder: (context, snapshot) {
-                              final statuses = snapshot.data ?? {};
-                              final soulBlockDownloaded =
-                                  statuses['soul_block'] ?? false;
-                              final soulRhythmDownloaded =
-                                  statuses['soul_rhythm'] ?? false;
-                              final caroNeonDownloaded =
-                                  statuses['caro_neon'] ?? false;
-                              return GridView.count(
-                                crossAxisCount: crossAxisCount,
-                                crossAxisSpacing: spacing,
-                                mainAxisSpacing: spacing + 2,
-                                childAspectRatio:
-                                    crossAxisCount == 3 ? 0.68 : 0.75,
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                children: [
-                                  _SoulBlockCard(
-                                    isDownloaded: soulBlockDownloaded,
-                                    downloadProgress: downloadService
-                                        .getProgress('soul_block'),
-                                    onTap: () => _onGameTap(
-                                        'soul_block',
-                                        'Soul Block',
-                                        () => _openSoulBlockGame(context)),
-                                    onLongPress: soulBlockDownloaded
-                                        ? () => _confirmDeleteGame(
-                                            context, 'soul_block', 'Soul Block')
-                                        : null,
-                                    onDelete: soulBlockDownloaded
-                                        ? () => _confirmDeleteGame(
-                                            context, 'soul_block', 'Soul Block')
-                                        : null,
-                                  ),
-                                  if (kDebugMode)
-                                    _SoulRhythmCard(
-                                      imagePath: GameTab.soulRhythmIconPath,
-                                      isDownloaded: soulRhythmDownloaded,
-                                      downloadProgress: downloadService
-                                          .getProgress('soul_rhythm'),
-                                      onTap: () => _onGameTap(
-                                          'soul_rhythm',
-                                          'Soul Rhythm',
-                                          () => _openSoulGame(context)),
-                                      onLongPress: soulRhythmDownloaded
-                                          ? () => _confirmDeleteGame(context,
-                                              'soul_rhythm', 'Soul Rhythm')
-                                          : null,
-                                      onDelete: soulRhythmDownloaded
-                                          ? () => _confirmDeleteGame(context,
-                                              'soul_rhythm', 'Soul Rhythm')
-                                          : null,
-                                    ),
-                                  if (kDebugMode)
-                                    _GenericGameCard(
-                                      label: 'Caro Neon',
-                                      icon: Icons.grid_4x4_rounded,
-                                      color: const Color(0xFF00E5FF),
-                                      isDownloaded: caroNeonDownloaded,
-                                      downloadProgress: downloadService
-                                          .getProgress('caro_neon'),
-                                      onLongPress: caroNeonDownloaded
-                                          ? () => _confirmDeleteGame(
-                                              context, 'caro_neon', 'Caro Neon')
-                                          : null,
-                                      onDelete: caroNeonDownloaded
-                                          ? () => _confirmDeleteGame(
-                                              context, 'caro_neon', 'Caro Neon')
-                                          : null,
-                                      onTap: () => _onGameTap(
-                                          'caro_neon',
-                                          'Caro Neon',
-                                          () => Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        const CaroNeonScreen()),
-                                              )),
-                                    ),
-                                ],
-                              );
-                            },
-                          );
-                        });
+
+                    // Dùng _downloadedGames trực tiếp thay vì FutureBuilder
+                    // Để tránh tạo Future mới mỗi lần rebuild (gây flash loading)
+                    final soulBlockDownloaded =
+                        _downloadedGames['soul_block'] ?? false;
+                    final soulRhythmDownloaded =
+                        _downloadedGames['soul_rhythm'] ?? false;
+                    final caroNeonDownloaded =
+                        _downloadedGames['caro_neon'] ?? false;
+
+                    return GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: spacing,
+                      mainAxisSpacing: spacing + 2,
+                      childAspectRatio: crossAxisCount == 3 ? 0.68 : 0.75,
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      children: [
+                        _SoulBlockCard(
+                          isDownloaded: soulBlockDownloaded,
+                          downloadProgress:
+                              downloadService.getProgress('soul_block'),
+                          onTap: () => _onGameTap(
+                              'soul_block',
+                              'Soul Block',
+                              () => _openSoulBlockGame(context)),
+                          onLongPress: soulBlockDownloaded
+                              ? () => _confirmDeleteGame(
+                                  context, 'soul_block', 'Soul Block')
+                              : null,
+                          onDelete: soulBlockDownloaded
+                              ? () => _confirmDeleteGame(
+                                  context, 'soul_block', 'Soul Block')
+                              : null,
+                        ),
+                        if (kDebugMode)
+                          _SoulRhythmCard(
+                            imagePath: GameTab.soulRhythmIconPath,
+                            isDownloaded: soulRhythmDownloaded,
+                            downloadProgress:
+                                downloadService.getProgress('soul_rhythm'),
+                            onTap: () => _onGameTap(
+                                'soul_rhythm',
+                                'Soul Rhythm',
+                                () => _openSoulGame(context)),
+                            onLongPress: soulRhythmDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'soul_rhythm', 'Soul Rhythm')
+                                : null,
+                            onDelete: soulRhythmDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'soul_rhythm', 'Soul Rhythm')
+                                : null,
+                          ),
+                        if (kDebugMode)
+                          _GenericGameCard(
+                            label: 'Caro Neon',
+                            icon: Icons.grid_4x4_rounded,
+                            color: const Color(0xFF00E5FF),
+                            isDownloaded: caroNeonDownloaded,
+                            downloadProgress:
+                                downloadService.getProgress('caro_neon'),
+                            onLongPress: caroNeonDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'caro_neon', 'Caro Neon')
+                                : null,
+                            onDelete: caroNeonDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'caro_neon', 'Caro Neon')
+                                : null,
+                            onTap: () => _onGameTap(
+                                'caro_neon',
+                                'Caro Neon',
+                                () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const CaroNeonScreen()),
+                                    )),
+                          ),
+                      ],
+                    );
                   },
                 ),
               ),
