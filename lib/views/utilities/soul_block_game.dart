@@ -194,6 +194,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   @override
   void initState() {
     super.initState();
+    _adMob.suppressAutoInterstitial();
     WidgetsBinding.instance.addObserver(this);
     _prefsFuture = SharedPreferences.getInstance();
     _board = _createEmptyBoard();
@@ -254,6 +255,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
   @override
   void dispose() {
+    _adMob.resumeAutoInterstitial();
     WidgetsBinding.instance.removeObserver(this);
     _autoTrayShuffleTimer?.cancel();
     _dragVisualTick.dispose();

@@ -604,7 +604,9 @@ class NotificationService {
         await SharedPreferences.getInstance();
     final notificationsEnabled =
         prefs.getBool('il_notifications_enabled') ?? true;
-    if (!notificationsEnabled || !await hasPermission()) {
+    final sleepReminderEnabled =
+        prefs.getBool('il_smart_reminder_sleep') ?? true;
+    if (!notificationsEnabled || !sleepReminderEnabled || !await hasPermission()) {
       await cancelDailySleepReminder();
       return;
     }

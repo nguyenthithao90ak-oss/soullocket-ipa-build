@@ -489,7 +489,7 @@ class HouseSettingsService {
       });
     }
 
-    if (updates.length <= 6) {
+    if (updates.length <= 2) {
       return;
     }
 

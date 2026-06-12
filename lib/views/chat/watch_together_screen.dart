@@ -13,6 +13,7 @@ import '../../utils/app_error_mapper.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/services/webrtc_service.dart';
+import '../../utils/services/admob_service.dart';
 
 class WatchTogetherScreen extends StatefulWidget {
   final String myHouseId;
@@ -61,6 +62,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   @override
   void initState() {
     super.initState();
+    AdMobService().suppressAutoInterstitial();
     _syncClientId =
         '${widget.myHouseId}_${DateTime.now().millisecondsSinceEpoch}';
 
@@ -115,6 +117,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
 
   @override
   void dispose() {
+    AdMobService().resumeAutoInterstitial();
     _localSyncDebounce?.cancel();
     _watchSubscription?.cancel();
     _urlController.dispose();

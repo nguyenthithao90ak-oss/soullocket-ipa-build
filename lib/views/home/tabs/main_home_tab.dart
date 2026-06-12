@@ -1683,6 +1683,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _saveCountdownQuickUiPrefs({
     String? countdownStyleKey,
     String? fallingEffectKey,
+    Set<String>? prevalidatedUnlockedStyles,
+    bool? isVip,
   }) async {
     await UiPrefs.ensureLoaded();
     final current = UiPrefs.notifier.value;
@@ -1738,12 +1740,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       }
     }
 
-    final isVip = await PurchaseService().isVip();
+    final resolvedIsVip = isVip ?? await PurchaseService().isVip();
     if (countdownStyleKey != null &&
         _kCountdownQuickPremiumStyleKeys.contains(resolvedCountdownStyleKey) &&
-        !isVip) {
-      final unlockedStyles = await _getUnlockedCountdownStyles();
-      if (!unlockedStyles.contains(resolvedCountdownStyleKey)) {
+        !resolvedIsVip) {
+      final resolvedUnlockedStyles = prevalidatedUnlockedStyles ?? await _getUnlockedCountdownStyles();
+      if (!resolvedUnlockedStyles.contains(resolvedCountdownStyleKey)) {
         if (mounted) {
           _showLatestSnackBar(
             'Kiểu "$resolvedCountdownStyleKey" chưa được mở. Hãy xem quảng cáo trong bảng tùy chỉnh để mở kiểu này.',
@@ -2365,27 +2367,33 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
                             runSpacing: 10,
                             children: [
                               if (currentStyleIsLocked)
-                              buildLockedAdButton(
-                                option: selectedStyle,
-                                onUnlocked: (opt) async {
-                                  await _saveCountdownQuickUiPrefs(
-                                    countdownStyleKey: opt.value,
-                                  );
-                                },
-                              )
-                            else
-                              buildOptionChip(
-                                option: selectedStyle,
-                                selected: true,
-                                onTap: () => _saveCountdownQuickUiPrefs(
-                                  countdownStyleKey: selectedStyle.value,
+                                buildLockedAdButton(
+                                  option: selectedStyle,
+                                  onUnlocked: (opt) async {
+                                    await _saveCountdownQuickUiPrefs(
+                                      countdownStyleKey: opt.value,
+                                      prevalidatedUnlockedStyles: unlockedStyles,
+                                      isVip: isVip,
+                                    );
+                                  },
+                                )
+                              else
+                                buildOptionChip(
+                                  option: selectedStyle,
+                                  selected: true,
+                                  onTap: () => _saveCountdownQuickUiPrefs(
+                                    countdownStyleKey: selectedStyle.value,
+                                    prevalidatedUnlockedStyles: unlockedStyles,
+                                    isVip: isVip,
+                                  ),
                                 ),
-                              ),
                               buildOptionChip(
                                 option: selectedEffect,
                                 selected: true,
                                 onTap: () => _saveCountdownQuickUiPrefs(
                                   fallingEffectKey: selectedEffect.value,
+                                  prevalidatedUnlockedStyles: unlockedStyles,
+                                  isVip: isVip,
                                 ),
                               ),
                             ],
@@ -2402,6 +2410,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
                       selectedValue: uiState.countdownStyleKey,
                       onSelect: (option) => _saveCountdownQuickUiPrefs(
                         countdownStyleKey: option.value,
+                        prevalidatedUnlockedStyles: unlockedStyles,
+                        isVip: isVip,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -2414,6 +2424,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
                       selectedValue: uiState.fallingEffectKey,
                       onSelect: (option) => _saveCountdownQuickUiPrefs(
                         fallingEffectKey: option.value,
+                        prevalidatedUnlockedStyles: unlockedStyles,
+                        isVip: isVip,
                       ),
                     ),
                     const SizedBox(height: 16),

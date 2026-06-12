@@ -231,6 +231,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
   @override
   void initState() {
     super.initState();
+    _adMob.suppressAutoInterstitial();
     _sfxPlayers = List.generate(
       4,
       (index) => AudioPlayer(playerId: 'soul_rhythm_sfx_$index'),
@@ -303,6 +304,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
 
   @override
   void dispose() {
+    _adMob.resumeAutoInterstitial();
     _stateGeneration++;
     _cancelReviveCountdown();
     _cancelGameOverReveal();

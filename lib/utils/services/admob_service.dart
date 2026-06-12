@@ -101,7 +101,7 @@ class AdMobService {
   static const int _autoInterstitialMinMinutes = 15;
   static const int _autoInterstitialMaxMinutes = 30;
   static const int _autoInterstitialRetryMinutes = 5;
-  static const int _autoMandatoryRewardedChancePercent = 40;
+  static const int _autoMandatoryRewardedChancePercent = 15;
   static const int _appOpenMaxPerDay = 3;
   static const List<String> _debugTestDeviceIds = <String>[
     'D9B28AB8E1553E4F327420FC9896415C',
@@ -200,7 +200,7 @@ class AdMobService {
   bool _isAppOpenLoading = false;
   bool _isShowingAppOpenAd = false;
   int _lastFullscreenAdShownMs = 0;
-  static const int _fullscreenAdCooldownMs = 2 * 60 * 1000;
+  static const int _fullscreenAdCooldownMs = 5 * 60 * 1000;
   Completer<void>? _initializeCompleter;
   Completer<bool>? _appOpenLoadCompleter;
   bool _sdkInitialized = false;
@@ -908,6 +908,22 @@ class AdMobService {
   Timer? _autoInterstitialTimer;
   bool _autoInterstitialSchedulerEnabled = false;
   bool _isShowingAutoInterstitial = false;
+  bool _isAutoInterstitialSuppressed = false;
+
+  void suppressAutoInterstitial() {
+    _isAutoInterstitialSuppressed = true;
+    _autoInterstitialTimer?.cancel();
+    _autoInterstitialTimer = null;
+    debugPrint('AdMobService: Auto Interstitial suppressed.');
+  }
+
+  void resumeAutoInterstitial() {
+    _isAutoInterstitialSuppressed = false;
+    debugPrint('AdMobService: Auto Interstitial resumed.');
+    if (_autoInterstitialSchedulerEnabled) {
+      _scheduleAutoInterstitialTimer();
+    }
+  }
 
   Future<void> loadInterstitialAd() async {
     if (kIsWeb) return;
@@ -1042,6 +1058,7 @@ class AdMobService {
     if (kIsWeb ||
         !_autoInterstitialSchedulerEnabled ||
         _isShowingAutoInterstitial ||
+        _isAutoInterstitialSuppressed ||
         FirebaseAuth.instance.currentUser == null) {
       return;
     }
@@ -1066,9 +1083,9 @@ class AdMobService {
             // Xem hết quảng cáo bắt buộc -> Đặt lại thời gian bình thường (30-60p)
             await _setNextAutoInterstitialAt(_generateNextAutoInterstitialAt());
           } else {
-            // Thoát ngang quảng cáo bắt buộc -> Đặt thời gian hiện lại là 10 phút
+            // Thoát ngang quảng cáo bắt buộc -> Đặt thời gian hiện lại là 20 phút
             await _setNextAutoInterstitialAt(
-              DateTime.now().add(const Duration(minutes: 10)),
+              DateTime.now().add(const Duration(minutes: 20)),
             );
           }
         } else {

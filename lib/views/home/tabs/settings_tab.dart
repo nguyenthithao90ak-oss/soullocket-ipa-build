@@ -492,6 +492,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _smartDiaryReminder = true;
   bool _smartCapsuleReminder = true;
   bool _smartLoveNoteReminder = true;
+  bool _smartSleepReminder = true;
   bool _touchSound = true;
   bool _confettiFx = true;
   bool _showWeather = true;

@@ -62,18 +62,18 @@ class _CountdownModeIndependentScreenState
 
   // Keep the most useful styles on top for a cleaner, faster settings flow.
   static final List<MapEntry<String, String>> _countdownStyleOptions = [
-    const MapEntry('Floating Hearts', 'floating_hearts'),
-    const MapEntry('Glass', 'glass'),
-    MapEntry(L10nService().translate('home_mcnh_a57a8e'), 'default'),
-    const MapEntry('Rose Wave', 'rose_wave'),
-    const MapEntry('Plain', 'plain'),
-    const MapEntry('Glow', 'glow'),
-    const MapEntry('Candy', 'candy'),
-    const MapEntry('Galaxy', 'galaxy'),
-    const MapEntry('Aurora', 'aurora'),
-    const MapEntry('Crystal', 'crystal'),
-    const MapEntry('Fireworks', 'fireworks'),
-    const MapEntry('Lava', 'lava'),
+    MapEntry(L10nService().translate('countdown_floating_hearts'), 'floating_hearts'),
+    MapEntry(L10nService().translate('countdown_glass'), 'glass'),
+    MapEntry(L10nService().translate('countdown_default'), 'default'),
+    MapEntry(L10nService().translate('countdown_rose_wave'), 'rose_wave'),
+    MapEntry(L10nService().translate('countdown_plain'), 'plain'),
+    MapEntry(L10nService().translate('countdown_glow'), 'glow'),
+    MapEntry(L10nService().translate('countdown_candy'), 'candy'),
+    MapEntry(L10nService().translate('countdown_galaxy'), 'galaxy'),
+    MapEntry(L10nService().translate('countdown_aurora'), 'aurora'),
+    MapEntry(L10nService().translate('countdown_crystal'), 'crystal'),
+    MapEntry(L10nService().translate('countdown_fireworks'), 'fireworks'),
+    MapEntry(L10nService().translate('countdown_lava'), 'lava'),
   ];
 
   static const Set<String> _premiumCountdownStyleKeys = <String>{

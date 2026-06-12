@@ -27,6 +27,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
     await prefs.setBool('il_smart_reminder_diary', _smartDiaryReminder);
     await prefs.setBool('il_smart_reminder_capsule', _smartCapsuleReminder);
     await prefs.setBool('il_smart_reminder_love_note', _smartLoveNoteReminder);
+    await prefs.setBool('il_smart_reminder_sleep', _smartSleepReminder);
   }
 
   Future<void> _syncNotificationTopics(bool enabled) async {
@@ -58,6 +59,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       _smartDiaryReminder = value;
       _smartCapsuleReminder = value;
       _smartLoveNoteReminder = value;
+      _smartSleepReminder = value;
     });
 
     try {
@@ -75,6 +77,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             _smartDiaryReminder = false;
             _smartCapsuleReminder = false;
             _smartLoveNoteReminder = false;
+            _smartSleepReminder = false;
           });
           await _persistNotificationPrefs();
           _showToast(
@@ -104,6 +107,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
         _smartDiaryReminder = previousValue;
         _smartCapsuleReminder = previousValue;
         _smartLoveNoteReminder = previousValue;
+        _smartSleepReminder = previousValue;
       });
       await _persistNotificationPrefs();
       _showToast(
@@ -453,7 +457,23 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     unawaited(_persistNotificationPrefs());
                   },
                   helperText:
-                      'Nhắc nhẹ một câu yêu thương, không gửi quá nhiều.',
+                      'Tự động gửi lời chúc sáng/tối ngọt ngào cho đối phương khi bạn mở app.',
+                ),
+                _buildSwitchRow(
+                  'Nhắc ngủ ngoan',
+                  _smartSleepReminder,
+                  (v) {
+                    setState(() => _smartSleepReminder = v);
+                    SoundService().playClick();
+                    unawaited(_persistNotificationPrefs().then((_) async {
+                      if (v) {
+                        await NotificationService().syncDailySleepReminder();
+                      } else {
+                        await NotificationService().cancelDailySleepReminder();
+                      }
+                    }));
+                  },
+                  helperText: 'Nhắc nhở người thương đi ngủ đúng giờ vào mỗi tối.',
                 ),
               ],
             ),

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../utils/services/admob_service.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -66,11 +67,13 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
   @override
   void initState() {
     super.initState();
+    AdMobService().suppressAutoInterstitial();
     _loadContext();
   }
 
   @override
   void dispose() {
+    AdMobService().resumeAutoInterstitial();
     _stageScrollController.dispose();
     super.dispose();
   }

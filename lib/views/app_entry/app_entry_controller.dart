@@ -415,7 +415,7 @@ class AppEntryController {
 
     if (!hasTriggeredInitialAppOpenAd) {
       didScheduleInitialAppOpenAd = true;
-      Future<void>.delayed(const Duration(seconds: 4), () async {
+      Future<void>.delayed(const Duration(seconds: 12), () async {
         await _runGuarded(
           'show deferred startup app open ad after home stabilizes',
           () => _adMobService.showAppOpenAdIfEligible(),

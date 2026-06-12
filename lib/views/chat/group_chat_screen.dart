@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/services/admob_service.dart';
 
 import '../../core/sl_theme.dart';
 import '../../models/chat_message.dart';
@@ -60,6 +61,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   @override
   void initState() {
     super.initState();
+    AdMobService().suppressAutoInterstitial();
     _room = widget.initialRoom;
     _msgController.addListener(_handleComposerTextChanged);
     _messagesScrollController.addListener(_handleMessageScroll);
@@ -78,6 +80,17 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     unawaited(_loadMutedPref());
     unawaited(_loadHousesInfo(widget.initialRoom.memberHouseIds));
     unawaited(_loadInitialMessages());
+  }
+
+  @override
+  void dispose() {
+    AdMobService().resumeAutoInterstitial();
+    _roomSub?.cancel();
+    _liveMessageSub?.cancel();
+    _msgController.removeListener(_handleComposerTextChanged);
+    _msgController.dispose();
+    _messagesScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadMutedPref() async {
@@ -1350,16 +1363,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    _roomSub?.cancel();
-    _liveMessageSub?.cancel();
-    _msgController.removeListener(_handleComposerTextChanged);
-    _msgController.dispose();
-    _messagesScrollController.removeListener(_handleMessageScroll);
-    _messagesScrollController.dispose();
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {

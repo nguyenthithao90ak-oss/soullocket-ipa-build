@@ -6,6 +6,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/webrtc_service.dart';
 import '../../core/sl_theme.dart';
+import '../../utils/services/admob_service.dart';
 
 class VideoCallScreen extends StatefulWidget {
   final String houseId;
@@ -50,6 +51,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   @override
   void initState() {
     super.initState();
+    AdMobService().suppressAutoInterstitial();
     _isSpeakerOn = widget.isVideo; // Video call mặc định mở loa ngoài
     _webrtcService.toggleSpeaker(_isSpeakerOn);
     _initRenderers();
@@ -144,6 +146,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   @override
   void dispose() {
+    AdMobService().resumeAutoInterstitial();
     _roomStatusSub?.cancel();
     _webrtcService.hangUp();
     _localRenderer.dispose();

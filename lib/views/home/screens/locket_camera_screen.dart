@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../../../utils/services/admob_service.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/app_error_mapper.dart';
@@ -22,6 +23,7 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
   @override
   void initState() {
     super.initState();
+    AdMobService().suppressAutoInterstitial();
     _initCamera();
   }
 
@@ -127,6 +129,7 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
 
   @override
   void dispose() {
+    AdMobService().resumeAutoInterstitial();
     _controller?.dispose();
     super.dispose();
   }

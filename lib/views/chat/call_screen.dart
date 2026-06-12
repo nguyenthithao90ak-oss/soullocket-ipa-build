@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../utils/services/l10n_service.dart';
+import '../../utils/services/admob_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/services/webrtc_service.dart';
@@ -216,6 +217,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
   @override
   void initState() {
     super.initState();
+    AdMobService().suppressAutoInterstitial();
     _init();
   }
 
@@ -265,6 +267,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
 
   @override
   void dispose() {
+    AdMobService().resumeAutoInterstitial();
     _timer?.cancel();
     _localRenderer.dispose();
     _remoteRenderer.dispose();

@@ -23,6 +23,7 @@ import 'chat_message_preview.dart';
 import 'watch_together_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/services/admob_service.dart';
 
 import '../../utils/services/security_service.dart';
 import '../../core/sl_theme.dart';
@@ -159,6 +160,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   void initState() {
     super.initState();
+    AdMobService().suppressAutoInterstitial();
     _quickReactionEmoji = _quickReactionOptions.first;
     _checkChatLock();
     unawaited(_loadChatPrefs());
@@ -228,6 +230,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void dispose() {
+    AdMobService().resumeAutoInterstitial();
     _msgController.removeListener(_handleComposerTextChanged);
     _msgController.dispose();
     _messagesScrollController.dispose();

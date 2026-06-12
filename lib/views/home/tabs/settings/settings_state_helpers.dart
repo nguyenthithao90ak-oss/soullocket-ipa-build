@@ -791,6 +791,9 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _smartLoveNoteReminder =
                   _toBoolOrNull(data['smartReminderLoveNote']) ??
                       _smartLoveNoteReminder;
+              _smartSleepReminder =
+                  _toBoolOrNull(data['smartReminderSleep']) ??
+                      _smartSleepReminder;
               _touchSound = _toBoolOrNull(data['touchSound']) ?? _touchSound;
               _confettiFx = _toBoolOrNull(data['confettiFx']) ?? _confettiFx;
               _showWeather = _toBoolOrNull(data['showWeather']) ?? _showWeather;
