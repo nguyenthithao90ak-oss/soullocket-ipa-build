@@ -562,6 +562,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   void _handleTabActivityChanged(bool isActive) {
     _isTabActive = isActive;
     if (isActive) {
+      _deferHeavyHomeMotion = true;
       _warmHomeMedia(delayMotion: true);
       Future.delayed(const Duration(milliseconds: 500), () {
         if (!mounted || !_isTabActive) return;
@@ -2682,8 +2683,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _handleSendInteraction(String type, String emoji) async {
     final cleanEmoji =
         emoji.trim().isEmpty ? _emojiForInteractionType(type) : emoji;
-    final waitSeconds = await _consumeReactionThrowWaitSeconds();
-    if (waitSeconds > 0) {
+    
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final localWait = _consumeLocalReactionThrowWaitSeconds(nowMs);
+    if (localWait > 0) {
       _showReactionThrowLimitSnack();
       return;
     }
@@ -2704,13 +2707,20 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         ? null
         : preset.messages[_random.nextInt(preset.messages.length)];
 
-    _sendPartnerInteraction(
-      type,
-      showSentNotice: false,
-      emoji: cleanEmoji,
-      customTitle: randomTitle,
-      customMessage: randomMessage,
-    );
+    unawaited(Future(() async {
+      final waitSeconds = await _consumeReactionThrowWaitSeconds();
+      if (waitSeconds > 0) {
+        _showReactionThrowLimitSnack();
+        return;
+      }
+      _sendPartnerInteraction(
+        type,
+        showSentNotice: false,
+        emoji: cleanEmoji,
+        customTitle: randomTitle,
+        customMessage: randomMessage,
+      );
+    }));
 
     // Mở khóa nút bấm sau 2 giây
     Future.delayed(const Duration(seconds: 2), () {

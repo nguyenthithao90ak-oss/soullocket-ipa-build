@@ -1021,29 +1021,40 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _switchToTab(int index) async {
     final nextIndex = index.clamp(0, _navItems.length - 1);
     if (!mounted) return;
+    final oldIndex = _currentIndex;
     if (_currentIndex != nextIndex) {
       HapticFeedback.selectionClick();
       _currentIndex = nextIndex;
       _isUserTabSwiping = false;
       _isUserTabSwipingNotifier.value = false;
-      _setActiveTabIndex(nextIndex);
+      SLTheme.isTabSwiping.value = false;
+      _backgroundTabIndexNotifier.value = nextIndex;
     }
     unawaited(_persistCurrentTab(nextIndex));
     if (_pageController.hasClients) {
-      final currentPage = _pageController.page ?? _currentIndex.toDouble();
-      if ((currentPage - nextIndex).abs() < 0.001) return;
+      final currentPage = _pageController.page ?? oldIndex.toDouble();
+      if ((currentPage - nextIndex).abs() < 0.001) {
+        _setActiveTabIndex(nextIndex);
+        return;
+      }
       final pageDistance = (currentPage - nextIndex).abs();
       final duration = Duration(
-        milliseconds: pageDistance > 1.0 ? 280 : 210,
+        milliseconds: pageDistance > 1.0 ? 240 : 180,
       );
+      _isUserTabSwipingNotifier.value = true;
+      SLTheme.isTabSwiping.value = true;
       await _pageController.animateToPage(
         nextIndex,
         duration: duration,
         curve: Curves.easeOutQuart,
       );
+      _isUserTabSwipingNotifier.value = false;
+      SLTheme.isTabSwiping.value = false;
+      _setActiveTabIndex(nextIndex);
       return;
     }
     _backgroundTabIndexNotifier.value = nextIndex;
+    _setActiveTabIndex(nextIndex);
   }
 
   Future<void> _openPinnedCountdownModeIfNeeded() async {
@@ -1091,10 +1102,12 @@ class _HomeScreenState extends State<HomeScreen>
     if (shouldStartTracking && !_isUserTabSwiping && mounted) {
       _isUserTabSwiping = true;
       _isUserTabSwipingNotifier.value = true;
+      SLTheme.isTabSwiping.value = true;
       _syncMusicAnimationState();
     } else if (shouldStopTracking && _isUserTabSwiping && mounted) {
       _isUserTabSwiping = false;
       _isUserTabSwipingNotifier.value = false;
+      SLTheme.isTabSwiping.value = false;
       _syncMusicAnimationState();
     }
     return false;

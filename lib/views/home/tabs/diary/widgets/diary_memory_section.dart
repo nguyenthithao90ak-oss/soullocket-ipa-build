@@ -714,17 +714,25 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                 aspectRatio: 1.0,
                 child: ValueListenableBuilder<int>(
                   valueListenable: widget.selectionListenable,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(18)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0x125C71D8),
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: SLTheme.isTabSwiping,
+                    builder: (context, isSwiping, child) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.all(Radius.circular(18)),
+                          boxShadow: isSwiping
+                              ? null
+                              : const [
+                                  BoxShadow(
+                                    color: Color(0x125C71D8),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
                         ),
-                      ],
-                    ),
+                        child: child,
+                      );
+                    },
                     child: ClipRRect(
                       borderRadius: const BorderRadius.all(Radius.circular(18)),
                       child: Hero(

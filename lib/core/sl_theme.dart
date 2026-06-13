@@ -444,6 +444,7 @@ class SLShadow {
 
 /// ─── Main Theme Class ─────────────────────────────────────────
 class SLTheme {
+  static final ValueNotifier<bool> isTabSwiping = ValueNotifier<bool>(false);
   static const String defaultFontKey = 'quicksand';
   static List<SLFontOption> get fontOptions => [
     SLFontOption(
@@ -1176,48 +1177,53 @@ class SLTheme {
     double radius = 24,
     Color? color,
   }) {
-    final ui = UiPrefs.notifier.value;
-    final effectProfile = UiPrefs.resolveEffectProfile(
-      state: ui,
-      isWeb: kIsWeb,
-    );
-    final useLiteGlass = !effectProfile.premiumEffects;
-    Color baseColor = color ?? glassCardColor;
-    if (ui.transparentMode) {
-      baseColor = baseColor.withValues(alpha: 0.8);
-    }
-    final effectiveColor = useLiteGlass
-        ? Color.alphaBlend(
-            Colors.white.withValues(alpha: kIsWeb ? 0.20 : 0.12),
-            baseColor.withValues(alpha: 0.92),
-          )
-        : baseColor;
-    final effectiveBorder =
-        useLiteGlass ? glassBorder.withValues(alpha: 0.72) : glassBorder;
-    final effectiveShadow = useLiteGlass ? SLShadow.sm : SLShadow.glass;
+    return ValueListenableBuilder<bool>(
+      valueListenable: isTabSwiping,
+      builder: (context, isSwiping, _) {
+        final ui = UiPrefs.notifier.value;
+        final effectProfile = UiPrefs.resolveEffectProfile(
+          state: ui,
+          isWeb: kIsWeb,
+        );
+        final useLiteGlass = !effectProfile.premiumEffects || isSwiping;
+        Color baseColor = color ?? glassCardColor;
+        if (ui.transparentMode) {
+          baseColor = baseColor.withValues(alpha: 0.8);
+        }
+        final effectiveColor = useLiteGlass
+            ? Color.alphaBlend(
+                Colors.white.withValues(alpha: kIsWeb ? 0.20 : 0.12),
+                baseColor.withValues(alpha: 0.92),
+              )
+            : baseColor;
+        final effectiveBorder =
+            useLiteGlass ? glassBorder.withValues(alpha: 0.72) : glassBorder;
+        final effectiveShadow = useLiteGlass ? SLShadow.sm : SLShadow.glass;
 
-    final decoratedChild = Container(
-      padding: padding ?? SLSpacing.all20,
-      decoration: BoxDecoration(
-        color: effectiveColor,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: effectiveBorder, width: 0.5),
-        boxShadow: effectiveShadow,
-      ),
-      child: child,
-    );
+        final decoratedChild = Container(
+          padding: padding ?? SLSpacing.all20,
+          decoration: BoxDecoration(
+            color: effectiveColor,
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(color: effectiveBorder, width: 0.5),
+            boxShadow: effectiveShadow,
+          ),
+          child: child,
+        );
 
-    return Container(
-      margin: margin ?? const EdgeInsets.fromLTRB(15, 0, 15, 20),
-      child: useLiteGlass
-          ? decoratedChild
-          : ClipRRect(
-              borderRadius: BorderRadius.circular(radius),
-              child: FastBackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                child: decoratedChild,
-              ),
-            ),
+        return Container(
+          margin: margin ?? const EdgeInsets.fromLTRB(15, 0, 15, 20),
+          child: useLiteGlass
+              ? decoratedChild
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(radius),
+                  child: FastBackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                    child: decoratedChild,
+                  ),
+                ),
+        );
+      },
     );
   }
 

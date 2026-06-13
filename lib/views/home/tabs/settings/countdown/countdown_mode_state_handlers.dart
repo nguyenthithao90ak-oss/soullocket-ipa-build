@@ -455,47 +455,30 @@ extension _CountdownModeIndependentScreenStatePart
     final prefs = await SharedPreferences.getInstance();
     final scope = _scopeKey;
     final snapshot = _sanitizeSnapshot(_captureCurrentSnapshot());
-    await prefs.setBool(_prefKey('single_mode', scope: scope), _singleMode);
-    await prefs.setString(_prefKey('theme_key', scope: scope), _themeKey);
-    await prefs.setString(
-      _prefKey('style_key', scope: scope),
-      snapshot.styleKey,
-    );
-    await prefs.setString(_prefKey('font_key', scope: scope), _fontKey);
-    await prefs.setString(
-      _prefKey('avatar_frame_key', scope: scope),
-      _avatarFrameKey,
-    );
-    await prefs.setBool(
-      _prefKey('transparent_mode', scope: scope),
-      _transparentMode,
-    );
-    await prefs.setDouble(_prefKey('size_px', scope: scope), _countdownSizePx);
-    await prefs.setString(
-      _prefKey('bg_url', scope: scope),
-      _customBackgroundUrl,
-    );
-    await prefs.setString(
-      _prefKey('center_icon_type', scope: scope),
-      _centerIconType,
-    );
-    await prefs.setString(_prefKey('top_label', scope: scope), _topLabelText);
-    await prefs.setString(
-      _prefKey('bottom_label', scope: scope),
-      _bottomLabelText,
-    );
-    await prefs.setString(_prefKey('name_u1', scope: scope), _nameU1);
-    await prefs.setString(_prefKey('name_u2', scope: scope), _nameU2);
-    await prefs.setString(_prefKey('avatar_1', scope: scope), _avatarUrl1);
-    await prefs.setString(_prefKey('avatar_2', scope: scope), _avatarUrl2);
-    await prefs.setString(
-      _prefKey('anchor_date', scope: scope),
-      _anchorDate == null ? '' : DateInputUtils.formatIsoDate(_anchorDate!),
-    );
-    await prefs.setInt(
-      _prefKey('updated_at_ms', scope: scope),
-      snapshot.updatedAtMs,
-    );
+
+    await Future.wait([
+      prefs.setBool(_prefKey('single_mode', scope: scope), _singleMode),
+      prefs.setString(_prefKey('theme_key', scope: scope), _themeKey),
+      prefs.setString(_prefKey('style_key', scope: scope), snapshot.styleKey),
+      prefs.setString(_prefKey('font_key', scope: scope), _fontKey),
+      prefs.setString(_prefKey('avatar_frame_key', scope: scope), _avatarFrameKey),
+      prefs.setBool(_prefKey('transparent_mode', scope: scope), _transparentMode),
+      prefs.setDouble(_prefKey('size_px', scope: scope), _countdownSizePx),
+      prefs.setString(_prefKey('bg_url', scope: scope), _customBackgroundUrl),
+      prefs.setString(_prefKey('center_icon_type', scope: scope), _centerIconType),
+      prefs.setString(_prefKey('top_label', scope: scope), _topLabelText),
+      prefs.setString(_prefKey('bottom_label', scope: scope), _bottomLabelText),
+      prefs.setString(_prefKey('name_u1', scope: scope), _nameU1),
+      prefs.setString(_prefKey('name_u2', scope: scope), _nameU2),
+      prefs.setString(_prefKey('avatar_1', scope: scope), _avatarUrl1),
+      prefs.setString(_prefKey('avatar_2', scope: scope), _avatarUrl2),
+      prefs.setString(
+        _prefKey('anchor_date', scope: scope),
+        _anchorDate == null ? '' : DateInputUtils.formatIsoDate(_anchorDate!),
+      ),
+      prefs.setInt(_prefKey('updated_at_ms', scope: scope), snapshot.updatedAtMs),
+    ]);
+
     if (mounted) {
       _safeSetState(() {
         _spaceSnapshots[scope] = snapshot;
@@ -507,11 +490,13 @@ extension _CountdownModeIndependentScreenStatePart
 
     final serializedSnapshot = _snapshotToSerializedMap(snapshot);
     if (_isSharedSpace(scope)) {
-      await _countdownSpaceService.updateSpaceSnapshot(
+      unawaited(_countdownSpaceService.updateSpaceSnapshot(
         selfHouseId: _selfSpaceHouseId,
         otherHouseId: scope,
         snapshot: serializedSnapshot,
-      );
+      ).catchError((Object e) {
+        debugPrint('Failed to update space snapshot: $e');
+      }));
       return;
     }
 
@@ -519,11 +504,13 @@ extension _CountdownModeIndependentScreenStatePart
     if (pendingRequest == null) {
       return;
     }
-    await _countdownSpaceService.updatePendingRequestSnapshot(
+    unawaited(_countdownSpaceService.updatePendingRequestSnapshot(
       requestId: pendingRequest.requestId,
       fromHouseId: _selfSpaceHouseId,
       snapshot: serializedSnapshot,
-    );
+    ).catchError((Object e) {
+      debugPrint('Failed to update pending request snapshot: $e');
+    }));
   }
 
   Future<void> _openSpace(String houseId) async {

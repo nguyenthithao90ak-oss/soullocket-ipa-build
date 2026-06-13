@@ -61,7 +61,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
     }
 
     if (result.action == _CountdownModeSettingsAction.save) {
-      await _refreshCountdownStyleUnlockState();
+      unawaited(_refreshCountdownStyleUnlockState());
       _safeSetState(() {
         _singleMode = result.singleMode;
         _anchorDate = result.anchorDate;

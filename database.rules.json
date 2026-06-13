@@ -533,6 +533,11 @@
           "$other": {
             ".validate": "newData.val() === data.val()"
           }
+        },
+        "reaction_flights": {
+          ".read": "auth != null && (root.child('houses').child($houseId).child('members').child(auth.uid).exists() || root.child('houses').child($houseId).child('owner_uid').val() === auth.uid || root.child('admins').child(auth.uid).exists() || root.child('admins_list').child(auth.uid).exists() || auth.token.admin === true)",
+          ".write": "auth != null && (root.child('houses').child($houseId).child('members').child(auth.uid).exists() || root.child('houses').child($houseId).child('owner_uid').val() === auth.uid || root.child('admins').child(auth.uid).exists() || root.child('admins_list').child(auth.uid).exists() || auth.token.admin === true)",
+          ".indexOn": ["sentAt"]
         }
       }
     },
@@ -913,7 +918,8 @@
       "$targetHouseId": {
         ".read": "auth != null && (root.child('sys_settings/is_maintenance').val() !== true) && (root.child('sys_settings/community_maintenance_mode').val() !== true) && (auth.token.admin === true || root.child('houses').child($targetHouseId).child('owner_uid').val() === auth.uid || root.child('houses').child($targetHouseId).child('members').child(auth.uid).exists())",
         ".indexOn": [
-          "ts"
+          "ts",
+          "type"
         ],
         "$notifId": {
           ".write": "auth != null && (root.child('sys_settings/is_maintenance').val() !== true) && (root.child('sys_settings/community_maintenance_mode').val() !== true) && (((auth.token.admin === true || root.child('admins').child(auth.uid).exists() || root.child('admins_list').child(auth.uid).exists()) && (!data.exists() || (data.child('immutable').val() !== true && data.child('systemLocked').val() !== true))) || (!data.exists() && newData.exists() && (root.child('houses').child(newData.child('from').val()).child('owner_uid').val() === auth.uid || root.child('houses').child(newData.child('from').val()).child('members').child(auth.uid).exists()) && newData.child('type').isString() && (newData.child('type').val() === 'friend_request' || newData.child('type').val() === 'friend_accept' || newData.child('type').val() === 'countdown_space_request' || newData.child('type').val() === 'countdown_space_accept' || newData.child('type').val() === 'countdown_space_delete_request' || newData.child('type').val() === 'countdown_space_deleted' || newData.child('type').val() === 'message' || newData.child('type').val() === 'like' || newData.child('type').val() === 'comment') && newData.child('msg').isString() && newData.child('ts').isNumber()) || (data.exists() && newData.exists() && (root.child('houses').child($targetHouseId).child('owner_uid').val() === auth.uid || root.child('houses').child($targetHouseId).child('members').child(auth.uid).exists()) && newData.child('from').val() === data.child('from').val() && newData.child('type').val() === data.child('type').val() && newData.child('msg').val() === data.child('msg').val() && newData.child('title').val() === data.child('title').val() && newData.child('ts').val() === data.child('ts').val() && newData.child('immutable').val() === data.child('immutable').val() && newData.child('systemLocked').val() === data.child('systemLocked').val()) || (data.exists() && !newData.exists() && data.child('immutable').val() !== true && data.child('systemLocked').val() !== true && (root.child('houses').child($targetHouseId).child('owner_uid').val() === auth.uid || root.child('houses').child($targetHouseId).child('members').child(auth.uid).exists())))",
@@ -1358,8 +1364,8 @@
     },
     "gps": {
       "$houseId": {
+        ".read": "auth != null && (root.child('houses').child($houseId).child('owner_uid').val() === auth.uid || root.child('houses').child($houseId).child('members').child(auth.uid).exists() || root.child('admins').child(auth.uid).exists() || root.child('admins_list').child(auth.uid).exists())",
         "$role": {
-          ".read": "auth != null && (root.child('houses').child($houseId).child('owner_uid').val() === auth.uid || root.child('houses').child($houseId).child('members').child(auth.uid).exists() || root.child('admins').child(auth.uid).exists() || root.child('admins_list').child(auth.uid).exists())",
           ".write": "auth != null && (($role === 'user1' && root.child('houses').child($houseId).child('owner_uid').val() === auth.uid) || ($role === 'user1' && root.child('houses').child($houseId).child('members').child(auth.uid).child('role').val() === 'user1') || ($role === 'user2' && root.child('houses').child($houseId).child('members').child(auth.uid).child('role').val() === 'user2'))",
           ".validate": "(!newData.hasChild('lat') || newData.child('lat').isNumber()) && (!newData.hasChild('lng') || newData.child('lng').isNumber()) && (!newData.hasChild('lt') || newData.child('lt').isNumber()) && (!newData.hasChild('lg') || newData.child('lg').isNumber()) && (!newData.hasChild('ts') || newData.child('ts').isNumber()) && (!newData.hasChild('acc') || newData.child('acc').isNumber()) && (!newData.hasChild('speed') || newData.child('speed').isNumber()) && (!newData.hasChild('isLive') || newData.child('isLive').isBoolean()) && (!newData.hasChild('sharingEnabled') || newData.child('sharingEnabled').isBoolean()) && (!newData.hasChild('everShared') || newData.child('everShared').isBoolean()) && (!newData.hasChild('lastSeenAt') || newData.child('lastSeenAt').isNumber()) && (!newData.hasChild('lastKnown') || ((!newData.child('lastKnown').hasChild('lat') || newData.child('lastKnown').child('lat').isNumber()) && (!newData.child('lastKnown').hasChild('lng') || newData.child('lastKnown').child('lng').isNumber()) && (!newData.child('lastKnown').hasChild('lt') || newData.child('lastKnown').child('lt').isNumber()) && (!newData.child('lastKnown').hasChild('lg') || newData.child('lastKnown').child('lg').isNumber()) && (!newData.child('lastKnown').hasChild('ts') || newData.child('lastKnown').child('ts').isNumber()) && (!newData.child('lastKnown').hasChild('acc') || newData.child('lastKnown').child('acc').isNumber())))"
         }
@@ -1367,8 +1373,10 @@
     },
     "gps_history": {
       "$houseId": {
+        ".read": "auth != null && (root.child('houses').child($houseId).child('owner_uid').val() === auth.uid || root.child('houses').child($houseId).child('members').child(auth.uid).exists() || root.child('admins').child(auth.uid).exists() || root.child('admins_list').child(auth.uid).exists())",
         "$role": {
           "$dateKey": {
+            ".indexOn": ["ts"],
             "$entryId": {
               ".read": "auth != null && (root.child('houses').child($houseId).child('owner_uid').val() === auth.uid || root.child('houses').child($houseId).child('members').child(auth.uid).exists() || root.child('admins').child(auth.uid).exists() || root.child('admins_list').child(auth.uid).exists())",
               ".write": "auth != null && (($role === 'user1' && root.child('houses').child($houseId).child('owner_uid').val() === auth.uid) || ($role === 'user1' && root.child('houses').child($houseId).child('members').child(auth.uid).child('role').val() === 'user1') || ($role === 'user2' && root.child('houses').child($houseId).child('members').child(auth.uid).child('role').val() === 'user2'))",

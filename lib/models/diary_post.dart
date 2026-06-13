@@ -95,6 +95,7 @@ class DiaryPost {
         'pinned': pinned,
         if (pinnedAt != null) 'pinnedAt': pinnedAt,
         if (editedAt != null) 'editedAt': editedAt,
+        if (likes != null) 'likes': likes,
         if (blurHash != null) 'blurHash': blurHash,
       };
 }

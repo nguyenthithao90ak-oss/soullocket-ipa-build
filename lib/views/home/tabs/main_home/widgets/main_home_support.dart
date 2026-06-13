@@ -98,6 +98,7 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   final List<_ParticleData> _particles = [];
+  late final List<Widget> _particleWidgets;
 
   @override
   void initState() {
@@ -109,6 +110,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
 
     final random = Random();
     const particleCount = 4; // Slightly more particles
+    final hasAsset = widget.assetPath != null && widget.assetPath!.trim().isNotEmpty;
+
     for (int i = 0; i < particleCount; i++) {
       _particles.add(_ParticleData(
         delay: random.nextDouble() * 0.35, // More spread out
@@ -118,6 +121,44 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
         baseRotation: (random.nextDouble() - 0.5) * 0.72,
       ));
     }
+
+    _particleWidgets = List.generate(particleCount, (i) {
+      final p = _particles[i];
+      return hasAsset
+          ? Image.asset(
+              widget.assetPath!,
+              width: p.size,
+              height: p.size,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.low, // Optimized
+              errorBuilder: (_, __, ___) => Text(
+                widget.emoji,
+                style: TextStyle(
+                  fontSize: p.size,
+                  height: 1,
+                  shadows: [
+                    Shadow(
+                      color: Colors.pinkAccent.withValues(alpha: 0.5),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : Text(
+              widget.emoji,
+              style: TextStyle(
+                fontSize: p.size,
+                height: 1,
+                shadows: [
+                  Shadow(
+                    color: Colors.pinkAccent.withValues(alpha: 0.5),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+            );
+    });
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -146,7 +187,10 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
       builder: (context, child) {
         return Stack(
           clipBehavior: Clip.none,
-          children: _particles.map((p) {
+          children: List.generate(_particles.length, (index) {
+            final p = _particles[index];
+            final particleWidget = _particleWidgets[index];
+
             // Local progress for this particle
             double t = (_controller.value - p.delay) / p.flightDuration;
             if (t < 0) t = 0;
@@ -187,50 +231,14 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                           (t * 3.14 * 2 * (widget.shootToRight ? 1 : -1)),
                       child: Transform.scale(
                         scale: currentScale,
-                        child: widget.assetPath != null &&
-                                widget.assetPath!.trim().isNotEmpty
-                            ? Image.asset(
-                                widget.assetPath!,
-                                width: p.size,
-                                height: p.size,
-                                fit: BoxFit.contain,
-                                filterQuality: FilterQuality.medium, // Optimized
-                                errorBuilder: (_, __, ___) => Text(
-                                  widget.emoji,
-                                  style: TextStyle(
-                                    fontSize: p.size,
-                                    height: 1,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.pinkAccent
-                                            .withValues(alpha: 0.5),
-                                        blurRadius: 10,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            : Text(
-                                widget.emoji,
-                                style: TextStyle(
-                                  fontSize: p.size,
-                                  height: 1,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.pinkAccent
-                                          .withValues(alpha: 0.5),
-                                      blurRadius: 10,
-                                    ),
-                                  ],
-                                ),
-                              ),
+                        child: particleWidget,
                       ),
                     ),
                   ),
                 ),
               ),
             );
-          }).toList(),
+          }),
         );
       },
     );
