@@ -106,70 +106,78 @@ class _DiaryTabShell extends StatelessWidget {
                     children: [
                       // Memory tab - always mounted, just hidden
                       Positioned.fill(
-                        child: AnimatedOpacity(
-                          key: const ValueKey('memory_tab_opacity'),
-                          opacity: state._currentTab == 'memory' ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          child: IgnorePointer(
-                            ignoring: state._currentTab != 'memory',
-                            child: memorySection,
+                        child: Visibility(
+                          visible: state._currentTab == 'memory' || state._isAnimatingTabSwitch,
+                          maintainState: true,
+                          child: AnimatedOpacity(
+                            key: const ValueKey('memory_tab_opacity'),
+                            opacity: state._currentTab == 'memory' ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            child: IgnorePointer(
+                              ignoring: state._currentTab != 'memory',
+                              child: memorySection,
+                            ),
                           ),
                         ),
                       ),
                       // Post tab - always mounted, just hidden
                       Positioned.fill(
-                        child: AnimatedOpacity(
-                          key: const ValueKey('diary_tab_opacity'),
-                          opacity: state._currentTab == 'diary' ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          child: IgnorePointer(
-                            ignoring: state._currentTab != 'diary',
-                            child: ValueListenableBuilder<List<DiaryPost>>(
-                              valueListenable: state._feedController.postsVN,
-                              builder: (context, posts, child) {
-                                return DiaryList(
-                                  showDiaryPrivacyNotice:
-                                      state._showDiaryPrivacyNotice,
-                                  buildDiaryPrivacyNotice: () =>
-                                      const SizedBox.shrink(),
-                                  buildDiaryComposerCard: () =>
-                                      _DiaryComposerLauncherSection(
-                                    state: state,
-                                  ),
-                                  isLoading: state._isLoading &&
-                                      !state._isAnimatingTabSwitch,
-                                  isLoadingMore: state._feedController.isLoadingMore,
-                                  hasMore: state._feedController.hasMore,
-                                  houseId: state._houseId,
-                                  buildHouseSetupState: ({
-                                    required String title,
-                                    required String message,
-                                  }) =>
-                                      DiaryHouseSetupCard(
-                                    title: title,
-                                    message: message,
-                                    onRetry: state._fetchDiaryPosts,
-                                  ),
-                                  posts: posts,
-                                  buildDiaryEmptyState: () =>
-                                      const DiaryPostsEmptyStateCard(),
-                                  buildPostCard: (post) => DiaryItem(
-                                    post: post,
-                                    activeRoleKey: state._activeRoleKey,
-                                    nameU1: state._nameU1,
-                                    nameU2: state._nameU2,
-                                    resolvedAuthorName:
-                                        state._resolvedPostAuthorName(post),
-                                    postImageCacheWidth:
-                                        state._postImageCacheWidth(context),
-                                    onConfirmDelete:
-                                        state._confirmDeleteDiaryPost,
-                                  ),
-                                  scrollController: state._diaryScrollController,
-                                );
-                              },
+                        child: Visibility(
+                          visible: state._currentTab == 'diary' || state._isAnimatingTabSwitch,
+                          maintainState: true,
+                          child: AnimatedOpacity(
+                            key: const ValueKey('diary_tab_opacity'),
+                            opacity: state._currentTab == 'diary' ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            child: IgnorePointer(
+                              ignoring: state._currentTab != 'diary',
+                              child: ValueListenableBuilder<List<DiaryPost>>(
+                                valueListenable: state._feedController.postsVN,
+                                builder: (context, posts, child) {
+                                  return DiaryList(
+                                    showDiaryPrivacyNotice:
+                                        state._showDiaryPrivacyNotice,
+                                    buildDiaryPrivacyNotice: () =>
+                                        const SizedBox.shrink(),
+                                    buildDiaryComposerCard: () =>
+                                        _DiaryComposerLauncherSection(
+                                      state: state,
+                                    ),
+                                    isLoading: state._isLoading &&
+                                        !state._isAnimatingTabSwitch,
+                                    isLoadingMore: state._feedController.isLoadingMore,
+                                    hasMore: state._feedController.hasMore,
+                                    houseId: state._houseId,
+                                    buildHouseSetupState: ({
+                                      required String title,
+                                      required String message,
+                                    }) =>
+                                        DiaryHouseSetupCard(
+                                      title: title,
+                                      message: message,
+                                      onRetry: state._fetchDiaryPosts,
+                                    ),
+                                    posts: posts,
+                                    buildDiaryEmptyState: () =>
+                                        const DiaryPostsEmptyStateCard(),
+                                    buildPostCard: (post) => DiaryItem(
+                                      post: post,
+                                      activeRoleKey: state._activeRoleKey,
+                                      nameU1: state._nameU1,
+                                      nameU2: state._nameU2,
+                                      resolvedAuthorName:
+                                          state._resolvedPostAuthorName(post),
+                                      postImageCacheWidth:
+                                          state._postImageCacheWidth(context),
+                                      onConfirmDelete:
+                                          state._confirmDeleteDiaryPost,
+                                    ),
+                                    scrollController: state._diaryScrollController,
+                                  );
+                                },
+                              ),
                             ),
                           ),
                         ),
