@@ -14,6 +14,8 @@ import '../../../../../widgets/skeleton_container.dart';
 import '../controllers/diary_memory_controller.dart';
 import 'diary_tab_shell_sections.dart';
 
+const Color _diaryMemoryAccentColor = Color(0xFFD81B60);
+
 typedef DiaryPrepareMemoryFeedCallback = PreparedDiaryMemoryFeed Function({
   required Object? liveSource,
   required Object? cacheSource,
@@ -51,7 +53,6 @@ class DiaryMemorySection extends StatefulWidget {
     DateTime selectedDate,
     List<Map<String, dynamic>> photos,
   ) onEditGroupDate;
-  final ValueListenable<bool>? isSwipingListenable;
 
   const DiaryMemorySection({
     super.key,
@@ -77,7 +78,6 @@ class DiaryMemorySection extends StatefulWidget {
     required this.onLoadMore,
     required this.onEnsurePhotoUrl,
     required this.onEditGroupDate,
-    this.isSwipingListenable,
   });
 
   @override
@@ -266,45 +266,37 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     if (item.isHeader) {
                                       final highlights = item.highlights;
                                       if (highlights.isNotEmpty) {
-                                        return RepaintBoundary(
-                                          child: _DiaryMemorySpecialHeader(
-                                            icon:
-                                                highlights.first['icon'] ?? '💖',
-                                            title: highlights.first['text'] ?? '',
-                                            dateString: item.dateString ?? '',
-                                            totalPhotos: item.totalPhotos ?? 0,
-                                          ),
+                                        return _DiaryMemorySpecialHeader(
+                                          icon:
+                                              highlights.first['icon'] ?? '💖',
+                                          title: highlights.first['text'] ?? '',
+                                          dateString: item.dateString ?? '',
+                                          totalPhotos: item.totalPhotos ?? 0,
                                         );
                                       }
 
-                                      return RepaintBoundary(
-                                        child: _DiaryMemoryDateHeader(
-                                          dateString: item.dateString ?? '',
-                                          totalPhotos: item.totalPhotos ?? 0,
-                                        ),
+                                      return _DiaryMemoryDateHeader(
+                                        dateString: item.dateString ?? '',
+                                        totalPhotos: item.totalPhotos ?? 0,
                                       );
                                     }
 
-                                    return RepaintBoundary(
-                                      child: _DiaryMemoryPhotoRow(
-                                        rowPhotos: item.photosRow ?? const [],
-                                        thumbnailCacheWidth:
-                                            widget.thumbnailCacheWidth,
-                                        selectionListenable:
-                                            widget.selectionListenable,
-                                        selectedMemories: widget.selectedMemories,
-                                        isSelectionMode: widget.isSelectionMode,
-                                        onToggleSelection:
-                                            widget.onToggleSelection,
-                                        onOpenMemory: widget.onOpenMemory,
-                                        allPhotos: photos,
-                                        onEnsurePhotoUrl: widget.onEnsurePhotoUrl,
-                                        isSwipingListenable: widget.isSwipingListenable,
-                                      ),
+                                    return _DiaryMemoryPhotoRow(
+                                      rowPhotos: item.photosRow ?? const [],
+                                      thumbnailCacheWidth:
+                                          widget.thumbnailCacheWidth,
+                                      selectionListenable:
+                                          widget.selectionListenable,
+                                      selectedMemories: widget.selectedMemories,
+                                      isSelectionMode: widget.isSelectionMode,
+                                      onToggleSelection:
+                                          widget.onToggleSelection,
+                                      onOpenMemory: widget.onOpenMemory,
+                                      allPhotos: photos,
+                                      onEnsurePhotoUrl: widget.onEnsurePhotoUrl,
                                     );
                                   },
                                   childCount: flattenedItems.length,
-                                  addRepaintBoundaries: false,
                                 ),
                               ),
                             );
@@ -389,12 +381,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
 }
 
 class DiaryMemoryFixedBackground extends StatelessWidget {
-  final ValueListenable<bool>? isSwipingListenable;
-
-  const DiaryMemoryFixedBackground({
-    super.key,
-    this.isSwipingListenable,
-  });
+  const DiaryMemoryFixedBackground({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -408,6 +395,12 @@ class DiaryMemoryFixedBackground extends StatelessWidget {
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+        ),
+      ),
+      child: const RepaintBoundary(
+        child: CustomPaint(
+          painter: _DiaryMemoryPatternPainter(),
+          child: SizedBox.expand(),
         ),
       ),
     );
@@ -426,49 +419,88 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 8, left: 10, right: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEAFBFF),
-              borderRadius: BorderRadius.circular(8),
+      padding: const EdgeInsets.only(top: 24, bottom: 12, left: 10, right: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.70),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.86)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF7C8BFF).withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.access_time_rounded,
-                  size: 14,
-                  color: Color(0xFF62C7B5),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFEEF7), Color(0xFFEAFBFF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  dateString,
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF2E2740),
-                    fontSize: 12,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                Icons.collections_bookmark_rounded,
+                size: 18,
+                color: Color(0xFFD81B60),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr('home_albumngy_7e474f'),
+                    style: SLTheme.quicksand(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF7C6D83),
+                      letterSpacing: 0.4,
+                    ),
                   ),
+                  const SizedBox(height: 2),
+                  Text(
+                    dateString,
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF2E2740),
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF4EEFF),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: const Color(0xFFE9D7FF)),
+              ),
+              child: Text(
+                L10nService().format(
+                  'diary_photos_count',
+                  {'count': totalPhotos},
                 ),
-              ],
+                style: SLTheme.quicksand(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF7C5CE6),
+                  letterSpacing: 0.2,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            L10nService().format(
-              'diary_photos_count',
-              {'count': totalPhotos},
-            ),
-            style: SLTheme.quicksand(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF7C6D83),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -489,42 +521,98 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 8, left: 10, right: 10),
+    return Container(
+      margin: const EdgeInsets.only(top: 20, bottom: 8, left: 12, right: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFEEF7), Color(0xFFF3F0FF), Color(0xFFEAFBFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.90),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF7FB2).withValues(alpha: 0.14),
+            blurRadius: 20,
+            offset: const Offset(0, 9),
+          ),
+        ],
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFEEF7),
-              borderRadius: BorderRadius.circular(8),
+              color: Colors.white.withValues(alpha: 0.82),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.92),
+                width: 1,
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            alignment: Alignment.center,
+            child: Text(icon, style: const TextStyle(fontSize: 18)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(icon, style: const TextStyle(fontSize: 12)),
-                const SizedBox(width: 4),
+                Text(
+                  context.tr('home_storycbit_5a2a17'),
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF7C5CE6),
+                    fontSize: 10,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 3),
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFFD81B60),
-                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF2E2740),
+                    fontSize: 13.5,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  dateString,
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF7C6D83),
+                    fontSize: 11,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            '$dateString • ${L10nService().format('diary_photos_count', {
-                  'count': totalPhotos
-                })}',
-            style: SLTheme.quicksand(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF7C6D83),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.78),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: const Color(0xFFE9D7FF)),
+            ),
+            child: Text(
+              L10nService().format(
+                'diary_photos_count',
+                {'count': totalPhotos},
+              ),
+              style: SLTheme.quicksand(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: _diaryMemoryAccentColor,
+              ),
             ),
           ),
         ],
@@ -546,7 +634,6 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
   ) onOpenMemory;
   final List<Map<String, dynamic>> allPhotos;
   final Future<void> Function(Map<String, dynamic> photo) onEnsurePhotoUrl;
-  final ValueListenable<bool>? isSwipingListenable;
 
   const _DiaryMemoryPhotoRow({
     required this.rowPhotos,
@@ -558,7 +645,6 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
     required this.onOpenMemory,
     required this.allPhotos,
     required this.onEnsurePhotoUrl,
-    this.isSwipingListenable,
   });
 
   @override
@@ -714,33 +800,31 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                 aspectRatio: 1.0,
                 child: ValueListenableBuilder<int>(
                   valueListenable: widget.selectionListenable,
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: SLTheme.isTabSwiping,
-                    builder: (context, isSwiping, child) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.all(Radius.circular(18)),
-                          boxShadow: isSwiping
-                              ? null
-                              : const [
-                                  BoxShadow(
-                                    color: Color(0x125C71D8),
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              const Color(0xFF5C71D8).withValues(alpha: 0.14),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
                         ),
-                        child: child,
-                      );
-                    },
+                        BoxShadow(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          blurRadius: 8,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.all(Radius.circular(18)),
+                      borderRadius: BorderRadius.circular(18),
                       child: Hero(
                         tag: 'memory_image_${photo['id']}',
                         child: Image(
                           image: imageProvider,
                           fit: BoxFit.cover,
-                          filterQuality: FilterQuality.low,
+                          filterQuality: FilterQuality.high,
                           gaplessPlayback: true,
                           frameBuilder:
                               (context, child, frame, wasSynchronouslyLoaded) =>
@@ -874,7 +958,97 @@ abstract final class _DiaryMemoryImageProviders {
   }
 }
 
+class _DiaryMemoryPatternPainter extends CustomPainter {
+  const _DiaryMemoryPatternPainter();
 
+  @override
+  void paint(Canvas canvas, Size size) {
+    final washPaint = Paint()..style = PaintingStyle.fill;
+
+    washPaint.color = const Color(0xFFFF7FB2).withValues(alpha: 0.14);
+    canvas.drawCircle(
+      Offset(size.width * 0.86, size.height * 0.08),
+      size.width * 0.32,
+      washPaint,
+    );
+
+    washPaint.color = const Color(0xFF69D2E7).withValues(alpha: 0.16);
+    canvas.drawCircle(
+      Offset(size.width * 0.06, size.height * 0.28),
+      size.width * 0.24,
+      washPaint,
+    );
+
+    washPaint.color = const Color(0xFFFFD166).withValues(alpha: 0.18);
+    canvas.drawCircle(
+      Offset(size.width * 0.82, size.height * 0.76),
+      size.width * 0.30,
+      washPaint,
+    );
+
+    final dotPaint = Paint()..style = PaintingStyle.fill;
+    final dots = <({double x, double y, double r, Color color})>[
+      (x: 0.16, y: 0.10, r: 3.0, color: const Color(0xFFFF7FB2)),
+      (x: 0.34, y: 0.18, r: 2.3, color: const Color(0xFF62C7B5)),
+      (x: 0.72, y: 0.22, r: 2.8, color: const Color(0xFFFFC857)),
+      (x: 0.24, y: 0.46, r: 2.5, color: const Color(0xFFFF7FB2)),
+      (x: 0.66, y: 0.52, r: 3.4, color: const Color(0xFF7C8BFF)),
+      (x: 0.14, y: 0.78, r: 2.6, color: const Color(0xFF62C7B5)),
+      (x: 0.52, y: 0.88, r: 2.7, color: const Color(0xFFFF7FB2)),
+    ];
+    for (final dot in dots) {
+      dotPaint.color = dot.color.withValues(alpha: 0.28);
+      canvas.drawCircle(
+        Offset(size.width * dot.x, size.height * dot.y),
+        dot.r,
+        dotPaint,
+      );
+    }
+
+    _drawHeart(
+      canvas,
+      Offset(size.width * 0.88, size.height * 0.34),
+      0.72,
+      const Color(0xFFFF7FB2).withValues(alpha: 0.16),
+    );
+    _drawHeart(
+      canvas,
+      Offset(size.width * 0.18, size.height * 0.62),
+      0.55,
+      const Color(0xFF7C8BFF).withValues(alpha: 0.14),
+    );
+
+    final labelPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.44)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(size.width * 0.58, size.height * 0.58, 86, 30),
+        const Radius.circular(18),
+      ),
+      labelPaint,
+    );
+  }
+
+  void _drawHeart(Canvas canvas, Offset center, double scale, Color color) {
+    final path = Path()
+      ..moveTo(0, 10)
+      ..cubicTo(-26, -10, -38, 22, 0, 44)
+      ..cubicTo(38, 22, 26, -10, 0, 10)
+      ..close();
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(scale, scale);
+    canvas.drawPath(path, paint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
 
 class _DiaryMemoryHeroCard extends StatelessWidget {
   final int totalPhotos;
@@ -901,119 +1075,146 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusChips = <Widget>[
+      _DiaryMemoryHeroChip(
+        icon: Icons.photo_rounded,
+        label: L10nService().format(
+          'diary_photos_count',
+          {'count': totalPhotos},
+        ),
+        color: const Color(0xFFD81B60),
+        background: const Color(0xFFFFEEF5),
+      ),
+      _DiaryMemoryHeroChip(
+        icon: _statusIcon,
+        label: _statusLabel,
+        color: _statusColor,
+        background: _statusBackground,
+        minWidth: 126,
+      ),
+    ];
+
     return Container(
-      margin: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.white.withValues(alpha: 0.98),
-            const Color(0xFFFFF0F7).withValues(alpha: 0.96),
+            Colors.white.withValues(alpha: 0.96),
+            const Color(0xFFFFF0F7).withValues(alpha: 0.94),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white, width: 1.5),
+        borderRadius: BorderRadius.circular(28),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.86), width: 1.4),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF7FB2).withValues(alpha: 0.12),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: const Color(0xFFFF7FB2).withValues(alpha: 0.16),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: const Color(0xFF62C7B5).withValues(alpha: 0.10),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      child: Stack(
         children: [
-          Row(
+          Positioned(
+            right: -4,
+            top: -8,
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              size: 50,
+              color: const Color(0xFFFFC857).withValues(alpha: 0.18),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF6F91), Color(0xFF62C7B5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.collections_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      context.tr('home_knimcachng_692bf0'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF2E2740),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF6F91), Color(0xFF62C7B5)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: [
-                        _DiaryMemoryHeroChip(
-                          icon: Icons.photo_rounded,
-                          label: L10nService().format(
-                            'diary_photos_count',
-                            {'count': totalPhotos},
-                          ),
-                          color: const Color(0xFFD81B60),
-                          background: const Color(0xFFFFEEF5),
-                        ),
-                        _DiaryMemoryHeroChip(
-                          icon: _statusIcon,
-                          label: _statusLabel,
-                          color: _statusColor,
-                          background: _statusBackground,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              const Color(0xFFFF6F91).withValues(alpha: 0.24),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              _DiaryMemoryAddButton(
-                onTap: onAdd,
-                isLoading: isUploading,
-              ),
-            ],
-          ),
-          if (hasPendingUploadRetry) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF4D6),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFF0C36A)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.error_outline_rounded,
-                    color: Color(0xFF8E5B00),
-                    size: 18,
+                    child: const Icon(
+                      Icons.collections_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('home_knimcachng_692bf0'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            fontSize: 19,
+                            height: 1.08,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF2E2740),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          context.tr('home_lunhmlinha_795e58'),
+                          style: SLTheme.quicksand(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF7C6D83),
+                            height: 1.4,
+                          ),
+                        ),
+
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  ...statusChips,
+                  _DiaryMemoryAddButton(
+                    onTap: onAdd,
+                    isLoading: isUploading,
+                  ),
+                ],
+              ),
+              if (hasPendingUploadRetry) ...[
+                const SizedBox(height: 12),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 300;
+                    final message = Text(
                       pendingUploadMessage,
                       style: SLTheme.quicksand(
                         fontSize: 12,
@@ -1021,30 +1222,73 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                         color: const Color(0xFF7A5200),
                         height: 1.35,
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed:
-                        isUploading ? null : () => onRetryPendingUpload(),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      minimumSize: Size.zero,
-                    ),
-                    child: Text(
-                      context.tr('home_thli_4dffdf'),
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF8E5B00),
-                        fontSize: 12,
+                    );
+                    final retryButton = TextButton(
+                      onPressed:
+                          isUploading ? null : () => onRetryPendingUpload(),
+                      child: Text(
+                        context.tr('home_thli_4dffdf'),
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF8E5B00),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+                    );
+
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF4D6),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: const Color(0xFFF0C36A),
+                        ),
+                      ),
+                      child: compact
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(
+                                      Icons.error_outline_rounded,
+                                      color: Color(0xFF8E5B00),
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(child: message),
+                                  ],
+                                ),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: retryButton,
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                const Icon(
+                                  Icons.error_outline_rounded,
+                                  color: Color(0xFF8E5B00),
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(child: message),
+                                const SizedBox(width: 8),
+                                retryButton,
+                              ],
+                            ),
+                    );
+                  },
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );
@@ -1108,41 +1352,46 @@ class _DiaryMemoryHeroChip extends StatelessWidget {
   final String label;
   final Color color;
   final Color background;
+  final double? minWidth;
 
   const _DiaryMemoryHeroChip({
     required this.icon,
     required this.label,
     required this.color,
     required this.background,
+    this.minWidth,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.fade,
-              softWrap: false,
-              style: SLTheme.quicksand(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                color: color,
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: minWidth ?? 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.fade,
+                softWrap: false,
+                style: SLTheme.quicksand(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1304,6 +1553,7 @@ class _DiaryMemoryAddButton extends StatelessWidget {
     );
   }
 }
+
 
 class _DiaryMemoryInlineLoading extends StatelessWidget {
   const _DiaryMemoryInlineLoading();

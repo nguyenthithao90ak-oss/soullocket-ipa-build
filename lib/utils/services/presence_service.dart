@@ -115,9 +115,6 @@ class PresenceService {
     }
 
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
-    final normalizedIgnoredUid = ignoreUid?.trim();
-    final hasIgnoredUidFilter =
-        normalizedIgnoredUid != null && normalizedIgnoredUid.isNotEmpty;
     final sessions = data['sessions'];
     if (sessions is Map) {
       final freshSessionCount = _countFreshSessions(
@@ -125,31 +122,11 @@ class PresenceService {
         nowMs: now,
         ignoreUid: ignoreUid,
       );
-      if (freshSessionCount > 0) {
-        return true;
-      }
+      return freshSessionCount > 0;
     }
-    if (hasIgnoredUidFilter) {
-      return false;
-    }
-
-    final activeSessionCount = data['activeSessionCount'];
-    if (activeSessionCount is num && activeSessionCount.toInt() > 0) {
-      return true;
-    }
-
-    final status = data['status']?.toString().trim().toLowerCase();
-    if (status != 'online') {
-      return false;
-    }
-
-    final lastSeen = _readEpochMs(data['lastSeen']);
-    if (lastSeen == null) {
-      return true;
-    }
-    return now - lastSeen >= 0 &&
-        now - lastSeen <= onlineFreshness.inMilliseconds;
+    return false;
   }
+
 
   static int? lastSeenMs(Map<dynamic, dynamic>? data) {
     return _readEpochMs(data?['lastSeen']);

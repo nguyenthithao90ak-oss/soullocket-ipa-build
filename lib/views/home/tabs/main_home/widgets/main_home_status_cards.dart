@@ -419,6 +419,35 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     required bool compact,
     bool enableMotion = true,
   }) {
+    if (SLTheme.isTabSwiping.value) {
+      return SizedBox(
+        height: compact ? 70 : 80,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            for (final metric in metrics)
+              Container(
+                width: compact ? 50 : 60,
+                height: compact ? 50 : 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: metric.color.withValues(alpha: 0.1),
+                  border: Border.all(color: metric.color.withValues(alpha: 0.2)),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${metric.value}%',
+                  style: SLTheme.quicksand(
+                    fontSize: compact ? 12 : 13,
+                    fontWeight: FontWeight.w900,
+                    color: metric.color,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
     final bubbleSize = compact ? 58.0 : 60.0;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

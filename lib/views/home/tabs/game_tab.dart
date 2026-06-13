@@ -391,35 +391,45 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                 ),
               ),
               if (_isBannerReady && _bannerAd != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 24, 10, 0),
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.4)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                ValueListenableBuilder<bool>(
+                  valueListenable: SLTheme.isTabSwiping,
+                  builder: (context, isSwiping, _) {
+                    if (isSwiping) {
+                      return SizedBox(
+                        height: _bannerAd!.size.height.toDouble() + 32,
+                      );
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 24, 10, 0),
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.4)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: SizedBox(
-                          width: _bannerAd!.size.width.toDouble(),
-                          height: _bannerAd!.size.height.toDouble(),
-                          child: AdWidget(ad: _bannerAd!),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: SizedBox(
+                              width: _bannerAd!.size.width.toDouble(),
+                              height: _bannerAd!.size.height.toDouble(),
+                              child: AdWidget(ad: _bannerAd!),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
             ],
           ),

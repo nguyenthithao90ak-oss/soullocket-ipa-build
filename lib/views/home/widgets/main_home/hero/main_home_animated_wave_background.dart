@@ -176,6 +176,12 @@ class _WavePainter extends CustomPainter {
       Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
     );
 
+    if (SLTheme.isTabSwiping.value) {
+      final baseColor = const Color(0xFFFFC6DA).withValues(alpha: 0.25);
+      canvas.drawCircle(center, radius, Paint()..color = baseColor);
+      return;
+    }
+
     if (styleKey == 'plain') {
       return;
     } else if (styleKey == 'glow') {

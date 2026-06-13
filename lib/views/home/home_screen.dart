@@ -83,11 +83,15 @@ typedef _HomeTabBuilder = Widget Function(bool isActive);
 class _TabActivationHost extends StatefulWidget {
   final int tabIndex;
   final ValueListenable<int> activeIndexListenable;
+  final ValueListenable<int> backgroundIndexListenable;
+  final ValueListenable<bool> isSwipingListenable;
   final _HomeTabBuilder builder;
 
   const _TabActivationHost({
     required this.tabIndex,
     required this.activeIndexListenable,
+    required this.backgroundIndexListenable,
+    required this.isSwipingListenable,
     required this.builder,
   });
 
@@ -97,42 +101,83 @@ class _TabActivationHost extends StatefulWidget {
 
 class _TabActivationHostState extends State<_TabActivationHost> {
   late bool _isActive;
+  late bool _isVisible;
   Widget? _cachedChild;
 
   @override
   void initState() {
     super.initState();
     _isActive = widget.activeIndexListenable.value == widget.tabIndex;
-    widget.activeIndexListenable.addListener(_onActiveIndexChanged);
+    _isVisible = _calculateVisibility();
+    widget.activeIndexListenable.addListener(_onStateChanged);
+    widget.backgroundIndexListenable.addListener(_onStateChanged);
+    widget.isSwipingListenable.addListener(_onStateChanged);
     _cachedChild = widget.builder(_isActive);
+  }
+
+  bool _calculateVisibility() {
+    final activeIndex = widget.activeIndexListenable.value;
+    if (activeIndex == widget.tabIndex) {
+      return true;
+    }
+    final backgroundIndex = widget.backgroundIndexListenable.value;
+    if (backgroundIndex == widget.tabIndex) {
+      return true;
+    }
+    final isSwiping = widget.isSwipingListenable.value;
+    if (isSwiping) {
+      final diff = (widget.tabIndex - backgroundIndex).abs();
+      if (diff <= 1) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @override
   void didUpdateWidget(covariant _TabActivationHost oldWidget) {
     super.didUpdateWidget(oldWidget);
+    bool needsRebuild = false;
     if (oldWidget.activeIndexListenable != widget.activeIndexListenable ||
+        oldWidget.backgroundIndexListenable != widget.backgroundIndexListenable ||
+        oldWidget.isSwipingListenable != widget.isSwipingListenable ||
         oldWidget.tabIndex != widget.tabIndex) {
-      oldWidget.activeIndexListenable.removeListener(_onActiveIndexChanged);
+      oldWidget.activeIndexListenable.removeListener(_onStateChanged);
+      oldWidget.backgroundIndexListenable.removeListener(_onStateChanged);
+      oldWidget.isSwipingListenable.removeListener(_onStateChanged);
+
+      widget.activeIndexListenable.addListener(_onStateChanged);
+      widget.backgroundIndexListenable.addListener(_onStateChanged);
+      widget.isSwipingListenable.addListener(_onStateChanged);
+
       _isActive = widget.activeIndexListenable.value == widget.tabIndex;
-      widget.activeIndexListenable.addListener(_onActiveIndexChanged);
+      _isVisible = _calculateVisibility();
+      needsRebuild = true;
     }
     // Update cache if the builder itself changes (e.g., from a hot reload or parent rebuild)
     if (oldWidget.builder != widget.builder) {
+      needsRebuild = true;
+    }
+    if (needsRebuild) {
       _cachedChild = widget.builder(_isActive);
     }
   }
 
   @override
   void dispose() {
-    widget.activeIndexListenable.removeListener(_onActiveIndexChanged);
+    widget.activeIndexListenable.removeListener(_onStateChanged);
+    widget.backgroundIndexListenable.removeListener(_onStateChanged);
+    widget.isSwipingListenable.removeListener(_onStateChanged);
     super.dispose();
   }
 
-  void _onActiveIndexChanged() {
+  void _onStateChanged() {
     final nextActive = widget.activeIndexListenable.value == widget.tabIndex;
-    if (_isActive != nextActive) {
+    final nextVisible = _calculateVisibility();
+    if (_isActive != nextActive || _isVisible != nextVisible) {
       setState(() {
         _isActive = nextActive;
+        _isVisible = nextVisible;
         _cachedChild = widget.builder(_isActive);
       });
     }
@@ -140,9 +185,13 @@ class _TabActivationHostState extends State<_TabActivationHost> {
 
   @override
   Widget build(BuildContext context) {
-    return TickerMode(
-      enabled: _isActive,
-      child: _cachedChild ?? widget.builder(_isActive),
+    return Visibility(
+      visible: _isVisible,
+      maintainState: true,
+      child: TickerMode(
+        enabled: _isActive,
+        child: _cachedChild ?? widget.builder(_isActive),
+      ),
     );
   }
 }
@@ -597,6 +646,8 @@ class _HomeScreenState extends State<HomeScreen>
       child: _TabActivationHost(
         tabIndex: index,
         activeIndexListenable: _activeTabIndexNotifier,
+        backgroundIndexListenable: _backgroundTabIndexNotifier,
+        isSwipingListenable: _isUserTabSwipingNotifier,
         builder: _tabBuilders[index],
       ),
     );

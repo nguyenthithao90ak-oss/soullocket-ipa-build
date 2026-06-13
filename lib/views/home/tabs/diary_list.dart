@@ -3,6 +3,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../models/diary_post.dart';
 import '../../../widgets/skeleton_container.dart';
+import '../../../core/sl_theme.dart';
 
 
 class DiaryList extends StatelessWidget {

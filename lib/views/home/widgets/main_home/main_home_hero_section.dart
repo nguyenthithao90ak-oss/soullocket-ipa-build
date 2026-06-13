@@ -196,13 +196,27 @@ class _ModernHomeBody extends StatelessWidget {
                       ),
                       SLSpacing.h20,
                       RepaintBoundary(
-                        child: state._buildModernInsightCard(
-                          isSingle: isSingle,
-                          nameU1: nameU1,
-                          nameU2: nameU2,
-                          enableMotion: effectProfile.animationEnabled &&
-                              !state._deferHeavyHomeMotion,
-                        ),
+                        child: state.widget.isSwipingListenable == null
+                            ? state._buildModernInsightCard(
+                                isSingle: isSingle,
+                                nameU1: nameU1,
+                                nameU2: nameU2,
+                                enableMotion: effectProfile.animationEnabled &&
+                                    !state._deferHeavyHomeMotion,
+                              )
+                            : ValueListenableBuilder<bool>(
+                                valueListenable: state.widget.isSwipingListenable!,
+                                builder: (context, isSwiping, _) {
+                                  return state._buildModernInsightCard(
+                                    isSingle: isSingle,
+                                    nameU1: nameU1,
+                                    nameU2: nameU2,
+                                    enableMotion: effectProfile.animationEnabled &&
+                                        !state._deferHeavyHomeMotion &&
+                                        !isSwiping,
+                                  );
+                                },
+                              ),
                       ),
                       SLSpacing.h20,
                       RepaintBoundary(
