@@ -477,6 +477,7 @@ class _HomeScreenState extends State<HomeScreen>
       (isActive) => DiaryTab(
             isActive: isActive,
             onSelectionOverlayChanged: _handleDiarySelectionOverlayChanged,
+            isSwipingListenable: _isUserTabSwipingNotifier,
           ),
       (_) => const UtilitiesTab(),
       (_) => const GameTab(),
@@ -1086,10 +1087,6 @@ class _HomeScreenState extends State<HomeScreen>
     final shouldStopTracking = notification is ScrollEndNotification ||
         (notification is UserScrollNotification &&
             notification.direction == ScrollDirection.idle);
-
-    if (!_hasSwipeReactiveUi()) {
-      return false;
-    }
 
     if (shouldStartTracking && !_isUserTabSwiping && mounted) {
       _isUserTabSwiping = true;

@@ -694,9 +694,11 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     }
     if (!mounted) return;
     final roleChangeTitle = context.tr('change_role');
-    final prefs = await SharedPreferences.getInstance();
     final previousRole = _activeRoleKey == 'user2' ? 'user2' : 'user1';
     final nextRole = _activeRoleKey == 'user1' ? 'user2' : 'user1';
+    final roleTerm = _displayNameForRole(nextRole);
+
+    final prefs = await SharedPreferences.getInstance();
 
     setState(() {
       _activeRoleKey = nextRole;
@@ -705,6 +707,18 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     await prefs.setString('il_role', nextRole);
     await prefs.setString('il_user_name', _displayNameForRole(nextRole));
     RoleUtils.roleNotifier.value = nextRole;
+
+    if (_relationshipMode == 'single') {
+      _showToast(
+        'Chế độ độc thân không hỗ trợ đổi vai Nam/Nữ.',
+        success: false,
+      );
+    } else {
+      _showToast(
+        'Đã đổi thành công sang vai $roleTerm 🎉',
+        success: true,
+      );
+    }
 
     final resolvedHouseId =
         (_houseId ?? await _houseService.getCurrentHouseId())?.trim();
@@ -728,26 +742,12 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
           type: 'role_change',
           title: roleChangeTitle,
           content:
-              'Thiết bị này vừa chuyển từ $previousRole sang $nextRole trong phần Cài đặt.',
+              'Thiết bị này vừa chuyển từ ${_displayNameForRole(previousRole)} sang ${_displayNameForRole(nextRole)} trong phần Cài đặt.',
           extra: {
             'previousRole': previousRole,
             'role': nextRole,
           },
         ),
-      );
-    }
-
-    if (!mounted) return;
-    if (_relationshipMode == 'single') {
-      _showToast(
-        'Chế độ độc thân không hỗ trợ đổi vai Nam/Nữ.',
-        success: false,
-      );
-    } else {
-      final roleTerm = nextRole == 'user2' ? context.tr('role_wife') : context.tr('role_husband');
-      _showToast(
-        'Đã đổi thành công sang vai $roleTerm 🎉',
-        success: true,
       );
     }
   }

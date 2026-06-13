@@ -75,16 +75,12 @@ Widget _buildStartupLegalSection({
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  margin: const EdgeInsets.only(top: 6),
-                  decoration: BoxDecoration(
-                    color: accent,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: accent.withValues(alpha: 0.85),
+                  size: 12,
                 ),
-                const SizedBox(width: 7),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     bullet,

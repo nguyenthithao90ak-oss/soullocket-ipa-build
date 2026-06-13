@@ -72,6 +72,7 @@ class _DiaryTabShell extends StatelessWidget {
           photos: photos,
         );
       },
+      isSwipingListenable: state.widget.isSwipingListenable,
     );
 
     return Scaffold(
@@ -86,7 +87,9 @@ class _DiaryTabShell extends StatelessWidget {
                 opacity: state._currentTab == 'memory' ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
-                child: const DiaryMemoryFixedBackground(),
+                child: DiaryMemoryFixedBackground(
+                  isSwipingListenable: state.widget.isSwipingListenable,
+                ),
               ),
             ),
           ),

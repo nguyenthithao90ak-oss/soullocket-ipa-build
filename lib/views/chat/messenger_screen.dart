@@ -7,6 +7,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../utils/services/offline_cache_service.dart';
+import '../../utils/services/admob_service.dart';
 
 import '../../models/group_chat_room.dart';
 import '../../utils/services/presence_service.dart';
@@ -92,6 +93,7 @@ class _MessengerScreenState extends State<MessengerScreen>
   @override
   void initState() {
     super.initState();
+    AdMobService().suppressAutoInterstitial();
     _tabController = TabController(length: 2, vsync: this);
     _searchCtrl.addListener(() {
       if (!mounted) return;
@@ -1038,6 +1040,7 @@ class _MessengerScreenState extends State<MessengerScreen>
 
   @override
   void dispose() {
+    AdMobService().resumeAutoInterstitial();
     _searchDebounce?.cancel();
     _friendsRealtimeDebounce?.cancel();
     _internalPartnerPresenceDebounce?.cancel();

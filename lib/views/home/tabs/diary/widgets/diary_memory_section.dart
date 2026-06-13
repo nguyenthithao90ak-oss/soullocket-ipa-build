@@ -51,6 +51,7 @@ class DiaryMemorySection extends StatefulWidget {
     DateTime selectedDate,
     List<Map<String, dynamic>> photos,
   ) onEditGroupDate;
+  final ValueListenable<bool>? isSwipingListenable;
 
   const DiaryMemorySection({
     super.key,
@@ -76,6 +77,7 @@ class DiaryMemorySection extends StatefulWidget {
     required this.onLoadMore,
     required this.onEnsurePhotoUrl,
     required this.onEditGroupDate,
+    this.isSwipingListenable,
   });
 
   @override
@@ -297,6 +299,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                         onOpenMemory: widget.onOpenMemory,
                                         allPhotos: photos,
                                         onEnsurePhotoUrl: widget.onEnsurePhotoUrl,
+                                        isSwipingListenable: widget.isSwipingListenable,
                                       ),
                                     );
                                   },
@@ -386,7 +389,12 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
 }
 
 class DiaryMemoryFixedBackground extends StatelessWidget {
-  const DiaryMemoryFixedBackground({super.key});
+  final ValueListenable<bool>? isSwipingListenable;
+
+  const DiaryMemoryFixedBackground({
+    super.key,
+    this.isSwipingListenable,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -400,12 +408,6 @@ class DiaryMemoryFixedBackground extends StatelessWidget {
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-        ),
-      ),
-      child: const RepaintBoundary(
-        child: CustomPaint(
-          painter: _DiaryMemoryPatternPainter(),
-          child: SizedBox.expand(),
         ),
       ),
     );
@@ -544,6 +546,7 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
   ) onOpenMemory;
   final List<Map<String, dynamic>> allPhotos;
   final Future<void> Function(Map<String, dynamic> photo) onEnsurePhotoUrl;
+  final ValueListenable<bool>? isSwipingListenable;
 
   const _DiaryMemoryPhotoRow({
     required this.rowPhotos,
@@ -555,6 +558,7 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
     required this.onOpenMemory,
     required this.allPhotos,
     required this.onEnsurePhotoUrl,
+    this.isSwipingListenable,
   });
 
   @override
@@ -715,25 +719,20 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                       borderRadius: BorderRadius.all(Radius.circular(18)),
                       boxShadow: [
                         BoxShadow(
-                          color: Color(0x245C71D8),
-                          blurRadius: 14,
-                          offset: Offset(0, 6),
-                        ),
-                        BoxShadow(
-                          color: Color(0xB8FFFFFF),
+                          color: Color(0x125C71D8),
                           blurRadius: 8,
-                          offset: Offset(0, -2),
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.all(Radius.circular(18)),
+                      borderRadius: const BorderRadius.all(Radius.circular(18)),
                       child: Hero(
                         tag: 'memory_image_${photo['id']}',
                         child: Image(
                           image: imageProvider,
                           fit: BoxFit.cover,
-                          filterQuality: FilterQuality.medium,
+                          filterQuality: FilterQuality.low,
                           gaplessPlayback: true,
                           frameBuilder:
                               (context, child, frame, wasSynchronouslyLoaded) =>
@@ -867,97 +866,7 @@ abstract final class _DiaryMemoryImageProviders {
   }
 }
 
-class _DiaryMemoryPatternPainter extends CustomPainter {
-  const _DiaryMemoryPatternPainter();
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final washPaint = Paint()..style = PaintingStyle.fill;
-
-    washPaint.color = const Color(0xFFFF7FB2).withValues(alpha: 0.14);
-    canvas.drawCircle(
-      Offset(size.width * 0.86, size.height * 0.08),
-      size.width * 0.32,
-      washPaint,
-    );
-
-    washPaint.color = const Color(0xFF69D2E7).withValues(alpha: 0.16);
-    canvas.drawCircle(
-      Offset(size.width * 0.06, size.height * 0.28),
-      size.width * 0.24,
-      washPaint,
-    );
-
-    washPaint.color = const Color(0xFFFFD166).withValues(alpha: 0.18);
-    canvas.drawCircle(
-      Offset(size.width * 0.82, size.height * 0.76),
-      size.width * 0.30,
-      washPaint,
-    );
-
-    final dotPaint = Paint()..style = PaintingStyle.fill;
-    final dots = <({double x, double y, double r, Color color})>[
-      (x: 0.16, y: 0.10, r: 3.0, color: const Color(0xFFFF7FB2)),
-      (x: 0.34, y: 0.18, r: 2.3, color: const Color(0xFF62C7B5)),
-      (x: 0.72, y: 0.22, r: 2.8, color: const Color(0xFFFFC857)),
-      (x: 0.24, y: 0.46, r: 2.5, color: const Color(0xFFFF7FB2)),
-      (x: 0.66, y: 0.52, r: 3.4, color: const Color(0xFF7C8BFF)),
-      (x: 0.14, y: 0.78, r: 2.6, color: const Color(0xFF62C7B5)),
-      (x: 0.52, y: 0.88, r: 2.7, color: const Color(0xFFFF7FB2)),
-    ];
-    for (final dot in dots) {
-      dotPaint.color = dot.color.withValues(alpha: 0.28);
-      canvas.drawCircle(
-        Offset(size.width * dot.x, size.height * dot.y),
-        dot.r,
-        dotPaint,
-      );
-    }
-
-    _drawHeart(
-      canvas,
-      Offset(size.width * 0.88, size.height * 0.34),
-      0.72,
-      const Color(0xFFFF7FB2).withValues(alpha: 0.16),
-    );
-    _drawHeart(
-      canvas,
-      Offset(size.width * 0.18, size.height * 0.62),
-      0.55,
-      const Color(0xFF7C8BFF).withValues(alpha: 0.14),
-    );
-
-    final labelPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.44)
-      ..style = PaintingStyle.fill;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(size.width * 0.58, size.height * 0.58, 86, 30),
-        const Radius.circular(18),
-      ),
-      labelPaint,
-    );
-  }
-
-  void _drawHeart(Canvas canvas, Offset center, double scale, Color color) {
-    final path = Path()
-      ..moveTo(0, 10)
-      ..cubicTo(-26, -10, -38, 22, 0, 44)
-      ..cubicTo(38, 22, 26, -10, 0, 10)
-      ..close();
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.scale(scale, scale);
-    canvas.drawPath(path, paint);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 class _DiaryMemoryHeroCard extends StatelessWidget {
   final int totalPhotos;

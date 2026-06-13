@@ -428,12 +428,19 @@ class UpdateTab extends StatelessWidget {
       padding: SLSpacing.all20,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFFFF5F7), Color(0xFFF4F7FF)],
+          colors: [Colors.white, Color(0xFFFFF1F2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFF7CAD8)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFFE4E6)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE11D48).withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,7 +505,7 @@ class UpdateTab extends StatelessWidget {
                     vertical: SLSpacing.sm,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: SLRadius.lgAll,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 icon: const Icon(Icons.menu_book_rounded, size: 18),
@@ -517,7 +524,7 @@ class UpdateTab extends StatelessWidget {
                     vertical: SLSpacing.sm,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: SLRadius.lgAll,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 icon: const Icon(Icons.support_agent_rounded, size: 18),
@@ -632,7 +639,9 @@ class UpdateTab extends StatelessWidget {
           _buildQuickCard(
             _tr(L10nService().translate('home_hngdnsdng_14c212'), 'Usage guide'),
             Icons.book_rounded,
-            const Color(0xFF2196F3),
+            const Color(0xFFEFF6FF),
+            const Color(0xFFDBEAFE),
+            const Color(0xFF1D4ED8),
             () => _openDoc(
               context,
               title: _tr(L10nService().translate('home_hngdnsdnga_1d5442'), 'App usage guide'),
@@ -642,7 +651,9 @@ class UpdateTab extends StatelessWidget {
           _buildQuickCard(
             _tr(L10nService().translate('home_linhhthng_fc8a3f'), 'Contact support'),
             Icons.headset_mic_rounded,
-            const Color(0xFF263238),
+            const Color(0xFFF8FAFC),
+            const Color(0xFFE2E8F0),
+            const Color(0xFF475569),
             () => _openExternal(
               context,
               Uri(
@@ -656,13 +667,17 @@ class UpdateTab extends StatelessWidget {
           _buildQuickCard(
             _tr(L10nService().translate('home_chatviadmi_6daadf'), 'Chat with admin'),
             Icons.smart_toy_rounded,
-            const Color(0xFF0288D1),
+            const Color(0xFFECFDF5),
+            const Color(0xFFD1FAE5),
+            const Color(0xFF047857),
             () => _openSupportContact(context),
           ),
           _buildQuickCard(
             _tr(L10nService().translate('home_nhntinmi_fa749d'), 'Latest news'),
             Icons.favorite_rounded,
-            const Color(0xFFF06292),
+            const Color(0xFFFFF1F2),
+            const Color(0xFFFFE4E6),
+            const Color(0xFFBE123C),
             () => _showNewsSheet(context),
           ),
         ],
@@ -760,7 +775,7 @@ class UpdateTab extends StatelessWidget {
               assetPath: 'assets/docs/about.html',
             ),
           ),
-          SLSpacing.h12,
+          SLSpacing.h8,
           _buildGuideAction(
             _tr(L10nService().translate('home_mhngdnsdng_ccfed6'), 'Open the app guide'),
             Icons.menu_book_rounded,
@@ -771,7 +786,7 @@ class UpdateTab extends StatelessWidget {
               assetPath: 'assets/docs/huong_dan.html',
             ),
           ),
-          SLSpacing.h12,
+          SLSpacing.h8,
           _buildGuideAction(
             _tr(L10nService().translate('home_hngdncitln_85abba'), 'First setup guide'),
             Icons.rocket_launch_rounded,
@@ -782,7 +797,7 @@ class UpdateTab extends StatelessWidget {
               assetPath: 'assets/docs/huong_dan_cai_dat_lan_dau.html',
             ),
           ),
-          SLSpacing.h12,
+          SLSpacing.h8,
           _buildGuideAction(
             _tr(L10nService().translate('home_chnhschbom_98b319'), 'Privacy Policy'),
             Icons.privacy_tip_rounded,
@@ -793,7 +808,7 @@ class UpdateTab extends StatelessWidget {
               assetPath: 'assets/docs/privacy.html',
             ),
           ),
-          SLSpacing.h12,
+          SLSpacing.h8,
           _buildGuideAction(
             _tr(L10nService().translate('home_iukhonsdng_9a9c73'), 'Terms of Use'),
             Icons.gavel_rounded,
@@ -804,7 +819,7 @@ class UpdateTab extends StatelessWidget {
               assetPath: 'assets/docs/terms.html',
             ),
           ),
-          SLSpacing.h12,
+          SLSpacing.h8,
           _buildGuideAction(
             _tr(L10nService().translate('home_chnhschcoo_9209d0'), 'Cookie Policy'),
             Icons.cookie_rounded,
@@ -815,14 +830,14 @@ class UpdateTab extends StatelessWidget {
               assetPath: 'assets/docs/cookie-policy.html',
             ),
           ),
-          SLSpacing.h12,
+          SLSpacing.h8,
           _buildGuideAction(
             _tr(L10nService().translate('home_hngdnxadli_a627ed'), 'Data deletion guide'),
             Icons.warning_amber_rounded,
             const Color(0xFFE53935),
             () => _showDeleteGuide(context),
           ),
-          SLSpacing.h12,
+          SLSpacing.h8,
           _buildGuideAction(
             _tr(L10nService().translate('home_trangyucux_92da02'), 'Account deletion request page'),
             Icons.open_in_new_rounded,
@@ -833,7 +848,7 @@ class UpdateTab extends StatelessWidget {
               clipboardFallback: AppConfig.deleteAccountPageUrl,
             ),
           ),
-          SLSpacing.h12,
+          SLSpacing.h16,
           Container(
             padding: SLSpacing.symmetric(
               horizontal: SLSpacing.sm,
@@ -841,7 +856,7 @@ class UpdateTab extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
-              borderRadius: SLRadius.mdAll,
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0xFFE8EDF4)),
             ),
             child: Text(
@@ -942,16 +957,16 @@ class UpdateTab extends StatelessWidget {
     required Widget child,
   }) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.97),
-        borderRadius: SLRadius.xlAll,
-        border: Border.all(color: Colors.white),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -1025,8 +1040,8 @@ class UpdateTab extends StatelessWidget {
       padding: SLSpacing.all12,
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: SLRadius.lgAll,
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1064,39 +1079,44 @@ class UpdateTab extends StatelessWidget {
   Widget _buildQuickCard(
     String title,
     IconData icon,
-    Color color,
+    Color bg,
+    Color border,
+    Color textColor,
     VoidCallback onTap,
   ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: SLRadius.lgAll,
+        borderRadius: BorderRadius.circular(12),
         child: Ink(
-          padding: SLSpacing.symmetric(horizontal: 14, vertical: 14),
+          padding: SLSpacing.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: color,
-            borderRadius: SLRadius.lgAll,
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.28),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: border),
           ),
           child: Row(
             children: [
-              Icon(icon, color: Colors.white, size: 18),
-              SLSpacing.w12,
+              Icon(icon, color: textColor, size: 20),
+              SLSpacing.w8,
               Expanded(
                 child: Text(
                   title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: _labelStyle(
-                    color: Colors.white,
-                    fontSize: 13,
+                    color: textColor,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
+              ),
+              SLSpacing.w4,
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: textColor.withValues(alpha: 0.35),
+                size: 11,
               ),
             ],
           ),
@@ -1119,8 +1139,8 @@ class UpdateTab extends StatelessWidget {
       padding: SLSpacing.all12,
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.14)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1129,8 +1149,8 @@ class UpdateTab extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: SLRadius.mdAll,
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
@@ -1143,6 +1163,7 @@ class UpdateTab extends StatelessWidget {
                   title,
                   style: _labelStyle(
                     color: const Color(0xFF1F2937),
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 SLSpacing.h4,
@@ -1217,28 +1238,24 @@ class UpdateTab extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: SLRadius.mdAll,
+        borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         child: Ink(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
+          padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.055),
-            borderRadius: SLRadius.mdAll,
-            border: Border(
-              bottom: BorderSide(color: color.withValues(alpha: 0.22)),
-            ),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: color.withValues(alpha: 0.16)),
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 18),
               ),
@@ -1246,29 +1263,22 @@ class UpdateTab extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.visible,
                   style: _labelStyle(
                     color: Color.lerp(
                           const Color(0xFF1F2937),
                           color,
-                          0.18,
+                          0.15,
                         ) ??
                         const Color(0xFF1F2937),
-                    fontSize: 13.6,
-                    fontWeight: FontWeight.w900,
-                    height: 1.25,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  color: color,
-                  size: 20,
-                ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: color.withValues(alpha: 0.6),
+                size: 20,
               ),
             ],
           ),
@@ -1287,15 +1297,16 @@ class UpdateTab extends StatelessWidget {
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
         foregroundColor: color,
-        side: BorderSide(color: color.withValues(alpha: 0.35)),
-        backgroundColor: Colors.white,
+        side: BorderSide(color: color.withValues(alpha: 0.15)),
+        backgroundColor: color.withValues(alpha: 0.05),
         padding: SLSpacing.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
       ),
       icon: Icon(icon, size: 18),
       label: Text(
         label,
-        style: _labelStyle(color: color),
+        style: _labelStyle(color: color, fontWeight: FontWeight.w800),
       ),
     );
   }

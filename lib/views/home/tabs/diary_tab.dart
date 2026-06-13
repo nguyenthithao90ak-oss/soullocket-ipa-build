@@ -5,7 +5,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -37,11 +37,13 @@ part 'diary/sections/diary_tab_shell.dart';
 class DiaryTab extends StatefulWidget {
   final bool isActive;
   final ValueChanged<bool>? onSelectionOverlayChanged;
+  final ValueListenable<bool>? isSwipingListenable;
 
   const DiaryTab({
     super.key,
     required this.isActive,
     this.onSelectionOverlayChanged,
+    this.isSwipingListenable,
   });
 
   @override

@@ -273,6 +273,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     required bool isSingle,
     required String nameU1,
     required String nameU2,
+    required bool enableMotion,
   }) {
     final insight = _insightData;
     final metrics = insight == null
@@ -349,7 +350,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 ),
               )
             else ...[
-              _buildInsightBubbleWrap(metrics, compact: false),
+              _buildInsightBubbleWrap(metrics, compact: false, enableMotion: enableMotion),
               SLSpacing.h20,
               Container(
                 padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
@@ -416,6 +417,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
   Widget _buildInsightBubbleWrap(
     List<_InsightBubbleSpec> metrics, {
     required bool compact,
+    bool enableMotion = true,
   }) {
     final bubbleSize = compact ? 58.0 : 60.0;
     return Row(
@@ -432,6 +434,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 size: bubbleSize,
                 emphasize: metrics[index].emphasize,
                 compact: compact,
+                enableMotion: enableMotion,
               ),
             ),
           ),
@@ -466,6 +469,7 @@ class _FloatingInsightBubble extends StatefulWidget {
   final double size;
   final bool emphasize;
   final bool compact;
+  final bool enableMotion;
 
   const _FloatingInsightBubble({
     required this.label,
@@ -475,6 +479,7 @@ class _FloatingInsightBubble extends StatefulWidget {
     required this.size,
     required this.emphasize,
     required this.compact,
+    this.enableMotion = true,
   });
 
   @override
@@ -491,7 +496,22 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
     _controller = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 4200 + (widget.phase * 240).round()),
-    )..repeat();
+    );
+    if (widget.enableMotion) {
+      _controller.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _FloatingInsightBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.enableMotion != widget.enableMotion) {
+      if (widget.enableMotion) {
+        _controller.repeat();
+      } else {
+        _controller.stop();
+      }
+    }
   }
 
   @override
@@ -510,6 +530,9 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
+        if (!_controller.isAnimating) {
+          return child!;
+        }
         final angle = (_controller.value * 2 * pi) + widget.phase;
         final verticalShift = sin(angle) * (widget.compact ? 1.2 : 1.8);
         final horizontalShift = cos(angle * 0.9) * 0.5;

@@ -200,6 +200,8 @@ class _ModernHomeBody extends StatelessWidget {
                           isSingle: isSingle,
                           nameU1: nameU1,
                           nameU2: nameU2,
+                          enableMotion: effectProfile.animationEnabled &&
+                              !state._deferHeavyHomeMotion,
                         ),
                       ),
                       SLSpacing.h20,

@@ -34,31 +34,11 @@ extension _HomeScreenShellBackground on _HomeScreenState {
       usesCustomBackground: usesCustomBackground,
     );
 
-    final accent = _HomeScreenState._navItems[tabIndex].activeColor;
     final safeQuality = switch (graphicsQualityKey) {
       'low' => 'low',
       'high' => 'high',
       _ => 'balanced',
     };
-    final orbScale = switch (safeQuality) {
-      'low' => 0.72,
-      'high' => 1.18,
-      _ => 1.0,
-    };
-    final baseOpacity = _resolveOrbOpacity(
-      tabIndex: tabIndex,
-      quality: safeQuality,
-      isDark: effectiveIsDark,
-    );
-    final primaryOrbColor = _resolvePrimaryOrbColor(tabIndex, accent);
-    final secondaryOrbColor = _resolveSecondaryOrbColor(tabIndex);
-    final tertiaryOrbColor = _resolveTertiaryOrbColor(tabIndex);
-
-    final showPrimaryOrb = safeQuality != 'low';
-    final showSecondaryOrb = safeQuality != 'low';
-    final showTertiaryOrb = safeQuality == 'high';
-    final primaryAnimate = animateAmbientEffects && safeQuality != 'low';
-    final secondaryAnimate = animateAmbientEffects && safeQuality == 'high';
 
     return Stack(
       fit: StackFit.expand,
@@ -72,72 +52,6 @@ extension _HomeScreenShellBackground on _HomeScreenState {
             ),
           ),
         ),
-        if (showPrimaryOrb)
-          Positioned(
-            top: safeQuality == 'low' ? -48 : (safeQuality == 'high' ? -96 : -80),
-            right: safeQuality == 'low' ? -28 : (safeQuality == 'high' ? -56 : -40),
-            child: RepaintBoundary(
-              child: _buildGlowOrb(
-                primaryOrbColor.withValues(alpha: 
-                  safeQuality == 'low'
-                      ? (baseOpacity - 0.05).clamp(0.03, 0.10).toDouble()
-                      : (safeQuality == 'high'
-                          ? (baseOpacity + 0.035).clamp(0.12, 0.30).toDouble()
-                          : baseOpacity),
-                ),
-                (safeQuality == 'low'
-                        ? 156
-                        : (safeQuality == 'high' ? 254 : 220)) *
-                    orbScale,
-                animate: primaryAnimate,
-              ),
-            ),
-          ),
-        if (showSecondaryOrb)
-          Positioned(
-            top: safeQuality == 'high' ? 132 : 150,
-            left: safeQuality == 'high' ? -82 : -60,
-            child: RepaintBoundary(
-              child: _buildGlowOrb(
-                secondaryOrbColor.withValues(alpha: 
-                  (baseOpacity - (safeQuality == 'high' ? -0.005 : 0.04))
-                      .clamp(0.05, 0.22)
-                      .toDouble(),
-                ),
-                (safeQuality == 'high' ? 224 : 180) * orbScale,
-                animate: secondaryAnimate,
-              ),
-            ),
-          ),
-        if (showTertiaryOrb)
-          Positioned(
-            bottom: -104,
-            right: -16,
-            child: RepaintBoundary(
-              child: _buildGlowOrb(
-                tertiaryOrbColor.withValues(alpha: 
-                  (baseOpacity + 0.01).clamp(0.08, 0.20).toDouble(),
-                ),
-                266 * orbScale,
-                animate: false,
-              ),
-            ),
-          ),
-        if (safeQuality == 'high')
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.34,
-            right: -42,
-            child: RepaintBoundary(
-              child: _buildGlowOrb(
-                Color.alphaBlend(
-                  Colors.white.withValues(alpha: 0.14),
-                  primaryOrbColor,
-                ).withValues(alpha: 0.10),
-                144,
-                animate: false,
-              ),
-            ),
-          ),
         if (safeQuality == 'high')
           Positioned.fill(
             child: IgnorePointer(
@@ -238,52 +152,7 @@ extension _HomeScreenShellBackground on _HomeScreenState {
     return _resolveShellGradient(themeKey, isDark);
   }
 
-  double _resolveOrbOpacity({
-    required int tabIndex,
-    required String quality,
-    required bool isDark,
-  }) {
-    return switch (quality) {
-      'low' => isDark ? 0.10 : 0.14,
-      'high' => isDark ? 0.18 : 0.26,
-      _ => isDark ? 0.13 : 0.20,
-    };
-  }
 
-  Color _resolvePrimaryOrbColor(int tabIndex, Color accent) {
-    return accent;
-  }
-
-  Color _resolveSecondaryOrbColor(int tabIndex) {
-    return SLTheme.accentPurple;
-  }
-
-  Color _resolveTertiaryOrbColor(int tabIndex) {
-    return SLTheme.primaryLight;
-  }
-
-  Widget _buildGlowOrb(Color color, double size, {bool animate = false}) {
-    if (!animate) {
-      return IgnorePointer(
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-            boxShadow: [
-              BoxShadow(
-                color: color,
-                blurRadius: 80,
-                spreadRadius: 18,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    return _BreathingGlowOrb(color: color, size: size);
-  }
 
   List<Color> _resolveShellGradient(String themeKey, bool isDark) {
     if (themeKey == 'off') {
@@ -509,77 +378,4 @@ class _StableShellBackgroundImageState
   }
 }
 
-class _BreathingGlowOrb extends StatefulWidget {
-  final Color color;
-  final double size;
 
-  const _BreathingGlowOrb({required this.color, required this.size});
-
-  @override
-  State<_BreathingGlowOrb> createState() => _BreathingGlowOrbState();
-}
-
-class _BreathingGlowOrbState extends State<_BreathingGlowOrb>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _opacityAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
-    );
-    _opacityAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
-    );
-
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) _controller.repeat(reverse: true);
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: Opacity(
-              opacity: _opacityAnimation.value,
-              child: Container(
-                width: widget.size,
-                height: widget.size,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: widget.color,
-                  boxShadow: [
-                    BoxShadow(
-                      color: widget.color,
-                      blurRadius: 80,
-                      spreadRadius: 18,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}

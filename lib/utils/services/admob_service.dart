@@ -511,6 +511,7 @@ class AdMobService {
     await initialize();
     if (!_sdkInitialized) return false;
     if (_isShowingAppOpenAd) return false;
+    if (_isAutoInterstitialSuppressed) return false;
     if (FirebaseAuth.instance.currentUser == null) return false;
     if (await isProUser()) return false;
     if (!await _canShowAppOpenToday()) return false;

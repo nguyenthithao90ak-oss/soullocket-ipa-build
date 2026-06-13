@@ -150,9 +150,18 @@ Widget _buildCookieChoiceCard({
                 color: selected ? accent : Colors.transparent,
                 border: Border.all(
                   color: selected ? accent : _panelBorder,
-                  width: selected ? 7 : 2,
+                  width: selected ? 1.5 : 2,
                 ),
               ),
+              child: selected
+                  ? const Center(
+                      child: Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 15,
+                      ),
+                    )
+                  : null,
             ),
           ),
           Expanded(
@@ -208,16 +217,12 @@ Widget _buildCookieChoiceCard({
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            margin: const EdgeInsets.only(top: 5),
-                            decoration: BoxDecoration(
-                              color: accent,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: accent.withValues(alpha: 0.85),
+                            size: large ? 13 : 11,
                           ),
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               bullet,

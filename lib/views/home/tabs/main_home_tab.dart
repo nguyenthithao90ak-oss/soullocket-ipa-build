@@ -562,8 +562,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   void _handleTabActivityChanged(bool isActive) {
     _isTabActive = isActive;
     if (isActive) {
-      _warmHomeMedia();
-      Future.delayed(const Duration(milliseconds: 300), () {
+      _warmHomeMedia(delayMotion: true);
+      Future.delayed(const Duration(milliseconds: 500), () {
         if (!mounted || !_isTabActive) return;
         unawaited(
           _fetchHouseData(
