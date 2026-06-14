@@ -6,14 +6,14 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
       _MetricCardData(
         title: context.tr('home_nhtk_d59e8b'),
         value: '${insight.diaryTotal}',
-        subtitle: '+${insight.diaryMonth} tháng này',
+        subtitle: L10nService().translateThisMonth(insight.diaryMonth),
         accent: const Color(0xFF10B981),
         icon: Icons.menu_book_rounded,
       ),
       _MetricCardData(
         title: context.tr('home_albumnh_9e1acf'),
         value: '${insight.albumTotal}',
-        subtitle: '+${insight.albumMonth} tháng này',
+        subtitle: L10nService().translateThisMonth(insight.albumMonth),
         accent: const Color(0xFF8B5CF6),
         icon: Icons.photo_library_rounded,
       ),

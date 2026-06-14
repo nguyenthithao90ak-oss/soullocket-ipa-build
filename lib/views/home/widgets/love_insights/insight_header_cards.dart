@@ -258,19 +258,19 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
             children: [
               _buildInfoChip(
                 icon: Icons.local_fire_department_rounded,
-                text: '${insight.activeDays} ngày tích cực',
+                text: L10nService().translateActiveDays(insight.activeDays),
                 color: const Color(0xFFF5A623),
                 background: const Color(0xFFFFF2D8),
               ),
               _buildInfoChip(
                 icon: Icons.event_note_rounded,
-                text: '${insight.memoryThisMonth} kỷ niệm/tháng',
+                text: L10nService().translateMemoriesPerMonth(insight.memoryThisMonth),
                 color: const Color(0xFF0F4C81),
                 background: const Color(0xFFEAF4FF),
               ),
               _buildInfoChip(
                 icon: Icons.sentiment_satisfied_alt_rounded,
-                text: '${insight.positivity}% tích cực',
+                text: L10nService().translatePositivity(insight.positivity),
                 color: const Color(0xFFD81B60),
                 background: const Color(0xFFFFEAF2),
               ),

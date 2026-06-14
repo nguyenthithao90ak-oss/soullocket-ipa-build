@@ -1159,7 +1159,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                               color: const Color(0xFF00E676).withValues(alpha: 0.3)),
                         ),
                         child: Text(
-                          '${items.length} bản ghi',
+                          L10nService().translateRecordsCount(items.length),
                           style: SLTheme.quicksand(
                             color: const Color(0xFF00E676),
                             fontWeight: FontWeight.w800,
@@ -1298,7 +1298,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                                       CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Lời nhắn từ ${item['a']}',
+                                      L10nService().translatePartnerMessage(item['a']?.toString() ?? ''),
                                       style: SLTheme.quicksand(
                                           color: Colors.white,
                                           fontWeight: FontWeight.w800,

@@ -2540,6 +2540,7 @@ class _CountdownQuickCustomizeSheetContentState
     required double currentValue,
     required double? tempValue,
     required ValueChanged<double> onChanged,
+    required ValueChanged<double> onChangedEnd,
     required VoidCallback onSave,
   }) {
     final displayValue = tempValue ?? currentValue;
@@ -2623,6 +2624,10 @@ class _CountdownQuickCustomizeSheetContentState
                     max: UiPrefs.maxCountdownSizePx,
                     value: displayValue.clamp(200.0, UiPrefs.maxCountdownSizePx),
                     onChanged: onChanged,
+                    onChangeEnd: (v) {
+                      onChangedEnd(v);
+                      onSave();
+                    },
                   ),
                 ),
               ),
@@ -2642,7 +2647,7 @@ class _CountdownQuickCustomizeSheetContentState
                 style: SLTheme.quicksand(
                   fontSize: 12.6,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF8E6F7E),
+                  color: hasChanges ? const Color(0xFFD81B60) : const Color(0xFF8E6F7E),
                 ),
               ),
               if (hasChanges)
@@ -2891,6 +2896,11 @@ class _CountdownQuickCustomizeSheetContentState
                   currentValue: uiState.countdownSizePx,
                   tempValue: _tempCountdownSize,
                   onChanged: (value) {
+                    setState(() {
+                      _tempCountdownSize = value;
+                    });
+                  },
+                  onChangedEnd: (value) {
                     setState(() {
                       _tempCountdownSize = value;
                     });

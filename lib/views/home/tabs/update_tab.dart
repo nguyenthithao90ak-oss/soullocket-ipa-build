@@ -327,6 +327,7 @@ class UpdateTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    L10nScope.of(context); // Listen to locale changes
     return FutureBuilder<bool>(
       future: _adminFuture(),
       builder: (context, snapshot) {
