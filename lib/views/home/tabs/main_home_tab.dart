@@ -272,6 +272,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   int _homeMediaWarmupToken = 0;
   final Set<String> _seenNewDeviceNotificationIds = <String>{};
   String _lastHomeMediaWarmupSignature = '';
+  final ValueNotifier<bool> _isScrollingNotifier = ValueNotifier<bool>(false);
 
   StreamSubscription? _membersSubscription;
 
@@ -564,6 +565,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _fallingEffectTypeNotifier.dispose();
     _interactionDragHoveredNotifier.dispose();
     _reactionFlightsNotifier.dispose();
+    _isScrollingNotifier.dispose();
     super.dispose();
   }
 
@@ -2148,10 +2150,19 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
                     }
                     final fallingEffectWidget = Positioned.fill(
                       child: IgnorePointer(
-                        child: FallingEffect(
-                          type: effectType,
-                          isDark: false,
-                          density: effectProfile.graphicsQualityKey,
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: _isScrollingNotifier,
+                          builder: (context, isScrolling, child) {
+                            return TickerMode(
+                              enabled: !isScrolling,
+                              child: child!,
+                            );
+                          },
+                          child: FallingEffect(
+                            type: effectType,
+                            isDark: false,
+                            density: effectProfile.graphicsQualityKey,
+                          ),
                         ),
                       ),
                     );

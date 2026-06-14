@@ -429,15 +429,20 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               child: ValueListenableBuilder<bool>(
                 valueListenable: SLTheme.isTabSwiping,
                 builder: (context, isSwiping, _) {
-                  return _FloatingInsightBubble(
-                    label: metrics[index].label,
-                    value: metrics[index].value,
-                    color: metrics[index].color,
-                    phase: metrics[index].phase,
-                    size: bubbleSize,
-                    emphasize: metrics[index].emphasize,
-                    compact: compact,
-                    enableMotion: enableMotion && !isSwiping,
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: _isScrollingNotifier,
+                    builder: (context, isScrolling, _) {
+                      return _FloatingInsightBubble(
+                        label: metrics[index].label,
+                        value: metrics[index].value,
+                        color: metrics[index].color,
+                        phase: metrics[index].phase,
+                        size: bubbleSize,
+                        emphasize: metrics[index].emphasize,
+                        compact: compact,
+                        enableMotion: enableMotion && !isSwiping && !isScrolling,
+                      );
+                    },
                   );
                 },
               ),
