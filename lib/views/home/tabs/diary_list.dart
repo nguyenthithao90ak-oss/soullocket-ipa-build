@@ -54,36 +54,47 @@ class DiaryList extends StatelessWidget {
               if (showBlockingLoader)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 48, 16, 0),
-                  child: Column(
-                    children: List.generate(
-                      3,
-                      (index) => Padding(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SkeletonContainer.circle(size: 44),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SkeletonContainer.rounded(
-                                    width: MediaQuery.of(context).size.width * 0.4,
-                                    height: 16,
+                  child: Builder(
+                    builder: (context) {
+                      final baseColor = Colors.white.withValues(alpha: 0.15);
+                      final highlightColor = Colors.white.withValues(alpha: 0.25);
+                      return Column(
+                        children: List.generate(
+                          3,
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SkeletonContainer.circle(
+                                  size: 44,
+                                  baseColor: baseColor, highlightColor: highlightColor,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      SkeletonContainer.rounded(
+                                        width: MediaQuery.of(context).size.width * 0.4,
+                                        height: 16,
+                                        baseColor: baseColor, highlightColor: highlightColor,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      SkeletonContainer.rounded(
+                                        width: double.infinity,
+                                        height: 80,
+                                        baseColor: baseColor, highlightColor: highlightColor,
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 8),
-                                  const SkeletonContainer.rounded(
-                                    width: double.infinity,
-                                    height: 80,
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    }
                   ),
                 )
               else if (houseId == null)

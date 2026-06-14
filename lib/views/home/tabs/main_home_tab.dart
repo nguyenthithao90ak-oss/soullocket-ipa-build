@@ -2139,45 +2139,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
                 return ValueListenableBuilder<String>(
                   valueListenable: _fallingEffectTypeNotifier,
                   builder: (context, effectType, child) {
-                    final effectProfile = UiPrefs.resolveEffectProfile(
-                      state: uiState,
-                      isWeb: kIsWeb,
-                    );
-                    if (effectType == 'off' ||
-                        _deferHeavyHomeMotion ||
-                        !effectProfile.animationEnabled) {
-                      return const SizedBox.shrink();
-                    }
-                    final fallingEffectWidget = Positioned.fill(
-                      child: IgnorePointer(
-                        child: ValueListenableBuilder<bool>(
-                          valueListenable: _isScrollingNotifier,
-                          builder: (context, isScrolling, child) {
-                            return TickerMode(
-                              enabled: !isScrolling,
-                              child: child!,
-                            );
-                          },
-                          child: FallingEffect(
-                            type: effectType,
-                            isDark: false,
-                            density: effectProfile.graphicsQualityKey,
-                          ),
-                        ),
-                      ),
-                    );
-                    if (widget.isSwipingListenable == null) {
-                      return fallingEffectWidget;
-                    }
-                    return ValueListenableBuilder<bool>(
-                      valueListenable: widget.isSwipingListenable!,
-                      builder: (context, isSwiping, _) {
-                        if (isSwiping) {
-                          return const SizedBox.shrink();
-                        }
-                        return fallingEffectWidget;
-                      },
-                    );
+                    // Tạm ngắt hoàn toàn hiệu ứng nền để giảm lag
+                    return const SizedBox.shrink();
                   },
                 );
               },
@@ -2871,15 +2834,7 @@ class _CountdownQuickCustomizeSheetContentState
                                 isVip: widget.isVip,
                               ),
                             ),
-                          buildOptionChip(
-                            option: selectedEffect,
-                            selected: true,
-                            onTap: () => widget.homeState._saveCountdownQuickUiPrefs(
-                              fallingEffectKey: selectedEffect.value,
-                              prevalidatedUnlockedStyles: _unlockedStyles,
-                              isVip: widget.isVip,
-                            ),
-                          ),
+                          // Tạm ngắt hiển thị hiệu ứng nền
                         ],
                       ),
                     ],
@@ -2926,19 +2881,7 @@ class _CountdownQuickCustomizeSheetContentState
                     }
                   },
                 ),
-                const SizedBox(height: 12),
-                buildSection(
-                  title: 'Hiệu ứng nền',
-                  description: 'Đổi hiệu ứng động trên màn hình chính.',
-                  icon: Icons.auto_fix_high_rounded,
-                  options: widget.effectOptions,
-                  selectedValue: uiState.fallingEffectKey,
-                  onSelect: (option) => widget.homeState._saveCountdownQuickUiPrefs(
-                    fallingEffectKey: option.value,
-                    prevalidatedUnlockedStyles: _unlockedStyles,
-                    isVip: widget.isVip,
-                  ),
-                ),
+                // Tạm ngắt phần cài đặt Hiệu ứng nền
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,

@@ -63,7 +63,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
   }
 
   Future<void> _loadBannerAd() async {
-    final adErrorFallback = context.tr('home_khngthtiqu_b7dcec');
+    final adErrorFallback = L10nService().translate('home_khngthtiqu_b7dcec');
     try {
       final adMob = AdMobService();
       await adMob.initialize();
@@ -105,7 +105,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
       debugPrint(
         'GameTab download status load failed: ${AppErrorMapper.resolve(
           e,
-          fallbackMessage: context.tr('home_khngthtitr_ff9207'),
+          fallbackMessage: L10nService().translate('home_khngthtitr_ff9207'),
         ).message}',
       );
     }

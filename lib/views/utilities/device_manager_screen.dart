@@ -38,7 +38,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
   }
 
   Future<void> _initData() async {
-    final msgFallback = context.tr('util_chathtithn_526c2d');
+    final msgFallback = L10nService().translate('util_chathtithn_526c2d');
     try {
       _currentDeviceId = await _svc.getCurrentDeviceIdentifier();
       final currentSnapshot = await _svc.getCurrentDeviceSnapshot();
@@ -53,7 +53,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
             'is_admin': false,
           }
         ];
-        _loadMessage = context.tr('util_angngbdanh_0b2773');
+        _loadMessage = L10nService().translate('util_angngbdanh_0b2773');
         _isLoading = false;
         _isSyncingDevices = true;
       });
@@ -86,10 +86,10 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         _isLoading = true;
       }
     });
-    final msgRegisterFail = context.tr('util_chathngbth_d39079');
-    final msgLoadFail = context.tr('util_chathtidan_e58038');
-    final msgOnlyCurrentDevice = context.tr('util_nubntngngn_2e56cd');
-    final msgNoDevices = context.tr('util_chacdliumy_af1225');
+    final msgRegisterFail = L10nService().translate('util_chathngbth_d39079');
+    final msgLoadFail = L10nService().translate('util_chathtidan_e58038');
+    final msgOnlyCurrentDevice = L10nService().translate('util_nubntngngn_2e56cd');
+    final msgNoDevices = L10nService().translate('util_chacdliumy_af1225');
 
     try {
       _securityDeviceSignalsAllowed =

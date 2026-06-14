@@ -4,18 +4,24 @@ class SkeletonContainer extends StatefulWidget {
   final double width;
   final double height;
   final BorderRadius borderRadius;
+  final Color? baseColor;
+  final Color? highlightColor;
 
   const SkeletonContainer({
     super.key,
     this.width = double.infinity,
     this.height = double.infinity,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.baseColor,
+    this.highlightColor,
   });
 
   const SkeletonContainer.square({
     super.key,
     required double size,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.baseColor,
+    this.highlightColor,
   })  : width = size,
         height = size;
 
@@ -24,11 +30,15 @@ class SkeletonContainer extends StatefulWidget {
     required this.width,
     required this.height,
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
+    this.baseColor,
+    this.highlightColor,
   });
 
   const SkeletonContainer.circle({
     super.key,
     required double size,
+    this.baseColor,
+    this.highlightColor,
   })  : width = size,
         height = size,
         borderRadius = const BorderRadius.all(Radius.circular(1000));
@@ -49,11 +59,24 @@ class _SkeletonContainerState extends State<SkeletonContainer>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
+    
+    _initAnimation();
+  }
 
+  void _initAnimation() {
     _animation = ColorTween(
-      begin: const Color(0xFFF2F3F5),
-      end: const Color(0xFFE2E4E8),
+      begin: widget.baseColor ?? const Color(0xFFF2F3F5),
+      end: widget.highlightColor ?? const Color(0xFFE2E4E8),
     ).animate(_controller);
+  }
+
+  @override
+  void didUpdateWidget(SkeletonContainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.baseColor != oldWidget.baseColor || 
+        widget.highlightColor != oldWidget.highlightColor) {
+      _initAnimation();
+    }
   }
 
   @override

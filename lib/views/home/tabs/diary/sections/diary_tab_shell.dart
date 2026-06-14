@@ -10,7 +10,15 @@ class _DiaryTabShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state._isCheckingAuth) {
-      return const _DiaryTabLoadingSection();
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            Positioned.fill(child: SLTheme.meshPattern()),
+            const SafeArea(child: _DiaryTabLoadingSection()),
+          ],
+        ),
+      );
     }
 
     if (!state._isAuthenticated) {
@@ -216,19 +224,27 @@ class _DiaryTabLoadingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final baseColor = Colors.white.withValues(alpha: 0.15);
+    final highlightColor = Colors.white.withValues(alpha: 0.25);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
           const SizedBox(height: 20),
           // Skeleton cho Header
-          const SkeletonContainer.rounded(width: 200, height: 28),
+          SkeletonContainer.rounded(
+            width: 200, height: 28, 
+            baseColor: baseColor, highlightColor: highlightColor,
+          ),
           const SizedBox(height: 24),
           // Skeleton cho Tab Switcher
-          const SkeletonContainer.rounded(
+          SkeletonContainer.rounded(
               width: double.infinity,
               height: 50,
-              borderRadius: BorderRadius.all(Radius.circular(20))),
+              borderRadius: const BorderRadius.all(Radius.circular(20)),
+              baseColor: baseColor, highlightColor: highlightColor,
+          ),
           const SizedBox(height: 30),
           // Danh sách Skeleton Items
           Expanded(
@@ -239,7 +255,10 @@ class _DiaryTabLoadingSection extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SkeletonContainer.circle(size: 48),
+                    SkeletonContainer.circle(
+                      size: 48,
+                      baseColor: baseColor, highlightColor: highlightColor,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -248,11 +267,13 @@ class _DiaryTabLoadingSection extends StatelessWidget {
                           SkeletonContainer.rounded(
                             width: MediaQuery.of(context).size.width * 0.45,
                             height: 18,
+                            baseColor: baseColor, highlightColor: highlightColor,
                           ),
                           const SizedBox(height: 10),
-                          const SkeletonContainer.rounded(
+                          SkeletonContainer.rounded(
                             width: double.infinity,
                             height: 100,
+                            baseColor: baseColor, highlightColor: highlightColor,
                           ),
                         ],
                       ),
