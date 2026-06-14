@@ -78,13 +78,14 @@ class _NavItem {
   });
 }
 
-typedef _HomeTabBuilder = Widget Function(bool isActive);
+typedef _HomeTabBuilder = Widget Function(ValueNotifier<bool> isActiveNotifier);
 
 class _TabActivationHost extends StatefulWidget {
   final int tabIndex;
   final ValueListenable<int> activeIndexListenable;
   final ValueListenable<int> backgroundIndexListenable;
   final ValueListenable<bool> isSwipingListenable;
+  final ValueListenable<({int source, int target})?> jumpListenable;
   final _HomeTabBuilder builder;
 
   const _TabActivationHost({
@@ -92,6 +93,7 @@ class _TabActivationHost extends StatefulWidget {
     required this.activeIndexListenable,
     required this.backgroundIndexListenable,
     required this.isSwipingListenable,
+    required this.jumpListenable,
     required this.builder,
   });
 
@@ -100,34 +102,36 @@ class _TabActivationHost extends StatefulWidget {
 }
 
 class _TabActivationHostState extends State<_TabActivationHost> {
-  late bool _isActive;
+  late final ValueNotifier<bool> _isActiveNotifier;
   late bool _isVisible;
   Widget? _cachedChild;
 
   @override
   void initState() {
     super.initState();
-    _isActive = widget.activeIndexListenable.value == widget.tabIndex;
+    final isActive = widget.activeIndexListenable.value == widget.tabIndex;
+    _isActiveNotifier = ValueNotifier<bool>(isActive);
     _isVisible = _calculateVisibility();
     widget.activeIndexListenable.addListener(_onStateChanged);
     widget.backgroundIndexListenable.addListener(_onStateChanged);
     widget.isSwipingListenable.addListener(_onStateChanged);
-    _cachedChild = widget.builder(_isActive);
+    widget.jumpListenable.addListener(_onStateChanged);
+    _cachedChild = widget.builder(_isActiveNotifier);
   }
 
   bool _calculateVisibility() {
+    final jump = widget.jumpListenable.value;
+    if (jump != null) {
+      return widget.tabIndex == jump.source || widget.tabIndex == jump.target;
+    }
     final activeIndex = widget.activeIndexListenable.value;
     if (activeIndex == widget.tabIndex) {
       return true;
     }
-    final backgroundIndex = widget.backgroundIndexListenable.value;
-    if (backgroundIndex == widget.tabIndex) {
-      return true;
-    }
     final isSwiping = widget.isSwipingListenable.value;
     if (isSwiping) {
-      final diff = (widget.tabIndex - backgroundIndex).abs();
-      if (diff <= 1) {
+      final floorIndex = widget.backgroundIndexListenable.value;
+      if (widget.tabIndex == floorIndex || widget.tabIndex == floorIndex + 1) {
         return true;
       }
     }
@@ -141,16 +145,20 @@ class _TabActivationHostState extends State<_TabActivationHost> {
     if (oldWidget.activeIndexListenable != widget.activeIndexListenable ||
         oldWidget.backgroundIndexListenable != widget.backgroundIndexListenable ||
         oldWidget.isSwipingListenable != widget.isSwipingListenable ||
+        oldWidget.jumpListenable != widget.jumpListenable ||
         oldWidget.tabIndex != widget.tabIndex) {
       oldWidget.activeIndexListenable.removeListener(_onStateChanged);
       oldWidget.backgroundIndexListenable.removeListener(_onStateChanged);
       oldWidget.isSwipingListenable.removeListener(_onStateChanged);
+      oldWidget.jumpListenable.removeListener(_onStateChanged);
 
       widget.activeIndexListenable.addListener(_onStateChanged);
       widget.backgroundIndexListenable.addListener(_onStateChanged);
       widget.isSwipingListenable.addListener(_onStateChanged);
+      widget.jumpListenable.addListener(_onStateChanged);
 
-      _isActive = widget.activeIndexListenable.value == widget.tabIndex;
+      final nextActive = widget.activeIndexListenable.value == widget.tabIndex;
+      _isActiveNotifier.value = nextActive;
       _isVisible = _calculateVisibility();
       needsRebuild = true;
     }
@@ -159,7 +167,7 @@ class _TabActivationHostState extends State<_TabActivationHost> {
       needsRebuild = true;
     }
     if (needsRebuild) {
-      _cachedChild = widget.builder(_isActive);
+      _cachedChild = widget.builder(_isActiveNotifier);
     }
   }
 
@@ -168,17 +176,18 @@ class _TabActivationHostState extends State<_TabActivationHost> {
     widget.activeIndexListenable.removeListener(_onStateChanged);
     widget.backgroundIndexListenable.removeListener(_onStateChanged);
     widget.isSwipingListenable.removeListener(_onStateChanged);
+    widget.jumpListenable.removeListener(_onStateChanged);
+    _isActiveNotifier.dispose();
     super.dispose();
   }
 
   void _onStateChanged() {
     final nextActive = widget.activeIndexListenable.value == widget.tabIndex;
     final nextVisible = _calculateVisibility();
-    if (_isActive != nextActive || _isVisible != nextVisible) {
+    if (_isActiveNotifier.value != nextActive || _isVisible != nextVisible) {
       setState(() {
-        _isActive = nextActive;
+        _isActiveNotifier.value = nextActive;
         _isVisible = nextVisible;
-        _cachedChild = widget.builder(_isActive);
       });
     }
   }
@@ -189,8 +198,8 @@ class _TabActivationHostState extends State<_TabActivationHost> {
       visible: _isVisible,
       maintainState: true,
       child: TickerMode(
-        enabled: _isActive,
-        child: _cachedChild ?? widget.builder(_isActive),
+        enabled: _isActiveNotifier.value,
+        child: _cachedChild ?? widget.builder(_isActiveNotifier),
       ),
     );
   }
@@ -373,11 +382,7 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
           metrics.page ?? widget.controller.initialPage.toDouble();
       final closestPage = _clampPage(currentPage.round());
       if (closestPage != _lastReportedPage) {
-        if (mounted) {
-          setState(() {
-            _lastReportedPage = closestPage;
-          });
-        }
+        _lastReportedPage = closestPage;
         widget.onPageChanged?.call(closestPage);
       }
     }
@@ -387,8 +392,8 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
   @override
   Widget build(BuildContext context) {
     final axisDirection = _axisDirectionFor(context);
-    // Render all tabs upfront so they are warmed in layout, preventing any build overhead during swipe transitions.
-    final cacheExtent = widget.children.length.toDouble();
+    // Render adjacent tabs (cacheExtent = 1.0) instead of all tabs upfront, preventing high memory and layout overhead.
+    const cacheExtent = 1.0;
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -449,6 +454,7 @@ class _HomeScreenState extends State<HomeScreen>
   late final ValueNotifier<int>
       _backgroundTabIndexNotifier; // ⚡ Thêm để tránh rebuild toàn bộ
   late final ValueNotifier<int> _vipThemeRotationTickNotifier;
+  late final ValueNotifier<({int source, int target})?> _jumpNotifier;
   late final PageController _pageController;
   DateTime? _lastExitAttemptAt;
   bool _isUserTabSwiping = false;
@@ -515,16 +521,19 @@ class _HomeScreenState extends State<HomeScreen>
     _vipThemeRotationTickNotifier = ValueNotifier<int>(0);
     _navCollapsedNotifier = ValueNotifier<bool>(_navCollapsed);
     _isUserTabSwipingNotifier = ValueNotifier<bool>(false);
+    _jumpNotifier = ValueNotifier<({int source, int target})?>(null);
     _pageController = PageController(initialPage: _currentIndex);
     _tabBuilders = [
-      (isActive) => MainHomeTab(
-            isActive: isActive,
+      (isActiveNotifier) => MainHomeTab(
+            isActiveListenable: isActiveNotifier,
             onOpenSettings: _openSettings,
             isSwipingListenable: _isUserTabSwipingNotifier,
           ),
-      if (_communityTabEnabled) (isActive) => CommunityTab(isActive: isActive),
-      (isActive) => DiaryTab(
-            isActive: isActive,
+      if (_communityTabEnabled)
+        (isActiveNotifier) =>
+            CommunityTab(isActiveListenable: isActiveNotifier),
+      (isActiveNotifier) => DiaryTab(
+            isActiveListenable: isActiveNotifier,
             onSelectionOverlayChanged: _handleDiarySelectionOverlayChanged,
             isSwipingListenable: _isUserTabSwipingNotifier,
           ),
@@ -648,6 +657,7 @@ class _HomeScreenState extends State<HomeScreen>
         activeIndexListenable: _activeTabIndexNotifier,
         backgroundIndexListenable: _backgroundTabIndexNotifier,
         isSwipingListenable: _isUserTabSwipingNotifier,
+        jumpListenable: _jumpNotifier,
         builder: _tabBuilders[index],
       ),
     );
@@ -947,6 +957,7 @@ class _HomeScreenState extends State<HomeScreen>
     _activeTabIndexNotifier.dispose();
     _backgroundTabIndexNotifier.dispose(); // ⚡ Dispose background notifier
     _vipThemeRotationTickNotifier.dispose();
+    _jumpNotifier.dispose();
     _musicController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -1094,11 +1105,18 @@ class _HomeScreenState extends State<HomeScreen>
       );
       _isUserTabSwipingNotifier.value = true;
       SLTheme.isTabSwiping.value = true;
+      final isJumping = pageDistance > 1.0;
+      if (isJumping) {
+        _jumpNotifier.value = (source: oldIndex, target: nextIndex);
+      }
       await _pageController.animateToPage(
         nextIndex,
         duration: duration,
         curve: Curves.easeOutQuart,
       );
+      if (isJumping) {
+        _jumpNotifier.value = null;
+      }
       _isUserTabSwipingNotifier.value = false;
       SLTheme.isTabSwiping.value = false;
       _setActiveTabIndex(nextIndex);
@@ -1134,10 +1152,13 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   bool _handlePageScrollNotification(ScrollNotification notification) {
+    if (notification.depth != 0) {
+      return false;
+    }
     final metrics = notification.metrics;
     if (metrics is PageMetrics) {
       final previewIndex = (metrics.page ?? _currentIndex.toDouble())
-          .round()
+          .floor()
           .clamp(0, _navItems.length - 1);
       if (_backgroundTabIndexNotifier.value != previewIndex) {
         _backgroundTabIndexNotifier.value = previewIndex;

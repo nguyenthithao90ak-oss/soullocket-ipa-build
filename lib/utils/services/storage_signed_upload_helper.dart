@@ -72,7 +72,7 @@ class StorageSignedUploadHelper {
     if (onProgress == null) return task();
 
     bool isDone = false;
-    final tick = const Duration(milliseconds: 50);
+    const tick = Duration(milliseconds: 50);
     double current = start;
     final step = (end - start) / (expectedDuration.inMilliseconds / tick.inMilliseconds);
     

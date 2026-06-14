@@ -19,6 +19,7 @@ import 'house_service.dart';
 import 'offline_cache_service.dart';
 import 'purchase_service.dart';
 import 'revenue_security_telemetry_service.dart';
+import 'ad_suppression_guard.dart';
 
 /// ============================================================
 ///  AdMobService — GRA (Phase Production)
@@ -505,6 +506,10 @@ class AdMobService {
 
   Future<bool> showAppOpenAdIfEligible() async {
     if (kIsWeb) return false;
+    if (AdSuppressionGuard.instance.isSuppressed) {
+      debugPrint('AdMobService: App Open ad suppressed by AdSuppressionGuard.');
+      return false;
+    }
     if (hasRecentFullscreenAd(cooldown: const Duration(minutes: 10))) {
       return false;
     }
@@ -951,6 +956,10 @@ class AdMobService {
   Future<void> showInterstitialAd() async {
     if (kIsWeb) return;
     if (await isProUser()) return;
+    if (AdSuppressionGuard.instance.isSuppressed) {
+      debugPrint('AdMobService: Interstitial ad suppressed by AdSuppressionGuard.');
+      return;
+    }
     await initialize();
     if (!_sdkInitialized) return;
     if (_interstitialAd == null) {
@@ -1060,6 +1069,7 @@ class AdMobService {
         !_autoInterstitialSchedulerEnabled ||
         _isShowingAutoInterstitial ||
         _isAutoInterstitialSuppressed ||
+        AdSuppressionGuard.instance.isSuppressed ||
         FirebaseAuth.instance.currentUser == null) {
       return;
     }

@@ -721,11 +721,21 @@ class NotificationService {
     final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
     final displayName = await _resolveSleepReminderDisplayName(prefs, role);
 
+    final nightTimeStr = prefs.getString('il_good_night_time') ?? '22:15';
+    final nightParts = nightTimeStr.split(':');
+    final nightHour = nightParts.isNotEmpty ? (int.tryParse(nightParts[0]) ?? 22) : 22;
+    final nightMinute = nightParts.length > 1 ? (int.tryParse(nightParts[1]) ?? 15) : 15;
+
+    final morningTimeStr = prefs.getString('il_good_morning_time') ?? '05:55';
+    final morningParts = morningTimeStr.split(':');
+    final morningHour = morningParts.isNotEmpty ? (int.tryParse(morningParts[0]) ?? 5) : 5;
+    final morningMinute = morningParts.length > 1 ? (int.tryParse(morningParts[1]) ?? 55) : 55;
+
     await _maybeSendAutoTimedGreeting(
       houseId: houseId,
       kind: 'good_night',
-      targetHour: 22,
-      targetMinute: 15,
+      targetHour: nightHour,
+      targetMinute: nightMinute,
       windowEndHour: 23,
       windowEndMinute: 59,
       title: '🌙✨ $displayName ngủ ngon nha 💖',
@@ -736,8 +746,8 @@ class NotificationService {
     await _maybeSendAutoTimedGreeting(
       houseId: houseId,
       kind: 'good_morning',
-      targetHour: 5,
-      targetMinute: 55,
+      targetHour: morningHour,
+      targetMinute: morningMinute,
       windowEndHour: 9,
       windowEndMinute: 0,
       title: '☀️🌷 Chào buổi sáng, $displayName 💛',
@@ -815,8 +825,14 @@ class NotificationService {
 
   tz.TZDateTime _nextDailySleepReminderTime() {
     final now = tz.TZDateTime.now(tz.local);
+    final prefs = OfflineCacheService.getPrefsSync();
+    final timeStr = prefs?.getString('il_good_night_time') ?? '22:15';
+    final parts = timeStr.split(':');
+    final hour = parts.isNotEmpty ? (int.tryParse(parts[0]) ?? 22) : 22;
+    final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 15) : 15;
+
     var scheduled =
-        tz.TZDateTime(tz.local, now.year, now.month, now.day, 22, 15);
+        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
     if (!scheduled.isAfter(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }

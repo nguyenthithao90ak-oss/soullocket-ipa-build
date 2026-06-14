@@ -572,7 +572,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
   }
 
   Future<void> _init() async {
-    if (!widget.isActive) return;
+    if (!_isActive) return;
 
     _cancelFeedFilterSubscriptions();
     _updateState(() {
@@ -658,7 +658,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
             settings['avtUser1']?.toString() ??
             '';
       }
-      if (widget.isActive) {
+      if (_isActive) {
         _subscribeToRealtimeData();
       }
     } else {
@@ -707,7 +707,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
 
   void _syncRealtimeFeedSubscription({bool forceRestart = false}) {
     final errorFallback = context.tr('home_clixyra_775791');
-    if (!widget.isActive) {
+    if (!_isActive) {
       _feedSub?.cancel();
       _feedSub = null;
       return;

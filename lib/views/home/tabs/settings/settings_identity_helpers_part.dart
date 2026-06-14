@@ -32,6 +32,8 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       _smartLoveNoteReminder =
           prefs.getBool('il_smart_reminder_love_note') ?? true;
       _smartSleepReminder = prefs.getBool('il_smart_reminder_sleep') ?? true;
+      _goodMorningTime = prefs.getString('il_good_morning_time') ?? '05:55';
+      _goodNightTime = prefs.getString('il_good_night_time') ?? '22:15';
       _touchSound = prefs.getBool('il_touch_sound') ?? true;
       _confettiFx = prefs.getBool('il_confetti_fx') ?? true;
       _showWeather = prefs.getBool('il_show_weather') ?? true;

@@ -1022,6 +1022,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
       await prefs.setBool(
           'il_smart_reminder_love_note', _smartLoveNoteReminder);
       await prefs.setBool('il_smart_reminder_sleep', _smartSleepReminder);
+      await prefs.setString('il_good_morning_time', _goodMorningTime);
+      await prefs.setString('il_good_night_time', _goodNightTime);
       await prefs.setBool('il_touch_sound', _touchSound);
       await prefs.setBool('il_confetti_fx', _confettiFx);
       await prefs.setBool('il_show_weather', _showWeather);
@@ -1048,6 +1050,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
           'smartReminderCapsule': _smartCapsuleReminder,
           'smartReminderLoveNote': _smartLoveNoteReminder,
           'smartReminderSleep': _smartSleepReminder,
+          'goodMorningTime': _goodMorningTime,
+          'goodNightTime': _goodNightTime,
           'touchSound': _touchSound,
           'confettiFx': _confettiFx,
           'showWeather': _showWeather,

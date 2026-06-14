@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../screens/document_viewer_screen.dart';
@@ -580,6 +581,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   int _lockTimeout = 0; // minutes, 0 means immediately
   bool _isMilitaryMode = false;
   bool _notificationsEnabled = true;
+  String _goodMorningTime = '05:55';
+  String _goodNightTime = '22:15';
   String _storedLockSecret = '';
   String? _storedLockSalt;
   int? _storedLockLength;

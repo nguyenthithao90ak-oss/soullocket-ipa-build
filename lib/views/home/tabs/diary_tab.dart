@@ -35,13 +35,13 @@ part 'diary/sections/diary_composer_launcher_section.dart';
 part 'diary/sections/diary_tab_shell.dart';
 
 class DiaryTab extends StatefulWidget {
-  final bool isActive;
+  final ValueNotifier<bool> isActiveListenable;
   final ValueChanged<bool>? onSelectionOverlayChanged;
   final ValueListenable<bool>? isSwipingListenable;
 
   const DiaryTab({
     super.key,
-    required this.isActive,
+    required this.isActiveListenable,
     this.onSelectionOverlayChanged,
     this.isSwipingListenable,
   });
@@ -683,7 +683,8 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
   @override
   void initState() {
     super.initState();
-    _isTabActive = widget.isActive;
+    _isTabActive = widget.isActiveListenable.value;
+    widget.isActiveListenable.addListener(_onActiveChanged);
     _feedController.addListener(_handleFeedControllerChange);
     _memoryController.addListener(_handleControllerChange);
     _guardController.addListener(_handleControllerChange);
@@ -695,6 +696,14 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     });
   }
 
+  void _onActiveChanged() {
+    if (!mounted) return;
+    final nextActive = widget.isActiveListenable.value;
+    if (_isTabActive != nextActive) {
+      _handleTabActivityChanged(nextActive);
+    }
+  }
+
   @override
   void didUpdateWidget(covariant DiaryTab oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -702,15 +711,20 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
         widget.onSelectionOverlayChanged) {
       _syncSelectionOverlayVisibility();
     }
-    if (oldWidget.isActive == widget.isActive) {
-      return;
+    if (oldWidget.isActiveListenable != widget.isActiveListenable) {
+      oldWidget.isActiveListenable.removeListener(_onActiveChanged);
+      widget.isActiveListenable.addListener(_onActiveChanged);
+      final nextActive = widget.isActiveListenable.value;
+      if (_isTabActive != nextActive) {
+        _handleTabActivityChanged(nextActive);
+      }
     }
-    _handleTabActivityChanged(widget.isActive);
   }
 
   @override
   void dispose() {
     widget.onSelectionOverlayChanged?.call(false);
+    widget.isActiveListenable.removeListener(_onActiveChanged);
     _feedController.removeListener(_handleFeedControllerChange);
     _memoryController.removeListener(_handleControllerChange);
     _guardController.removeListener(_handleControllerChange);
@@ -727,13 +741,14 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     _isTabActive = isActive;
     _syncSelectionOverlayVisibility();
     if (isActive) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (!mounted || !_isTabActive) return;
-        unawaited(_activateDiaryTab());
-      });
-      return;
+      final currentHouseId = _feedController.houseId;
+      if (_feedController.postsVN.value.isEmpty || _lastSyncedMemoryHouseId != currentHouseId) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (!mounted || !_isTabActive) return;
+          unawaited(_activateDiaryTab());
+        });
+      }
     }
-    unawaited(_feedController.pauseRealtime());
   }
 
   Future<void> _prepareDiaryOnMount() async {

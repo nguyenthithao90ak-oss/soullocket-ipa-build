@@ -65,8 +65,6 @@ class _CountdownModeIndependentScreenState
     MapEntry(L10nService().translate('countdown_floating_hearts'), 'floating_hearts'),
     MapEntry(L10nService().translate('countdown_glass'), 'glass'),
     MapEntry(L10nService().translate('countdown_default'), 'default'),
-    MapEntry(L10nService().translate('countdown_rose_wave'), 'rose_wave'),
-    MapEntry(L10nService().translate('countdown_plain'), 'plain'),
     MapEntry(L10nService().translate('countdown_glow'), 'glow'),
     MapEntry(L10nService().translate('countdown_candy'), 'candy'),
     MapEntry(L10nService().translate('countdown_galaxy'), 'galaxy'),
@@ -193,7 +191,6 @@ class _CountdownModeIndependentScreenState
   bool _spaceChromeVisible = true;
   Set<String> _unlockedCountdownStyleKeys = <String>{};
   String? _uploadingAvatarRole;
-  double? _avatarUploadProgress;
   bool _didPromptPendingSpaceAvatarRetry = false;
 
   @override

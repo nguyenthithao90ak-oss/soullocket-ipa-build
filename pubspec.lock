@@ -2333,10 +2333,9 @@ packages:
   tiktok_business_sdk:
     dependency: "direct main"
     description:
-      name: tiktok_business_sdk
-      sha256: "66dd10f4b77e127256cfcb605fc2de53a44fdb97781a263a120891fe5388496d"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/tiktok_business_sdk"
+      relative: true
+    source: path
     version: "0.0.1"
   timezone:
     dependency: "direct main"
@@ -2475,7 +2474,7 @@ packages:
     source: hosted
     version: "1.2.5"
   vector_math:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: vector_math
       sha256: d530bd74fea330e6e364cda7a85019c434070188383e1cd8d9777ee586914c5b

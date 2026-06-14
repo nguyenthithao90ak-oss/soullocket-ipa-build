@@ -119,7 +119,9 @@ dependencies:
   app_tracking_transparency: ^2.0.7
   sensors_plus: ^7.0.0
   cloud_firestore: ^6.5.0
-  tiktok_business_sdk: ^0.0.1
+  vector_math: ^2.1.4
+  tiktok_business_sdk:
+    path: packages/tiktok_business_sdk
 dependency_overrides:
   image_cropper_platform_interface: 7.1.0
 

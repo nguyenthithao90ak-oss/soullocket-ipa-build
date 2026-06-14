@@ -251,10 +251,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       countdownStyles: [
         (context.tr('countdown_default'), 'default', false),
         (context.tr('countdown_floating_hearts'), 'floating_hearts', true),
-        (context.tr('countdown_rose_wave'), 'rose_wave', false),
         (context.tr('countdown_glass'), 'glass', false),
         (context.tr('countdown_glow'), 'glow', false),
-        (context.tr('countdown_plain'), 'plain', false),
         (context.tr('countdown_candy'), 'candy', false),
         (context.tr('countdown_galaxy'), 'galaxy', true),
         (context.tr('countdown_aurora'), 'aurora', true),

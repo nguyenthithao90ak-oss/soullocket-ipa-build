@@ -317,6 +317,22 @@ extension _MainHomeLoadController on _MainHomeTabState {
     if (!_isTabActive && !preloadOnly) {
       return;
     }
+
+    final previousHouseId = _houseId;
+    final houseId = await _houseService.getCurrentHouseId();
+
+    final normalizedPreviousHouseId = previousHouseId?.trim() ?? '';
+    final normalizedNewHouseId = houseId?.trim() ?? '';
+    final isNewHouseContext = normalizedNewHouseId.isEmpty ||
+        normalizedPreviousHouseId != normalizedNewHouseId;
+
+    if (!isNewHouseContext && _presenceSubscription != null && _settingsSubscription != null) {
+      if (mounted && _isLoading) {
+        setState(() => _isLoading = false);
+      }
+      return;
+    }
+
     final sessionId = _invalidateLiveWorkSessionImpl();
     if (!preloadOnly) {
       _cancelLiveWorkBindingsImpl();
@@ -376,8 +392,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
       final cachedRelMode = prefs.getString('il_rel_mode') ?? 'couple';
       _showStatus = prefs.getBool('il_show_status') ?? true;
       _showWeather = prefs.getBool('il_show_weather') ?? true;
-      final previousHouseId = _houseId;
-      final houseId = await _houseService.getCurrentHouseId();
       if (isStale()) return;
       if (houseId != null && houseId.isNotEmpty) {
         _houseId = houseId;

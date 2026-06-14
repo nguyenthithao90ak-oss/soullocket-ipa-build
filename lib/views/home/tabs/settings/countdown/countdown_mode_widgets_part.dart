@@ -1237,7 +1237,7 @@ class _FloatingHeartsRingOverlayState
                         transform: Matrix4.identity()
                           ..setEntry(3, 2, 0.002) // Perspective 3D
                           ..rotateZ(finalRotation)
-                          ..scale(scaleX, scaleY, 1.0),
+                          ..scaleByVector3(Vector3(scaleX, scaleY, 1.0)),
                         child: Icon(
                           i % 3 == 0 ? Icons.favorite_rounded : Icons.bubble_chart_rounded,
                           size: p.size,

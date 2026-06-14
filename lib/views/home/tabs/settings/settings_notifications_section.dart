@@ -28,6 +28,28 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
     await prefs.setBool('il_smart_reminder_capsule', _smartCapsuleReminder);
     await prefs.setBool('il_smart_reminder_love_note', _smartLoveNoteReminder);
     await prefs.setBool('il_smart_reminder_sleep', _smartSleepReminder);
+    await prefs.setString('il_good_morning_time', _goodMorningTime);
+    await prefs.setString('il_good_night_time', _goodNightTime);
+
+    if (_houseId != null) {
+      try {
+        await _dbRef.child('houses/$_houseId/settings').update({
+          'notificationsEnabled': _notificationsEnabled,
+          'notifAnniversary': _notifAnniversary,
+          'notifPost': _notifPost,
+          'notifChat': _notifChat,
+          'notifFriend': _notifFriend,
+          'notifHeart': _notifHeart,
+          'smartReminderDiary': _smartDiaryReminder,
+          'smartReminderCapsule': _smartCapsuleReminder,
+          'smartReminderLoveNote': _smartLoveNoteReminder,
+          'smartReminderSleep': _smartSleepReminder,
+          'goodMorningTime': _goodMorningTime,
+          'goodNightTime': _goodNightTime,
+          'updatedAt': ServerValue.timestamp,
+        });
+      } catch (_) {}
+    }
   }
 
   Future<void> _syncNotificationTopics(bool enabled) async {
@@ -475,6 +497,36 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   },
                   helperText: 'Nhắc nhở người thương đi ngủ đúng giờ vào mỗi tối.',
                 ),
+                if (_smartLoveNoteReminder || _smartSleepReminder) ...[
+                  const SizedBox(height: 8),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Divider(color: Color(0xFFE2E8F0), height: 1),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildTimePickerRow(
+                    'Giờ chúc buổi sáng',
+                    _goodMorningTime,
+                    (newTime) {
+                      setState(() => _goodMorningTime = newTime);
+                      SoundService().playClick();
+                      unawaited(_persistNotificationPrefs().then((_) async {
+                        await NotificationService().syncDailySleepReminder();
+                      }));
+                    },
+                  ),
+                  _buildTimePickerRow(
+                    'Giờ chúc buổi tối',
+                    _goodNightTime,
+                    (newTime) {
+                      setState(() => _goodNightTime = newTime);
+                      SoundService().playClick();
+                      unawaited(_persistNotificationPrefs().then((_) async {
+                        await NotificationService().syncDailySleepReminder();
+                      }));
+                    },
+                  ),
+                ],
               ],
             ),
           ),
@@ -554,6 +606,77 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildTimePickerRow(
+    String label,
+    String timeStr,
+    ValueChanged<String> onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: InkWell(
+        onTap: () async {
+          final parts = timeStr.split(':');
+          final hour = parts.isNotEmpty ? (int.tryParse(parts[0]) ?? 0) : 0;
+          final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+          final time = await showTimePicker(
+            context: context,
+            initialTime: TimeOfDay(hour: hour, minute: minute),
+          );
+          if (time != null) {
+            final formatted = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+            onChanged(formatted);
+          }
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: const Color(0xFFE2E8F0),
+              width: 1.2,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: SLTextStyles.quicksand(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: const Color(0xFF1A1A2E),
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    timeStr,
+                    style: SLTextStyles.quicksand(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14.5,
+                      color: const Color(0xFFD81B60),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.access_time_filled_rounded,
+                    size: 18,
+                    color: Color(0xFFD81B60),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

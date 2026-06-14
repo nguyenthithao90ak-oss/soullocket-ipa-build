@@ -217,11 +217,11 @@ class CommunityRulesCard extends StatelessWidget {
 }
 
 class CommunityTab extends StatefulWidget {
-  final bool isActive;
+  final ValueNotifier<bool> isActiveListenable;
 
   const CommunityTab({
     super.key,
-    this.isActive = true,
+    required this.isActiveListenable,
   });
 
   @override
@@ -493,6 +493,8 @@ class _CommunityTabState extends State<CommunityTab>
     _blockedUsersDebounce = null;
   }
 
+  bool get _isActive => widget.isActiveListenable.value;
+
   @override
   void initState() {
     super.initState();
@@ -515,7 +517,7 @@ class _CommunityTabState extends State<CommunityTab>
     _scrollController.addListener(() {
       // ⚡ Trigger lazy preload when scrolling
       final preloadPosts = _filteredPostsCache ?? _filteredPosts();
-      if (widget.isActive &&
+      if (_isActive &&
           preloadPosts.isNotEmpty &&
           _scrollController.hasClients) {
         final position = _scrollController.position;
@@ -533,7 +535,7 @@ class _CommunityTabState extends State<CommunityTab>
             _feedPreloadThrottleTimer = Timer(
               _feedPreloadThrottleDelay,
               () {
-                if (!mounted || !widget.isActive) return;
+                if (!mounted || !_isActive) return;
                 CommunityFeedService().preloadMoreImages(
                   currentIndex,
                   preloadPosts,
@@ -552,14 +554,25 @@ class _CommunityTabState extends State<CommunityTab>
         }
       }
     });
-    if (widget.isActive) {
+    widget.isActiveListenable.addListener(_onActiveChanged);
+    if (_isActive) {
       _activateTab();
     }
     unawaited(_restoreCommunityMessengerButtonOffset());
   }
 
+  void _onActiveChanged() {
+    if (!mounted) return;
+    if (_isActive) {
+      _activateTab();
+    } else {
+      _deactivateTab();
+    }
+  }
+
   @override
   void dispose() {
+    widget.isActiveListenable.removeListener(_onActiveChanged);
     _deactivateTab();
     _feedCachePersistTimer?.cancel();
     _communityMessengerButtonPersistTimer?.cancel();
@@ -582,13 +595,10 @@ class _CommunityTabState extends State<CommunityTab>
   @override
   void didUpdateWidget(covariant CommunityTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.isActive == widget.isActive) {
-      return;
-    }
-    if (!widget.isActive) {
-      _deactivateTab();
-    } else {
-      _activateTab();
+    if (oldWidget.isActiveListenable != widget.isActiveListenable) {
+      oldWidget.isActiveListenable.removeListener(_onActiveChanged);
+      widget.isActiveListenable.addListener(_onActiveChanged);
+      _onActiveChanged();
     }
   }
   static int _adShowCount = 0;

@@ -123,7 +123,7 @@ part '../widgets/main_home/hero/main_home_hero_header.dart';
 part 'main_home/models/main_home_models.dart';
 
 class MainHomeTab extends StatefulWidget {
-  final bool isActive;
+  final ValueNotifier<bool> isActiveListenable;
   final VoidCallback? onOpenSettings;
   final GlobalKey? firstGuideHeroKey;
   final GlobalKey? firstGuideSettingsKey;
@@ -131,7 +131,7 @@ class MainHomeTab extends StatefulWidget {
 
   const MainHomeTab({
     super.key,
-    required this.isActive,
+    required this.isActiveListenable,
     this.onOpenSettings,
     this.firstGuideHeroKey,
     this.firstGuideSettingsKey,
@@ -498,7 +498,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _isTabActive = widget.isActive;
+    _isTabActive = widget.isActiveListenable.value;
+    widget.isActiveListenable.addListener(_onActiveChanged);
     _reactionFlightsNotifier = ValueNotifier<List<_HomeReactionFlight>>([]);
     unawaited(() async {
       try {
@@ -517,10 +518,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       delayMotion: true,
       force: _hasWarmHomeSnapshot,
     );
-    _minuteStream =
-        Stream.periodic(const Duration(minutes: 1)).asBroadcastStream();
-    _secondStream =
-        Stream.periodic(const Duration(seconds: 1)).asBroadcastStream();
+    _minuteStream = Stream.periodic(const Duration(minutes: 1))
+        .where((_) => _isTabActive)
+        .asBroadcastStream();
+    _secondStream = Stream.periodic(const Duration(seconds: 1))
+        .where((_) => _isTabActive)
+        .asBroadcastStream();
     unawaited(
       _fetchHouseData(
         preserveVisibleState: _hasWarmHomeSnapshot,
@@ -530,18 +533,31 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     unawaited(_promptPendingAvatarRetryIfNeeded());
   }
 
+  void _onActiveChanged() {
+    if (!mounted) return;
+    final nextActive = widget.isActiveListenable.value;
+    if (_isTabActive != nextActive) {
+      _handleTabActivityChanged(nextActive);
+    }
+  }
+
   @override
   void didUpdateWidget(covariant MainHomeTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.isActive == widget.isActive) {
-      return;
+    if (oldWidget.isActiveListenable != widget.isActiveListenable) {
+      oldWidget.isActiveListenable.removeListener(_onActiveChanged);
+      widget.isActiveListenable.addListener(_onActiveChanged);
+      final nextActive = widget.isActiveListenable.value;
+      if (_isTabActive != nextActive) {
+        _handleTabActivityChanged(nextActive);
+      }
     }
-    _handleTabActivityChanged(widget.isActive);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.isActiveListenable.removeListener(_onActiveChanged);
     _invalidateLiveWorkSession();
     _cancelLiveWorkBindings();
     _homeMediaWarmupToken++;
@@ -574,8 +590,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       });
       return;
     }
+    // Do not cancel Firebase RTDB bindings here (keep them connected to avoid tearing down and re-fetching on tab switch).
+    // Instead, we only pause non-critical active loops if any, but weather loop and presence check and update will
+    // automatically adapt based on _isTabActive inside their respective timers/listeners.
     _invalidateLiveWorkSession();
-    _cancelLiveWorkBindings();
   }
 
   Future<void> _syncHomeCardFirstTapHintState() async {
@@ -1825,12 +1843,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         isPremium: true,
       ),
       _CountdownQuickOption(
-        label: context.tr('countdown_rose_wave'),
-        value: 'rose_wave',
-        icon: Icons.waves_rounded,
-        accent: const Color(0xFFE85C96),
-      ),
-      _CountdownQuickOption(
         label: context.tr('countdown_glass'),
         value: 'glass',
         icon: Icons.blur_on_rounded,
@@ -1841,12 +1853,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         value: 'glow',
         icon: Icons.auto_awesome_rounded,
         accent: const Color(0xFFFF8A65),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_plain'),
-        value: 'plain',
-        icon: Icons.circle_outlined,
-        accent: const Color(0xFF8D6E63),
       ),
       _CountdownQuickOption(
         label: context.tr('countdown_candy'),
@@ -1955,519 +1961,17 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (sheetContext, setSheetState) {
-            final mediaQuery = MediaQuery.of(sheetContext);
-
-        /// Chip cho mục đã mở hoặc miễn phí
-        Widget buildOptionChip({
-          required _CountdownQuickOption option,
-          required bool selected,
-          required VoidCallback onTap,
-        }) {
-          final accent = option.accent;
-          final borderColor = selected
-              ? accent
-              : accent.withValues(alpha: 0.28);
-          final backgroundColor = selected
-              ? accent.withValues(alpha: 0.14)
-              : Colors.white;
-          final textColor = selected ? accent : const Color(0xFF584450);
-
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: onTap,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: backgroundColor,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: borderColor),
-                  boxShadow: selected
-                      ? [
-                          BoxShadow(
-                            color: accent.withValues(alpha: 0.18),
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(option.icon, size: 17, color: accent),
-                    const SizedBox(width: 8),
-                    Text(
-                      option.label,
-                      style: SLTheme.quicksand(
-                        fontSize: 12.6,
-                        fontWeight:
-                            selected ? FontWeight.w900 : FontWeight.w800,
-                        color: textColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
-        /// Nút riêng cho mục chưa mở khóa
-        Widget buildLockedAdButton({
-          required _CountdownQuickOption option,
-          required Future<void> Function(_CountdownQuickOption option) onUnlocked,
-        }) {
-          final isThisUnlocking = unlockingStyleKey == option.value;
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: isThisUnlocking
-                  ? null
-                  : () async {
-                      if (unlockingStyleKey != null) return;
-                      HapticFeedback.mediumImpact();
-                      setSheetState(() {
-                        unlockingStyleKey = option.value;
-                      });
-                      try {
-                        final adMob = AdMobService();
-                        final adSuccess = await adMob.showRewardedAd();
-                        if (!mounted) return;
-                        if (adSuccess) {
-                          final prefs = await SharedPreferences.getInstance();
-                          final now = DateTime.now().millisecondsSinceEpoch;
-                          await prefs.setInt('il_last_any_rewarded_ad_ts', now);
-                          final expiry = now + _kCountdownQuickUnlockWindow.inMilliseconds;
-                          final expiryKey = 'il_countdown_style_unlock_expiry_${option.value}';
-                          await prefs.setInt(expiryKey, expiry);
-                          unlockedStyles = {...unlockedStyles, option.value};
-                          setSheetState(() {});
-                          await onUnlocked(option);
-                          _showLatestSnackBar('Đã mở khóa "${option.label}" trong 7 ngày!');
-                        } else {
-                          _showLatestSnackBar('Chưa mở khóa. Vui lòng xem hết quảng cáo.');
-                        }
-                      } catch (_) {
-                        _showLatestSnackBar('Đã xảy ra lỗi khi tải quảng cáo.');
-                      } finally {
-                        setSheetState(() {
-                          unlockingStyleKey = null;
-                        });
-                      }
-                    },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF5F0),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFFFFB87A)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      option.icon,
-                      size: 17,
-                      color: const Color(0xFFE06000),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      option.label,
-                      style: SLTheme.quicksand(
-                        fontSize: 12.6,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF7A3800),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (isThisUnlocking)
-                      const SizedBox(
-                        width: 13,
-                        height: 13,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE06000)),
-                        ),
-                      )
-                    else
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF8C00),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.play_circle_rounded,
-                              size: 11,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              'Xem QC',
-                              style: SLTheme.quicksand(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
-        Widget buildSection({
-          required String title,
-          required String description,
-          required IconData icon,
-          required List<_CountdownQuickOption> options,
-          required String selectedValue,
-          required Future<void> Function(_CountdownQuickOption option) onSelect,
-        }) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFFF0DDE4)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFDE8F0),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: const Color(0xFFD81B60),
-                        size: 19,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: SLTheme.quicksand(
-                              fontSize: 14.8,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF4A3640),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            description,
-                            style: SLTheme.quicksand(
-                              fontSize: 12.1,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF8E6F7E),
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: options.map((option) {
-                    final isLocked = option.isPremium && !unlockedStyles.contains(option.value);
-                    if (isLocked) {
-                      return buildLockedAdButton(
-                        option: option,
-                        onUnlocked: (opt) async {
-                          HapticFeedback.selectionClick();
-                          await onSelect(opt);
-                        },
-                      );
-                    }
-                    return buildOptionChip(
-                      option: option,
-                      selected: selectedValue == option.value,
-                      onTap: () async {
-                        HapticFeedback.selectionClick();
-                        await onSelect(option);
-                      },
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return SafeArea(
-          top: false,
-          child: ValueListenableBuilder<UiPrefsState>(
-            valueListenable: UiPrefs.notifier,
-            builder: (context, uiState, __) {
-              final selectedStyle = styleOptions.firstWhere(
-                (option) => option.value == uiState.countdownStyleKey,
-                orElse: () => styleOptions.first,
-              );
-              final selectedEffect = effectOptions.firstWhere(
-                (option) => option.value == uiState.fallingEffectKey,
-                orElse: () => effectOptions.last,
-              );
-              final currentStyleIsLocked =
-                  _kCountdownQuickPremiumStyleKeys.contains(
-                        uiState.countdownStyleKey,
-                      ) &&
-                      !unlockedStyles.contains(uiState.countdownStyleKey);
-
-              return SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  18,
-                  12,
-                  18,
-                  max(mediaQuery.padding.bottom, 14.0) + 18,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 46,
-                          height: 46,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFFFF8FB1),
-                                Color(0xFFD81B60),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.tune_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Tùy chỉnh vòng đếm',
-                                style: SLTheme.quicksand(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF33262D),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Ấn giữ vòng đếm ngày để mở bảng này và đổi nhanh giao diện ngay trên trang chủ.',
-                                style: SLTheme.quicksand(
-                                  fontSize: 12.4,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF806575),
-                                  height: 1.35,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(14),
-                            onTap: () => Navigator.of(sheetContext).pop(),
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: const Color(0xFFF0DDE4),
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.close_rounded,
-                                color: Color(0xFFD81B60),
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFFFFF2F7),
-                            Color(0xFFFFFBFD),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: const Color(0xFFF4D7E2)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Đang dùng',
-                            style: SLTheme.quicksand(
-                              fontSize: 12.2,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFFD81B60),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: [
-                              if (currentStyleIsLocked)
-                                buildLockedAdButton(
-                                  option: selectedStyle,
-                                  onUnlocked: (opt) async {
-                                    await _saveCountdownQuickUiPrefs(
-                                      countdownStyleKey: opt.value,
-                                      prevalidatedUnlockedStyles: unlockedStyles,
-                                      isVip: isVip,
-                                    );
-                                  },
-                                )
-                              else
-                                buildOptionChip(
-                                  option: selectedStyle,
-                                  selected: true,
-                                  onTap: () => _saveCountdownQuickUiPrefs(
-                                    countdownStyleKey: selectedStyle.value,
-                                    prevalidatedUnlockedStyles: unlockedStyles,
-                                    isVip: isVip,
-                                  ),
-                                ),
-                              buildOptionChip(
-                                option: selectedEffect,
-                                selected: true,
-                                onTap: () => _saveCountdownQuickUiPrefs(
-                                  fallingEffectKey: selectedEffect.value,
-                                  prevalidatedUnlockedStyles: unlockedStyles,
-                                  isVip: isVip,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    buildSection(
-                      title: 'Giao diện vòng đếm',
-                      description: 'Đổi phong cách hiển thị vòng đếm ngày.',
-                      icon: Icons.change_circle_rounded,
-                      options: styleOptions,
-                      selectedValue: uiState.countdownStyleKey,
-                      onSelect: (option) => _saveCountdownQuickUiPrefs(
-                        countdownStyleKey: option.value,
-                        prevalidatedUnlockedStyles: unlockedStyles,
-                        isVip: isVip,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    buildSection(
-                      title: 'Hiệu ứng nền',
-                      description:
-                          'Đổi hiệu ứng động trên màn hình chính.',
-                      icon: Icons.auto_fix_high_rounded,
-                      options: effectOptions,
-                      selectedValue: uiState.fallingEffectKey,
-                      onSelect: (option) => _saveCountdownQuickUiPrefs(
-                        fallingEffectKey: option.value,
-                        prevalidatedUnlockedStyles: unlockedStyles,
-                        isVip: isVip,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(sheetContext).pop(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD81B60),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: Text(
-                          'Xong',
-                          style: SLTheme.quicksand(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-          },
+        return _CountdownQuickCustomizeSheetContent(
+          styleOptions: styleOptions,
+          effectOptions: effectOptions,
+          unlockedStyles: unlockedStyles,
+          isVip: isVip,
+          homeState: this,
+          sheetContext: sheetContext,
         );
       },
     );
   }
-
   void _hideSettingsButtonForSession() {
     if (!mounted) return;
     final isCurrentlyHidden = _hideSettingsButtonUntilRestart;
@@ -2624,38 +2128,43 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         valueListenable: UiPrefs.notifier,
         builder: (context, uiState, __) => Stack(
           children: [
-            ValueListenableBuilder<String>(
-              valueListenable: _fallingEffectTypeNotifier,
-              builder: (context, effectType, child) {
-                final effectProfile = UiPrefs.resolveEffectProfile(
-                  state: uiState,
-                  isWeb: kIsWeb,
-                );
-                if (!widget.isActive ||
-                    effectType == 'off' ||
-                    _deferHeavyHomeMotion ||
-                    !effectProfile.animationEnabled) {
-                  return const SizedBox.shrink();
-                }
-                final fallingEffectWidget = Positioned.fill(
-                  child: IgnorePointer(
-                    child: FallingEffect(
-                      type: effectType,
-                      isDark: false,
-                      density: effectProfile.graphicsQualityKey,
-                    ),
-                  ),
-                );
-                if (widget.isSwipingListenable == null) {
-                  return fallingEffectWidget;
-                }
-                return ValueListenableBuilder<bool>(
-                  valueListenable: widget.isSwipingListenable!,
-                  builder: (context, isSwiping, _) {
-                    if (isSwiping) {
+            ValueListenableBuilder<bool>(
+              valueListenable: widget.isActiveListenable,
+              builder: (context, isActive, _) {
+                if (!isActive) return const SizedBox.shrink();
+                return ValueListenableBuilder<String>(
+                  valueListenable: _fallingEffectTypeNotifier,
+                  builder: (context, effectType, child) {
+                    final effectProfile = UiPrefs.resolveEffectProfile(
+                      state: uiState,
+                      isWeb: kIsWeb,
+                    );
+                    if (effectType == 'off' ||
+                        _deferHeavyHomeMotion ||
+                        !effectProfile.animationEnabled) {
                       return const SizedBox.shrink();
                     }
-                    return fallingEffectWidget;
+                    final fallingEffectWidget = Positioned.fill(
+                      child: IgnorePointer(
+                        child: FallingEffect(
+                          type: effectType,
+                          isDark: false,
+                          density: effectProfile.graphicsQualityKey,
+                        ),
+                      ),
+                    );
+                    if (widget.isSwipingListenable == null) {
+                      return fallingEffectWidget;
+                    }
+                    return ValueListenableBuilder<bool>(
+                      valueListenable: widget.isSwipingListenable!,
+                      builder: (context, isSwiping, _) {
+                        if (isSwiping) {
+                          return const SizedBox.shrink();
+                        }
+                        return fallingEffectWidget;
+                      },
+                    );
                   },
                 );
               },
@@ -2728,5 +2237,716 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         _isSendingInteraction = false;
       }
     });
+  }
+}
+
+class _CountdownQuickCustomizeSheetContent extends StatefulWidget {
+  final List<_CountdownQuickOption> styleOptions;
+  final List<_CountdownQuickOption> effectOptions;
+  final Set<String> unlockedStyles;
+  final bool isVip;
+  final _MainHomeTabState homeState;
+  final BuildContext sheetContext;
+
+  const _CountdownQuickCustomizeSheetContent({
+    required this.styleOptions,
+    required this.effectOptions,
+    required this.unlockedStyles,
+    required this.isVip,
+    required this.homeState,
+    required this.sheetContext,
+  });
+
+  @override
+  State<_CountdownQuickCustomizeSheetContent> createState() =>
+      _CountdownQuickCustomizeSheetContentState();
+}
+
+class _CountdownQuickCustomizeSheetContentState
+    extends State<_CountdownQuickCustomizeSheetContent> {
+  double? _tempCountdownSize;
+  String? _unlockingStyleKey;
+  late Set<String> _unlockedStyles;
+
+  @override
+  void initState() {
+    super.initState();
+    _unlockedStyles = Set<String>.from(widget.unlockedStyles);
+  }
+
+  Widget buildOptionChip({
+    required _CountdownQuickOption option,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final accent = option.accent;
+    final borderColor = selected ? accent : accent.withValues(alpha: 0.28);
+    final backgroundColor = selected ? accent.withValues(alpha: 0.14) : Colors.white;
+    final textColor = selected ? accent : const Color(0xFF584450);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: borderColor),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.18),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(option.icon, size: 17, color: accent),
+              const SizedBox(width: 8),
+              Text(
+                option.label,
+                style: SLTheme.quicksand(
+                  fontSize: 12.6,
+                  fontWeight: selected ? FontWeight.w900 : FontWeight.w800,
+                  color: textColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildLockedAdButton({
+    required _CountdownQuickOption option,
+    required Future<void> Function(_CountdownQuickOption option) onUnlocked,
+  }) {
+    final isThisUnlocking = _unlockingStyleKey == option.value;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: isThisUnlocking
+            ? null
+            : () async {
+                if (_unlockingStyleKey != null) return;
+                HapticFeedback.mediumImpact();
+                setState(() {
+                  _unlockingStyleKey = option.value;
+                });
+                try {
+                  final adMob = AdMobService();
+                  final adSuccess = await adMob.showRewardedAd();
+                  if (!mounted) return;
+                  if (adSuccess) {
+                    final prefs = await SharedPreferences.getInstance();
+                    final now = DateTime.now().millisecondsSinceEpoch;
+                    await prefs.setInt('il_last_any_rewarded_ad_ts', now);
+                    final expiry = now + _MainHomeTabState._kCountdownQuickUnlockWindow.inMilliseconds;
+                    final expiryKey = 'il_countdown_style_unlock_expiry_${option.value}';
+                    await prefs.setInt(expiryKey, expiry);
+                    setState(() {
+                      _unlockedStyles = {..._unlockedStyles, option.value};
+                    });
+                    await onUnlocked(option);
+                    widget.homeState._showLatestSnackBar('Đã mở khóa "${option.label}" trong 7 ngày!');
+                  } else {
+                    widget.homeState._showLatestSnackBar('Chưa mở khóa. Vui lòng xem hết quảng cáo.');
+                  }
+                } catch (_) {
+                  widget.homeState._showLatestSnackBar('Đã xảy ra lỗi khi tải quảng cáo.');
+                } finally {
+                  if (mounted) {
+                    setState(() {
+                      _unlockingStyleKey = null;
+                    });
+                  }
+                }
+              },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF5F0),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFFFB87A)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                option.icon,
+                size: 17,
+                color: const Color(0xFFE06000),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                option.label,
+                style: SLTheme.quicksand(
+                  fontSize: 12.6,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF7A3800),
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (isThisUnlocking)
+                const SizedBox(
+                  width: 13,
+                  height: 13,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE06000)),
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF8C00),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.play_circle_filled_rounded,
+                        size: 11,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        'Xem QC',
+                        style: SLTheme.quicksand(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildSection({
+    required String title,
+    required String description,
+    required IconData icon,
+    required List<_CountdownQuickOption> options,
+    required String selectedValue,
+    required Future<void> Function(_CountdownQuickOption option) onSelect,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFF0DDE4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDE8F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: const Color(0xFFD81B60),
+                  size: 19,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: SLTheme.quicksand(
+                        fontSize: 14.8,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF4A3640),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: SLTheme.quicksand(
+                        fontSize: 12.1,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8E6F7E),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: options.map((option) {
+              final isLocked = option.isPremium && !_unlockedStyles.contains(option.value);
+              if (isLocked) {
+                return buildLockedAdButton(
+                  option: option,
+                  onUnlocked: (opt) async {
+                    HapticFeedback.selectionClick();
+                    await onSelect(opt);
+                  },
+                );
+              }
+              return buildOptionChip(
+                option: option,
+                selected: selectedValue == option.value,
+                onTap: () async {
+                  HapticFeedback.selectionClick();
+                  await onSelect(option);
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildSizeSection({
+    required String title,
+    required String description,
+    required IconData icon,
+    required double currentValue,
+    required double? tempValue,
+    required ValueChanged<double> onChanged,
+    required VoidCallback onSave,
+  }) {
+    final displayValue = tempValue ?? currentValue;
+    final hasChanges = tempValue != null && (tempValue - currentValue).abs() > 0.01;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFF0DDE4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDE8F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: const Color(0xFFD81B60),
+                  size: 19,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: SLTheme.quicksand(
+                        fontSize: 14.8,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF4A3640),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: SLTheme.quicksand(
+                        fontSize: 12.1,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8E6F7E),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(
+                Icons.zoom_out_rounded,
+                color: Color(0xFF8E6F7E),
+                size: 20,
+              ),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderThemeData(
+                    activeTrackColor: const Color(0xFFD81B60),
+                    inactiveTrackColor: const Color(0xFFFDE8F0),
+                    thumbColor: const Color(0xFFD81B60),
+                    overlayColor: const Color(0xFFD81B60).withValues(alpha: 0.12),
+                    trackHeight: 4.0,
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
+                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 16.0),
+                  ),
+                  child: Slider(
+                    min: 200.0,
+                    max: UiPrefs.maxCountdownSizePx,
+                    value: displayValue.clamp(200.0, UiPrefs.maxCountdownSizePx),
+                    onChanged: onChanged,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.zoom_in_rounded,
+                color: Color(0xFFD81B60),
+                size: 20,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Kích thước: ${displayValue.toInt()} px',
+                style: SLTheme.quicksand(
+                  fontSize: 12.6,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF8E6F7E),
+                ),
+              ),
+              if (hasChanges)
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: onSave,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF2F7),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFF4D7E2)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        'Lưu',
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFD81B60),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+
+    return SafeArea(
+      top: false,
+      child: ValueListenableBuilder<UiPrefsState>(
+        valueListenable: UiPrefs.notifier,
+        builder: (context, uiState, __) {
+          final selectedStyle = widget.styleOptions.firstWhere(
+            (option) => option.value == uiState.countdownStyleKey,
+            orElse: () => widget.styleOptions.first,
+          );
+          final selectedEffect = widget.effectOptions.firstWhere(
+            (option) => option.value == uiState.fallingEffectKey,
+            orElse: () => widget.effectOptions.last,
+          );
+          final currentStyleIsLocked =
+              _MainHomeTabState._kCountdownQuickPremiumStyleKeys.contains(
+                    uiState.countdownStyleKey,
+                  ) &&
+                  !_unlockedStyles.contains(uiState.countdownStyleKey);
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              18,
+              12,
+              18,
+              max(mediaQuery.padding.bottom, 14.0) + 18,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFFFF8FB1),
+                            Color(0xFFD81B60),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.tune_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tùy chỉnh vòng đếm',
+                            style: SLTheme.quicksand(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF33262D),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ấn giữ vòng đếm ngày để mở bảng này và đổi nhanh giao diện ngay trên trang chủ.',
+                            style: SLTheme.quicksand(
+                              fontSize: 12.4,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF806575),
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () => Navigator.of(widget.sheetContext).pop(),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(0xFFF0DDE4),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            color: Color(0xFFD81B60),
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFFFF2F7),
+                        Color(0xFFFFFBFD),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: const Color(0xFFF4D7E2)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Đang dùng',
+                        style: SLTheme.quicksand(
+                          fontSize: 12.2,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFD81B60),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          if (currentStyleIsLocked)
+                            buildLockedAdButton(
+                              option: selectedStyle,
+                              onUnlocked: (opt) async {
+                                await widget.homeState._saveCountdownQuickUiPrefs(
+                                  countdownStyleKey: opt.value,
+                                  prevalidatedUnlockedStyles: _unlockedStyles,
+                                  isVip: widget.isVip,
+                                );
+                              },
+                            )
+                          else
+                            buildOptionChip(
+                              option: selectedStyle,
+                              selected: true,
+                              onTap: () => widget.homeState._saveCountdownQuickUiPrefs(
+                                countdownStyleKey: selectedStyle.value,
+                                prevalidatedUnlockedStyles: _unlockedStyles,
+                                isVip: widget.isVip,
+                              ),
+                            ),
+                          buildOptionChip(
+                            option: selectedEffect,
+                            selected: true,
+                            onTap: () => widget.homeState._saveCountdownQuickUiPrefs(
+                              fallingEffectKey: selectedEffect.value,
+                              prevalidatedUnlockedStyles: _unlockedStyles,
+                              isVip: widget.isVip,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                buildSection(
+                  title: 'Giao diện vòng đếm',
+                  description: 'Đổi phong cách hiển thị vòng đếm ngày.',
+                  icon: Icons.change_circle_rounded,
+                  options: widget.styleOptions,
+                  selectedValue: uiState.countdownStyleKey,
+                  onSelect: (option) => widget.homeState._saveCountdownQuickUiPrefs(
+                    countdownStyleKey: option.value,
+                    prevalidatedUnlockedStyles: _unlockedStyles,
+                    isVip: widget.isVip,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                buildSizeSection(
+                  title: 'Kích thước vòng đếm',
+                  description: 'Kéo để điều chỉnh độ lớn của vòng đếm ngày.',
+                  icon: Icons.photo_size_select_large_rounded,
+                  currentValue: uiState.countdownSizePx,
+                  tempValue: _tempCountdownSize,
+                  onChanged: (value) {
+                    setState(() {
+                      _tempCountdownSize = value;
+                    });
+                  },
+                  onSave: () async {
+                    if (_tempCountdownSize != null) {
+                      final nextState = uiState.copyWith(countdownSizePx: _tempCountdownSize);
+                      await UiPrefs.saveState(nextState);
+                      setState(() {
+                        _tempCountdownSize = null;
+                      });
+                      HapticFeedback.mediumImpact();
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                buildSection(
+                  title: 'Hiệu ứng nền',
+                  description: 'Đổi hiệu ứng động trên màn hình chính.',
+                  icon: Icons.auto_fix_high_rounded,
+                  options: widget.effectOptions,
+                  selectedValue: uiState.fallingEffectKey,
+                  onSelect: (option) => widget.homeState._saveCountdownQuickUiPrefs(
+                    fallingEffectKey: option.value,
+                    prevalidatedUnlockedStyles: _unlockedStyles,
+                    isVip: widget.isVip,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(widget.sheetContext).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD81B60),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: Text(
+                      'Xong',
+                      style: SLTheme.quicksand(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 }

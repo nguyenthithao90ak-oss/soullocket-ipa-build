@@ -1082,7 +1082,7 @@ class StorageService {
 
         () async {
           try {
-            final chunkSize = 64 * 1024; // 64KB per chunk
+            const chunkSize = 64 * 1024; // 64KB per chunk
             for (var i = 0; i < bytes.length; i += chunkSize) {
               final end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
               request.sink.add(bytes.sublist(i, end));

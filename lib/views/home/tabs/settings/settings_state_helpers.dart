@@ -794,6 +794,14 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _smartSleepReminder =
                   _toBoolOrNull(data['smartReminderSleep']) ??
                       _smartSleepReminder;
+              final dbMorningTime = data['goodMorningTime']?.toString().trim() ?? '';
+              if (dbMorningTime.isNotEmpty) {
+                _goodMorningTime = dbMorningTime;
+              }
+              final dbNightTime = data['goodNightTime']?.toString().trim() ?? '';
+              if (dbNightTime.isNotEmpty) {
+                _goodNightTime = dbNightTime;
+              }
               _touchSound = _toBoolOrNull(data['touchSound']) ?? _touchSound;
               _confettiFx = _toBoolOrNull(data['confettiFx']) ?? _confettiFx;
               _showWeather = _toBoolOrNull(data['showWeather']) ?? _showWeather;

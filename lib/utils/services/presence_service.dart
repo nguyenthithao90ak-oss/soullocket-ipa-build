@@ -35,6 +35,7 @@ class PresenceService {
 
   String? get _currentUid => FirebaseAuth.instance.currentUser?.uid;
 
+  // ignore: unused_element
   DatabaseReference _presenceRoleRef(String houseId, String role) {
     return _dbRef.child('houses/$houseId/presence/$role');
   }
@@ -314,11 +315,29 @@ class PresenceService {
         if (_currentUid != null) 'uid': _currentUid,
         if (_activeDeviceType != null) 'device': _activeDeviceType,
       }).timeout(const Duration(seconds: 3));
+
+      // Prune stale sessions for BOTH roles to ensure accurate online statuses
+      final houseId = _activeHouseId ?? '';
+      if (houseId.isNotEmpty) {
+        await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user1'), nowMs: now);
+        await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user2'), nowMs: now);
+      }
+
       await _refreshAggregatePresence(
         _myPresenceRef!,
         nowMs: now,
         preferredDevice: _activeDeviceType,
       );
+
+      // Also refresh the aggregate presence of the opposite role in case we pruned its sessions
+      if (houseId.isNotEmpty) {
+        final oppositeRole = _activeRole == 'user1' ? 'user2' : 'user1';
+        await _refreshAggregatePresence(
+          _dbRef.child('houses/$houseId/presence/$oppositeRole'),
+          nowMs: now,
+        );
+      }
+
       debugPrint('Presence heartbeat refreshed session $_mySessionId');
     } on TimeoutException {
       return;
@@ -374,56 +393,13 @@ class PresenceService {
     }
   }
 
+  // ignore: unused_element
   Future<void> _removeCurrentUidGhostSessions({
     required int nowMs,
   }) async {
-    final houseId = _activeHouseId;
-    final role = _activeRole;
-    final uid = _currentUid;
-    if (houseId == null || role == null || uid == null || uid.isEmpty) {
-      return;
-    }
-
-    final oppositeRole = role == 'user1' ? 'user2' : 'user1';
-    final oppositeRef = _presenceRoleRef(houseId, oppositeRole);
-    try {
-      final snap = await oppositeRef
-          .child('sessions')
-          .get()
-          .timeout(const Duration(seconds: 3));
-      final sessions = _readSessionMap(snap.value);
-      if (sessions.isEmpty) {
-        return;
-      }
-
-      final updates = <String, dynamic>{};
-      for (final entry in sessions.entries) {
-        final sessionUid = _readSessionUid(entry.value);
-        if (sessionUid != uid) {
-          continue;
-        }
-        updates[entry.key.toString()] = null;
-      }
-
-      if (updates.isEmpty) {
-        return;
-      }
-
-      await oppositeRef.child('sessions').update(updates);
-      await _refreshAggregatePresence(
-        oppositeRef,
-        nowMs: nowMs,
-        preferredDevice: _activeDeviceType,
-      );
-      debugPrint(
-        'Presence removed ghost sessions from $oppositeRole for uid $uid: ${updates.keys.join(', ')}',
-      );
-    } catch (e) {
-      debugPrint('Presence ghost session cleanup failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể dọn phiên hiện diện trùng.',
-      ).message}');
-    }
+    // Vô hiệu hóa: Cả 2 người dùng chung 1 tài khoản Firebase Auth (cùng UID)
+    // nhưng hoạt động ở 2 vai trò chéo nhau, tránh xóa phiên của nhau.
+    return;
   }
 
   Future<void> _refreshAggregatePresence(
@@ -495,8 +471,13 @@ class PresenceService {
     _mySessionId ??= '${now}_${_dbRef.push().key}';
 
     try {
-      await _removeCurrentUidGhostSessions(nowMs: now);
-      await _pruneStaleSessions(_myPresenceRef!, nowMs: now);
+      // Vô hiệu hóa xóa ghost session chéo vì 2 người dùng chung tài khoản
+      // await _removeCurrentUidGhostSessions(nowMs: now);
+
+      // Dọn dẹp stale sessions cho cả 2 vai trò để tránh hiển thị sai trạng thái khi 1 người offline
+      await _pruneStaleSessions(_dbRef.child('houses/$_activeHouseId/presence/user1'), nowMs: now);
+      await _pruneStaleSessions(_dbRef.child('houses/$_activeHouseId/presence/user2'), nowMs: now);
+
       await _myPresenceRef!.child('sessions/$_mySessionId').set({
         'ts': now,
         if (_currentUid != null) 'uid': _currentUid,
@@ -512,6 +493,14 @@ class PresenceService {
         nowMs: now,
         preferredDevice: _activeDeviceType,
       );
+
+      // Cập nhật lại aggregate presence cho vai trò đối diện
+      final oppositeRole = _activeRole == 'user1' ? 'user2' : 'user1';
+      await _refreshAggregatePresence(
+        _dbRef.child('houses/$_activeHouseId/presence/$oppositeRole'),
+        nowMs: now,
+      );
+
       debugPrint('Presence online for $_activeRole in $_activeHouseId');
     } on TimeoutException {
       return;

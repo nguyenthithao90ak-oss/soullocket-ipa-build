@@ -239,8 +239,8 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
 
     _currentProvider = CachedNetworkImageProvider(
       normalizedUrl,
-      maxWidth: 720,
-      maxHeight: 720,
+      maxWidth: 256,
+      maxHeight: 256,
     );
     final startupFile = HomeStartupMediaCache.getFile(normalizedUrl);
     _diskCachedProvider = startupFile != null ? FileImage(startupFile) : null;

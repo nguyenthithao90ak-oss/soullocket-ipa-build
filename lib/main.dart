@@ -30,6 +30,7 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
+import 'package:soullocket_app/utils/services/performance_profile_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -300,6 +301,7 @@ void main() {
 
       await UiPrefs.ensureLoaded();
       await L10nService().init();
+      await PerformanceProfileService.instance.initialize();
       runApp(const MyApp());
       _scheduleDeferredBootstrap();
     } on _MissingBootstrapConfig {

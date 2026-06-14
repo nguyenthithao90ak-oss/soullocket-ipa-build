@@ -160,9 +160,9 @@ mixin _SoulBlockStrategyLogic {
   ) {
     final stress = _boardStressLevel(boardMask);
     final avgTier =
-        combo.fold<double>(0, (sum, item) => sum + item.tier) / combo.length;
+        combo.fold<double>(0, (total, item) => total + item.tier) / combo.length;
     final avgCells =
-        combo.fold<double>(0, (sum, item) => sum + item.cellCount) /
+        combo.fold<double>(0, (total, item) => total + item.cellCount) /
             combo.length;
     final hasEasyAnchor = _hasEasyAnchor(combo);
     final hasRecoveryPiece = _hasRecoveryPiece(combo);
