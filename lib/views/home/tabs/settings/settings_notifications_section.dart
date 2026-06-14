@@ -359,12 +359,13 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           ? context.tr('advanced')
           : context.tr('notification_center'),
       borderColor: const Color(0xFF006064),
+      flatMode: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (showHeaderCard)
             Container(
-              padding: SLSpacing.all12,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFFF2FBFC),
                 borderRadius: SLRadius.lgAll,
@@ -398,7 +399,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             )
           else
             Container(
-              padding: SLSpacing.all12,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFFF2FBFC),
                 borderRadius: SLRadius.lgAll,
@@ -423,7 +424,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             ),
           SLSpacing.h12,
           Container(
-            padding: SLSpacing.all12,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFFFFF8E1),
               borderRadius: SLRadius.lgAll,
@@ -500,7 +501,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                 if (_smartLoveNoteReminder || _smartSleepReminder) ...[
                   const SizedBox(height: 8),
                   const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 8),
                     child: Divider(color: Color(0xFFE2E8F0), height: 1),
                   ),
                   const SizedBox(height: 8),
@@ -532,7 +533,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           ),
           SLSpacing.h12,
           Container(
-            padding: SLSpacing.all12,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFFF8F7FF),
               borderRadius: SLRadius.lgAll,
@@ -633,7 +634,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
         },
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(14),

@@ -456,22 +456,43 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     final isStandalone = Navigator.of(context).canPop();
     final showBack = isStandalone && !hideBackButton;
     final showExpand = !isStandalone;
+    final shortestSide = MediaQuery.of(context).size.shortestSide;
+    final isMobile = shortestSide < 600;
+
+    final margin = (flatMode || (isMobile && isStandalone))
+        ? const EdgeInsets.symmetric(horizontal: 0, vertical: 6)
+        : const EdgeInsets.symmetric(horizontal: 16, vertical: 8);
+
+    final borderRadius = (isMobile && isStandalone)
+        ? BorderRadius.zero
+        : BorderRadius.circular(24);
+
+    final border = (isMobile && isStandalone)
+        ? null
+        : Border.all(
+            color: borderColor.withValues(alpha: 0.18),
+            width: 1.5,
+          );
+
+    final boxShadow = (isMobile && isStandalone)
+        ? null
+        : [
+            BoxShadow(
+              color: borderColor.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ];
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: margin,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: borderColor.withValues(alpha: 0.18),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: borderColor.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: (isMobile && isStandalone)
+            ? Colors.white
+            : Colors.white.withValues(alpha: 0.96),
+        borderRadius: borderRadius,
+        border: border,
+        boxShadow: boxShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -975,7 +996,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: value
                 ? const Color(0xFFD81B60).withValues(alpha: 0.05)

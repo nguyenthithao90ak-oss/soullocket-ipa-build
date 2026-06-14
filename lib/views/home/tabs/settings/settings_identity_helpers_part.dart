@@ -198,8 +198,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         _draftLiteMode != ui.liteMode ||
         _draftTransparentMode != ui.transparentMode ||
         draftQuality != ui.graphicsQualityKey ||
-        draftBackground != ui.customBackgroundUrl ||
-        _draftWidgetThemeKey != null;
+        draftBackground != ui.customBackgroundUrl;
   }
 
   Future<void> _saveThemeSettings({bool silent = false}) async {
@@ -233,7 +232,6 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         (_draftGraphicsQualityKey ?? ui.graphicsQualityKey).trim();
     final customBackgroundUrl =
         (_draftCustomBackgroundUrl ?? ui.customBackgroundUrl).trim();
-    final widgetThemeKey = _draftWidgetThemeKey ?? 'pink';
     final transparentMode = _draftTransparentMode ?? ui.transparentMode;
     final oldSavedUrl = ui.customBackgroundUrl;
 
@@ -259,30 +257,6 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
 
     if (!silent) setState(() => _isSavingTheme = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-
-      final currentUid = _auth.currentUser?.uid ?? 'guest';
-      final houseIdKey = _houseId ?? 'local';
-      final accountKey = '${currentUid}_$houseIdKey';
-
-      await prefs.setString('il_widget_theme_$accountKey', widgetThemeKey);
-      await prefs.setString('il_widget_style_$accountKey', _widgetStyleKey);
-      await prefs.setBool(
-          'il_widget_show_diary_$accountKey', _showDiaryOnWidget);
-      await prefs.setBool(
-          'il_widget_heart_animated_$accountKey', _widgetHeartAnimated);
-      await prefs.setString(
-          'il_widget_heart_style_$accountKey', _widgetHeartStyleKey);
-      await prefs.setString(
-          'il_widget_heart_color_$accountKey', _widgetHeartColorKey);
-      await prefs.setString(
-          'il_widget_preview_size_$accountKey', _widgetPreviewSizeKey);
-      await prefs.setString(
-          'il_widget_diary_layout_$accountKey', _widgetDiaryLayoutKey);
-      await prefs.setString(
-          'il_widget_season_mode_$accountKey', _widgetSeasonModeKey);
-      await _syncWidgetAppearanceDraft();
-
       await UiPrefs.saveState(
         ui.copyWith(
           themeKey: themeKey,

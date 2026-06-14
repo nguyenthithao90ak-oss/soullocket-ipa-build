@@ -22,16 +22,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
       return;
     }
 
-    if (!mounted) return;
-    final canContinue = await _securityFlowGuard.guard(
-      context,
-      action: SensitiveActionType.saveSecondaryEmail,
-      houseId: _houseId,
-    );
-    if (!canContinue) {
-      return;
-    }
-
     try {
       await _dbRef.child('houses/$houseId/settings').update({
         'showWeather': _showWeather,
