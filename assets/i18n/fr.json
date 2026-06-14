@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "Impossible d'enregistrer l'image : {error}",
   "util_drawing_delete_image_failed": "Impossible de supprimer la photo : {error}",
   "util_drawing_partner_drawing": "{name} dessine...",
-  "util_drawing_sync_online_count": "Synchronisation 2 personnes sont activées • {count} l'autre personne est en ligne",
+  "util_drawing_sync_online_count": "Synchronisation du dessin activée • {count} partenaire en ligne",
   "util_drawing_canvas_locked_status": "La toile est verrouillée par défilement.  {status}",
   "util_finance_each_pays": "Chaque personne paie :\n {amount}",
   "util_finance_used_amount": "Utilisé : {amount}",

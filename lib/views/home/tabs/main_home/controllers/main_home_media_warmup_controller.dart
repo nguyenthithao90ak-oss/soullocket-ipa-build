@@ -132,11 +132,15 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     final backgroundUrl = UiPrefs.notifier.value.customBackgroundUrl.trim();
     final signature = '$avatarUrl1|$avatarUrl2|$backgroundUrl';
 
+    // ⚡ Defer setState for _deferHeavyHomeMotion to post-frame so it doesn't
+    //    block the ongoing swipe animation frame.
     if (delayMotion && !_deferHeavyHomeMotion) {
+      _deferHeavyHomeMotion = true;
       if (mounted) {
-        setState(() => _deferHeavyHomeMotion = true);
-      } else {
-        _deferHeavyHomeMotion = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          setState(() {});
+        });
       }
     }
     final shouldReleaseDeferredMotion = delayMotion || _deferHeavyHomeMotion;

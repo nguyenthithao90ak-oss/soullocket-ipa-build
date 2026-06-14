@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "Bild kann nicht gespeichert werden: {error}",
   "util_drawing_delete_image_failed": "Foto kann nicht gelöscht werden: {error}",
   "util_drawing_partner_drawing": "{name} zeichnet...",
-  "util_drawing_sync_online_count": "Synchronisieren 2 Personen sind eingeschaltet • {count} die andere Person ist online",
+  "util_drawing_sync_online_count": "Zeichnungssynchronisierung aktiv • {count} Partner online",
   "util_drawing_canvas_locked_status": "Die Leinwand ist scrollbar.  {status}",
   "util_finance_each_pays": "Jede Person zahlt:\n {amount}",
   "util_finance_used_amount": "Verwendet: {amount}",

@@ -580,7 +580,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (isActive) {
       _deferHeavyHomeMotion = true;
       _warmHomeMedia(delayMotion: true);
-      Future.delayed(const Duration(milliseconds: 500), () {
+      // ⚡ Delay fetch until after swipe animation (~300ms) + warmup settle (650ms).
+      //    700ms gives enough breathing room so the UI thread is free during animation.
+      Future.delayed(const Duration(milliseconds: 700), () {
         if (!mounted || !_isTabActive) return;
         unawaited(
           _fetchHouseData(
@@ -2624,10 +2626,7 @@ class _CountdownQuickCustomizeSheetContentState
                     max: UiPrefs.maxCountdownSizePx,
                     value: displayValue.clamp(200.0, UiPrefs.maxCountdownSizePx),
                     onChanged: onChanged,
-                    onChangeEnd: (v) {
-                      onChangedEnd(v);
-                      onSave();
-                    },
+                    onChangeEnd: onChangedEnd,
                   ),
                 ),
               ),

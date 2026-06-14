@@ -107,14 +107,16 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
 
   void _handleFeedControllerChange() {
     _syncMemoryControllerHouse();
-    if (mounted) {
+    // ⚡ Skip rebuild while tab is inactive to avoid jank during swipe animations
+    if (mounted && _isTabActive) {
       setState(() {});
     }
   }
 
   void _handleControllerChange() {
     _syncSelectionOverlayVisibility();
-    if (mounted) {
+    // ⚡ Skip rebuild while tab is inactive to avoid jank during swipe animations
+    if (mounted && _isTabActive) {
       setState(() {});
     }
   }
@@ -741,9 +743,16 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     _isTabActive = isActive;
     _syncSelectionOverlayVisibility();
     if (isActive) {
+      // ⚡ Flush any setState calls that were skipped while tab was inactive.
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _isTabActive) setState(() {});
+        });
+      }
       final currentHouseId = _feedController.houseId;
       if (_feedController.postsVN.value.isEmpty || _lastSyncedMemoryHouseId != currentHouseId) {
-        Future.delayed(const Duration(milliseconds: 300), () {
+        // ⚡ Increased from 300ms → 450ms to clear swipe animation before fetch
+        Future.delayed(const Duration(milliseconds: 450), () {
           if (!mounted || !_isTabActive) return;
           unawaited(_activateDiaryTab());
         });

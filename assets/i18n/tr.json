@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "Resim kaydedilemiyor: {error}",
   "util_drawing_delete_image_failed": "Fotoğraf silinemiyor: {error}",
   "util_drawing_partner_drawing": "{name} çizim yapıyor...",
-  "util_drawing_sync_online_count": "Senkronizasyon 2 kişi açık • {count} diğer kişi çevrimiçi",
+  "util_drawing_sync_online_count": "Çift çizim senkronizasyonu aktif • {count} partner çevrimiçi",
   "util_drawing_canvas_locked_status": "Kanvas kaydırma kilitlidir.  {status}",
   "util_finance_each_pays": "Her kişi şunları öder:\n {amount}",
   "util_finance_used_amount": "Kullanılan: {amount}",

@@ -105,6 +105,7 @@ class _TabActivationHostState extends State<_TabActivationHost> {
   late final ValueNotifier<bool> _isActiveNotifier;
   late bool _isVisible;
   Widget? _cachedChild;
+  bool _pendingStateUpdate = false; // ⚡ batch multiple listener fires
 
   @override
   void initState() {
@@ -182,14 +183,25 @@ class _TabActivationHostState extends State<_TabActivationHost> {
   }
 
   void _onStateChanged() {
-    final nextActive = widget.activeIndexListenable.value == widget.tabIndex;
-    final nextVisible = _calculateVisibility();
-    if (_isActiveNotifier.value != nextActive || _isVisible != nextVisible) {
-      setState(() {
-        _isActiveNotifier.value = nextActive;
-        _isVisible = nextVisible;
-      });
-    }
+    // ⚡ Multiple listenables may fire in the same microtask batch during a swipe.
+    //   Coalesce them into a single setState via a deferred microtask.
+    if (_pendingStateUpdate) return;
+    _pendingStateUpdate = true;
+    Future.microtask(() {
+      if (!mounted) {
+        _pendingStateUpdate = false;
+        return;
+      }
+      _pendingStateUpdate = false;
+      final nextActive = widget.activeIndexListenable.value == widget.tabIndex;
+      final nextVisible = _calculateVisibility();
+      if (_isActiveNotifier.value != nextActive || _isVisible != nextVisible) {
+        setState(() {
+          _isActiveNotifier.value = nextActive;
+          _isVisible = nextVisible;
+        });
+      }
+    });
   }
 
   @override

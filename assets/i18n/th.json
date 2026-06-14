@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "ไม่สามารถบันทึกภาพ: {error}",
   "util_drawing_delete_image_failed": "ไม่สามารถลบรูปภาพ: {error}",
   "util_drawing_partner_drawing": "{name} กำลังวาด...",
-  "util_drawing_sync_online_count": "กำลังซิงค์ 2 คนอยู่ • {count} อีกฝ่ายออนไลน์อยู่",
+  "util_drawing_sync_online_count": "เปิดใช้งานการซิงค์วาดคู่ • {count} อีกฝ่ายออนไลน์อยู่",
   "util_drawing_canvas_locked_status": "ผืนผ้าใบมีการล็อคแบบเลื่อน  {status}",
   "util_finance_each_pays": "แต่ละคนจ่าย:\n {amount}",
   "util_finance_used_amount": "ใช้แล้ว: {amount}",

@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "无法保存图像:{error}",
   "util_drawing_delete_image_failed": "无法删除照片:{error}",
   "util_drawing_partner_drawing": "{name} 正在绘制...",
-  "util_drawing_sync_online_count": "同步 2 人在线 • {count} 其他人在线",
+  "util_drawing_sync_online_count": "双人画板同步已开启 • {count} 对方在线",
   "util_drawing_canvas_locked_status": "画布是滚动锁定的。  {status}",
   "util_finance_each_pays": "每人支付:\n {amount}",
   "util_finance_used_amount": "使用:{amount}",

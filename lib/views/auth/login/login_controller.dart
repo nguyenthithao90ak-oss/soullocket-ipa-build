@@ -2,18 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/services/offline_cache_service.dart';
-import '../utils/services/anti_spam_service.dart';
-import '../utils/services/auth_service.dart';
-import '../utils/services/security_service.dart';
-import '../utils/services/l10n_service.dart';
-import '../utils/app_error_mapper.dart';
-import '../utils/rapid_action_feedback_policy.dart';
-import '../utils/sl_notice.dart';
-import '../views/app_entry.dart';
-import '../views/auth/qr_login_display_dialog.dart';
-import '../views/auth/login/social_auth_action_helper.dart';
-import '../core/sl_theme.dart';
+import '../../../utils/services/offline_cache_service.dart';
+import '../../../utils/services/anti_spam_service.dart';
+import '../../../utils/services/auth_service.dart';
+import '../../../utils/services/security_service.dart';
+import '../../../utils/services/l10n_service.dart';
+import '../../../utils/app_error_mapper.dart';
+import '../../../utils/rapid_action_feedback_policy.dart';
+import '../../../utils/sl_notice.dart';
+import '../../app_entry.dart';
+import '../qr_login_display_dialog.dart';
+import 'social_auth_action_helper.dart';
+import '../../../core/sl_theme.dart';
 
 class LoginController extends ChangeNotifier {
   static const Duration _authActionTimeout = Duration(seconds: 20);

@@ -15,6 +15,7 @@ import 'package:flutter/rendering.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/drawing_studio_service.dart';
 import '../../utils/app_error_mapper.dart';
+import '../../utils/services/role_utils.dart';
 
 part 'drawing_studio/models/drawing_models.dart';
 part 'drawing_studio/painters/drawing_painters.dart';
@@ -92,11 +93,11 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     _strokesSub?.cancel();
     _backgroundSub?.cancel();
     _presenceSub?.cancel();
-    final uid = _auth.currentUser?.uid;
-    if (uid != null && uid.isNotEmpty) {
+    final myRole = RoleUtils.currentRoleSync();
+    if (myRole.isNotEmpty) {
       unawaited(_drawingService.removePresence(
         houseId: widget.houseId,
-        uid: uid,
+        uid: myRole,
       ));
     }
     super.dispose();
@@ -131,22 +132,23 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       setState(() => _backgroundId = background.id);
     });
 
+    final myRole = RoleUtils.currentRoleSync();
     _presenceSub = _drawingService.streamPresence(widget.houseId).listen((items) {
       if (!mounted) return;
       setState(() {
-        _presence = items.where((item) => item.uid != uid).toList();
+        _presence = items.where((item) => item.uid != myRole).toList();
       });
     });
   }
 
   Future<void> _updatePresence({required bool isDrawing}) async {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null || uid.isEmpty || widget.houseId.trim().isEmpty) {
+    final myRole = RoleUtils.currentRoleSync();
+    if (myRole.isEmpty || widget.houseId.trim().isEmpty) {
       return;
     }
     await _drawingService.updatePresence(
       houseId: widget.houseId,
-      uid: uid,
+      uid: myRole,
       name: widget.myName,
       isDrawing: isDrawing,
       colorValue: _currentColor.toARGB32(),

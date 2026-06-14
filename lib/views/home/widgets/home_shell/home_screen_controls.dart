@@ -146,8 +146,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
       pauseAnimations: _isUserTabSwiping,
     );
     final isPerformanceMode = effectProfile.performanceMode;
-    final useBackdropBlur = effectProfile.premiumEffects &&
-        MediaQuery.of(context).size.shortestSide >= 600;
+    final useBackdropBlur = effectProfile.premiumEffects && !isPerformanceMode;
 
     final navSurface = Container(
       key: _firstGuideBottomNavKey,
@@ -155,9 +154,9 @@ extension _HomeScreenShellControls on _HomeScreenState {
       decoration: BoxDecoration(
         color: isDark
             ? const Color(0xFF151A25)
-                .withValues(alpha: isPerformanceMode ? 0.98 : 0.75)
+                .withValues(alpha: isPerformanceMode ? 0.98 : 0.55)
             : const Color(0xFFFFFFFF)
-                .withValues(alpha: isPerformanceMode ? 0.99 : 0.85),
+                .withValues(alpha: isPerformanceMode ? 0.99 : 0.65),
         borderRadius: BorderRadius.circular(40),
         border: Border.all(
           color: isDark
@@ -216,7 +215,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   child: !useBackdropBlur
                       ? navSurface
                       : FastBackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                          filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                           fallbackColor: Colors.transparent,
                           child: navSurface,
                         ),

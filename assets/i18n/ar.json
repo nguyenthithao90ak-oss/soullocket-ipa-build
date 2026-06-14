@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "غير قادر على حفظ الصورة: {error}",
   "util_drawing_delete_image_failed": "غير قادر على حذف الصورة: {error}",
   "util_drawing_partner_drawing": "{name} يرسم...",
-  "util_drawing_sync_online_count": "مزامنة شخصين قيد التشغيل • {count} الشخص الآخر متصل بالإنترنت",
+  "util_drawing_sync_online_count": "تم تمكين مزامنة الرسم الثنائي • {count} الطرف الآخر متصل",
   "util_drawing_canvas_locked_status": "اللوحة القماشية قابلة للتمرير.  {status}",
   "util_finance_each_pays": "يدفع كل شخص:\n {amount}",
   "util_finance_used_amount": "المستخدمة: {amount}",

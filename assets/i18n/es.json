@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "No se puede guardar la imagen: {error}",
   "util_drawing_delete_image_failed": "No se puede eliminar la foto: {error}",
   "util_drawing_partner_drawing": "{name} está dibujando...",
-  "util_drawing_sync_online_count": "Sincronizar 2 personas están en • {count} la otra persona está en línea",
+  "util_drawing_sync_online_count": "Sincronización de dibujo activada • {count} pareja en línea",
   "util_drawing_canvas_locked_status": "El lienzo tiene bloqueo de desplazamiento.  {status}",
   "util_finance_each_pays": "Cada persona paga:\n {amount}",
   "util_finance_used_amount": "Usado: {amount}",
