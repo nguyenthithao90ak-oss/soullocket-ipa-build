@@ -10,14 +10,9 @@ class _DiaryTabShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state._isCheckingAuth) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: Colors.transparent,
-        body: Stack(
-          children: [
-            Positioned.fill(child: SLTheme.meshPattern()),
-            const SafeArea(child: _DiaryTabLoadingSection()),
-          ],
-        ),
+        body: SafeArea(child: _DiaryTabLoadingSection()),
       );
     }
 
@@ -86,18 +81,6 @@ class _DiaryTabShell extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          Positioned.fill(child: SLTheme.meshPattern()),
-          // Background animation - wrapped in RepaintBoundary
-          Positioned.fill(
-            child: RepaintBoundary(
-              child: AnimatedOpacity(
-                opacity: state._currentTab == 'memory' ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                child: const DiaryMemoryFixedBackground(),
-              ),
-            ),
-          ),
           Column(
             children: [
               DiaryHeaderSection(
