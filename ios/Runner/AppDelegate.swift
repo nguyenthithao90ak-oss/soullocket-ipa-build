@@ -254,6 +254,7 @@ import ActivityKit
           message: "Failed to copy asset into the App Group container.",
           details: error.localizedDescription
         )
+      )
     }
   }
 
@@ -441,4 +442,3 @@ public struct SoulLocketActivityAttributes: ActivityAttributes {
     }
 }
 #endif
-
