@@ -260,7 +260,7 @@ class UtilityService {
     ),
     UtilityApp(
       id: 'health',
-      title: 'Sức khỏe',
+      title: 'health',
       icon: Icons.health_and_safety_rounded,
       colors: [const Color(0xFFFF80AB), const Color(0xFFF06292)],
     ),
