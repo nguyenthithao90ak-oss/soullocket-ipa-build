@@ -529,7 +529,11 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         updates['opened_from'] = widget.initialTopic!.trim();
       }
 
-      await _db.ref('support_tickets/$_ticketId').update(updates);
+      try {
+        await _db.ref('support_tickets/$_ticketId').update(updates);
+      } catch (e) {
+        debugPrint('Error updating ticket metadata: $e');
+      }
 
       await _generateReply(
         text,

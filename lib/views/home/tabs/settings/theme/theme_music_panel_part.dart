@@ -82,7 +82,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
             ? 'Đang dùng nhạc mặc định'
             : _deriveMusicTitle(_bgMusicUrl));
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: _ThemeSectionCard(
         icon: Icons.music_note_rounded,
         title: context.tr('theme_music_panel'),
