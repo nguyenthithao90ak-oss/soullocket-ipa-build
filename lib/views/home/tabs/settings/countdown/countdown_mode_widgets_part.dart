@@ -1165,21 +1165,6 @@ class _FloatingHeartsRingOverlayState
   @override
   Widget build(BuildContext context) {
     final radius = widget.size / 2;
-    // Điểm nhấn sáng ở trung tâm tạo hiệu ứng bóng bẩy
-    final centerGlow = Container(
-      width: widget.size,
-      height: widget.size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.15),
-            Colors.white.withValues(alpha: 0.0),
-          ],
-          stops: const [0.0, 0.7],
-        ),
-      ),
-    );
 
     return IgnorePointer(
       child: SizedBox(
@@ -1188,7 +1173,6 @@ class _FloatingHeartsRingOverlayState
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            centerGlow,
             AnimatedBuilder(
               animation: Listenable.merge([_mainController, _tiltNotifier]),
               builder: (context, _) {
