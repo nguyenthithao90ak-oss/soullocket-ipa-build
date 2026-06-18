@@ -72,18 +72,21 @@ class _NotificationScreenState extends State<NotificationScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _tabController = TabController(length: _kTabs.length, vsync: this)
-      ..addListener(() {
-        if (!_tabController.indexIsChanging) {
-          setState(() => _filter = NotifFilter.values[_tabController.index]);
-        }
-      });
+    _tabController = TabController(length: _kTabs.length, vsync: this);
+    _tabController.addListener(_onTabChanged);
     _init();
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      setState(() => _filter = NotifFilter.values[_tabController.index]);
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _tabController.removeListener(_onTabChanged);
     _detachNotificationsListener();
     _tabController.dispose();
     super.dispose();

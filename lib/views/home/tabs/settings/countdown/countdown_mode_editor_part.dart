@@ -10,7 +10,7 @@ Future<XFile?> _cropCountdownModeAvatarFile(XFile file) async {
       sourcePath: file.path,
       aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
       compressFormat: ImageCompressFormat.jpg,
-      compressQuality: 88,
+      compressQuality: 80,
       maxWidth: 1080,
       maxHeight: 1080,
       uiSettings: [
@@ -41,7 +41,7 @@ Future<XFile?> _cropCountdownModeBackgroundFile(XFile file) async {
       sourcePath: file.path,
       aspectRatio: _themeBackgroundAspectRatio,
       compressFormat: ImageCompressFormat.jpg,
-      compressQuality: 85,
+      compressQuality: 80,
       maxWidth: 1080,
       maxHeight: 2560,
       uiSettings: [
@@ -1088,7 +1088,7 @@ class _CountdownModeEditorScreenState
                                   runSpacing: 8,
                                   children: [
                                     ActionChip(
-                                      label: const Text('Hôm nay'),
+                                      label: Text(context.tr('countdown_today')),
                                       onPressed: () {
                                         final now = DateTime.now();
                                         setState(() {
@@ -1101,7 +1101,7 @@ class _CountdownModeEditorScreenState
                                       },
                                     ),
                                     ActionChip(
-                                      label: const Text('Ngày yêu mặc định'),
+                                      label: Text(context.tr('countdown_default_love_date')),
                                       onPressed: () {
                                         final parsed = DateInputUtils.parse(
                                           widget.anchorDate == null

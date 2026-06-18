@@ -22,6 +22,7 @@ import 'package:soullocket_app/utils/core/sl_theme.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'offline_cache_service.dart';
+import 'secure_storage_service.dart';
 
 part 'military_lock/military_lock_cooldown_evaluator.dart';
 part 'military_lock/military_lock_models.dart';

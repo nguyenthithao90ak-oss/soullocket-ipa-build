@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "画像を保存できません: {error}",
   "util_drawing_delete_image_failed": "写真を削除できません: {error}",
   "util_drawing_partner_drawing": "{name} が絵を描いています...",
-  "util_drawing_sync_online_count": "ペア描画同期が有効 • {count} 相手がオンラインです",
+  "util_drawing_sync_online_count": "同期 2 人がオンになっています • {count} 他の人はオンラインです",
   "util_drawing_canvas_locked_status": "キャンバスはスクロールロックされています。  {status}",
   "util_finance_each_pays": "各人は次の料金を支払います。\n {amount}",
   "util_finance_used_amount": "使用: {amount}",

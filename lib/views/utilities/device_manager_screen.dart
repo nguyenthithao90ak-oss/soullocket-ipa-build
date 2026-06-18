@@ -99,79 +99,82 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         _securityDeviceSignalsAllowed = true;
       }
       await _svc.registerCurrentDevice();
+
+      List<Map<String, dynamic>> devices = const [];
+      try {
+        devices = await _svc.loadDevices().timeout(const Duration(seconds: 12));
+      } catch (e) {
+        final errorInfo = AppErrorMapper.resolve(
+          e,
+          fallbackMessage: msgLoadFail,
+        );
+        debugPrint('Load devices failed: ${errorInfo.message}');
+        _loadMessage = errorInfo.message;
+      }
+
+      final hasCurrentDevice = devices.any((device) =>
+          device['deviceId']?.toString().trim() == _currentDeviceId);
+      if (!hasCurrentDevice) {
+        final currentSnapshot = await _svc.getCurrentDeviceSnapshot();
+        if (!mounted) return;
+        devices = [
+          ...devices,
+          {
+            ...currentSnapshot,
+            'deviceId': _currentDeviceId,
+            'status': _securityDeviceSignalsAllowed ? 'pending' : 'local_only',
+            'last_seen': DateTime.now().millisecondsSinceEpoch,
+            'is_admin': false,
+          }
+        ];
+        if (_loadMessage.isEmpty && devices.length == 1) {
+          _loadMessage = msgOnlyCurrentDevice;
+        }
+      }
+
+      if (devices.isEmpty) {
+        final currentSnapshot = await _svc.getCurrentDeviceSnapshot();
+        if (!mounted) return;
+        devices = [
+          {
+            ...currentSnapshot,
+            'deviceId': _currentDeviceId,
+            'status': _securityDeviceSignalsAllowed ? 'pending' : 'local_only',
+            'last_seen': DateTime.now().millisecondsSinceEpoch,
+            'is_admin': false,
+          }
+        ];
+        _loadMessage = _loadMessage.isNotEmpty ? _loadMessage : msgNoDevices;
+      }
+
+      final currentDevice = devices.cast<Map<String, dynamic>?>().firstWhere(
+            (device) => device?['deviceId'] == _currentDeviceId,
+            orElse: () => null,
+          );
+      final currentStatus = currentDevice?['status']?.toString();
+      final currentIsAdmin = currentDevice?['is_admin'] == true;
+      final canManageFromList = currentIsAdmin || currentStatus == 'approved';
+      if (mounted) {
+        setState(() {
+          _devices = devices;
+          _currentDeviceCanManageDevices =
+              _currentDeviceCanManageDevices || canManageFromList;
+        });
+      }
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: msgRegisterFail,
       );
-      debugPrint('Error auto registering device: ${errorInfo.message}');
+      debugPrint('Error loading devices context: ${errorInfo.message}');
       _loadMessage = errorInfo.message;
-    }
-
-    List<Map<String, dynamic>> devices = const [];
-    try {
-      devices = await _svc.loadDevices();
-    } catch (e) {
-      final errorInfo = AppErrorMapper.resolve(
-        e,
-        fallbackMessage: msgLoadFail,
-      );
-      debugPrint('Load devices failed: ${errorInfo.message}');
-      _loadMessage = errorInfo.message;
-    }
-
-    final hasCurrentDevice = devices.any(
-        (device) => device['deviceId']?.toString().trim() == _currentDeviceId);
-    if (!hasCurrentDevice) {
-      final currentSnapshot = await _svc.getCurrentDeviceSnapshot();
-      if (!mounted) return;
-      devices = [
-        ...devices,
-        {
-          ...currentSnapshot,
-          'deviceId': _currentDeviceId,
-          'status': _securityDeviceSignalsAllowed ? 'pending' : 'local_only',
-          'last_seen': DateTime.now().millisecondsSinceEpoch,
-          'is_admin': false,
-        }
-      ];
-      if (_loadMessage.isEmpty && devices.length == 1) {
-        _loadMessage = msgOnlyCurrentDevice;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isSyncingDevices = false;
+        });
       }
-    }
-
-    if (devices.isEmpty) {
-      final currentSnapshot = await _svc.getCurrentDeviceSnapshot();
-      if (!mounted) return;
-      devices = [
-        {
-          ...currentSnapshot,
-          'deviceId': _currentDeviceId,
-          'status': _securityDeviceSignalsAllowed ? 'pending' : 'local_only',
-          'last_seen': DateTime.now().millisecondsSinceEpoch,
-          'is_admin': false,
-        }
-      ];
-      _loadMessage = _loadMessage.isNotEmpty
-          ? _loadMessage
-          : msgNoDevices;
-    }
-
-    final currentDevice = devices.cast<Map<String, dynamic>?>().firstWhere(
-          (device) => device?['deviceId'] == _currentDeviceId,
-          orElse: () => null,
-        );
-    final currentStatus = currentDevice?['status']?.toString();
-    final currentIsAdmin = currentDevice?['is_admin'] == true;
-    final canManageFromList = currentIsAdmin || currentStatus == 'approved';
-    if (mounted) {
-      setState(() {
-        _devices = devices;
-        _currentDeviceCanManageDevices =
-            _currentDeviceCanManageDevices || canManageFromList;
-        _isLoading = false;
-        _isSyncingDevices = false;
-      });
     }
   }
 

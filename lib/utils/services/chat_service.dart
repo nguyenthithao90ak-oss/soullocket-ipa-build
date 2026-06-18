@@ -196,8 +196,13 @@ class ChatService {
 
   Future<bool> _hasRoomIndex(String houseId, String roomId) async {
     try {
-      final snap = await _dbRef.child(_roomIndexPath(houseId, roomId)).get();
+      final snap = await _dbRef
+          .child(_roomIndexPath(houseId, roomId))
+          .get()
+          .timeout(const Duration(seconds: 10));
       return _snapshotHasRoomIndex(snap);
+    } on TimeoutException {
+      return false;
     } on FirebaseException catch (error) {
       if (error.code == 'permission-denied') {
         return false;
@@ -212,12 +217,17 @@ class ChatService {
     }
 
     try {
-      final roomSnap = await _dbRef.child('chats/$roomId').get();
+      final roomSnap = await _dbRef
+          .child('chats/$roomId')
+          .get()
+          .timeout(const Duration(seconds: 10));
       if (!roomSnap.exists) {
         return false;
       }
       await _dbRef.child(_roomIndexPath(houseId, roomId)).set(true);
       return true;
+    } on TimeoutException {
+      return false;
     } on FirebaseException catch (error) {
       if (error.code == 'permission-denied') {
         return false;
@@ -285,11 +295,16 @@ class ChatService {
     String myHouseId,
     String targetHouseId,
   ) async {
-    final myBlockSnap = await _dbRef
-        .child('houses/$myHouseId/blocked_users/$targetHouseId')
-        .get();
-    if (myBlockSnap.value == true) {
-      throw Exception('Hai nhà đã chặn nhau, không thể tiếp tục trò chuyện.');
+    try {
+      final myBlockSnap = await _dbRef
+          .child('houses/$myHouseId/blocked_users/$targetHouseId')
+          .get()
+          .timeout(const Duration(seconds: 10));
+      if (myBlockSnap.value == true) {
+        throw Exception('Hai nhà đã chặn nhau, không thể tiếp tục trò chuyện.');
+      }
+    } on TimeoutException {
+      throw Exception('Kiểm tra trạng thái chặn không thành công do timeout.');
     }
   }
 
@@ -301,20 +316,27 @@ class ChatService {
     if (!await _ensureViewerRoomIndex(myHouseId, roomId)) {
       return;
     }
-    final roomSnap = await _dbRef.child('chats/$roomId').get();
-    if (!roomSnap.exists || roomSnap.value is! Map) {
+    try {
+      final roomSnap = await _dbRef
+          .child('chats/$roomId')
+          .get()
+          .timeout(const Duration(seconds: 10));
+      if (!roomSnap.exists || roomSnap.value is! Map) {
+        return;
+      }
+      final room = _asStringDynamicMap(roomSnap.value);
+      if (room == null) {
+        return;
+      }
+      final status = (room['status'] ?? '').toString().trim().toLowerCase();
+      if (status == 'closed') {
+        final message = (room['closedMessage'] ?? '').toString().trim();
+        throw Exception(
+          message.isEmpty ? 'Đoạn chat này đã bị đóng.' : message,
+        );
+      }
+    } on TimeoutException {
       return;
-    }
-    final room = _asStringDynamicMap(roomSnap.value);
-    if (room == null) {
-      return;
-    }
-    final status = (room['status'] ?? '').toString().trim().toLowerCase();
-    if (status == 'closed') {
-      final message = (room['closedMessage'] ?? '').toString().trim();
-      throw Exception(
-        message.isEmpty ? 'Đoạn chat này đã bị đóng.' : message,
-      );
     }
   }
 
@@ -862,31 +884,38 @@ class ChatService {
       query = query.endAt(endBeforeKey);
     }
 
-    final snap = await query.limitToLast(fetchLimit).get();
-    if (!snap.exists || snap.value is! Map) return [];
+    try {
+      final snap = await query
+          .limitToLast(fetchLimit)
+          .get()
+          .timeout(const Duration(seconds: 10));
+      if (!snap.exists || snap.value is! Map) return [];
 
-    final data = Map<dynamic, dynamic>.from(snap.value as Map);
-    final messages = <ChatMessage>[];
-    data.forEach((key, value) {
-      if (value is Map) {
-        messages.add(ChatMessage.fromMap(key.toString(), value));
+      final data = Map<dynamic, dynamic>.from(snap.value as Map);
+      final messages = <ChatMessage>[];
+      data.forEach((key, value) {
+        if (value is Map) {
+          messages.add(ChatMessage.fromMap(key.toString(), value));
+        }
+      });
+
+      if (endBeforeKey != null && endBeforeKey.isNotEmpty) {
+        messages.removeWhere((message) => message.id == endBeforeKey);
       }
-    });
 
-    if (endBeforeKey != null && endBeforeKey.isNotEmpty) {
-      messages.removeWhere((message) => message.id == endBeforeKey);
+      messages.sort((a, b) {
+        final byTime = b.timestamp.compareTo(a.timestamp);
+        if (byTime != 0) return byTime;
+        return b.id.compareTo(a.id);
+      });
+
+      if (messages.length > limit) {
+        return messages.sublist(0, limit);
+      }
+      return messages;
+    } on TimeoutException {
+      return [];
     }
-
-    messages.sort((a, b) {
-      final byTime = b.timestamp.compareTo(a.timestamp);
-      if (byTime != 0) return byTime;
-      return b.id.compareTo(a.id);
-    });
-
-    if (messages.length > limit) {
-      return messages.sublist(0, limit);
-    }
-    return messages;
   }
 
   Future<List<ChatMessage>> fetchInternalMessagesPage(
@@ -901,31 +930,38 @@ class ChatService {
       query = query.endAt(endBeforeKey);
     }
 
-    final snap = await query.limitToLast(fetchLimit).get();
-    if (!snap.exists || snap.value is! Map) return [];
+    try {
+      final snap = await query
+          .limitToLast(fetchLimit)
+          .get()
+          .timeout(const Duration(seconds: 10));
+      if (!snap.exists || snap.value is! Map) return [];
 
-    final data = Map<dynamic, dynamic>.from(snap.value as Map);
-    final messages = <ChatMessage>[];
-    data.forEach((key, value) {
-      if (value is Map) {
-        messages.add(ChatMessage.fromMap(key.toString(), value));
+      final data = Map<dynamic, dynamic>.from(snap.value as Map);
+      final messages = <ChatMessage>[];
+      data.forEach((key, value) {
+        if (value is Map) {
+          messages.add(ChatMessage.fromMap(key.toString(), value));
+        }
+      });
+
+      if (endBeforeKey != null && endBeforeKey.isNotEmpty) {
+        messages.removeWhere((message) => message.id == endBeforeKey);
       }
-    });
 
-    if (endBeforeKey != null && endBeforeKey.isNotEmpty) {
-      messages.removeWhere((message) => message.id == endBeforeKey);
+      messages.sort((a, b) {
+        final byTime = b.timestamp.compareTo(a.timestamp);
+        if (byTime != 0) return byTime;
+        return b.id.compareTo(a.id);
+      });
+
+      if (messages.length > limit) {
+        return messages.sublist(0, limit);
+      }
+      return messages;
+    } on TimeoutException {
+      return [];
     }
-
-    messages.sort((a, b) {
-      final byTime = b.timestamp.compareTo(a.timestamp);
-      if (byTime != 0) return byTime;
-      return b.id.compareTo(a.id);
-    });
-
-    if (messages.length > limit) {
-      return messages.sublist(0, limit);
-    }
-    return messages;
   }
 
   Stream<ChatMessage> streamNewMessages(

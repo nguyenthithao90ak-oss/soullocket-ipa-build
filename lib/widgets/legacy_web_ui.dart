@@ -1,9 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import '../utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import '../core/sl_theme.dart';
-import 'package:soullocket_app/utils/services/notification_service.dart';
 
 class LegacyWebUi {
   static const Color accentPink = SLColors.primary;
@@ -292,20 +291,8 @@ class LegacyWebUi {
     String? title,
     IconData? icon,
   }) {
-    ScaffoldMessengerState? tempMessenger;
-    try {
-      tempMessenger = ScaffoldMessenger.maybeOf(context);
-    } catch (_) {}
-    if (tempMessenger == null) {
-      final rootContext = NotificationService.navigatorKey.currentContext;
-      if (rootContext != null) {
-        try {
-          tempMessenger = ScaffoldMessenger.maybeOf(rootContext);
-        } catch (_) {}
-      }
-    }
-    if (tempMessenger == null) return;
-    final messenger = tempMessenger;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
 
     final notice =
         _resolveNoticeStyleV2(message, success, title: title, icon: icon);
@@ -317,11 +304,11 @@ class LegacyWebUi {
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.transparent,
           elevation: 0,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          margin: const EdgeInsets.fromLTRB(14, 0, 14, 20),
           padding: EdgeInsets.zero,
           duration: Duration(seconds: success ? 3 : 4),
           content: Container(
-            padding: const EdgeInsets.fromLTRB(16, 16, 18, 16),
+            padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
             decoration: softPanelDecoration(
               accent: notice.borderColor,
               radius: 24,
@@ -332,8 +319,8 @@ class LegacyWebUi {
             child: Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [notice.iconTint.withValues(alpha: 0.16), Colors.white],
@@ -344,9 +331,9 @@ class LegacyWebUi {
                     border:
                         Border.all(color: notice.iconTint.withValues(alpha: 0.14)),
                   ),
-                  child: Icon(notice.icon, color: notice.iconTint, size: 24),
+                  child: Icon(notice.icon, color: notice.iconTint, size: 20),
                 ),
-                SLSpacing.w12,
+                SLSpacing.w10,
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,16 +342,16 @@ class LegacyWebUi {
                       Text(
                         notice.title,
                         style: SLTheme.quicksand(
-                          fontSize: 14.5,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w900,
                           color: notice.titleColor,
                         ),
                       ),
-                      SLSpacing.gapH(3),
+                      SLSpacing.gapH(2),
                       Text(
                         message,
                         style: SLTheme.quicksand(
-                          fontSize: 13.5,
+                          fontSize: 12.4,
                           fontWeight: FontWeight.w700,
                           height: 1.4,
                           color: notice.bodyColor,
@@ -389,20 +376,8 @@ class LegacyWebUi {
     String? title,
     IconData? icon,
   }) {
-    ScaffoldMessengerState? tempMessenger;
-    try {
-      tempMessenger = ScaffoldMessenger.maybeOf(context);
-    } catch (_) {}
-    if (tempMessenger == null) {
-      final rootContext = NotificationService.navigatorKey.currentContext;
-      if (rootContext != null) {
-        try {
-          tempMessenger = ScaffoldMessenger.maybeOf(rootContext);
-        } catch (_) {}
-      }
-    }
-    if (tempMessenger == null) return;
-    final messenger = tempMessenger;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
 
     final notice =
         _resolveNoticeStyleV2(message, success, title: title, icon: icon);
@@ -414,11 +389,11 @@ class LegacyWebUi {
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.transparent,
           elevation: 0,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          margin: const EdgeInsets.fromLTRB(14, 0, 14, 20),
           padding: EdgeInsets.zero,
           duration: Duration(seconds: success ? 3 : 8),
           content: Container(
-            padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             decoration: softPanelDecoration(
               accent: notice.borderColor,
               radius: 24,
@@ -429,8 +404,8 @@ class LegacyWebUi {
             child: Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [notice.iconTint.withValues(alpha: 0.16), Colors.white],
@@ -441,9 +416,9 @@ class LegacyWebUi {
                     border:
                         Border.all(color: notice.iconTint.withValues(alpha: 0.14)),
                   ),
-                  child: Icon(notice.icon, color: notice.iconTint, size: 24),
+                  child: Icon(notice.icon, color: notice.iconTint, size: 20),
                 ),
-                SLSpacing.w12,
+                SLSpacing.w10,
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -452,16 +427,16 @@ class LegacyWebUi {
                       Text(
                         notice.title,
                         style: SLTheme.quicksand(
-                          fontSize: 14.5,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w900,
                           color: notice.titleColor,
                         ),
                       ),
-                      SLSpacing.gapH(3),
+                      SLSpacing.gapH(2),
                       Text(
                         message,
                         style: SLTheme.quicksand(
-                          fontSize: 13.5,
+                          fontSize: 12.4,
                           fontWeight: FontWeight.w700,
                           height: 1.4,
                           color: notice.bodyColor,
@@ -599,26 +574,6 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
   final isSave = lower.contains('lưu') ||
       lower.contains('cập nhật') ||
       lower.contains('đồng bộ');
-  final isRole = lower.contains('đổi vai') ||
-      lower.contains('vai trò') ||
-      lower.contains('vai ');
-
-  if (isRole) {
-    return _LegacyNoticeStyle(
-      title: title ??
-          (success ? 'Thay đổi vai trò' : 'Lỗi thay đổi vai trò'),
-      icon: icon ?? Icons.swap_horiz_rounded,
-      iconTint: const Color(0xFF1E88E5),
-      borderColor: const Color(0xFF90CAF9),
-      gradient: const [
-        Color(0xFFFFFBFF),
-        Color(0xFFE3F2FD),
-        Color(0xFFFFFFFF),
-      ],
-      titleColor: const Color(0xFF1565C0),
-      bodyColor: SLColors.textSecond,
-    );
-  }
 
   if (isAccount) {
     return _LegacyNoticeStyle(

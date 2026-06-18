@@ -84,49 +84,48 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
 
   Widget _buildModernRelationshipAction({required bool isSingle}) {
     final canSendMissYou = !isSingle;
-    final VoidCallback handleTap =
-        canSendMissYou ? _sendSuggestedInteraction : () {};
-    final displayPreset = _displayInteractionPreset;
-    final showDefaultHeart = canSendMissYou &&
-        _showDefaultHeartSuggestion &&
-        _manualInteractionPresetType == null;
+    return ValueListenableBuilder<_PartnerInteractionPreset>(
+      valueListenable: _smartInteractionPresetNotifier,
+      builder: (context, preset, _) {
+        final displayPreset = _displayInteractionPreset;
+        final showDefaultHeart = canSendMissYou &&
+            _showDefaultHeartSuggestion &&
+            _manualInteractionPresetType == null;
 
-    // Bọc icon trong SizedBox nhỏ vừa đủ, dùng deferToChild để gesture
-    // chỉ được tiêu thụ khi chạm đúng vào icon – tránh chặn swipe ngang PageView.
-    return GestureDetector(
-      behavior: HitTestBehavior.deferToChild,
-      excludeFromSemantics: true,
-      onTap: canSendMissYou ? handleTap : null,
-      onLongPressStart:
-          canSendMissYou ? _handleInteractionLongPressStart : null,
-      onLongPressMoveUpdate:
-          canSendMissYou ? _handleInteractionLongPressMoveUpdate : null,
-      onLongPressEnd: canSendMissYou ? _handleInteractionLongPressEnd : null,
-      onLongPressCancel:
-          canSendMissYou ? _handleInteractionLongPressCancel : null,
-      child: _HeartbeatWidget(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: canSendMissYou ? 112 : 74,
-              height: canSendMissYou ? 112 : 74,
-              child: Center(
-                child: canSendMissYou
-                    ? (showDefaultHeart
-                        ? _buildInteractionVisual(
-                            visual: '\u{1F496}',
-                            assetPath:
-                                'assets/images/interaction_stickers/custom/numbered/sticker_082.png',
-                            size: 84,
-                            emojiSize: 72,
-                            preferAsset: true,
-                          )
-                        : _buildInteractionVisual(
-                            visual: displayPreset.emoji,
-                            assetPath: displayPreset.assetPath,
-                            size: 52,
-                            emojiSize: 44,
+        return GestureDetector(
+          behavior: HitTestBehavior.deferToChild,
+          excludeFromSemantics: true,
+          onTap: canSendMissYou ? _sendSuggestedInteraction : null,
+          onLongPressStart:
+              canSendMissYou ? _handleInteractionLongPressStart : null,
+          onLongPressMoveUpdate:
+              canSendMissYou ? _handleInteractionLongPressMoveUpdate : null,
+          onLongPressEnd: canSendMissYou ? _handleInteractionLongPressEnd : null,
+          onLongPressCancel:
+              canSendMissYou ? _handleInteractionLongPressCancel : null,
+          child: _HeartbeatWidget(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: canSendMissYou ? 112 : 74,
+                  height: canSendMissYou ? 112 : 74,
+                  child: Center(
+                    child: canSendMissYou
+                        ? (showDefaultHeart
+                            ? _buildInteractionVisual(
+                                visual: '\u{1F496}',
+                                assetPath:
+                                    'assets/images/interaction_stickers/custom/numbered/sticker_082.png',
+                                size: 84,
+                                emojiSize: 72,
+                                preferAsset: true,
+                              )
+                            : _buildInteractionVisual(
+                                visual: displayPreset.emoji,
+                                assetPath: displayPreset.assetPath,
+                                size: 52,
+                                emojiSize: 44,
                             preferAsset: true,
                           ))
                     : const Icon(
@@ -140,8 +139,10 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
               // Keep icon-only presentation here.
             ],
           ],
-        ),
-      ),
+        ),  // close Column
+      ),  // close _HeartbeatWidget
+      );  // close GestureDetector + return
+      },
     );
   }
 

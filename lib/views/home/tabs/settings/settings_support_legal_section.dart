@@ -59,26 +59,26 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         ? AppConfig.iOSStoreUrl
         : AppConfig.androidStoreUrl;
 
-    const subject = 'SoulLocket â€” Nháº­t kÃ½ tÃ¬nh yÃªu cho 2 ngÆ°á»i';
+    const subject = 'SoulLocket — Nhật ký tình yêu cho 2 người';
     final message = [
-      'SoulLocket â€” NgÃ´i nhÃ  chung cho cÃ¡c cáº·p Ä‘Ã´i ðŸ’–',
+      'SoulLocket — Ngôi nhà chung cho các cặp đôi 💖',
       '',
-      'â€¢ Äáº¿m ngÃ y yÃªu (kÃ­nh má» siÃªu xinh)',
-      'â€¢ LÆ°u ká»· niá»‡m, áº£nh, nháº­t kÃ½',
-      'â€¢ Chat, widget mÃ n hÃ¬nh chÃ­nh, mini game',
+      '• Đếm ngày yêu (kính mời siêu xinh)',
+      '• Lưu kỷ niệm, ảnh, nhật ký',
+      '• Chat, widget màn hình chính, mini game',
       '',
-      'Táº£i app táº¡i Ä‘Ã¢y ðŸ‘‡',
+      'Tải app tại đây 👇',
       storeUrl,
     ].join('\n');
 
     if (!mounted) return;
 
-    // TrÃ¡nh cáº£m giÃ¡c Ä‘Æ¡ trÃªn emulator: copy sáºµn Ä‘á»ƒ ngÆ°á»i dÃ¹ng dÃ¹ng ngay,
-    // cÃ²n share sheet sáº½ má»Ÿ báº¥t Ä‘á»“ng bá»™ á»Ÿ ná»n.
+    // Tránh cảm giác đơ trên emulator: copy sẵn để người dùng dùng ngay,
+    // còn share sheet sẽ mở bất đồng bộ ở nền.
     try {
       await Clipboard.setData(ClipboardData(text: message));
       if (mounted) {
-        SLNotice.showInfo(context, 'ÄÃ£ copy ná»™i dung chia sáº»');
+        SLNotice.showInfo(context, 'Đã copy nội dung chia sẻ');
       }
     } catch (_) {}
 
@@ -92,7 +92,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             ),
           ).timeout(const Duration(seconds: 3));
         } catch (_) {
-          // ÄÃ£ cÃ³ fallback copy clipboard á»Ÿ trÃªn.
+          // Đã có fallback copy clipboard ở trên.
         }
       }),
     );
@@ -390,7 +390,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     }
 
     if (confirm == true) {
-      // XÃ¡c nháº­n thÃªm láº§n ná»¯a cho an toÃ n
+      // Xác nhận thêm lần nữa cho an toàn
       if (!mounted) return;
       bool? finalConfirm;
       try {
@@ -481,7 +481,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           }
           SLNotice.showSuccess(
             context,
-            'YÃªu cáº§u thÃ nh cÃ´ng. TÃ i khoáº£n Ä‘Ã£ Ä‘Æ°á»£c lÃªn lá»‹ch xÃ³a sau $days ngÃ y. Khi Ä‘Ã£ xÃ³a thÃ¬ khÃ´ng thá»ƒ khÃ´i phá»¥c.',
+            'Yêu cầu thành công. Tài khoản đã được lên lịch xóa sau $days ngày. Khi đã xóa thì không thể khôi phục.',
           );
 
           try {

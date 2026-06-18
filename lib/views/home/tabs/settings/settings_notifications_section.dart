@@ -18,53 +18,33 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
 
   Future<void> _persistNotificationPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('il_notifications_enabled', _notificationsEnabled);
-    await prefs.setBool('il_notif_anniversary', _notifAnniversary);
-    await prefs.setBool('il_notif_post', _notifPost);
-    await prefs.setBool('il_notif_chat', _notifChat);
-    await prefs.setBool('il_notif_friend', _notifFriend);
-    await prefs.setBool('il_notif_heart', _notifHeart);
-    await prefs.setBool('il_smart_reminder_diary', _smartDiaryReminder);
-    await prefs.setBool('il_smart_reminder_capsule', _smartCapsuleReminder);
-    await prefs.setBool('il_smart_reminder_love_note', _smartLoveNoteReminder);
-    await prefs.setBool('il_smart_reminder_sleep', _smartSleepReminder);
-    await prefs.setString('il_good_morning_time', _goodMorningTime);
-    await prefs.setString('il_good_night_time', _goodNightTime);
-
-    if (_houseId != null) {
-      try {
-        await _dbRef.child('houses/$_houseId/settings').update({
-          'notificationsEnabled': _notificationsEnabled,
-          'notifAnniversary': _notifAnniversary,
-          'notifPost': _notifPost,
-          'notifChat': _notifChat,
-          'notifFriend': _notifFriend,
-          'notifHeart': _notifHeart,
-          'smartReminderDiary': _smartDiaryReminder,
-          'smartReminderCapsule': _smartCapsuleReminder,
-          'smartReminderLoveNote': _smartLoveNoteReminder,
-          'smartReminderSleep': _smartSleepReminder,
-          'goodMorningTime': _goodMorningTime,
-          'goodNightTime': _goodNightTime,
-          'updatedAt': ServerValue.timestamp,
-        });
-      } catch (_) {}
-    }
+    final draft = SettingsNotificationsDraft(
+      houseId: _houseId,
+      notificationsEnabled: _notificationsEnabled,
+      notifAnniversary: _notifAnniversary,
+      notifPost: _notifPost,
+      notifChat: _notifChat,
+      notifFriend: _notifFriend,
+      notifHeart: _notifHeart,
+      smartDiaryReminder: _smartDiaryReminder,
+      smartCapsuleReminder: _smartCapsuleReminder,
+      smartLoveNoteReminder: _smartLoveNoteReminder,
+      smartSleepReminder: _smartSleepReminder,
+      goodMorningTime: _goodMorningTime,
+      goodNightTime: _goodNightTime,
+    );
+    await _settingsNotificationsController.persistNotificationPrefs(
+      prefs: prefs,
+      dbRef: _dbRef,
+      draft: draft,
+    );
   }
 
   Future<void> _syncNotificationTopics(bool enabled) async {
-    if (enabled) {
-      await FirebaseMessaging.instance.subscribeToTopic('soullocket_global');
-      if ((_houseId ?? '').trim().isNotEmpty) {
-        await FirebaseMessaging.instance.subscribeToTopic('house_$_houseId');
-      }
-      return;
-    }
-
-    await FirebaseMessaging.instance.unsubscribeFromTopic('soullocket_global');
-    if ((_houseId ?? '').trim().isNotEmpty) {
-      await FirebaseMessaging.instance.unsubscribeFromTopic('house_$_houseId');
-    }
+    await _settingsNotificationsController.syncNotificationTopics(
+      houseId: _houseId,
+      enabled: enabled,
+    );
   }
 
   Future<void> _handleNotificationsEnabledChanged(bool value) async {

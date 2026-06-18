@@ -211,9 +211,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
           final waitMins =
               _SettingsTabState._emailVerifyResendCooldownSeconds ~/ 60 -
                   (diff / 60000).floor();
+          // ignore: unused_local_variable
           final waitText = waitMins > 0 ? '$waitMins phút' : waitMinText;
-          _showToast('Vui lòng đợi $waitText nữa trước khi gửi lại.',
-              success: false);
+          _showToast(context.tr('resend_cooldown_text'), success: false);
           return;
         }
       }

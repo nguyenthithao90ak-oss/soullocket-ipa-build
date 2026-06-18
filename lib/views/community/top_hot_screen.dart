@@ -42,18 +42,21 @@ class _TopHotScreenState extends State<TopHotScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: _periods.length, vsync: this);
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) return;
-      final period = _periods[_tabController.index];
-      if (period != _currentPeriod) {
-        setState(() => _currentPeriod = period);
-      }
-    });
+    _tabController.addListener(_onTabChanged);
     _load();
+  }
+
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    final period = _periods[_tabController.index];
+    if (period != _currentPeriod) {
+      setState(() => _currentPeriod = period);
+    }
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }

@@ -89,11 +89,24 @@ class HouseSettingsService {
   }
 
   Future<HouseSettings?> fetchSettings(String houseId) async {
+    final cacheKey = 'house_settings_$houseId';
+    final cachedData = OfflineCacheService.getMemoryCache(cacheKey);
+    if (cachedData is HouseSettings) {
+      return cachedData;
+    }
+
     final snap = await _dbRef.child('houses/$houseId/settings').get();
     if (!snap.exists || snap.value == null) return null;
     final raw = snap.value;
     if (raw is! Map) return null;
-    return HouseSettings.fromMap(raw);
+    final settings = HouseSettings.fromMap(raw);
+    OfflineCacheService.setMemoryCache(cacheKey, settings, const Duration(minutes: 5));
+    return settings;
+  }
+
+  void _invalidateCache(String houseId) {
+    OfflineCacheService.clearMemoryCache('house_settings_$houseId');
+    OfflineCacheService.clearMemoryCache('house_profile_$houseId');
   }
 
   Future<void> _ensureCurrentDeviceCanModifySharedInfo(
@@ -218,6 +231,7 @@ class HouseSettingsService {
         updatedAt: DateTime.now().millisecondsSinceEpoch,
       ),
     });
+    _invalidateCache(houseId);
     await _recordSpaceActivity(
       houseId,
       'đã làm mới thông tin không gian chung',
@@ -236,6 +250,7 @@ class HouseSettingsService {
   Future<void> updateField(String houseId, String field, dynamic value) async {
     await _ensureCurrentDeviceCanModifySharedInfo(houseId);
     await _dbRef.child('houses/$houseId/settings/$field').set(value);
+    _invalidateCache(houseId);
   }
 
   Future<void> updateAvatar(
@@ -269,6 +284,7 @@ class HouseSettingsService {
     }
 
     await _dbRef.update(updates);
+    _invalidateCache(houseId);
   }
 
   Future<void> updateHouseAvatarOnly({
@@ -296,6 +312,7 @@ class HouseSettingsService {
         updatedAt: DateTime.now().millisecondsSinceEpoch,
       ),
     });
+    _invalidateCache(houseId);
   }
 
   Future<void> updateProfilePresentation({
@@ -345,6 +362,7 @@ class HouseSettingsService {
     }
 
     await _dbRef.update(updates);
+    _invalidateCache(houseId);
   }
 
   Future<void> updateHouseName(String houseId, String newName) async {
@@ -364,6 +382,7 @@ class HouseSettingsService {
         updatedAt: DateTime.now().millisecondsSinceEpoch,
       ),
     });
+    _invalidateCache(houseId);
     await _recordSpaceActivity(
       houseId,
       'đã đổi tên không gian thành "$trimmed"',
@@ -403,6 +422,7 @@ class HouseSettingsService {
         'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
         'houses/$houseId/updatedAt': ServerValue.timestamp,
       });
+      _invalidateCache(houseId);
     } on FirebaseException catch (fe) {
       if (fe.code == 'permission-denied') {
         throw 'Hệ thống từ chối cập nhật ngày yêu. Có thể do lỗi phân quyền hoặc cấu hình bảo mật.';
@@ -456,6 +476,7 @@ class HouseSettingsService {
     }
 
     await _dbRef.update(updates);
+    _invalidateCache(houseId);
     final activityText = hasTopLabel && hasBottomLabel
         ? 'đã chỉnh lại chữ ở vòng đếm ngày'
         : hasTopLabel
@@ -468,6 +489,7 @@ class HouseSettingsService {
     required String houseId,
     String? fallingEffectKey,
     String? countdownStyleKey,
+    double? countdownSizePx,
   }) async {
     await _ensureCurrentDeviceCanModifySharedInfo(houseId);
     final safeHouseId = houseId.trim();
@@ -488,21 +510,35 @@ class HouseSettingsService {
         'houses/$safeHouseId/settings/countdownStyle': safeCountdownStyleKey,
       });
     }
+    if (countdownSizePx != null) {
+      updates.addAll({
+        'houses/$safeHouseId/settings/countdownSizePx': countdownSizePx,
+      });
+    }
 
     if (updates.length <= 2) {
       return;
     }
 
     await _dbRef.update(updates);
+    _invalidateCache(houseId);
   }
 
   Future<Map<String, dynamic>?> fetchHouseProfile(String houseId) async {
+    final cacheKey = 'house_profile_$houseId';
+    final cachedData = OfflineCacheService.getMemoryCache(cacheKey);
+    if (cachedData is Map<String, dynamic>) {
+      return cachedData;
+    }
+
     try {
       final snap = await _dbRef
           .get()
           .timeout(const Duration(seconds: 3));
       if (!snap.exists || snap.value == null) return null;
-      return _asStringDynamicMap(snap.value);
+      final profile = _asStringDynamicMap(snap.value);
+      OfflineCacheService.setMemoryCache(cacheKey, profile, const Duration(minutes: 5));
+      return profile;
     } catch (_) {
       return null;
     }

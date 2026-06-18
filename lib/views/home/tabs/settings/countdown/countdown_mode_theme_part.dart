@@ -127,7 +127,7 @@ class _CountdownModeStyleData {
         outerGradient: LinearGradient(
           colors: [
             Colors.white.withValues(alpha: 0.30),
-            Colors.white.withValues(alpha: 0.18)
+            Colors.white.withValues(alpha: 0.18),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -135,7 +135,7 @@ class _CountdownModeStyleData {
         innerGradient: LinearGradient(
           colors: [
             Colors.white.withValues(alpha: 0.10),
-            Colors.white.withValues(alpha: 0.04)
+            Colors.white.withValues(alpha: 0.04),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -148,14 +148,14 @@ class _CountdownModeStyleData {
         numberGradient: const [Colors.white, Color(0xFFFFD5E8)],
         topColor: Colors.white,
         bottomColor: Colors.white.withValues(alpha: 0.92),
-        labelShadows: [
-          Shadow(color: Colors.black.withValues(alpha: 0.24), blurRadius: 10),
+        labelShadows: const [
+          Shadow(color: Colors.black, blurRadius: 10),
         ],
-        numberShadows: [
+        numberShadows: const [
           Shadow(
-            color: Colors.black.withValues(alpha: 0.22),
+            color: Colors.black,
             blurRadius: 18,
-            offset: const Offset(0, 6),
+            offset: Offset(0, 6),
           ),
         ],
       );

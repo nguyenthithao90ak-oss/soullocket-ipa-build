@@ -59,7 +59,10 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen>
       // Fetch some suggestions
       _suggestions = await _friendsService.searchHouses('');
     }
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {});
+      // ⚡ setState rỗng cần được thay bằng notifier hoặc kiểm tra có thay đổi thật không
+    }
   }
 
   Future<void> _search(String q) async {

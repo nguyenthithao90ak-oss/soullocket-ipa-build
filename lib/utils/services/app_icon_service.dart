@@ -19,7 +19,7 @@ class AppIconService {
     switch (normalizeIconKey(key)) {
       case defaultIconKey:
       default:
-        return 'Mac dinh';
+        return 'Mặc định';
     }
   }
 

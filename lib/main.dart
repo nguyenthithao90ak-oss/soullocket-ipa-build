@@ -207,10 +207,11 @@ Future<void> _configureSystemUiForEdgeToEdge() async {
   }
 
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  // ⚠️ Android 15 (SDK 35) deprecates statusBarColor & navigationBarColor.
+  //     Edge-to-edge is now the system default; color-based inset APIs are
+  //     no-ops and trigger Play Console warnings. We omit them entirely.
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
@@ -395,7 +396,7 @@ Future<void> _initializeFirebaseBootstrap() async {
     try {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        cacheSizeBytes: 100 * 1024 * 1024, // 100 MB
       );
     } catch (e) {
       debugPrint('Firestore web persistence error: $e');
@@ -423,7 +424,7 @@ Future<void> _initializeFirebaseBootstrap() async {
     try {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        cacheSizeBytes: 100 * 1024 * 1024, // 100 MB
       );
     } catch (e) {
       debugPrint('Firestore persistence error: $e');

@@ -313,7 +313,6 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
           _draftGraphicsQualityKey = graphicsQualityKey;
           _draftCustomBackgroundUrl = customBackgroundUrl;
           _draftTransparentMode = transparentMode;
-          _showSettingsSyncBanner = false;
         });
 
         UiPrefs.notifier.value = UiPrefs.notifier.value.copyWith();
@@ -334,7 +333,6 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         _draftGraphicsQualityKey = graphicsQualityKey;
         _draftCustomBackgroundUrl = customBackgroundUrl;
         _draftTransparentMode = transparentMode;
-        _showSettingsSyncBanner = false;
       }
     } catch (e) {
       if (!mounted) return;

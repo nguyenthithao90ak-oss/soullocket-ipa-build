@@ -1138,3 +1138,80 @@ class _SparkleBetaBadge extends StatelessWidget {
     );
   }
 }
+
+/// Widget compact row cho toggle (Switch/Checkbox) bên trong các card cài đặt.
+/// Thay thế layout Container dài dòng cũ: chỉ icon + label + control.
+class _SettingsToggleRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+
+  // Switch
+  final bool? switchValue;
+  final ValueChanged<bool>? onSwitchChanged;
+
+  // Checkbox
+  final bool useCheckbox;
+  final bool? checkValue;
+  final ValueChanged<bool?>? onCheckChanged;
+
+  const _SettingsToggleRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    this.switchValue,
+    this.onSwitchChanged,
+    this.useCheckbox = false,
+    this.checkValue,
+    this.onCheckChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 16, color: iconColor),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: SLTheme.quicksand(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF334155),
+              ),
+            ),
+          ),
+          if (useCheckbox)
+            Checkbox(
+              value: checkValue ?? false,
+              activeColor: iconColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+              side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
+              onChanged: onCheckChanged,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            )
+          else
+            Transform.scale(
+              scale: 0.85,
+              child: Switch.adaptive(
+                value: switchValue ?? false,
+                activeColor: iconColor,
+                onChanged: onSwitchChanged,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

@@ -123,6 +123,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
     _urlController.dispose();
     _progressVN.dispose();
 
+    _videoPlayerController?.removeListener(_handleVideoPlayerSyncTick);
     _videoPlayerController?.dispose();
     _remoteRenderer.dispose();
     if (_isCallingVN.value) _webrtc.hangUp();

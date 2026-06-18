@@ -108,8 +108,8 @@ class MyApp extends StatelessWidget {
             textTheme: SLTypography.textTheme(baseTextTheme),
             appBarTheme: AppBarTheme(
               systemOverlayStyle: const SystemUiOverlayStyle(
-                statusBarColor: Colors.transparent,
-                systemNavigationBarColor: Colors.transparent,
+                // ⚠️ Android 15 deprecates statusBarColor / navigationBarColor.
+                //     Omitted — edge-to-edge handles these automatically.
                 statusBarIconBrightness: Brightness.dark,
                 systemNavigationBarIconBrightness: Brightness.dark,
               ),

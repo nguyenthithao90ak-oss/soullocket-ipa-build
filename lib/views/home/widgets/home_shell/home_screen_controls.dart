@@ -103,28 +103,34 @@ extension _HomeScreenShellControls on _HomeScreenState {
                 captureMode) {
               return const SizedBox.shrink();
             }
-            return ValueListenableBuilder<int>(
-              valueListenable: _backgroundTabIndexNotifier,
-              builder: (context, currentIndex, _) {
-                final effectProfile = _resolveHomeEffectProfile(
-                  UiPrefs.notifier.value,
-                  pauseAnimations: _isUserTabSwiping,
-                );
-                return AnimatedSize(
-                  duration: effectProfile.performanceMode
-                      ? Duration.zero
-                      : const Duration(milliseconds: 180),
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.bottomCenter,
-                  child: navCollapsed
-                      ? _buildCollapsedNavHandle(
-                          isDark: isDark,
-                          currentIndex: currentIndex,
-                        )
-                      : _buildExpandedBottomNav(
-                          isDark: isDark,
-                          currentIndex: currentIndex,
-                        ),
+            return ValueListenableBuilder<bool>(
+              valueListenable: _isUserTabSwipingNotifier,
+              builder: (context, isSwiping, _) {
+                return ValueListenableBuilder<int>(
+                  valueListenable: _backgroundTabIndexNotifier,
+                  builder: (context, currentIndex, _) {
+                    final effectProfile = _resolveHomeEffectProfile(
+                      UiPrefs.notifier.value,
+                      pauseAnimations: isSwiping,
+                    );
+                    return AnimatedSize(
+                      duration: effectProfile.performanceMode || isSwiping
+                          ? Duration.zero
+                          : const Duration(milliseconds: 180),
+                      curve: Curves.easeOutCubic,
+                      alignment: Alignment.bottomCenter,
+                      child: navCollapsed
+                          ? _buildCollapsedNavHandle(
+                              isDark: isDark,
+                              currentIndex: currentIndex,
+                            )
+                          : _buildExpandedBottomNav(
+                              isDark: isDark,
+                              currentIndex: currentIndex,
+                              isSwiping: isSwiping,
+                            ),
+                    );
+                  },
                 );
               },
             );
@@ -137,42 +143,39 @@ extension _HomeScreenShellControls on _HomeScreenState {
   Widget _buildExpandedBottomNav({
     required bool isDark,
     required int currentIndex,
+    required bool isSwiping,
   }) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final accent = _HomeScreenState._navItems[currentIndex].activeColor;
     final uiState = UiPrefs.notifier.value;
     final effectProfile = _resolveHomeEffectProfile(
       uiState,
-      pauseAnimations: _isUserTabSwiping,
+      pauseAnimations: isSwiping,
     );
     final isPerformanceMode = effectProfile.performanceMode;
-    final useBackdropBlur = effectProfile.premiumEffects && !isPerformanceMode;
+    final useBackdropBlur = effectProfile.premiumEffects && !isPerformanceMode && !isSwiping;
 
     final navSurface = Container(
       key: _firstGuideBottomNavKey,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF151A25)
-                .withValues(alpha: isPerformanceMode ? 0.98 : 0.55)
-            : const Color(0xFFFFFFFF)
-                .withValues(alpha: isPerformanceMode ? 0.99 : 0.65),
+            ? Colors.black.withValues(alpha: 0.45)
+            : Colors.black.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(40),
         border: Border.all(
           color: isDark
-              ? Colors.white.withValues(alpha: 0.12)
-              : Colors.black.withValues(alpha: 0.04),
+              ? Colors.white.withValues(alpha: 0.10)
+              : Colors.black.withValues(alpha: 0.05),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(
-              alpha: isDark
-                  ? (isPerformanceMode ? 0.20 : 0.35)
-                  : (isPerformanceMode ? 0.05 : 0.12),
+              alpha: isDark ? 0.18 : 0.04,
             ),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -302,20 +305,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                 width: 44,
                 height: 14,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isDark
-                        ? [
-                            const Color(0xFF1A2231).withValues(alpha: 0.94),
-                            const Color(0xFF253047).withValues(alpha: 0.92),
-                          ]
-                        : [
-                            Colors.white.withValues(alpha: 0.97),
-                            Color.lerp(accent, Colors.white, 0.90) ??
-                                Colors.white,
-                          ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: Colors.transparent,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
@@ -324,18 +314,10 @@ extension _HomeScreenShellControls on _HomeScreenState {
                     top: BorderSide(
                       color: isDark
                           ? Colors.white.withValues(alpha: 0.09)
-                          : accent.withValues(alpha: 0.18),
+                          : accent.withValues(alpha: 0.15),
                       width: 1.1,
                     ),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
                 ),
                 child: Center(
                   child: SizedBox(

@@ -9,6 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/material.dart';
+import '../utilities/update_dialog_helper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -404,8 +405,9 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
   @override
   Widget build(BuildContext context) {
     final axisDirection = _axisDirectionFor(context);
-    // Render adjacent tabs (cacheExtent = 1.0) instead of all tabs upfront, preventing high memory and layout overhead.
-    const cacheExtent = 1.0;
+    // Render nhiều tab hơn (cacheExtent = 2.0) để pre-render trước các tab lân cận,
+    // giúp chuyển tab mượt hơn, không phải build lại từ đầu.
+    const cacheExtent = 2.0;
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -461,6 +463,7 @@ class _HomeScreenState extends State<HomeScreen>
   final _breakupService = BreakupService();
   late final List<_HomeTabBuilder> _tabBuilders;
   final Map<int, Widget> _tabPageCache = <int, Widget>{};
+  Widget? _cachedForegroundContent;
   int _homeReloadCounter = 0;
   late final ValueNotifier<int> _activeTabIndexNotifier;
   late final ValueNotifier<int>
@@ -526,6 +529,7 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     RoleUtils.roleNotifier.addListener(_handleGlobalRoleChanged);
+    RoleUtils.duplicateRoleNotifier.addListener(_handleDuplicateRoleWarning);
     _currentIndex = widget.initialTab.clamp(0, _navItems.length - 1);
     _activeTabIndexNotifier = ValueNotifier<int>(_currentIndex);
     _backgroundTabIndexNotifier =
@@ -553,7 +557,10 @@ class _HomeScreenState extends State<HomeScreen>
       (_) => const GameTab(),
       (_) => const UpdateTab(),
     ];
-    _tabPageCache[_currentIndex] = _buildTabPage(_currentIndex);
+    // Pre-init tất cả các tab để chuyển đổi mượt ngay từ lần đầu
+    for (var i = 0; i < _navItems.length; i++) {
+      _tabPageCache[i] = _buildTabPage(i);
+    }
     _musicController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2500),
@@ -586,11 +593,23 @@ class _HomeScreenState extends State<HomeScreen>
         if (!mounted) return;
         unawaited(_runDeferredStartupTasks());
       });
-      unawaited(UpdateCheckerService.checkUpdate(context));
+      unawaited(_checkAndUpdateApp());
     });
     _widgetActionSub = WidgetActionService().actions.listen((action) {
       unawaited(_handleWidgetLaunchAction(action));
     });
+  }
+
+  Future<void> _checkAndUpdateApp() async {
+    final updateInfo = await UpdateCheckerService.checkUpdate();
+    if (updateInfo != null && updateInfo.needsUpdate && mounted) {
+      UpdateDialogHelper.show(
+        context,
+        updateInfo.storeUrl,
+        updateInfo.latestVersion,
+        updateInfo.forceUpdate,
+      );
+    }
   }
 
   Future<void> _prewarmShellMedia() async {
@@ -684,7 +703,27 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       _homeReloadCounter++;
       _tabPageCache.clear();
+      _cachedForegroundContent = null;
     });
+  }
+
+  void _handleDuplicateRoleWarning() {
+    if (!mounted || !RoleUtils.duplicateRoleNotifier.value) return;
+    // Reset ngay để chỉ hiện 1 lần, throttle 24h được xử lý trong PresenceService.
+    RoleUtils.duplicateRoleNotifier.value = false;
+    final role = RoleUtils.roleNotifier.value ?? RoleUtils.currentRoleSync();
+    final roleLabel = role == 'user2'
+        ? L10nService().translate('Nữ')
+        : L10nService().translate('Nam');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '⚠️ ${L10nService().translate('Bạn đang trùng vai')} $roleLabel — ${L10nService().translate('một thiết bị khác cũng đang đăng nhập cùng vai.')}',
+        ),
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _handleMusicPlaybackChanged() {
@@ -953,6 +992,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     RoleUtils.roleNotifier.removeListener(_handleGlobalRoleChanged);
+    RoleUtils.duplicateRoleNotifier.removeListener(_handleDuplicateRoleWarning);
     _callSub?.cancel();
     _settingsSub?.cancel();
     _widgetActionSub?.cancel();
@@ -1097,7 +1137,6 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
     final oldIndex = _currentIndex;
     if (_currentIndex != nextIndex) {
-      HapticFeedback.selectionClick();
       _currentIndex = nextIndex;
       _isUserTabSwiping = false;
       _isUserTabSwipingNotifier.value = false;
@@ -1113,7 +1152,7 @@ class _HomeScreenState extends State<HomeScreen>
       }
       final pageDistance = (currentPage - nextIndex).abs();
       final duration = Duration(
-        milliseconds: pageDistance > 1.0 ? 240 : 180,
+        milliseconds: pageDistance > 1.0 ? 200 : 140,
       );
       _isUserTabSwipingNotifier.value = true;
       SLTheme.isTabSwiping.value = true;
@@ -1366,163 +1405,210 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final foregroundContent = Stack(
+  Widget _buildShellBody({
+    required Widget foregroundChild,
+    required bool isDark,
+    required String resolvedThemeKey,
+    required String resolvedEffectKey,
+    required String graphicsQualityKey,
+    required bool shouldAnimateEffects,
+    required bool shouldAnimateFallingEffect,
+  }) {
+    Widget bodyContent = Stack(
       children: [
-        NotificationListener<ScrollNotification>(
-          onNotification: _handlePageScrollNotification,
-          child: _HomePreloadPageView(
-            controller: _pageController,
-            onPageChanged: _handlePageChanged,
-            dragStartBehavior: DragStartBehavior.start,
-            physics:
-                const _HomeTabPagePhysics(parent: ClampingScrollPhysics()),
-            children: List<Widget>.generate(
-              _navItems.length,
-              _tabPageForIndex,
-              growable: false,
+        Positioned.fill(
+          child: RepaintBoundary(
+            child: _buildShellBackground(
+              themeKey: resolvedThemeKey,
+              tabIndex: 0,
+              isDark: isDark,
+              backgroundUrl: UiPrefs.notifier.value.customBackgroundUrl,
+              graphicsQualityKey: graphicsQualityKey,
+              animateAmbientEffects: shouldAnimateEffects,
             ),
           ),
         ),
-        ValueListenableBuilder<bool>(
-          valueListenable: _isUserTabSwipingNotifier,
-          builder: (context, isSwiping, child) {
-            return TickerMode(
-              enabled: !isSwiping,
-              child: child ?? const SizedBox.shrink(),
+        foregroundChild,
+        ValueListenableBuilder<int>(
+          valueListenable: _activeTabIndexNotifier,
+          builder: (context, activeIndex, _) {
+            final isMainHomeTab = activeIndex == 0;
+            if (!isMainHomeTab || resolvedEffectKey == 'off') {
+              return const SizedBox.shrink();
+            }
+            return ValueListenableBuilder<bool>(
+              valueListenable: _isUserTabSwipingNotifier,
+              builder: (context, isSwiping, _) {
+                // ⚡ Dùng Visibility(maintainState: false) để dispose hẳn AnimationController khi swipe
+                if (isSwiping) return const SizedBox.shrink();
+                return Positioned.fill(
+                  child: RepaintBoundary(
+                    child: IgnorePointer(
+                      child: LegacyFallingEffect(
+                        type: resolvedEffectKey,
+                        isDark: isDark,
+                        density: graphicsQualityKey,
+                        opacity: isDark ? 0.96 : 0.88,
+                        animate: shouldAnimateFallingEffect,
+                      ),
+                    ),
+                  ),
+                );
+              },
             );
           },
-          child: _buildMusicButton(),
         ),
       ],
     );
 
-    return ValueListenableBuilder<UiPrefsState>(
-      valueListenable: UiPrefs.notifier,
-      child: foregroundContent,
-      builder: (context, uiState, cachedForegroundChild) {
-        final effectProfile = _resolveHomeEffectProfile(
-          uiState,
-          pauseAnimations: _isUserTabSwiping,
-        );
-        final graphicsQualityKey = effectProfile.graphicsQualityKey;
-
-        Widget buildShell({required Widget foregroundChild}) {
-          final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
-          final resolvedEffectKey = uiState.liteMode
-              ? 'off'
-              : _resolveEffectKey(uiState.fallingEffectKey, resolvedThemeKey);
-          final isDark = _isDarkTheme(resolvedThemeKey);
-          final shouldAnimateEffects =
-              effectProfile.premiumEffects && resolvedEffectKey == 'off';
-          final shouldAnimateFallingEffect =
-              effectProfile.animationEnabled && resolvedEffectKey != 'off';
-
-          Widget bodyContent = Stack(
-            children: [
-              Positioned.fill(
-                child: RepaintBoundary(
-                  child: _buildShellBackground(
-                    themeKey: resolvedThemeKey,
-                    tabIndex: 0,
-                    isDark: isDark,
-                    backgroundUrl: uiState.customBackgroundUrl,
-                    graphicsQualityKey: graphicsQualityKey,
-                    animateAmbientEffects: shouldAnimateEffects,
-                  ),
-                ),
-              ),
-              foregroundChild,
-              ValueListenableBuilder<int>(
-                valueListenable: _activeTabIndexNotifier,
-                builder: (context, activeIndex, _) {
-                  final isMainHomeTab = activeIndex == 0;
-                  if (!isMainHomeTab || resolvedEffectKey == 'off') {
-                    return const SizedBox.shrink();
-                  }
-                  return ValueListenableBuilder<bool>(
-                    valueListenable: _isUserTabSwipingNotifier,
-                    builder: (context, isSwiping, _) {
-                      return Positioned.fill(
-                        child: RepaintBoundary(
-                          child: IgnorePointer(
-                            child: Offstage(
-                              offstage: isSwiping,
-                              child: LegacyFallingEffect(
-                                type: resolvedEffectKey,
-                                isDark: isDark,
-                                density: graphicsQualityKey,
-                                opacity: isDark ? 0.96 : 0.88,
-                                animate: shouldAnimateFallingEffect && !isSwiping,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-          );
-
-          if (shouldAnimateEffects) {
-            bodyContent = ValueListenableBuilder<int>(
-              valueListenable: _activeTabIndexNotifier,
-              builder: (context, activeIndex, child) {
-                final resolvedChild = child ?? bodyContent;
-                final isMainHomeTab = activeIndex == 0;
-                if (!isMainHomeTab) {
-                  return resolvedChild;
-                }
-                return ValueListenableBuilder<bool>(
-                  valueListenable: _isUserTabSwipingNotifier,
-                  builder: (context, isSwiping, childUnderTouch) {
-                    final targetChild = childUnderTouch ?? resolvedChild;
-                    if (isSwiping) {
-                      return targetChild;
-                    }
-                    return TouchEffectOverlay(child: targetChild);
-                  },
-                  child: resolvedChild,
-                );
-              },
-              child: bodyContent,
-            );
+    if (shouldAnimateEffects) {
+      bodyContent = ValueListenableBuilder<int>(
+        valueListenable: _activeTabIndexNotifier,
+        builder: (context, activeIndex, child) {
+          final resolvedChild = child ?? bodyContent;
+          final isMainHomeTab = activeIndex == 0;
+          if (!isMainHomeTab) {
+            return resolvedChild;
           }
-
-          return PopScope(
-            canPop: false,
-            onPopInvokedWithResult: (didPop, _) async {
-              if (didPop) return;
-              await _handleExitAttempt();
+          return ValueListenableBuilder<bool>(
+            valueListenable: _isUserTabSwipingNotifier,
+            builder: (context, isSwiping, childUnderTouch) {
+              final targetChild = childUnderTouch ?? resolvedChild;
+              if (isSwiping) {
+                return targetChild;
+              }
+              return TouchEffectOverlay(child: targetChild);
             },
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              child: Scaffold(
-                extendBody: true,
-                body: bodyContent,
-                bottomNavigationBar: _buildBottomNav(isDark: isDark),
+            child: resolvedChild,
+          );
+        },
+        child: bodyContent,
+      );
+    }
+
+    return bodyContent;
+  }
+
+  /// ⚡ Cache foreground content để tránh rebuild PageView khi UiPrefs thay đổi
+  Widget _getOrBuildForegroundContent() {
+    if (_cachedForegroundContent == null || _homeReloadCounter > 0) {
+      _cachedForegroundContent = Stack(
+        children: [
+          NotificationListener<ScrollNotification>(
+            onNotification: _handlePageScrollNotification,
+            child: _HomePreloadPageView(
+              controller: _pageController,
+              onPageChanged: _handlePageChanged,
+              dragStartBehavior: DragStartBehavior.start,
+              // ⚡ TẮT VUỐT: NeverScrollableScrollPhysics — chỉ chuyển tab bằng nút bottom nav.
+              // ☞ BẬT LẠI: đổi thành `const _HomeTabPagePhysics(parent: ClampingScrollPhysics())`
+              physics:
+                  const NeverScrollableScrollPhysics(),
+              children: List<Widget>.generate(
+                _navItems.length,
+                _tabPageForIndex,
+                growable: false,
               ),
             ),
-          );
-        }
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _isUserTabSwipingNotifier,
+            builder: (context, isSwiping, child) {
+              return TickerMode(
+                enabled: !isSwiping,
+                child: child ?? const SizedBox.shrink(),
+              );
+            },
+            child: _buildMusicButton(),
+          ),
+        ],
+      );
+    }
+    return _cachedForegroundContent!;
+  }
 
-        if (uiState.themeKey.trim() != 'theme-vip-rotate') {
-          return buildShell(foregroundChild: cachedForegroundChild!);
-        }
+  @override
+  Widget build(BuildContext context) {
+    final foregroundContent = _getOrBuildForegroundContent();
 
-        return ValueListenableBuilder<int>(
-          valueListenable: _vipThemeRotationTickNotifier,
-          child: cachedForegroundChild,
-          builder: (context, _, foregroundChild) {
-            return buildShell(
-              foregroundChild: foregroundChild ?? const SizedBox.shrink(),
-            );
-          },
-        );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _handleExitAttempt();
       },
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        child: Scaffold(
+          extendBody: true,
+          // ⚡ Dùng child param để foregroundContent không bị rebuild khi UiPrefs thay đổi
+          body: ValueListenableBuilder<UiPrefsState>(
+            valueListenable: UiPrefs.notifier,
+            builder: (context, uiState, child) {
+              final effectProfile = _resolveHomeEffectProfile(
+                uiState,
+                pauseAnimations: _isUserTabSwiping,
+              );
+              final graphicsQualityKey = effectProfile.graphicsQualityKey;
+              final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
+              final resolvedEffectKey = uiState.liteMode
+                  ? 'off'
+                  : _resolveEffectKey(uiState.fallingEffectKey, resolvedThemeKey);
+              final isDark = _isDarkTheme(resolvedThemeKey);
+              final shouldAnimateEffects =
+                  effectProfile.premiumEffects && resolvedEffectKey == 'off';
+              final shouldAnimateFallingEffect =
+                  effectProfile.animationEnabled && resolvedEffectKey != 'off';
+
+              final shellChild = child ?? const SizedBox.shrink();
+
+              if (uiState.themeKey.trim() != 'theme-vip-rotate') {
+                return _buildShellBody(
+                  foregroundChild: shellChild,
+                  isDark: isDark,
+                  resolvedThemeKey: resolvedThemeKey,
+                  resolvedEffectKey: resolvedEffectKey,
+                  graphicsQualityKey: graphicsQualityKey,
+                  shouldAnimateEffects: shouldAnimateEffects,
+                  shouldAnimateFallingEffect: shouldAnimateFallingEffect,
+                );
+              }
+
+              return ValueListenableBuilder<int>(
+                valueListenable: _vipThemeRotationTickNotifier,
+                builder: (context, _, __) {
+                  final rotatedThemeKey = _resolveThemeKey(uiState.themeKey);
+                  final rotatedEffectKey = uiState.liteMode
+                      ? 'off'
+                      : _resolveEffectKey(uiState.fallingEffectKey, rotatedThemeKey);
+                  final rotatedIsDark = _isDarkTheme(rotatedThemeKey);
+                  final rotatedShouldAnimateEffects =
+                      effectProfile.premiumEffects && rotatedEffectKey == 'off';
+                  final rotatedShouldAnimateFallingEffect =
+                      effectProfile.animationEnabled && rotatedEffectKey != 'off';
+                  return _buildShellBody(
+                    foregroundChild: shellChild,
+                    isDark: rotatedIsDark,
+                    resolvedThemeKey: rotatedThemeKey,
+                    resolvedEffectKey: rotatedEffectKey,
+                    graphicsQualityKey: graphicsQualityKey,
+                    shouldAnimateEffects: rotatedShouldAnimateEffects,
+                    shouldAnimateFallingEffect: rotatedShouldAnimateFallingEffect,
+                  );
+                },
+              );
+            },
+            child: foregroundContent,
+          ),
+          bottomNavigationBar: ValueListenableBuilder<UiPrefsState>(
+            valueListenable: UiPrefs.notifier,
+            builder: (context, uiState, _) {
+              final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
+              return _buildBottomNav(isDark: _isDarkTheme(resolvedThemeKey));
+            },
+          ),
+        ),
+      ),
     );
   }
 

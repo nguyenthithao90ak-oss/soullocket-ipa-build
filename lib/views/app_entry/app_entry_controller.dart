@@ -523,8 +523,10 @@ class AppEntryController {
   Future<void> _initPresence(String houseId) async {
     final prefs = await getPrefs();
     final role = RoleUtils.normalizeNullable(prefs.getString('il_role')) ??
-        RoleUtils.normalizeNullable(_currentRole) ??
-        'user1';
+        RoleUtils.normalizeNullable(_currentRole);
+    // Không fallback cứng về 'user1' nếu role chưa xác định.
+    // Tránh 2 thiết bị cùng lúc online với user1.
+    if (role == null) return;
     _currentHouseId = houseId;
     _currentRole = role;
     _sessionConnectivityCoordinator.updatePresenceTarget(
@@ -538,11 +540,11 @@ class AppEntryController {
   Future<void> _refreshPresenceContext() async {
     final prefs = await getPrefs();
     final role = _normalizeRole(prefs.getString('il_role')) ??
-        _normalizeRole(_currentRole) ??
-        'user1';
+        _normalizeRole(_currentRole);
+    // Không fallback cứng về 'user1' — giữ nguyên _currentRole cũ nếu không có role hợp lệ.
     final houseId = await _houseService.getCurrentHouseId();
     _currentHouseId = houseId;
-    _currentRole = houseId == null || houseId.isEmpty ? null : role;
+    _currentRole = (houseId == null || houseId.isEmpty) ? null : (role ?? _currentRole);
     _sessionConnectivityCoordinator.updatePresenceTarget(
       houseId: _currentHouseId,
       role: _currentRole,

@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
 import 'admob_service.dart';
 import 'offline_cache_service.dart';
 
@@ -17,7 +15,10 @@ class CollageLimitService {
   }
 
   /// Kiểm tra có thể tạo không, nếu chưa thể thì hỏi xem quảng cáo.
-  Future<bool> checkLimitAndAskAd(BuildContext context) async {
+  Future<bool> checkLimitAndAskAd({
+    required Future<bool> Function(int currentLimit, int dailyLimit) onAskUserToWatchAd,
+    required void Function(String message, {bool isError}) onShowMessage,
+  }) async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final today = _getTodayKey();
@@ -29,8 +30,6 @@ class CollageLimitService {
     int currentLimit = dailyLimit + extraLimit;
 
     if (currentCount >= currentLimit) {
-      if (!context.mounted) return false;
-
       final lastAdTime = prefs.getInt('collage_last_ad_time_$today') ?? 0;
       final nowMs = DateTime.now().millisecondsSinceEpoch;
       const int cooldownMs = 15 * 60 * 1000;
@@ -38,52 +37,11 @@ class CollageLimitService {
       // Nếu đã xem quảng cáo trong vòng 15 phút, tặng luôn lượt mà không cần xem lại
       if (nowMs - lastAdTime < cooldownMs) {
         await prefs.setInt(extraKey, extraLimit + dailyLimit);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  'Vì bạn vừa xem quảng cáo gần đây, tặng bạn thêm $dailyLimit lượt miễn phí!',
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: const Color(0xFFD81B60),
-            ),
-          );
-        }
+        onShowMessage('Vì bạn vừa xem quảng cáo gần đây, tặng bạn thêm $dailyLimit lượt miễn phí!', isError: false);
         return true;
       }
 
-      bool wantToWatchAd = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-              title: Text('Hết lượt tạo ảnh',
-                  style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFFD81B60))),
-              content: Text(
-                'Bạn đã hết lượt tạo ảnh hôm nay ($currentLimit lượt).\nHãy xem 1 quảng cáo để nhận thêm $dailyLimit lượt tạo ảnh nữa nhé!',
-                style: SLTheme.quicksand(fontWeight: FontWeight.w600),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text('Hủy',
-                      style: SLTheme.quicksand(
-                          color: Colors.grey, fontWeight: FontWeight.bold)),
-                ),
-                FilledButton.icon(
-                  onPressed: () => Navigator.pop(context, true),
-                  icon: const Icon(Icons.play_circle_fill),
-                  label: Text('Nhận $dailyLimit lượt',
-                      style: SLTheme.quicksand(fontWeight: FontWeight.bold)),
-                  style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFD81B60)),
-                ),
-              ],
-            ),
-          ) ??
-          false;
-
+      bool wantToWatchAd = await onAskUserToWatchAd(currentLimit, dailyLimit);
       if (!wantToWatchAd) {
         return false;
       }
@@ -94,27 +52,10 @@ class CollageLimitService {
         await prefs.setInt(extraKey, extraLimit + dailyLimit);
         await prefs.setInt('collage_last_ad_time_$today',
             DateTime.now().millisecondsSinceEpoch);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Bạn đã nhận thêm $dailyLimit lượt tạo ảnh!',
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: const Color(0xFFD81B60),
-            ),
-          );
-        }
+        onShowMessage('Bạn đã nhận thêm $dailyLimit lượt tạo ảnh!', isError: false);
         return true;
       } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Chưa xem xong quảng cáo!',
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+        onShowMessage('Chưa xem xong quảng cáo!', isError: true);
         return false;
       }
     }

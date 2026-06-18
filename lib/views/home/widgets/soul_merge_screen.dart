@@ -72,39 +72,32 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
     _mergeTimesSub = _mergeService.watchMergeTimes().listen((mergeTimes) {
       debugPrint('[SoulMergeScreen] watchMergeTimes update: $mergeTimes');
-      
-      final myUid = FirebaseAuth.instance.currentUser?.uid ?? '';
-      bool iBumped = false;
-      bool partnerBumped = false;
-      
-      if (mergeTimes.containsKey(myUid)) {
-        iBumped = true;
-      }
-      
-      for (final key in mergeTimes.keys) {
-        if (key != myUid) {
-          partnerBumped = true;
-        }
-      }
-      
-      if (mounted) {
-        setState(() {
-          _iHaveBumped = iBumped;
-          _partnerHasBumped = partnerBumped;
-        });
-      }
 
-      if (mergeTimes.length >= 2) {
-        final uids = mergeTimes.keys.toList();
-        final time1 = mergeTimes[uids[0]]!;
-        final time2 = mergeTimes[uids[1]]!;
-        final diff = (time1 - time2).abs();
-        debugPrint('[SoulMergeScreen] Time diff between bumps: ${diff}ms');
-        // If bumped within 1.5 seconds of each other (using unified server timestamps)
-        if (diff < 1500) {
-          _triggerMerge();
+      // Dùng role ('user1'/'user2') làm key — không dùng uid vì 2 người chung 1 uid.
+      final prefs = SharedPreferences.getInstance();
+      prefs.then((p) {
+        final myRole = p.getString('il_role')?.trim() == 'user2' ? 'user2' : 'user1';
+        final partnerRole = myRole == 'user2' ? 'user1' : 'user2';
+        final iBumped = mergeTimes.containsKey(myRole);
+        final partnerBumped = mergeTimes.containsKey(partnerRole);
+
+        if (mounted) {
+          setState(() {
+            _iHaveBumped = iBumped;
+            _partnerHasBumped = partnerBumped;
+          });
         }
-      }
+
+        if (iBumped && partnerBumped) {
+          final time1 = mergeTimes[myRole]!;
+          final time2 = mergeTimes[partnerRole]!;
+          final diff = (time1 - time2).abs();
+          debugPrint('[SoulMergeScreen] Time diff between bumps: ${diff}ms');
+          if (diff < 1500) {
+            _triggerMerge();
+          }
+        }
+      });
     });
   }
 

@@ -340,13 +340,13 @@ class _StableShellBackgroundImageState
             image: fallback,
             fit: BoxFit.cover,
             gaplessPlayback: true,
-            filterQuality: FilterQuality.high,
+            filterQuality: FilterQuality.medium,
           ),
         Image(
           image: current,
           fit: BoxFit.cover,
           gaplessPlayback: true,
-          filterQuality: FilterQuality.high,
+          filterQuality: FilterQuality.medium,
           frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
             if (!_ready && (wasSynchronouslyLoaded || frame != null)) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -369,7 +369,7 @@ class _StableShellBackgroundImageState
                   image: fallback,
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
-                  filterQuality: FilterQuality.high,
+                  filterQuality: FilterQuality.medium,
                 )
               : const SizedBox.shrink(),
         ),

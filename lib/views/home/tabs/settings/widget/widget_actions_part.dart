@@ -3,39 +3,23 @@ part of '../../settings_tab.dart';
 extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   Future<void> _persistWidgetPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    final currentUid = _auth.currentUser?.uid ?? 'guest';
-    final houseIdKey = _houseId ?? 'local';
-    final accountKey = '${currentUid}_$houseIdKey';
-
-    await prefs.setString(
-      'il_widget_theme_$accountKey',
-      _draftWidgetThemeKey ?? 'pink',
+    final currentUid = _auth.currentUser?.uid;
+    final draft = SettingsWidgetDraft(
+      draftWidgetThemeKey: _draftWidgetThemeKey,
+      widgetStyleKey: _widgetStyleKey,
+      showDiaryOnWidget: _showDiaryOnWidget,
+      widgetHeartAnimated: _widgetHeartAnimated,
+      widgetHeartStyleKey: _widgetHeartStyleKey,
+      widgetHeartColorKey: _widgetHeartColorKey,
+      widgetPreviewSizeKey: _widgetPreviewSizeKey,
+      widgetDiaryLayoutKey: _widgetDiaryLayoutKey,
+      widgetSeasonModeKey: _widgetSeasonModeKey,
     );
-    await prefs.setString('il_widget_style_$accountKey', _widgetStyleKey);
-    await prefs.setBool('il_widget_show_diary_$accountKey', _showDiaryOnWidget);
-    await prefs.setBool(
-      'il_widget_heart_animated_$accountKey',
-      _widgetHeartAnimated,
-    );
-    await prefs.setString(
-      'il_widget_heart_style_$accountKey',
-      _widgetHeartStyleKey,
-    );
-    await prefs.setString(
-      'il_widget_heart_color_$accountKey',
-      _widgetHeartColorKey,
-    );
-    await prefs.setString(
-      'il_widget_preview_size_$accountKey',
-      _widgetPreviewSizeKey,
-    );
-    await prefs.setString(
-      'il_widget_diary_layout_$accountKey',
-      _widgetDiaryLayoutKey,
-    );
-    await prefs.setString(
-      'il_widget_season_mode_$accountKey',
-      _widgetSeasonModeKey,
+    await _settingsWidgetController.persistWidgetPrefs(
+      prefs: prefs,
+      currentUid: currentUid,
+      houseId: _houseId,
+      draft: draft,
     );
   }
 

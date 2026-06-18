@@ -45,6 +45,7 @@ import '../../../models/house_settings.dart';
 import '../../../models/utilities/shared_note.dart';
 import 'settings_tab.dart' show SettingsTab, FloatingHeartsRingOverlay;
 import '../../ui_prefs.dart';
+import '../../premium/premium_store_screen.dart';
 import '../../utilities/age_zodiac_screen.dart';
 import '../../utilities/bucket_list_screen.dart';
 import '../../utilities/calendar_screen.dart';
@@ -173,9 +174,14 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final NotificationService _notificationService = NotificationService();
   final LocationService _locationService = LocationService();
   final Random _random = Random();
+  DateTime? _lastFetchTime;
+  static const Duration _fetchCacheDuration = Duration(seconds: 30);
 
   Map<String, dynamic>? _houseSettings;
-  Map<String, dynamic> _presenceData = {};
+  final ValueNotifier<Map<String, dynamic>> _presenceDataNotifier =
+      ValueNotifier<Map<String, dynamic>>({});
+  Map<String, dynamic> get _presenceData => _presenceDataNotifier.value;
+  set _presenceData(Map<String, dynamic> v) => _presenceDataNotifier.value = v;
   bool _hasLoadedPresenceSnapshot = false;
   bool _isLoading = true;
   bool _showStatus = true;
@@ -185,8 +191,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   String? _uploadingAvatarRole;
   double? _avatarUploadProgress;
   bool _didPromptPendingAvatarRetry = false;
-  String _homeDistanceText = 'Đang định vị...';
-  String? _homeMapAlert;
+  final ValueNotifier<String> _homeDistanceTextNotifier =
+      ValueNotifier<String>('Đang định vị...');
+  final ValueNotifier<String?> _homeMapAlertNotifier =
+      ValueNotifier<String?>(null);
   int _wishIndex = -1;
   int _tipIndex = -1;
   bool _hideSettingsButtonUntilRestart = false;
@@ -241,8 +249,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   int _liveWorkSessionId = 0;
   List<String> _cachedWidgetDiaryImageUrls = const <String>[];
   List<String> _recentChatSignals = [];
-  _PartnerInteractionPreset _smartInteractionPreset =
-      _defaultSmartInteractionPreset();
+  late final ValueNotifier<_PartnerInteractionPreset> _smartInteractionPresetNotifier;
+  _PartnerInteractionPreset get _smartInteractionPreset =>
+      _smartInteractionPresetNotifier.value;
+  set _smartInteractionPreset(_PartnerInteractionPreset v) =>
+      _smartInteractionPresetNotifier.value = v;
   bool _showDefaultHeartSuggestion = false;
   String? _manualInteractionPresetType;
   bool _incomingInteractionDialogVisible = false;
@@ -268,6 +279,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       false);
   String _lastHomeSettingsPayloadSignature = '';
   String _lastWidgetSettingsSyncKey = '';
+  final ValueNotifier<String> _fallingEffectTypeNotifier =
+      ValueNotifier<String>('off');
   bool _deferHeavyHomeMotion = false;
   int _homeMediaWarmupToken = 0;
   final Set<String> _seenNewDeviceNotificationIds = <String>{};
@@ -502,6 +515,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _isTabActive = widget.isActiveListenable.value;
     widget.isActiveListenable.addListener(_onActiveChanged);
     _reactionFlightsNotifier = ValueNotifier<List<_HomeReactionFlight>>([]);
+    _smartInteractionPresetNotifier =
+        ValueNotifier<_PartnerInteractionPreset>(_defaultSmartInteractionPreset());
     unawaited(() async {
       try {
         final selectedUiFont = SLTheme.textStyleForKey(
@@ -562,10 +577,15 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _invalidateLiveWorkSession();
     _cancelLiveWorkBindings();
     _homeMediaWarmupToken++;
-    _fallingEffectTypeNotifier.dispose();
+
     _interactionDragHoveredNotifier.dispose();
     _reactionFlightsNotifier.dispose();
+    _smartInteractionPresetNotifier.dispose();
+    _presenceDataNotifier.dispose();
+    _homeDistanceTextNotifier.dispose();
+    _homeMapAlertNotifier.dispose();
     _isScrollingNotifier.dispose();
+    _fallingEffectTypeNotifier.dispose();
     super.dispose();
   }
 
@@ -582,6 +602,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (isActive) {
       _deferHeavyHomeMotion = true;
       _warmHomeMedia(delayMotion: true);
+      // ⚡ Skip re-fetch if data is still fresh (< 30s old)
+      final dataIsFresh = _lastFetchTime != null &&
+          DateTime.now().difference(_lastFetchTime!) <= _fetchCacheDuration;
+      if (dataIsFresh) return;
       // ⚡ Delay fetch until after swipe animation (~300ms) + warmup settle (650ms).
       //    700ms gives enough breathing room so the UI thread is free during animation.
       Future.delayed(const Duration(milliseconds: 700), () {
@@ -1159,7 +1183,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
             kind: _HomeHighlightKind.photo,
             title: item.caption.trim().isNotEmpty
                 ? item.caption.trim()
-                : 'Ảnh kỷ niệm',
+                : 'áº¢nh ká»· niá»‡m',
             subtitle: item.authorName.trim().isNotEmpty
                 ? item.authorName.trim()
                 : 'Kho ảnh chung',
@@ -1232,7 +1256,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         sourcePath: file.path,
         aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
         compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 90,
+        compressQuality: 80,
         maxWidth: 1080,
         maxHeight: 1080,
         uiSettings: [
@@ -1710,6 +1734,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _saveCountdownQuickUiPrefs({
     String? countdownStyleKey,
     String? fallingEffectKey,
+    double? countdownSizePx,
+    double? avatarSizePx,
+    String? avatarFrameKey,
+    String? customBackgroundUrl,
+    String? countdownTextColor,
     Set<String>? prevalidatedUnlockedStyles,
     bool? isVip,
   }) async {
@@ -1788,32 +1817,71 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     final normalizedFallingEffectKey = fallingEffectKey == null
         ? current.fallingEffectKey
         : resolvedFallingEffectKey;
+    final normalizedCountdownSizePx = countdownSizePx ?? current.countdownSizePx;
+    final normalizedAvatarSizePx = avatarSizePx ?? current.avatarSizePx;
+    final normalizedAvatarFrameKey = avatarFrameKey ?? current.avatarFrameKey;
+    final normalizedCustomBackgroundUrl = customBackgroundUrl ?? current.customBackgroundUrl;
+    final normalizedCountdownTextColor = countdownTextColor ?? current.countdownTextColor;
+    
+    // Auto turn off transparentMode if user explicitly changes countdown style
+    final newTransparentMode = (countdownStyleKey != null) ? false : current.transparentMode;
 
     if (normalizedCountdownStyleKey == current.countdownStyleKey &&
-        normalizedFallingEffectKey == current.fallingEffectKey) {
+        normalizedFallingEffectKey == current.fallingEffectKey &&
+        normalizedCountdownSizePx == current.countdownSizePx &&
+        normalizedAvatarSizePx == current.avatarSizePx &&
+        normalizedAvatarFrameKey == current.avatarFrameKey &&
+        normalizedCustomBackgroundUrl == current.customBackgroundUrl &&
+        normalizedCountdownTextColor == current.countdownTextColor &&
+        newTransparentMode == current.transparentMode) {
       return;
     }
 
     final nextState = current.copyWith(
       countdownStyleKey: normalizedCountdownStyleKey,
       fallingEffectKey: normalizedFallingEffectKey,
+      countdownSizePx: normalizedCountdownSizePx,
+      avatarSizePx: normalizedAvatarSizePx,
+      avatarFrameKey: normalizedAvatarFrameKey,
+      customBackgroundUrl: normalizedCustomBackgroundUrl,
+      countdownTextColor: normalizedCountdownTextColor,
+      transparentMode: newTransparentMode,
     );
 
     unawaited(UiPrefs.saveState(nextState).catchError((_) {}));
 
     final houseId = (_houseId ?? '').trim();
     if (houseId.isNotEmpty) {
-      unawaited(_houseSettingsService.updateHomeUiSettings(
-        houseId: houseId,
-        countdownStyleKey:
-            normalizedCountdownStyleKey == current.countdownStyleKey
-                ? null
-                : normalizedCountdownStyleKey,
-        fallingEffectKey:
-            normalizedFallingEffectKey == current.fallingEffectKey
-                ? null
-                : normalizedFallingEffectKey,
-      ).catchError((e) {
+      final updates = <String, dynamic>{
+        'updatedAt': ServerValue.timestamp,
+      };
+      if (normalizedCountdownStyleKey != current.countdownStyleKey) {
+        updates['countdownStyle'] = normalizedCountdownStyleKey;
+      }
+      if (normalizedFallingEffectKey != current.fallingEffectKey) {
+        updates['fallingEffect'] = normalizedFallingEffectKey;
+      }
+      if (normalizedCountdownSizePx != current.countdownSizePx) {
+        updates['countdownSizePx'] = normalizedCountdownSizePx;
+      }
+      if (normalizedAvatarSizePx != current.avatarSizePx) {
+        updates['avatarSizePx'] = normalizedAvatarSizePx;
+      }
+      if (normalizedAvatarFrameKey != current.avatarFrameKey) {
+        updates['avatarFrame'] = normalizedAvatarFrameKey;
+      }
+      if (normalizedCustomBackgroundUrl != current.customBackgroundUrl) {
+        updates['customBackgroundUrl'] = normalizedCustomBackgroundUrl;
+        updates['customHomeBackground'] = normalizedCustomBackgroundUrl;
+      }
+      if (normalizedCountdownTextColor != current.countdownTextColor) {
+        updates['countdownTextColor'] = normalizedCountdownTextColor;
+      }
+      if (newTransparentMode != current.transparentMode) {
+        updates['transparentMode'] = newTransparentMode;
+      }
+
+      unawaited(_dbRef.child('houses/$houseId/settings').update(updates).catchError((e) {
         if (mounted) {
           _showLatestSnackBar(
             'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.',
@@ -2002,7 +2070,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return false;
   }
 
-  final ValueNotifier<String> _fallingEffectTypeNotifier = ValueNotifier('off');
 
   void triggerShootingHeartState({String? emoji, String? fromRole}) {
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -2241,6 +2308,9 @@ class _CountdownQuickCustomizeSheetContent extends StatefulWidget {
 class _CountdownQuickCustomizeSheetContentState
     extends State<_CountdownQuickCustomizeSheetContent> {
   double? _tempCountdownSize;
+  bool? _localHomeShowTimer;
+  bool _isUploadingBg = false;
+  double? _bgUploadProgress;
   String? _unlockingStyleKey;
   late Set<String> _unlockedStyles;
 
@@ -2307,6 +2377,7 @@ class _CountdownQuickCustomizeSheetContentState
     required Future<void> Function(_CountdownQuickOption option) onUnlocked,
   }) {
     final isThisUnlocking = _unlockingStyleKey == option.value;
+    final accent = option.accent;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -2350,65 +2421,44 @@ class _CountdownQuickCustomizeSheetContentState
               },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF5F0),
+            color: accent.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFFFB87A)),
+            border: Border.all(color: accent.withValues(alpha: 0.45), width: 1.5),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 option.icon,
-                size: 17,
-                color: const Color(0xFFE06000),
+                size: 20,
+                color: accent,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Text(
                 option.label,
                 style: SLTheme.quicksand(
-                  fontSize: 12.6,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF7A3800),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  color: accent,
                 ),
               ),
               const SizedBox(width: 8),
               if (isThisUnlocking)
-                const SizedBox(
-                  width: 13,
-                  height: 13,
+                SizedBox(
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE06000)),
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(accent),
                   ),
                 )
               else
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF8C00),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.play_circle_filled_rounded,
-                        size: 11,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        'Xem QC',
-                        style: SLTheme.quicksand(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+                Icon(
+                  Icons.play_circle_fill_rounded,
+                  size: 22,
+                  color: accent,
                 ),
             ],
           ),
@@ -2503,6 +2553,121 @@ class _CountdownQuickCustomizeSheetContentState
                 },
               );
             }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildTextColorSection({
+    required String selectedColorHex,
+    required Future<void> Function(String hex) onSelect,
+  }) {
+    final colors = [
+      '', // Mặc định
+      '#FFFFFF', // Trắng
+      '#000000', // Đen
+      '#F44336', // Đỏ
+      '#E91E63', // Hồng
+      '#9C27B0', // Tím
+      '#673AB7', // Tím đậm
+      '#3F51B5', // Xanh chàm
+      '#2196F3', // Xanh dương
+      '#00BCD4', // Xanh ngọc
+      '#4CAF50', // Xanh lá
+      '#FFEB3B', // Vàng
+      '#FF9800', // Cam
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFF0DDE4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDE8F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.format_color_text_rounded,
+                  color: Color(0xFFD81B60),
+                  size: 19,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Màu chữ vòng đếm',
+                      style: SLTheme.quicksand(
+                        fontSize: 14.8,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF4A3640),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Thay đổi màu sắc nhãn và số ngày yêu.',
+                      style: SLTheme.quicksand(
+                        fontSize: 12.1,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8E6F7E),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: colors.map((hex) {
+                final isSelected = selectedColorHex == hex;
+                final isDefault = hex.isEmpty;
+                final color = isDefault ? Colors.transparent : Color(int.parse(hex.replaceFirst('#', '0xFF')));
+                
+                return GestureDetector(
+                  onTap: () async {
+                    HapticFeedback.selectionClick();
+                    await onSelect(hex);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 12),
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? const Color(0xFFD81B60) : const Color(0xFFF0DDE4),
+                        width: isSelected ? 3.0 : 1.5,
+                      ),
+                    ),
+                    child: isDefault
+                        ? Icon(Icons.format_color_reset_rounded, size: 20, color: isSelected ? const Color(0xFFD81B60) : const Color(0xFF8E6F7E))
+                        : (isSelected
+                            ? Icon(Icons.check_rounded, size: 20, color: color.computeLuminance() > 0.5 ? Colors.black : Colors.white)
+                            : null),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ],
       ),
@@ -2656,6 +2821,385 @@ class _CountdownQuickCustomizeSheetContentState
                 ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickBgImage() async {
+    final homeState = widget.homeState;
+    final houseId = (homeState._houseId ?? '').trim();
+    if (houseId.isEmpty) {
+      homeState._showLatestSnackBar('Vui lòng đăng nhập hoặc tham gia nhà để đổi ảnh nền.');
+      return;
+    }
+
+    final isVipActive = widget.isVip;
+    final prefs = await SharedPreferences.getInstance();
+    final lastAdStr = prefs.getString('last_bg_ad_time');
+    bool shouldShowAd = !isVipActive;
+    if (shouldShowAd && lastAdStr != null) {
+      final lastAd = DateTime.tryParse(lastAdStr);
+      if (lastAd != null && DateTime.now().difference(lastAd).inMinutes < 20) {
+        shouldShowAd = false;
+      }
+    }
+
+    if (shouldShowAd) {
+      final adMob = AdMobService();
+      final adSuccess = await adMob.showRewardedAd();
+      if (!mounted) return;
+      if (!adSuccess) {
+        homeState._showLatestSnackBar('Bạn cần xem hết quảng cáo để tải ảnh nền.');
+        return;
+      }
+      await prefs.setString('last_bg_ad_time', DateTime.now().toIso8601String());
+    }
+
+    try {
+      final pickedFile = await homeState._storageService.pickImage();
+      if (pickedFile == null || !mounted) return;
+      XFile file = pickedFile;
+
+      try {
+        final croppedFile = await ImageCropper().cropImage(
+          sourcePath: file.path,
+          aspectRatio: const CropAspectRatio(ratioX: 9, ratioY: 16),
+          compressFormat: ImageCompressFormat.jpg,
+          compressQuality: 82,
+          maxWidth: 1440,
+          maxHeight: 3200,
+          uiSettings: [
+            IOSUiSettings(
+              title: 'Chỉnh sửa ảnh nền',
+              // Using ratio16x9 since ratio9x16 was removed in image_cropper v7
+              aspectRatioPresets: const [CropAspectRatioPreset.ratio16x9],
+              aspectRatioLockEnabled: true,
+              aspectRatioPickerButtonHidden: true,
+              resetAspectRatioEnabled: false,
+            ),
+          ],
+        );
+        if (croppedFile != null) {
+          file = XFile(croppedFile.path);
+        }
+      } catch (e) {
+        debugPrint('Lỗi cắt ảnh: $e');
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _isUploadingBg = true;
+        _bgUploadProgress = 0.0;
+      });
+
+      final url = await homeState._storageService.uploadImage(
+        houseId,
+        'themes',
+        file,
+        quality: 95,
+        minWidth: 1440,
+        minHeight: 1440,
+        onProgress: (progress) {
+          if (mounted) {
+            setState(() {
+              _bgUploadProgress = progress;
+            });
+          }
+        },
+      );
+
+      if (!mounted) return;
+      if (url == null || url.trim().isEmpty) {
+        homeState._showLatestSnackBar('Tải ảnh nền thất bại.');
+        return;
+      }
+
+      final oldUrl = UiPrefs.notifier.value.customBackgroundUrl;
+      if (oldUrl.isNotEmpty) {
+        try {
+          homeState._storageService.deleteImageByUrl(oldUrl);
+        } catch (_) {}
+      }
+
+      await homeState._saveCountdownQuickUiPrefs(
+        customBackgroundUrl: url.trim(),
+        isVip: widget.isVip,
+      );
+
+      homeState._showLatestSnackBar('Đã lưu ảnh nền thành công!');
+    } catch (e) {
+      if (mounted) {
+        homeState._showLatestSnackBar('Đã xảy ra lỗi khi tải lên ảnh nền.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingBg = false;
+          _bgUploadProgress = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _clearBgImage() async {
+    final oldUrl = UiPrefs.notifier.value.customBackgroundUrl;
+    if (oldUrl.isNotEmpty) {
+      try {
+        widget.homeState._storageService.deleteImageByUrl(oldUrl);
+      } catch (_) {}
+    }
+    await widget.homeState._saveCountdownQuickUiPrefs(
+      customBackgroundUrl: '',
+      isVip: widget.isVip,
+    );
+    widget.homeState._showLatestSnackBar('Đã xóa ảnh nền trang chủ.');
+  }
+
+  Widget buildTimerSection({
+    required bool showTimer,
+    required ValueChanged<bool> onToggle,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFF0DDE4)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDE8F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.timer_outlined,
+                  color: Color(0xFFD81B60),
+                  size: 19,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bộ đếm giờ chi tiết',
+                    style: SLTheme.quicksand(
+                      fontSize: 14.8,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF4A3640),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Hiện giờ/phút/giây bên dưới số ngày.',
+                    style: SLTheme.quicksand(
+                      fontSize: 12.1,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF8E6F7E),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Switch(
+            value: showTimer,
+            activeColor: const Color(0xFFD81B60),
+            activeTrackColor: const Color(0xFFFDE8F0),
+            inactiveThumbColor: const Color(0xFFB0B0B0),
+            inactiveTrackColor: const Color(0xFFF0DDE4),
+            onChanged: onToggle,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildBackgroundSection({
+    required String? customBgUrl,
+  }) {
+    final hasBg = customBgUrl != null && customBgUrl.trim().isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFF0DDE4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDE8F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.image_outlined,
+                  color: Color(0xFFD81B60),
+                  size: 19,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ảnh nền trang chủ',
+                      style: SLTheme.quicksand(
+                        fontSize: 14.8,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF4A3640),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tải lên hoặc xóa ảnh nền trang chủ.',
+                      style: SLTheme.quicksand(
+                        fontSize: 12.1,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8E6F7E),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_isUploadingBg) ...[
+            Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _bgUploadProgress != null
+                        ? 'Đang tải lên: ${(_bgUploadProgress! * 100).toInt()}%'
+                        : 'Đang chuẩn bị tải lên...',
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF8E6F7E),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            Row(
+              children: [
+                if (hasBg) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: CachedNetworkImage(
+                      imageUrl: customBgUrl.trim(),
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: const Color(0xFFFDE8F0),
+                        child: const Icon(Icons.image_outlined, size: 16, color: Color(0xFFD81B60)),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: const Color(0xFFFDE8F0),
+                        child: const Icon(Icons.broken_image_outlined, size: 16, color: Color(0xFFD81B60)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFF0DDE4)),
+                      foregroundColor: const Color(0xFF4A3640),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: _pickBgImage,
+                    icon: const Icon(Icons.upload_rounded, size: 16, color: Color(0xFFD81B60)),
+                    label: Text(
+                      hasBg ? 'Thay đổi ảnh' : 'Tải ảnh lên',
+                      style: SLTheme.quicksand(fontSize: 13, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+                if (hasBg) ...[
+                  const SizedBox(width: 10),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF2F7),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFF4D7E2)),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFD81B60), size: 20),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(
+                              'Xóa ảnh nền?',
+                              style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                            ),
+                            content: Text(
+                              'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
+                              style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+                            ),
+                            actions: [
+                              TextButton(
+                                child: Text(
+                                  'Hủy',
+                                  style: SLTheme.quicksand(fontWeight: FontWeight.w800, color: const Color(0xFF8E6F7E)),
+                                ),
+                                onPressed: () => Navigator.pop(ctx),
+                              ),
+                              TextButton(
+                                child: Text(
+                                  'Xóa',
+                                  style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: const Color(0xFFD81B60)),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(ctx);
+                                  _clearBgImage();
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -2854,6 +3398,15 @@ class _CountdownQuickCustomizeSheetContentState
                   ),
                 ),
                 const SizedBox(height: 12),
+                buildTextColorSection(
+                  selectedColorHex: uiState.countdownTextColor,
+                  onSelect: (hex) => widget.homeState._saveCountdownQuickUiPrefs(
+                    countdownTextColor: hex,
+                    prevalidatedUnlockedStyles: _unlockedStyles,
+                    isVip: widget.isVip,
+                  ),
+                ),
+                const SizedBox(height: 12),
                 buildSizeSection(
                   title: 'Kích thước vòng đếm',
                   description: 'Kéo để điều chỉnh độ lớn của vòng đếm ngày.',
@@ -2872,14 +3425,41 @@ class _CountdownQuickCustomizeSheetContentState
                   },
                   onSave: () async {
                     if (_tempCountdownSize != null) {
-                      final nextState = uiState.copyWith(countdownSizePx: _tempCountdownSize);
-                      await UiPrefs.saveState(nextState);
+                      final sizeToSave = _tempCountdownSize!;
                       setState(() {
                         _tempCountdownSize = null;
                       });
+                      await widget.homeState._saveCountdownQuickUiPrefs(
+                        countdownSizePx: sizeToSave,
+                        isVip: widget.isVip,
+                      );
                       HapticFeedback.mediumImpact();
                     }
                   },
+                ),
+                buildTimerSection(
+                  showTimer: _localHomeShowTimer ?? (widget.homeState._houseSettings?.containsKey('homeShowTimer') == true
+                      ? (widget.homeState._houseSettings!['homeShowTimer'] == true || widget.homeState._houseSettings!['homeShowTimer'] == 'true')
+                      : false),
+                  onToggle: (val) async {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      _localHomeShowTimer = val;
+                    });
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('il_home_show_timer', val);
+                    final houseId = (widget.homeState._houseId ?? '').trim();
+                    if (houseId.isNotEmpty) {
+                      await widget.homeState._dbRef.child('houses/$houseId/settings').update({
+                        'homeShowTimer': val,
+                        'updatedAt': ServerValue.timestamp,
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                buildBackgroundSection(
+                  customBgUrl: uiState.customBackgroundUrl,
                 ),
                 // Tạm ngắt phần cài đặt Hiệu ứng nền
                 const SizedBox(height: 16),

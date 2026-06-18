@@ -242,7 +242,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 children: [
                   Expanded(
                     child: Text(
-                      _homeDistanceText,
+                      _homeDistanceTextNotifier.value,
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,

@@ -485,6 +485,47 @@ extension _CountdownModeIndependentScreenStatePart
       });
     }
     if (scope == _selfSpaceHouseId || _selfSpaceHouseId == 'local_self') {
+      await UiPrefs.ensureLoaded();
+      final currentUi = UiPrefs.notifier.value;
+      final nextUi = currentUi.copyWith(
+        themeKey: _themeKey,
+        countdownStyleKey: snapshot.styleKey,
+        fontKey: _fontKey,
+        avatarFrameKey: _avatarFrameKey,
+        transparentMode: _transparentMode,
+        countdownSizePx: _countdownSizePx,
+        customBackgroundUrl: _customBackgroundUrl,
+        countdownTopLabel: _topLabelText,
+        countdownBottomLabel: _bottomLabelText,
+      );
+      await UiPrefs.saveState(nextUi);
+
+      if (_selfSpaceHouseId != 'local_self') {
+        final houseId = _selfSpaceHouseId;
+        final updates = <String, dynamic>{
+          'houses/$houseId/settings/relationshipMode': _singleMode ? 'single' : 'couple',
+          'houses/$houseId/settings/theme': _themeKey,
+          'houses/$houseId/settings/countdownStyle': snapshot.styleKey,
+          'houses/$houseId/settings/font': _fontKey,
+          'houses/$houseId/settings/avatarFrame': _avatarFrameKey,
+          'houses/$houseId/settings/transparentMode': _transparentMode,
+          'houses/$houseId/settings/countdownSizePx': _countdownSizePx,
+          'houses/$houseId/settings/customBackgroundUrl': _customBackgroundUrl,
+          'houses/$houseId/settings/customHomeBackground': _customBackgroundUrl,
+          'houses/$houseId/settings/countdownTopLabel': _topLabelText,
+          'houses/$houseId/settings/countdownBottomLabel': _bottomLabelText,
+          'houses/$houseId/settings/greetingQuote': _topLabelText,
+          'houses/$houseId/settings/dayUnit': _bottomLabelText,
+          'houses/$houseId/settings/nameU1': _nameU1,
+          'houses/$houseId/settings/nameU2': _nameU2,
+          'houses/$houseId/settings/avtUser1': _avatarUrl1,
+          'houses/$houseId/settings/avtUser2': _avatarUrl2,
+          'houses/$houseId/settings/startDate': _anchorDate == null ? '' : DateInputUtils.formatIsoDate(_anchorDate!),
+          'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
+          'houses/$houseId/updatedAt': ServerValue.timestamp,
+        };
+        await _countdownSpaceDbRef.update(updates);
+      }
       return;
     }
 
@@ -718,7 +759,7 @@ extension _CountdownModeIndependentScreenStatePart
                       backgroundColor: const Color(0xFFD81B60),
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('OK'),
+                    child: Text(context.tr('ok')),
                   ),
                 ],
               );

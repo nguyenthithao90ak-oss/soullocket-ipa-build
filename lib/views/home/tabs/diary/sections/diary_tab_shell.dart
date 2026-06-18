@@ -92,7 +92,7 @@ class _DiaryTabShell extends StatelessWidget {
                 child: RepaintBoundary(
                   child: Stack(
                     children: [
-                      // Memory tab - always mounted, just hidden
+                      // Memory tab - deferred load to avoid jank on tab switch
                       Positioned.fill(
                         child: AnimatedOpacity(
                           key: const ValueKey('memory_tab_opacity'),
@@ -101,7 +101,9 @@ class _DiaryTabShell extends StatelessWidget {
                           curve: Curves.easeInOut,
                           child: IgnorePointer(
                             ignoring: state._currentTab != 'memory',
-                            child: memorySection,
+                            child: state._deferMemoryLoad
+                                ? const _DiaryTabLoadingSection()
+                                : memorySection,
                           ),
                         ),
                       ),

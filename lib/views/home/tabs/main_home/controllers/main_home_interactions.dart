@@ -9,17 +9,9 @@ extension _MainHomeInteractions on _MainHomeTabState {
     if (preset == null) return;
     _interactionRotationTimer?.cancel();
     _interactionRotationTimer = null;
-    if (!mounted) {
-      _manualInteractionPresetType = preset.type;
-      _showDefaultHeartSuggestion = false;
-      _smartInteractionPreset = preset;
-      return;
-    }
-    _safeSetState(() {
-      _manualInteractionPresetType = preset.type;
-      _showDefaultHeartSuggestion = false;
-      _smartInteractionPreset = preset;
-    });
+    _manualInteractionPresetType = preset.type;
+    _showDefaultHeartSuggestion = false;
+    _smartInteractionPreset = preset;
   }
 
 
@@ -65,13 +57,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
     if (_rotationQueue.isNotEmpty) {
       final nextType = _rotationQueue.removeAt(0);
       final nextPreset = _maybePresetForInteractionType(nextType) ?? _defaultSmartInteractionPreset();
-      if (!mounted) {
-        _smartInteractionPreset = nextPreset;
-      } else {
-        _safeSetState(() {
-          _smartInteractionPreset = nextPreset;
-        });
-      }
+      _smartInteractionPreset = nextPreset;
       unawaited(_rememberInteractionRotationType(nextPreset.type));
     }
 
@@ -91,14 +77,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
     if (_rotationQueue.isNotEmpty) {
       final nextType = _rotationQueue.removeAt(0);
       final nextPreset = _maybePresetForInteractionType(nextType) ?? _defaultSmartInteractionPreset();
-      if (!mounted) {
-        _smartInteractionPreset = nextPreset;
-        unawaited(_rememberInteractionRotationType(nextPreset.type));
-        return;
-      }
-      _safeSetState(() {
-        _smartInteractionPreset = nextPreset;
-      });
+      _smartInteractionPreset = nextPreset;
       unawaited(_rememberInteractionRotationType(nextPreset.type));
     }
   }

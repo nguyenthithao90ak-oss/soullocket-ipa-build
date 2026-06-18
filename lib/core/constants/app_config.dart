@@ -235,7 +235,7 @@ class AppConfig {
   );
   static const String tiktokIosAccessToken = String.fromEnvironment(
     'TIKTOK_IOS_ACCESS_TOKEN',
-    defaultValue: 'TTCucvMWfgFYehGYcH7s0UKRo0QDyHWC',
+    defaultValue: '',
   );
   static const String tiktokIosTtAppId = String.fromEnvironment(
     'TIKTOK_IOS_TT_APP_ID',
@@ -249,7 +249,7 @@ class AppConfig {
   );
   static const String tiktokAndroidAccessToken = String.fromEnvironment(
     'TIKTOK_ANDROID_ACCESS_TOKEN',
-    defaultValue: 'TTLOS5DXLTSh47Ya1BhGVQY5uP0VBklL',
+    defaultValue: '',
   );
   static const String tiktokAndroidTtAppId = String.fromEnvironment(
     'TIKTOK_ANDROID_TT_APP_ID',

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/single_match_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'offline_cache_service.dart';
+import 'secure_storage_service.dart';
 
 class JoinHouseResult {
   final bool success;
@@ -75,10 +76,14 @@ class CoupleService {
 
       final prefs = OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
-      await prefs.setString('il_house_id', resolvedHouseId);
-      await prefs.setString('il_auth_uid', user.uid);
-      await prefs.setString('il_role', assignedRole);
-      await prefs.setString('il_rel_mode', 'couple');
+      await SecureStorageService.instance.write(SecureStorageService.keyHouseId, resolvedHouseId);
+      await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
+      await SecureStorageService.instance.write(SecureStorageService.keyRole, assignedRole);
+      await SecureStorageService.instance.write(SecureStorageService.keyRelMode, 'couple');
+      await prefs.remove('il_house_id');
+      await prefs.remove('il_auth_uid');
+      await prefs.remove('il_role');
+      await prefs.remove('il_rel_mode');
       await prefs.remove('il_single_connect_qr_pending_$resolvedHouseId');
 
       return const JoinHouseResult.ok();

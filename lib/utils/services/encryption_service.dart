@@ -53,8 +53,11 @@ class EncryptionService {
       'soullocket-private-vault-recovery-v1';
 
   // --- Web-compatible constants (PHẢI khớp với core-encryption.js) ---
-  // Giữ lại duy nhất để đọc + migrate dữ liệu Web legacy.
-  // Không được dùng salt cố định này cho dữ liệu mới.
+  // Salt cố định là hạn chế của Web legacy (JS không lưu được salt riêng).
+  // Chỉ dùng để decrypt + migrate dữ liệu ENC: cũ.
+  // ⚠️ TO-DO: Khi analytics cho thấy không còn ENC: data nào,
+  //          xóa _webCompatSalt, _deriveWebCompatKey, _aesGcmDecrypt
+  //          và throw ngay trong decryptMessage cho ENC: format.
   static const String _webCompatSalt = 'goodgo-salt-2026';
   static const int _webCompatIterations = 100000; // 100k iterations
   static const String _legacyWebWriteDisabledMessage =
@@ -279,6 +282,8 @@ class EncryptionService {
   Future<String> decryptWebLegacy(
       String ciphertext, String housePassword) async {
     if (!ciphertext.startsWith(_legacyPrefix)) return ciphertext;
+    // Salt cố định chỉ dùng để migrate dữ liệu cũ.
+    // Không dùng cho bất kỳ dữ liệu ENC2: mới nào.
     try {
       final key = await _deriveWebCompatKey(housePassword);
       return _aesGcmDecrypt(key, ciphertext);

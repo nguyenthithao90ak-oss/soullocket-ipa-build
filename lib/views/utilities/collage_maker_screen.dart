@@ -18,6 +18,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../utils/collage_generator.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/collage_limit_service.dart';
+import 'collage_limit_ui_helper.dart';
 import '../../utils/services/image_picker_recovery_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
@@ -952,7 +953,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
 
   Future<void> _saveImage() async {
     if (_generatedCollageBytes == null) return;
-    final canProceed = await CollageLimitService().checkLimitAndAskAd(context);
+    final canProceed = await CollageLimitUiHelper.checkLimitAndAskAd(context);
     if (!mounted || !canProceed) return;
     final hasFullQuality = await _ensureFullQualityCollage();
     if (!mounted || !hasFullQuality || _generatedCollageBytes == null) return;
@@ -1000,7 +1001,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
 
   Future<void> _shareImage() async {
     if (_generatedCollageBytes == null) return;
-    final canProceed = await CollageLimitService().checkLimitAndAskAd(context);
+    final canProceed = await CollageLimitUiHelper.checkLimitAndAskAd(context);
     if (!mounted || !canProceed) return;
     final hasFullQuality = await _ensureFullQualityCollage();
     if (!mounted || !hasFullQuality || _generatedCollageBytes == null) return;

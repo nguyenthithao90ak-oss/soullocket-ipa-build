@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "छवि सहेजने में असमर्थ: {error}",
   "util_drawing_delete_image_failed": "फ़ोटो हटाने में असमर्थ: {error}",
   "util_drawing_partner_drawing": "{name} ड्राइंग कर रहा है...",
-  "util_drawing_sync_online_count": "युगल ड्राइंग सिंक सक्षम है • {count} साथी ऑनलाइन है",
+  "util_drawing_sync_online_count": "सिंक 2 लोग चालू हैं • {count} दूसरा व्यक्ति ऑनलाइन है",
   "util_drawing_canvas_locked_status": "कैनवास स्क्रॉल-लॉकिंग है.  {status}",
   "util_finance_each_pays": "प्रत्येक व्यक्ति भुगतान करता है:\n {amount}",
   "util_finance_used_amount": "प्रयुक्त: {amount}",

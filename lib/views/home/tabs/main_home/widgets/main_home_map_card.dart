@@ -197,7 +197,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                       SLSpacing.w8,
                       Flexible(
                         child: Text(
-                          _homeDistanceText,
+                          _homeDistanceTextNotifier.value,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: SLTheme.quicksand(
@@ -223,7 +223,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                 ),
               ],
             ),
-            if (_homeMapAlert != null && _homeMapAlert!.trim().isNotEmpty) ...[
+            if (this._homeMapAlertNotifier.value != null && _homeMapAlertNotifier.value!.trim().isNotEmpty) ...[
               SLSpacing.h8,
               Container(
                 width: double.infinity,
@@ -235,7 +235,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                   border: Border.all(color: const Color(0xFFCE93D8)),
                 ),
                 child: Text(
-                  _homeMapAlert!,
+                  _homeMapAlertNotifier.value!,
                   style: SLTheme.quicksand(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,

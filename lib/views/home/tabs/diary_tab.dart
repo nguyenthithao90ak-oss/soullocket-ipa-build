@@ -68,6 +68,7 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
   final ScrollController _diaryScrollController = ScrollController();
   bool _isTabActive = false;
   bool _isActivatingTab = false;
+  bool _deferMemoryLoad = true;
   bool _lastSelectionOverlayVisible = false;
   final Set<String> _warmedMemoryViewerKeys = <String>{};
 
@@ -743,6 +744,12 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     _isTabActive = isActive;
     _syncSelectionOverlayVisibility();
     if (isActive) {
+      // ⚡ Defer memory section load until after swipe animation
+      if (_deferMemoryLoad) {
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) setState(() => _deferMemoryLoad = false);
+        });
+      }
       // ⚡ Flush any setState calls that were skipped while tab was inactive.
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1006,396 +1013,374 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     _warmMemoryViewerAroundIndex(allPhotos, currentIndex);
 
     Navigator.push<void>(
-        context,
-        PageRouteBuilder(
-          opaque: false,
-          barrierDismissible: true,
-          barrierColor: Colors.black.withValues(alpha: 0.92),
-          transitionDuration: const Duration(milliseconds: 320),
-          reverseTransitionDuration: const Duration(milliseconds: 320),
-          pageBuilder: (dialogContext, animation, secondaryAnimation) =>
-              StatefulBuilder(
+      context,
+      PageRouteBuilder(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.transparent,
+        transitionDuration: const Duration(milliseconds: 320),
+        reverseTransitionDuration: const Duration(milliseconds: 320),
+        pageBuilder: (dialogContext, animation, secondaryAnimation) {
+          final bgOpacityNotifier = ValueNotifier<double>(1.0);
+          final isZoomedInNotifier = ValueNotifier<bool>(false);
+          final dragOffsetNotifier = ValueNotifier<Offset>(Offset.zero);
+          final dragScaleNotifier = ValueNotifier<double>(1.0);
+
+          return StatefulBuilder(
             builder: (context, setState) {
               final currentItem =
                   allPhotos.isNotEmpty ? allPhotos[currentIndex] : initialItem;
 
-              void closeOnVerticalSwipe(DragEndDetails details) {
-                final velocity = details.primaryVelocity ?? 0;
-                if (velocity.abs() < 200) {
-                  return;
-                }
-                Navigator.pop(dialogContext);
-              }
-
-              Widget buildViewerImage(Map<String, dynamic> item) {
-                final imageProvider = _memoryImageProvider(
-                  item['url']?.toString() ?? '',
-                  maxWidth: 2200,
-                );
-                final transformationController = TransformationController();
-                final panEnabledVN = ValueNotifier<bool>(false);
-
-                void handleTransformChanged() {
-                  final matrix = transformationController.value;
-                  final scale = matrix.getMaxScaleOnAxis();
-                  final shouldEnablePan = scale > 1.02;
-                  if (panEnabledVN.value != shouldEnablePan) {
-                    panEnabledVN.value = shouldEnablePan;
-                  }
-                }
-
-                void handleSwipeDown() {
-                  final scale =
-                      transformationController.value.getMaxScaleOnAxis();
-                  if (scale > 1.05) {
-                    transformationController.value = Matrix4.identity();
-                    handleTransformChanged();
-                    return;
-                  }
-                  Navigator.pop(dialogContext);
-                }
-
-                transformationController.addListener(handleTransformChanged);
-
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onLongPress: () =>
-                      _showMemoryViewerActions(dialogContext, item),
-                  onVerticalDragEnd: (details) {
-                    final velocity = details.primaryVelocity ?? 0;
-                    if (velocity > 220) {
-                      handleSwipeDown();
-                    }
-                  },
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: panEnabledVN,
-                    builder: (context, panEnabled, _) {
-                      return InteractiveViewer(
-                        transformationController: transformationController,
-                        panEnabled: panEnabled,
-                        minScale: 1.0,
-                        maxScale: 4.5,
-                        boundaryMargin: const EdgeInsets.all(24),
-                        clipBehavior: Clip.none,
-                        interactionEndFrictionCoefficient: 0.00008,
-                        child: Hero(
-                          tag: 'memory_image_${item['id']}',
-                          child: Image(
-                            image: imageProvider,
-                            fit: BoxFit.contain,
-                            width: double.infinity,
-                            height: double.infinity,
-                            filterQuality: FilterQuality.high,
-                            gaplessPlayback: true,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(
-                              Icons.broken_image,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
+              return Stack(
+                children: [
+                  AnimatedBuilder(
+                    animation: animation,
+                    builder: (context, _) {
+                      return ValueListenableBuilder<double>(
+                        valueListenable: bgOpacityNotifier,
+                        builder: (context, dragOpacity, _) {
+                          final double opacity = 0.92 * dragOpacity * animation.value;
+                          return Container(
+                            color: Colors.black.withValues(alpha: opacity),
+                          );
+                        },
                       );
                     },
                   ),
-                );
-              }
-
-              return FadeTransition(
-                opacity: animation,
-                child: Scaffold(
-                  backgroundColor: Colors.transparent,
-                  body: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(dialogContext),
-                        child: Container(color: Colors.transparent),
-                      ),
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black.withValues(alpha: 0.62),
-                                  Colors.transparent,
-                                  Colors.black.withValues(alpha: 0.58),
-                                ],
-                                stops: const [0.0, 0.22, 1.0],
+                  _MemoryZoomDraggableWrapper(
+                    onDismiss: () => Navigator.pop(dialogContext),
+                    bgOpacityNotifier: bgOpacityNotifier,
+                    isZoomedInNotifier: isZoomedInNotifier,
+                    dragOffsetNotifier: dragOffsetNotifier,
+                    dragScaleNotifier: dragScaleNotifier,
+                    child: Scaffold(
+                      backgroundColor: Colors.transparent,
+                      body: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.pop(dialogContext),
+                            child: Container(color: Colors.transparent),
+                          ),
+                          if (allPhotos.isNotEmpty)
+                            PageView.builder(
+                              controller: pageController,
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: allPhotos.length,
+                              onPageChanged: (index) {
+                                setState(() {
+                                  currentIndex = index;
+                                });
+                                isZoomedInNotifier.value = false;
+                                _warmMemoryViewerAroundIndex(allPhotos, index);
+                              },
+                              itemBuilder: (context, index) {
+                                return _MemoryViewerPage(
+                                  item: allPhotos[index],
+                                  dragOffsetNotifier: dragOffsetNotifier,
+                                  dragScaleNotifier: dragScaleNotifier,
+                                  isZoomedInNotifier: isZoomedInNotifier,
+                                  onLongPress: () =>
+                                      _showMemoryViewerActions(dialogContext, allPhotos[index]),
+                                  imageProviderBuilder: _memoryImageProvider,
+                                );
+                              },
+                            )
+                          else
+                            Builder(
+                              builder: (context) => _MemoryViewerPage(
+                                item: initialItem,
+                                dragOffsetNotifier: dragOffsetNotifier,
+                                dragScaleNotifier: dragScaleNotifier,
+                                isZoomedInNotifier: isZoomedInNotifier,
+                                onLongPress: () =>
+                                    _showMemoryViewerActions(dialogContext, initialItem),
+                                imageProviderBuilder: _memoryImageProvider,
                               ),
                             ),
-                          ),
-                        ),
-                      ),
-                      if (allPhotos.isNotEmpty)
-                        GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onVerticalDragEnd: closeOnVerticalSwipe,
-                          child: PageView.builder(
-                            controller: pageController,
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: allPhotos.length,
-                            onPageChanged: (index) {
-                              setState(() {
-                                currentIndex = index;
-                              });
-                              _warmMemoryViewerAroundIndex(allPhotos, index);
+                          AnimatedBuilder(
+                            animation: animation,
+                            builder: (context, _) {
+                              return ValueListenableBuilder<double>(
+                                valueListenable: bgOpacityNotifier,
+                                builder: (context, dragOpacity, _) {
+                                  final double baseUiOpacity = ((dragOpacity - 0.82) / 0.18).clamp(0.0, 1.0);
+                                  final double uiOpacity = baseUiOpacity * animation.value;
+                                  return Opacity(
+                                    opacity: uiOpacity,
+                                    child: IgnorePointer(
+                                      ignoring: uiOpacity < 0.5,
+                                      child: Stack(
+                                        children: [
+                                          Positioned.fill(
+                                            child: IgnorePointer(
+                                              child: DecoratedBox(
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topCenter,
+                                                    end: Alignment.bottomCenter,
+                                                    colors: [
+                                                      Colors.black.withValues(alpha: 0.62),
+                                                      Colors.transparent,
+                                                      Colors.black.withValues(alpha: 0.58),
+                                                    ],
+                                                    stops: const [0.0, 0.22, 1.0],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            left: 18,
+                                            right: 86,
+                                            bottom: MediaQuery.of(context).padding.bottom + 18,
+                                            child: IgnorePointer(
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 14,
+                                                  vertical: 12,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black.withValues(alpha: 0.42),
+                                                  borderRadius: BorderRadius.circular(22),
+                                                  border: Border.all(
+                                                    color: Colors.white.withValues(alpha: 0.10),
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Container(
+                                                      width: 32,
+                                                      height: 32,
+                                                      decoration: BoxDecoration(
+                                                        gradient: const LinearGradient(
+                                                          colors: [
+                                                            Color(0xFFFF6F91),
+                                                            Color(0xFF7C8BFF)
+                                                          ],
+                                                        ),
+                                                        borderRadius: BorderRadius.circular(12),
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons.favorite_rounded,
+                                                        color: Colors.white,
+                                                        size: 17,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment.start,
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Text(
+                                                            '${currentIndex + 1}/${allPhotos.isEmpty ? 1 : allPhotos.length} kỷ niệm',
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                            style: SLTheme.quicksand(
+                                                              color: Colors.white,
+                                                              fontSize: 13,
+                                                              fontWeight: FontWeight.w900,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(height: 2),
+                                                          Text(
+                                                            _formatMemoryTimestamp(currentItem),
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                            style: SLTheme.quicksand(
+                                                              color: Colors.white
+                                                                  .withValues(alpha: 0.68),
+                                                              fontSize: 11,
+                                                              fontWeight: FontWeight.w700,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: MediaQuery.of(context).padding.top + 14,
+                                            left: 18,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withValues(alpha: 0.42),
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: Colors.white.withValues(alpha: 0.12),
+                                                ),
+                                              ),
+                                              child: IconButton(
+                                                tooltip: context.tr('home_ng_f63d1e'),
+                                                onPressed: () => Navigator.pop(dialogContext),
+                                                icon: const Icon(
+                                                  Icons.close_rounded,
+                                                  color: Colors.white,
+                                                  size: 22,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: MediaQuery.of(context).padding.top + 14,
+                                            right: 18,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withValues(alpha: 0.42),
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: Colors.white.withValues(alpha: 0.12),
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withValues(alpha: 0.22),
+                                                    blurRadius: 18,
+                                                    offset: const Offset(0, 8),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: PopupMenuButton<String>(
+                                                tooltip: context.tr('home_tychnnh_5e18e0'),
+                                                padding: const EdgeInsets.all(11),
+                                                icon: const Icon(
+                                                  Icons.more_vert_rounded,
+                                                  color: Colors.white,
+                                                  size: 23,
+                                                ),
+                                                color: const Color(0xFF171A21),
+                                                surfaceTintColor: const Color(0xFF171A21),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(20),
+                                                ),
+                                                itemBuilder: (menuContext) => [
+                                                  PopupMenuItem<String>(
+                                                    value: 'save',
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.download_rounded,
+                                                          color: Colors.white,
+                                                          size: 19,
+                                                        ),
+                                                        const SizedBox(width: 12),
+                                                        Text(
+                                                          context.tr('home_lunh_9088ba'),
+                                                          style: SLTheme.quicksand(
+                                                            color: Colors.white,
+                                                            fontWeight: FontWeight.w800,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  PopupMenuItem<String>(
+                                                    value: 'share',
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.link_rounded,
+                                                          color: Colors.white,
+                                                          size: 19,
+                                                        ),
+                                                        const SizedBox(width: 12),
+                                                        Text(
+                                                          context.tr('home_chiasnh_003604'),
+                                                          style: SLTheme.quicksand(
+                                                            color: Colors.white,
+                                                            fontWeight: FontWeight.w800,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  PopupMenuItem<String>(
+                                                    value: 'info',
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.info_outline_rounded,
+                                                          color: Colors.white,
+                                                          size: 19,
+                                                        ),
+                                                        const SizedBox(width: 12),
+                                                        Text(
+                                                          context.tr('home_chititnh_958bbd'),
+                                                          style: SLTheme.quicksand(
+                                                            color: Colors.white,
+                                                            fontWeight: FontWeight.w800,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  PopupMenuItem<String>(
+                                                    value: 'delete',
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.delete_outline_rounded,
+                                                          color: Color(0xFFFF6B6B),
+                                                          size: 19,
+                                                        ),
+                                                        const SizedBox(width: 12),
+                                                        Text(
+                                                          context.tr('home_xanh_0b98d1'),
+                                                          style: SLTheme.quicksand(
+                                                            color: const Color(0xFFFF6B6B),
+                                                            fontWeight: FontWeight.w800,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                                onSelected: (value) async {
+                                                  switch (value) {
+                                                    case 'save':
+                                                      await _downloadSingleImage(
+                                                          currentItem['url']);
+                                                      break;
+                                                    case 'share':
+                                                      Navigator.pop(dialogContext);
+                                                      await _shareSingleMemory(currentItem);
+                                                      break;
+                                                    case 'info':
+                                                      await _showMemoryInfoSheet(
+                                                          dialogContext, currentItem);
+                                                      break;
+                                                    case 'delete':
+                                                      Navigator.pop(dialogContext);
+                                                      await _deleteMemory(currentItem);
+                                                      break;
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
                             },
-                            itemBuilder: (context, index) {
-                              return buildViewerImage(allPhotos[index]);
-                            },
                           ),
-                        )
-                      else
-                        GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onVerticalDragEnd: closeOnVerticalSwipe,
-                          child: Builder(
-                            builder: (context) => buildViewerImage(initialItem),
-                          ),
-                        ),
-                      Positioned(
-                        left: 18,
-                        right: 86,
-                        bottom: MediaQuery.of(context).padding.bottom + 18,
-                        child: IgnorePointer(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.42),
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.10),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFFFF6F91),
-                                        Color(0xFF7C8BFF)
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.favorite_rounded,
-                                    color: Colors.white,
-                                    size: 17,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        '${currentIndex + 1}/${allPhotos.isEmpty ? 1 : allPhotos.length} kỷ niệm',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: SLTheme.quicksand(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        _formatMemoryTimestamp(currentItem),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: SLTheme.quicksand(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.68),
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        ],
                       ),
-                      Positioned(
-                        top: MediaQuery.of(context).padding.top + 14,
-                        left: 18,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.42),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.12),
-                            ),
-                          ),
-                          child: IconButton(
-                            tooltip: context.tr('home_ng_f63d1e'),
-                            onPressed: () => Navigator.pop(dialogContext),
-                            icon: const Icon(
-                              Icons.close_rounded,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: MediaQuery.of(context).padding.top + 14,
-                        right: 18,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.42),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.12),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.22),
-                                blurRadius: 18,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: PopupMenuButton<String>(
-                            tooltip: context.tr('home_tychnnh_5e18e0'),
-                            padding: const EdgeInsets.all(11),
-                            icon: const Icon(
-                              Icons.more_vert_rounded,
-                              color: Colors.white,
-                              size: 23,
-                            ),
-                            color: const Color(0xFF171A21),
-                            surfaceTintColor: const Color(0xFF171A21),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            itemBuilder: (menuContext) => [
-                              PopupMenuItem<String>(
-                                value: 'save',
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.download_rounded,
-                                      color: Colors.white,
-                                      size: 19,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      context.tr('home_lunh_9088ba'),
-                                      style: SLTheme.quicksand(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              PopupMenuItem<String>(
-                                value: 'share',
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.link_rounded,
-                                      color: Colors.white,
-                                      size: 19,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      context.tr('home_chiasnh_003604'),
-                                      style: SLTheme.quicksand(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              PopupMenuItem<String>(
-                                value: 'info',
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.info_outline_rounded,
-                                      color: Colors.white,
-                                      size: 19,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      context.tr('home_chititnh_958bbd'),
-                                      style: SLTheme.quicksand(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              PopupMenuItem<String>(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.delete_outline_rounded,
-                                      color: Color(0xFFFF6B6B),
-                                      size: 19,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      context.tr('home_xanh_0b98d1'),
-                                      style: SLTheme.quicksand(
-                                        color: const Color(0xFFFF6B6B),
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            onSelected: (value) async {
-                              switch (value) {
-                                case 'save':
-                                  await _downloadSingleImage(
-                                      currentItem['url']);
-                                  break;
-                                case 'share':
-                                  Navigator.pop(dialogContext);
-                                  await _shareSingleMemory(currentItem);
-                                  break;
-                                case 'info':
-                                  await _showMemoryInfoSheet(
-                                      dialogContext, currentItem);
-                                  break;
-                                case 'delete':
-                                  Navigator.pop(dialogContext);
-                                  await _deleteMemory(currentItem);
-                                  break;
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               );
             },
-          ),
-        ));
+          );
+        },
+      ),
+    );
   }
 
   String _formatMemoryTimestamp(Map<String, dynamic> item) {
@@ -1546,5 +1531,198 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
   Widget build(BuildContext context) {
     super.build(context);
     return _DiaryTabShell(state: this);
+  }
+}
+
+class _MemoryZoomDraggableWrapper extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onDismiss;
+  final ValueNotifier<double> bgOpacityNotifier;
+  final ValueNotifier<bool> isZoomedInNotifier;
+  final ValueNotifier<Offset> dragOffsetNotifier;
+  final ValueNotifier<double> dragScaleNotifier;
+
+  const _MemoryZoomDraggableWrapper({
+    required this.child,
+    required this.onDismiss,
+    required this.bgOpacityNotifier,
+    required this.isZoomedInNotifier,
+    required this.dragOffsetNotifier,
+    required this.dragScaleNotifier,
+  });
+
+  @override
+  State<_MemoryZoomDraggableWrapper> createState() => _MemoryZoomDraggableWrapperState();
+}
+
+class _MemoryZoomDraggableWrapperState extends State<_MemoryZoomDraggableWrapper> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  double _dragY = 0.0;
+  double _dragStartAnimY = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 280));
+    _controller.addListener(() {
+      setState(() {
+        final double curveValue = CurvedAnimation(
+          parent: _controller,
+          curve: Curves.easeOutCubic,
+        ).value;
+        _dragY = _dragStartAnimY * (1.0 - curveValue);
+        _updateOpacity();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _updateOpacity() {
+    widget.bgOpacityNotifier.value = (1.0 - (_dragY / 320.0)).clamp(0.0, 1.0);
+    widget.dragOffsetNotifier.value = Offset(0, _dragY);
+    widget.dragScaleNotifier.value = (1.0 - (_dragY / 380.0)).clamp(0.35, 1.0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onVerticalDragStart: (details) {
+        if (widget.isZoomedInNotifier.value) return;
+        _controller.stop();
+        _dragStartAnimY = _dragY;
+      },
+      onVerticalDragUpdate: (details) {
+        if (widget.isZoomedInNotifier.value) return;
+        setState(() {
+          _dragY += details.delta.dy;
+          if (_dragY < 0.0) _dragY = 0.0;
+          _updateOpacity();
+        });
+      },
+      onVerticalDragEnd: (details) {
+        if (widget.isZoomedInNotifier.value) return;
+        final velocity = details.primaryVelocity ?? 0;
+        if (_dragY > 140 || velocity > 250) {
+          widget.onDismiss();
+        } else {
+          _dragStartAnimY = _dragY;
+          _controller.forward(from: 0.0);
+        }
+      },
+      child: widget.child,
+    );
+  }
+}
+
+class _MemoryViewerPage extends StatefulWidget {
+  final Map<String, dynamic> item;
+  final ValueNotifier<Offset> dragOffsetNotifier;
+  final ValueNotifier<double> dragScaleNotifier;
+  final ValueNotifier<bool> isZoomedInNotifier;
+  final VoidCallback onLongPress;
+  final ImageProvider<Object> Function(String, {int? maxWidth}) imageProviderBuilder;
+
+  const _MemoryViewerPage({
+    required this.item,
+    required this.dragOffsetNotifier,
+    required this.dragScaleNotifier,
+    required this.isZoomedInNotifier,
+    required this.onLongPress,
+    required this.imageProviderBuilder,
+  });
+
+  @override
+  State<_MemoryViewerPage> createState() => _MemoryViewerPageState();
+}
+
+class _MemoryViewerPageState extends State<_MemoryViewerPage> {
+  late final ImageProvider<Object> _imageProvider;
+  late final TransformationController _transformationController;
+  late final ValueNotifier<bool> _panEnabledVN;
+
+  @override
+  void initState() {
+    super.initState();
+    _imageProvider = widget.imageProviderBuilder(
+      widget.item['url']?.toString() ?? '',
+      maxWidth: 2200,
+    );
+    _transformationController = TransformationController();
+    _panEnabledVN = ValueNotifier<bool>(false);
+
+    _transformationController.addListener(_handleTransformChanged);
+  }
+
+  void _handleTransformChanged() {
+    final matrix = _transformationController.value;
+    final scale = matrix.getMaxScaleOnAxis();
+    final shouldEnablePan = scale > 1.02;
+    if (_panEnabledVN.value != shouldEnablePan) {
+      _panEnabledVN.value = shouldEnablePan;
+      widget.isZoomedInNotifier.value = shouldEnablePan;
+    }
+  }
+
+  @override
+  void dispose() {
+    _transformationController.removeListener(_handleTransformChanged);
+    _transformationController.dispose();
+    _panEnabledVN.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: widget.onLongPress,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _panEnabledVN,
+        builder: (context, panEnabled, _) {
+          return AnimatedBuilder(
+            animation: Listenable.merge([widget.dragOffsetNotifier, widget.dragScaleNotifier]),
+            builder: (context, child) {
+              return Transform.translate(
+                offset: widget.dragOffsetNotifier.value,
+                child: Transform.scale(
+                  scale: widget.dragScaleNotifier.value,
+                  child: InteractiveViewer(
+                    transformationController: _transformationController,
+                    panEnabled: panEnabled,
+                    minScale: 1.0,
+                    maxScale: 4.5,
+                    boundaryMargin: const EdgeInsets.all(24),
+                    clipBehavior: Clip.none,
+                    interactionEndFrictionCoefficient: 0.00008,
+                    child: Hero(
+                      tag: 'memory_image_${widget.item['id']}',
+                      child: Image(
+                        image: _imageProvider,
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: double.infinity,
+                        filterQuality: FilterQuality.high,
+                        gaplessPlayback: true,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(
+                          Icons.broken_image,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 }

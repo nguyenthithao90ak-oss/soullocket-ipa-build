@@ -12,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/services/image_picker_recovery_service.dart';
 import '../utils/services/storage_service.dart';
+import '../views/utilities/collage_limit_ui_helper.dart';
 import '../utils/services/collage_limit_service.dart';
 import '../utils/collage_generator.dart';
 import '../utils/services/pending_upload_retry_coordinator.dart';
@@ -548,7 +549,7 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
 
   Future<void> _generateCollage() async {
     final int requestId = ++_generationTicket;
-    final canProceed = await CollageLimitService().checkLimitAndAskAd(context);
+    final canProceed = await CollageLimitUiHelper.checkLimitAndAskAd(context);
     if (!mounted) return;
     if (!canProceed) return;
 

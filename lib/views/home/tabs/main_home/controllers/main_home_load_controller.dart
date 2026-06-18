@@ -178,7 +178,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
   }
 
   void _updatePresenceDataImpl(Map<String, dynamic> nextPresence) {
-    _presenceData = nextPresence;
+    _presenceDataNotifier.value = nextPresence;
     final nextSignature = _presenceUiSignatureForPayloadImpl(nextPresence);
     if (_presenceUiSignature == nextSignature || !mounted) {
       _presenceUiSignature = nextSignature;
@@ -186,7 +186,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
     }
 
     _presenceUiSignature = nextSignature;
-    setState(() {});
   }
 
   bool _updatePresenceDataIfNeededImpl(Map<String, dynamic> nextPresence) {
@@ -205,22 +204,14 @@ extension _MainHomeLoadController on _MainHomeTabState {
     required String? alertText,
   }) {
     final nextSignature = '$distanceText|${alertText ?? ''}';
-    _homeDistanceText = distanceText;
-    _homeMapAlert = alertText;
-    if (_homeMapPreviewSignature == nextSignature) {
-      return;
+    bool needsUpdate = false;
+    if (_homeMapPreviewSignature != nextSignature) {
+      _homeMapPreviewSignature = nextSignature;
+      needsUpdate = true;
     }
-
-    _homeMapPreviewSignature = nextSignature;
-    if (!mounted) {
-      return;
-    }
-
-    _homeMapPreviewDebounce?.cancel();
-    _homeMapPreviewDebounce = Timer(const Duration(milliseconds: 140), () {
-      if (!mounted) return;
-      setState(() {});
-    });
+    _homeDistanceTextNotifier.value = distanceText;
+    _homeMapAlertNotifier.value = alertText;
+    if (!needsUpdate) return;
   }
 
   dynamic _normalizeInsightSignatureValueImpl(dynamic value) {
@@ -334,9 +325,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
     }
 
     final sessionId = _invalidateLiveWorkSessionImpl();
-    if (!preloadOnly) {
-      _cancelLiveWorkBindingsImpl();
-    }
+    // ⚡ Luôn cancel bindings cũ trước khi setup lại, tránh duplicate listener
+    _cancelLiveWorkBindingsImpl();
 
     bool isStale() {
       return _isLiveWorkSessionStaleImpl(
@@ -567,10 +557,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 final hadLoadedPresenceSnapshot = _hasLoadedPresenceSnapshot;
                 _hasLoadedPresenceSnapshot = true;
                 final didUpdatePresence = _updatePresenceDataIfNeededImpl(map);
-                if (!didUpdatePresence &&
-                    !hadLoadedPresenceSnapshot &&
-                    mounted) {
-                  setState(() {});
+                if (!hadLoadedPresenceSnapshot && mounted) {
+                  // ⚡ Lần đầu load presence: không cần setState rỗng,
+                  // widget sẽ tự cập nhật qua ValueListenableBuilder
                 }
 
                 if (didUpdatePresence &&
@@ -604,7 +593,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
               final didUpdatePresence =
                   _updatePresenceDataIfNeededImpl(const <String, dynamic>{});
               if (!didUpdatePresence && !hadLoadedPresenceSnapshot) {
-                setState(() {});
+                // ⚡ Lần đầu load presence mà không có data: không cần setState rỗng
               }
               if (didUpdatePresence && _houseSettings != null) {
                 _scheduleLoveWidgetSync(
@@ -887,5 +876,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
       );
       if (mounted) setState(() => _isLoading = false);
     }
+    _lastFetchTime = DateTime.now();
   }
 }

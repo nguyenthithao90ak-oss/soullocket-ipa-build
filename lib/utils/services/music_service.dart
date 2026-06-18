@@ -74,16 +74,37 @@ class MusicService {
     return 'audio';
   }
 
+  void _onPlayerStateChanged(PlayerState state) {
+    isPlayingNotifier.value = state == PlayerState.playing;
+  }
+
+  StreamSubscription<PlayerState>? _playerStateSub;
+  bool _isInitialized = false;
+
   Future<void> init() async {
+    if (_isInitialized) return;
+    _isInitialized = true;
+
     _audioPlayer.setReleaseMode(ReleaseMode.loop);
 
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      isPlayingNotifier.value = state == PlayerState.playing;
-    });
+    _playerStateSub = _audioPlayer.onPlayerStateChanged.listen(_onPlayerStateChanged);
 
     UiPrefs.notifier.addListener(_handleUiPrefsChanged);
 
     unawaited(_applyResolvedMusic());
+  }
+
+  /// Giải phóng tài nguyên — gọi khi service không còn được dùng.
+  void dispose() {
+    if (!_isInitialized) return;
+    _isInitialized = false;
+
+    _playerStateSub?.cancel();
+    _playerStateSub = null;
+    UiPrefs.notifier.removeListener(_handleUiPrefsChanged);
+    _audioPlayer.dispose();
+    isPlayingNotifier.dispose();
+    isVisibleNotifier.dispose();
   }
 
   void _handleUiPrefsChanged() {

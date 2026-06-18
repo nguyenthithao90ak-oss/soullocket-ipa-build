@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.2.1+48
+version: 2.0.0+53
 
 environment:
   sdk: ^3.5.3
@@ -65,7 +65,7 @@ dependencies:
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.2.0
   firebase_messaging: ^16.2.0
-  flutter_local_notifications: ^21.0.0
+  flutter_local_notifications: ^22.0.1
   in_app_purchase: ^3.2.3
   in_app_purchase_android: ^0.4.0
   sqflite: ^2.4.2
@@ -94,7 +94,7 @@ dependencies:
   path_provider: ^2.1.5
   share_plus: ^12.0.2
   vision_gallery_saver: ^3.1.1
-  google_mobile_ads: ^8.0.0
+  google_mobile_ads: ^9.0.0
   image_cropper: ^12.2.1
   local_auth_android: ^2.0.8
   local_auth_darwin: ^2.0.3
@@ -114,8 +114,8 @@ dependencies:
   flutter_blurhash: ^0.9.1
   firebase_crashlytics: ^5.2.0
   blurhash: ^1.2.0
-  freezed_annotation: ^2.4.4
-  json_annotation: ^4.9.0
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.12.0
   app_tracking_transparency: ^2.0.7
   sensors_plus: ^7.0.0
   cloud_firestore: ^6.5.0
@@ -136,10 +136,11 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
-  build_runner: ^2.4.15
-  freezed: ^2.5.8
-  json_serializable: ^6.9.5
-  very_good_analysis: ^7.0.0
+  build_runner: ^2.15.0
+  freezed: ^3.2.5
+  json_serializable: ^6.14.0
+  very_good_analysis: ^10.2.0
+  mockito: ^5.6.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -456,6 +456,63 @@ extension _SettingsTabThemeSection on _SettingsTabState {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+          // 1. Hình nền & Hiệu ứng — thường dùng nhất
+          _ThemeSectionCard(
+            icon: Icons.palette_rounded,
+            title: context.tr('theme_bg_effect_title'),
+            description: context.tr('theme_bg_effect_desc'),
+            themeColor: const Color(0xFF9C27B0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLabel(context.tr('theme_falling_effect')),
+                const SizedBox(height: 6),
+                _buildEffectPresetStrip(selection.effectKey),
+                const SizedBox(height: 12),
+                _buildLabel(context.tr('theme_home_block_tone')),
+                _buildThemeDropdownField(
+                  value: selection.homeToneKey,
+                  options: config.homeTones,
+                  onChanged: (value) =>
+                      _updateThemeDraft(() => _draftHomeBlockToneKey = value),
+                ),
+                const SizedBox(height: 14),
+                _buildThemeHomeLikePreviewCard(
+                  selection.previewBackground,
+                  themeKey: selection.themeKey,
+                  effectKey: selection.effectKey,
+                  graphicsKey: selection.graphicsKey,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildGradientBtn(
+                        label: _isUploadingThemeBackground
+                            ? (_themeUploadProgress != null 
+                                ? context.tr('theme_uploading_pct').replaceAll('{pct}', (_themeUploadProgress! * 100).toInt().toString())
+                                : context.tr('theme_uploading_img'))
+                            : context.tr('theme_upload_web_bg'),
+                        gradient: const [Color(0xFFFF7EA8), Color(0xFFFF5E92)],
+                        onTap: _isUploadingThemeBackground
+                            ? () {}
+                            : _pickThemeBackgroundImage,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildGradientBtn(
+                        label: context.tr('theme_remove_bg'),
+                        gradient: const [Color(0xFFFF5B6A), Color(0xFFFF4343)],
+                        onTap: _clearThemeBackgroundImage,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // 2. Khung & Kích thước
           _ThemeSectionCard(
             icon: Icons.aspect_ratio_rounded,
             title: context.tr('theme_frame_size'),
@@ -490,14 +547,13 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                             
                             _draftCountdownSizePx = value;
                             
-                            // Debounce live preview để kéo thanh trượt không bị khựng
-                            _uiPrefsDebounceTimer?.cancel();
-                            if (mounted) {
-                              _uiPrefsDebounceTimer = Timer(const Duration(milliseconds: 150), () {
-                                if (!mounted) return;
-                                _applyThemeDraftToUiPrefsPreview();
-                              });
-                            }
+                            // Chỉ cập nhật nhẹ preview card trong settings, không gọi _applyThemeDraftToUiPrefsPreview
+                            // để tránh lag do rebuild toàn app khi kéo slider.
+                            _panelRebuildNotifier.value++;
+                          },
+                          onChangeEnd: (value) {
+                            // Khi thả tay ra mới cập nhật UiPrefs (sync) và đẩy lên mảng draft.
+                            _updateThemeDraft(() => _draftCountdownSizePx = value, syncPreview: true);
                           },
                         ),
                         Align(
@@ -539,14 +595,69 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     final locked = s.$3 &&
                         !_isVipActive &&
                         !selection.hasCountdownAdPass;
-                    final label = locked ? '${s.$1}${context.tr('theme_countdown_label_ad')}' : s.$1;
-                    return (locked ? '${s.$1}${context.tr('theme_countdown_label_locked')}' : label, s.$2);
+                    final label = locked ? '${s.$1} ${context.tr('theme_countdown_label_ad')}' : s.$1;
+                    return (label, s.$2);
                   }).toList(),
                   onChanged: (value) => _handleCountdownStyleChange(value),
+                ),
+                const SizedBox(height: 10),
+                _buildCountdownStyleStrip(selection.countdownStyleKey, selection.hasCountdownAdPass),
+              ],
+            ),
+          ),
+          // 3. Font chữ & Ngôn ngữ
+          _ThemeSectionCard(
+            icon: Icons.font_download_rounded,
+            title: '${context.tr('font_label')} & ${context.tr('lang_label')}',
+            description: context.tr('theme_font_lang_desc'),
+            themeColor: const Color(0xFF00C8FF),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLabel(context.tr('lang_label')),
+                _buildThemeDropdownField(
+                  value: selection.languageKey,
+                  options: config.languages,
+                  onChanged: (value) {
+                    // Tránh khựng UI: Đợi menu dropdown đóng mượt mà xong (300ms) rồi mới load tệp JSON ngôn ngữ nặng
+                    Future.delayed(const Duration(milliseconds: 300), () async {
+                      await L10nService().setLocale(value);
+                      if (!mounted) return;
+                      setState(() {});
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildLabel(context.tr('font_label')),
+                _buildThemeFontDropdownField(
+                  value: selection.fontKey,
+                  fonts: config.fonts,
+                  onChanged: (value) =>
+                      _updateThemeDraft(() => _draftFontKey = value),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+                  ),
+                  child: Text(
+                    context.tr('theme_font_desc'),
+                    style: _themeFontStyle(
+                      selection.fontKey,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFFD81B60),
+                      height: 1.45,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
+          // 4. Thêm kỷ niệm
           _ThemeSectionCard(
             icon: Icons.calendar_month_rounded,
             title: context.tr('theme_add_new_memory'),
@@ -692,142 +803,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               ],
             ),
           ),
-          _ThemeSectionCard(
-            icon: Icons.font_download_rounded,
-            title: '${context.tr('font_label')} & ${context.tr('lang_label')}',
-            description: context.tr('theme_font_lang_desc'),
-            themeColor: const Color(0xFF00C8FF),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildLabel(context.tr('lang_label')),
-                _buildThemeDropdownField(
-                  value: selection.languageKey,
-                  options: config.languages,
-                  onChanged: (value) {
-                    // Tránh khựng UI: Đợi menu dropdown đóng mượt mà xong (300ms) rồi mới load tệp JSON ngôn ngữ nặng
-                    Future.delayed(const Duration(milliseconds: 300), () async {
-                      await L10nService().setLocale(value);
-                      if (!mounted) return;
-                      setState(() {});
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                _buildLabel(context.tr('font_label')),
-                _buildThemeFontDropdownField(
-                  value: selection.fontKey,
-                  fonts: config.fonts,
-                  onChanged: (value) =>
-                      _updateThemeDraft(() => _draftFontKey = value),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
-                  ),
-                  child: Text(
-                    context.tr('theme_font_desc'),
-                    style: _themeFontStyle(
-                      selection.fontKey,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFFD81B60),
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _ThemeSectionCard(
-            icon: Icons.palette_rounded,
-            title: context.tr('theme_bg_effect_title'),
-            description: context.tr('theme_bg_effect_desc'),
-            themeColor: const Color(0xFF9C27B0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildLabel(context.tr('theme_falling_effect')),
-                const SizedBox(height: 6),
-                _buildEffectPresetStrip(selection.effectKey),
-                const SizedBox(height: 12),
-                _buildLabel(context.tr('theme_color_theme')),
-                const SizedBox(height: 6),
-                selection.previewBackground.isNotEmpty
-                    ? Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 16,
-                          horizontal: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF2F2F2),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: const Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            context.tr('theme_bg_in_use'),
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF757575),
-                            ),
-                          ),
-                        ),
-                      )
-                    : _buildThemePaletteStrip(selection.themeKey),
-                const SizedBox(height: 12),
-                _buildLabel(context.tr('theme_home_block_tone')),
-                _buildThemeDropdownField(
-                  value: selection.homeToneKey,
-                  options: config.homeTones,
-                  onChanged: (value) =>
-                      _updateThemeDraft(() => _draftHomeBlockToneKey = value),
-                ),
-                const SizedBox(height: 14),
-                _buildThemeHomeLikePreviewCard(
-                  selection.previewBackground,
-                  themeKey: selection.themeKey,
-                  effectKey: selection.effectKey,
-                  graphicsKey: selection.graphicsKey,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildGradientBtn(
-                        label: _isUploadingThemeBackground
-                            ? (_themeUploadProgress != null 
-                                ? context.tr('theme_uploading_pct').replaceAll('{pct}', (_themeUploadProgress! * 100).toInt().toString())
-                                : context.tr('theme_uploading_img'))
-                            : context.tr('theme_upload_web_bg'),
-                        gradient: const [Color(0xFFFF7EA8), Color(0xFFFF5E92)],
-                        onTap: _isUploadingThemeBackground
-                            ? () {}
-                            : _pickThemeBackgroundImage,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildGradientBtn(
-                        label: context.tr('theme_remove_bg'),
-                        gradient: const [Color(0xFFFF5B6A), Color(0xFFFF4343)],
-                        onTap: _clearThemeBackgroundImage,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          // 5. Hiệu năng & Quyền hạn — ít dùng nhất, để cuối
           _ThemeSectionCard(
             icon: Icons.settings_suggest_rounded,
             title: context.tr('theme_perf_title'),
@@ -836,243 +812,165 @@ extension _SettingsTabThemeSection on _SettingsTabState {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFFFFF),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFF3D9E6)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.tr('home_trongsut_38b9d1'),
-                              style: SLTheme.quicksand(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFFD81B60),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              context.tr('home_lmcckhihin_df481f'),
-                              style: SLTheme.quicksand(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF777777),
-                                height: 1.45,
-                              ),
-                            ),
-                          ],
+                // Trong suốt
+                _SettingsToggleRow(
+                  icon: Icons.blur_on_rounded,
+                  iconColor: const Color(0xFFD81B60),
+                  label: context.tr('home_trongsut_38b9d1'),
+                  useCheckbox: true,
+                  checkValue: _draftTransparentMode ?? ui.transparentMode,
+                  onCheckChanged: (v) => _updateThemeDraft(
+                      () => _draftTransparentMode = v ?? false),
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                // Chế độ đơn giản hóa
+                _SettingsToggleRow(
+                  icon: Icons.bolt_rounded,
+                  iconColor: const Color(0xFFFF9800),
+                  label: context.tr('theme_lite_mode_title'),
+                  switchValue: _draftLiteMode,
+                  onSwitchChanged: (v) => _updateThemeDraft(
+                      () => _draftLiteMode = v),
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                const SizedBox(height: 12),
+                // Chất lượng đồ họa
+                Row(
+                  children: [
+                    const Icon(Icons.tune_rounded, size: 16, color: Color(0xFF64748B)),
+                    const SizedBox(width: 6),
+                    Text(
+                      context.tr('theme_graphics_quality'),
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF334155),
+                      ),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => _updateThemeDraft(
+                        () => _draftGraphicsQualityKey = 'auto',
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: (_draftGraphicsQualityKey ?? ui.graphicsQualityKey) == 'auto'
+                              ? const Color(0xFF2877FF)
+                              : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          context.tr('theme_graphics_auto'),
+                          style: SLTheme.quicksand(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: (_draftGraphicsQualityKey ?? ui.graphicsQualityKey) == 'auto'
+                                ? Colors.white
+                                : const Color(0xFF64748B),
+                          ),
                         ),
                       ),
-                      Checkbox(
-                        value: _draftTransparentMode ?? ui.transparentMode,
-                        activeColor: const Color(0xFFD81B60),
-                        onChanged: (value) => _updateThemeDraft(
-                            () => _draftTransparentMode = value ?? false),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.tr('theme_lite_mode_title'),
-                              style: SLTheme.quicksand(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFFD81B60),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              context.tr('theme_lite_mode_desc'),
-                              style: SLTheme.quicksand(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF777777),
-                                height: 1.45,
-                              ),
-                            ),
-                          ],
+                const SizedBox(height: 8),
+                Row(
+                  children: graphicsOptions.map((item) {
+                    final selected = selection.graphicsKey == item.$2;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => _updateThemeDraft(
+                          () => _draftGraphicsQualityKey = item.$2,
                         ),
-                      ),
-                      Switch.adaptive(
-                        value: _draftLiteMode,
-                        activeThumbColor: const Color(0xFFD81B60),
-                        onChanged: (value) => _updateThemeDraft(
-                            () => _draftLiteMode = value),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            context.tr('theme_graphics_quality'),
+                        child: Container(
+                          margin: EdgeInsets.only(
+                            right: item == graphicsOptions.last ? 0 : 8,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? const Color(0xFFFF4D8D)
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            item.$1,
+                            textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFFFF4D73),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: selected ? Colors.white : const Color(0xFF64748B),
                             ),
                           ),
-                          const Spacer(),
-                          GestureDetector(
-                            onTap: () => _updateThemeDraft(
-                              () => _draftGraphicsQualityKey = 'auto',
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                gradient: (_draftGraphicsQualityKey ??
-                                            ui.graphicsQualityKey) ==
-                                        'auto'
-                                    ? const LinearGradient(
-                                        colors: [
-                                          Color(0xFF4EA3FF),
-                                          Color(0xFF2877FF)
-                                        ],
-                                      )
-                                    : const LinearGradient(
-                                        colors: [
-                                          Color(0xFFE0E0E0),
-                                          Color(0xFFBDBDBD)
-                                        ],
-                                      ),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                context.tr('theme_graphics_auto'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        context.tr('theme_graphics_desc'),
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF777777),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: graphicsOptions.map((item) {
-                          final selected = selection.graphicsKey == item.$2;
-                          return Expanded(
-                            child: GestureDetector(
-                              onTap: () => _updateThemeDraft(
-                                () => _draftGraphicsQualityKey = item.$2,
-                              ),
-                              child: Container(
-                                margin: EdgeInsets.only(
-                                  right: item == graphicsOptions.last ? 0 : 8,
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: selected
-                                      ? const Color(0xFFFF4D8D)
-                                      : const Color(0xFFF8F8F8),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Text(
-                                  item.$1,
-                                  textAlign: TextAlign.center,
-                                  style: SLTheme.quicksand(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w900,
-                                    color: selected
-                                        ? Colors.white
-                                        : const Color(0xFF666666),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                // Trung tâm ủy quyền — compact inline row
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
                     children: [
-                      Text(
-                        context.tr('theme_permission_center'),
-                        style: SLTheme.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF0277BD),
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0277BD).withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.admin_panel_settings_rounded,
+                          size: 16,
+                          color: Color(0xFF0277BD),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.tr('theme_permission_desc'),
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF546E7A),
-                          height: 1.45,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          context.tr('theme_permission_center'),
+                          style: SLTheme.quicksand(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF334155),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      _buildGradientBtn(
-                        label: _isGrantingPermissions
-                            ? context.tr('home_angxinquyn_8dc1d1')
-                            : Platform.isIOS
+                      SizedBox(
+                        height: 34,
+                        child: ElevatedButton.icon(
+                          onPressed: _isGrantingPermissions ? null : _requestAllPermissions,
+                          icon: _isGrantingPermissions
+                              ? const SizedBox(
+                                  width: 13,
+                                  height: 13,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.verified_user_rounded, size: 15),
+                          label: Text(
+                            Platform.isIOS
                                 ? context.tr('home_thitlpquyn_942e97')
                                 : context.tr('theme_grant_all_perms'),
-                        gradient: const [Color(0xFF57C96C), Color(0xFF78D884)],
-                        onTap: _isGrantingPermissions
-                            ? () {}
-                            : _requestAllPermissions,
+                            style: SLTheme.quicksand(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF27AE60),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
                       ),
                     ],
                   ),

@@ -102,6 +102,8 @@ import '../../../widgets/soul_locket_brand_mark.dart';
 import '../../visitors/visitor_profile_screen.dart';
 import 'settings/account/identity_panel.dart';
 import 'settings/controllers/settings_identity_controller.dart';
+import 'settings/controllers/settings_notifications_controller.dart';
+import 'settings/controllers/settings_widget_controller.dart';
 import 'settings/relationship/relationship_actions.dart';
 
 part 'settings/settings_shared_widgets.dart';
@@ -306,10 +308,10 @@ String _widgetPreviewSizeLabel(String key) {
 String _widgetStyleLabel(String key) {
   switch (key) {
     case 'countdown':
-      return 'Dem ngay';
+      return 'Đếm ngày';
     case 'classic':
     default:
-      return 'Mac dinh';
+      return 'Mặc định';
   }
 }
 
@@ -346,51 +348,53 @@ class _SettingsBackgroundLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [_kSettingsBgTop, _kSettingsBgMid, _kSettingsBgBottom],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+    return RepaintBoundary(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [_kSettingsBgTop, _kSettingsBgMid, _kSettingsBgBottom],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
-        ),
-        Positioned(
-          top: -76,
-          left: -42,
-          child: IgnorePointer(
-            child: Container(
-              width: 210,
-              height: 210,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [Color(0x52FFFFFF), Color(0x00FFFFFF)],
+          Positioned(
+            top: -76,
+            left: -42,
+            child: IgnorePointer(
+              child: Container(
+                width: 210,
+                height: 210,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [Color(0x52FFFFFF), Color(0x00FFFFFF)],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          right: -88,
-          bottom: 92,
-          child: IgnorePointer(
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [Color(0x14FF78A8), Color(0x00FF78A8)],
+          Positioned(
+            right: -88,
+            bottom: 92,
+            child: IgnorePointer(
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [Color(0x14FF78A8), Color(0x00FF78A8)],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -416,9 +420,6 @@ class SettingsTab extends StatefulWidget {
 class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   static const int _emailVerifyResendCooldownSeconds = 5 * 60;
   static const int _emailVerifyPendingWindowSeconds = 30 * 60;
-  static const Duration _settingsSyncBannerDelay = Duration(milliseconds: 420);
-  static const Duration _settingsSyncBannerMinVisible =
-      Duration(milliseconds: 900);
   static const String countdownModePinnedLaunchPrefsKey =
       'il_countdown_mode_pinned_launch_v1';
   static const String _emailVerifyPendingEmailKey =
@@ -441,6 +442,10 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   final ScheduleNotifService _scheduleNotifService = ScheduleNotifService();
   final SettingsIdentityController _settingsIdentityController =
       const SettingsIdentityController();
+  final SettingsNotificationsController _settingsNotificationsController =
+      const SettingsNotificationsController();
+  final SettingsWidgetController _settingsWidgetController =
+      const SettingsWidgetController();
   final SettingsRelationshipWatcher _relationshipWatcher =
       SettingsRelationshipWatcher();
 
@@ -461,7 +466,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isCoupleConnected = false;
   bool _isLoading = false;
   bool _isBootstrappingSettings = true;
-  bool _showSettingsSyncBanner = false;
   bool _isCheckingBackupStatus = false;
   bool _isManualBackupSyncing = false;
   bool _isRestoringSettingsBackup = false;
@@ -563,8 +567,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool? _draftTransparentMode;
   bool _draftLiteMode = false;
   Timer? _widgetDiaryPreviewTimer;
-  Timer? _settingsSyncBannerDelayTimer;
-  Timer? _settingsSyncBannerHideTimer;
   final ValueNotifier<int> _widgetPreviewTickNotifier = ValueNotifier<int>(0);
   double? _localCountdownSize;
   final List<String> _securityQuestions = [
@@ -645,7 +647,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _startEmailVerifyTimer();
-    _armSettingsSyncBanner();
+    // ⚡ Khởi tạo activeRoleKey ngay từ local để tránh nhảy lộn khi fetch Firebase
+    SharedPreferences.getInstance().then((prefs) {
+      if (!mounted) return;
+      final localRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
+      setState(() => _activeRoleKey = localRole);
+    });
     _scheduleSettingsBootstrap();
   }
 
@@ -800,8 +807,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     _uiPrefsDebounceTimer?.cancel();
     _stopWidgetPreviewTicker();
     _emailVerifyTimer?.cancel();
-    _settingsSyncBannerDelayTimer?.cancel();
-    _settingsSyncBannerHideTimer?.cancel();
 
     // ⚡ Save any pending theme settings before dispose
     _saveThemeSettings(silent: true).ignore();

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'offline_cache_service.dart';
+import 'secure_storage_service.dart';
 
 class SettingsBackupStatus {
   final bool hasCloudBackup;
@@ -376,12 +377,16 @@ class SettingsSyncService {
   }
 
   Future<String?> _resolveHouseId(SharedPreferences prefs, String uid) async {
-    final cached = prefs.getString('il_house_id')?.trim() ?? '';
-    final cachedAuthUid = prefs.getString('il_auth_uid')?.trim() ?? '';
+    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyHouseId, prefs.getString('il_house_id'));
+    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyAuthUid, prefs.getString('il_auth_uid'));
+    final cached = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
+    final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
     if (cached.isNotEmpty) {
       if (cachedAuthUid == uid) {
         return cached;
       }
+      await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
+      await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       await prefs.remove('il_house_id');
       await prefs.remove('il_role');
     }
@@ -390,8 +395,10 @@ class SettingsSyncService {
       final snap = await _db.child('users/$uid/houseId').get();
       final houseId = snap.value?.toString().trim() ?? '';
       if (houseId.isNotEmpty) {
-        await prefs.setString('il_house_id', houseId);
-        await prefs.setString('il_auth_uid', uid);
+        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
+        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+        await prefs.remove('il_house_id');
+        await prefs.remove('il_auth_uid');
         return houseId;
       }
     } catch (_) {}

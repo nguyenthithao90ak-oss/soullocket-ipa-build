@@ -15,7 +15,9 @@ class SecureStorageService {
   static const String keyUserPin = 'il_custom_lock';
   static const String keyPinSalt = 'il_custom_lock_salt';
   static const String keyAuthUid = 'il_auth_uid';
-
+  static const String keyHouseId = 'il_house_id';
+  static const String keyRole = 'il_role';
+  static const String keyRelMode = 'il_rel_mode';
   Future<void> write(String key, String value) async {
     await _storage.write(key: key, value: value);
   }

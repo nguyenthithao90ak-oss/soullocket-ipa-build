@@ -10,8 +10,11 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'consent_service.dart';
 import 'security_service.dart';
+import 'auth_service.dart';
+import 'core/cloud_functions_helper.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'secure_storage_service.dart';
 
 class DeviceTrustState {
   static const Duration autoTrustDelay = Duration(hours: 12);
@@ -559,14 +562,18 @@ class DeviceManagerService {
     try {
       final deviceInfo = await _getDeviceInfo();
       final ipPayload = await _resolveDeviceIpPayload();
-      final callable = _functions.httpsCallable('registerCurrentDeviceSecure');
-      await callable.call({
-        'deviceId': deviceInfo['deviceId'],
-        'model': deviceInfo['model'],
-        'os': deviceInfo['os'],
-        'platform': deviceInfo['platform'],
-        ...ipPayload,
-      });
+      await CloudFunctionsHelper.callSecure<dynamic>(
+        'registerCurrentDeviceSecure',
+        payload: {
+          'deviceId': deviceInfo['deviceId'],
+          'model': deviceInfo['model'],
+          'os': deviceInfo['os'],
+          'platform': deviceInfo['platform'],
+          ...ipPayload,
+        },
+        timeout: const Duration(seconds: 15),
+        throwOriginalException: true,
+      );
       return true;
     } on FirebaseFunctionsException catch (e) {
       debugPrint(
@@ -734,6 +741,10 @@ class DeviceManagerService {
   Future<void> _forceSignOutWithLocalSessionClear() async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
+    await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
+    await SecureStorageService.instance.delete(SecureStorageService.keyAuthUid);
+    await SecureStorageService.instance.delete(SecureStorageService.keyRole);
+    await SecureStorageService.instance.delete(SecureStorageService.keyRelMode);
     await prefs.remove(_prefHouseId);
     await prefs.remove(_prefAuthUid);
     await prefs.remove('il_role');
@@ -830,7 +841,7 @@ class DeviceManagerService {
     final houseSnap = await _db
         .ref('users/$uid/houseId')
         .get()
-        .timeout(const Duration(seconds: 5));
+        .timeout(const Duration(seconds: 10));
     final houseId = houseSnap.value?.toString().trim();
     if (houseId == null || houseId.isEmpty) {
       return functionDevices ?? [];
@@ -839,7 +850,7 @@ class DeviceManagerService {
     final snap = await _db
         .ref('houses/$houseId/security/devices')
         .get()
-        .timeout(const Duration(seconds: 6));
+        .timeout(const Duration(seconds: 10));
     if (!snap.exists) {
       return functionDevices ?? [];
     }
@@ -897,10 +908,12 @@ class DeviceManagerService {
   Future<List<Map<String, dynamic>>?> _loadDevicesFromFunction() async {
     try {
       final currentDeviceId = await getCurrentDeviceIdentifier();
-      final callable = _functions.httpsCallable('getDeviceListSecure');
-      final result = await callable
-          .call({'currentDeviceId': currentDeviceId})
-          .timeout(const Duration(seconds: 6));
+      final result = await CloudFunctionsHelper.callSecure<dynamic>(
+        'getDeviceListSecure',
+        payload: {'currentDeviceId': currentDeviceId},
+        timeout: const Duration(seconds: 6),
+        throwOriginalException: true,
+      );
       final rawDevices = result.data is Map ? result.data['devices'] : null;
       if (rawDevices is! List) {
         return const [];
@@ -1020,13 +1033,18 @@ class DeviceManagerService {
 
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final cachedHouseId = prefs.getString(_prefHouseId)?.trim() ?? '';
-    final cachedAuthUid = prefs.getString(_prefAuthUid)?.trim() ?? '';
+    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyHouseId, prefs.getString(_prefHouseId));
+    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyAuthUid, prefs.getString(_prefAuthUid));
+    final cachedHouseId = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
+    final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
     if (cachedHouseId.isNotEmpty) {
       if (cachedAuthUid == uid) {
         _rememberHouseId(cachedHouseId, uid: uid);
         return cachedHouseId;
       }
+      await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
+      await SecureStorageService.instance.delete(SecureStorageService.keyAuthUid);
+      await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       await prefs.remove(_prefHouseId);
       await prefs.remove(_prefAuthUid);
       await prefs.remove('il_role');
@@ -1064,8 +1082,10 @@ class DeviceManagerService {
     }
 
     _rememberHouseId(houseId, uid: uid);
-    await prefs.setString(_prefHouseId, houseId);
-    await prefs.setString(_prefAuthUid, uid);
+    await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
+    await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+    await prefs.remove(_prefHouseId);
+    await prefs.remove(_prefAuthUid);
     return houseId;
   }
 

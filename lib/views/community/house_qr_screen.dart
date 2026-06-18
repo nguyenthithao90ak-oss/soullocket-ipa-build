@@ -1048,7 +1048,7 @@ class _HouseQRScreenState extends State<HouseQRScreen>
                 TextField(
                   controller: _lookupController,
                   textInputAction: TextInputAction.search,
-                  onChanged: (_) => setState(() {}),
+                  onChanged: (_) => setState(() { /* trigger rebuild for clear button visibility */ }),
                   onSubmitted: (_) => unawaited(_searchHouseManually()),
                   decoration: InputDecoration(
                     hintText: context.tr('comm_vdabc123xy_310a2c'),

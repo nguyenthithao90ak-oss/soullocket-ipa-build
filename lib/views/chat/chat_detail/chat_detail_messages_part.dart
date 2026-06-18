@@ -142,7 +142,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
       ..addAll(messages.map((message) => message.id));
     _oldestMessageKey = _messages.isEmpty ? null : _messages.last.id;
     _newestMessageKey = _messages.isEmpty ? null : _messages.first.id;
-    setState(() {});
+    // ⚡ Không cần setState rỗng — widget dùng StreamBuilder hoặc sẽ rebuild
+    // khi listener _listenForNewMessages kích hoạt
   }
 
   void _listenForNewMessages() {

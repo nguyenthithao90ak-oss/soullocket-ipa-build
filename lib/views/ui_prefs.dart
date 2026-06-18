@@ -17,6 +17,7 @@ class UiPrefsState {
   final String countdownStyleKey;
   final String countdownTopLabel;
   final String countdownBottomLabel;
+  final String countdownTextColor;
   final String fontKey;
   final String homeBlockToneKey;
   final bool liteMode;
@@ -43,6 +44,7 @@ class UiPrefsState {
     required this.countdownStyleKey,
     required this.countdownTopLabel,
     required this.countdownBottomLabel,
+    required this.countdownTextColor,
     required this.fontKey,
     required this.homeBlockToneKey,
     required this.liteMode,
@@ -70,6 +72,7 @@ class UiPrefsState {
     String? countdownStyleKey,
     String? countdownTopLabel,
     String? countdownBottomLabel,
+    String? countdownTextColor,
     String? fontKey,
     String? homeBlockToneKey,
     bool? liteMode,
@@ -96,6 +99,7 @@ class UiPrefsState {
       countdownStyleKey: countdownStyleKey ?? this.countdownStyleKey,
       countdownTopLabel: countdownTopLabel ?? this.countdownTopLabel,
       countdownBottomLabel: countdownBottomLabel ?? this.countdownBottomLabel,
+      countdownTextColor: countdownTextColor ?? this.countdownTextColor,
       fontKey: fontKey ?? this.fontKey,
       homeBlockToneKey: homeBlockToneKey ?? this.homeBlockToneKey,
       liteMode: liteMode ?? this.liteMode,
@@ -130,6 +134,7 @@ class UiPrefsState {
     countdownStyleKey: 'glass',
     countdownTopLabel: '',
     countdownBottomLabel: '',
+    countdownTextColor: '',
     fontKey: 'quicksand',
     homeBlockToneKey: 'theme',
     liteMode: false,
@@ -176,6 +181,7 @@ class UiPrefs {
   static const _kCountdownStyleKey = 'il_countdown_style';
   static const _kCountdownTopLabelKey = 'il_countdown_top_label';
   static const _kCountdownBottomLabelKey = 'il_countdown_bottom_label';
+  static const _kCountdownTextColorKey = 'il_countdown_text_color';
   static const _kFontKey = 'il_font_key';
   static const _kHomeBlockToneKey = 'il_home_block_tone';
   static const _kLiteModeKey = 'il_lite_mode';
@@ -297,6 +303,8 @@ class UiPrefs {
         (prefs.getString(_kCountdownTopLabelKey) ?? '').trim();
     final countdownBottomLabel =
         (prefs.getString(_kCountdownBottomLabelKey) ?? '').trim();
+    final countdownTextColor =
+        (prefs.getString(_kCountdownTextColorKey) ?? '').trim();
     final fontKey =
         (prefs.getString(_kFontKey) ?? UiPrefsState.defaults.fontKey).trim();
     final homeBlockToneKey = (prefs.getString(_kHomeBlockToneKey) ??
@@ -326,6 +334,7 @@ class UiPrefs {
         countdownStyleKey: countdownStyleKey,
         countdownTopLabel: countdownTopLabel,
         countdownBottomLabel: countdownBottomLabel,
+        countdownTextColor: countdownTextColor,
         fontKey: fontKey,
         homeBlockToneKey: homeBlockToneKey,
         liteMode:
@@ -412,6 +421,7 @@ class UiPrefs {
     await prefs.setString(_kCountdownTopLabelKey, normalized.countdownTopLabel);
     await prefs.setString(
         _kCountdownBottomLabelKey, normalized.countdownBottomLabel);
+    await prefs.setString(_kCountdownTextColorKey, normalized.countdownTextColor);
     await prefs.setString(_kFontKey, normalized.fontKey);
     await prefs.setString(_kHomeBlockToneKey, normalized.homeBlockToneKey);
     await prefs.setBool(_kLiteModeKey, normalized.liteMode);
@@ -463,6 +473,7 @@ class UiPrefs {
       countdownStyleKey: state.countdownStyleKey,
       countdownTopLabel: state.countdownTopLabel.trim(),
       countdownBottomLabel: state.countdownBottomLabel.trim(),
+      countdownTextColor: state.countdownTextColor.trim(),
       fontKey: state.fontKey,
       homeBlockToneKey: state.homeBlockToneKey,
       liteMode: state.liteMode,

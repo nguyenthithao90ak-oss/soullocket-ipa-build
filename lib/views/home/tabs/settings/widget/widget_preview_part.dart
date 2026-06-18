@@ -6,54 +6,71 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     switch (themeKey) {
       case 'dark':
         return (
-          colors: const [Color(0xFF121321), Color(0xFF24293F)],
+          colors: const [Color(0xFF0F172A), Color(0xFF1E1E38), Color(0xFF0F172A)],
           textColor: Colors.white,
           borderColor: const Color(0xFF475569),
           premium: false,
         );
       case 'white':
         return (
-          colors: const [Color(0xFFFFFFFF), Color(0xFFF5F7FB)],
+          colors: const [Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
           textColor: const Color(0xFF1F2937),
-          borderColor: const Color(0xFFE5E7EB),
+          borderColor: const Color(0xFFE2E8F0),
           premium: false,
         );
       case 'blue':
         return (
           colors: const [
-            Color(0xFFEAF4FF),
-            Color(0xFFCFE6FF),
+            Color(0xFFE0F2FE),
+            Color(0xFFBAE6FD),
+            Color(0xFF7DD3FC),
           ],
-          textColor: const Color(0xFF214A84),
-          borderColor: const Color(0xFF8FC2FF),
+          textColor: const Color(0xFF0F3D7A),
+          borderColor: const Color(0xFF93C5FD),
           premium: false,
         );
       case 'orange':
         return (
-          colors: const [Color(0xFFFFEDD5), Color(0xFFFEC89A)],
-          textColor: const Color(0xFF9A3412),
+          colors: const [
+            Color(0xFFFEF3C7),
+            Color(0xFFFDBA74),
+            Color(0xFFF97316),
+          ],
+          textColor: const Color(0xFF7C2D12),
           borderColor: const Color(0xFFFDBA74),
           premium: false,
         );
       case 'purple':
         return (
-          colors: const [Color(0xFFF3E8FF), Color(0xFFD8B4FE)],
+          colors: const [
+            Color(0xFFF3E8FF),
+            Color(0xFFE9D5FF),
+            Color(0xFFD8B4FE),
+          ],
           textColor: const Color(0xFF5B217A),
           borderColor: const Color(0xFFC084FC),
           premium: false,
         );
       case 'green':
         return (
-          colors: const [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
-          textColor: const Color(0xFF166534),
+          colors: const [
+            Color(0xFFECFDF5),
+            Color(0xFFA7F3D0),
+            Color(0xFF6EE7B7),
+          ],
+          textColor: const Color(0xFF065F46),
           borderColor: const Color(0xFF86EFAC),
           premium: false,
         );
       case 'red':
         return (
-          colors: const [Color(0xFFFFE4E6), Color(0xFFFDA4AF)],
+          colors: const [
+            Color(0xFFFFF5F5),
+            Color(0xFFFED7D7),
+            Color(0xFFFB7185),
+          ],
           textColor: const Color(0xFF9F1239),
-          borderColor: const Color(0xFFFB7185),
+          borderColor: const Color(0xFFFCA5A5),
           premium: false,
         );
       case 'premium':
@@ -71,9 +88,13 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       case 'pink':
       default:
         return (
-          colors: const [Color(0xFFFFEEF5), Color(0xFFFBCFE8)],
+          colors: const [
+            Color(0xFFFFF0F5),
+            Color(0xFFFFD3E0),
+            Color(0xFFFFB7CE),
+          ],
           textColor: const Color(0xFF831843),
-          borderColor: const Color(0xFFF9A8D4),
+          borderColor: const Color(0xFFFBCFE8),
           premium: false,
         );
     }
@@ -679,6 +700,106 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     );
   }
 
+  Widget _buildWidgetPreviewDecorations(
+    String themeKey,
+    Color accentColor,
+    double width,
+    double height,
+  ) {
+    if (themeKey == 'premium') return const SizedBox.shrink();
+
+    final isDark = themeKey == 'dark';
+    
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Stack(
+          children: [
+            // Top Right glow circle
+            if (!isDark && themeKey != 'white')
+              Positioned(
+                top: -height * 0.2,
+                right: -width * 0.1,
+                child: Container(
+                  width: width * 0.44,
+                  height: width * 0.44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        accentColor.withValues(alpha: 0.15),
+                        accentColor.withValues(alpha: 0.04),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            // Bottom Left glow circle
+            if (!isDark && themeKey != 'white')
+              Positioned(
+                bottom: -height * 0.22,
+                left: -width * 0.12,
+                child: Container(
+                  width: width * 0.36,
+                  height: width * 0.36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        Colors.white.withValues(alpha: 0.4),
+                        Colors.white.withValues(alpha: 0.1),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            // Dark theme stars
+            if (isDark) ...[
+              Positioned(
+                top: height * 0.15,
+                right: width * 0.15,
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 10,
+                  color: Colors.white.withValues(alpha: 0.2),
+                ),
+              ),
+              Positioned(
+                bottom: height * 0.2,
+                left: width * 0.12,
+                child: Icon(
+                  Icons.star_rounded,
+                  size: 8,
+                  color: Colors.white.withValues(alpha: 0.15),
+                ),
+              ),
+            ],
+            // White theme soft blue blob
+            if (themeKey == 'white')
+              Positioned(
+                top: -height * 0.15,
+                right: -width * 0.05,
+                child: Container(
+                  width: width * 0.38,
+                  height: width * 0.38,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFFE0F2FE).withValues(alpha: 0.5),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ignore: unused_element
   Widget _buildWidgetDayLabel(
     Color textColor,
@@ -808,8 +929,10 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                         _widgetPreviewCardGradient(themeKey, theme.colors),
                     borderRadius: BorderRadius.circular(26),
                     border: Border.all(
-                      color: theme.borderColor.withValues(alpha: 0.95),
-                      width: 1.4,
+                      color: themeKey == 'white'
+                          ? const Color(0xFFE2E8F0)
+                          : theme.borderColor.withValues(alpha: 0.35),
+                      width: 1.8,
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -827,6 +950,13 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                             cardWidth,
                             countdownHeight,
                           ),
+                        )
+                      else
+                        _buildWidgetPreviewDecorations(
+                          themeKey,
+                          accentColor,
+                          cardWidth,
+                          countdownHeight,
                         ),
                       Padding(
                         padding: EdgeInsets.fromLTRB(
@@ -878,7 +1008,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'ngay',
+                              'ngày',
                               style: SLTheme.quicksand(
                                 color: daysColor.withValues(alpha: 0.78),
                                 fontSize: isCompact ? 13 : 14,
@@ -915,8 +1045,10 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                   gradient: _widgetPreviewCardGradient(themeKey, theme.colors),
                   borderRadius: BorderRadius.circular(26),
                   border: Border.all(
-                    color: theme.borderColor.withValues(alpha: 0.95),
-                    width: 1.4,
+                    color: themeKey == 'white'
+                        ? const Color(0xFFE2E8F0)
+                        : theme.borderColor.withValues(alpha: 0.35),
+                    width: 1.8,
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -934,6 +1066,13 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                           cardWidth,
                           cardHeight,
                         ),
+                      )
+                    else
+                      _buildWidgetPreviewDecorations(
+                        themeKey,
+                        accentColor,
+                        cardWidth,
+                        cardHeight,
                       ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
@@ -1037,24 +1176,31 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          padding: const EdgeInsets.all(3),
+          padding: const EdgeInsets.all(3.5),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.18),
+            color: Colors.white.withValues(alpha: 0.20),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
           ),
-          child: CircleAvatar(
-            radius: radius,
-            backgroundColor: Colors.white.withValues(alpha: 0.78),
-            backgroundImage:
-                avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-            child: avatarUrl.isEmpty
-                ? Icon(
-                    Icons.person,
-                    color: textColor.withValues(alpha: 0.75),
-                    size: iconSize,
-                  )
-                : null,
+          child: Container(
+            padding: const EdgeInsets.all(1.5),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: CircleAvatar(
+              radius: radius - 1.5,
+              backgroundColor: Colors.white.withValues(alpha: 0.85),
+              backgroundImage:
+                  avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+              child: avatarUrl.isEmpty
+                  ? Icon(
+                      Icons.person,
+                      color: textColor.withValues(alpha: 0.75),
+                      size: iconSize * 0.9,
+                    )
+                  : null,
+            ),
           ),
         ),
         const SizedBox(height: 8),

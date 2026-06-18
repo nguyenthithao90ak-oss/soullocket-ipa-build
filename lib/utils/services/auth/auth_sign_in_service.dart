@@ -1363,10 +1363,17 @@ class AuthSignInService {
 
     final prefs = await _prefs;
     if (houseId != null && houseId.isNotEmpty) {
-      final role = await _houseContextService.detectAutoRole(houseId);
       await prefs.setString('il_house_id', houseId);
       await prefs.setString('il_auth_uid', user.uid);
-      await prefs.setString('il_role', role);
+      // Chỉ detect và ghi role khi role hiện tại chưa có hoặc không hợp lệ.
+      // Không bao giờ ghi đè role đã được user chọn/lưu hợp lệ.
+      final existingRole = prefs.getString('il_role');
+      if (existingRole != 'user1' && existingRole != 'user2') {
+        final role = await _houseContextService.detectAutoRole(houseId);
+        if (role == 'user1' || role == 'user2') {
+          await prefs.setString('il_role', role);
+        }
+      }
     } else {
       await prefs.remove('il_house_id');
       await prefs.remove('il_auth_uid');

@@ -312,7 +312,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:
-              const Text('Lần upload ảnh nền cài đặt trước đã bị gián đoạn.'),
+              Text(context.tr('upload_background_interrupted')),
           action: SnackBarAction(
             label: 'Thử lại',
             onPressed: () {
@@ -393,7 +393,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
             sourcePath: file.path,
             aspectRatio: _themeBackgroundAspectRatio,
             compressFormat: ImageCompressFormat.jpg,
-            compressQuality: 95,
+            compressQuality: 82,
             maxWidth: 1440,
             maxHeight: 3200,
             uiSettings: [
@@ -468,7 +468,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       _showToast(context.tr('theme_success_bg_saved'), success: true);
     } catch (e) {
       if (!mounted) return;
-      _showToast('Không thể tải ảnh nền: $e', success: false);
+      _showToast(context.tr('err_upload_background'), success: false);
     } finally {
       if (mounted) {
         setState(() {

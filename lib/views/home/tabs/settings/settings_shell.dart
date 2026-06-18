@@ -40,8 +40,7 @@ extension _SettingsTabShell on _SettingsTabState {
   Future<void> _togglePanel(String id) async {
     final sectionId = _sectionIdForPanel(id);
     if (_isBootstrappingSettings) {
-      _showToast('Đang tải dữ liệu cài đặt, vui lòng thử lại sau vài giây.',
-          success: false);
+      _showToast(context.tr('settings_loading_data'), success: false);
       return;
     }
     if (_shouldShowPendingDeviceGate(sectionId)) {
@@ -584,60 +583,7 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildSettingsSyncBanner() {
-    if (!_showSettingsSyncBanner) {
-      return const SizedBox(height: 8);
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(15, 10, 15, 6),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFD7E2EE)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Đang đồng bộ dữ liệu cài đặt...',
-              style: SLTheme.quicksand(
-                fontSize: 12.6,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF2D3A4B),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Màn hình đã mở ngay. Các mục chi tiết sẽ sẵn sàng sau khi tải xong.',
-              style: SLTheme.quicksand(
-                fontSize: 11.2,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF66758A),
-                height: 1.35,
-              ),
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: const LinearProgressIndicator(
-                minHeight: 5,
-                backgroundColor: Color(0xFFE6EDF5),
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF78A8)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const SizedBox(height: 8);
   }
 
   Widget _buildSettingsCategoryGrid() {
@@ -775,14 +721,14 @@ extension _SettingsTabShell on _SettingsTabState {
 
   Widget _buildStandalonePanelPage(String id) {
     final sectionId = _sectionIdForPanel(id);
-    return ValueListenableBuilder<int>(
-      valueListenable: _panelRebuildNotifier,
-      builder: (context, _, __) {
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            const _SettingsBackgroundLayer(),
-            Scaffold(
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const _SettingsBackgroundLayer(),
+        ValueListenableBuilder<int>(
+          valueListenable: _panelRebuildNotifier,
+          builder: (context, _, __) {
+            return Scaffold(
               backgroundColor: Colors.transparent,
               body: SafeArea(
                 child: LayoutBuilder(
@@ -811,10 +757,10 @@ extension _SettingsTabShell on _SettingsTabState {
                   },
                 ),
               ),
-            ),
-          ],
-        );
-      },
+            );
+          },
+        ),
+      ],
     );
   }
 

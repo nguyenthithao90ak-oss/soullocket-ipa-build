@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../utils/services/session/presence_status_formatter.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/role_utils.dart';
 
 class PresenceService {
   static const PresenceStatusFormatter _statusFormatter =
@@ -16,7 +17,7 @@ class PresenceService {
   PresenceService._internal();
 
   static const Duration onlineFreshness = Duration(minutes: 5);
-  static const Duration heartbeatInterval = Duration(seconds: 30);
+  static const Duration heartbeatInterval = Duration(seconds: 120);
   static const Duration staleSessionThreshold = Duration(minutes: 5);
   static const Duration justDisconnectedThreshold = Duration(minutes: 1);
 
@@ -29,9 +30,12 @@ class PresenceService {
   String? _activeRole;
   String? _activeDeviceType;
   String? _lastOnlineFingerprint;
+  DateTime? _lastDuplicateRoleWarnedAt;
+  DateTime? _lastMarkActiveAt;
   // ignore: cancel_subscriptions
   StreamSubscription? _connectedSub;
   Timer? _heartbeatTimer;
+  int _heartbeatCount = 0;
 
   String? get _currentUid => FirebaseAuth.instance.currentUser?.uid;
 
@@ -254,6 +258,7 @@ class PresenceService {
     _activeHouseId = houseId;
     _activeRole = role;
     _activeDeviceType = deviceType;
+    _heartbeatCount = 0;
 
     final nextFingerprint = '$houseId|$role|${deviceType ?? 'flutter'}';
     final canReuseCurrentSession = !targetChanged &&
@@ -316,29 +321,39 @@ class PresenceService {
         if (_activeDeviceType != null) 'device': _activeDeviceType,
       }).timeout(const Duration(seconds: 3));
 
-      // Prune stale sessions for BOTH roles to ensure accurate online statuses
-      final houseId = _activeHouseId ?? '';
-      if (houseId.isNotEmpty) {
-        await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user1'), nowMs: now);
-        await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user2'), nowMs: now);
-      }
+      final shouldRunFull = _heartbeatCount == 0 || _heartbeatCount % 3 == 0;
+      _heartbeatCount++;
 
-      await _refreshAggregatePresence(
-        _myPresenceRef!,
-        nowMs: now,
-        preferredDevice: _activeDeviceType,
-      );
+      if (shouldRunFull) {
+        // Prune stale sessions for BOTH roles to ensure accurate online statuses
+        final houseId = _activeHouseId ?? '';
+        if (houseId.isNotEmpty) {
+          await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user1'), nowMs: now);
+          await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user2'), nowMs: now);
+        }
 
-      // Also refresh the aggregate presence of the opposite role in case we pruned its sessions
-      if (houseId.isNotEmpty) {
-        final oppositeRole = _activeRole == 'user1' ? 'user2' : 'user1';
         await _refreshAggregatePresence(
-          _dbRef.child('houses/$houseId/presence/$oppositeRole'),
+          _myPresenceRef!,
           nowMs: now,
+          preferredDevice: _activeDeviceType,
         );
-      }
 
-      debugPrint('Presence heartbeat refreshed session $_mySessionId');
+        // Also refresh the aggregate presence of the opposite role in case we pruned its sessions
+        if (houseId.isNotEmpty) {
+          final oppositeRole = _activeRole == 'user1' ? 'user2' : 'user1';
+          await _refreshAggregatePresence(
+            _dbRef.child('houses/$houseId/presence/$oppositeRole'),
+            nowMs: now,
+          );
+        }
+
+        // Phát hiện trùng vai: kiểm tra có session khác (không phải của mình) cùng vai đang online không.
+        await _checkDuplicateRole(nowMs: now);
+
+        debugPrint('Presence full heartbeat refreshed session $_mySessionId');
+      } else {
+        debugPrint('Presence lightweight heartbeat refreshed session $_mySessionId (count: $_heartbeatCount)');
+      }
     } on TimeoutException {
       return;
     } catch (e) {
@@ -349,10 +364,58 @@ class PresenceService {
     }
   }
 
+  /// Kiểm tra có thiết bị khác cùng vai đang online không.
+  /// Nếu có và chưa cảnh báo trong 24h → set duplicateRoleNotifier = true.
+  Future<void> _checkDuplicateRole({required int nowMs}) async {
+    final houseId = _activeHouseId;
+    final role = _activeRole;
+    final sessionId = _mySessionId;
+    if (houseId == null || role == null || sessionId == null) return;
+
+    // Throttle 24h
+    final lastWarned = _lastDuplicateRoleWarnedAt;
+    if (lastWarned != null &&
+        DateTime.now().difference(lastWarned).inHours < 24) {
+      return;
+    }
+
+    try {
+      final snap = await _dbRef
+          .child('houses/$houseId/presence/$role/sessions')
+          .get()
+          .timeout(const Duration(seconds: 3));
+      final raw = snap.value;
+      if (raw is! Map) return;
+
+      var otherFreshCount = 0;
+      raw.forEach((key, value) {
+        if (key.toString() == sessionId) return; // bỏ qua session của mình
+        final ts = _readSessionTimestamp(value);
+        if (ts != null &&
+            nowMs - ts >= 0 &&
+            nowMs - ts <= onlineFreshness.inMilliseconds) {
+          otherFreshCount++;
+        }
+      });
+
+      if (otherFreshCount > 0) {
+        _lastDuplicateRoleWarnedAt = DateTime.now();
+        RoleUtils.duplicateRoleNotifier.value = true;
+        debugPrint('[Presence] Duplicate role detected: $otherFreshCount other session(s) on $role');
+      }
+    } catch (_) {}
+  }
+
   Future<void> markActiveNow() async {
     if (!_shouldBeOnline) {
       return;
     }
+    // Throttle: không gọi heartbeat quá 1 lần mỗi 60s
+    if (_lastMarkActiveAt != null &&
+        DateTime.now().difference(_lastMarkActiveAt!).inSeconds < 60) {
+      return;
+    }
+    _lastMarkActiveAt = DateTime.now();
     if (_myPresenceRef == null || _mySessionId == null) {
       await _doGoOnline();
       return;
@@ -501,6 +564,7 @@ class PresenceService {
         nowMs: now,
       );
 
+      _heartbeatCount = 0;
       debugPrint('Presence online for $_activeRole in $_activeHouseId');
     } on TimeoutException {
       return;

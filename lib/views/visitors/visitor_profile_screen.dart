@@ -291,7 +291,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         ratioY: _kProfileHeaderExpandedHeight,
       ),
       compressFormat: ImageCompressFormat.jpg,
-      compressQuality: 88,
+      compressQuality: 80,
       maxWidth: 1600,
       maxHeight: 1280,
       uiSettings: [
@@ -318,7 +318,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         sourcePath: file.path,
         aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
         compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 90,
+        compressQuality: 82,
         maxWidth: 1080,
         maxHeight: 1080,
         uiSettings: [

@@ -14,7 +14,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/device_manager_service.dart';
 import '../../utils/services/single_match_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'auth/auth_recovery_service.dart';
+import 'core/cloud_functions_helper.dart';
 import 'offline_cache_service.dart';
+import 'secure_storage_service.dart';
 
 class HouseCreationOtpRequiredException implements Exception {
   final String maskedEmail;
@@ -140,39 +143,21 @@ class HouseService {
     }
   }
 
-  Future<HttpsCallableResult<dynamic>> _callCreateHouseSecure(
-    Map<String, dynamic> payload,
-  ) async {
-    final callable = _functions.httpsCallable('createHouseSecure');
-    debugPrint('[HouseService] createHouseSecure start');
-    final response = await callable.call(payload).timeout(
-      const Duration(seconds: 12),
-      onTimeout: () {
-        throw TimeoutException('createHouseSecure timed out');
-      },
-    );
-    debugPrint('[HouseService] createHouseSecure success');
-    return response;
+  bool _isDebugAppCheckFailure(FirebaseFunctionsException error) {
+    final message = (error.message ?? '').trim().toLowerCase();
+    return message.contains('app check') ||
+        message.contains('appcheck') ||
+        message.contains('debug token') ||
+        message.contains('play integrity') ||
+        message.contains('attestation');
   }
 
   bool _shouldRetryCreateHouse(FirebaseFunctionsException error) {
     final code = error.code.trim().toLowerCase();
-    final message = (error.message ?? '').trim().toLowerCase();
     return code == 'unauthenticated' ||
         code == 'unavailable' ||
         code == 'deadline-exceeded' ||
-        code == 'failed-precondition' &&
-            (message.contains('app check') ||
-                message.contains('appcheck') ||
-                message.contains('debug token') ||
-                message.contains('play integrity') ||
-                message.contains('attestation')) ||
-        code == 'permission-denied' &&
-            (message.contains('app check') ||
-                message.contains('appcheck') ||
-                message.contains('debug token') ||
-                message.contains('play integrity') ||
-                message.contains('attestation'));
+        (_isDebugAppCheckFailure(error));
   }
 
   HouseCreationOtpRequiredException? _otpRequiredFromError(
@@ -220,7 +205,12 @@ class HouseService {
   ) async {
     await _refreshCallableSecurityContext(force: true);
     try {
-      return await _callCreateHouseSecure(payload);
+      return await CloudFunctionsHelper.callSecure<dynamic>(
+        'createHouseSecure',
+        payload: payload,
+        timeout: const Duration(seconds: 12),
+        throwOriginalException: true,
+      );
     } on FirebaseFunctionsException catch (error) {
       final otpRequired = _otpRequiredFromError(error);
       if (otpRequired != null) {
@@ -236,7 +226,12 @@ class HouseService {
       ).message}');
       await Future.delayed(const Duration(milliseconds: 700));
       await _refreshCallableSecurityContext(force: true);
-      return _callCreateHouseSecure(payload);
+      return await CloudFunctionsHelper.callSecure<dynamic>(
+        'createHouseSecure',
+        payload: payload,
+        timeout: const Duration(seconds: 12),
+        throwOriginalException: true,
+      );
     }
   }
 
@@ -300,9 +295,7 @@ class HouseService {
     }
 
     Future<String> createAdminDebugFallback() async {
-      final callable = _functions.httpsCallable('createHouseSecureAdminDebug');
-      debugPrint('[HouseService] createHouseSecureAdminDebug start');
-      final response = await callable.call(<String, dynamic>{
+      final payload = <String, dynamic>{
         'email': normalizedEmail,
         'houseName': rawHouseName,
         'nameU1': normalizedNameU1,
@@ -314,12 +307,16 @@ class HouseService {
         if (deviceId.isNotEmpty) 'deviceId': deviceId,
         if (deviceModel.isNotEmpty) 'model': deviceModel,
         if (devicePlatform.isNotEmpty) 'platform': devicePlatform,
-      }).timeout(const Duration(seconds: 12), onTimeout: () {
-        throw TimeoutException('createHouseSecureAdminDebug timed out');
-      });
-      debugPrint('[HouseService] createHouseSecureAdminDebug success');
-      final payload = _asStringDynamicMap(response.data);
-      final createdHouseId = payload?['houseId']?.toString().trim() ?? '';
+      };
+      debugPrint('[HouseService] Admin debug createHouseSecure start');
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'createHouseSecureAdminDebug',
+        payload: payload,
+        timeout: const Duration(seconds: 12),
+      );
+      debugPrint('[HouseService] Admin debug createHouseSecure success');
+      final resultPayload = _asStringDynamicMap(response.data);
+      final createdHouseId = resultPayload?['houseId']?.toString().trim() ?? '';
       if (createdHouseId.isEmpty) {
         throw Exception('Không thể tạo nhà mới lúc này.');
       }
@@ -424,11 +421,15 @@ class HouseService {
 
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final cachedHouseId = prefs.getString('il_house_id')?.trim() ?? '';
-    final cachedAuthUid = prefs.getString(_authUidPrefsKey)?.trim() ?? '';
+    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyHouseId, prefs.getString('il_house_id'));
+    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyAuthUid, prefs.getString(_authUidPrefsKey));
+    final cachedHouseId = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
+    final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
 
     if (cachedHouseId.isNotEmpty) {
       if (cachedAuthUid != user.uid) {
+        await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
+        await SecureStorageService.instance.delete(SecureStorageService.keyRole);
         await prefs.remove('il_house_id');
         await prefs.remove('il_role');
       } else if (preferFresh) {
@@ -447,6 +448,7 @@ class HouseService {
           return cachedHouseId;
         }
 
+        await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
         await prefs.remove('il_house_id');
       } else {
         _fetchAndCacheHouseId(
@@ -495,8 +497,10 @@ class HouseService {
           primaryValue.isNotEmpty &&
           (!validateMembership ||
               await _validateHouseMembership(uid, primaryValue))) {
-        await prefs.setString('il_house_id', primaryValue);
-        await prefs.setString(_authUidPrefsKey, uid);
+        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, primaryValue);
+        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+        await prefs.remove('il_house_id');
+        await prefs.remove(_authUidPrefsKey);
         _syncHouseIdToFirestore(uid, primaryValue).catchError((_) => null);
         return primaryValue;
       }
@@ -509,8 +513,10 @@ class HouseService {
           (!validateMembership ||
               await _validateHouseMembership(uid, legacyValue))) {
         await _dbRef.child('users/$uid').update({'houseId': legacyValue});
-        await prefs.setString('il_house_id', legacyValue);
-        await prefs.setString(_authUidPrefsKey, uid);
+        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, legacyValue);
+        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+        await prefs.remove('il_house_id');
+        await prefs.remove(_authUidPrefsKey);
         _syncHouseIdToFirestore(uid, legacyValue).catchError((_) => null);
         return legacyValue;
       }
@@ -523,12 +529,12 @@ class HouseService {
       ).message}');
     }
 
-    final fallback = prefs.getString('il_house_id')?.trim() ?? '';
+    final fallback = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
     if (fallback.isEmpty) {
       return null;
     }
     if (!validateMembership || await _validateHouseMembership(uid, fallback)) {
-      await prefs.setString(_authUidPrefsKey, uid);
+      await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
       _syncHouseIdToFirestore(uid, fallback).catchError((_) => null);
       return fallback;
     }
@@ -598,27 +604,7 @@ class HouseService {
     return null;
   }
 
-  bool _isDebugAppCheckFailure(FirebaseFunctionsException error) {
-    if (!kDebugMode) {
-      return false;
-    }
-    final code = error.code.trim().toLowerCase();
-    final message = (error.message ?? '').trim().toLowerCase();
-    final isAppCheckCode = code == 'failed-precondition' ||
-        code == 'permission-denied' ||
-        code == 'unauthenticated';
-    if (!isAppCheckCode) {
-      return false;
-    }
-    if (code == 'unauthenticated' && _auth.currentUser != null) {
-      return true;
-    }
-    return message.contains('app check') ||
-        message.contains('appcheck') ||
-        message.contains('debug token') ||
-        message.contains('play integrity') ||
-        message.contains('attestation');
-  }
+
 
   Future<String> _createHouseDirectly({
     required String email,

@@ -597,39 +597,9 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
     }
   }
 
-  void _armSettingsSyncBanner() {
-    _settingsSyncBannerDelayTimer?.cancel();
-    _settingsSyncBannerHideTimer?.cancel();
-    _settingsSyncBannerHideTimer = null;
-    _showSettingsSyncBanner = false;
-    _settingsSyncBannerDelayTimer =
-        Timer(_SettingsTabState._settingsSyncBannerDelay, () {
-      if (!mounted || !_isBootstrappingSettings || _showSettingsSyncBanner) {
-        return;
-      }
-      setState(() => _showSettingsSyncBanner = true);
-    });
-  }
-
   void _markSettingsBootstrapComplete() {
-    if (!mounted || !_isBootstrappingSettings) {
-      return;
-    }
-    _settingsSyncBannerDelayTimer?.cancel();
-
-    if (!_showSettingsSyncBanner) {
-      setState(() => _isBootstrappingSettings = false);
-      return;
-    }
-
+    if (!mounted || !_isBootstrappingSettings) return;
     setState(() => _isBootstrappingSettings = false);
-    _settingsSyncBannerHideTimer?.cancel();
-    _settingsSyncBannerHideTimer =
-        Timer(_SettingsTabState._settingsSyncBannerMinVisible, () {
-      if (!mounted) return;
-      setState(() => _showSettingsSyncBanner = false);
-      _settingsSyncBannerHideTimer = null;
-    });
   }
 
   String _normalizeSettingsRoleKey(String? role) {

@@ -403,7 +403,7 @@ extension _CommunityTabComposer on _CommunityTabState {
     final advicePrefix = context.tr('home_xinlikhuyn_cd284a');
 
     if (_currentFeedType == 'locket') {
-      // Nháº£y tháº³ng vÃ o camera náº¿u lÃ  tab Locket
+      // Nhảy thẳng vào camera nếu là tab Locket
       if (!mounted) return;
       final capturedImage = await Navigator.push<XFile>(
         context,
@@ -725,7 +725,7 @@ extension _CommunityTabComposer on _CommunityTabState {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setInner) {
-            // Tá»± Ä‘á»™ng má»Ÿ bá»™ chá»n áº£nh náº¿u Ä‘Æ°á»£c yÃªu cáº§u
+            // Tự động mở bộ chọn ảnh nếu được yêu cầu
             if (openImagePicker && selectedImage == null && !isPickingImage) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 pickComposerImage(setInner, ctx);
@@ -1206,7 +1206,7 @@ extension _CommunityTabComposer on _CommunityTabState {
 
     bool isLocketPost = _currentFeedType == 'locket';
     if (isLocketPost) {
-      visibility = 'friends'; // Khoáº£nh kháº¯c chá»‰ cÃ³ bÃ i viáº¿t cho báº¡n bÃ¨
+      visibility = 'friends'; // Khoảnh khắc chỉ có bài viết cho bạn bè
     }
 
     await _submitCommunityPost(

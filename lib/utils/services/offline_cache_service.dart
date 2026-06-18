@@ -7,7 +7,39 @@ class OfflineCacheService {
   static SharedPreferences? _cachedPrefs;
   static Future<void>? _initializingPrefs;
 
+  // RAM Cache
+  static final Map<String, _MemoryCacheEntry> _memoryCache = {};
+
   OfflineCacheService._internal();
+
+  /// Đặt dữ liệu vào RAM Cache với thời gian sống (TTL).
+  static void setMemoryCache(String key, dynamic data, Duration ttl) {
+    _memoryCache[key] = _MemoryCacheEntry(
+      data: data,
+      expiresAt: DateTime.now().add(ttl),
+    );
+  }
+
+  /// Lấy dữ liệu từ RAM Cache. Trả về null nếu không có hoặc đã hết hạn.
+  static dynamic getMemoryCache(String key) {
+    final entry = _memoryCache[key];
+    if (entry == null) return null;
+    if (DateTime.now().isAfter(entry.expiresAt)) {
+      _memoryCache.remove(key);
+      return null;
+    }
+    return entry.data;
+  }
+
+  /// Xóa RAM Cache cho một key cụ thể.
+  static void clearMemoryCache(String key) {
+    _memoryCache.remove(key);
+  }
+
+  /// Xóa toàn bộ RAM Cache.
+  static void clearAllMemoryCache() {
+    _memoryCache.clear();
+  }
 
   static SharedPreferences? getPrefsSync() => _cachedPrefs;
 
@@ -80,4 +112,11 @@ class OfflineCacheService {
       await prefs.remove(key);
     }
   }
+}
+
+class _MemoryCacheEntry {
+  final dynamic data;
+  final DateTime expiresAt;
+
+  _MemoryCacheEntry({required this.data, required this.expiresAt});
 }

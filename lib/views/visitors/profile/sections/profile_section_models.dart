@@ -65,7 +65,7 @@ class VisitorProfileTabContentData {
 const VisitorProfileHeaderThemeData visitorProfileHeaderFallbackTheme =
     VisitorProfileHeaderThemeData(
   key: 'soft_default',
-  label: 'Mac dinh',
+  label: 'Mặc định',
   icon: Icons.wallpaper_rounded,
   colors: [Color(0xFFD97996), Color(0xFF8C6EA6), Color(0xFF4B5E86)],
 );

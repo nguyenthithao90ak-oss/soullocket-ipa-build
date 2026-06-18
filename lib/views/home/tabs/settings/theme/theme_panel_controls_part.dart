@@ -351,57 +351,47 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 //     );
 //   }
 
-  Widget _buildThemePaletteStrip(String selectedKey) {
+  Widget _buildCountdownStyleStrip(String selectedKey, bool hasAdPass) {
     final items = [
       (
-        'Auto',
-        'theme-auto',
-        const [Color(0xFFFFE4E1), Color(0xFFEFDFFF), Color(0xFFBDE1FF)],
+        context.tr('countdown_default'), 'default',
+        const [Color(0xFFFFF0F7), Color(0xFFFFDDEF), Color(0xFFFFC8DE)], false,
       ),
       (
-        '30s 👑',
-        'theme-vip-rotate',
-        const [Color(0xFFFFD166), Color(0xFFFF4D8D), Color(0xFF7C4DFF)],
+        context.tr('countdown_glass'), 'glass',
+        const [Color(0xFFF5FAFF), Color(0xFFE6F7FF)], false,
       ),
       (
-        'Hồng',
-        'theme-pink-glow',
-        const [Color(0xFFFFD9E8), Color(0xFFFF9DBB)],
+        context.tr('countdown_glow'), 'glow',
+        const [Color(0xFFFFF5FA), Color(0xFFFFD9E8)], false,
       ),
       (
-        'Gốc',
-        'theme-default',
-        const [Color(0xFFFFF1F7), Color(0xFFEBDFFF)],
+        context.tr('countdown_candy'), 'candy',
+        const [Color(0xFFFFE3F3), Color(0xFFE0F7FF), Color(0xFFFFF4C8)], false,
       ),
       (
-        'Cam',
-        'theme-sunset',
-        const [Color(0xFFFF7A59), Color(0xFFFFD166)],
+        context.tr('countdown_floating_hearts'), 'floating_hearts',
+        const [Color(0xFFFFF5F8), Color(0xFFFFF0F5)], true,
       ),
       (
-        'Biển',
-        'theme-ocean',
-        const [Color(0xFF4FACFE), Color(0xFF38F9D7)],
+        context.tr('countdown_galaxy'), 'galaxy',
+        const [Color(0xFF120024), Color(0xFF05000F)], true,
       ),
       (
-        'Đêm',
-        'theme-night',
-        const [Color(0xFF243B55), Color(0xFF8E2DE2)],
+        context.tr('countdown_aurora'), 'aurora',
+        const [Color(0xFF001B2E), Color(0xFF021A10)], true,
       ),
       (
-        'Dark',
-        'theme-dark',
-        const [Color(0xFF1F2937), Color(0xFF4B5563)],
+        context.tr('countdown_crystal'), 'crystal',
+        const [Color(0xFFE8F4FF), Color(0xFFF6EAFF), Color(0xFFFFF8E7)], true,
       ),
       (
-        'Mystic',
-        'theme-mystic-dark',
-        const [Color(0xFF312E81), Color(0xFF7C3AED)],
+        context.tr('countdown_fireworks'), 'fireworks',
+        const [Color(0xFF140026), Color(0xFF06000F)], true,
       ),
       (
-        'Clean',
-        'off',
-        const [Color(0xFFF8FAFC), Color(0xFFE2E8F0)],
+        context.tr('countdown_lava'), 'lava',
+        const [Color(0xFF1A0502), Color(0xFF4A1103)], true,
       ),
     ];
 
@@ -409,10 +399,13 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
       spacing: 8,
       runSpacing: 8,
       children: items.map((item) {
-        final selected = selectedKey == item.$2;
+        final key = item.$2;
+        final isPremium = item.$4;
+        final locked = isPremium && !_isVipActive && !hasAdPass;
+        final selected = selectedKey == key && !locked;
         return GestureDetector(
           onTap: () {
-            unawaited(_handleThemeSelection(item.$2));
+            unawaited(_handleCountdownStyleChange(key));
           },
           child: AnimatedScale(
             scale: selected ? 1.08 : 1.0,
@@ -423,7 +416,10 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: item.$3),
+                gradient: locked
+                    ? LinearGradient(
+                        colors: item.$3.map((c) => c.withValues(alpha: 0.50)).toList())
+                    : LinearGradient(colors: item.$3),
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
                   color: selected
@@ -431,26 +427,37 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                       : Colors.white.withValues(alpha: 0.7),
                   width: selected ? 2.2 : 1,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: selected
-                        ? const Color(0xFFD81B60).withValues(alpha: 0.28)
-                        : const Color(0xFFD81B60).withValues(alpha: 0.06),
-                    blurRadius: selected ? 20 : 10,
-                    spreadRadius: selected ? 1 : 0,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFFD81B60).withValues(alpha: 0.28),
+                          blurRadius: 20,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : null,
               ),
-              child: Text(
-                item.$1,
-                style: SLTheme.quicksand(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w900,
-                  color: selected
-                      ? const Color(0xFFD81B60)
-                      : const Color(0xFF5C4B58),
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    item.$1,
+                    style: SLTheme.quicksand(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w900,
+                      color: locked
+                          ? const Color(0xFF9E9E9E)
+                          : selected
+                              ? const Color(0xFFD81B60)
+                              : const Color(0xFF5C4B58),
+                    ),
+                  ),
+                  if (locked) ...[
+                    const SizedBox(width: 4),
+                    const Icon(Icons.play_circle_fill_rounded, size: 14, color: Color(0xFFD81B60)),
+                  ],
+                ],
               ),
             ),
           ),

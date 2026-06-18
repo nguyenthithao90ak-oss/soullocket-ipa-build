@@ -116,6 +116,15 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
     final transparentMode = UiPrefs.notifier.value.transparentMode;
     final countdownVisual =
         _CountdownVisualSpec.resolve(countdownStyleKey, transparentMode);
+        
+    final countdownTextColorStr = UiPrefs.notifier.value.countdownTextColor;
+    Color? customTextColor;
+    if (countdownTextColorStr.isNotEmpty) {
+      try {
+        customTextColor = Color(int.parse(countdownTextColorStr.replaceFirst('#', '0xFF')));
+      } catch (_) {}
+    }
+
     final labelHeight = (circleSize * 0.15).clamp(38.0, 64.0).toDouble();
     final numberHeight = (circleSize * 0.38).clamp(80.0, 150.0).toDouble();
     final topLabelWidth = circleSize * 0.68;
@@ -134,12 +143,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
                 smartGreeting: smartGreeting,
               ),
       onLongPress: state._showCountdownQuickCustomizeSheet,
-      child: _MainHomeHeroCountdownMotionShell(
-        size: circleSize,
-        styleKey: countdownStyleKey,
-        highlightColors: countdownVisual.numberGradient,
-        enableMotion: enableMotion,
-        child: Container(
+      child: Container(
           width: circleSize,
           height: circleSize,
           decoration: BoxDecoration(
@@ -174,6 +178,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
                         child: _AnimatedWaveBackground(
                           styleKey: countdownStyleKey,
                           enableMotion: enableMotion,
+                          transparentMode: transparentMode,
                         ),
                       ),
                     ),
@@ -209,7 +214,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
                             fontSize: (circleSize * 0.075).clamp(16.0, 22.0),
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.2,
-                            color: countdownVisual.topLabelColor,
+                            color: customTextColor ?? countdownVisual.topLabelColor,
                           ).copyWith(
                             shadows: countdownVisual.labelShadows,
                           ),
@@ -230,45 +235,29 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
                     ),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Shadow Layer (No ShaderMask to prevent blurriness)
-                          Text(
-                            circleValue,
-                            maxLines: 1,
-                            textAlign: TextAlign.center,
-                            style: state._uiTextStyle(
-                              fontSize: (circleSize * 0.36).clamp(56.0, 132.0),
-                              fontWeight: FontWeight.w900,
-                              color: Colors.transparent, // Only show shadow
-                              height: 0.96,
-                              letterSpacing: 4.0,
-                            ).copyWith(
-                              shadows: countdownVisual.numberShadows,
-                            ),
+                      child: ShaderMask(
+                        shaderCallback: (bounds) => LinearGradient(
+                          colors: customTextColor != null
+                              ? [customTextColor, customTextColor]
+                              : countdownVisual.numberGradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ).createShader(bounds),
+                        blendMode: BlendMode.srcIn,
+                        child: Text(
+                          circleValue,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: state._uiTextStyle(
+                            fontSize: (circleSize * 0.36).clamp(56.0, 132.0),
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 0.96,
+                            letterSpacing: 4.0,
+                          ).copyWith(
+                            shadows: countdownVisual.numberShadows,
                           ),
-                          // Gradient Layer with ShaderMask
-                          ShaderMask(
-                            shaderCallback: (bounds) => LinearGradient(
-                              colors: countdownVisual.numberGradient,
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ).createShader(bounds),
-                            child: Text(
-                              circleValue,
-                              maxLines: 1,
-                              textAlign: TextAlign.center,
-                              style: state._uiTextStyle(
-                                fontSize: (circleSize * 0.36).clamp(56.0, 132.0),
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                height: 0.96,
-                                letterSpacing: 4.0,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -296,7 +285,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
                             fontSize: (circleSize * 0.082).clamp(17.0, 24.0),
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.1,
-                            color: countdownVisual.bottomLabelColor,
+                            color: customTextColor ?? countdownVisual.bottomLabelColor,
                           ).copyWith(
                             shadows: countdownVisual.labelShadows,
                           ),
@@ -310,7 +299,6 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
           ),
         ),
       ),
-    ),
     );
   }
 }

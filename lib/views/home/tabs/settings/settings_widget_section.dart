@@ -106,9 +106,20 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F4F8),
-        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF2F5FA), Color(0xFFEDF1F8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFDDE4ED), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: items.map((item) {
@@ -118,7 +129,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             child: GestureDetector(
               onTap: () => unawaited(_handleWidgetPanelTabChanged(item.$1)),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 240),
                 curve: Curves.easeOut,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8,
@@ -133,38 +144,62 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                         )
                       : null,
                   color: isSelected ? null : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFFFF5E92).withValues(alpha: 0.28),
-                            blurRadius: 10,
+                            color: const Color(0xFFFF5E92).withValues(alpha: 0.32),
+                            blurRadius: 12,
                             offset: const Offset(0, 4),
+                          ),
+                          BoxShadow(
+                            color: const Color(0xFFFF8AB8).withValues(alpha: 0.14),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
                           ),
                         ]
                       : const [],
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    Icon(
-                      item.$3,
-                      size: 18,
-                      color: isSelected
-                          ? Colors.white
-                          : const Color(0xFF94A3B8),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      item.$2,
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 11.8,
-                        fontWeight: FontWeight.w900,
-                        color: isSelected
-                            ? Colors.white
-                            : const Color(0xFF94A3B8),
+                    // Decorative sparkle for selected tab
+                    if (isSelected)
+                      Positioned(
+                        top: -2,
+                        right: 4,
+                        child: Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
                       ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          item.$3,
+                          size: 18,
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF94A3B8),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          item.$2,
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            fontSize: 11.8,
+                            fontWeight: FontWeight.w900,
+                            color: isSelected
+                                ? Colors.white
+                                : const Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -514,6 +549,36 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
     );
   }
 
+  /// Decorative icon for each widget theme swatch.
+  IconData _widgetThemeSwatchIcon(String key) {
+    switch (key) {
+      case 'pink':    return Icons.favorite_rounded;
+      case 'white':   return Icons.ac_unit_rounded;
+      case 'dark':    return Icons.dark_mode_rounded;
+      case 'blue':    return Icons.water_rounded;
+      case 'orange':  return Icons.wb_sunny_rounded;
+      case 'purple':  return Icons.auto_awesome_rounded;
+      case 'green':   return Icons.eco_rounded;
+      case 'red':     return Icons.local_fire_department_rounded;
+      default:        return Icons.palette_rounded;
+    }
+  }
+
+  /// Decorative emoji accent for each widget theme swatch.
+  String _widgetThemeSwatchEmoji(String key) {
+    switch (key) {
+      case 'pink':    return '🌸';
+      case 'white':   return '❄️';
+      case 'dark':    return '🌙';
+      case 'blue':    return '🌊';
+      case 'orange':  return '🌅';
+      case 'purple':  return '✨';
+      case 'green':   return '🍀';
+      case 'red':     return '🔥';
+      default:        return '🎨';
+    }
+  }
+
   /// Color swatch grid for widget background theme selection.
   Widget _buildWidgetThemeSwatchGrid(_WidgetPanelConfig config) {
     // Map themeKey -> (gradient colors, label)
@@ -532,87 +597,202 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
     return Wrap(
       spacing: 10,
-      runSpacing: 10,
+      runSpacing: 12,
       children: swatches.map((swatch) {
         final key = swatch.$1;
         final colors = swatch.$2;
         final label = swatch.$3;
         final isSelected = currentKey == key;
+        final themeIcon = _widgetThemeSwatchIcon(key);
+        final themeEmoji = _widgetThemeSwatchEmoji(key);
+        final isDarkTheme = key == 'dark';
+        final iconColor = isDarkTheme
+            ? Colors.white.withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.85);
 
         return GestureDetector(
           onTap: () async => _handleWidgetThemeChanged(key),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
+            duration: const Duration(milliseconds: 220),
             curve: Curves.easeOut,
-            width: 74,
+            width: 76,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected
-                    ? colors.last.withValues(alpha: 0.85)
+                    ? colors.last.withValues(alpha: 0.90)
                     : const Color(0xFFE0E7EF),
-                width: isSelected ? 2.0 : 1.2,
+                width: isSelected ? 2.2 : 1.2,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: colors.first.withValues(alpha: 0.32),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        color: colors.first.withValues(alpha: 0.38),
+                        blurRadius: 14,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 5),
+                      ),
+                      BoxShadow(
+                        color: colors.last.withValues(alpha: 0.18),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
                     ]
-                  : [],
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(15),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Color preview area
+                  // Color preview area with decorative icon + emoji
                   Container(
-                    height: 46,
+                    height: 52,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: colors,
+                        colors: [
+                          colors.first,
+                          Color.lerp(colors.first, colors.last, 0.5)!,
+                          colors.last,
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                     ),
-                    child: isSelected
-                        ? Center(
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // Subtle decorative pattern overlay
+                        Positioned(
+                          top: -4,
+                          right: -4,
+                          child: Icon(
+                            themeIcon,
+                            size: 28,
+                            color: isDarkTheme
+                                ? Colors.white.withValues(alpha: 0.12)
+                                : Colors.white.withValues(alpha: 0.20),
+                          ),
+                        ),
+                        // Bottom-left small decorative dot
+                        Positioned(
+                          bottom: 4,
+                          left: 6,
+                          child: Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: 0.28),
+                            ),
+                          ),
+                        ),
+                        // Center content
+                        Center(
+                          child: isSelected
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 22,
+                                      height: 22,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.92),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: colors.last.withValues(alpha: 0.30),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        Icons.check_rounded,
+                                        size: 14,
+                                        color: colors.last,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Icon(
+                                  themeIcon,
+                                  size: 20,
+                                  color: iconColor,
+                                ),
+                        ),
+                        // Shimmer dot for selected state
+                        if (isSelected)
+                          Positioned(
+                            top: 5,
+                            left: 6,
                             child: Container(
-                              width: 22,
-                              height: 22,
+                              width: 7,
+                              height: 7,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.9),
                                 shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.check_rounded,
-                                size: 14,
-                                color: colors.last,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.90),
+                                    Colors.white.withValues(alpha: 0.0),
+                                  ],
+                                ),
                               ),
                             ),
-                          )
-                        : null,
+                          ),
+                      ],
+                    ),
                   ),
-                  // Label area
+                  // Label area with emoji + gradient tint
                   Container(
-                    color: Colors.white,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isSelected
+                            ? [
+                                colors.first.withValues(alpha: 0.08),
+                                Colors.white,
+                              ]
+                            : [Colors.white, Colors.white],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 4,
                       vertical: 5,
                     ),
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 10.4,
-                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                        color: isSelected ? colors.last : const Color(0xFF64748B),
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isSelected) ...[
+                          Text(
+                            themeEmoji,
+                            style: const TextStyle(fontSize: 9),
+                          ),
+                          const SizedBox(width: 2),
+                        ],
+                        Flexible(
+                          child: Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: SLTheme.quicksand(
+                              fontSize: 10.4,
+                              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                              color: isSelected ? colors.last : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

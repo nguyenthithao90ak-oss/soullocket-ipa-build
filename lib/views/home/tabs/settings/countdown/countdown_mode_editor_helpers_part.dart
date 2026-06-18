@@ -364,7 +364,7 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                       backgroundColor: const Color(0xFFD81B60),
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('OK'),
+                    child: Text(context.tr('ok')),
                   ),
                 ],
               );

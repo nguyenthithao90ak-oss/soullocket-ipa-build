@@ -33,27 +33,34 @@ extension _SettingsTabPersistence on _SettingsTabState {
     } catch (_) {}
   }
 
-  void _updateThemeDraft(VoidCallback updateFn) {
+  void _updateThemeDraft(VoidCallback updateFn, {bool syncPreview = true}) {
     updateFn();
     
-    // 1. Cập nhật giao diện nội bộ (các nút bấm, slider, ...) ngay lập tức và mượt mà.
+    // 1. Cập nhật giao diện nội bộ (các nút bấm, slider, ...)
     if (mounted) {
       setState(() {});
     }
 
-    // 2. Debounce UiPrefs (tránh lag do rebuild app khi bấm liên tục)
+    // 2. Đồng bộ Preview
     _uiPrefsDebounceTimer?.cancel();
-    if (mounted) {
-      _uiPrefsDebounceTimer = Timer(const Duration(milliseconds: 350), () {
-        if (!mounted) return;
-        _applyThemeDraftToUiPrefsPreview();
-      });
+    if (syncPreview) {
+      // Cho các thao tác nhấp chuột (chọn effect/theme), cập nhật ngay lập tức 
+      // để Flutter gộp chung vào 1 frame render, xoá bỏ hiện tượng giật lag do render 2 lần.
+      if (mounted) _applyThemeDraftToUiPrefsPreview();
+    } else {
+      // Dành cho thao tác liên tục nếu cần
+      if (mounted) {
+        _uiPrefsDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+          if (!mounted) return;
+          _applyThemeDraftToUiPrefsPreview();
+        });
+      }
     }
 
-    // 3. Debounce lưu lên Server (chống spam ghi dữ liệu)
+    // 3. Debounce lưu lên Server ngầm sau 1.5s
     _autoSaveThemeTimer?.cancel();
     if (mounted) {
-      _autoSaveThemeTimer = Timer(const Duration(milliseconds: 2000), () {
+      _autoSaveThemeTimer = Timer(const Duration(milliseconds: 1500), () {
         if (!mounted) return;
         unawaited(_saveThemeSettings(silent: true));
       });
@@ -297,7 +304,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
 //       if (!silent) _showToast(context.tr('home_lucitnngca_14ab51'), success: true);
 //     } catch (e) {
 //       if (!silent) {
-//         _showToast('KhÃ´ng thá»ƒ lÆ°u cÃ i Ä‘áº·t nÃ¢ng cao: $e', success: false);
+//         _showToast('Không thể lưu cài đặt nâng cao: $e', success: false);
 //       }
 //     } finally {
 //       if (mounted) {
@@ -519,14 +526,14 @@ extension _SettingsTabPersistence on _SettingsTabState {
         '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
 
     if (difference.isNegative) {
-      return 'ÄÃ£ háº¿t háº¡n vÃ o: $formattedDate';
+      return 'Đã hết hạn vào: $formattedDate';
     } else {
       final daysLeft = difference.inDays;
       final hoursLeft = difference.inHours % 24;
       if (daysLeft > 0) {
-        return 'CÃ²n láº¡i: $daysLeft ngÃ y (Háº¡n: $formattedDate)';
+        return 'Còn lại: $daysLeft ngày (Hạn: $formattedDate)';
       } else if (hoursLeft > 0) {
-        return 'CÃ²n láº¡i: $hoursLeft giá» (Háº¡n hÃ´m nay)';
+        return 'Còn lại: $hoursLeft giờ (Hạn hôm nay)';
       } else {
         return context.tr('home_sphthnhnhm_1ffe67');
       }
@@ -611,7 +618,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
         ...secMap,
       };
       final prefs = await SharedPreferences.getInstance();
-      final currentRole =
+      // ⚡ KHÔNG ghi đè _activeRoleKey ở đây — _fetchSettingsData() đã set giá trị
+      //   chuẩn xác từ Firebase rồi. Dòng này chỉ để dùng local, không set state.
+      final localRole = // ignore: unused_local_variable
           prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       final legacyHousePin = (effectiveSecurity['pin'] ?? '').toString().trim();
       final pinConfiguredRaw = effectiveSecurity['pinConfigured'];
@@ -692,7 +701,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
         _googleLinked = linkedGoogle;
         _passwordLinked = linkedPassword;
         _isMainEmailVerified = currentUser?.emailVerified ?? false;
-        _activeRoleKey = currentRole;
+        // ⚡ KHÔNG ghi đè _activeRoleKey — _fetchSettingsData() đã set giá trị đúng từ Firebase.
         _selectedSecurityQuestion = _securityQuestions.contains(question)
             ? question
             : _selectedSecurityQuestion;
@@ -1207,7 +1216,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       _showToast(context.tr('saved_info'), success: true);
     } catch (e) {
       if (!mounted) return;
-      _showToast('${context.tr('err_save_info')}: $e', success: false);
+      _showToast(context.tr('err_save_info'), success: false);
     }
   }
   */

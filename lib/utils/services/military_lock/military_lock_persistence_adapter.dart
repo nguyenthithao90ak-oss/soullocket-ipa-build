@@ -22,15 +22,20 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
 
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
+    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyHouseId, prefs.getString(MilitaryLockService._prefHouseId));
+    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyAuthUid, prefs.getString(MilitaryLockService._prefAuthUid));
     final cachedHouseId =
-        prefs.getString(MilitaryLockService._prefHouseId)?.trim() ?? '';
+        (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
     final cachedAuthUid =
-        prefs.getString(MilitaryLockService._prefAuthUid)?.trim() ?? '';
+        (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
     if (cachedHouseId.isNotEmpty) {
       if (currentUid.isNotEmpty && cachedAuthUid == currentUid) {
         _rememberResolvedHouseId(cachedHouseId, uid: currentUid);
         return cachedHouseId;
       }
+      await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
+      await SecureStorageService.instance.delete(SecureStorageService.keyAuthUid);
+      await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       await prefs.remove(MilitaryLockService._prefHouseId);
       await prefs.remove(MilitaryLockService._prefAuthUid);
       await prefs.remove('il_role');
@@ -93,14 +98,26 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
   }) async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
+    // PIN hash + salt đọc từ FlutterSecureStorage
+    final secureLock = await _secureStorage.read(
+      key: MilitaryLockService._prefCustomLock,
+    );
+    final secureSalt = await _secureStorage.read(
+      key: MilitaryLockService._prefCustomLockSalt,
+    );
     final localSecret = _buildLockSecretRecord(
-      prefs.getString(MilitaryLockService._prefCustomLock),
-      rawSalt: prefs.getString(MilitaryLockService._prefCustomLockSalt),
+      secureLock ?? prefs.getString(MilitaryLockService._prefCustomLock),
+      rawSalt: secureSalt ?? prefs.getString(MilitaryLockService._prefCustomLockSalt),
       rawPinLength: prefs.getInt(MilitaryLockService._prefCustomLockLength),
       rawConfiguredAt: prefs.getInt(
         MilitaryLockService._prefCustomLockConfiguredAt,
       ),
     );
+    // Migration: nếu còn dữ liệu cũ trong SharedPreferences, xóa đi sau khi đã đọc
+    if (secureLock == null && prefs.getString(MilitaryLockService._prefCustomLock) != null) {
+      await prefs.remove(MilitaryLockService._prefCustomLock);
+      await prefs.remove(MilitaryLockService._prefCustomLockSalt);
+    }
     final localEnabled =
         (prefs.getBool(MilitaryLockService._prefAppLockEnabled) ?? false) &&
             localSecret != null &&
@@ -144,9 +161,9 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
     }
 
     final cachedHouseId =
-        prefs.getString(MilitaryLockService._prefHouseId)?.trim() ?? '';
+        (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
     final cachedAuthUid =
-        prefs.getString(MilitaryLockService._prefAuthUid)?.trim() ?? '';
+        (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
     final currentUid = _auth.currentUser?.uid.trim() ?? '';
     if (cachedHouseId.isNotEmpty &&
         currentUid.isNotEmpty &&
@@ -253,17 +270,22 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
       MilitaryLockService._prefMilitaryMode,
       normalizedEnabled && militaryMode,
     );
-    await prefs.setString(
-      MilitaryLockService._prefCustomLock,
-      normalizedEnabled ? trimmedLock : '',
-    );
-    if (normalizedEnabled && trimmedSalt.isNotEmpty) {
-      await prefs.setString(
-        MilitaryLockService._prefCustomLockSalt,
-        trimmedSalt,
+    // PIN hash + salt lưu vào FlutterSecureStorage (KeyStore/Encrypted) thay vì SharedPreferences
+    if (normalizedEnabled) {
+      await _secureStorage.write(
+        key: MilitaryLockService._prefCustomLock,
+        value: trimmedLock,
       );
     } else {
-      await prefs.remove(MilitaryLockService._prefCustomLockSalt);
+      await _secureStorage.delete(key: MilitaryLockService._prefCustomLock);
+    }
+    if (normalizedEnabled && trimmedSalt.isNotEmpty) {
+      await _secureStorage.write(
+        key: MilitaryLockService._prefCustomLockSalt,
+        value: trimmedSalt,
+      );
+    } else {
+      await _secureStorage.delete(key: MilitaryLockService._prefCustomLockSalt);
     }
     if (normalizedEnabled && normalizedPinLength != null) {
       await prefs.setInt(
@@ -306,9 +328,9 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
       normalizedSettings,
     );
     final cachedHouseId =
-        prefs.getString(MilitaryLockService._prefHouseId)?.trim() ?? '';
+        (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
     final cachedAuthUid =
-        prefs.getString(MilitaryLockService._prefAuthUid)?.trim() ?? '';
+        (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
     final currentUid = _auth.currentUser?.uid.trim() ?? '';
     if (cachedHouseId.isNotEmpty &&
         currentUid.isNotEmpty &&
@@ -495,8 +517,10 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
       final primaryValue = primarySnap.value?.toString().trim() ?? '';
       if (primaryValue.isNotEmpty) {
         _rememberResolvedHouseId(primaryValue, uid: uid);
-        await prefs.setString(MilitaryLockService._prefHouseId, primaryValue);
-        await prefs.setString(MilitaryLockService._prefAuthUid, uid);
+        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, primaryValue);
+        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+        await prefs.remove(MilitaryLockService._prefHouseId);
+        await prefs.remove(MilitaryLockService._prefAuthUid);
         return primaryValue;
       }
 
@@ -507,8 +531,10 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
       final legacyValue = legacySnap.value?.toString().trim() ?? '';
       if (legacyValue.isNotEmpty) {
         _rememberResolvedHouseId(legacyValue, uid: uid);
-        await prefs.setString(MilitaryLockService._prefHouseId, legacyValue);
-        await prefs.setString(MilitaryLockService._prefAuthUid, uid);
+        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, legacyValue);
+        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+        await prefs.remove(MilitaryLockService._prefHouseId);
+        await prefs.remove(MilitaryLockService._prefAuthUid);
         try {
           await _db.child('users/$uid').update({'houseId': legacyValue});
         } catch (_) {}

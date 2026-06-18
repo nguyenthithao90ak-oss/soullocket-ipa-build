@@ -373,7 +373,7 @@ class _UtilitiesHubTileContent extends StatelessWidget {
           'colors': app.colors,
           'title': app.title,
         };
-    final List<Color> colors = config['colors'] as List<Color>;
+    final List<Color> colors = List<Color>.from(config['colors'] as List);
     final IconData iconData = config['icon'] as IconData;
     final Color iconColor =
         (config['iconColor'] as Color?) ?? SLColors.textInverse;

@@ -235,7 +235,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                             Expanded(
                               child: ChoiceChip(
                                 selected: draftSingleMode,
-                                label: const Text('Cá nhân'),
+                                label: Text(context.tr('countdown_single_mode')),
                                 onSelected: (_) =>
                                     setSheetState(() => draftSingleMode = true),
                               ),
@@ -244,7 +244,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                             Expanded(
                               child: ChoiceChip(
                                 selected: !draftSingleMode,
-                                label: const Text('Cặp đôi'),
+                                label: Text(context.tr('countdown_couple_mode')),
                                 onSelected: (_) => setSheetState(
                                     () => draftSingleMode = false),
                               ),
@@ -257,8 +257,8 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                             Expanded(
                               child: Text(
                                 draftDate == null
-                                    ? 'Chưa chọn ngày mốc'
-                                    : 'Ngày mốc: ${DateInputUtils.formatDisplayDate(draftDate!)}',
+                                    ? context.tr('countdown_no_date_selected')
+                                    : '${context.tr('countdown_anchor_date')}: ${DateInputUtils.formatDisplayDate(draftDate!)}',
                                 style: SLTheme.quicksand(
                                   fontSize: 12.8,
                                   fontWeight: FontWeight.w800,
@@ -280,7 +280,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                 }
                               },
                               icon: const Icon(Icons.event_rounded),
-                              label: const Text('Chọn ngày'),
+                              label: Text(context.tr('countdown_pick_date')),
                             ),
                           ],
                         ),
@@ -316,7 +316,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                           value: draftTransparent,
                           onChanged: (value) =>
                               setSheetState(() => draftTransparent = value),
-                          title: const Text('Kính mờ'),
+                          title: Text(context.tr('countdown_transparent_mode')),
                         ),
                         StatefulBuilder(
                           builder: (sheetContext, setSliderState) {
@@ -362,7 +362,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                               );
                             },
                             icon: const Icon(Icons.check_circle_rounded),
-                            label: const Text('Lưu thay đổi'),
+                            label: Text(context.tr('countdown_save_changes')),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -394,7 +394,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                               );
                             },
                             icon: const Icon(Icons.grid_view_rounded),
-                            label: const Text('Về danh sách không gian'),
+                            label: Text(context.tr('countdown_back_to_spaces')),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -425,7 +425,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                               );
                             },
                             icon: const Icon(Icons.close_rounded),
-                            label: const Text('Thoát không gian đếm'),
+                            label: Text(context.tr('countdown_exit_space')),
                           ),
                         ),
                       ],

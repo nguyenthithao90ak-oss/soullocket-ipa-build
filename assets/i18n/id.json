@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "Tidak dapat menyimpan gambar: {error}",
   "util_drawing_delete_image_failed": "Tidak dapat menghapus foto: {error}",
   "util_drawing_partner_drawing": "{name} sedang menggambar...",
-  "util_drawing_sync_online_count": "Sinkronisasi gambar pasangan aktif • {count} pasangan online",
+  "util_drawing_sync_online_count": "Sinkronisasi 2 orang ada di • {count} orang lain sedang online",
   "util_drawing_canvas_locked_status": "Kanvasnya mengunci gulir.  {status}",
   "util_finance_each_pays": "Setiap orang membayar:\n {amount}",
   "util_finance_used_amount": "Digunakan: {amount}",

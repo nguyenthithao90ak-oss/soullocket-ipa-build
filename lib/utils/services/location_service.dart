@@ -472,7 +472,10 @@ class LocationService {
 
   Future<Map<String, dynamic>?> fetchBothLocations(String houseId) async {
     try {
-      final snap = await _dbRef.child('gps/$houseId').get();
+      final snap = await _dbRef
+          .child('gps/$houseId')
+          .get()
+          .timeout(const Duration(seconds: 10));
       if (!snap.exists || snap.value == null) return null;
       return Map<String, dynamic>.from(snap.value as Map);
     } catch (_) {
@@ -519,7 +522,11 @@ class LocationService {
         .subtract(const Duration(days: _kGpsHistoryRetentionDays - 1));
     final deleteThroughKey =
         _formatDateKey(oldestKeptDay.subtract(const Duration(days: 1)));
-    final snap = await historyRoot.orderByKey().endAt(deleteThroughKey).get();
+    final snap = await historyRoot
+        .orderByKey()
+        .endAt(deleteThroughKey)
+        .get()
+        .timeout(const Duration(seconds: 10));
     final raw = _toStringDynamicMap(snap.value);
     if (raw.isEmpty) {
       return;
@@ -537,7 +544,10 @@ class LocationService {
     required String dateKey,
   }) async {
     final dayPath = 'gps_history/$houseId/$role/$dateKey';
-    final snap = await _dbRef.child(dayPath).get();
+    final snap = await _dbRef
+        .child(dayPath)
+        .get()
+        .timeout(const Duration(seconds: 10));
     final raw = _toStringDynamicMap(snap.value);
     if (raw.length <= _kGpsHistoryMaxPointsPerDay) {
       return;

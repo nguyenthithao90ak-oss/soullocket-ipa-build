@@ -3,10 +3,12 @@ part of '../../../tabs/main_home_tab.dart';
 class _AnimatedWaveBackground extends StatefulWidget {
   final String styleKey;
   final bool enableMotion;
+  final bool transparentMode;
 
   const _AnimatedWaveBackground({
     required this.styleKey,
     required this.enableMotion,
+    this.transparentMode = false,
   });
 
   static bool hasMotion(String styleKey) {
@@ -39,7 +41,10 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
     if (kIsWeb) return;
     try {
       _sensorSubscription?.cancel();
-      _sensorSubscription = accelerometerEventStream().listen(
+      // ⚡ Dùng sample rate cao nhất 50ms thay vì luồng real-time liên tục
+      _sensorSubscription = accelerometerEventStream(
+        samplingPeriod: const Duration(milliseconds: 50),
+      ).listen(
         (event) {
           if (!mounted) return;
           // Smooth the tilt using low-pass filter (lerp)
@@ -108,6 +113,10 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
   @override
   Widget build(BuildContext context) {
     if (!_AnimatedWaveBackground.hasMotion(widget.styleKey)) {
+      return const SizedBox.expand();
+    }
+    final isBasicStyle = widget.styleKey == 'default' || widget.styleKey == 'glass' || widget.styleKey == 'plain' || widget.styleKey.isEmpty;
+    if (widget.transparentMode && isBasicStyle) {
       return const SizedBox.expand();
     }
     final uiState = UiPrefs.notifier.value;

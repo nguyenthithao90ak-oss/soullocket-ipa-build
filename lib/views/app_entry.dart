@@ -156,6 +156,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   }
 
   void _listenToMaintenance() {
+    _maintenanceSub?.cancel();
     _maintenanceSub = FirebaseDatabase.instance
         .ref('sys_settings/is_maintenance')
         .onValue

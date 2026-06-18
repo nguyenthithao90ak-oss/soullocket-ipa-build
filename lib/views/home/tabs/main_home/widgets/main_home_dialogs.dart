@@ -643,7 +643,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                       const SizedBox(height: 2),
                       Text(
                         partnerOnline
-                            ? '$partnerName sáº½ tháº¥y ngay'
+                            ? '$partnerName sẽ thấy ngay'
                             : 'Đã gửi cho $partnerName',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

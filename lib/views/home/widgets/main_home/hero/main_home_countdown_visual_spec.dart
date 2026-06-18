@@ -30,7 +30,8 @@ class _CountdownVisualSpec {
   });
 
   factory _CountdownVisualSpec.resolve(String styleKey, bool transparentMode) {
-    if (transparentMode) {
+    final isBasicStyle = styleKey == 'default' || styleKey == 'glass' || styleKey == 'plain' || styleKey.isEmpty;
+    if (transparentMode && isBasicStyle) {
       return _CountdownVisualSpec(
         outerColor: Colors.white.withValues(alpha: 0.30),
         outerGradient: null,
@@ -43,14 +44,14 @@ class _CountdownVisualSpec {
         numberGradient: const [Colors.white, Color(0xFFFFD1E4)],
         topLabelColor: Colors.white,
         bottomLabelColor: Colors.white.withValues(alpha: 0.92),
-        labelShadows: [
-          Shadow(color: Colors.black.withValues(alpha: 0.22), blurRadius: 8),
+        labelShadows: const [
+          Shadow(color: Colors.black, blurRadius: 8),
         ],
-        numberShadows: [
+        numberShadows: const [
           Shadow(
-            color: Colors.black.withValues(alpha: 0.22),
+            color: Colors.black,
             blurRadius: 18,
-            offset: const Offset(0, 6),
+            offset: Offset(0, 6),
           ),
         ],
       );
@@ -80,25 +81,21 @@ class _CountdownVisualSpec {
         );
       case 'floating_hearts':
         return _CountdownVisualSpec(
-          outerColor: null,
-          outerGradient: const LinearGradient(
-            colors: [Color(0xFFFFF5F8), Color(0xFFFFF0F5)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          outerColor: Colors.white.withValues(alpha: 0.30),
+          outerGradient: null,
           outerBorder: Border.all(
-            color: const Color(0xFFFFC0CB),
-            width: 4.5,
+            color: Colors.white.withValues(alpha: 0.35),
+            width: 3.0,
           ),
           shadows: [
             BoxShadow(
-              color: const Color(0xFFFFC0CB).withValues(alpha: 0.35),
+              color: const Color(0xFFFFC0CB).withValues(alpha: 0.25),
               blurRadius: 24.0,
               spreadRadius: 2.0,
               offset: const Offset(0, 10),
             ),
           ],
-          innerColor: const Color(0xFFFFF0F5),
+          innerColor: Colors.white.withValues(alpha: 0.08),
           innerGradient: null,
           innerBorder: null,
           numberGradient: const [

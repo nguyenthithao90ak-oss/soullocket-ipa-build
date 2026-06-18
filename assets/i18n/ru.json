@@ -5763,7 +5763,7 @@
   "util_drawing_save_image_failed": "Невозможно сохранить изображение: {error}",
   "util_drawing_delete_image_failed": "Невозможно удалить фотографию: {error}.",
   "util_drawing_partner_drawing": "{name} рисует...",
-  "util_drawing_sync_online_count": "Синхронизация рисования включена • {count} партнёр в сети",
+  "util_drawing_sync_online_count": "Синхронизация включена 2 человека • {count} другой человек в сети",
   "util_drawing_canvas_locked_status": "Холст имеет блокировку прокрутки.  {status}",
   "util_finance_each_pays": "Каждый человек платит:\n {amount}",
   "util_finance_used_amount": "Используется: {amount}",

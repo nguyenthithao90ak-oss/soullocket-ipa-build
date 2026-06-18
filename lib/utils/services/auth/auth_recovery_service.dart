@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/security_service.dart';
 import 'auth_support.dart' as auth_support;
+import '../core/cloud_functions_helper.dart';
 
 class AuthRecoveryService {
   AuthRecoveryService({
@@ -296,12 +297,15 @@ class AuthRecoveryService {
 
   Future<bool> verifyPin(String houseId, String pin) async {
     try {
-      final callable = _functions.httpsCallable('verifyHousePin');
       final result = await _callOtpFunction(
-        () => callable.call({
-          'houseId': houseId.trim(),
-          'pin': pin.trim(),
-        }),
+        () => CloudFunctionsHelper.callSecure<dynamic>(
+          'verifyHousePin',
+          payload: {
+            'houseId': houseId.trim(),
+            'pin': pin.trim(),
+          },
+          throwOriginalException: true,
+        ),
       );
       final rawData = result.data;
       if (rawData is! Map) {
@@ -349,13 +353,16 @@ class AuthRecoveryService {
 
   Future<void> sendOtpEmail(String email) async {
     try {
-      final callable = _functions.httpsCallable('requestEmailOTP');
       final deviceId = await SecurityService().getDeviceId();
       await _callOtpFunction(
-        () => callable.call({
-          'email': email.trim(),
-          if (deviceId.trim().isNotEmpty) 'deviceId': deviceId.trim(),
-        }),
+        () => CloudFunctionsHelper.callSecure<dynamic>(
+          'requestEmailOTP',
+          payload: {
+            'email': email.trim(),
+            if (deviceId.trim().isNotEmpty) 'deviceId': deviceId.trim(),
+          },
+          throwOriginalException: true,
+        ),
         allowUnauthenticatedWithoutMarkers: true,
       );
     } catch (error) {
@@ -386,12 +393,15 @@ class AuthRecoveryService {
 
   Future<String> verifyOtpAndGetToken(String email, String otp) async {
     try {
-      final callable = _functions.httpsCallable('verifyEmailOTP');
       final result = await _callOtpFunction(
-        () => callable.call({
-          'email': email.trim(),
-          'otp': otp.trim(),
-        }),
+        () => CloudFunctionsHelper.callSecure<dynamic>(
+          'verifyEmailOTP',
+          payload: {
+            'email': email.trim(),
+            'otp': otp.trim(),
+          },
+          throwOriginalException: true,
+        ),
         allowUnauthenticatedWithoutMarkers: true,
       );
       final rawData = result.data;
@@ -438,12 +448,15 @@ class AuthRecoveryService {
         throw 'Email OTP không khớp email chính của tài khoản hiện tại.';
       }
 
-      final callable = _functions.httpsCallable('verifyPrimaryEmailOTP');
       final result = await _callOtpFunction(
-        () => callable.call({
-          'email': normalizedEmail,
-          'otp': otp.trim(),
-        }),
+        () => CloudFunctionsHelper.callSecure<dynamic>(
+          'verifyPrimaryEmailOTP',
+          payload: {
+            'email': normalizedEmail,
+            'otp': otp.trim(),
+          },
+          throwOriginalException: true,
+        ),
       );
       final data = _asStringDynamicMap(result.data);
       if (data == null) {
@@ -470,12 +483,15 @@ class AuthRecoveryService {
 
   Future<void> validateEmailOTP(String email, String otp) async {
     try {
-      final callable = _functions.httpsCallable('validateEmailOTP');
       final result = await _callOtpFunction(
-        () => callable.call({
-          'email': email.trim(),
-          'otp': otp.trim(),
-        }),
+        () => CloudFunctionsHelper.callSecure<dynamic>(
+          'validateEmailOTP',
+          payload: {
+            'email': email.trim(),
+            'otp': otp.trim(),
+          },
+          throwOriginalException: true,
+        ),
         allowUnauthenticatedWithoutMarkers: true,
       );
       final data = _asStringDynamicMap(result.data);

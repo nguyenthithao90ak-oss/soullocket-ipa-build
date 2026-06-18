@@ -14,7 +14,7 @@ struct WidgetTheme {
         switch bgTheme {
         case "dark":
             return WidgetTheme(
-                gradient: [Color(hex: "0C1020"), Color(hex: "1F2937"), Color(hex: "111827")],
+                gradient: [Color(hex: "0F172A"), Color(hex: "1E1E38"), Color(hex: "0F172A")],
                 textColor: .white,
                 secondaryTextColor: Color.white.opacity(0.78),
                 accentColor: Color(hex: "FF8FB1"),
@@ -23,16 +23,16 @@ struct WidgetTheme {
             )
         case "white":
             return WidgetTheme(
-                gradient: [Color(hex: "FFFFFF"), Color(hex: "F6F7FB"), Color(hex: "EEF2FF")],
+                gradient: [Color(hex: "FFFFFF"), Color(hex: "F8FAFC"), Color(hex: "F1F5F9")],
                 textColor: Color(hex: "1F2937"),
                 secondaryTextColor: Color(hex: "4B5563"),
                 accentColor: Color(hex: "D6336C"),
                 chipBackground: Color.white.opacity(0.88),
-                chipBorder: Color(hex: "E5E7EB")
+                chipBorder: Color(hex: "E2E8F0")
             )
         case "blue":
             return WidgetTheme(
-                gradient: [Color(hex: "E0F2FE"), Color(hex: "BFDBFE"), Color(hex: "93C5FD")],
+                gradient: [Color(hex: "E0F2FE"), Color(hex: "BAE6FD"), Color(hex: "7DD3FC")],
                 textColor: Color(hex: "0F3D7A"),
                 secondaryTextColor: Color(hex: "215B9C"),
                 accentColor: Color(hex: "1565C0"),
@@ -41,8 +41,8 @@ struct WidgetTheme {
             )
         case "orange":
             return WidgetTheme(
-                gradient: [Color(hex: "FFF1D6"), Color(hex: "FED7AA"), Color(hex: "FDBA74")],
-                textColor: Color(hex: "9A3412"),
+                gradient: [Color(hex: "FEF3C7"), Color(hex: "FDBA74"), Color(hex: "F97316")],
+                textColor: Color(hex: "7C2D12"),
                 secondaryTextColor: Color(hex: "B45309"),
                 accentColor: Color(hex: "EA580C"),
                 chipBackground: Color.white.opacity(0.74),
@@ -50,7 +50,7 @@ struct WidgetTheme {
             )
         case "purple":
             return WidgetTheme(
-                gradient: [Color(hex: "F3E8FF"), Color(hex: "E9D5FF"), Color(hex: "C4B5FD")],
+                gradient: [Color(hex: "F3E8FF"), Color(hex: "E9D5FF"), Color(hex: "D8B4FE")],
                 textColor: Color(hex: "5B217A"),
                 secondaryTextColor: Color(hex: "7C3AED"),
                 accentColor: Color(hex: "8B5CF6"),
@@ -59,8 +59,8 @@ struct WidgetTheme {
             )
         case "green":
             return WidgetTheme(
-                gradient: [Color(hex: "DCFCE7"), Color(hex: "BBF7D0"), Color(hex: "86EFAC")],
-                textColor: Color(hex: "166534"),
+                gradient: [Color(hex: "ECFDF5"), Color(hex: "A7F3D0"), Color(hex: "6EE7B7")],
+                textColor: Color(hex: "065F46"),
                 secondaryTextColor: Color(hex: "0F766E"),
                 accentColor: Color(hex: "10B981"),
                 chipBackground: Color.white.opacity(0.74),
@@ -68,12 +68,12 @@ struct WidgetTheme {
             )
         case "red":
             return WidgetTheme(
-                gradient: [Color(hex: "FFE4E6"), Color(hex: "FDA4AF"), Color(hex: "FB7185")],
+                gradient: [Color(hex: "FFF5F5"), Color(hex: "FED7D7"), Color(hex: "FB7185")],
                 textColor: Color(hex: "9F1239"),
                 secondaryTextColor: Color(hex: "BE123C"),
                 accentColor: Color(hex: "E11D48"),
                 chipBackground: Color.white.opacity(0.76),
-                chipBorder: Color(hex: "FB7185")
+                chipBorder: Color(hex: "FCA5A5")
             )
         case "premium":
             return WidgetTheme(
@@ -88,12 +88,12 @@ struct WidgetTheme {
             fallthrough
         default:
             return WidgetTheme(
-                gradient: [Color(hex: "FFEEF5"), Color(hex: "FBCFE8"), Color(hex: "F9A8D4")],
+                gradient: [Color(hex: "FFF0F5"), Color(hex: "FFD3E0"), Color(hex: "FFB7CE")],
                 textColor: Color(hex: "831843"),
                 secondaryTextColor: Color(hex: "9D174D"),
                 accentColor: Color(hex: "FF4D73"),
                 chipBackground: Color.white.opacity(0.82),
-                chipBorder: Color(hex: "F9A8D4")
+                chipBorder: Color(hex: "FBCFE8")
             )
         }
     }
@@ -559,6 +559,91 @@ struct PremiumAuroraBackdrop: View {
     }
 }
 
+struct WidgetBackgroundDecorations: View {
+    let bgTheme: String
+    let accentColor: Color
+
+    var body: some View {
+        GeometryReader { proxy in
+            let size = proxy.size
+            let isDark = bgTheme == "dark"
+
+            ZStack {
+                if bgTheme != "premium" {
+                    if !isDark && bgTheme != "white" {
+                        // Top Right glow circle
+                        Circle()
+                            .fill(
+                                RadialGradient(
+                                    gradient: Gradient(colors: [accentColor.opacity(0.18), accentColor.opacity(0.04), .clear]),
+                                    center: .center,
+                                    startRadius: 2,
+                                    endRadius: size.width * 0.35
+                                )
+                            )
+                            .frame(width: size.width * 0.7, height: size.width * 0.7)
+                            .position(x: size.width * 0.9, y: size.height * 0.1)
+
+                        // Bottom Left glow circle
+                        Circle()
+                            .fill(
+                                RadialGradient(
+                                    gradient: Gradient(colors: [Color.white.opacity(0.45), Color.white.opacity(0.1), .clear]),
+                                    center: .center,
+                                    startRadius: 2,
+                                    endRadius: size.width * 0.28
+                                )
+                            )
+                            .frame(width: size.width * 0.56, height: size.width * 0.56)
+                            .position(x: size.width * 0.1, y: size.height * 0.9)
+                    }
+
+                    if isDark {
+                        // Dark theme subtle glows & stars
+                        Circle()
+                            .fill(
+                                RadialGradient(
+                                    gradient: Gradient(colors: [accentColor.opacity(0.10), .clear]),
+                                    center: .center,
+                                    startRadius: 2,
+                                    endRadius: size.width * 0.35
+                                )
+                            )
+                            .frame(width: size.width * 0.7, height: size.width * 0.7)
+                            .position(x: size.width * 0.85, y: size.height * 0.2)
+
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color.white.opacity(0.2))
+                            .position(x: size.width * 0.8, y: size.height * 0.25)
+
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 8))
+                            .foregroundColor(Color.white.opacity(0.15))
+                            .position(x: size.width * 0.15, y: size.height * 0.75)
+                    }
+
+                    if bgTheme == "white" {
+                        // White theme soft blue blob
+                        Circle()
+                            .fill(
+                                RadialGradient(
+                                    gradient: Gradient(colors: [Color(hex: "E0F2FE").opacity(0.55), .clear]),
+                                    center: .center,
+                                    startRadius: 2,
+                                    endRadius: size.width * 0.3
+                                )
+                            )
+                            .frame(width: size.width * 0.6, height: size.width * 0.6)
+                            .position(x: size.width * 0.85, y: size.height * 0.15)
+                    }
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
 struct PersonCard: View {
     let name: String
     let status: String
@@ -616,6 +701,8 @@ struct SoulLocketWidgetView: View {
 
             if entry.data.bgTheme == "premium" {
                 PremiumAuroraBackdrop(accentColor: theme.accentColor)
+            } else {
+                WidgetBackgroundDecorations(bgTheme: entry.data.bgTheme, accentColor: theme.accentColor)
             }
 
             switch family {
