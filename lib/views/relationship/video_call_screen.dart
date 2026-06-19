@@ -58,8 +58,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   }
 
   Future<void> _initRenderers() async {
-    final msgListenerFail = context.tr('relationship_khngththeo_dec6d3');
-    final msgErrorOccurred = context.tr('relationship_chathbtucu_cd4ee1');
     await _localRenderer.initialize();
     await _remoteRenderer.initialize();
     try {
@@ -123,10 +121,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             }
           },
           onError: (Object error) {
+            String msg = 'relationship_khngththeo_dec6d3';
+            if (mounted) msg = context.tr(msg);
             debugPrint(
               'Video call room listener failed: ${AppErrorMapper.resolve(
                 error,
-                fallbackMessage: msgListenerFail,
+                fallbackMessage: msg,
               ).message}',
             );
           },
@@ -135,6 +135,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isPreparing = false);
+      final msgErrorOccurred = context.tr('relationship_chathbtucu_cd4ee1');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msgErrorOccurred),

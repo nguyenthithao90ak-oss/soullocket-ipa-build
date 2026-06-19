@@ -20,6 +20,7 @@ import '../../chat/messenger_screen.dart';
 import '../../map/map_screen.dart';
 import '../../relationship/couple_connect_screen.dart';
 import '../../single_match/single_match_hub_screen.dart';
+import '../widgets/soul_merge_screen.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -45,7 +46,6 @@ import '../../../models/house_settings.dart';
 import '../../../models/utilities/shared_note.dart';
 import 'settings_tab.dart' show SettingsTab, FloatingHeartsRingOverlay;
 import '../../ui_prefs.dart';
-import '../../premium/premium_store_screen.dart';
 import '../../utilities/age_zodiac_screen.dart';
 import '../../utilities/bucket_list_screen.dart';
 import '../../utilities/calendar_screen.dart';
@@ -547,6 +547,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ),
     );
     unawaited(_promptPendingAvatarRetryIfNeeded());
+    unawaited(PurchaseService()
+        .getVipAccessInfo()
+        .catchError((_) => const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null)));
   }
 
   void _onActiveChanged() {
@@ -2215,6 +2218,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
             _buildMainContent(
               customBackgroundUrl: uiState.customBackgroundUrl,
             ),
+            _SoulMergeSticker(isSingle: _houseId == null),
           ],
         ),
       ),
@@ -2489,16 +2493,27 @@ class _CountdownQuickCustomizeSheetContentState
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDE8F0),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4A00E0).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   icon,
-                  color: const Color(0xFFD81B60),
-                  size: 19,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 10),
@@ -2593,16 +2608,27 @@ class _CountdownQuickCustomizeSheetContentState
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDE8F0),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF416C), Color(0xFFFF4B2B)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF4B2B).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: const Icon(
                   Icons.format_color_text_rounded,
-                  color: Color(0xFFD81B60),
-                  size: 19,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 10),
@@ -2701,16 +2727,27 @@ class _CountdownQuickCustomizeSheetContentState
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDE8F0),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF00C9FF), Color(0xFF92FE9D)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF00C9FF).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   icon,
-                  color: const Color(0xFFD81B60),
-                  size: 19,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 10),
@@ -2974,16 +3011,27 @@ class _CountdownQuickCustomizeSheetContentState
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDE8F0),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFDC830), Color(0xFFF37335)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFF37335).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: const Icon(
                   Icons.timer_outlined,
-                  color: Color(0xFFD81B60),
-                  size: 19,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 10),
@@ -3043,16 +3091,27 @@ class _CountdownQuickCustomizeSheetContentState
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDE8F0),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF9733EE).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: const Icon(
                   Icons.image_outlined,
-                  color: Color(0xFFD81B60),
-                  size: 19,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 10),
@@ -3493,3 +3552,93 @@ class _CountdownQuickCustomizeSheetContentState
     );
   }
 }
+
+class _SoulMergeSticker extends StatefulWidget {
+  final bool isSingle;
+  const _SoulMergeSticker({required this.isSingle});
+
+  @override
+  State<_SoulMergeSticker> createState() => _SoulMergeStickerState();
+}
+
+class _SoulMergeStickerState extends State<_SoulMergeSticker> {
+  Offset? _position;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPosition();
+  }
+
+  Future<void> _loadPosition() async {
+    final prefs = await SharedPreferences.getInstance();
+    final dx = prefs.getDouble('soul_merge_x');
+    final dy = prefs.getDouble('soul_merge_y');
+    if (dx != null && dy != null && mounted) {
+      setState(() => _position = Offset(dx, dy));
+    }
+  }
+
+  Future<void> _savePosition(Offset pos) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('soul_merge_x', pos.dx);
+    await prefs.setDouble('soul_merge_y', pos.dy);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isSingle) return const SizedBox.shrink();
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: UiPrefs.captureModeNotifier,
+      builder: (context, captureMode, _) {
+        if (captureMode) return const SizedBox.shrink();
+
+        final defaultPos = Offset(14, MediaQuery.of(context).padding.top + 4);
+        final pos = _position ?? defaultPos;
+
+        return Positioned(
+          left: pos.dx,
+          top: pos.dy,
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              setState(() {
+                _position = Offset(
+                  (pos.dx + details.delta.dx).clamp(0.0, MediaQuery.of(context).size.width - 50),
+                  (pos.dy + details.delta.dy).clamp(0.0, MediaQuery.of(context).size.height - 150),
+                );
+              });
+            },
+            onPanEnd: (_) {
+              if (_position != null) _savePosition(_position!);
+            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SoulMergeScreen()),
+            ),
+            child: Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF4F93).withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Image.asset(
+                'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+

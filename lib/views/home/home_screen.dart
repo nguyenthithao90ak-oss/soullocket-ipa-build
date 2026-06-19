@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:ui' as ui;
 
@@ -15,6 +15,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../../utils/services/offline_cache_service.dart';
 
+import '../../core/sl_page_physics.dart';
 import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/auth_service.dart';
@@ -37,6 +38,7 @@ import '../../widgets/touch_effect_overlay.dart';
 import '../notifications/notification_center_screen.dart';
 import '../chat/chat_detail_screen.dart';
 import '../relationship/couple_connect_screen.dart';
+import 'package:soullocket_app/views/utilities/health_screen.dart';
 import '../relationship/video_call_screen.dart';
 import '../utilities/calendar_screen.dart';
 import 'love_insights_screen.dart';
@@ -242,98 +244,7 @@ class _KeepAliveTabPageState extends State<_KeepAliveTabPage>
   }
 }
 
-class _HomeTabPagePhysics extends PageScrollPhysics {
-  static const double _pageSwitchThreshold = 0.46;
-  static const double _dragThreshold = 3.0;
-  static const double _minFlingDistanceMultiplier = 0.82;
-  static const double _minFlingVelocityMultiplier = 0.88;
 
-  const _HomeTabPagePhysics({super.parent});
-
-  @override
-  _HomeTabPagePhysics applyTo(ScrollPhysics? ancestor) {
-    return _HomeTabPagePhysics(parent: buildParent(ancestor));
-  }
-
-  double _getPage(ScrollMetrics position) {
-    if (position is PageMetrics) {
-      return position.page ?? 0.0;
-    }
-    final safeViewport =
-        position.viewportDimension == 0 ? 1.0 : position.viewportDimension;
-    return position.pixels / safeViewport;
-  }
-
-  double _getPixels(ScrollMetrics position, double page) {
-    final viewportFraction =
-        position is PageMetrics ? position.viewportFraction : 1.0;
-    final safeViewport = (position.viewportDimension * viewportFraction) == 0
-        ? 1.0
-        : (position.viewportDimension * viewportFraction);
-    return page * safeViewport;
-  }
-
-  double _getTargetPixels(ScrollMetrics position, double velocity) {
-    final page = _getPage(position);
-    final basePage = page.floorToDouble();
-
-    double targetPage;
-    if (velocity >= minFlingVelocity) {
-      targetPage = basePage + 1.0;
-    } else if (velocity <= -minFlingVelocity) {
-      targetPage = page.ceilToDouble() - 1.0;
-    } else {
-      final pageFraction = page - basePage;
-      targetPage =
-          pageFraction >= _pageSwitchThreshold ? basePage + 1.0 : basePage;
-    }
-
-    final targetPixels = _getPixels(position, targetPage);
-    if (targetPixels < position.minScrollExtent) {
-      return position.minScrollExtent;
-    }
-    if (targetPixels > position.maxScrollExtent) {
-      return position.maxScrollExtent;
-    }
-    return targetPixels;
-  }
-
-  @override
-  Simulation? createBallisticSimulation(
-    ScrollMetrics position,
-    double velocity,
-  ) {
-    if ((velocity <= 0.0 && position.pixels <= position.minScrollExtent) ||
-        (velocity >= 0.0 && position.pixels >= position.maxScrollExtent)) {
-      return super.createBallisticSimulation(position, velocity);
-    }
-
-    final tolerance = toleranceFor(position);
-    final target = _getTargetPixels(position, velocity);
-    if ((target - position.pixels).abs() <= tolerance.distance) {
-      return null;
-    }
-
-    return ScrollSpringSimulation(
-      spring,
-      position.pixels,
-      target,
-      velocity,
-      tolerance: tolerance,
-    );
-  }
-
-  @override
-  double get minFlingDistance =>
-      super.minFlingDistance * _minFlingDistanceMultiplier;
-
-  @override
-  double get minFlingVelocity =>
-      super.minFlingVelocity * _minFlingVelocityMultiplier;
-
-  @override
-  double? get dragStartDistanceMotionThreshold => _dragThreshold;
-}
 
 class _HomePreloadPageView extends StatefulWidget {
   final PageController controller;
@@ -405,9 +316,9 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
   @override
   Widget build(BuildContext context) {
     final axisDirection = _axisDirectionFor(context);
-    // Render nhiều tab hơn (cacheExtent = 2.0) để pre-render trước các tab lân cận,
-    // giúp chuyển tab mượt hơn, không phải build lại từ đầu.
-    const cacheExtent = 2.0;
+    // Render tab lân cận (cacheExtent = 1.0) để pre-render 1 tab kế tiếp,
+    // giúp chuyển tab mượt nhưng không làm tràn RAM như khi để 2.0 (tải 5 tab cùng lúc).
+    const cacheExtent = 1.0;
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -1034,7 +945,30 @@ class _HomeScreenState extends State<HomeScreen>
       case WidgetLaunchAction.calendar:
         await _openCalendarFromWidget();
         return;
+      case WidgetLaunchAction.cycle:
+        await _openHealthScreenFromWidget();
+        return;
     }
+  }
+
+  Future<void> _openHealthScreenFromWidget() async {
+    final houseId = await _houseService.getCurrentHouseId();
+    if (houseId == null || houseId.trim().isEmpty) {
+      await _switchToTab(0);
+      return;
+    }
+    if (!mounted) return;
+
+    await _switchToTab(0);
+    if (!mounted) return;
+
+    await Navigator.of(context).push(
+      SLRoute(
+        builder: (_) => HealthScreen(
+          houseId: houseId,
+        ),
+      ),
+    );
   }
 
   Future<void> _openLoveScreenFromWidget() async {
@@ -1500,10 +1434,9 @@ class _HomeScreenState extends State<HomeScreen>
               controller: _pageController,
               onPageChanged: _handlePageChanged,
               dragStartBehavior: DragStartBehavior.start,
-              // ⚡ TẮT VUỐT: NeverScrollableScrollPhysics — chỉ chuyển tab bằng nút bottom nav.
-              // ☞ BẬT LẠI: đổi thành `const _HomeTabPagePhysics(parent: ClampingScrollPhysics())`
-              physics:
-                  const NeverScrollableScrollPhysics(),
+              // 🛑 TẮT VƯỢT: NeverScrollableScrollPhysics để chỉ chuyển tab bằng nút bottom nav.
+              // ✅ BẬT LẠI: đổi thành `const _HomeTabPagePhysics(parent: ClampingScrollPhysics())`
+              physics: const NeverScrollableScrollPhysics(),
               children: List<Widget>.generate(
                 _navItems.length,
                 _tabPageForIndex,

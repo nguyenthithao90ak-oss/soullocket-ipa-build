@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
@@ -871,6 +872,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                           : _loadError != null
                               ? _buildLoadError()
                               : TabBarView(
+                                  physics: const SLPagePhysics(),
                                   controller: _tabController,
                                   children: <Widget>[
                                     _buildDiscoveryTab(),

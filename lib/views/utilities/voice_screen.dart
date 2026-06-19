@@ -41,6 +41,49 @@ class VoiceScreen extends StatefulWidget {
 }
 
 class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Ghi âm giọng nói',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Ghi lại các lời chúc, giọng hát, hoặc tiếng ngáy của người ấy để lưu giữ.\n- Lưu trữ trên mây, không lo mất file khi đổi điện thoại.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Bấm và giữ biểu tượng Micro để bắt đầu ghi âm.\n- Đặt tên cho bản ghi và lưu lại.\n- Bấm nút Phát để nghe lại bất cứ lúc nào, âm thanh sẽ đồng bộ sang máy người kia.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu'),
+          ),
+        ],
+      ),
+    );
+  }
+
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
   final PrivateMediaUrlService _privateMediaUrlService =
@@ -840,6 +883,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
           ),
         ),
         centerTitle: true,
+          actions: [_buildInfoIcon(context)],
         backgroundColor: Colors.transparent,
         elevation: 0,
         flexibleSpace: ClipRect(

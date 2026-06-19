@@ -12,6 +12,49 @@ class CalculatorScreen extends StatefulWidget {
 }
 
 class _CalculatorScreenState extends State<CalculatorScreen> {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: SLColors.primary, size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Máy tính',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Công cụ tính toán nhanh dùng ngay trong ứng dụng mà không cần thoát ra ngoài.\n- Có thể dùng khi đang tính chi phí đi chơi chung hoặc chia tiền.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Nhập các phép tính như máy tính thông thường.\n- Lịch sử tính toán được lưu lại tạm thời để xem các kết quả trước đó.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   static const List<String> _buttons = [
     'C',
     '( )',
@@ -142,7 +185,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, L10nService().translate('util_mytnh_fcce20')),
+      appBar: SLTheme.appBar(context, L10nService().translate('util_mytnh_fcce20'), actions: [_buildInfoIcon(context)]),
       body: SLTheme.background(
         child: SafeArea(
           child: Column(

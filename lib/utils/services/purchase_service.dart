@@ -210,6 +210,9 @@ class PurchaseService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  VipAccessInfo? _cachedAccessInfo;
+  String? _cachedAccessUid;
+
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
   bool _initialized = false;
   Future<void>? _initializing;
@@ -290,7 +293,7 @@ class PurchaseService {
         headers: headers,
         body: jsonEncode({'uid': user.uid}),
       );
-      await getVipAccessInfo();
+      await getVipAccessInfo(forceRefresh: true);
 
       if (response.statusCode != 200) {
         debugPrint(
@@ -659,7 +662,7 @@ class PurchaseService {
     );
   }
 
-  Future<VipAccessInfo> getVipAccessInfo() async {
+  Future<VipAccessInfo> getVipAccessInfo({bool forceRefresh = false}) async {
     if (!AppConfig.isPurchaseEnabled) {
       return const VipAccessInfo(
         isVip: false,
@@ -670,32 +673,44 @@ class PurchaseService {
 
     final user = _auth.currentUser;
     if (user == null) {
+      _cachedAccessInfo = null;
+      _cachedAccessUid = null;
       return const VipAccessInfo(
         isVip: false,
         planId: '',
         expiresAtMs: null,
       );
     }
+
+    if (!forceRefresh && _cachedAccessInfo != null && _cachedAccessUid == user.uid) {
+      return _cachedAccessInfo!;
+    }
+
+    VipAccessInfo access = const VipAccessInfo(
+      isVip: false,
+      planId: '',
+      expiresAtMs: null,
+    );
 
     final userVipSnap = await _db.ref('users/${user.uid}/vip').get();
     if (userVipSnap.exists) {
       final userVipData = _toMap(userVipSnap.value);
-      final access = _vipAccessFromPayload(userVipData, planField: 'vipPlan');
-      if (access.isVip) {
-        return access;
+      final userAccess = _vipAccessFromPayload(userVipData, planField: 'vipPlan');
+      if (userAccess.isVip) {
+        access = userAccess;
       }
     }
 
-    final houseId = await _resolveCurrentHouseId(user.uid);
-    if (houseId == null || houseId.isEmpty) {
-      return const VipAccessInfo(
-        isVip: false,
-        planId: '',
-        expiresAtMs: null,
-      );
+    if (!access.isVip) {
+      final houseId = await _resolveCurrentHouseId(user.uid);
+      if (houseId != null && houseId.isNotEmpty) {
+        access = await _getHouseVipAccessInfo(houseId);
+      }
     }
 
-    return _getHouseVipAccessInfo(houseId);
+    _cachedAccessInfo = access;
+    _cachedAccessUid = user.uid;
+    return access;
   }
 
   Map<String, dynamic> _toMap(dynamic raw) {

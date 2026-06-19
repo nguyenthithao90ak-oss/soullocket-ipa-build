@@ -1355,6 +1355,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 SLSpacing.h8,
                 Expanded(
                   child: TabBarView(
+                    physics: const SLPagePhysics(),
                     children: labels.map((label) {
                       final stickers = stickerGroups[label]!;
                       return GridView.builder(

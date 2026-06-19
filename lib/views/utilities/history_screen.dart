@@ -26,6 +26,49 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Lịch sử hoạt động',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Ghi lại toàn bộ dấu chân tương tác của hai người: ngày bắt đầu yêu, lần đầu thêm ảnh, khi thay đổi hình nền, v.v.\n- Giúp dễ dàng theo dõi dòng thời gian phát triển tình cảm.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Hệ thống tự động lưu các sự kiện quan trọng vào lịch sử.\n- Bạn có thể xem lại để thấy nhà chung của mình đã thay đổi thế nào qua thời gian.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   final _svc = ActivityHistoryService.instance;
   final _criticalSync = CriticalDataSyncService();
   List<ActivityHistoryEntry> _history = [];
@@ -163,6 +206,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ),
         centerTitle: true,
+
         backgroundColor: Colors.transparent,
         elevation: 0,
         flexibleSpace: ClipRect(
@@ -184,6 +228,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 onPressed: () => Navigator.pop(context),
               ),
         actions: [
+          _buildInfoIcon(context),
           IconButton(
             icon:
                 const Icon(Icons.delete_sweep_outlined, color: Colors.white70),

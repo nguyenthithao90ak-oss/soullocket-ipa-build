@@ -28,7 +28,6 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
   }
 
   Future<void> _initCamera() async {
-    final msgInitErr = context.tr('home_khngthkhin_e72ec1');
     try {
       _cameras = await availableCameras();
       if (_cameras.isEmpty) return;
@@ -40,6 +39,8 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
 
       await _startCamera(_cameras[_currentCameraIndex]);
     } catch (e) {
+      if (!mounted) return;
+      final msgInitErr = context.tr('home_khngthkhin_e72ec1');
       debugPrint('Error init camera: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: msgInitErr,

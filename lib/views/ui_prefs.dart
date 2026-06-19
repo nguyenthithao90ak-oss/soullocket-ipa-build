@@ -412,36 +412,34 @@ class UiPrefs {
     notifier.value = normalized;
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await prefs.setString(_kThemeKey, normalized.themeKey);
-    await prefs.setString(_kFallingEffectKey, normalized.fallingEffectKey);
-    await prefs.setDouble(_kAvatarSizeKey, normalized.avatarSizePx);
-    await prefs.setDouble(_kCountdownSizeKey, normalized.countdownSizePx);
-    await prefs.setString(_kAvatarFrameKey, normalized.avatarFrameKey);
-    await prefs.setString(_kCountdownStyleKey, normalized.countdownStyleKey);
-    await prefs.setString(_kCountdownTopLabelKey, normalized.countdownTopLabel);
-    await prefs.setString(
-        _kCountdownBottomLabelKey, normalized.countdownBottomLabel);
-    await prefs.setString(_kCountdownTextColorKey, normalized.countdownTextColor);
-    await prefs.setString(_kFontKey, normalized.fontKey);
-    await prefs.setString(_kHomeBlockToneKey, normalized.homeBlockToneKey);
-    await prefs.setBool(_kLiteModeKey, normalized.liteMode);
-    await prefs.setString(_kGraphicsQualityKey, normalized.graphicsQualityKey);
-    await prefs.setBool(_kTouchSoundKey, normalized.touchSound);
-    await prefs.setBool(_kConfettiFxKey, normalized.confettiFx);
-    await prefs.setBool(_kMusicAutoplayKey, normalized.musicAutoplay);
-    await prefs.setInt(_kVaultTimeoutKey, normalized.vaultTimeoutMins);
-    await prefs.setBool(_kVaultHomeEnabledKey, normalized.vaultHomeEnabled);
-    await prefs.setString(_kVaultHomeStyleKey, normalized.vaultHomeStyle);
-    await prefs.setBool(
-        _kVaultHomeBadgeEnabledKey, normalized.vaultHomeBadgeEnabled);
-    await prefs.setBool(
-        _kVaultHomePreviewEnabledKey, normalized.vaultHomePreviewEnabled);
-    await prefs.setBool(_kVaultHomeHidePreviewWhenLockedKey,
-        normalized.vaultHomeHidePreviewWhenLocked);
-    await prefs.setString(
-        _kCustomBackgroundUrlKey, normalized.customBackgroundUrl);
-    await prefs.setBool(_kTransparentModeKey, normalized.transparentMode);
-    await prefs.setString(_kBrandMarkKey, normalized.brandMarkKey);
+    
+    await Future.wait([
+      prefs.setString(_kThemeKey, normalized.themeKey),
+      prefs.setString(_kFallingEffectKey, normalized.fallingEffectKey),
+      prefs.setDouble(_kAvatarSizeKey, normalized.avatarSizePx),
+      prefs.setDouble(_kCountdownSizeKey, normalized.countdownSizePx),
+      prefs.setString(_kAvatarFrameKey, normalized.avatarFrameKey),
+      prefs.setString(_kCountdownStyleKey, normalized.countdownStyleKey),
+      prefs.setString(_kCountdownTopLabelKey, normalized.countdownTopLabel),
+      prefs.setString(_kCountdownBottomLabelKey, normalized.countdownBottomLabel),
+      prefs.setString(_kCountdownTextColorKey, normalized.countdownTextColor),
+      prefs.setString(_kFontKey, normalized.fontKey),
+      prefs.setString(_kHomeBlockToneKey, normalized.homeBlockToneKey),
+      prefs.setBool(_kLiteModeKey, normalized.liteMode),
+      prefs.setString(_kGraphicsQualityKey, normalized.graphicsQualityKey),
+      prefs.setBool(_kTouchSoundKey, normalized.touchSound),
+      prefs.setBool(_kConfettiFxKey, normalized.confettiFx),
+      prefs.setBool(_kMusicAutoplayKey, normalized.musicAutoplay),
+      prefs.setInt(_kVaultTimeoutKey, normalized.vaultTimeoutMins),
+      prefs.setBool(_kVaultHomeEnabledKey, normalized.vaultHomeEnabled),
+      prefs.setString(_kVaultHomeStyleKey, normalized.vaultHomeStyle),
+      prefs.setBool(_kVaultHomeBadgeEnabledKey, normalized.vaultHomeBadgeEnabled),
+      prefs.setBool(_kVaultHomePreviewEnabledKey, normalized.vaultHomePreviewEnabled),
+      prefs.setBool(_kVaultHomeHidePreviewWhenLockedKey, normalized.vaultHomeHidePreviewWhenLocked),
+      prefs.setString(_kCustomBackgroundUrlKey, normalized.customBackgroundUrl),
+      prefs.setBool(_kTransparentModeKey, normalized.transparentMode),
+      prefs.setString(_kBrandMarkKey, normalized.brandMarkKey),
+    ]);
 
     try {
       unawaited(SettingsSyncService().backupSettingsToCloud());

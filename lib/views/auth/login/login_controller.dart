@@ -48,6 +48,8 @@ class LoginController extends ChangeNotifier {
   String? _draftRelationshipMode;
   String? get draftRelationshipMode => _draftRelationshipMode;
 
+  int _failedAuthAttempts = 0;
+
   String _selectedSecurityQuestion =
       L10nService().translate('auth_security_q_dob');
   String get selectedSecurityQuestion => _selectedSecurityQuestion;
@@ -231,7 +233,11 @@ class LoginController extends ChangeNotifier {
 
       registerRelMode = await ensureRelationshipModeSelected(email);
       if (registerRelMode == null) return;
+    }
 
+    final isProxy = await SecurityService().isProxyOrVpnActive();
+    
+    if (_failedAuthAttempts >= 2) {
       final passed = await showMathCaptcha();
       if (!passed) return;
     }
@@ -244,7 +250,6 @@ class LoginController extends ChangeNotifier {
       if (_isLoginTab) {
         SLNotice.showInfo(context,
             L10nService().translate('auth_logging_in'));
-        final isProxy = await SecurityService().isProxyOrVpnActive();
         SecurityService().setProxyAtLogin(isProxy);
 
         await _authService.signInWithEmailPassword(email, password).timeout(
@@ -273,7 +278,6 @@ class LoginController extends ChangeNotifier {
         SLNotice.showInfo(
             context,
             L10nService().translate('auth_creating_account'));
-        final isProxy = await SecurityService().isProxyOrVpnActive();
         SecurityService().setProxyAtLogin(isProxy);
 
         debugPrint('[Auth][Register] start createUserWithEmailAndPassword');
@@ -318,6 +322,7 @@ class LoginController extends ChangeNotifier {
         );
       }
     } catch (e) {
+      _failedAuthAttempts++;
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: _isLoginTab
@@ -376,6 +381,8 @@ class LoginController extends ChangeNotifier {
         return;
       }
 
+      _failedAuthAttempts = 0; // Reset on success
+
       if (context.mounted) {
         _showSuccessDialog(
           context,
@@ -386,6 +393,7 @@ class LoginController extends ChangeNotifier {
         );
       }
     } catch (e) {
+      _failedAuthAttempts++;
       if (context.mounted) {
         SLNotice.showError(
           context,
@@ -431,6 +439,7 @@ class LoginController extends ChangeNotifier {
           }
         }
       } catch (e) {
+        _failedAuthAttempts++;
         if (context.mounted) {
           SLNotice.showError(
             context,
@@ -459,6 +468,7 @@ class LoginController extends ChangeNotifier {
         actions: [
           TextButton(
             onPressed: () {
+              _failedAuthAttempts = 0; // Reset on success
               Navigator.of(ctx).pop();
               if (next != null && context.mounted) {
                 Navigator.of(context)

@@ -26,6 +26,49 @@ class BucketListScreen extends StatefulWidget {
 
 class _BucketListScreenState extends State<BucketListScreen>
     with TickerProviderStateMixin {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: SLColors.primary, size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Danh sách Bucket 100',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Gợi ý và lưu trữ 100 điều các cặp đôi nên làm cùng nhau.\n- Theo dõi tiến độ hoàn thành (0/100).\n- Chia sẻ cảm xúc khi hoàn thành từng mục.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Bấm dấu + để tự thêm điều muốn làm hoặc chọn từ gợi ý có sẵn.\n- Khi cả hai cùng hoàn thành một mục, hãy đánh dấu "Hoàn thành" để lưu lại kỷ niệm.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final TextEditingController _itemController = TextEditingController();
 
@@ -150,7 +193,7 @@ class _BucketListScreenState extends State<BucketListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, context.tr('util_danhschcng_153531')),
+      appBar: SLTheme.appBar(context, context.tr('util_danhschcng_153531'), actions: [_buildInfoIcon(context)]),
       body: Stack(
         children: <Widget>[
           SLTheme.softCanvasBackdrop(

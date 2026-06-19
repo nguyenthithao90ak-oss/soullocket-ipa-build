@@ -21,6 +21,9 @@ class FinanceScreen extends StatefulWidget {
 }
 
 class _FinanceScreenState extends State<FinanceScreen> {
+
+
+
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
@@ -327,6 +330,41 @@ class _FinanceScreenState extends State<FinanceScreen> {
     super.dispose();
   }
 
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        title: Text(
+          'Quỹ chung',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: SLTheme.textMain),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold, color: SLTheme.textMain)),
+              SizedBox(height: 4),
+              Text('- Ghi chép chi tiêu chung của hai người (đi ăn, xem phim, du lịch).\n- Thống kê biểu đồ trực quan xem tiền đang được tiêu vào mục nào nhiều nhất.\n- Theo dõi số dư quỹ chung nếu có đóng góp.', style: TextStyle(color: SLTheme.textLight)),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold, color: SLTheme.textMain)),
+              SizedBox(height: 4),
+              Text('- Bấm + Giao dịch mới mỗi khi phát sinh chi tiêu.\n- Nhập số tiền, chọn hạng mục và ghi chú ai là người trả tiền.\n- Xem mục Thống kê để cân đối lại tài chính vào cuối tháng.', style: TextStyle(color: SLTheme.textLight)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -345,6 +383,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline_rounded, color: SLTheme.textMain, size: 22),
+            onPressed: () => _showInfoDialog(context),
+          ),
           IconButton(
             icon: const Icon(Icons.calculate_outlined, color: SLTheme.textMain),
             onPressed: _showSplitBillDialog,

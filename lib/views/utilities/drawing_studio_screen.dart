@@ -35,6 +35,9 @@ class DrawingStudioScreen extends StatefulWidget {
 }
 
 class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
+
+
+
   static const int _maxGalleryItems = 20;
 
   final GlobalKey _canvasKey = GlobalKey();
@@ -796,6 +799,41 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     return _activeGalleryActionId == item.id;
   }
 
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        title: Text(
+          'Xưởng vẽ',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: const Color(0xFFD81B60)),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD81B60))),
+              SizedBox(height: 4),
+              Text('- Bảng vẽ đồng bộ trực tiếp: bạn vẽ một nét, máy người kia lập tức hiện lên.\n- Cùng nhau tạo ra các tác phẩm nghệ thuật hoặc chơi trò đoán hình.', style: TextStyle(color: Color(0xFF8A5B76))),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD81B60))),
+              SizedBox(height: 4),
+              Text('- Chọn cọ vẽ, màu sắc và độ dày nét vẽ ở thanh công cụ.\n- Bắt đầu vẽ trên màn hình. Mọi thay đổi sẽ lập tức truyền đến máy người ấy.\n- Bấm nút Lưu để lưu tác phẩm vào thư viện máy hoặc cài làm nền.', style: TextStyle(color: Color(0xFF8A5B76))),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: Color(0xFFD81B60))),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -811,6 +849,12 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
             color: const Color(0xFFD81B60),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline_rounded, color: Color(0xFFD81B60), size: 22),
+            onPressed: () => _showInfoDialog(context),
+          ),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(

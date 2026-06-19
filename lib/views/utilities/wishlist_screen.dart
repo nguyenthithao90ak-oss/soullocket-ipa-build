@@ -20,6 +20,49 @@ class WishlistScreen extends StatefulWidget {
 }
 
 class _WishlistScreenState extends State<WishlistScreen> {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: SLColors.primary, size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Danh sách Ước nguyện',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Lưu lại những món quà hoặc những nơi bạn muốn đi để người ấy biết.\n- Tạo bất ngờ bằng cách âm thầm đánh dấu "Đã mua tặng".'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Bấm Thêm điều ước, nhập tên món quà, đính kèm hình ảnh và link mua hàng.\n- Nửa kia có thể vào xem và bấm nút Thực hiện điều ước để tặng bạn một sự bất ngờ.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final TextEditingController _itemController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
@@ -175,7 +218,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, context.tr('util_wishlisti_b2581f')),
+      appBar: SLTheme.appBar(context, context.tr('util_wishlisti_b2581f'), actions: [_buildInfoIcon(context)]),
       body: SLTheme.softCanvasBackdrop(
         baseColor: SLColors.bgMain,
         accentColor: SLColors.warning,

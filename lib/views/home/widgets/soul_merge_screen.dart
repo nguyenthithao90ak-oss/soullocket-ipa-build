@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../utils/helpers/bump_detector.dart';
@@ -448,16 +447,57 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF1A0533),
-                  Color(0xFF4A0033),
+                  Color(0xFF2C0B3E),
+                  Color(0xFF611756),
+                  Color(0xFF9C2A6F),
+                  Color(0xFFE2528F),
                 ],
+                stops: [0.0, 0.35, 0.7, 1.0],
               ),
             ),
           ),
           
+          // Soft glowing orbs for cuteness
+          Positioned(
+            top: -60,
+            right: -40,
+            child: Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.04),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 120,
+            left: -80,
+            child: Container(
+              width: 280,
+              height: 280,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFFF7FB2).withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 350,
+            right: 30,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFD81B60).withValues(alpha: 0.06),
+              ),
+            ),
+          ),
+
           // Isolated tap hearts particle overlay
           _TapHeartsOverlay(key: _heartsOverlayKey),
           

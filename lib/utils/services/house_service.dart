@@ -14,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/device_manager_service.dart';
 import '../../utils/services/single_match_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'auth/auth_recovery_service.dart';
 import 'core/cloud_functions_helper.dart';
 import 'offline_cache_service.dart';
 import 'secure_storage_service.dart';

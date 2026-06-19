@@ -22,6 +22,49 @@ class RewardStoreScreen extends StatefulWidget {
 }
 
 class _RewardStoreScreenState extends State<RewardStoreScreen> {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: Color(0xFFF9C040), size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Cửa hàng & Vòng quay',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Nơi tiêu hao "Điểm tình yêu" thu thập được mỗi ngày.\n- Đổi điểm lấy vé Vòng Quay May Mắn để trúng khung avatar, chủ đề ứng dụng, hoặc nhãn dán hiếm.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Tích lũy điểm thông qua việc làm nhiệm vụ hàng ngày.\n- Dùng điểm để mua vé quay. Mỗi lần quay sẽ ra một vật phẩm ngẫu nhiên. Các vật phẩm trùng lặp sẽ được quy đổi thành điểm thưởng.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   final AdMobService _adMob = AdMobService();
   final DailyQuestService _dailyQuestService = DailyQuestService();
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
@@ -815,8 +858,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 builder: (context, pointSnapshot) {
                   final points = pointSnapshot.data ?? 0;
                   return ListView(
-                    cacheExtent: 900,
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                    cacheExtent: 900, padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
                       _buildWatchAdCard(proUntil),
                       SLSpacing.h20,

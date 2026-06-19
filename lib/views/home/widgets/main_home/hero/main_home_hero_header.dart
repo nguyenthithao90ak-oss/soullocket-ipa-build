@@ -1,6 +1,6 @@
 part of '../../../tabs/main_home_tab.dart';
 
-class _MainHomeHeroHeader extends StatelessWidget {
+class _MainHomeHeroHeader extends StatefulWidget {
   final _MainHomeTabState state;
   final bool isSingle;
   final VoidCallback? onOpenSettings;
@@ -14,30 +14,14 @@ class _MainHomeHeroHeader extends StatelessWidget {
   });
 
   @override
+  State<_MainHomeHeroHeader> createState() => _MainHomeHeroHeaderState();
+}
+
+class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        if (!isSingle)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 4,
-            left: 14,
-            child: ValueListenableBuilder<bool>(
-              valueListenable: UiPrefs.captureModeNotifier,
-              builder: (context, captureMode, _) {
-                if (captureMode) return const SizedBox.shrink();
-                return state._buildHeaderButton(
-                  icon: Icons.join_inner_rounded,
-                  color: const Color(0xFFFF4F93),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const SoulMergeScreen(),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
         Positioned(
           top: MediaQuery.of(context).padding.top + 4,
           right: 14,
@@ -45,7 +29,7 @@ class _MainHomeHeroHeader extends StatelessWidget {
             valueListenable: UiPrefs.captureModeNotifier,
             builder: (context, captureMode, _) {
               final hideButton =
-                  state._hideSettingsButtonUntilRestart || captureMode;
+                  widget.state._hideSettingsButtonUntilRestart || captureMode;
               return IgnorePointer(
                 ignoring: captureMode,
                 child: AnimatedOpacity(
@@ -56,12 +40,12 @@ class _MainHomeHeroHeader extends StatelessWidget {
                     duration: const Duration(milliseconds: 180),
                     curve: Curves.easeOutCubic,
                     scale: hideButton ? 0.92 : 1.0,
-                    child: state._buildHeaderButton(
-                      key: firstGuideSettingsKey,
+                    child: widget.state._buildHeaderButton(
+                      key: widget.firstGuideSettingsKey,
                       icon: Icons.settings_rounded,
                       color: SLTheme.primary,
-                      onLongPress: state._hideSettingsButtonForSession,
-                      onTap: onOpenSettings ??
+                      onLongPress: widget.state._hideSettingsButtonForSession,
+                      onTap: widget.onOpenSettings ??
                           () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -77,11 +61,11 @@ class _MainHomeHeroHeader extends StatelessWidget {
             },
           ),
         ),
-        if (state._showLegacyMessengerButton && !isSingle)
+        if (widget.state._showLegacyMessengerButton && !widget.isSingle)
           Positioned(
             top: MediaQuery.of(context).padding.top + 12,
             left: 66,
-            child: state._buildHeaderButton(
+            child: widget.state._buildHeaderButton(
               icon: Icons.messenger_outline,
               color: const Color(0xFFD81B60),
               onTap: () => Navigator.push(

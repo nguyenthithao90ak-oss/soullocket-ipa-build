@@ -10,7 +10,6 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'consent_service.dart';
 import 'security_service.dart';
-import 'auth_service.dart';
 import 'core/cloud_functions_helper.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';

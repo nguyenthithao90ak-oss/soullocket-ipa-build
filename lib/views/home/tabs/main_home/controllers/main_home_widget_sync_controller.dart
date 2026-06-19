@@ -324,6 +324,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         birthday2: dobU2,
         diaryImageUrls: diaryImageUrls,
       );
+      await WidgetService.syncCycleWidgetData(houseId: houseId);
+      await WidgetService.syncCalendarWidgetData(houseId: houseId);
       _lastLoveWidgetSignature = widgetSignature;
     } catch (_) {}
   }

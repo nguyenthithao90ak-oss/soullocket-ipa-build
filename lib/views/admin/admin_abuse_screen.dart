@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
@@ -410,6 +411,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
           ),
           Expanded(
             child: TabBarView(
+              physics: const SLPagePhysics(),
               controller: _tabController,
               children: [
                 _buildLogsTab(),

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -118,15 +120,20 @@ class _CinemaScreenState extends State<CinemaScreen> {
   @override
   void initState() {
     super.initState();
-    _msgHouseNameDefault = context.tr('util_rpknim_d094b9');
-    _msgSettingsLoadFail = context.tr('util_khngthtici_5693ed');
-    _msgMemoriesLoadFail = context.tr('util_khngthtinh_b3efc6');
-    _msgReelLoadFail = context.tr('util_khngthtire_9725ac');
 
     _listenToSettings();
     _listenToMemories();
     _listenToDailyReel();
     _startPreviewTimer();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _msgHouseNameDefault = context.tr('util_rpknim_d094b9');
+    _msgSettingsLoadFail = context.tr('util_khngthtici_5693ed');
+    _msgMemoriesLoadFail = context.tr('util_khngthtinh_b3efc6');
+    _msgReelLoadFail = context.tr('util_khngthtire_9725ac');
   }
 
   @override

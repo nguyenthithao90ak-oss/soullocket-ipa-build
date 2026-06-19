@@ -190,6 +190,7 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
         children: <Widget>[
           Positioned.fill(
             child: PageView.builder(
+              physics: const SLPagePhysics(),
               controller: _pageController,
               itemCount: widget.reel.items.length,
               onPageChanged: (value) {

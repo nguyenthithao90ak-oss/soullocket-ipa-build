@@ -1,6 +1,41 @@
 part of '../cinema_screen.dart';
 
 extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Rạp chiếu phim',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Cùng nhau xem YouTube đồng bộ từ xa (vừa xem vừa chat/call).\n- Bạn tua video hoặc tạm dừng, máy người ấy cũng đồng bộ theo lập tức.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Dán link video YouTube vào ô tìm kiếm hoặc chọn từ lịch sử.\n- Khi video phát, cả hai sẽ xem cùng một khoảnh khắc. Bất kỳ ai bấm Pause hoặc tua đi, hệ thống sẽ đồng bộ cho người còn lại.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTopBar() {
     final reel = _activeReel;
     return LayoutBuilder(
@@ -13,6 +48,11 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               icon: Icons.arrow_back_ios_new_rounded,
               onTap: () => Navigator.of(context).maybePop(),
             ),
+              const SizedBox(width: 8),
+              _circleButton(
+                icon: Icons.info_outline_rounded,
+                onTap: () => _showInfoDialog(context),
+              ),
             SizedBox(width: compact ? 8 : 12),
             Expanded(
               child: Align(
@@ -879,29 +919,49 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
   }
 
   Widget _networkImage(String url) {
-    return CachedNetworkImage(
-      memCacheWidth: 1440,
-      imageUrl: url,
-      fit: BoxFit.cover,
-      filterQuality: FilterQuality.high,
-      placeholder: (_, __) => Container(
-        color: const Color(0xFF182334),
-        alignment: Alignment.center,
-        child: const CircularProgressIndicator(
-          strokeWidth: 2.2,
-          color: Color(0xFFFF6FA5),
+    final isNetwork = url.startsWith('http://') || url.startsWith('https://');
+
+    if (isNetwork) {
+      return CachedNetworkImage(
+        memCacheWidth: 1440,
+        imageUrl: url,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        placeholder: (_, __) => Container(
+          color: const Color(0xFF182334),
+          alignment: Alignment.center,
+          child: const CircularProgressIndicator(
+            strokeWidth: 2.2,
+            color: Color(0xFFFF6FA5),
+          ),
         ),
-      ),
-      errorWidget: (_, __, ___) => Container(
-        color: const Color(0xFF182334),
-        alignment: Alignment.center,
-        child: const Icon(
-          Icons.broken_image_outlined,
-          color: Colors.white70,
-          size: 30,
+        errorWidget: (_, __, ___) => Container(
+          color: const Color(0xFF182334),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.broken_image_outlined,
+            color: Colors.white54,
+            size: 30,
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      return Image.file(
+        File(url),
+        cacheWidth: 1440,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (_, __, ___) => Container(
+          color: const Color(0xFF182334),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.broken_image_outlined,
+            color: Colors.white54,
+            size: 30,
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildContainedImage(
@@ -909,29 +969,44 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     int memCacheWidth = 1440,
     double errorIconSize = 30,
   }) {
+    final isNetwork = url.startsWith('http://') || url.startsWith('https://');
+
     return ColoredBox(
       color: Colors.black,
       child: Center(
-        child: CachedNetworkImage(
-          memCacheWidth: memCacheWidth,
-          imageUrl: url,
-          fit: BoxFit.scaleDown,
-          filterQuality: FilterQuality.high,
-          alignment: Alignment.center,
-          placeholder: (_, __) => const SizedBox(
-            width: 34,
-            height: 34,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.2,
-              color: Color(0xFFFF6FA5),
-            ),
-          ),
-          errorWidget: (_, __, ___) => Icon(
-            Icons.broken_image_outlined,
-            color: Colors.white70,
-            size: errorIconSize,
-          ),
-        ),
+        child: isNetwork
+            ? CachedNetworkImage(
+                memCacheWidth: memCacheWidth,
+                imageUrl: url,
+                fit: BoxFit.scaleDown,
+                filterQuality: FilterQuality.high,
+                alignment: Alignment.center,
+                placeholder: (_, __) => const SizedBox(
+                  width: 34,
+                  height: 34,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: Color(0xFFFF6FA5),
+                  ),
+                ),
+                errorWidget: (_, __, ___) => Icon(
+                  Icons.broken_image_outlined,
+                  color: Colors.white70,
+                  size: errorIconSize,
+                ),
+              )
+            : Image.file(
+                File(url),
+                cacheWidth: memCacheWidth,
+                fit: BoxFit.scaleDown,
+                filterQuality: FilterQuality.high,
+                alignment: Alignment.center,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.broken_image_outlined,
+                  color: Colors.white70,
+                  size: errorIconSize,
+                ),
+              ),
       ),
     );
   }

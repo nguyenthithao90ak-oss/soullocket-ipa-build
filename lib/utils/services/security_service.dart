@@ -111,16 +111,29 @@ class SecurityService {
           includeLoopback: false, type: InternetAddressType.any);
       for (var interface in interfaces) {
         final name = interface.name.toLowerCase();
-        if (name.contains('tun') ||
-            name.contains('tap') ||
-            name.contains('ppp') ||
-            name.contains('pptp') ||
-            name.contains('ipsec') ||
-            name.contains('vpn') ||
-            name.contains('wireguard') ||
-            name.contains('wg0') ||
-            name.contains('utun') ||
-            name.contains('ovpn')) {
+        
+        bool isVpn = false;
+        if (Platform.isIOS) {
+          // On iOS, utun, ipsec, ppp are often used for Cellular, Hotspot, Private Relay
+          isVpn = name.contains('tap') || 
+                  (name.contains('tun') && !name.startsWith('utun')) || 
+                  name.contains('wireguard') || 
+                  name.contains('wg0') || 
+                  name.contains('ovpn');
+        } else {
+          isVpn = name.contains('tun') ||
+              name.contains('tap') ||
+              name.contains('ppp') ||
+              name.contains('pptp') ||
+              name.contains('ipsec') ||
+              name.contains('vpn') ||
+              name.contains('wireguard') ||
+              name.contains('wg0') ||
+              name.contains('utun') ||
+              name.contains('ovpn');
+        }
+
+        if (isVpn) {
           isDetected = true;
           break;
         }
@@ -675,12 +688,20 @@ class SecurityService {
             ? interface.addresses.first.address
             : 'N/A';
 
-        bool isVpnIface = name.contains('tun') ||
-            name.contains('tap') ||
-            name.contains('vpn') ||
-            name.contains('ppp') ||
-            name.contains('wg') ||
-            name.contains('utun');
+        bool isVpnIface = false;
+        if (Platform.isIOS) {
+          isVpnIface = name.contains('tap') ||
+              (name.contains('tun') && !name.startsWith('utun')) ||
+              name.contains('vpn') ||
+              name.contains('wg');
+        } else {
+          isVpnIface = name.contains('tun') ||
+              name.contains('tap') ||
+              name.contains('vpn') ||
+              name.contains('ppp') ||
+              name.contains('wg') ||
+              name.contains('utun');
+        }
 
         if (isVpnIface) {
           vpnIp = addr;

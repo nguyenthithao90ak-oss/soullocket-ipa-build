@@ -223,7 +223,7 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                 ),
               ],
             ),
-            if (this._homeMapAlertNotifier.value != null && _homeMapAlertNotifier.value!.trim().isNotEmpty) ...[
+            if (_homeMapAlertNotifier.value != null && _homeMapAlertNotifier.value!.trim().isNotEmpty) ...[
               SLSpacing.h8,
               Container(
                 width: double.infinity,

@@ -24,6 +24,38 @@ class GiftcodeScreen extends StatefulWidget {
 }
 
 class _GiftcodeScreenState extends State<GiftcodeScreen> {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Nhập mã Quà tặng',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: Text(
+          'Nhập mã Giftcode để nhận được những phần quà đặc biệt từ các sự kiện của SoulLocket.',
+          style: SLTheme.quicksand(height: 1.45),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu'),
+          ),
+        ],
+      ),
+    );
+  }
+
   final TextEditingController _codeController = TextEditingController();
   final GiftcodeService _giftcodeService = GiftcodeService();
   bool _isLoading = false;
@@ -85,6 +117,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
           ),
         ),
         centerTitle: true,
+          actions: [_buildInfoIcon(context)],
         backgroundColor: Colors.transparent,
         elevation: 0,
         flexibleSpace: ClipRect(

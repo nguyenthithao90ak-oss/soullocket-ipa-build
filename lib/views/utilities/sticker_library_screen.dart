@@ -2,6 +2,49 @@ import 'package:flutter/material.dart';
 import '../../core/sl_theme.dart';
 
 class StickerLibraryScreen extends StatelessWidget {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: Color(0xFF24324A), size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Thư viện nhãn dán',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Nơi quản lý và thêm các bộ nhãn dán độc quyền dùng để ném vào người ấy trên màn hình chính.\n- Mở khóa nhãn dán hiếm thông qua vòng quay hoặc điểm tình yêu.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Duyệt qua các bộ nhãn dán, bấm Tải về để thêm vào bộ sưu tập.\n- Tại màn hình chính, mở ngăn kéo nhãn dán và ném chúng để tạo hiệu ứng tương tác.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   const StickerLibraryScreen({super.key});
 
   static const List<String> _stickers = <String>[
@@ -229,6 +272,7 @@ class StickerLibraryScreen extends StatelessWidget {
             color: const Color(0xFF24324A),
           ),
         ),
+        actions: [_buildInfoIcon(context)],
       ),
       body: SafeArea(
         child: Column(

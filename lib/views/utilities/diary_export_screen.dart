@@ -17,6 +17,49 @@ class DiaryExportScreen extends StatefulWidget {
 }
 
 class _DiaryExportScreenState extends State<DiaryExportScreen> {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: Color(0xFFD81B60), size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Xuất nhật ký',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Đóng gói toàn bộ nhật ký tình yêu thành một file duy nhất để lưu trữ Offline vĩnh viễn.\n- Dễ dàng in thành sách nếu muốn lưu giữ kỷ niệm cầm tay.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Bấm "Bắt đầu xuất dữ liệu", hệ thống sẽ thu thập bài viết, ảnh, và sticker.\n- File tải về có thể mở trực tiếp bằng trình duyệt trên máy tính hoặc điện thoại mà không cần mạng.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   bool _isLoading = true;
   bool _isExportingHtml = false;
   String _houseName = L10nService().translate('util_nginhtnhyu_dbebce');
@@ -93,6 +136,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
             color: const Color(0xFFD81B60),
           ),
         ),
+        actions: [_buildInfoIcon(context)],
       ),
       body: _isLoading
           ? const Center(

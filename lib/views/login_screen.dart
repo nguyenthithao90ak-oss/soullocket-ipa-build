@@ -62,6 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _securityAnswerController =
       TextEditingController();
 
+  int _failedAuthAttempts = 0;
+
   final AuthService _authService = AuthService();
   final AntiSpamRateLimitService _authRateLimiter = AntiSpamRateLimitService();
   final SecurityFlowGuard _securityFlowGuard = SecurityFlowGuard.instance;
@@ -417,9 +419,11 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      final passed = await _showMathCaptcha();
-      if (!passed) return;
-      if (!mounted) return;
+      if (_failedAuthAttempts >= 2) {
+        final passed = await _showMathCaptcha();
+        if (!passed) return;
+        if (!mounted) return;
+      }
     } else {
       sessionRole = await _readSavedGender(email);
       if (sessionRole == null && mounted) {
@@ -433,6 +437,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (_isLoginTab) {
+      if (_failedAuthAttempts >= 2) {
+        final passed = await _showMathCaptcha();
+        if (!passed) return;
+        if (!mounted) return;
+      }
+
       final canContinue = await _securityFlowGuard.guard(
         context,
         action: SensitiveActionType.loginWithPassword,
@@ -483,6 +493,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         if (!mounted) return;
+        _failedAuthAttempts = 0; // Reset on success
         debugPrint('[Auth][LoginScreen] login success -> navigate AppEntry');
         handedOffToAppEntry = true;
         setState(() => _isLoading = false);
@@ -508,6 +519,7 @@ class _LoginScreenState extends State<LoginScreen> {
         shouldClearPendingHouseSetupDraft = false;
 
         if (!mounted) return;
+        _failedAuthAttempts = 0; // Reset on success
         debugPrint('[Auth][LoginScreen] register success -> navigate AppEntry');
         handedOffToAppEntry = true;
         setState(() => _isLoading = false);
@@ -519,6 +531,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
     } catch (e) {
+      _failedAuthAttempts++;
       if (!_isLoginTab && shouldClearPendingHouseSetupDraft) {
         await _clearPendingHouseSetupDraft();
       }
@@ -731,6 +744,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (!mounted) return;
+      _failedAuthAttempts = 0; // Reset on success
       debugPrint(
           '[Auth][LoginScreen] social login success -> navigate AppEntry');
       handedOffToAppEntry = true;
@@ -742,6 +756,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return;
     } catch (e) {
+      _failedAuthAttempts++;
       final resolvedMessage = AppErrorMapper.resolve(
         e,
         fallbackMessage: L10nService().translate('auth_login_unavailable'),

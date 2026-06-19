@@ -1479,6 +1479,41 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     );
   }
 
+  void _showInfoDialog(BuildContext context) {
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1E1E2C),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(
+            'Hầm bí mật',
+            style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: Colors.white),
+          ),
+          content: const SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70)),
+                SizedBox(height: 4),
+                Text('- Nơi an toàn nhất để cất giữ hình ảnh và video nhạy cảm, riêng tư.\n- Bảo vệ bằng mã PIN hoặc FaceID/Vân tay.\n- Tùy chọn "Mã PIN giả" để hiển thị một hầm trống khi bị ép buộc mở.', style: TextStyle(color: Colors.white60)),
+                SizedBox(height: 12),
+                Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70)),
+                SizedBox(height: 4),
+                Text('- Thiết lập mã PIN lần đầu khi truy cập.\n- Bấm biểu tượng + để thêm ảnh/video từ thư viện máy.\n- Bật tính năng Mã PIN giả trong phần cài đặt của hầm để tăng cường bảo mật.', style: TextStyle(color: Colors.white60)),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Đã hiểu', style: TextStyle(color: Colors.blueAccent)),
+            ),
+          ],
+        ),
+      );
+    }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1502,12 +1537,17 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             child: Container(color: Colors.black.withValues(alpha: 0.2)),
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: Colors.white, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
+
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+            onPressed: () => _showInfoDialog(context),
+          ),
           if (_encryptionReady)
             IconButton(
               icon: const Icon(Icons.settings, color: Colors.white),

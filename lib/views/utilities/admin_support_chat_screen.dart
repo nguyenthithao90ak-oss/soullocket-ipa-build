@@ -24,7 +24,6 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
   @override
   void initState() {
     super.initState();
-    final msgListenerFail = context.tr('util_khngthtida_9bb7ee');
     _ticketsSub = _db.child('support_tickets').onValue.listen(
       (event) {
         final raw = event.snapshot.value;
@@ -56,10 +55,12 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
         });
       },
       onError: (Object error) {
+        String msg = 'util_khngthtida_9bb7ee';
+        if (mounted) msg = context.tr(msg);
         debugPrint(
           'Admin support listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: msgListenerFail,
+            fallbackMessage: msg,
           ).message}',
         );
       },
@@ -326,8 +327,6 @@ class _AdminSupportChatDetailScreenState
   @override
   void initState() {
     super.initState();
-    final msgTicketFail = context.tr('util_khngthtidl_617c2c');
-    final msgMessagesFail = context.tr('util_khngthtihi_4d3f34');
     _db.child('support_tickets/${widget.ticketId}/unread_admin').set(0);
 
     _ticketSub = _db.child('support_tickets/${widget.ticketId}').onValue.listen(
@@ -346,10 +345,12 @@ class _AdminSupportChatDetailScreenState
         setState(() => _ticket = item);
       },
       onError: (Object error) {
+        String msg = 'util_khngthtidl_617c2c';
+        if (mounted) msg = context.tr(msg);
         debugPrint(
           'Admin ticket listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: msgTicketFail,
+            fallbackMessage: msg,
           ).message}',
         );
       },
@@ -391,10 +392,12 @@ class _AdminSupportChatDetailScreenState
         });
       },
       onError: (Object error) {
+        String msg = 'util_khngthtihi_4d3f34';
+        if (mounted) msg = context.tr(msg);
         debugPrint(
           'Admin messages listener failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: msgMessagesFail,
+            fallbackMessage: msg,
           ).message}',
         );
       },

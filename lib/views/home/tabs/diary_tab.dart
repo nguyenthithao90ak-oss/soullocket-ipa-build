@@ -7,6 +7,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/sl_theme.dart';
@@ -1065,7 +1066,7 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                           if (allPhotos.isNotEmpty)
                             PageView.builder(
                               controller: pageController,
-                              physics: const BouncingScrollPhysics(),
+                              physics: const SLPagePhysics(parent: BouncingScrollPhysics()),
                               itemCount: allPhotos.length,
                               onPageChanged: (index) {
                                 setState(() {

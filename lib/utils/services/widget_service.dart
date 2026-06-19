@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'house_service.dart';
 import 'notification_service.dart';
 import 'daily_quest_service.dart';
+import 'package:soullocket_app/utils/services/health_cycle_service.dart';
 
 class WidgetService {
   static const String appGroupId = AppConfig.iOSAppGroupId;
@@ -24,6 +25,12 @@ class WidgetService {
   static const String androidWidgetName = 'WidgetCoupleProvider';
   static const String qualifiedAndroidWidgetName =
       'com.soullocket.app.WidgetCoupleProvider';
+  static const String androidWidgetCycleName = 'WidgetCycleProvider';
+  static const String qualifiedAndroidWidgetCycleName =
+      'com.soullocket.app.WidgetCycleProvider';
+  static const String androidWidgetCalendarName = 'WidgetCalendarProvider';
+  static const String qualifiedAndroidWidgetCalendarName =
+      'com.soullocket.app.WidgetCalendarProvider';
   static const String defaultWidgetStyleKey = 'classic';
   static const String defaultHeartStyleKey = '❤️';
   static const Set<String> _supportedHeartStyleKeys = <String>{
@@ -93,6 +100,19 @@ class WidgetService {
       qualifiedAndroidName: qualifiedAndroidWidgetName,
     );
     await refreshWidgetShell();
+  }
+
+  static Future<void> requestPinCycleWidget() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    await ensureInitialized(forceUpdate: true);
+    await HomeWidget.requestPinWidget(
+      androidName: androidWidgetCycleName,
+      qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
+    );
+    final houseId = await HouseService().getCurrentHouseId();
+    if (houseId != null && houseId.isNotEmpty) {
+      await syncCycleWidgetData(houseId: houseId);
+    }
   }
 
   static Future<void> refreshWidgetShell() async {
@@ -294,6 +314,16 @@ class WidgetService {
     await _saveIfMissing<String>('diaryImagePaths', '[]');
     await _saveIfMissing<String>('diaryImageUrlSignature', '');
     await _saveIfMissing<int>('diaryImageCount', 0);
+    await _saveIfMissing<bool>('cycle_enabled', false);
+    await _saveIfMissing<String>('cycle_phase', 'menstruation');
+    await _saveIfMissing<String>('cycle_phase_label', '🩸 Giai đoạn Hành kinh');
+    await _saveIfMissing<String>('cycle_next_period_in', '');
+    await _saveIfMissing<String>('cycle_tip', '');
+    await _saveIfMissing<String>('cycle_progress', '0.0');
+    await _saveIfMissing<bool>('calendar_enabled', false);
+    await _saveIfMissing<String>('calendar_countdown', '');
+    await _saveIfMissing<String>('calendar_next_date', '');
+    await _saveIfMissing<String>('calendar_events_text', '');
   }
 
   static String normalizeHeartStyleKey(String? value) {
@@ -984,6 +1014,185 @@ class WidgetService {
     } catch (e) {
       debugPrint('Error ending Live Activity: $e');
       return false;
+    }
+  }
+
+  static Future<void> syncCycleWidgetData({
+    required String houseId,
+  }) async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      final hasConsent = await SharedPreferences.getInstance()
+          .then((prefs) => prefs.getBool('il_health_consent') ?? false);
+      if (!hasConsent) {
+        await _saveWidgetDataIfChanged<bool>('cycle_enabled', false);
+        await HomeWidget.updateWidget(
+          androidName: androidWidgetCycleName,
+          qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
+        );
+        return;
+      }
+
+      final settings = await HealthCycleService().getCycleSettings(houseId);
+      if (settings == null) {
+        await _saveWidgetDataIfChanged<bool>('cycle_enabled', false);
+        await HomeWidget.updateWidget(
+          androidName: androidWidgetCycleName,
+          qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
+        );
+        return;
+      }
+
+      final state = HealthCycleService().calculateCurrentState(settings);
+
+      await _saveWidgetDataIfChanged<bool>('cycle_enabled', true);
+      await _saveWidgetDataIfChanged<String>('cycle_phase', state.phase.name);
+      await _saveWidgetDataIfChanged<String>(
+        'cycle_phase_label',
+        state.phaseLabel,
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'cycle_next_period_in',
+        state.nextPeriodIn == 0
+            ? 'Kỳ sau: Hôm nay'
+            : 'Kỳ sau: Còn ${state.nextPeriodIn} ngày',
+      );
+      await _saveWidgetDataIfChanged<String>('cycle_tip', state.tip);
+      await _saveWidgetDataIfChanged<String>(
+        'cycle_progress',
+        (state.progressPercent / 100.0).toStringAsFixed(3),
+      );
+
+      await HomeWidget.updateWidget(
+        androidName: androidWidgetCycleName,
+        qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
+      );
+    } catch (e) {
+      debugPrint(
+        'Error syncing cycle widget: ${AppErrorMapper.resolve(e).message}',
+      );
+    }
+  }
+
+  static Future<void> syncCalendarWidgetData({
+    required String houseId,
+  }) async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      final snap = await FirebaseDatabase.instance
+          .ref('houses/$houseId/calendar')
+          .get();
+      if (!snap.exists || snap.value is! Map) {
+        await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
+        await HomeWidget.updateWidget(
+          androidName: androidWidgetCalendarName,
+          qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
+        );
+        return;
+      }
+
+      final data = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(snap.value as Map));
+      final today = DateTime.now();
+      final todayMidnight = DateTime(today.year, today.month, today.day);
+
+      DateTime? nearestDate;
+      List<String> nearestEvents = [];
+
+      data.forEach((dateKeyStr, dateEventsRaw) {
+        if (dateEventsRaw is! Map) return;
+        final parts = dateKeyStr.split('-');
+        if (parts.length != 3) return;
+        final year = int.tryParse(parts[0]);
+        final month = int.tryParse(parts[1]);
+        final day = int.tryParse(parts[2]);
+        if (year == null || month == null || day == null) return;
+
+        final eventDate = DateTime(year, month, day);
+        if (eventDate.isBefore(todayMidnight)) return;
+
+        final eventsMap = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(dateEventsRaw));
+        final sortedList = eventsMap.entries.map((e) {
+          final val = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(e.value as Map));
+          return {
+            'title': val['title']?.toString() ?? '',
+            'ts': val['ts'] as int? ?? 0,
+          };
+        }).toList()
+          ..sort((a, b) => (a['ts'] as int).compareTo(b['ts'] as int));
+
+        final titles = sortedList
+            .map((item) => item['title'] as String)
+            .where((t) => t.isNotEmpty)
+            .toList();
+
+        if (titles.isEmpty) return;
+
+        if (nearestDate == null || eventDate.isBefore(nearestDate!)) {
+          nearestDate = eventDate;
+          nearestEvents = titles;
+        }
+      });
+
+      if (nearestDate == null || nearestEvents.isEmpty) {
+        await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
+        await HomeWidget.updateWidget(
+          androidName: androidWidgetCalendarName,
+          qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
+        );
+        return;
+      }
+
+      final diffDays = nearestDate!.difference(todayMidnight).inDays;
+      String countdownText = '';
+      if (diffDays == 0) {
+        countdownText = 'Hôm nay 📍';
+      } else if (diffDays == 1) {
+        countdownText = 'Ngày mai 📅';
+      } else {
+        countdownText = 'Còn $diffDays ngày';
+      }
+
+      final weekdays = [
+        'Thứ Hai',
+        'Thứ Ba',
+        'Thứ Tư',
+        'Thứ Năm',
+        'Thứ Sáu',
+        'Thứ Bảy',
+        'Chủ Nhật'
+      ];
+      final weekdayStr = weekdays[nearestDate!.weekday - 1];
+      final dateLabel =
+          '$weekdayStr, ${nearestDate!.day.toString().padLeft(2, '0')}/${nearestDate!.month.toString().padLeft(2, '0')}/${nearestDate!.year}';
+
+      final eventsText = nearestEvents.map((title) => '• $title').join('\n');
+
+      await _saveWidgetDataIfChanged<bool>('calendar_enabled', true);
+      await _saveWidgetDataIfChanged<String>('calendar_countdown', countdownText);
+      await _saveWidgetDataIfChanged<String>('calendar_next_date', dateLabel);
+      await _saveWidgetDataIfChanged<String>('calendar_events_text', eventsText);
+
+      await HomeWidget.updateWidget(
+        androidName: androidWidgetCalendarName,
+        qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
+      );
+    } catch (e) {
+      debugPrint(
+        'Error syncing calendar widget: ${AppErrorMapper.resolve(e).message}',
+      );
+    }
+  }
+
+  static Future<void> requestPinCalendarWidget() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    await ensureInitialized(forceUpdate: true);
+    await HomeWidget.requestPinWidget(
+      androidName: androidWidgetCalendarName,
+      qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
+    );
+    final houseId = await HouseService().getCurrentHouseId();
+    if (houseId != null && houseId.isNotEmpty) {
+      await syncCalendarWidgetData(houseId: houseId);
     }
   }
 }

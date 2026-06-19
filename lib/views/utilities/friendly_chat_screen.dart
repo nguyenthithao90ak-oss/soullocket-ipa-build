@@ -27,6 +27,49 @@ class FriendlyChatScreen extends StatefulWidget {
 }
 
 class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: Color(0xFF243042), size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Chat với Cố vấn Tình yêu',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Trò chuyện với trợ lý ảo AI thông minh được huấn luyện đặc biệt cho tư vấn tình cảm.\n- Giúp đưa ra lời khuyên hòa giải, gợi ý quà tặng hoặc địa điểm hẹn hò.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Nhập câu hỏi hoặc tâm sự của bạn vào ô chat.\n- Cố vấn sẽ phản hồi lại ngay lập tức (cuộc trò chuyện này là hoàn toàn bí mật, người ấy sẽ không thấy).'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   static final List<String> _reportReasons = <String>[
     L10nService().translate('util_nidungkhng_493873'),
     L10nService().translate('util_trlisaihoc_6d9fe3'),

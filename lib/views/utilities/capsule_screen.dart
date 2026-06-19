@@ -26,6 +26,9 @@ class CapsuleScreen extends StatefulWidget {
 }
 
 class _CapsuleScreenState extends State<CapsuleScreen> {
+
+
+
   static const String _pendingUploadKeyPrefix = 'capsule_';
   static const Color _backgroundTop = Color(0xFFB224EF);
   static const Color _backgroundBottom = Color(0xFF7579FF);
@@ -428,6 +431,41 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     }
   }
 
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: const Color(0xFF1B2A36),
+        title: Text(
+          'Hộp thời gian',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: Colors.white),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+              SizedBox(height: 4),
+              Text('- Gửi gắm một thông điệp, hình ảnh, hoặc video vào tương lai.\n- Hộp sẽ bị khóa cứng và không ai (kể cả bạn) có thể mở ra xem trước thời hạn.', style: TextStyle(color: Colors.white70)),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+              SizedBox(height: 4),
+              Text('- Bấm Tạo hộp mới, chọn thời gian mở khóa (ví dụ: kỷ niệm 10 năm).\n- Thêm lời nhắn, ảnh, video, sau đó bấm Niêm phong.\n- Cả hai sẽ nhận được thông báo khi hộp thời gian đến ngày mở khóa.', style: TextStyle(color: Colors.white70)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: Color(0xFF64B5F6))),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -459,6 +497,12 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
               color: Colors.white, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+            onPressed: () => _showInfoDialog(context),
+          ),
+        ],
       ),
       body: SizedBox.expand(
         child: DecoratedBox(

@@ -6,29 +6,44 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
     int memCacheWidth = 1600,
     double errorIconSize = 42,
   }) {
+    final isNetwork = url.startsWith('http://') || url.startsWith('https://');
+
     return ColoredBox(
       color: Colors.black,
       child: Center(
-        child: CachedNetworkImage(
-          memCacheWidth: memCacheWidth,
-          imageUrl: url,
-          fit: BoxFit.scaleDown,
-          filterQuality: FilterQuality.high,
-          alignment: Alignment.center,
-          placeholder: (_, __) => const SizedBox(
-            width: 36,
-            height: 36,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.4,
-              color: Color(0xFFFF6FA5),
-            ),
-          ),
-          errorWidget: (_, __, ___) => Icon(
-            Icons.broken_image_outlined,
-            color: Colors.white70,
-            size: errorIconSize,
-          ),
-        ),
+        child: isNetwork
+            ? CachedNetworkImage(
+                memCacheWidth: memCacheWidth,
+                imageUrl: url,
+                fit: BoxFit.scaleDown,
+                filterQuality: FilterQuality.high,
+                alignment: Alignment.center,
+                placeholder: (_, __) => const SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    color: Color(0xFFFF6FA5),
+                  ),
+                ),
+                errorWidget: (_, __, ___) => Icon(
+                  Icons.broken_image_outlined,
+                  color: Colors.white70,
+                  size: errorIconSize,
+                ),
+              )
+            : Image.file(
+                File(url),
+                cacheWidth: memCacheWidth,
+                fit: BoxFit.scaleDown,
+                filterQuality: FilterQuality.high,
+                alignment: Alignment.center,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.broken_image_outlined,
+                  color: Colors.white70,
+                  size: errorIconSize,
+                ),
+              ),
       ),
     );
   }

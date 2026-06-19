@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -322,6 +323,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
         ),
       ),
       body: TabBarView(
+        physics: const SLPagePhysics(),
         controller: _tabController,
         children: [
           _buildViewTab(houseId),

@@ -52,6 +52,49 @@ class CollageMakerScreen extends StatefulWidget {
 }
 
 class _CollageMakerScreenState extends State<CollageMakerScreen> {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: Icon(Icons.info_outline_rounded, color: const Color(0xFFE274A0), size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Ghép ảnh nghệ thuật',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Ghép nhiều bức ảnh kỷ niệm lại với nhau theo nhiều bố cục đẹp mắt.\n- Hỗ trợ đổi nền, chỉnh viền và bo góc khung ảnh.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Chọn từ 2 đến 9 bức ảnh.\n- Chọn bố cục ưng ý, thay đổi màu nền hoặc độ dày viền.\n- Bấm Lưu để tải ảnh ghép về máy hoặc lưu vào Album chung.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
+
   static const int _collageDecodeMaxDimension = 1400;
   static const int _collagePreviewDecodeMaxDimension = 720;
   static const int _imageLoadBatchSize = 4;

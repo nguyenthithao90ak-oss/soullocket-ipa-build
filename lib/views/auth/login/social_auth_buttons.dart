@@ -11,17 +11,19 @@ class SocialAuthButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const providers = <_SocialProviderData>[
-      _SocialProviderData(
+    final isAndroid = Theme.of(context).platform == TargetPlatform.android;
+    final providers = <_SocialProviderData>[
+      const _SocialProviderData(
         providerId: 'Google',
         caption: 'Google',
         iconKind: _SocialIconKind.google,
       ),
-      _SocialProviderData(
-        providerId: 'Apple',
-        caption: 'Apple',
-        iconKind: _SocialIconKind.apple,
-      ),
+      if (!isAndroid)
+        const _SocialProviderData(
+          providerId: 'Apple',
+          caption: 'Apple',
+          iconKind: _SocialIconKind.apple,
+        ),
     ];
 
     return LayoutBuilder(

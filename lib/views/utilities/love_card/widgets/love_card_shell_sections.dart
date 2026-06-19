@@ -129,6 +129,41 @@ class _LoveCardScreenBody extends StatelessWidget {
 }
 
 class _LoveCardHeaderSection extends StatelessWidget {
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Love Card (Thẻ tình yêu)',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Bộ sưu tập thẻ bài tương tác vui nhộn dùng để "phạt" hoặc "thưởng" người ấy.\n- Bao gồm nhiều cấp độ hiếm (Common, Rare, Epic, Legendary).'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Bốc thẻ hàng ngày để sưu tập.\n- Chọn một thẻ và bấm Dùng để bắt người ấy thực hiện một hành động (ví dụ: Massage 10 phút, Cấm giận dỗi 1 ngày).\n- Thẻ đã dùng sẽ vào lịch sử và bị tiêu hao.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   final _LoveCardScreenState state;
   final _LoveThemeData theme;
   final List<Color> colors;
@@ -148,6 +183,11 @@ class _LoveCardHeaderSection extends StatelessWidget {
           _LoveCardRoundButton(
             icon: Icons.arrow_back_ios_new_rounded,
             onTap: () => Navigator.pop(context),
+          ),
+          const SizedBox(width: 10),
+          _LoveCardRoundButton(
+            icon: Icons.info_outline_rounded,
+            onTap: () => _showInfoDialog(context),
           ),
           const SizedBox(width: 10),
           Expanded(

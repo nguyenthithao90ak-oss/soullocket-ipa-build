@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';
@@ -124,6 +125,7 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen>
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFFD81B60)))
           : TabBarView(
+              physics: const SLPagePhysics(),
               controller: _tabController,
               children: [
                 _buildFriendsTab(),

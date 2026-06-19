@@ -13,6 +13,49 @@ class AgeZodiacScreen extends StatefulWidget {
 }
 
 class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
+
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon: const Icon(Icons.info_outline_rounded, color: Color(0xFF3B2448), size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Tuổi & Cung Hoàng Đạo',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Tính toán số ngày tuổi và cung hoàng đạo của cả hai dựa trên ngày sinh đã khai báo.\n- Phân tích mức độ hợp nhau (chỉ số tương hợp) giữa hai cung hoàng đạo.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('- Mở tiện ích để xem các thông số tử vi vui nhộn.\n- Bạn có thể điều chỉnh lại ngày sinh trong phần cài đặt tài khoản nếu thông tin chưa chính xác.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   final _settingsService = HouseSettingsService();
   String _nameU1 = 'Bạn Nam';
   String _nameU2 = 'Bạn Nữ';
@@ -220,6 +263,7 @@ class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
         title: Text(L10nService().translate('util_hongotui_98b08f'),
             style: SLTheme.quicksand(
                 fontWeight: FontWeight.w900, color: const Color(0xFF3B2448))),
+        actions: [_buildInfoIcon(context)],
         backgroundColor: Colors.white.withValues(alpha: 0.08),
         foregroundColor: const Color(0xFF3B2448),
         elevation: 0,

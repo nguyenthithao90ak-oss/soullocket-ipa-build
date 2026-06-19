@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +9,7 @@ import 'dart:math' as math;
 import '../../core/sl_theme.dart';
 import '../../utils/services/health_period_service.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import 'package:soullocket_app/utils/services/widget_service.dart';
 
 class HealthScreen extends StatefulWidget {
   final String houseId;
@@ -102,6 +104,7 @@ class _HealthScreenState extends State<HealthScreen>
           _hasConsent = true;
         });
       }
+      unawaited(WidgetService.syncCycleWidgetData(houseId: widget.houseId));
     }
   }
 
@@ -187,6 +190,9 @@ class _HealthScreenState extends State<HealthScreen>
 
     // Log the period start and trigger notification scheduling
     await HealthPeriodService().logPeriodStart(widget.houseId, _lastDate!);
+
+    // Sync widget cycle data
+    unawaited(WidgetService.syncCycleWidgetData(houseId: widget.houseId));
 
     if (mounted) {
       setState(() {
@@ -506,6 +512,25 @@ class _HealthScreenState extends State<HealthScreen>
           icon: Icons.bolt_rounded,
           onTap: _markTodayAsPeriodStart,
         ),
+        if (Platform.isAndroid) ...[
+          SLSpacing.h16,
+          _buildGlassListTile(
+            title: 'Thêm tiện ích ra màn hình chính',
+            subtitle: 'Ghim tiện ích Chu kỳ ra màn hình để xem nhanh',
+            icon: Icons.add_to_home_screen_rounded,
+            onTap: () async {
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              scaffoldMessenger.hideCurrentSnackBar();
+              scaffoldMessenger.showSnackBar(
+                const SnackBar(
+                  content: Text('Đang gửi yêu cầu... Nếu không thấy phản hồi, vui lòng nhấn giữ màn hình chính để tự thêm thủ công nhé! ✨'),
+                  duration: Duration(seconds: 5),
+                ),
+              );
+              await WidgetService.requestPinCycleWidget();
+            },
+          ),
+        ],
         SLSpacing.h16,
         Row(
           children: [

@@ -33,7 +33,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     } catch (_) {}
   }
 
-  void _updateThemeDraft(VoidCallback updateFn, {bool syncPreview = true}) {
+  void _updateThemeDraft(VoidCallback updateFn, {bool syncPreview = false}) {
     updateFn();
     
     // 1. Cập nhật giao diện nội bộ (các nút bấm, slider, ...)

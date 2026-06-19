@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/widget_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -12,7 +14,6 @@ import 'calendar/widgets/calendar_background_decor.dart';
 import 'calendar/widgets/calendar_event_input_panel.dart';
 import 'calendar/widgets/calendar_event_list_section.dart';
 import 'calendar/widgets/calendar_header_section.dart';
-import 'calendar/widgets/calendar_info_pill.dart';
 import 'calendar/widgets/calendar_selected_day_summary.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -27,6 +28,9 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
+
+
+
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
   CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -252,6 +256,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     });
 
     _scheduleEventNotifications(day, cleanText);
+    if (Platform.isAndroid) {
+      unawaited(WidgetService.syncCalendarWidgetData(houseId: widget.houseId));
+    }
     return true;
   }
 
@@ -359,252 +366,120 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void _deleteEvent(String dateKey, String eventId) {
     _dbRef
         .child('houses/${widget.houseId}/calendar/$dateKey/$eventId')
-        .remove();
+        .remove()
+        .then((_) {
+      if (mounted && Platform.isAndroid) {
+        unawaited(WidgetService.syncCalendarWidgetData(houseId: widget.houseId));
+      }
+    });
   }
 
-  Future<void> _showUsageGuide() async {
-    final width = MediaQuery.of(context).size.width;
-    final compact = width < 380;
-
-    await showDialog<void>(
+  void _showUsageGuide() {
+    showDialog<void>(
       context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: FastBackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                padding: EdgeInsets.fromLTRB(
-                  compact ? 18 : 20,
-                  compact ? 18 : 20,
-                  compact ? 18 : 20,
-                  compact ? 16 : 18,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: 0.96),
-                      Colors.white.withValues(alpha: 0.86),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.14),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: compact ? 44 : 48,
-                          height: compact ? 44 : 48,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF8AA4), Color(0xFFE85D75)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(compact ? 14 : 16),
-                          ),
-                          child: const Icon(
-                            Icons.info_outline_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        SLSpacing.w12,
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                context.tr('util_hngdndnglc_234451'),
-                                style: SLTheme.quicksand(
-                                  fontSize: compact ? 16 : 17,
-                                  fontWeight: FontWeight.w900,
-                                  color: SLTheme.textMain,
-                                ),
-                              ),
-                              SLSpacing.h4,
-                              Text(
-                                context.tr('util_thmlchhnvi_3cd2f4'),
-                                style: SLTheme.quicksand(
-                                  fontSize: compact ? 11.5 : 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: SLTheme.textMuted,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          icon: const Icon(Icons.close_rounded),
-                          color: SLTheme.textMuted,
-                          splashRadius: 20,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: compact ? 14 : 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        CalendarInfoPill(
-                          icon: Icons.notifications_active_rounded,
-                          label: context.tr('util_nhcvo900sn_1062db'),
-                          accent: const Color(0xFFE85D75),
-                          compact: compact,
-                        ),
-                        CalendarInfoPill(
-                          icon: Icons.event_available_rounded,
-                          label: context.tr('util_nhctrc1ngy_09c55a'),
-                          accent: const Color(0xFF2157F2),
-                          compact: compact,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: compact ? 14 : 16),
-                    _buildGuideStep(
-                      number: '1',
-                      title: context.tr('util_chnngy_d2cce5'),
-                      description:
-                          context.tr('util_chmvongybn_92732b'),
-                    ),
-                    _buildGuideStep(
-                      number: '2',
-                      title: context.tr('util_nhpnidung_5f153e'),
-                      description:
-                          context.tr('util_ghingngnnh_2d7dac'),
-                    ),
-                    _buildGuideStep(
-                      number: '3',
-                      title: context.tr('util_thmvolch_2a1508'),
-                      description:
-                          context.tr('util_bmntthmluk_aa8abf'),
-                    ),
-                    _buildGuideStep(
-                      number: '4',
-                      title: context.tr('util_cchthngboh_efb6db'),
-                      description:
-                          context.tr('util_ngdnghinsn_2db6a9'),
-                    ),
-                    SizedBox(height: compact ? 14 : 16),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(compact ? 12 : 14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF5F7),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFFFD5DE)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.lightbulb_outline_rounded,
-                            color: Color(0xFFE85D75),
-                            size: 20,
-                          ),
-                          SLSpacing.w10,
-                          Expanded(
-                            child: Text(
-                              context.tr('util_monnghikiu_82a005'),
-                              style: SLTheme.quicksand(
-                                fontSize: compact ? 11.5 : 12,
-                                fontWeight: FontWeight.w700,
-                                color: SLTheme.textMain,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: const Color(0xFF1B2A36),
+        title: Text(
+          'Lịch & Sự kiện',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: Colors.white),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+              SizedBox(height: 4),
+              Text('- Ghi nhớ ngày kỷ niệm, ngày sinh nhật, hoặc các lịch hẹn hò quan trọng.\n- Hệ thống sẽ tự động nhắc nhở trước sự kiện.', style: TextStyle(color: Colors.white70)),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+              SizedBox(height: 4),
+              Text('- Bấm chọn ngày, nhập nội dung sự kiện và lưu lại.\n- Các sự kiện quan trọng có thể được xem lại và nhận thông báo nhắc nhở trước 1 ngày.', style: TextStyle(color: Colors.white70)),
+            ],
           ),
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu', style: TextStyle(color: Color(0xFF64B5F6))),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildGuideStep({
-    required String number,
-    required String title,
-    required String description,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFFF8AA4), Color(0xFFE85D75)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              number,
-              style: SLTheme.quicksand(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          SLSpacing.w12,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: SLTheme.quicksand(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w900,
-                    color: SLTheme.textMain,
-                  ),
+  Widget _buildPinWidgetTile(bool compact) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+        ),
+        child: InkWell(
+          onTap: () async {
+            final scaffoldMessenger = ScaffoldMessenger.of(context);
+            scaffoldMessenger.hideCurrentSnackBar();
+            scaffoldMessenger.showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Đang gửi yêu cầu... Nếu không thấy phản hồi, vui lòng nhấn giữ màn hình chính để tự thêm thủ công nhé! ✨',
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  description,
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: SLTheme.textMuted,
-                    height: 1.38,
-                  ),
+                duration: Duration(seconds: 5),
+              ),
+            );
+            await WidgetService.requestPinCalendarWidget();
+          },
+          child: Row(
+            children: [
+              Container(
+                width: compact ? 40 : 44,
+                height: compact ? 40 : 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
+                child: const Icon(
+                  Icons.add_to_home_screen_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Thêm tiện ích ra màn hình chính',
+                      style: SLTheme.quicksand(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: compact ? 14 : 15,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Ghim lịch trình & đếm ngược chuyến đi ra màn hình chính',
+                      style: SLTheme.quicksand(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w600,
+                        fontSize: compact ? 11 : 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.white70,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -726,6 +601,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       shortDateLabel: _formatShortDate(selectedDay),
                       eventCount: eventCount,
                     ),
+                    if (Platform.isAndroid) ...[
+                      SizedBox(height: compact ? 12 : 16),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: horizontalInset),
+                        child: _buildPinWidgetTile(compact),
+                      ),
+                    ],
                     SizedBox(height: compact ? 12 : 16),
                     CalendarEventInputPanel(
                       horizontalInset: horizontalInset,
