@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:soullocket_app/app.dart';
+import 'package:soullocket_app/views/home/widgets/floating_bubble_widget.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -51,6 +52,15 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       fatal: false,
     ));
   }
+}
+
+@pragma('vm:entry-point')
+void overlayMain() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: FloatingBubbleWidget(),
+  ));
 }
 
 const MethodChannel _bootstrapChannel = MethodChannel('soul_locket/bootstrap');

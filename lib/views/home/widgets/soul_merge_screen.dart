@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:soullocket_app/models/diary_post.dart';
 
 import '../../../utils/helpers/bump_detector.dart';
 import '../../../utils/services/soul_merge_service.dart';
@@ -29,7 +33,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   late Animation<double> _pulseAnim;
 
   // Memory photos lists and timers
-  List<String> _memoryUrls = [];
+  List<Map<String, String>> _memoriesData = [];
   final List<ExplodingPhoto> _activePhotos = [];
   final List<({Offset position, UniqueKey id})> _activeParticleExplosions = [];
   Timer? _explosionTimer;
@@ -51,10 +55,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   Offset _dragStartPos = Offset.zero;
 
   final TextEditingController _customMsgController = TextEditingController();
-  StreamSubscription<Map<String, dynamic>?>? _messagesSub;
+  StreamSubscription<List<Map<String, dynamic>>>? _messagesSub;
   final List<FloatingMessage> _floatingMessages = [];
   int _lastMsgTimestamp = 0;
   String _myRole = 'user1';
+  List<Map<String, dynamic>> _chatHistory = [];
+  final ScrollController _chatScrollController = ScrollController();
+  bool _overlayEnabled = false;
 
   @override
   void initState() {
@@ -78,6 +85,35 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     unawaited(_mergeService.clearBumps());
     _initUserInfo();
     _listenSoulMessages();
+
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      FlutterOverlayWindow.overlayListener.listen((event) {
+        if (event == 'launch_app') {
+          const MethodChannel('soul_locket/app_control').invokeMethod('bringToForeground');
+        } else if (event == 'request_sync') {
+          _sendOverlaySyncPayload();
+        } else if (event is String && event.startsWith('{')) {
+          try {
+            final data = jsonDecode(event);
+            if (data['action'] == 'send_msg') {
+              final txt = data['text']?.toString() ?? '';
+              if (txt.isNotEmpty) {
+                _sendSoulMessage(txt);
+              }
+            }
+          } catch (e) {
+            debugPrint('[SoulMergeScreen] overlayListener error: $e');
+          }
+        }
+      });
+      FlutterOverlayWindow.isActive().then((active) {
+        if (mounted) {
+          setState(() {
+            _overlayEnabled = active;
+          });
+        }
+      });
+    }
 
     _mergeTimesSub = _mergeService.watchMergeTimes().listen((mergeTimes) {
       debugPrint('[SoulMergeScreen] watchMergeTimes update: $mergeTimes');
@@ -325,35 +361,89 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     });
   }
 
-  Future<List<String>> _fetchMemoryUrls() async {
+  Future<List<Map<String, String>>> _fetchMemoriesData() async {
     try {
       final houseId = await _mergeService.getCurrentHouseId();
       if (houseId == null || houseId.isEmpty) return const [];
 
       final dbRef = FirebaseDatabase.instance.ref();
-      final memoriesSnap = await dbRef.child('houses/$houseId/memories').limitToLast(30).get();
-      final diarySnap = await dbRef.child('houses/$houseId/diary').limitToLast(30).get();
+      final memoriesSnap = await dbRef.child('houses/$houseId/memories').limitToLast(15).get();
+      final diarySnap = await dbRef.child('houses/$houseId/diary').limitToLast(15).get();
 
-      final urls = <String>{};
-      
-      void extractUrls(dynamic raw) {
-        if (raw is Map) {
-          raw.forEach((_, value) {
-            if (value is Map) {
-              final imageUrl = (value['url'] ?? value['imageUrl'] ?? value['thumbUrl'] ?? '').toString().trim();
-              if (imageUrl.isNotEmpty) {
-                urls.add(imageUrl);
-              }
+      final List<Map<String, String>> items = [];
+
+      if (memoriesSnap.value is Map) {
+        final map = memoriesSnap.value as Map;
+        map.forEach((key, val) {
+          if (val is Map) {
+            final imageUrl = (val['url'] ?? val['imageUrl'] ?? val['thumbUrl'] ?? '').toString().trim();
+            final tsRaw = val['timestamp'] ?? val['ts'];
+            String dateStr = '';
+            if (tsRaw is int) {
+              final dt = DateTime.fromMillisecondsSinceEpoch(tsRaw);
+              dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
             }
-          });
-        }
+            if (imageUrl.isNotEmpty) {
+              items.add({
+                'url': imageUrl,
+                'text': '',
+                'type': 'photo',
+                'mood': '💖',
+                'dateStr': dateStr,
+              });
+            }
+          }
+        });
       }
 
-      extractUrls(memoriesSnap.value);
-      extractUrls(diarySnap.value);
-      return urls.toList();
+      if (diarySnap.value is Map) {
+        final map = diarySnap.value as Map;
+        map.forEach((key, val) {
+          if (val is Map) {
+            final post = DiaryPost.fromJson(key.toString(), val);
+            final dt = post.timestamp;
+            final dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
+            if (post.imageUrl.isNotEmpty) {
+              items.add({
+                'url': post.imageUrl,
+                'text': post.content,
+                'type': 'photo',
+                'mood': post.mood,
+                'dateStr': dateStr,
+              });
+            } else if (post.content.isNotEmpty) {
+              items.add({
+                'url': '',
+                'text': post.content,
+                'type': 'text',
+                'mood': post.mood,
+                'dateStr': dateStr,
+              });
+            }
+          }
+        });
+      }
+
+      if (items.isEmpty) {
+        items.add({
+          'url': '',
+          'text': 'Hai tâm hồn hòa quyện cùng nhau 💕',
+          'type': 'text',
+          'mood': '💖',
+          'dateStr': '',
+        });
+        items.add({
+          'url': '',
+          'text': 'Cùng nhau lưu giữ từng kỷ niệm ngọt ngào tại Soul Locket 🏡',
+          'type': 'text',
+          'mood': '🥰',
+          'dateStr': '',
+        });
+      }
+
+      return items;
     } catch (e) {
-      debugPrint('[SoulMergeScreen] _fetchMemoryUrls error: $e');
+      debugPrint('[SoulMergeScreen] _fetchMemoriesData error: $e');
       return const [];
     }
   }
@@ -374,13 +464,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       HapticFeedback.heavyImpact();
     });
 
-    // Fetch memory urls and start explosion loop
-    final urls = await _fetchMemoryUrls();
+    // Fetch memory fragments and start explosion loop
+    final data = await _fetchMemoriesData();
     if (mounted) {
       setState(() {
-        _memoryUrls = urls;
+        _memoriesData = data;
       });
-      if (_memoryUrls.isNotEmpty) {
+      if (_memoriesData.isNotEmpty) {
         _startPhotoExplosions();
       }
     }
@@ -399,8 +489,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   void _spawnPhotoExplosion() {
-    if (_memoryUrls.isEmpty) return;
-    final randomUrl = _memoryUrls[_random.nextInt(_memoryUrls.length)];
+    if (_memoriesData.isEmpty) return;
+    final randomItem = _memoriesData[_random.nextInt(_memoriesData.length)];
     
     final size = MediaQuery.of(context).size;
     final double x = 30 + _random.nextDouble() * (size.width - 200);
@@ -408,7 +498,11 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     final position = Offset(x, y);
 
     final photo = ExplodingPhoto(
-      url: randomUrl,
+      url: randomItem['url'] ?? '',
+      text: randomItem['text'] ?? '',
+      type: randomItem['type'] ?? 'photo',
+      mood: randomItem['mood'] ?? '💖',
+      dateStr: randomItem['dateStr'] ?? '',
       position: position,
       angle: (_random.nextDouble() - 0.5) * 0.4, // Slight rotation
       targetScale: 0.8 + _random.nextDouble() * 0.4,
@@ -441,6 +535,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   @override
   void dispose() {
     _customMsgController.dispose();
+    _chatScrollController.dispose();
     _messagesSub?.cancel();
     _continuousHeartsTimer?.cancel();
     _bumpDetector.stop();
@@ -460,6 +555,17 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: Colors.white),
+        actions: [
+          if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+            IconButton(
+              onPressed: _toggleOverlaySetting,
+              icon: Icon(
+                _overlayEnabled ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded,
+                color: _overlayEnabled ? const Color(0xFFFF4F93) : Colors.white,
+              ),
+              tooltip: 'Bong bóng nổi ngoài app',
+            ),
+        ],
       ),
       extendBodyBehindAppBar: true,
       body: Stack(
@@ -680,26 +786,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: Column(
                         children: [
-                          Text(
-                            'Hãy mở màn hình này trên cả hai máy, sau đó cụng nhẹ hai điện thoại vào nhau để ghép nối linh hồn.',
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: 15,
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            '*(Nếu thiết bị không hỗ trợ cảm biến, chạm trực tiếp vào hình trái tim trên cả 2 máy cùng lúc để ghép nối)*',
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              color: const Color(0xFFFF7FB2),
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              height: 1.4,
-                            ),
-                          ),
                           const SizedBox(height: 24),
                           // Connection Status Line
                           Container(
@@ -740,6 +826,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                               ),
                             ),
                           ],
+                          // Removed toggle card from bottom as it is now in the AppBar
                         ],
                       ),
                     ),
@@ -806,25 +893,63 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   void _listenSoulMessages() {
-    _messagesSub = _mergeService.watchSoulMessages().listen((data) {
-      if (data == null || !mounted) return;
-      final timestamp = data['timestamp'] as int? ?? 0;
-      if (timestamp <= _lastMsgTimestamp) return;
+    _messagesSub = _mergeService.watchSoulMessages().listen((list) {
+      if (!mounted) return;
 
-      final text = (data['text'] ?? '').toString().trim();
-      final sender = (data['sender'] ?? '').toString().trim();
-      if (text.isEmpty || sender.isEmpty) return;
+      final isFirstLoad = (_lastMsgTimestamp == 0);
+      int maxTimestamp = _lastMsgTimestamp;
 
-      final nowMs = DateTime.now().millisecondsSinceEpoch;
-      if ((nowMs - timestamp).abs() > 15000) {
-        _lastMsgTimestamp = timestamp;
-        return;
+      if (isFirstLoad) {
+        if (list.isNotEmpty) {
+          for (final msg in list) {
+            final t = msg['timestamp'] as int? ?? 0;
+            if (t > maxTimestamp) maxTimestamp = t;
+          }
+        } else {
+          maxTimestamp = DateTime.now().millisecondsSinceEpoch;
+        }
       }
 
-      _lastMsgTimestamp = timestamp;
-      final isSelf = (sender == _myRole);
+      for (final msg in list) {
+        final t = msg['timestamp'] as int? ?? 0;
+        if (t > _lastMsgTimestamp) {
+          if (t > maxTimestamp) maxTimestamp = t;
+          if (!isFirstLoad) {
+            final text = (msg['text'] ?? '').toString().trim();
+            final sender = (msg['sender'] ?? '').toString().trim();
+            if (text.isNotEmpty && sender.isNotEmpty) {
+              final isSelf = (sender == _myRole);
+              _spawnFloatingMessage(text, isSelf);
 
-      _spawnFloatingMessage(text, isSelf);
+              if (!isSelf && !kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+                FlutterOverlayWindow.isActive().then((active) {
+                  if (active) {
+                    final payload = jsonEncode({
+                      'type': 'new_msg_preview',
+                      'text': text,
+                    });
+                    FlutterOverlayWindow.shareData(payload);
+                  }
+                });
+              }
+            }
+          }
+        }
+      }
+
+      setState(() {
+        _chatHistory = list;
+        _lastMsgTimestamp = maxTimestamp;
+      });
+
+      _sendOverlaySyncPayload();
+
+      // Scroll to bottom
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_chatScrollController.hasClients) {
+          _chatScrollController.jumpTo(_chatScrollController.position.maxScrollExtent);
+        }
+      });
     });
   }
 
@@ -861,6 +986,18 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
     await _mergeService.sendSoulMessage(trimmed);
+
+    // Send push notification to partner's main home screen
+    if (_houseId != null && _houseId!.isNotEmpty) {
+      unawaited(
+        NotificationService().sendPartnerNotification(
+          houseId: _houseId!,
+          title: '💬 Lời thì thầm từ $_myName',
+          body: trimmed,
+          data: const {'screen': 'soul_merge', 'type': 'soul_merge'},
+        ),
+      );
+    }
   }
 
   void _sendCustomMessage() {
@@ -869,6 +1006,14 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _customMsgController.clear();
     unawaited(_sendSoulMessage(text));
     FocusScope.of(context).unfocus();
+  }
+
+  String _formatTime(int? timestamp) {
+    if (timestamp == null) return '';
+    final dt = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
   Widget _buildChatInputBar() {
@@ -882,6 +1027,122 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Chat History List Container (Glassmorphic)
+          Container(
+            height: 160,
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1.0,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: _chatHistory.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.favorite_outline_rounded,
+                            color: Colors.white.withValues(alpha: 0.35),
+                            size: 24,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Hãy gửi những lời thì thầm tâm hồn... 💕',
+                            style: SLTheme.quicksand(
+                              color: Colors.white.withValues(alpha: 0.35),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _chatScrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      itemCount: _chatHistory.length,
+                      itemBuilder: (context, index) {
+                        final msg = _chatHistory[index];
+                        final sender = (msg['sender'] ?? '').toString();
+                        final isSelf = (sender == _myRole);
+                        final text = (msg['text'] ?? '').toString();
+                        final timeStr = _formatTime(msg['timestamp'] as int?);
+
+                        return Align(
+                          alignment: isSelf ? Alignment.centerRight : Alignment.centerLeft,
+                          child: Container(
+                            margin: EdgeInsets.only(
+                              top: 4,
+                              bottom: 4,
+                              left: isSelf ? 48 : 0,
+                              right: isSelf ? 0 : 48,
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: isSelf
+                                  ? const LinearGradient(
+                                      colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : const LinearGradient(
+                                      colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                              borderRadius: BorderRadius.only(
+                                topLeft: const Radius.circular(14),
+                                topRight: const Radius.circular(14),
+                                bottomLeft: Radius.circular(isSelf ? 14 : 2),
+                                bottomRight: Radius.circular(isSelf ? 2 : 14),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (isSelf ? const Color(0xFFFF4F93) : const Color(0xFF8E2DE2))
+                                      .withValues(alpha: 0.2),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                                  isSelf ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  text,
+                                  style: SLTheme.quicksand(
+                                    color: Colors.white,
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (timeStr.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    timeStr,
+                                    style: SLTheme.quicksand(
+                                      color: Colors.white.withValues(alpha: 0.5),
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -943,7 +1204,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                           color: Colors.white60,
                           fontSize: 14,
                         ),
+                        filled: false,
                         border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       ),
@@ -978,10 +1242,97 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       ),
     );
   }
+  void _sendOverlaySyncPayload() {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    FlutterOverlayWindow.isActive().then((active) {
+      if (active) {
+        final payload = jsonEncode({
+          'type': 'update_chat',
+          'history': _chatHistory,
+          'myRole': _myRole,
+          'partnerName': _partnerName,
+        });
+        FlutterOverlayWindow.shareData(payload);
+      }
+    });
+  }
+
+  Future<void> _toggleOverlaySetting() async {
+    final granted = await FlutterOverlayWindow.isPermissionGranted();
+    if (!_overlayEnabled) {
+      if (!granted) {
+        final reqResult = await FlutterOverlayWindow.requestPermission();
+        if (reqResult != true) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Cần cấp quyền hiển thị trên ứng dụng khác để bật bong bóng nổi!',
+                  style: SLTheme.quicksand(fontWeight: FontWeight.bold),
+                ),
+                backgroundColor: Colors.redAccent,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            );
+          }
+          return;
+        }
+      }
+      
+      await FlutterOverlayWindow.showOverlay(
+        enableDrag: true,
+        height: 80,
+        width: 80,
+        alignment: OverlayAlignment.centerRight,
+        overlayTitle: 'Bong bóng tâm hồn',
+        overlayContent: 'Lời thì thầm đang kết nối...',
+      );
+
+      if (mounted) {
+        setState(() {
+          _overlayEnabled = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Đã bật bong bóng nổi ngoài ứng dụng! 💬',
+              style: SLTheme.quicksand(fontWeight: FontWeight.bold),
+            ),
+            backgroundColor: const Color(0xFFFF4F93),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } else {
+      await FlutterOverlayWindow.closeOverlay();
+      if (mounted) {
+        setState(() {
+          _overlayEnabled = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Đã tắt bong bóng nổi ngoài ứng dụng.',
+              style: SLTheme.quicksand(fontWeight: FontWeight.bold),
+            ),
+            backgroundColor: Colors.grey.shade800,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
+  }
 }
 
 class ExplodingPhoto {
   final String url;
+  final String text;
+  final String type; // 'photo' | 'text'
+  final String mood;
+  final String dateStr;
   final Offset position;
   final double angle;
   final double targetScale;
@@ -989,6 +1340,10 @@ class ExplodingPhoto {
   
   ExplodingPhoto({
     required this.url,
+    this.text = '',
+    this.type = 'photo',
+    this.mood = '💖',
+    this.dateStr = '',
     required this.position,
     required this.angle,
     required this.targetScale,
@@ -1080,52 +1435,120 @@ class _ExplodingPhotoWidgetState extends State<ExplodingPhotoWidget>
             ),
           );
         },
-        child: Container(
-          width: 140,
-          height: 170,
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 15,
-                spreadRadius: 2,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    widget.photo.url,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.purple.shade100,
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_rounded,
-                          color: Colors.purple,
+        child: widget.photo.type == 'text'
+            ? Container(
+                width: 150,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: const Color(0xFFFF4F93).withValues(alpha: 0.25),
+                    width: 1.2,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(widget.photo.mood, style: const TextStyle(fontSize: 14)),
+                        if (widget.photo.dateStr.isNotEmpty)
+                          Text(
+                            widget.photo.dateStr,
+                            style: SLTheme.quicksand(
+                              color: Colors.black54,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.photo.text,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        color: Colors.black87,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : Container(
+                width: 140,
+                height: 170,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          widget.photo.url,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            color: Colors.purple.shade100,
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image_rounded,
+                                color: Colors.purple,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.favorite_rounded,
+                          color: Color(0xFFFF4F93),
+                          size: 12,
+                        ),
+                        if (widget.photo.dateStr.isNotEmpty) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.photo.dateStr,
+                            style: SLTheme.quicksand(
+                              color: Colors.black54,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              // Polaroid-style bottom bar with a cute heart
-              const Icon(
-                Icons.favorite_rounded,
-                color: Color(0xFFFF4F93),
-                size: 16,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
