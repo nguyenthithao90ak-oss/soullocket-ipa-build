@@ -129,6 +129,7 @@ class GiftcodeService {
         'permission-denied' => GiftcodeError.permissionDenied,
         'not-found' => GiftcodeError.notFound,
         'invalid-argument' => GiftcodeError.invalidCode,
+        'unauthenticated' => GiftcodeError.verificationRequired,
         'failed-precondition'
             when normalizedMessage.toLowerCase().contains('app check') =>
           GiftcodeError.verificationRequired,
@@ -174,21 +175,9 @@ class GiftcodeService {
   }
 
   bool _isDebugAppCheckFailure(FirebaseFunctionsException error) {
-    if (!kDebugMode) {
-      return false;
-    }
     final code = error.code.trim().toLowerCase();
-    if (code != 'failed-precondition' &&
-        code != 'permission-denied' &&
-        code != 'unauthenticated') {
-      return false;
-    }
-    final message =
-        '${error.message ?? ''} ${error.details ?? ''}'.trim().toLowerCase();
-    return message.contains('app check') ||
-        message.contains('appcheck') ||
-        message.contains('debug token') ||
-        message.contains('play integrity') ||
-        message.contains('attestation');
+    return code == 'failed-precondition' ||
+        code == 'permission-denied' ||
+        code == 'unauthenticated';
   }
 }

@@ -459,9 +459,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF111426),
-              Color(0xFF171D38),
-              Color(0xFF10294A),
+              Color(0xFF070913),
+              Color(0xFF0F1123),
+              Color(0xFF1A1530),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -469,28 +469,33 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         ),
         child: Stack(
           children: [
+            const Positioned.fill(
+              child: CustomPaint(
+                painter: _StarryBackgroundPainter(),
+              ),
+            ),
             Positioned(
               top: -110,
               right: -70,
               child: _buildBackdropOrb(
-                size: 240,
-                color: const Color(0xFFF9C15A),
+                size: 280,
+                color: const Color(0xFFF59E0B),
               ),
             ),
             Positioned(
               top: 220,
               left: -90,
               child: _buildBackdropOrb(
-                size: 220,
-                color: const Color(0xFFCE6BE8),
+                size: 280,
+                color: const Color(0xFF8B5CF6),
               ),
             ),
             Positioned(
               bottom: -120,
               right: -40,
               child: _buildBackdropOrb(
-                size: 260,
-                color: const Color(0xFF4FB9FF),
+                size: 300,
+                color: const Color(0xFF06B6D4),
               ),
             ),
             SafeArea(
@@ -742,23 +747,26 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
 
   Widget _buildHeroSection() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.white.withValues(alpha: 0.12),
-            Colors.white.withValues(alpha: 0.06),
+            Colors.white.withValues(alpha: 0.09),
+            Colors.white.withValues(alpha: 0.03),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: const Color(0xFFF9C15A).withValues(alpha: 0.22),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF9C15A).withValues(alpha: 0.18),
-            blurRadius: 26,
-            offset: const Offset(0, 18),
+            color: const Color(0xFFF9C15A).withValues(alpha: 0.08),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -772,53 +780,70 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               _buildTopChip(
                 icon: Icons.workspace_premium_rounded,
                 label: 'PRO',
+                color: const Color(0xFFF9C15A),
               ),
               _buildTopChip(
                 icon: Icons.verified_user_rounded,
                 label: _isVip ? 'Đang hoạt động' : _checkoutLabel,
+                color: const Color(0xFF4FB9FF),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 72,
-                height: 72,
+                width: 76,
+                height: 76,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFF9C15A), Color(0xFFFFB347)],
+                    colors: [
+                      Color(0xFFFFD54F),
+                      Color(0xFFF9C15A),
+                      Color(0xFFFF8F00),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFF9C15A).withValues(alpha: 0.32),
-                      blurRadius: 18,
-                      offset: const Offset(0, 10),
+                      color: const Color(0xFFF9C15A).withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
                 child: const Icon(
                   Icons.auto_awesome_rounded,
-                  color: Color(0xFF1D2036),
-                  size: 34,
+                  color: Color(0xFF0F0C20),
+                  size: 38,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 18),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Mở khóa trải nghiệm trọn vẹn',
-                      style: SLTheme.quicksand(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        height: 1.12,
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [
+                          Colors.white,
+                          Color(0xFFFFECB3),
+                          Color(0xFFF9C15A),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: Text(
+                        'Mở khóa trải nghiệm trọn vẹn',
+                        style: SLTheme.quicksand(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          height: 1.15,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -826,7 +851,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                       'SoulLocket PRO giúp hai bạn dùng app mượt hơn, lưu được nhiều hơn và có giao diện riêng tinh gọn.',
                       style: SLTheme.quicksand(
                         fontSize: 13,
-                        color: const Color(0xFFD8DDF0),
+                        color: const Color(0xFFC4CBDE),
                         fontWeight: FontWeight.w600,
                         height: 1.45,
                       ),
@@ -836,7 +861,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
           const Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -867,24 +892,36 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         'title': 'Theme & hiệu ứng',
         'desc':
             'Mở khóa giao diện đẹp hơn, hiệu ứng tình yêu và tùy chỉnh không gian riêng của hai bạn.',
+        'gradient': const LinearGradient(
+          colors: [Color(0xFFF9C15A), Color(0xFFFF9800)],
+        ),
       },
       {
         'icon': Icons.style_rounded,
         'title': 'Love card & kỷ niệm',
         'desc':
             'Dùng thêm mẫu thiệp, collage/video export và công cụ lưu giữ khoảnh khắc nâng cao.',
+        'gradient': const LinearGradient(
+          colors: [Color(0xFFE289F2), Color(0xFFB388FF)],
+        ),
       },
       {
         'icon': Icons.privacy_tip_rounded,
         'title': 'Riêng tư hơn',
         'desc':
             'Tăng quyền kiểm soát không gian riêng, bảo mật và trải nghiệm ít bị làm phiền hơn.',
+        'gradient': const LinearGradient(
+          colors: [Color(0xFF4FB9FF), Color(0xFF00E5FF)],
+        ),
       },
       {
         'icon': Icons.block_rounded,
         'title': 'Ít gián đoạn hơn',
         'desc':
             'Giảm quảng cáo nếu gói đang hỗ trợ, ưu tiên trải nghiệm mượt và tập trung hơn.',
+        'gradient': const LinearGradient(
+          colors: [Color(0xFF81C784), Color(0xFF4CAF50)],
+        ),
       },
     ];
 
@@ -914,6 +951,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                     icon: benefit['icon'] as IconData,
                     title: benefit['title'] as String,
                     desc: benefit['desc'] as String,
+                    gradient: benefit['gradient'] as Gradient,
                   ),
                 );
               }).toList(),
@@ -926,42 +964,47 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
 
   Widget _buildComparisonSection() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Free vs Premium',
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 16,
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [Colors.white, Color(0xFFC4CBDE)],
+            ).createShader(bounds),
+            child: Text(
+              'So sánh quyền lợi',
+              style: SLTheme.quicksand(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 17,
+              ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           _buildComparisonRow(
-            title: 'Free',
+            title: 'Tài khoản thường (Free)',
             items: const [
-              'Lưu kỷ niệm cơ bản',
-              'Viết nhật ký',
-              'Dùng theme mặc định',
-              'Một số tiện ích miễn phí',
+              'Lưu kỷ niệm giới hạn',
+              'Viết nhật ký cơ bản',
+              'Sử dụng theme mặc định',
+              'Chỉ dùng một vài tiện ích cơ bản',
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           _buildComparisonRow(
-            title: 'Premium',
+            title: 'Tài khoản SoulLocket PRO',
             highlight: true,
             items: const [
-              'Theme và hiệu ứng cao cấp',
-              'Love card/collage nâng cao',
-              'Tùy chỉnh widget và không gian riêng',
-              'Bảo mật và trải nghiệm ít gián đoạn hơn',
+              'Không giới hạn bộ nhớ hình ảnh Kỷ niệm',
+              'Theme giao diện & hiệu ứng tình yêu cao cấp',
+              'Tùy chỉnh không gian riêng & Tiện ích màn hình chính độc quyền',
+              'Bảo mật nâng cao & Trải nghiệm mượt mà không quảng cáo',
             ],
           ),
         ],
@@ -976,33 +1019,53 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: highlight
-            ? const Color(0xFFF9C15A).withValues(alpha: 0.12)
-            : Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
+            ? const Color(0xFFF9C15A).withValues(alpha: 0.07)
+            : Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: highlight
-              ? const Color(0xFFF9C15A).withValues(alpha: 0.30)
-              : Colors.white.withValues(alpha: 0.07),
+              ? const Color(0xFFF9C15A).withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.05),
+          width: highlight ? 1.2 : 1.0,
         ),
+        boxShadow: highlight
+            ? [
+                BoxShadow(
+                  color: const Color(0xFFF9C15A).withValues(alpha: 0.03),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                )
+              ]
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: SLTheme.quicksand(
-              color: highlight ? const Color(0xFFF9C15A) : Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 13,
-            ),
+          Row(
+            children: [
+              Icon(
+                highlight ? Icons.star_rounded : Icons.star_outline_rounded,
+                size: 18,
+                color: highlight ? const Color(0xFFF9C15A) : const Color(0xFF8F9BB3),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: SLTheme.quicksand(
+                  color: highlight ? const Color(0xFFF9C15A) : Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13.5,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           ...items.map(
             (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1013,17 +1076,17 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                     size: 16,
                     color: highlight
                         ? const Color(0xFFF9C15A)
-                        : const Color(0xFFC4CBDE),
+                        : const Color(0xFF8F9BB3),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       item,
                       style: SLTheme.quicksand(
-                        color: const Color(0xFFC4CBDE),
-                        fontSize: 11.8,
-                        height: 1.35,
-                        fontWeight: FontWeight.w700,
+                        color: highlight ? const Color(0xFFE2E8F0) : const Color(0xFF94A3B8),
+                        fontSize: 12,
+                        height: 1.4,
+                        fontWeight: highlight ? FontWeight.w700 : FontWeight.w600,
                       ),
                     ),
                   ),
@@ -1040,25 +1103,35 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     required IconData icon,
     required String title,
     required String desc,
+    required Gradient gradient,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.07),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.06),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFFF9C15A).withValues(alpha: 0.12),
+              gradient: gradient,
               borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: gradient.colors.first.withValues(alpha: 0.25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ]
             ),
-            child: Icon(icon, color: const Color(0xFFF9C15A)),
+            child: Icon(icon, color: const Color(0xFF161A31), size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -1070,14 +1143,14 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   style: SLTheme.quicksand(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
-                    fontSize: 15,
+                    fontSize: 14.5,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   desc,
                   style: SLTheme.quicksand(
-                    color: const Color(0xFFC4CBDE),
+                    color: const Color(0xFFB0BBD8),
                     fontSize: 11.5,
                     height: 1.45,
                     fontWeight: FontWeight.w600,
@@ -1121,17 +1194,17 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: featured
               ? [
-                  const Color(0x26F8C14E),
-                  const Color(0x22F37B9B),
+                  const Color(0xFF1E1A3C),
+                  const Color(0xFF2E2248),
                 ]
               : [
-                  Colors.white.withValues(alpha: 0.08),
                   Colors.white.withValues(alpha: 0.05),
+                  Colors.white.withValues(alpha: 0.02),
                 ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1139,13 +1212,14 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: featured
-              ? const Color(0xFFF9C15A).withValues(alpha: 0.42)
-              : Colors.white.withValues(alpha: 0.08),
+              ? const Color(0xFFF9C15A).withValues(alpha: 0.45)
+              : Colors.white.withValues(alpha: 0.06),
+          width: featured ? 1.5 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
             color: featured
-                ? const Color(0xFFF9C15A).withValues(alpha: 0.12)
+                ? const Color(0xFFF9C15A).withValues(alpha: 0.1)
                 : Colors.black.withValues(alpha: 0.16),
             blurRadius: 22,
             offset: const Offset(0, 12),
@@ -1155,24 +1229,57 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (badge.isNotEmpty)
-                _buildPlanBadge(
-                  label: badge,
-                  bright: featured,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (badge.isNotEmpty)
+                    _buildPlanBadge(
+                      label: badge,
+                      bright: featured,
+                    ),
+                  _buildPlanBadge(
+                    label: _planDurationLabel(info),
+                  ),
+                  _buildPlanBadge(
+                    label: _purchaseModeText(product, info),
+                  ),
+                ],
+              ),
+              if (featured)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFF176), Color(0xFFF9C15A)],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.star_rounded,
+                        color: Color(0xFF0F0C20),
+                        size: 13,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'KHUYÊN DÙNG',
+                        style: SLTheme.quicksand(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF0F0C20),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              _buildPlanBadge(
-                label: _planDurationLabel(info),
-              ),
-              _buildPlanBadge(
-                label: _purchaseModeText(product, info),
-              ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
               final stacked = constraints.maxWidth < 360;
@@ -1192,7 +1299,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   Text(
                     _planSubtitle(product),
                     style: SLTheme.quicksand(
-                      color: const Color(0xFFD6DCEF),
+                      color: const Color(0xFFB0BBD8),
                       fontWeight: FontWeight.w600,
                       fontSize: stacked ? 12 : 12.5,
                       height: 1.42,
@@ -1207,9 +1314,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   Text(
                     _displayPrice(product, info),
                     style: SLTheme.quicksand(
-                      color: const Color(0xFFFFD36D),
+                      color: featured ? const Color(0xFFFFF176) : const Color(0xFFF9C15A),
                       fontWeight: FontWeight.w900,
-                      fontSize: stacked ? 22 : 24,
+                      fontSize: stacked ? 24 : 26,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1217,7 +1324,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                     _calculatePricePerDay(product, info),
                     style: SLTheme.quicksand(
                       color: Colors.white70,
-                      fontSize: 11,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1228,7 +1335,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     infoColumn,
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     priceColumn
                   ],
                 );
@@ -1243,13 +1350,13 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               );
             },
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: Colors.white.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1264,7 +1371,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   child: Text(
                     _securityNote(product),
                     style: SLTheme.quicksand(
-                      color: const Color(0xFFC4CBDE),
+                      color: const Color(0xFF94A3B8),
                       fontSize: 11.5,
                       height: 1.4,
                       fontWeight: FontWeight.w600,
@@ -1274,31 +1381,60 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 14),
-          SizedBox(
+          const SizedBox(height: 16),
+          Container(
             width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isPurchasing
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: featured
+                  ? const LinearGradient(
+                      colors: [Color(0xFFFFE082), Color(0xFFF9C15A), Color(0xFFFFB347)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: featured ? null : Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(16),
+              border: featured
                   ? null
-                  : () => _purchaseService.buyProduct(product),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: featured
-                    ? const Color(0xFFF9C15A)
-                    : const Color(0xFF242A46),
-                foregroundColor:
-                    featured ? const Color(0xFF1E2138) : Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
-              icon: const Icon(Icons.lock_open_rounded, size: 18),
-              label: Text(
-                context.tr('premium_buy_now'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
+                  : Border.all(color: Colors.white.withValues(alpha: 0.12)),
+              boxShadow: featured
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFFF9C15A).withValues(alpha: 0.25),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      )
+                    ]
+                  : null,
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _isPurchasing
+                    ? null
+                    : () => _purchaseService.buyProduct(product),
+                borderRadius: BorderRadius.circular(16),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.bolt_rounded,
+                        size: 18,
+                        color: featured ? const Color(0xFF0F0C20) : const Color(0xFFF9C15A),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        context.tr('premium_buy_now'),
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                          color: featured ? const Color(0xFF0F0C20) : Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1359,43 +1495,69 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
 
   Widget _buildVipActiveStatus() {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [
-            Color(0x2BF9C15A),
-            Color(0x1847C9A2),
+            const Color(0xFFF9C15A).withValues(alpha: 0.15),
+            const Color(0xFFFFB347).withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(30),
-        border:
-            Border.all(color: const Color(0xFFF9C15A).withValues(alpha: 0.35)),
+        border: Border.all(
+          color: const Color(0xFFF9C15A).withValues(alpha: 0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF9C15A).withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Container(
-            width: 72,
-            height: 72,
+            width: 76,
+            height: 76,
             decoration: BoxDecoration(
-              color: const Color(0xFFF9C15A).withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(22),
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFFE082), Color(0xFFF9C15A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFF9C15A).withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
             child: const Icon(
               Icons.verified_rounded,
-              size: 38,
-              color: Color(0xFFF9C15A),
+              size: 40,
+              color: Color(0xFF0F0C20),
             ),
           ),
-          const SizedBox(height: 14),
-          Text(
-            'Bạn đang dùng PRO',
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
+          const SizedBox(height: 18),
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [Color(0xFFFFE082), Color(0xFFF9C15A)],
+            ).createShader(bounds),
+            child: Text(
+              'TÀI KHOẢN PRO ĐANG HOẠT ĐỘNG',
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -1403,9 +1565,10 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             'Toàn bộ quyền lợi đã được kích hoạt. Cảm ơn hai bạn đã đồng hành cùng SoulLocket.',
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
-              color: const Color(0xFFD8DDF0),
+              color: const Color(0xFFC4CBDE),
               fontWeight: FontWeight.w600,
               height: 1.5,
+              fontSize: 13,
             ),
           ),
         ],
@@ -1507,14 +1670,16 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.w900,
+            letterSpacing: 0.2,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 5),
         Text(
           subtitle,
           style: SLTheme.quicksand(
-            color: const Color(0xFFC4CBDE),
+            color: const Color(0xFF94A3B8),
             fontWeight: FontWeight.w600,
+            fontSize: 12.5,
             height: 1.45,
           ),
         ),
@@ -1525,7 +1690,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   Widget _buildTopChip({
     required IconData icon,
     required String label,
+    Color? color,
   }) {
+    final themeColor = color ?? const Color(0xFFF9C15A);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -1536,7 +1703,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: const Color(0xFFF9C15A)),
+          Icon(icon, size: 18, color: themeColor),
           const SizedBox(width: 6),
           Text(
             label,
@@ -1559,12 +1726,12 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: bright
-            ? const Color(0xFFF9C15A)
+            ? const Color(0xFFFFF176)
             : Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
           color: bright
-              ? const Color(0xFFF9C15A)
+              ? const Color(0xFFFFF176)
               : Colors.white.withValues(alpha: 0.08),
         ),
       ),
@@ -1573,7 +1740,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         style: SLTheme.quicksand(
           fontSize: 10.5,
           fontWeight: FontWeight.w900,
-          color: bright ? const Color(0xFF1E2138) : Colors.white70,
+          color: bright ? const Color(0xFF0F0C20) : Colors.white70,
         ),
       ),
     );
@@ -1622,6 +1789,54 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       ),
     );
   }
+}
+
+class _StarryBackgroundPainter extends CustomPainter {
+  const _StarryBackgroundPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    
+    // Draw hardcoded stars for high performance and visual consistency
+    final stars = [
+      Offset(size.width * 0.1, size.height * 0.15),
+      Offset(size.width * 0.25, size.height * 0.08),
+      Offset(size.width * 0.35, size.height * 0.22),
+      Offset(size.width * 0.55, size.height * 0.05),
+      Offset(size.width * 0.7, size.height * 0.18),
+      Offset(size.width * 0.85, size.height * 0.1),
+      Offset(size.width * 0.9, size.height * 0.25),
+      
+      Offset(size.width * 0.15, size.height * 0.4),
+      Offset(size.width * 0.45, size.height * 0.48),
+      Offset(size.width * 0.8, size.height * 0.38),
+      
+      Offset(size.width * 0.08, size.height * 0.65),
+      Offset(size.width * 0.3, size.height * 0.72),
+      Offset(size.width * 0.65, size.height * 0.62),
+      Offset(size.width * 0.88, size.height * 0.78),
+      
+      Offset(size.width * 0.2, size.height * 0.9),
+      Offset(size.width * 0.5, size.height * 0.88),
+      Offset(size.width * 0.78, size.height * 0.92),
+    ];
+    
+    final starSizes = [1.2, 1.8, 1.0, 2.2, 1.5, 1.0, 1.7, 1.5, 2.0, 1.2, 1.8, 1.0, 2.2, 1.3, 1.5, 1.0, 2.0];
+    final starOpacities = [0.4, 0.7, 0.3, 0.8, 0.5, 0.3, 0.6, 0.5, 0.8, 0.4, 0.7, 0.3, 0.8, 0.5, 0.6, 0.3, 0.7];
+
+    for (int i = 0; i < stars.length; i++) {
+      if (i < starSizes.length && i < starOpacities.length) {
+        paint.color = Colors.white.withValues(alpha: starOpacities[i]);
+        canvas.drawCircle(stars[i], starSizes[i], paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _PremiumInfoPill extends StatelessWidget {

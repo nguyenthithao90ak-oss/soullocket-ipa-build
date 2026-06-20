@@ -599,38 +599,150 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   }) {
     final safeValue =
         options.any((item) => item.$2 == value) ? value : options.first.$2;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: LegacyWebUi.softPanelDecoration(
-        accent: const Color(0xFFF48FB1),
-        radius: 22,
-        colors: const [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFFFFFF)],
+    final selectedOption = options.firstWhere((item) => item.$2 == safeValue);
+
+    return GestureDetector(
+      onTap: () => _showSelectionBottomSheet(
+        title: 'Lựa chọn',
+        options: options,
+        selectedValue: safeValue,
+        onChanged: onChanged,
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: safeValue,
-          isExpanded: true,
-          borderRadius: BorderRadius.circular(18),
-          items: options
-              .map(
-                (item) => DropdownMenuItem<String>(
-                  value: item.$2,
-                  child: Text(
-                    item.$1,
-                    style: SLTheme.quicksand(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF575757),
-                    ),
-                  ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: LegacyWebUi.softPanelDecoration(
+          accent: const Color(0xFFF48FB1),
+          radius: 22,
+          colors: const [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFFFFFF)],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                selectedOption.$1,
+                style: SLTheme.quicksand(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF575757),
                 ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value != null) onChanged(value);
-          },
+              ),
+            ),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Color(0xFF94A3B8),
+              size: 20,
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  void _showSelectionBottomSheet({
+    required String title,
+    required List<(String, String)> options,
+    required String selectedValue,
+    required ValueChanged<String> onChanged,
+  }) {
+    unawaited(SystemSound.play(SystemSoundType.click));
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      builder: (context) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              color: const Color(0xFFFFF6FA).withValues(alpha: 0.94),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 38,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    title,
+                    style: SLTheme.quicksand(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: options.map((option) {
+                          final isSelected = option.$2 == selectedValue;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: Material(
+                              color: isSelected
+                                  ? const Color(0xFFFFE4EC).withValues(alpha: 0.7)
+                                  : Colors.white.withValues(alpha: 0.85),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? const Color(0xFFFF77A8).withValues(alpha: 0.4)
+                                      : const Color(0xFFF1E4EC).withValues(alpha: 0.6),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  onChanged(option.$2);
+                                  unawaited(SystemSound.play(SystemSoundType.click));
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          option.$1,
+                                          style: SLTheme.quicksand(
+                                            fontSize: 14,
+                                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w800,
+                                            color: isSelected
+                                                ? const Color(0xFFD81B60)
+                                                : const Color(0xFF475569),
+                                          ),
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        const Icon(
+                                          Icons.check_circle_rounded,
+                                          color: Color(0xFFD81B60),
+                                          size: 20,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -641,46 +753,135 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   }) {
     final safeValue =
         fonts.any((font) => font.key == value) ? value : fonts.first.key;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: LegacyWebUi.softPanelDecoration(
-        accent: const Color(0xFFF48FB1),
-        radius: 22,
-        colors: const [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFFFFFF)],
+    final selectedFont = fonts.firstWhere((font) => font.key == safeValue);
+
+    return GestureDetector(
+      onTap: () => _showFontSelectionBottomSheet(
+        fonts: fonts,
+        selectedValue: safeValue,
+        onChanged: onChanged,
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: safeValue,
-          isExpanded: true,
-          itemHeight: null,
-          menuMaxHeight: 420,
-          borderRadius: BorderRadius.circular(18),
-          selectedItemBuilder: (context) => fonts
-              .map(
-                (font) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: _buildThemeFontDropdownMenuItem(font, compact: true),
-                ),
-              )
-              .toList(),
-          items: fonts
-              .map(
-                (font) => DropdownMenuItem<String>(
-                  value: font.key,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: _buildThemeFontDropdownMenuItem(font),
-                  ),
-                ),
-              )
-              .toList(),
-          onChanged: (nextValue) {
-            if (nextValue != null) onChanged(nextValue);
-          },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: LegacyWebUi.softPanelDecoration(
+          accent: const Color(0xFFF48FB1),
+          radius: 22,
+          colors: const [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFFFFFF)],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildThemeFontDropdownMenuItem(selectedFont, compact: true),
+            ),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Color(0xFF94A3B8),
+              size: 20,
+            ),
+          ],
         ),
       ),
     );
   }
+
+  void _showFontSelectionBottomSheet({
+    required List<SLFontOption> fonts,
+    required String selectedValue,
+    required ValueChanged<String> onChanged,
+  }) {
+    unawaited(SystemSound.play(SystemSoundType.click));
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      builder: (context) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              color: const Color(0xFFFFF6FA).withValues(alpha: 0.94),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 38,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Chọn phông chữ',
+                    style: SLTheme.quicksand(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: fonts.map((font) {
+                          final isSelected = font.key == selectedValue;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: Material(
+                              color: isSelected
+                                  ? const Color(0xFFFFE4EC).withValues(alpha: 0.7)
+                                  : Colors.white.withValues(alpha: 0.85),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? const Color(0xFFFF77A8).withValues(alpha: 0.4)
+                                      : const Color(0xFFF1E4EC).withValues(alpha: 0.6),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  onChanged(font.key);
+                                  unawaited(SystemSound.play(SystemSoundType.click));
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildThemeFontDropdownMenuItem(font),
+                                      ),
+                                      if (isSelected)
+                                        const Icon(
+                                          Icons.check_circle_rounded,
+                                          color: Color(0xFFD81B60),
+                                          size: 20,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 
   Widget _buildThemeFontDropdownMenuItem(
     SLFontOption font, {

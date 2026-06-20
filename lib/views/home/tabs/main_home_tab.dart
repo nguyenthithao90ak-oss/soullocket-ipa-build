@@ -82,8 +82,8 @@ import '../../../utils/services/purchase_service.dart';
 import '../../../utils/services/admob_service.dart';
 
 import 'package:soullocket_app/views/home/love_insights_screen.dart';
+import 'package:soullocket_app/views/home/milestones_screen.dart';
 import '../screens/global_search_screen.dart';
-import '../widgets/soul_merge_screen.dart';
 import 'dart:ui' as ui;
 
 import '../../../widgets/lottie_async_loader.dart';
@@ -195,6 +195,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ValueNotifier<String>('Đang định vị...');
   final ValueNotifier<String?> _homeMapAlertNotifier =
       ValueNotifier<String?>(null);
+  final ValueNotifier<Map<String, dynamic>?> _homePartnerBatteryNotifier =
+      ValueNotifier<Map<String, dynamic>?>(null);
   int _wishIndex = -1;
   int _tipIndex = -1;
   bool _hideSettingsButtonUntilRestart = false;
@@ -220,6 +222,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   List<AlbumItem> _albumHighlights = [];
   List<SharedNote> _noteHighlights = [];
   List<_HomeHighlightItem> _highlightItems = [];
+  StreamSubscription<DatabaseEvent>? _homeCalendarSubscription;
+  List<Map<String, dynamic>> _homeCalendarEvents = [];
   String? _selectedHomeToolId;
   late final ValueNotifier<List<_HomeReactionFlight>> _reactionFlightsNotifier;
   final Set<String> _seenReactionFlightIds = <String>{};
@@ -587,6 +591,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _presenceDataNotifier.dispose();
     _homeDistanceTextNotifier.dispose();
     _homeMapAlertNotifier.dispose();
+    _homePartnerBatteryNotifier.dispose();
     _isScrollingNotifier.dispose();
     _fallingEffectTypeNotifier.dispose();
     super.dispose();
@@ -3640,5 +3645,17 @@ class _SoulMergeStickerState extends State<_SoulMergeSticker> {
       },
     );
   }
+}
+
+class HomeUpcomingEvent {
+  final String title;
+  final DateTime date;
+  final String type; // 'calendar' | 'anniversary' | 'birthday' | 'holiday'
+
+  HomeUpcomingEvent({
+    required this.title,
+    required this.date,
+    required this.type,
+  });
 }
 

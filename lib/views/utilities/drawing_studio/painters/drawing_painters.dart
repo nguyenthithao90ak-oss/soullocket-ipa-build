@@ -84,6 +84,7 @@ class _DrawingCanvasPainter extends CustomPainter {
   const _DrawingCanvasPainter({
     required this.backgroundId,
     required this.strokes,
+    super.repaint,
   });
 
   @override

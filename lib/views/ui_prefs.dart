@@ -34,6 +34,7 @@ class UiPrefsState {
   final bool vaultHomeHidePreviewWhenLocked;
   final bool transparentMode;
   final String brandMarkKey;
+  final List<String> homeBlockOrder;
 
   const UiPrefsState({
     required this.themeKey,
@@ -61,6 +62,7 @@ class UiPrefsState {
     required this.vaultHomeHidePreviewWhenLocked,
     required this.transparentMode,
     required this.brandMarkKey,
+    required this.homeBlockOrder,
   });
 
   UiPrefsState copyWith({
@@ -89,6 +91,7 @@ class UiPrefsState {
     bool? vaultHomeHidePreviewWhenLocked,
     bool? transparentMode,
     String? brandMarkKey,
+    List<String>? homeBlockOrder,
   }) {
     return UiPrefsState(
       themeKey: themeKey ?? this.themeKey,
@@ -119,6 +122,7 @@ class UiPrefsState {
           vaultHomeHidePreviewWhenLocked ?? this.vaultHomeHidePreviewWhenLocked,
       transparentMode: transparentMode ?? this.transparentMode,
       brandMarkKey: brandMarkKey ?? this.brandMarkKey,
+      homeBlockOrder: homeBlockOrder ?? this.homeBlockOrder,
     );
   }
 
@@ -151,6 +155,7 @@ class UiPrefsState {
     vaultHomeHidePreviewWhenLocked: true,
     transparentMode: true,
     brandMarkKey: SoulLocketBrand.defaultStyleKey,
+    homeBlockOrder: ['highlight', 'map', 'insight'],
   );
 }
 
@@ -199,6 +204,7 @@ class UiPrefs {
       'il_vault_home_hide_preview_when_locked';
   static const _kTransparentModeKey = 'il_transparent_mode';
   static const _kBrandMarkKey = 'il_brand_mark_key';
+  static const _kHomeBlockOrderKey = 'il_home_block_order';
 
   static final ValueNotifier<UiPrefsState> notifier =
       ValueNotifier<UiPrefsState>(UiPrefsState.defaults);
@@ -315,6 +321,8 @@ class UiPrefs {
         .trim();
     final customBackgroundUrl =
         (prefs.getString(_kCustomBackgroundUrlKey) ?? '').trim();
+    final homeBlockOrder = prefs.getStringList(_kHomeBlockOrderKey) ??
+        const ['highlight', 'map', 'insight'];
 
     notifier.value = _normalizeState(
       UiPrefsState(
@@ -366,6 +374,7 @@ class UiPrefs {
         brandMarkKey: SoulLocketBrand.normalizeStyleKey(
           prefs.getString(_kBrandMarkKey) ?? UiPrefsState.defaults.brandMarkKey,
         ),
+        homeBlockOrder: homeBlockOrder,
       ),
     );
   }
@@ -412,34 +421,37 @@ class UiPrefs {
     notifier.value = normalized;
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    
-    await Future.wait([
-      prefs.setString(_kThemeKey, normalized.themeKey),
-      prefs.setString(_kFallingEffectKey, normalized.fallingEffectKey),
-      prefs.setDouble(_kAvatarSizeKey, normalized.avatarSizePx),
-      prefs.setDouble(_kCountdownSizeKey, normalized.countdownSizePx),
-      prefs.setString(_kAvatarFrameKey, normalized.avatarFrameKey),
-      prefs.setString(_kCountdownStyleKey, normalized.countdownStyleKey),
-      prefs.setString(_kCountdownTopLabelKey, normalized.countdownTopLabel),
-      prefs.setString(_kCountdownBottomLabelKey, normalized.countdownBottomLabel),
-      prefs.setString(_kCountdownTextColorKey, normalized.countdownTextColor),
-      prefs.setString(_kFontKey, normalized.fontKey),
-      prefs.setString(_kHomeBlockToneKey, normalized.homeBlockToneKey),
-      prefs.setBool(_kLiteModeKey, normalized.liteMode),
-      prefs.setString(_kGraphicsQualityKey, normalized.graphicsQualityKey),
-      prefs.setBool(_kTouchSoundKey, normalized.touchSound),
-      prefs.setBool(_kConfettiFxKey, normalized.confettiFx),
-      prefs.setBool(_kMusicAutoplayKey, normalized.musicAutoplay),
-      prefs.setInt(_kVaultTimeoutKey, normalized.vaultTimeoutMins),
-      prefs.setBool(_kVaultHomeEnabledKey, normalized.vaultHomeEnabled),
-      prefs.setString(_kVaultHomeStyleKey, normalized.vaultHomeStyle),
-      prefs.setBool(_kVaultHomeBadgeEnabledKey, normalized.vaultHomeBadgeEnabled),
-      prefs.setBool(_kVaultHomePreviewEnabledKey, normalized.vaultHomePreviewEnabled),
-      prefs.setBool(_kVaultHomeHidePreviewWhenLockedKey, normalized.vaultHomeHidePreviewWhenLocked),
-      prefs.setString(_kCustomBackgroundUrlKey, normalized.customBackgroundUrl),
-      prefs.setBool(_kTransparentModeKey, normalized.transparentMode),
-      prefs.setString(_kBrandMarkKey, normalized.brandMarkKey),
-    ]);
+    await prefs.setString(_kThemeKey, normalized.themeKey);
+    await prefs.setString(_kFallingEffectKey, normalized.fallingEffectKey);
+    await prefs.setDouble(_kAvatarSizeKey, normalized.avatarSizePx);
+    await prefs.setDouble(_kCountdownSizeKey, normalized.countdownSizePx);
+    await prefs.setString(_kAvatarFrameKey, normalized.avatarFrameKey);
+    await prefs.setString(_kCountdownStyleKey, normalized.countdownStyleKey);
+    await prefs.setString(_kCountdownTopLabelKey, normalized.countdownTopLabel);
+    await prefs.setString(
+        _kCountdownBottomLabelKey, normalized.countdownBottomLabel);
+    await prefs.setString(_kCountdownTextColorKey, normalized.countdownTextColor);
+    await prefs.setString(_kFontKey, normalized.fontKey);
+    await prefs.setString(_kHomeBlockToneKey, normalized.homeBlockToneKey);
+    await prefs.setBool(_kLiteModeKey, normalized.liteMode);
+    await prefs.setString(_kGraphicsQualityKey, normalized.graphicsQualityKey);
+    await prefs.setBool(_kTouchSoundKey, normalized.touchSound);
+    await prefs.setBool(_kConfettiFxKey, normalized.confettiFx);
+    await prefs.setBool(_kMusicAutoplayKey, normalized.musicAutoplay);
+    await prefs.setInt(_kVaultTimeoutKey, normalized.vaultTimeoutMins);
+    await prefs.setBool(_kVaultHomeEnabledKey, normalized.vaultHomeEnabled);
+    await prefs.setString(_kVaultHomeStyleKey, normalized.vaultHomeStyle);
+    await prefs.setBool(
+        _kVaultHomeBadgeEnabledKey, normalized.vaultHomeBadgeEnabled);
+    await prefs.setBool(
+        _kVaultHomePreviewEnabledKey, normalized.vaultHomePreviewEnabled);
+    await prefs.setBool(_kVaultHomeHidePreviewWhenLockedKey,
+        normalized.vaultHomeHidePreviewWhenLocked);
+    await prefs.setString(
+        _kCustomBackgroundUrlKey, normalized.customBackgroundUrl);
+    await prefs.setBool(_kTransparentModeKey, normalized.transparentMode);
+    await prefs.setString(_kBrandMarkKey, normalized.brandMarkKey);
+    await prefs.setStringList(_kHomeBlockOrderKey, normalized.homeBlockOrder);
 
     try {
       unawaited(SettingsSyncService().backupSettingsToCloud());
@@ -488,6 +500,7 @@ class UiPrefs {
       vaultHomeHidePreviewWhenLocked: state.vaultHomeHidePreviewWhenLocked,
       transparentMode: state.transparentMode,
       brandMarkKey: SoulLocketBrand.normalizeStyleKey(state.brandMarkKey),
+      homeBlockOrder: state.homeBlockOrder,
     );
   }
 }

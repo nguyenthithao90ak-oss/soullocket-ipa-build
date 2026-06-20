@@ -594,11 +594,32 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
 
       final result = await showDialog<String>(
         context: context,
-        builder: (ctx) => StatefulBuilder(
-          builder: (ctx, setLocalState) => AlertDialog(
-            backgroundColor: SLColors.darkBgCard,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        builder: (ctx) => Theme(
+          data: Theme.of(ctx).copyWith(
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.08),
+              hintStyle: const TextStyle(color: Colors.white38),
+              labelStyle: const TextStyle(color: Colors.white70),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.white24),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.white24),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: SLColors.danger),
+              ),
+            ),
+          ),
+          child: StatefulBuilder(
+            builder: (ctx, setLocalState) => AlertDialog(
+              backgroundColor: SLColors.darkBgCard,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
             title: Text(context.tr('util_thmghichty_5651be'),
                 style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800, color: Colors.white)),
@@ -609,6 +630,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   controller: captionCtrl,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white12,
                     hintText: context.tr('util_mtkhonhkhc_52663c'),
                     hintStyle: const TextStyle(color: Colors.white38),
                     border: OutlineInputBorder(
@@ -683,7 +706,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             ],
           ),
         ),
-      );
+      ),
+    );
       if (result == null) return;
       captionPlain = result;
     }
@@ -794,9 +818,30 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocalState) => AlertDialog(
-          backgroundColor: SLColors.darkBgCard,
+      builder: (ctx) => Theme(
+        data: Theme.of(ctx).copyWith(
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.08),
+            hintStyle: const TextStyle(color: Colors.white38),
+            labelStyle: const TextStyle(color: Colors.white70),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white24),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white24),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: SLColors.danger),
+            ),
+          ),
+        ),
+        child: StatefulBuilder(
+          builder: (ctx, setLocalState) => AlertDialog(
+            backgroundColor: SLColors.darkBgCard,
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           scrollable: true,
@@ -827,6 +872,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   obscureText: obscurePass,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white12,
                     hintText: context.tr('util_mtkhutithi_d4f304'),
                     hintStyle: const TextStyle(color: Colors.white38),
                     suffixIcon: IconButton(
@@ -858,6 +905,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     obscureText: obscureConfirm,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white12,
                       hintText: context.tr('util_nhplimtkhu_eee7a7'),
                       hintStyle: const TextStyle(color: Colors.white38),
                       suffixIcon: IconButton(
@@ -935,7 +984,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Future<String?> _showRecoveryCodeInputDialog() async {
@@ -943,8 +993,29 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: SLColors.darkBgCard,
+      builder: (ctx) => Theme(
+        data: Theme.of(ctx).copyWith(
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.08),
+            hintStyle: const TextStyle(color: Colors.white38),
+            labelStyle: const TextStyle(color: Colors.white70),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white24),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white24),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: SLColors.danger),
+            ),
+          ),
+        ),
+        child: AlertDialog(
+          backgroundColor: SLColors.darkBgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           context.tr('util_nhpmkhiphc_44a271'),
@@ -958,6 +1029,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           textCapitalization: TextCapitalization.characters,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white12,
             hintText: 'VD: ABCD-EFGH-JKLM-NPQR',
             hintStyle: const TextStyle(color: Colors.white38),
             border: OutlineInputBorder(
@@ -982,7 +1055,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Future<void> _showGeneratedRecoveryCodeDialog(
@@ -1196,9 +1270,30 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocalState) => AlertDialog(
-          backgroundColor: SLColors.darkBgCard,
+      builder: (ctx) => Theme(
+        data: Theme.of(ctx).copyWith(
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.08),
+            hintStyle: const TextStyle(color: Colors.white38),
+            labelStyle: const TextStyle(color: Colors.white70),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white24),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white24),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: SLColors.danger),
+            ),
+          ),
+        ),
+        child: StatefulBuilder(
+          builder: (ctx, setLocalState) => AlertDialog(
+            backgroundColor: SLColors.darkBgCard,
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           scrollable: true,
@@ -1218,6 +1313,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   obscureText: obscureOld,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white12,
                     labelText: context.tr('util_mtkhuc_36b0a2'),
                     labelStyle: const TextStyle(color: Colors.white70),
                     suffixIcon: IconButton(
@@ -1237,6 +1334,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   obscureText: obscureNew,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white12,
                     labelText: context.tr('util_mtkhumi_ccef95'),
                     labelStyle: const TextStyle(color: Colors.white70),
                     suffixIcon: IconButton(
@@ -1256,6 +1355,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   obscureText: obscureNew,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white12,
                     labelText: context.tr('util_nhplimtkhu_82a9a4'),
                     labelStyle: const TextStyle(color: Colors.white70),
                     border: OutlineInputBorder(
@@ -1352,7 +1453,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   void _showVaultResetInfoDialog(bool isWithin12Hours) {

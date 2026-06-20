@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,6 +30,8 @@ class LocationService {
   static const double _kMaxPlausibleSpeedMps = 70;
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  static const MethodChannel _deviceInfoChannel =
+      MethodChannel('soul_locket/device_info');
   static StreamSubscription<Position>? _positionStream;
   static String? _activeHouseId;
   static String? _activeRole;
@@ -105,7 +108,14 @@ class LocationService {
   }
 
   Future<bool> requestBackgroundPermission({BuildContext? context}) async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+    if (kIsWeb) {
+      return false;
+    }
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final status = await app_permission.Permission.locationAlways.request();
+      return status == app_permission.PermissionStatus.granted;
+    }
+    if (defaultTargetPlatform != TargetPlatform.android) {
       return false;
     }
     if (await hasBackgroundPermission()) return true;
@@ -389,6 +399,27 @@ class LocationService {
             position.accuracy <= _kMaxAcceptedAccuracyMeters);
   }
 
+  Future<Map<String, dynamic>> _fetchBatteryInfo() async {
+    if (kIsWeb) return const {};
+    try {
+      final raw = await _deviceInfoChannel
+          .invokeMapMethod<String, dynamic>('getBatteryInfo')
+          .timeout(const Duration(seconds: 3));
+      if (raw == null) return const {};
+      final level = raw['level'];
+      final isCharging = raw['isCharging'];
+      if (level is int && level >= 0) {
+        return {
+          'battery': level,
+          if (isCharging is bool) 'isCharging': isCharging,
+        };
+      }
+    } catch (_) {
+      // bỏ qua nếu platform không hỗ trợ
+    }
+    return const {};
+  }
+
   Future<void> _writeAcceptedLocationToFirebase(
     String houseId,
     String role,
@@ -396,6 +427,8 @@ class LocationService {
     int now,
   ) async {
     _lastFirebaseUpdateTs = now;
+
+    final batteryInfo = await _fetchBatteryInfo();
 
     final payload = {
       'lt': position.latitude,
@@ -413,6 +446,7 @@ class LocationService {
         'speed': position.speed,
       if (position.heading.isFinite && position.heading >= 0)
         'heading': position.heading,
+      ...batteryInfo,
     };
     _lastGpsPayload = Map<String, dynamic>.from(payload);
 

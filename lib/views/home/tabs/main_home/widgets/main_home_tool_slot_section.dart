@@ -670,193 +670,227 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
       return SecretVaultScreen(houseId: widget.houseId);
     }
 
-    final uiPrefs = UiPrefs.notifier.value;
-    final secureStyle = uiPrefs.vaultHomeStyle == 'secure';
-    final compactStyle = uiPrefs.vaultHomeStyle == 'compact';
-    final colors = secureStyle
-        ? [const Color(0xFF1F1C2C), const Color(0xFF928DAB)]
-        : [const Color(0xFFFFF0F6), const Color(0xFFE3F2FD)];
-    final accent = secureStyle ? const Color(0xFF4F46E5) : SLColors.primary;
-    final showPreview = uiPrefs.vaultHomePreviewEnabled &&
-        !(uiPrefs.vaultHomeHidePreviewWhenLocked && !_isUnlocked);
+    return StreamBuilder<bool>(
+      stream: PurchaseService().vipStatusStream(),
+      initialData: false,
+      builder: (context, snapshot) {
+        final isVip = (snapshot.data ?? false) || kDebugMode;
+        final uiPrefs = UiPrefs.notifier.value;
+        final secureStyle = uiPrefs.vaultHomeStyle == 'secure';
+        final compactStyle = uiPrefs.vaultHomeStyle == 'compact';
+        final cosmicStyle = uiPrefs.vaultHomeStyle == 'cosmic' && isVip;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Center(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(20),
-          child: Container(
-            width: double.infinity,
-            constraints: const BoxConstraints(maxWidth: 520),
-            padding: EdgeInsets.fromLTRB(
-              18,
-              compactStyle ? 18 : 22,
-              18,
-              compactStyle ? 18 : 22,
+        List<Color> colors;
+        Color accent;
+
+        if (secureStyle) {
+          colors = [const Color(0xFF1F1C2C), const Color(0xFF928DAB)];
+          accent = const Color(0xFF4F46E5);
+        } else if (cosmicStyle) {
+          colors = [const Color(0xFF0F0C20), const Color(0xFF15102A)];
+          accent = const Color(0xFFFFD700);
+        } else {
+          colors = [const Color(0xFFFFF0F6), const Color(0xFFE3F2FD)];
+          accent = SLColors.primary;
+        }
+
+        final showPreview = uiPrefs.vaultHomePreviewEnabled &&
+            !(uiPrefs.vaultHomeHidePreviewWhenLocked && !_isUnlocked);
+
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: colors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.88),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.92)),
-              boxShadow: [
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.18),
-                  blurRadius: 28,
-                  offset: const Offset(0, 16),
+          ),
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              child: Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(maxWidth: 520),
+                padding: EdgeInsets.fromLTRB(
+                  18,
+                  compactStyle ? 18 : 22,
+                  18,
+                  compactStyle ? 18 : 22,
                 ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          width: compactStyle ? 62 : 76,
-                          height: compactStyle ? 62 : 76,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: secureStyle
-                                  ? [const Color(0xFF4F46E5), const Color(0xFF111827)]
-                                  : [const Color(0xFFFF7A86), const Color(0xFFF6A0C6)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Icon(
-                            secureStyle
-                                ? Icons.enhanced_encryption_rounded
-                                : Icons.lock_person_rounded,
-                            color: Colors.white,
-                            size: compactStyle ? 28 : 34,
-                          ),
-                        ),
-                        if (uiPrefs.vaultHomeBadgeEnabled)
-                          Positioned(
-                            right: -5,
-                            bottom: -5,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: _isRequestingUnlock
-                                    ? const Color(0xFFFFB74D)
-                                    : const Color(0xFF43A047),
-                                shape: BoxShape.circle,
-                                border:
-                                    Border.all(color: Colors.white, width: 3),
-                              ),
-                              child: Icon(
-                                _isRequestingUnlock
-                                    ? Icons.hourglass_top_rounded
-                                    : Icons.verified_user_rounded,
-                                size: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.tr('home_khnggianri_5aa2fb'),
-                            style: SLTheme.quicksand(
-                              fontSize: compactStyle ? 18 : 21,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF243042),
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            _isRequestingUnlock
-                                ? context.tr('home_angxcthcmk_e31a5e')
-                                : context.tr('home_nhtknhring_4acbf3'),
-                            style: SLTheme.quicksand(
-                              fontSize: compactStyle ? 11.8 : 12.8,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF667085),
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ),
+                decoration: BoxDecoration(
+                  color: cosmicStyle
+                      ? Colors.black.withValues(alpha: 0.75)
+                      : Colors.white.withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: cosmicStyle
+                        ? const Color(0xFFFFD700).withValues(alpha: 0.3)
+                        : Colors.white.withValues(alpha: 0.92),
+                    width: cosmicStyle ? 2.0 : 1.0,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: cosmicStyle ? 0.35 : 0.18),
+                      blurRadius: cosmicStyle ? 36 : 28,
+                      offset: const Offset(0, 16),
                     ),
                   ],
                 ),
-                if (!compactStyle) ...[
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      _HomeVaultChip(
-                        icon: Icons.visibility_off_rounded,
-                        label: showPreview
-                            ? context.tr('home_previewant_dbaf55')
-                            : context.tr('home_npreview_1da491'),
-                        color: accent,
-                      ),
-                      _HomeVaultChip(
-                        icon: Icons.fingerprint_rounded,
-                        label: context.tr('home_mbngkha_d3e60a'),
-                        color: const Color(0xFF7E57C2),
-                      ),
-                      _HomeVaultChip(
-                        icon: Icons.favorite_rounded,
-                        label: context.tr('home_chhaibn_a913db'),
-                        color: const Color(0xFFD81B60),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: compactStyle ? 62 : 76,
+                              height: compactStyle ? 62 : 76,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: secureStyle
+                                      ? [const Color(0xFF4F46E5), const Color(0xFF111827)]
+                                      : cosmicStyle
+                                          ? [const Color(0xFFD97706), const Color(0xFF7C2D12)]
+                                          : [const Color(0xFFFF7A86), const Color(0xFFF6A0C6)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: Icon(
+                                secureStyle
+                                    ? Icons.enhanced_encryption_rounded
+                                    : cosmicStyle
+                                        ? Icons.vpn_key_rounded
+                                        : Icons.lock_person_rounded,
+                                color: Colors.white,
+                                size: compactStyle ? 28 : 34,
+                              ),
+                            ),
+                            if (uiPrefs.vaultHomeBadgeEnabled)
+                              Positioned(
+                                right: -5,
+                                bottom: -5,
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: _isRequestingUnlock
+                                        ? const Color(0xFFFFB74D)
+                                        : const Color(0xFF43A047),
+                                    shape: BoxShape.circle,
+                                    border:
+                                        Border.all(color: Colors.white, width: 3),
+                                  ),
+                                  child: Icon(
+                                    _isRequestingUnlock
+                                        ? Icons.hourglass_top_rounded
+                                        : Icons.verified_user_rounded,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.tr('home_khnggianri_5aa2fb'),
+                                style: SLTheme.quicksand(
+                                  fontSize: compactStyle ? 18 : 21,
+                                  fontWeight: FontWeight.w900,
+                                  color: cosmicStyle
+                                      ? const Color(0xFFFFD700)
+                                      : const Color(0xFF243042),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                _isRequestingUnlock
+                                    ? context.tr('home_angxcthcmk_e31a5e')
+                                    : context.tr('home_nhtknhring_4acbf3'),
+                                style: SLTheme.quicksand(
+                                  fontSize: compactStyle ? 11.8 : 12.8,
+                                  fontWeight: FontWeight.w700,
+                                  color: cosmicStyle
+                                      ? const Color(0xFFE2B653)
+                                      : const Color(0xFF667085),
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (!compactStyle) ...[
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _HomeVaultChip(
+                            icon: Icons.visibility_off_rounded,
+                            label: showPreview
+                                ? context.tr('home_previewant_dbaf55')
+                                : context.tr('home_npreview_1da491'),
+                            color: accent,
+                          ),
+                          _HomeVaultChip(
+                            icon: Icons.fingerprint_rounded,
+                            label: context.tr('home_mbngkha_d3e60a'),
+                            color: cosmicStyle ? const Color(0xFFFFD700) : const Color(0xFF7E57C2),
+                          ),
+                          _HomeVaultChip(
+                            icon: Icons.favorite_rounded,
+                            label: context.tr('home_chhaibn_a913db'),
+                            color: cosmicStyle ? const Color(0xFFFFD700) : const Color(0xFFD81B60),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
-                const SizedBox(height: 18),
-                if (_isRequestingUnlock)
-                  SizedBox(
-                    width: compactStyle ? 24 : 28,
-                    height: compactStyle ? 24 : 28,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: accent,
-                    ),
-                  )
-                else
-                  FilledButton.icon(
-                    onPressed: _requestUnlock,
-                    icon: const Icon(Icons.lock_open_rounded),
-                    label: Text(context.tr('home_mkhnggianr_b53f72')),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: accent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 12,
+                    const SizedBox(height: 18),
+                    if (_isRequestingUnlock)
+                      SizedBox(
+                        width: compactStyle ? 24 : 28,
+                        height: compactStyle ? 24 : 28,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: accent,
+                        ),
+                      )
+                    else
+                      FilledButton.icon(
+                        onPressed: _requestUnlock,
+                        icon: const Icon(Icons.lock_open_rounded),
+                        label: Text(context.tr('home_mkhnggianr_b53f72')),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: accent,
+                          foregroundColor: cosmicStyle ? Colors.black87 : Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

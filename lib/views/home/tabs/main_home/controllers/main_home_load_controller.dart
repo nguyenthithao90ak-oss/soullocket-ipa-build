@@ -41,6 +41,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _albumSubscription = null;
     _noteSubscription?.cancel();
     _noteSubscription = null;
+    _homeCalendarSubscription?.cancel();
+    _homeCalendarSubscription = null;
     _chatSignalSubscription?.cancel();
     _chatSignalSubscription = null;
     _reactionFlightSubscription?.cancel();
@@ -494,6 +496,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
         }
 
         _listenHighlights(houseId);
+        _listenHomeCalendarEvents(houseId);
         _listenNewDeviceNotifications(houseId);
         _listenInteractionSignals(houseId);
         _listenReactionFlights(houseId);

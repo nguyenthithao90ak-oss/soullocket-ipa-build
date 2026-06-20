@@ -56,7 +56,7 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   }
 
   Future<void> _handleWidgetThemeChanged(String value) async {
-    if (value == 'premium' && !_isVipActive) {
+    if ((value == 'premium' || value == 'cosmic') && !_isVipActive) {
       if (!AppConfig.isPurchaseEnabled) {
         _showToast(
           context.tr('home_lachnnyang_d9f089'),

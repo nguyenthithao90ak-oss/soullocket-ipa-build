@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
@@ -477,7 +478,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isDevicePending = false;
   String _devicePendingMessage = '';
   int _devicePendingUnlockAtMs = 0;
-  bool _isVipActive = false;
+  bool _isVipActiveField = false;
+  bool get _isVipActive => kDebugMode || _isVipActiveField;
+  set _isVipActive(bool val) => _isVipActiveField = val;
   bool _isRestoringVip = false;
   bool _googleLinked = false;
   bool _passwordLinked = false;

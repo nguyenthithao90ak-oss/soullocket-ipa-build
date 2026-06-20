@@ -846,3 +846,173 @@ class _LegacyNoticeStyle {
     required this.bodyColor,
   });
 }
+
+class SlAvatarFrame extends StatelessWidget {
+  final String frameKey;
+  final double size;
+  final Color accentColor;
+  final Widget child;
+  final bool isUser1;
+
+  const SlAvatarFrame({
+    super.key,
+    required this.frameKey,
+    required this.size,
+    required this.accentColor,
+    required this.child,
+    this.isUser1 = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final framePadding = LegacyWebUi.avatarFramePaddingForKey(frameKey, size);
+    final frameRadius = LegacyWebUi.avatarBorderRadiusForKey(frameKey, size);
+    final frameIsCircle = LegacyWebUi.avatarFrameIsCircle(frameKey);
+
+    // Tính toán inner border radius để ôm concentric hoàn hảo
+    final double rawRadius = LegacyWebUi.avatarBorderRadiusForKey(frameKey, size).bottomRight.x;
+    final double rawPadding = framePadding.top;
+    final innerRadius = frameIsCircle
+        ? null
+        : BorderRadius.circular((rawRadius - rawPadding).clamp(2.0, size));
+
+    final clippedAvatar = frameIsCircle
+        ? ClipOval(child: child)
+        : ClipRRect(
+            borderRadius: innerRadius ?? frameRadius,
+            child: child,
+          );
+
+    final mainFrame = frameKey == 'vip'
+        ? SlAnimatedVipFrame(
+            size: size,
+            padding: framePadding,
+            isCircle: frameIsCircle,
+            borderRadius: frameRadius,
+            child: child,
+          )
+        : Container(
+            width: size,
+            height: size,
+            decoration: LegacyWebUi.avatarFrameDecoration(
+              frameKey,
+              size,
+              accentColor: accentColor,
+            ),
+            child: Padding(
+              padding: framePadding,
+              child: clippedAvatar,
+            ),
+          );
+
+    if (frameKey == 'off') {
+      return mainFrame;
+    }
+
+    final List<Widget> decorations = [];
+
+    switch (frameKey) {
+      case 'rounded':
+        decorations.addAll([
+          Positioned(
+            top: -size * 0.05,
+            right: -size * 0.05,
+            child: Text('🌸', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+          ),
+          Positioned(
+            bottom: -size * 0.05,
+            left: -size * 0.05,
+            child: Text('💖', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+          ),
+        ]);
+        break;
+      case 'squircle':
+        decorations.addAll([
+          Positioned(
+            top: -size * 0.05,
+            left: -size * 0.05,
+            child: Text('🎀', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+          ),
+          Positioned(
+            bottom: -size * 0.05,
+            right: -size * 0.05,
+            child: Text('✨', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+          ),
+        ]);
+        break;
+      case 'pearl':
+        decorations.addAll([
+          Positioned(
+            top: -size * 0.05,
+            right: -size * 0.05,
+            child: Text('✨', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+          ),
+          Positioned(
+            bottom: -size * 0.05,
+            left: -size * 0.05,
+            child: Text('🤍', style: TextStyle(fontSize: (size * 0.24).clamp(12.0, 34.0))),
+          ),
+        ]);
+        break;
+      case 'glass':
+        decorations.addAll([
+          Positioned(
+            top: -size * 0.05,
+            left: -size * 0.05,
+            child: Text('🫧', style: TextStyle(fontSize: (size * 0.28).clamp(12.0, 38.0))),
+          ),
+          Positioned(
+            bottom: -size * 0.05,
+            right: -size * 0.05,
+            child: Text('☁️', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+          ),
+        ]);
+        break;
+      case 'vip':
+        decorations.addAll([
+          Positioned(
+            top: -size * 0.20,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text('👑', style: TextStyle(fontSize: (size * 0.32).clamp(14.0, 44.0))),
+            ),
+          ),
+          Positioned(
+            bottom: -size * 0.04,
+            left: -size * 0.04,
+            child: Text('⭐', style: TextStyle(fontSize: (size * 0.22).clamp(10.0, 30.0))),
+          ),
+          Positioned(
+            bottom: -size * 0.04,
+            right: -size * 0.04,
+            child: Text('⭐', style: TextStyle(fontSize: (size * 0.22).clamp(10.0, 30.0))),
+          ),
+        ]);
+        break;
+      case 'circle':
+      default:
+        decorations.addAll([
+          Positioned(
+            top: -size * 0.04,
+            left: -size * 0.04,
+            child: Text('✨', style: TextStyle(fontSize: (size * 0.24).clamp(10.0, 32.0))),
+          ),
+          Positioned(
+            bottom: -size * 0.04,
+            right: -size * 0.04,
+            child: Text(isUser1 ? '💙' : '❤️', style: TextStyle(fontSize: (size * 0.24).clamp(10.0, 32.0))),
+          ),
+        ]);
+        break;
+    }
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        mainFrame,
+        ...decorations,
+      ],
+    );
+  }
+}

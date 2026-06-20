@@ -624,6 +624,90 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     height: 1.4,
                   ),
                 ),
+                SLSpacing.h16,
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    context.tr('vault_style_title'),
+                    style: SLTextStyles.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF4A148C),
+                    ),
+                  ),
+                ),
+                SLSpacing.h8,
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: SLRadius.mdAll,
+                    border: Border.all(color: const Color(0xFFCE93D8)),
+                  ),
+                  child: ValueListenableBuilder<UiPrefsState>(
+                    valueListenable: UiPrefs.notifier,
+                    builder: (context, uiState, _) {
+                      return DropdownButtonFormField<String>(
+                        value: uiState.vaultHomeStyle,
+                        isExpanded: true,
+                        style: SLTextStyles.quicksand(
+                          color: const Color(0xFF4A148C),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        decoration: const InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                          border: InputBorder.none,
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'soft',
+                            child: Text(context.tr('vault_style_soft')),
+                          ),
+                          DropdownMenuItem(
+                            value: 'secure',
+                            child: Text(context.tr('vault_style_secure')),
+                          ),
+                          DropdownMenuItem(
+                            value: 'cosmic',
+                            child: Text(context.tr('vault_style_cosmic')),
+                          ),
+                        ],
+                        onChanged: (val) async {
+                          if (val == null) return;
+                          if (val == 'cosmic') {
+                            await _loadVipStatus();
+                            if (!_isVipActive) {
+                              _showToast(context.tr('vault_style_pro_required'), success: false);
+                              final houseId = _houseId?.trim();
+                              if (houseId == null || houseId.isEmpty) {
+                                _showToast(context.tr('home_hyvonhtrck_c33334'), success: false);
+                                return;
+                              }
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PremiumStoreScreen(
+                                    houseId: houseId,
+                                    myName: _nameU1.trim().isEmpty 
+                                        ? context.tr('home_bn_1fd75b') 
+                                        : _nameU1.trim(),
+                                  ),
+                                ),
+                              );
+                              if (mounted) {
+                                await _loadVipStatus();
+                              }
+                              return;
+                            }
+                          }
+                          
+                          await UiPrefs.saveState(UiPrefs.notifier.value.copyWith(vaultHomeStyle: val));
+                          _showToast(context.tr('saved_local_only'));
+                        },
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
         ],

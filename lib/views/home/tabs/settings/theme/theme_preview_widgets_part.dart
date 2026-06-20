@@ -8,8 +8,146 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     required String effectKey,
     required String graphicsKey,
   }) {
-    return const SizedBox.shrink();
+    final ui = UiPrefs.notifier.value;
+    final resolvedThemeKey = _resolvePreviewThemeKey(themeKey);
+    final isDark = _isPreviewDarkTheme(resolvedThemeKey);
+    final resolvedEffectKey = _resolvePreviewEffectKey(effectKey, resolvedThemeKey);
+    final accent = _previewThemeAccent(resolvedThemeKey);
+    final gradient = _previewThemeGradient(resolvedThemeKey, isDark);
+
+    return RepaintBoundary(
+      child: Center(
+        child: Container(
+          width: 320,
+          height: 480,
+          margin: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.16),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+            border: Border.all(
+              color: const Color(0xFFFFD6E4).withValues(alpha: 0.4),
+              width: 2,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Background
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: gradient,
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+                if (imageUrl.isNotEmpty)
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: ui.liteMode ? 0.12 : 0.28,
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  ),
+                // Effect layer
+                if (resolvedEffectKey != 'off' && !ui.liteMode && graphicsKey != 'low')
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: _buildThemePreviewEffectLayer(
+                        resolvedEffectKey,
+                        accent,
+                        isDark,
+                      ),
+                    ),
+                  ),
+                // Main Content inside phone mockup
+                SafeArea(
+                  minimum: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(
+                            Icons.cloud_queue_rounded,
+                            size: 16,
+                            color: isDark ? Colors.white70 : const Color(0xFF5F4C58),
+                          ),
+                          Text(
+                            'SoulLocket',
+                            style: _themeFontStyle(
+                              _draftFontKey ?? ui.fontKey,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: isDark ? Colors.white : const Color(0xFFD81B60),
+                            ),
+                          ),
+                          Icon(
+                            Icons.settings_rounded,
+                            size: 16,
+                            color: isDark ? Colors.white70 : const Color(0xFF5F4C58),
+                          ),
+                        ],
+                      ),
+                      const Spacer(flex: 2),
+                      // Countdown Circle
+                      _buildThemePreviewCountdownCircle(
+                        size: _localCountdownSize != null 
+                            ? (_localCountdownSize! * 0.36).clamp(90.0, 150.0)
+                            : 110.0,
+                        fontKey: _draftFontKey ?? ui.fontKey,
+                        visual: _themePreviewCountdownVisual(_draftCountdownStyleKey ?? ui.countdownStyleKey),
+                        topLabel: _themePreviewLabel(
+                          ui.countdownTopLabel,
+                          fallback: 'NGÀY BÊN NHAU',
+                          uppercase: true,
+                        ),
+                        valueText: '240',
+                        bottomLabel: _themePreviewLabel(
+                          ui.countdownBottomLabel,
+                          fallback: 'LOVE',
+                          uppercase: true,
+                        ),
+                      ),
+                      const Spacer(flex: 2),
+                      // Presence Card
+                      _buildThemePreviewPresenceCard(
+                        fontKey: _draftFontKey ?? ui.fontKey,
+                        avatarFrameKey: _draftAvatarFrameKey ?? ui.avatarFrameKey,
+                        homeToneKey: _draftHomeBlockToneKey ?? ui.homeBlockToneKey,
+                        isDark: isDark,
+                      ),
+                      const Spacer(flex: 3),
+                      // Bottom navigation dock preview
+                      _buildThemePreviewDock(
+                        fontKey: _draftFontKey ?? ui.fontKey,
+                        accent: accent,
+                        isDark: isDark,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
+
 
   String _themePreviewLabel(
     String raw, {
@@ -628,11 +766,6 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     required bool isUser1,
   }) {
     const avatarSize = 44.0;
-    final framePadding =
-        LegacyWebUi.avatarFramePaddingForKey(avatarFrameKey, avatarSize);
-    final frameRadius =
-        LegacyWebUi.avatarBorderRadiusForKey(avatarFrameKey, avatarSize);
-    final frameIsCircle = LegacyWebUi.avatarFrameIsCircle(avatarFrameKey);
     final accent = isUser1 ? const Color(0xFF2563EB) : const Color(0xFFFF4D79);
     final avatarImage = _buildThemePreviewAvatarImage(
       avatarUrl,
@@ -642,32 +775,13 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
 
     return Column(
       children: [
-        avatarFrameKey == 'vip'
-            ? SlAnimatedVipFrame(
-                size: avatarSize,
-                padding: framePadding,
-                isCircle: frameIsCircle,
-                borderRadius: frameRadius,
-                child: avatarImage,
-              )
-            : Container(
-                width: avatarSize,
-                height: avatarSize,
-                decoration: LegacyWebUi.avatarFrameDecoration(
-                  avatarFrameKey,
-                  avatarSize,
-                  accentColor: accent,
-                ),
-                child: Padding(
-                  padding: framePadding,
-                  child: frameIsCircle
-                      ? ClipOval(child: avatarImage)
-                      : ClipRRect(
-                          borderRadius: frameRadius,
-                          child: avatarImage,
-                        ),
-                ),
-              ),
+        SlAvatarFrame(
+          frameKey: avatarFrameKey,
+          size: avatarSize,
+          accentColor: accent,
+          isUser1: isUser1,
+          child: avatarImage,
+        ),
         if (ageBadge.isNotEmpty) ...[
           const SizedBox(height: 5),
           Container(

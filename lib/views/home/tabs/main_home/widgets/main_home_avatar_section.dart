@@ -501,29 +501,15 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                           child: clippedAvatar,
                         ),
                       )
-                    : frameKey == 'vip'
-                        ? SlAnimatedVipFrame(
-                            size: effectiveSize,
-                            padding: framePadding,
-                            isCircle: frameIsCircle,
-                            borderRadius: frameRadius,
-                            child: avatarContent,
-                          )
-                        : Container(
-                            width: effectiveSize,
-                            height: effectiveSize,
-                            decoration: LegacyWebUi.avatarFrameDecoration(
-                              frameKey,
-                              effectiveSize,
-                              accentColor: isUser1
-                                  ? LegacyWebUi.accentPink
-                                  : LegacyWebUi.accentBlue,
-                            ),
-                            child: Padding(
-                              padding: framePadding,
-                              child: clippedAvatar,
-                            ),
-                          ),
+                    : SlAvatarFrame(
+                        frameKey: frameKey,
+                        size: effectiveSize,
+                        accentColor: isUser1
+                            ? LegacyWebUi.accentPink
+                            : LegacyWebUi.accentBlue,
+                        isUser1: isUser1,
+                        child: avatarContent,
+                      ),
               ),
               if (showChooseImageHint)
                 const Positioned.fill(

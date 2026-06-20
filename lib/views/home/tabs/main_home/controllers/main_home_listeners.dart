@@ -29,6 +29,46 @@ extension _MainHomeListeners on _MainHomeTabState {
     });
   }
 
+  void _listenHomeCalendarEvents(String houseId) {
+    _homeCalendarSubscription?.cancel();
+    _homeCalendarSubscription = _dbRef
+        .child('houses/$houseId/calendar')
+        .onValue
+        .listen((event) {
+      if (!mounted) return;
+      if (event.snapshot.value == null) {
+        _safeSetState(() {
+          _homeCalendarEvents = [];
+        });
+        return;
+      }
+
+      try {
+        final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
+        final List<Map<String, dynamic>> parsedEvents = [];
+
+        data.forEach((dateKey, dateEvents) {
+          if (dateEvents is! Map) return;
+          final eventsMap = Map<dynamic, dynamic>.from(dateEvents);
+          eventsMap.forEach((key, val) {
+            if (val is! Map) return;
+            final map = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(val));
+            parsedEvents.add({
+              'id': key,
+              'dateKey': dateKey.toString(),
+              'title': map['title']?.toString() ?? '',
+              'ts': map['ts'] as int? ?? 0,
+            });
+          });
+        });
+
+        _safeSetState(() {
+          _homeCalendarEvents = parsedEvents;
+        });
+      } catch (_) {}
+    });
+  }
+
   void _listenInteractionSignals(String houseId) {
     _chatSignalSubscription?.cancel();
     _chatSignalSubscription = _dbRef

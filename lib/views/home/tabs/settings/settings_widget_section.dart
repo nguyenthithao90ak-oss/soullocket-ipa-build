@@ -42,15 +42,16 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       (context.tr('home_tmmng_9db47d'), 'purple'),
       (context.tr('home_xanhngc_49b55b'), 'green'),
       (context.tr('home_m_720483'), 'red'),
-      if (AppConfig.isPurchaseEnabled)
+      if (AppConfig.isPurchaseEnabled) ...[
         (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
+        (_isVipActive ? 'Vũ trụ PRO' : 'Vũ trụ PRO 🔒', 'cosmic'),
+      ],
     ];
     final heartColorOptions = [
       (context.tr('home_hngrose_ee75eb'), 'rose'),
       (context.tr('home_ruby_cb8e85'), 'ruby'),
       (context.tr('home_tmviolet_19bc69'), 'violet'),
       ('Xanh ocean', 'ocean'),
-      ('Mint', 'mint'),
       (context.tr('home_honghn_ab7dad'), 'sunset'),
       ('Gold', 'gold'),
     ];
@@ -222,15 +223,16 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       (context.tr('home_tmmng_9db47d'), 'purple'),
       (context.tr('home_xanhngc_49b55b'), 'green'),
       (context.tr('home_m_720483'), 'red'),
-      if (AppConfig.isPurchaseEnabled)
+      if (AppConfig.isPurchaseEnabled) ...[
         (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
+        (_isVipActive ? 'Vũ trụ PRO' : 'Vũ trụ PRO 🔒', 'cosmic'),
+      ],
     ];
     final heartColorOptions = [
       (context.tr('home_hngrose_ee75eb'), 'rose'),
       (context.tr('home_ruby_cb8e85'), 'ruby'),
       (context.tr('home_tmviolet_19bc69'), 'violet'),
       ('Xanh ocean', 'ocean'),
-      ('Mint', 'mint'),
       (context.tr('home_honghn_ab7dad'), 'sunset'),
       ('Gold', 'gold'),
     ];
@@ -560,6 +562,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       case 'purple':  return Icons.auto_awesome_rounded;
       case 'green':   return Icons.eco_rounded;
       case 'red':     return Icons.local_fire_department_rounded;
+      case 'premium': return Icons.brightness_auto_rounded;
+      case 'cosmic':  return Icons.star_rounded;
       default:        return Icons.palette_rounded;
     }
   }
@@ -575,6 +579,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       case 'purple':  return '✨';
       case 'green':   return '🍀';
       case 'red':     return '🔥';
+      case 'premium': return '💎';
+      case 'cosmic':  return '🌌';
       default:        return '🎨';
     }
   }
@@ -591,6 +597,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       ('purple',  [const Color(0xFFCE93D8), const Color(0xFF6A1B9A)], config.themeOptions.firstWhere((o) => o.$2 == 'purple', orElse: () => ('Tím', 'purple')).$1),
       ('green',   [const Color(0xFFA5D6A7), const Color(0xFF2E7D32)], config.themeOptions.firstWhere((o) => o.$2 == 'green', orElse: () => ('Xanh lá', 'green')).$1),
       ('red',     [const Color(0xFFEF9A9A), const Color(0xFFB71C1C)], config.themeOptions.firstWhere((o) => o.$2 == 'red', orElse: () => ('Đỏ', 'red')).$1),
+      if (AppConfig.isPurchaseEnabled) ...[
+        ('premium', [const Color(0xFFFBC2EB), const Color(0xFFA6C1EE)], config.themeOptions.firstWhere((o) => o.$2 == 'premium', orElse: () => ('Aurora PRO', 'premium')).$1),
+        ('cosmic',  [const Color(0xFF0F0C20), const Color(0xFFFFD700)], config.themeOptions.firstWhere((o) => o.$2 == 'cosmic', orElse: () => ('Vũ trụ PRO', 'cosmic')).$1),
+      ],
     ];
 
     final currentKey = _draftWidgetThemeKey ?? 'pink';

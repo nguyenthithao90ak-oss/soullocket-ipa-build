@@ -170,4 +170,21 @@ extension _MainHomeRouting on _MainHomeTabState {
       ),
     );
   }
+
+  void _openMilestonesDetail() {
+    if (_houseId == null) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MilestonesScreen(
+          houseId: _houseId!,
+          startDate: _houseSettings?['startDate']?.toString(),
+          houseSettings: _houseSettings ?? {},
+          homeCalendarEvents: _homeCalendarEvents,
+        ),
+      ),
+    ).then((_) {
+      _fetchHouseData(preserveVisibleState: true);
+    });
+  }
 }

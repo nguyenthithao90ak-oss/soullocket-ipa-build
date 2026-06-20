@@ -25,6 +25,10 @@ struct CoupleWidgetData {
     var showDiaryOnWidget: Bool
     var startDateRaw: String
     var dayUnitText: String
+    var battery1: Int  // -1 = unknown
+    var battery2: Int  // -1 = unknown
+    var isCharging1: Bool
+    var isCharging2: Bool
 
     func resolvedDaysText(referenceDate: Date = Date()) -> String {
         let unit = dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -71,6 +75,9 @@ struct CoupleWidgetData {
             diaryPaths = []
         }
 
+        let battery1Raw = defaults?.integer(forKey: "battery1") ?? -1
+        let battery2Raw = defaults?.integer(forKey: "battery2") ?? -1
+
         return CoupleWidgetData(
             name1: defaults?.string(forKey: "name1") ?? "Bạn",
             name2: defaults?.string(forKey: "name2") ?? "Người ấy",
@@ -92,7 +99,11 @@ struct CoupleWidgetData {
             diaryImagePaths: diaryPaths,
             showDiaryOnWidget: defaults?.bool(forKey: "showDiaryOnWidget") ?? false,
             startDateRaw: defaults?.string(forKey: "startDateRaw") ?? "",
-            dayUnitText: defaults?.string(forKey: "dayUnitText") ?? "ngày"
+            dayUnitText: defaults?.string(forKey: "dayUnitText") ?? "ngày",
+            battery1: battery1Raw == 0 && !(defaults?.object(forKey: "battery1") != nil) ? -1 : battery1Raw,
+            battery2: battery2Raw == 0 && !(defaults?.object(forKey: "battery2") != nil) ? -1 : battery2Raw,
+            isCharging1: defaults?.bool(forKey: "isCharging1") ?? false,
+            isCharging2: defaults?.bool(forKey: "isCharging2") ?? false
         )
     }
 }

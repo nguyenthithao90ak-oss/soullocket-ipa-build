@@ -263,6 +263,14 @@
 	<string>Ứng dụng cần quyền Face ID để mở khóa nhanh và bảo vệ nội dung riêng tư của bạn.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Ứng dụng cần quyền vị trí khi đang sử dụng để hiển thị bản đồ đôi, vị trí hiện tại, nhật ký có gắn địa điểm và gợi ý địa điểm gần bạn.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>SoulLocket thu thập dữ liệu vị trí chạy ngầm để hiển thị bản đồ chung, khoảng cách giữa hai bạn và chia sẻ vị trí ngay cả khi đóng ứng dụng.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>SoulLocket thu thập dữ liệu vị trí chạy ngầm để hiển thị bản đồ chung, khoảng cách giữa hai bạn và chia sẻ vị trí ngay cả khi đóng ứng dụng.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Ứng dụng cần quyền microphone để tham gia cuộc gọi âm thanh hoặc video và ghi nội dung âm thanh khi bạn chủ động sử dụng các tính năng đó.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

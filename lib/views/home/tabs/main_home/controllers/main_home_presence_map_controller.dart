@@ -830,6 +830,38 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         final myHasHistory = myPoint?['hasHistory'] == true;
         final partnerHasHistory = partnerPoint?['hasHistory'] == true;
 
+        final partnerNode = gpsData[_partnerRole];
+        if (partnerNode is Map) {
+          final partnerNodeMap = _toStringDynamicMap(partnerNode);
+          final battery = partnerNodeMap['battery'] ?? partnerNodeMap['batteryPct'];
+          final isCharging = partnerNodeMap['isCharging'] == true;
+          if (battery is num) {
+            _homePartnerBatteryNotifier.value = {
+              'level': battery.toInt(),
+              'isCharging': isCharging,
+            };
+          } else {
+            final lastKnown = partnerNodeMap['lastKnown'];
+            if (lastKnown is Map) {
+              final lastKnownMap = _toStringDynamicMap(lastKnown);
+              final lkBattery = lastKnownMap['battery'] ?? lastKnownMap['batteryPct'];
+              final lkIsCharging = lastKnownMap['isCharging'] == true;
+              if (lkBattery is num) {
+                _homePartnerBatteryNotifier.value = {
+                  'level': lkBattery.toInt(),
+                  'isCharging': lkIsCharging,
+                };
+              } else {
+                _homePartnerBatteryNotifier.value = null;
+              }
+            } else {
+              _homePartnerBatteryNotifier.value = null;
+            }
+          }
+        } else {
+          _homePartnerBatteryNotifier.value = null;
+        }
+
         var nextDistance = context.tr('home_angnhv_ea3669');
         String? nextAlert = isSingle
             ? context.tr('home_btvtrbnhin_5f5891')

@@ -512,6 +512,10 @@ class WidgetService {
     String birthday1 = '',
     String birthday2 = '',
     List<String> diaryImageUrls = const [],
+    int battery1 = -1,
+    int battery2 = -1,
+    bool isCharging1 = false,
+    bool isCharging2 = false,
   }) async {
     try {
       await ensureInitialized();
@@ -570,6 +574,15 @@ class WidgetService {
           daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim().isEmpty
               ? 'ngày'
               : daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim());
+      // Battery of each user (partner perspective)
+      if (battery1 >= 0) {
+        await _saveWidgetDataIfChanged<int>('battery1', battery1);
+        await _saveWidgetDataIfChanged<bool>('isCharging1', isCharging1);
+      }
+      if (battery2 >= 0) {
+        await _saveWidgetDataIfChanged<int>('battery2', battery2);
+        await _saveWidgetDataIfChanged<bool>('isCharging2', isCharging2);
+      }
 
       final normalizedAvatarUrl1 = avatarUrl1?.trim() ?? '';
       if (normalizedAvatarUrl1.isNotEmpty) {

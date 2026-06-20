@@ -158,7 +158,11 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
             children: [
               Positioned.fill(
                 child: Padding(
-                  padding: SLSpacing.all12,
+                  padding: (countdownVisual.outerColor != null ||
+                          countdownVisual.outerGradient != null ||
+                          countdownVisual.outerBorder != null)
+                      ? SLSpacing.all12
+                      : EdgeInsets.zero,
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -303,26 +307,7 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
   }
 }
 
-class _MainHomeHeroCountdownMotionShell extends StatelessWidget {
-  final double size;
-  final String styleKey;
-  final List<Color> highlightColors;
-  final bool enableMotion;
-  final Widget child;
 
-  const _MainHomeHeroCountdownMotionShell({
-    required this.size,
-    required this.styleKey,
-    required this.highlightColors,
-    required this.enableMotion,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
-  }
-}
 
 class _MainHomeHeroCountdownTapTarget extends StatelessWidget {
   final double circleSize;

@@ -53,6 +53,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   bool? _lastSyncedIsPlaying;
   late final String _syncClientId;
 
+  bool _lastKnownIsPlaying = false;
+  Duration _lastKnownPosition = Duration.zero;
+  DateTime _lastTickTime = DateTime.now();
+
   // Voice Call State
   final WebRTCService _webrtc = WebRTCService();
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
@@ -206,7 +210,32 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
     if (!_isVideoPlayer || _videoPlayerController == null) return;
     final controller = _videoPlayerController!;
     if (!controller.value.isInitialized) return;
-    _scheduleLocalPlaybackSync();
+
+    final now = DateTime.now();
+    final isPlaying = controller.value.isPlaying;
+    final position = controller.value.position;
+
+    // Detect play/pause state change
+    bool stateChanged = isPlaying != _lastKnownIsPlaying;
+
+    // Detect manual seek:
+    // We only consider it a seek if the position actually changed (posDiffMs > 100)
+    // and the change is significantly different from the elapsed real time.
+    final posDiffMs = (position.inMilliseconds - _lastKnownPosition.inMilliseconds).abs();
+    final timeDiffMs = now.difference(_lastTickTime).inMilliseconds;
+    bool seeked = posDiffMs > 100 && (posDiffMs - timeDiffMs).abs() > 1500;
+
+    _lastKnownIsPlaying = isPlaying;
+    _lastKnownPosition = position;
+    _lastTickTime = now;
+
+    if (stateChanged || seeked) {
+      _scheduleLocalPlaybackSync(
+        force: true,
+        isPlaying: isPlaying,
+        positionSec: position.inMilliseconds / 1000.0,
+      );
+    }
   }
 
   void _handleWebPlaybackMessage(String rawMessage) {
@@ -220,10 +249,14 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
           decoded.map((key, value) => MapEntry(key.toString(), value));
       if (data.isEmpty) return;
       final eventName = data['event']?.toString() ?? '';
+      
+      // Skip 'timeupdate' events to avoid continuous sync
+      if (eventName == 'timeupdate') return;
+
       final isPlaying = data['isPlaying'] == true;
       final positionSec = (data['positionSec'] as num?)?.toDouble() ?? 0.0;
       _scheduleLocalPlaybackSync(
-        force: eventName != 'timeupdate',
+        force: true,
         isPlaying: isPlaying,
         positionSec: positionSec,
       );
@@ -447,6 +480,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
     _currentUrl = url;
     _urlController.text = url;
     _resetPlaybackSyncCache();
+
+    _lastKnownIsPlaying = false;
+    _lastKnownPosition = Duration.zero;
+    _lastTickTime = DateTime.now();
 
     final isVideoFile = url.toLowerCase().endsWith('.mp4') ||
         url.contains('firebasestorage.googleapis.com');

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -65,7 +66,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final TextEditingController _noteController = TextEditingController();
-  late Stream<DatabaseEvent> _notesStream;
+  
+  Map<String, Map<String, dynamic>> _cachedNotes = {};
+  int _cachedNotesVersion = 0;
+  bool _isLoadingNotes = true;
+  StreamSubscription<DatabaseEvent>? _metadataSubscription;
 
   String _selectedColor = 'yellow';
   String _selectedTag = L10nService().translate('util_tnhyu_2814db');
@@ -90,15 +95,118 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   @override
   void initState() {
     super.initState();
-    _notesStream = _dbRef.child('houses/${widget.houseId}/note').onValue;
+    _loadNotesFromCache().then((_) {
+      _listenToNotesMetadata();
+    });
   }
 
   @override
   void didUpdateWidget(covariant SharedNotesScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.houseId != widget.houseId) {
-      _notesStream = _dbRef.child('houses/${widget.houseId}/note').onValue;
+      _isLoadingNotes = true;
+      _cachedNotes = {};
+      _cachedNotesVersion = 0;
+      _loadNotesFromCache().then((_) {
+        _listenToNotesMetadata();
+      });
     }
+  }
+
+  Future<void> _loadNotesFromCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dataStr = prefs.getString('il_cached_notes_data_${widget.houseId}');
+      final ver = prefs.getInt('il_cached_notes_ver_${widget.houseId}') ?? 0;
+      if (dataStr != null && dataStr.isNotEmpty) {
+        final decoded = jsonDecode(dataStr);
+        if (decoded is Map) {
+          final mapped = <String, Map<String, dynamic>>{};
+          decoded.forEach((k, v) {
+            if (v is Map) {
+              mapped[k.toString()] = Map<String, dynamic>.from(v);
+            }
+          });
+          if (mounted) {
+            setState(() {
+              _cachedNotes = mapped;
+              _cachedNotesVersion = ver;
+              _isLoadingNotes = false;
+            });
+          }
+        }
+      }
+    } catch (_) {
+      // Ignore cache load errors
+    }
+  }
+
+  Future<void> _saveNotesToCache(Map<String, Map<String, dynamic>> notes, int version) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('il_cached_notes_data_${widget.houseId}', jsonEncode(notes));
+      await prefs.setInt('il_cached_notes_ver_${widget.houseId}', version);
+    } catch (_) {}
+  }
+
+  void _listenToNotesMetadata() {
+    _metadataSubscription?.cancel();
+    _metadataSubscription = _dbRef
+        .child('houses/${widget.houseId}/metadata/last_updated_notes')
+        .onValue
+        .listen((event) async {
+      final val = event.snapshot.value;
+      final serverVersion = val is int ? val : (int.tryParse(val?.toString() ?? '') ?? 0);
+      
+      if (serverVersion != _cachedNotesVersion || _cachedNotes.isEmpty) {
+        await _fetchNotesFromServer(serverVersion);
+      } else {
+        if (mounted && _isLoadingNotes) {
+          setState(() {
+            _isLoadingNotes = false;
+          });
+        }
+      }
+    });
+  }
+
+  Future<void> _fetchNotesFromServer(int serverVersion) async {
+    try {
+      final snapshot = await _dbRef.child('houses/${widget.houseId}/note').get();
+      final raw = snapshot.value;
+      final nextNotes = <String, Map<String, dynamic>>{};
+      if (raw is Map) {
+        raw.forEach((k, v) {
+          if (v is Map) {
+            nextNotes[k.toString()] = Map<String, dynamic>.from(v);
+          }
+        });
+      }
+      
+      _cachedNotes = nextNotes;
+      _cachedNotesVersion = serverVersion;
+      
+      await _saveNotesToCache(nextNotes, serverVersion);
+      
+      if (mounted) {
+        setState(() {
+          _isLoadingNotes = false;
+        });
+      }
+    } catch (e) {
+      if (mounted && _isLoadingNotes) {
+        setState(() {
+          _isLoadingNotes = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _touchMetadata() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _dbRef
+        .child('houses/${widget.houseId}/metadata')
+        .update({'last_updated_notes': now});
   }
 
   Future<void> _addNote() async {
@@ -117,6 +225,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
       'tag': _selectedTag,
       'updatedTs': now.millisecondsSinceEpoch,
     });
+    await _touchMetadata();
 
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
@@ -134,13 +243,15 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   void _togglePinned(String key, bool currentPinned) {
     _dbRef
         .child('houses/${widget.houseId}/note/$key')
-        .update({'pinned': !currentPinned});
+        .update({'pinned': !currentPinned})
+        .then((_) => _touchMetadata());
   }
 
   void _toggleDone(String key, bool currentDone) {
     _dbRef
         .child('houses/${widget.houseId}/note/$key')
-        .update({'done': !currentDone});
+        .update({'done': !currentDone})
+        .then((_) => _touchMetadata());
   }
 
   void _deleteNote(String key) {
@@ -167,11 +278,13 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         restorePayload: data,
       );
       await existing.remove();
+      await _touchMetadata();
     });
   }
 
   @override
   void dispose() {
+    _metadataSubscription?.cancel();
     _noteController.dispose();
     super.dispose();
   }
@@ -385,115 +498,89 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   }
 
   Widget _buildNotesList() {
-    return StreamBuilder(
-      stream: _notesStream,
-      builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: SLColors.primary),
+    if (_isLoadingNotes && _cachedNotes.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(color: SLColors.primary),
+      );
+    }
+
+    if (_cachedNotes.isEmpty) {
+      return Padding(
+        padding: SLSpacing.all16,
+        child: Center(
+          child: SLTheme.emptyStatePanel(
+            icon: Icons.note_alt_rounded,
+            title: context.tr('util_chacghichn_ae5e3a'),
+            subtitle: context.tr('util_hylimtdngn_6a0e81'),
+            accentColor: const Color(0xFFF59EBA),
+          ),
+        ),
+      );
+    }
+
+    final items = _cachedNotes.entries
+        .map((e) => {
+              'key': e.key,
+              ...e.value,
+            })
+        .toList();
+
+    items.sort((a, b) {
+      if (a['pinned'] == true && b['pinned'] != true) return -1;
+      if (a['pinned'] != true && b['pinned'] == true) return 1;
+      return (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0);
+    });
+
+    final int doneCount =
+        items.where((item) => item['done'] == true).length;
+    final int pinnedCount =
+        items.where((item) => item['pinned'] == true).length;
+    final int pendingCount = items.length - doneCount;
+    final visibleItems = items.where((item) {
+      switch (_noteFilter) {
+        case 'pinned':
+          return item['pinned'] == true;
+        case 'pending':
+          return item['done'] != true;
+        default:
+          return true;
+      }
+    }).toList();
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+      itemCount: visibleItems.length + (visibleItems.isEmpty ? 2 : 1),
+      separatorBuilder: (_, __) => SLSpacing.h12,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return _buildNotesSummary(
+            totalCount: items.length,
+            doneCount: doneCount,
+            pinnedCount: pinnedCount,
+            pendingCount: pendingCount,
           );
         }
 
-        if (snapshot.hasError) {
-          return Padding(
-            padding: SLSpacing.all16,
-            child: Center(
-              child: SLTheme.emptyStatePanel(
-                icon: Icons.error_outline_rounded,
-                title: context.tr('util_khngticghi_6ec1a3'),
-                subtitle: context.tr('util_khngticghi_9e46d9'),
-                accentColor: SLColors.danger,
-              ),
-            ),
+        if (visibleItems.isEmpty) {
+          return SLTheme.emptyStatePanel(
+            icon: Icons.filter_alt_off_rounded,
+            title: 'Chưa có ghi chú phù hợp',
+            subtitle: 'Đổi bộ lọc để xem các ghi chú khác.',
+            accentColor: const Color(0xFFF59EBA),
           );
         }
 
-        if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
-          return Padding(
-            padding: SLSpacing.all16,
-            child: Center(
-              child: SLTheme.emptyStatePanel(
-                icon: Icons.note_alt_rounded,
-                title: context.tr('util_chacghichn_ae5e3a'),
-                subtitle:
-                    context.tr('util_hylimtdngn_6a0e81'),
-                accentColor: const Color(0xFFF59EBA),
-              ),
-            ),
-          );
-        }
+        final item = visibleItems[index - 1];
+        final colorKey = item['color'] as String? ?? 'yellow';
+        final bgColor = _colors[colorKey] ?? _colors['yellow']!;
+        final isDone = item['done'] == true;
+        final isPinned = item['pinned'] == true;
 
-        final raw = snapshot.data!.snapshot.value;
-        if (raw is! Map) {
-          return const SizedBox.shrink();
-        }
-        final data = Map<dynamic, dynamic>.from(raw);
-        final items = data.entries
-            .where((e) => e.value is Map)
-            .map((e) => {
-                  'key': e.key,
-                  ...Map<String, dynamic>.from(e.value as Map),
-                })
-            .toList();
-
-        items.sort((a, b) {
-          if (a['pinned'] == true && b['pinned'] != true) return -1;
-          if (a['pinned'] != true && b['pinned'] == true) return 1;
-          return (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0);
-        });
-
-        final int doneCount =
-            items.where((item) => item['done'] == true).length;
-        final int pinnedCount =
-            items.where((item) => item['pinned'] == true).length;
-        final int pendingCount = items.length - doneCount;
-        final visibleItems = items.where((item) {
-          switch (_noteFilter) {
-            case 'pinned':
-              return item['pinned'] == true;
-            case 'pending':
-              return item['done'] != true;
-            default:
-              return true;
-          }
-        }).toList();
-
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-          itemCount: visibleItems.length + (visibleItems.isEmpty ? 2 : 1),
-          separatorBuilder: (_, __) => SLSpacing.h12,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return _buildNotesSummary(
-                totalCount: items.length,
-                doneCount: doneCount,
-                pinnedCount: pinnedCount,
-                pendingCount: pendingCount,
-              );
-            }
-
-            if (visibleItems.isEmpty) {
-              return SLTheme.emptyStatePanel(
-                icon: Icons.filter_alt_off_rounded,
-                title: 'Chưa có ghi chú phù hợp',
-                subtitle: 'Đổi bộ lọc để xem các ghi chú khác.',
-                accentColor: const Color(0xFFF59EBA),
-              );
-            }
-
-            final item = visibleItems[index - 1];
-            final colorKey = item['color'] as String? ?? 'yellow';
-            final bgColor = _colors[colorKey] ?? _colors['yellow']!;
-            final isDone = item['done'] == true;
-            final isPinned = item['pinned'] == true;
-
-            return _buildNoteCard(
-              item: item,
-              bgColor: bgColor,
-              isDone: isDone,
-              isPinned: isPinned,
-            );
-          },
+        return _buildNoteCard(
+          item: item,
+          bgColor: bgColor,
+          isDone: isDone,
+          isPinned: isPinned,
         );
       },
     );

@@ -99,7 +99,8 @@ extension _MapLocationLogicExt on _MapScreenState {
         '${marker.id}_${marker.point.latitude.toStringAsFixed(5)}_'
         '${marker.point.longitude.toStringAsFixed(5)}_'
         '${marker.icon.codePoint}_${marker.color.toARGB32()}_${marker.title}_'
-        '${marker.subtitle}_${marker.pulse ? 1 : 0}|',
+        '${marker.subtitle}_${marker.pulse ? 1 : 0}_'
+        '${marker.battery ?? -1}_${marker.isCharging == true ? 1 : 0}_${marker.speed ?? -1.0}|',
       );
     }
     return buf.toString();
@@ -199,6 +200,9 @@ extension _MapLocationLogicExt on _MapScreenState {
         lng: currentLng,
         ts: currentTs,
         accuracy: _readDouble(activeLiveMap['acc']),
+        battery: _readInt(activeLiveMap['battery'] ?? activeLiveMap['batteryPct']),
+        isCharging: activeLiveMap['isCharging'] == true,
+        speed: _readDouble(activeLiveMap['speed']),
       );
     }
 
@@ -211,6 +215,9 @@ extension _MapLocationLogicExt on _MapScreenState {
           lng: lng,
           ts: _readInt(lastMap['ts']),
           accuracy: _readDouble(lastMap['acc']),
+          battery: _readInt(lastMap['battery'] ?? lastMap['batteryPct']),
+          isCharging: lastMap['isCharging'] == true,
+          speed: _readDouble(lastMap['speed']),
         );
       }
     } else if (currentLat != null &&
@@ -221,6 +228,9 @@ extension _MapLocationLogicExt on _MapScreenState {
         lng: currentLng,
         ts: currentTs,
         accuracy: _readDouble(activeLiveMap['acc']),
+        battery: _readInt(activeLiveMap['battery'] ?? activeLiveMap['batteryPct']),
+        isCharging: activeLiveMap['isCharging'] == true,
+        speed: _readDouble(activeLiveMap['speed']),
       );
     }
 
@@ -1523,6 +1533,9 @@ extension _MapLocationLogicExt on _MapScreenState {
               ? Icons.favorite_rounded
               : Icons.favorite_border_rounded,
           secondaryColor: partnerLive ? _kMapPinkDeep : _kMapPink,
+          battery: partnerPoint.battery,
+          isCharging: partnerPoint.isCharging,
+          speed: partnerPoint.speed,
           onTap: () => _showMapPointDialog(
             title: '${widget.myName} & ${widget.partnerName}',
             subtitle: _myAddressText,
@@ -1549,6 +1562,9 @@ extension _MapLocationLogicExt on _MapScreenState {
             subtitle: _myAddressText,
             pulse: myLive,
             avatarUrl: widget.myAvatarUrl,
+            battery: myPoint.battery,
+            isCharging: myPoint.isCharging,
+            speed: myPoint.speed,
             onTap: () => _showMapPointDialog(
               title: widget.myName,
               subtitle: _myAddressText,
@@ -1578,6 +1594,9 @@ extension _MapLocationLogicExt on _MapScreenState {
             subtitle: _partnerAddressText,
             pulse: partnerLive,
             avatarUrl: widget.partnerAvatarUrl,
+            battery: partnerPoint.battery,
+            isCharging: partnerPoint.isCharging,
+            speed: partnerPoint.speed,
             onTap: () => _showMapPointDialog(
               title: widget.partnerName,
               subtitle: _partnerAddressText,

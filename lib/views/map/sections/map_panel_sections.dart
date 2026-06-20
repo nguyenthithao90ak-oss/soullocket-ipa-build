@@ -572,18 +572,26 @@ extension _MapPanelSectionsExt on _MapScreenState {
     required Color accent,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF111827).withValues(alpha: 0.86),
-            accent.withValues(alpha: 0.10),
+            accent.withValues(alpha: 0.22),
+            accent.withValues(alpha: 0.08),
+            const Color(0xFF0D1117).withValues(alpha: 0.80),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withValues(alpha: 0.24)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withValues(alpha: 0.42), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.16),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,8 +602,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
             overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
               fontSize: 10.5,
-              fontWeight: FontWeight.w800,
-              color: accent.withValues(alpha: 0.96),
+              fontWeight: FontWeight.w900,
+              color: accent,
+              letterSpacing: 0.4,
             ),
           ),
           SLSpacing.h6,
@@ -604,7 +613,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
-              fontSize: 13.5,
+              fontSize: 14,
               fontWeight: FontWeight.w900,
               color: Colors.white,
             ),
@@ -693,19 +702,25 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF151D2B),
-            roleColor.withValues(alpha: 0.12),
+            const Color(0xFF0E1520),
+            roleColor.withValues(alpha: 0.18),
+            const Color(0xFF111827).withValues(alpha: 0.92),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: roleColor.withValues(alpha: 0.22)),
+        border: Border.all(color: roleColor.withValues(alpha: 0.38), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: roleColor.withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: roleColor.withValues(alpha: 0.20),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.30),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -738,14 +753,22 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       ),
                     ),
                     SLSpacing.h4,
-                    Text(
-                      statusText,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: statusColor,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.16),
+                        borderRadius: SLRadius.pillAll,
+                        border: Border.all(color: statusColor.withValues(alpha: 0.30)),
+                      ),
+                      child: Text(
+                        statusText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: SLTheme.quicksand(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                          color: statusColor,
+                        ),
                       ),
                     ),
                   ],
@@ -761,8 +784,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
-              color: Colors.white.withValues(alpha: 0.70),
-              height: 1.35,
+              color: Colors.white.withValues(alpha: 0.80),
+              height: 1.38,
             ),
           ),
           SLSpacing.h8,
@@ -845,9 +868,24 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF242526),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF0A1628),
+            _kMapBlue.withValues(alpha: 0.10),
+            const Color(0xFF111827).withValues(alpha: 0.95),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: _kMapPanelBorder),
+        border: Border.all(color: _kMapBlue.withValues(alpha: 0.28), width: 1.1),
+        boxShadow: [
+          BoxShadow(
+            color: _kMapBlue.withValues(alpha: 0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -937,9 +975,24 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF242526),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF1A0D1E),
+            _kMapPinkDeep.withValues(alpha: 0.12),
+            const Color(0xFF111827).withValues(alpha: 0.95),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: _kMapPanelBorder),
+        border: Border.all(color: _kMapPinkDeep.withValues(alpha: 0.28), width: 1.1),
+        boxShadow: [
+          BoxShadow(
+            color: _kMapPinkDeep.withValues(alpha: 0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

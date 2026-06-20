@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/services/auth_service.dart';
 import '../utils/services/deeplink_service.dart';
@@ -55,6 +56,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   late final Stream<User?> _authStream;
 
   StreamSubscription? _maintenanceSub;
+  bool _isMaintenance = false;
 
   bool _isAuthenticated = false;
   bool _isCheckingAuth = true;
@@ -73,6 +75,12 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    // Load cached maintenance state synchronously if available
+    final prefs = OfflineCacheService.getPrefsSync();
+    if (prefs != null) {
+      _isMaintenance = prefs.getBool(_kMaintenanceCacheKey) ?? false;
+    }
+
     _appEntryController = AppEntryController(houseService: _houseService);
     RoleUtils.roleNotifier.addListener(_handleRoleChangedEvent);
     _accessResolver = AppEntryAccessResolver(
@@ -131,6 +139,31 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
     _listenToMaintenance();
     _scheduleAuthStreamTimeout();
+    // Load cached maintenance state để block offline
+    unawaited(_loadCachedMaintenanceState());
+  }
+
+  static const _kMaintenanceCacheKey = 'sys_is_maintenance';
+
+  Future<void> _loadCachedMaintenanceState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getBool(_kMaintenanceCacheKey) ?? false;
+    if (!mounted || cached == _isMaintenance) return;
+    setState(() {
+      _isMaintenance = cached;
+    });
+    if (cached) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          try {
+            Navigator.of(context, rootNavigator: true)
+                .popUntil((route) => route.isFirst);
+          } catch (e) {
+            debugPrint('[AppEntry] Cached navigation pop failed: $e');
+          }
+        }
+      });
+    }
   }
 
   void _scheduleAuthStreamTimeout() {
@@ -162,44 +195,37 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         .onValue
         .listen((event) async {
       if (!mounted) return;
-
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
       final isMaintenance = event.snapshot.value == true;
-      final isAdmin = await _authService.isUserAdmin(user);
-      if (!mounted || isAdmin) return;
-
+      // Save to cache để offline vẫn block được
+      unawaited(
+        SharedPreferences.getInstance().then(
+          (p) => p.setBool(_kMaintenanceCacheKey, isMaintenance),
+        ),
+      );
+      if (!mounted) return;
       setState(() {
-        if (isMaintenance) {
-          _initialAccessState = const AppEntryAccessState(
-            isAdmin: false,
-            isMaintenance: true,
-          );
-          _accessStateFuture = Future.value(_initialAccessState);
-          return;
-        }
-
-        _accessStateFuture = _accessResolver.resolveAccessState(
-          user: user,
-          userId: user.uid,
-          onBackgroundState: (state) {
-            _handleBackgroundAccessState(
-              state,
-              userId: user.uid,
-              cachedHouseId: null,
-            );
-          },
-        );
+        _isMaintenance = isMaintenance;
       });
-    }, onError: (Object error, StackTrace stackTrace) {
-      final message = error.toString();
-      if (message.contains('permission-denied')) {
-        return;
+      if (isMaintenance) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            try {
+              Navigator.of(context, rootNavigator: true)
+                  .popUntil((route) => route.isFirst);
+            } catch (e) {
+              debugPrint('[AppEntry] Maintenance navigation pop failed: $e');
+            }
+          }
+        });
       }
+    }, onError: (Object error, StackTrace stackTrace) {
       debugPrint(
         '[AppEntry] Maintenance listener error: ${AppErrorMapper.resolve(error).message}',
       );
+      // Re-subscribe sau lỗi để không bỏ lỡ cập nhật bảo trì
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted) _listenToMaintenance();
+      });
     });
   }
 
@@ -498,6 +524,16 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    // Kiểm tra bảo trì ở TOP LEVEL - tất cả user, mọi màn hình, không bypass được
+    if (_isMaintenance) {
+      _removeSplashOnce();
+      return const BlockedScaffold(
+        title: 'Bảo trì hệ thống',
+        message:
+            'Chúng tôi đang bảo trì hệ thống để nâng cấp trải nghiệm tốt hơn. Vui lòng quảy lại sau ít phút.',
+        showActions: false,
+      );
+    }
     return _buildContent(context);
   }
 
@@ -594,8 +630,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
               );
             }
 
-            if (accessState?.isMaintenance == true &&
-                accessState?.isAdmin != true) {
+            if (accessState?.isMaintenance == true) {
               _removeSplashOnce();
               return const BlockedScaffold(
                 title: 'Bảo trì hệ thống',

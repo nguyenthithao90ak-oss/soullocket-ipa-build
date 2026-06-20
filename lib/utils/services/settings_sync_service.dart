@@ -296,6 +296,9 @@ class SettingsSyncService {
           } else if (value is num) {
             await prefs.setDouble(key, value.toDouble());
             restoredAnySetting = true;
+          } else if (value is List) {
+            await prefs.setStringList(key, value.map((e) => e.toString()).toList());
+            restoredAnySetting = true;
           }
         }
 

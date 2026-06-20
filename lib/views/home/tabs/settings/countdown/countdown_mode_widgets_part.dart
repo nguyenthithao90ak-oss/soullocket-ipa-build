@@ -751,30 +751,14 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const size = 72.0;
-    final framePadding =
-        LegacyWebUi.avatarFramePaddingForKey(avatarFrameKey, size);
-    final frameRadius =
-        LegacyWebUi.avatarBorderRadiusForKey(avatarFrameKey, size);
-    final frameIsCircle = LegacyWebUi.avatarFrameIsCircle(avatarFrameKey);
     final avatarContent = _buildAvatarContent();
 
-    return Container(
-      width: size,
-      height: size,
-      decoration: LegacyWebUi.avatarFrameDecoration(
-        avatarFrameKey,
-        size,
-        accentColor: accent,
-      ),
-      child: Padding(
-        padding: framePadding,
-        child: frameIsCircle
-            ? ClipOval(child: avatarContent)
-            : ClipRRect(
-                borderRadius: frameRadius,
-                child: avatarContent,
-              ),
-      ),
+    return SlAvatarFrame(
+      frameKey: avatarFrameKey,
+      size: size,
+      accentColor: accent,
+      isUser1: accent.value == 0xFF4BA7FF,
+      child: avatarContent,
     );
   }
 
@@ -1174,7 +1158,7 @@ class _FloatingHeartsRingOverlayState
           clipBehavior: Clip.none,
           children: [
             AnimatedBuilder(
-              animation: Listenable.merge([_mainController, _tiltNotifier]),
+              animation: _mainController,
               builder: (context, _) {
                 final tilt = _tiltNotifier.value;
                 final tiltX = tilt.dx;
@@ -1223,7 +1207,7 @@ class _FloatingHeartsRingOverlayState
                           ..rotateZ(finalRotation)
                           ..scaleByVector3(Vector3(scaleX, scaleY, 1.0)),
                         child: Icon(
-                          i % 3 == 0 ? Icons.favorite_rounded : Icons.bubble_chart_rounded,
+                          Icons.favorite_rounded,
                           size: p.size,
                           // Tích hợp độ trong suốt trực tiếp vào màu để bỏ Widget Opacity (rất nặng)
                           color: _kHeartColors[i % _kHeartColors.length].withValues(alpha: p.opacity),

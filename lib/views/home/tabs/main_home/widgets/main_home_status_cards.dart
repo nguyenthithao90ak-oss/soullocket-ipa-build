@@ -79,95 +79,219 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     return 'Cập nhật gần nhất ${diff.inDays} ngày trước';
   }
 
-  Widget _buildModernHighlightCard(
-      {required String? startDate, required bool isSingle}) {
-    final title = _buildCountdownText(isSingle: isSingle, startDate: startDate);
-    final photoCount = _highlightItems.length;
-    return SLTheme.glassCard(
-      margin: EdgeInsets.zero,
-      padding: SLSpacing.all20,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFFD7E6), Color(0xFFFFEEF5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+  Widget _buildModernHighlightCard({
+    required String? startDate,
+    required bool isSingle,
+    Widget? dragHandle,
+  }) {
+    final today = DateTime.now();
+    final todayMidnight = DateTime(today.year, today.month, today.day);
+    final List<HomeUpcomingEvent> upcomingEvents = [];
+
+    // 1. Kỷ niệm ngày yêu
+    if (startDate != null && startDate.isNotEmpty) {
+      try {
+        final startDt = DateTime.parse(startDate);
+        final startDtMidnight = DateTime(startDt.year, startDt.month, startDt.day);
+        final daysToday = todayMidnight.difference(startDtMidnight).inDays + 1;
+
+        int? nextMilestone;
+        for (final m in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 2500, 3000, 4000, 5000]) {
+          if (m >= daysToday) {
+            nextMilestone = m;
+            break;
+          }
+        }
+        if (nextMilestone != null) {
+          final milestoneDate = startDtMidnight.add(Duration(days: nextMilestone - 1));
+          upcomingEvents.add(HomeUpcomingEvent(
+            title: 'Kỷ niệm $nextMilestone ngày yêu nhau 💖',
+            date: milestoneDate,
+            type: 'anniversary',
+          ));
+        }
+
+        DateTime nextAnniversary = DateTime(todayMidnight.year, startDtMidnight.month, startDtMidnight.day);
+        if (nextAnniversary.isBefore(todayMidnight)) {
+          nextAnniversary = DateTime(todayMidnight.year + 1, startDtMidnight.month, startDtMidnight.day);
+        }
+        final years = nextAnniversary.year - startDtMidnight.year;
+        if (years > 0) {
+          upcomingEvents.add(HomeUpcomingEvent(
+            title: 'Kỷ niệm $years năm yêu nhau 🎉',
+            date: nextAnniversary,
+            type: 'anniversary',
+          ));
+        }
+      } catch (_) {}
+    }
+
+    // 2. Sinh nhật
+    final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
+    final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
+    final nameU1 = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
+    final nameU2 = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
+
+    void addBirthday(String dob, String name) {
+      if (dob.isEmpty) return;
+      try {
+        final bday = DateTime.parse(dob);
+        DateTime nextBday = DateTime(todayMidnight.year, bday.month, bday.day);
+        if (nextBday.isBefore(todayMidnight)) {
+          nextBday = DateTime(todayMidnight.year + 1, bday.month, bday.day);
+        }
+        upcomingEvents.add(HomeUpcomingEvent(
+          title: 'Sinh nhật $name 🎂',
+          date: nextBday,
+          type: 'birthday',
+        ));
+      } catch (_) {}
+    }
+    addBirthday(dobU1, nameU1);
+    addBirthday(dobU2, nameU2);
+
+    // 3. Ngày lễ lớn
+    final holidaysList = [
+      {'month': 1, 'day': 1, 'name': 'Tết Dương Lịch 🎆'},
+      {'month': 2, 'day': 14, 'name': 'Lễ Tình Nhân (Valentine) 💝'},
+      {'month': 3, 'day': 8, 'name': 'Quốc tế Phụ nữ 💐'},
+      {'month': 3, 'day': 14, 'name': 'Valentine Trắng 🤍'},
+      {'month': 4, 'day': 1, 'name': 'Cá tháng Tư 🃏'},
+      {'month': 4, 'day': 14, 'name': 'Valentine Đen 🖤'},
+      {'month': 6, 'day': 1, 'name': 'Quốc tế Thiếu nhi 🧸'},
+      {'month': 6, 'day': 28, 'name': 'Ngày Gia đình Việt Nam 👨‍👩‍👧‍👦'},
+      {'month': 10, 'day': 20, 'name': 'Ngày Phụ nữ Việt Nam 🌸'},
+      {'month': 10, 'day': 31, 'name': 'Lễ Halloween 🎃'},
+      {'month': 12, 'day': 24, 'name': 'Đêm Giáng sinh 🎄'},
+      {'month': 12, 'day': 25, 'name': 'Lễ Giáng sinh ❄️'},
+      {'month': 12, 'day': 31, 'name': 'Đêm Giao thừa ✨'},
+    ];
+    for (final h in holidaysList) {
+      DateTime nextH = DateTime(todayMidnight.year, h['month'] as int, h['day'] as int);
+      if (nextH.isBefore(todayMidnight)) {
+        nextH = DateTime(todayMidnight.year + 1, h['month'] as int, h['day'] as int);
+      }
+      upcomingEvents.add(HomeUpcomingEvent(
+        title: h['name'] as String,
+        date: nextH,
+        type: 'holiday',
+      ));
+    }
+
+    // 4. Lịch trình chuyến đi
+    for (final event in _homeCalendarEvents) {
+      final dateKey = event['dateKey']?.toString() ?? '';
+      final evTitle = event['title']?.toString() ?? '';
+      if (dateKey.isEmpty || evTitle.isEmpty) continue;
+
+      final parts = dateKey.split('-');
+      if (parts.length != 3) continue;
+      final year = int.tryParse(parts[0]);
+      final month = int.tryParse(parts[1]);
+      final day = int.tryParse(parts[2]);
+      if (year == null || month == null || day == null) continue;
+
+      final eventDate = DateTime(year, month, day);
+      if (eventDate.isBefore(todayMidnight)) continue;
+
+      upcomingEvents.add(HomeUpcomingEvent(
+        title: evTitle,
+        date: eventDate,
+        type: 'calendar',
+      ));
+    }
+
+    // Sắp xếp tăng dần & lọc trùng
+    upcomingEvents.sort((a, b) => a.date.compareTo(b.date));
+    final seenTitles = <String>{};
+    final uniqueEvents = <HomeUpcomingEvent>[];
+    for (final e in upcomingEvents) {
+      if (seenTitles.add('${e.title}_${e.date.millisecondsSinceEpoch}')) {
+        uniqueEvents.add(e);
+      }
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _openMilestonesDetail,
+      child: SLTheme.glassCard(
+        margin: EdgeInsets.zero,
+        padding: SLSpacing.all20,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFD7E6), Color(0xFFFFEEF5)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
                   ),
-                  borderRadius: BorderRadius.circular(15),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: SLColors.primary,
+                    size: 20,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.auto_awesome_rounded,
-                  color: SLColors.primary,
-                  size: 20,
-                ),
-              ),
-              SLSpacing.w12,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('home_khonhkhcni_903ef3'),
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF263242),
+                SLSpacing.w12,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.tr('home_khonhkhcni_903ef3'),
+                        style: SLTheme.quicksand(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF263242),
+                        ),
                       ),
-                    ),
-                    Text(
-                      context.tr('home_nhngiungtn_061ab5'),
-                      style: SLTheme.quicksand(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: SLColors.textSecondary,
+                      Text(
+                        context.tr('home_nhngiungtn_061ab5'),
+                        style: SLTheme.quicksand(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: SLColors.textSecondary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            title,
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
-              color: SLColors.primary,
-              height: 1.4,
+                if (dragHandle != null) dragHandle,
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.black26,
+                  size: 24,
+                ),
+              ],
             ),
-          ),
-          if (photoCount > 0) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 14),
             Text(
-              'Tháng này đã lưu $photoCount khoảnh khắc bằng ảnh',
+              _buildCountdownText(isSingle: isSingle, startDate: startDate),
               style: SLTheme.quicksand(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: SLColors.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: SLColors.primary,
+                height: 1.4,
               ),
             ),
           ],
-          SLSpacing.h16,
-          if (_highlightItems.isEmpty)
-            _buildHighlightEmptyState()
-          else
-            RepaintBoundary(
-              child: _buildHighlightPhotoScatter(),
-            ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildModernMapCard({required String nameU1, required String nameU2}) {
+  Widget _buildModernMapCard({
+    required String nameU1,
+    required String nameU2,
+    Widget? dragHandle,
+  }) {
     final isSingle = _isSingleRelationship;
     return _buildHomeCardFirstTapWrapper(
       showHint: _showMapCardFirstTapHint,
@@ -223,6 +347,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     ],
                   ),
                 ),
+                if (dragHandle != null) dragHandle,
                 Icon(
                   Icons.chevron_right_rounded,
                   color: SLColors.secondary.withValues(alpha: 0.5),
@@ -230,38 +355,55 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               ],
             ),
             const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _homeDistanceTextNotifier.value,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF4B5B6E),
-                        height: 1.4,
+            ValueListenableBuilder<String>(
+              valueListenable: _homeDistanceTextNotifier,
+              builder: (context, distanceText, _) {
+                return ValueListenableBuilder<Map<String, dynamic>?>(
+                  valueListenable: _homePartnerBatteryNotifier,
+                  builder: (context, batteryInfo, _) {
+                    String displayText = distanceText;
+                    if (batteryInfo != null && !isSingle) {
+                      final pct = batteryInfo['level'] as int;
+                      final isCharging = batteryInfo['isCharging'] == true;
+                      final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                      displayText = '$distanceText • $emoji $pct%';
+                    }
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
                       ),
-                    ),
-                  ),
-                  SLSpacing.w12,
-                  Text(
-                    context.tr('home_mngay_02e4c1'),
-                    style: SLTheme.quicksand(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: SLColors.secondary,
-                    ),
-                  ),
-                ],
-              ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              displayText,
+                              style: SLTheme.quicksand(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF4B5B6E),
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                          SLSpacing.w12,
+                          Text(
+                            context.tr('home_mngay_02e4c1'),
+                            style: SLTheme.quicksand(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: SLColors.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),
@@ -274,6 +416,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     required String nameU1,
     required String nameU2,
     required bool enableMotion,
+    Widget? dragHandle,
   }) {
     final insight = _insightData;
     final metrics = insight == null
@@ -338,6 +481,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   size: 16,
                   color: SLColors.accent.withValues(alpha: 0.5),
                 ),
+                const Spacer(),
+                if (dragHandle != null) dragHandle,
               ],
             ),
             SLSpacing.h20,

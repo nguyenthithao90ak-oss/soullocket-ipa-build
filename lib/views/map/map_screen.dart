@@ -1499,35 +1499,58 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     ),
                   ),
                 ],
-                if (!marker.compact)
-                  Positioned(
+                if (!marker.compact) () {
+                  var displayText = marker.title;
+                  if (marker.battery != null) {
+                    final pct = marker.battery!;
+                    final isCharging = marker.isCharging == true;
+                    final batteryEmoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                    displayText += ' $batteryEmoji $pct%';
+                  }
+
+                  if (marker.speed != null && marker.speed! > 0) {
+                    final speedKmh = (marker.speed! * 3.6).round();
+                    if (speedKmh > 20) {
+                      displayText += '\n🚗 $speedKmh km/h';
+                    } else if (speedKmh > 2) {
+                      displayText += '\n🚶 $speedKmh km/h';
+                    } else {
+                      displayText += '\nĐứng yên';
+                    }
+                  } else if (marker.speed != null) {
+                    displayText += '\nĐứng yên';
+                  }
+
+                  return Positioned(
                     bottom: markerHeight - 4,
                     child: Container(
-                      constraints: const BoxConstraints(maxWidth: 104),
+                      constraints: const BoxConstraints(maxWidth: 140),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF18191A).withValues(alpha: 0.94),
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: marker.color.withValues(alpha: 0.22),
                         ),
                       ),
                       child: Text(
-                        marker.title,
-                        maxLines: 1,
+                        displayText,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
-                          fontSize: 10.5,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
+                          height: 1.2,
                         ),
                       ),
                     ),
-                  ),
+                  );
+                }(),
               ],
             ),
           ),
@@ -1731,6 +1754,9 @@ class _GpsPoint {
   final int? ts;
   final double? accuracy;
   final String? address;
+  final int? battery;
+  final bool? isCharging;
+  final double? speed;
 
   const _GpsPoint({
     required this.lat,
@@ -1738,17 +1764,28 @@ class _GpsPoint {
     this.ts,
     this.accuracy,
     this.address,
+    this.battery,
+    this.isCharging,
+    this.speed,
   });
 
   ll.LatLng get latLng => ll.LatLng(lat, lng);
 
-  _GpsPoint copyWith({String? address}) {
+  _GpsPoint copyWith({
+    String? address,
+    int? battery,
+    bool? isCharging,
+    double? speed,
+  }) {
     return _GpsPoint(
       lat: lat,
       lng: lng,
       ts: ts,
       accuracy: accuracy,
       address: address ?? this.address,
+      battery: battery ?? this.battery,
+      isCharging: isCharging ?? this.isCharging,
+      speed: speed ?? this.speed,
     );
   }
 }
@@ -1823,6 +1860,9 @@ class _MapMarkerSpec {
   final String? secondaryAvatarUrl;
   final IconData? secondaryIcon;
   final Color? secondaryColor;
+  final int? battery;
+  final bool? isCharging;
+  final double? speed;
 
   const _MapMarkerSpec({
     required this.id,
@@ -1838,6 +1878,9 @@ class _MapMarkerSpec {
     this.secondaryAvatarUrl,
     this.secondaryIcon,
     this.secondaryColor,
+    this.battery,
+    this.isCharging,
+    this.speed,
   });
 }
 

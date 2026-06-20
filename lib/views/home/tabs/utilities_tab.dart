@@ -46,6 +46,7 @@ import '../../utilities/creative_diary_screen.dart';
 import '../../utilities/sticker_library_screen.dart';
 import '../../utilities/utility_sticker_icon.dart';
 import '../../utilities/health_screen.dart';
+import 'package:soullocket_app/views/utilities/pet_garden_screen.dart';
 
 // import '../../utils/sl_notice.dart';
 
@@ -570,6 +571,9 @@ class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClie
         break;
       case 'health':
         screen = HealthScreen(houseId: houseId);
+        break;
+      case 'pet':
+        screen = PetGardenScreen(houseId: houseId, myName: _myName);
         break;
     }
     if (screen != null) {

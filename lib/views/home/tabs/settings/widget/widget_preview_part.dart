@@ -85,6 +85,17 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
           borderColor: const Color(0xFFFFD166),
           premium: true,
         );
+      case 'cosmic':
+        return (
+          colors: const [
+            Color(0xFF0F0C20),
+            Color(0xFF15102A),
+            Color(0xFF1F1A3A),
+          ],
+          textColor: const Color(0xFFFFD700),
+          borderColor: const Color(0xFFFFD700),
+          premium: true,
+        );
       case 'pink':
       default:
         return (
@@ -119,12 +130,6 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
           Color(0xFF0EA5E9),
           Color(0xFF67E8F9),
           Color(0xFFE0F2FE),
-        ];
-      case 'mint':
-        return const [
-          Color(0xFF10B981),
-          Color(0xFF6EE7B7),
-          Color(0xFFDCFCE7),
         ];
       case 'sunset':
         return const [
@@ -650,26 +655,35 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       );
     }
 
+    final themeKey = _draftWidgetThemeKey ?? 'pink';
+    final isCosmic = themeKey == 'cosmic';
+
     return IgnorePointer(
       child: Stack(
         children: <Widget>[
           blob(
             alignment: firstAlignments[phase],
             size: cardWidth * 0.72,
-            colors: const [Color(0xFFFF8AB8), Color(0xFFFFB86B)],
-            opacity: 0.54,
+            colors: isCosmic
+                ? const [Color(0xFFFFD700), Color(0xFFB59410)]
+                : const [Color(0xFFFF8AB8), Color(0xFFFFB86B)],
+            opacity: isCosmic ? 0.35 : 0.54,
           ),
           blob(
             alignment: secondAlignments[phase],
             size: cardWidth * 0.62,
-            colors: const [Color(0xFF8AE7FF), Color(0xFF6D7CFF)],
-            opacity: 0.48,
+            colors: isCosmic
+                ? const [Color(0xFFFDE68A), Color(0xFFFFB86B)]
+                : const [Color(0xFF8AE7FF), Color(0xFF6D7CFF)],
+            opacity: isCosmic ? 0.28 : 0.48,
           ),
           blob(
             alignment: thirdAlignments[phase],
             size: cardHeight * 0.98,
-            colors: const [Color(0xFFFFD38A), Color(0xFFCE8BFF)],
-            opacity: 0.34,
+            colors: isCosmic
+                ? const [Color(0xFFFFFBEB), Color(0xFFEAB308)]
+                : const [Color(0xFFFFD38A), Color(0xFFCE8BFF)],
+            opacity: isCosmic ? 0.22 : 0.34,
           ),
           Positioned.fill(
             child: DecoratedBox(
@@ -686,13 +700,53 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               ),
             ),
           ),
+          if (isCosmic) ...[
+            Positioned(
+              top: cardHeight * 0.15,
+              left: cardWidth * 0.2,
+              child: Icon(
+                Icons.star_rounded,
+                size: 8,
+                color: Colors.white.withValues(alpha: 0.6),
+              ),
+            ),
+            Positioned(
+              top: cardHeight * 0.3,
+              right: cardWidth * 0.25,
+              child: Icon(
+                Icons.star_rounded,
+                size: 6,
+                color: Colors.white.withValues(alpha: 0.4),
+              ),
+            ),
+            Positioned(
+              bottom: cardHeight * 0.2,
+              left: cardWidth * 0.3,
+              child: Icon(
+                Icons.star_rounded,
+                size: 7,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+            Positioned(
+              bottom: cardHeight * 0.15,
+              right: cardWidth * 0.15,
+              child: Icon(
+                Icons.star_rounded,
+                size: 5,
+                color: Colors.white.withValues(alpha: 0.4),
+              ),
+            ),
+          ],
           Positioned(
             top: cardHeight * 0.16,
             right: cardWidth * 0.16,
             child: Icon(
               Icons.auto_awesome_rounded,
               size: cardWidth * 0.06,
-              color: Colors.white.withValues(alpha: 0.72),
+              color: isCosmic
+                  ? const Color(0xFFFFD700).withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.72),
             ),
           ),
         ],

@@ -33,10 +33,9 @@ class _CountdownVisualSpec {
     final isBasicStyle = styleKey == 'default' || styleKey == 'glass' || styleKey == 'plain' || styleKey.isEmpty;
     if (transparentMode && isBasicStyle) {
       return _CountdownVisualSpec(
-        outerColor: Colors.white.withValues(alpha: 0.30),
+        outerColor: null,
         outerGradient: null,
-        outerBorder:
-            Border.all(color: Colors.white.withValues(alpha: 0.30), width: 2),
+        outerBorder: null,
         shadows: const [],
         innerColor: Colors.white.withValues(alpha: 0.08),
         innerGradient: null,
@@ -81,12 +80,9 @@ class _CountdownVisualSpec {
         );
       case 'floating_hearts':
         return _CountdownVisualSpec(
-          outerColor: Colors.white.withValues(alpha: 0.30),
+          outerColor: null,
           outerGradient: null,
-          outerBorder: Border.all(
-            color: Colors.white.withValues(alpha: 0.35),
-            width: 3.0,
-          ),
+          outerBorder: null,
           shadows: [
             BoxShadow(
               color: const Color(0xFFFFC0CB).withValues(alpha: 0.25),

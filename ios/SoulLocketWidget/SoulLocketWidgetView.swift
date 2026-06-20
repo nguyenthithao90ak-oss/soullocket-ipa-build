@@ -84,6 +84,15 @@ struct WidgetTheme {
                 chipBackground: Color.white.opacity(0.16),
                 chipBorder: Color.white.opacity(0.24)
             )
+        case "cosmic":
+            return WidgetTheme(
+                gradient: [Color(hex: "0F0C20"), Color(hex: "15102A"), Color(hex: "1F1A3A")],
+                textColor: Color(hex: "FFFFD700"),
+                secondaryTextColor: Color(hex: "FFD700"),
+                accentColor: Color(hex: "FFFFD700"),
+                chipBackground: Color.black.opacity(0.4),
+                chipBorder: Color(hex: "FFFFD700").opacity(0.35)
+            )
         case "pink":
             fallthrough
         default:
@@ -123,12 +132,6 @@ struct HeartPalette {
                 primary: Color(hex: "0EA5E9"),
                 secondary: Color(hex: "67E8F9"),
                 glow: Color(hex: "E0F2FE")
-            )
-        case "mint":
-            return HeartPalette(
-                primary: Color(hex: "10B981"),
-                secondary: Color(hex: "6EE7B7"),
-                glow: Color(hex: "DCFCE7")
             )
         case "sunset":
             return HeartPalette(
@@ -559,6 +562,107 @@ struct PremiumAuroraBackdrop: View {
     }
 }
 
+struct PremiumCosmicBackdrop: View {
+    var body: some View {
+        GeometryReader { proxy in
+            let size = proxy.size
+            ZStack {
+                // Blob 1 (Gold/Amber)
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            gradient: Gradient(
+                                colors: [
+                                    Color(hex: "FFD700").opacity(0.28),
+                                    Color(hex: "B59410").opacity(0.12),
+                                    .clear
+                                ]
+                            ),
+                            center: .center,
+                            startRadius: 6,
+                            endRadius: size.width * 0.44
+                        )
+                    )
+                    .frame(width: size.width * 0.82, height: size.width * 0.82)
+                    .offset(x: -size.width * 0.26, y: -size.height * 0.28)
+
+                // Blob 2 (Soft Gold)
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            gradient: Gradient(
+                                colors: [
+                                    Color(hex: "FDE68A").opacity(0.24),
+                                    Color(hex: "FFB86B").opacity(0.10),
+                                    .clear
+                                ]
+                            ),
+                            center: .center,
+                            startRadius: 4,
+                            endRadius: size.width * 0.36
+                        )
+                    )
+                    .frame(width: size.width * 0.66, height: size.width * 0.66)
+                    .offset(x: size.width * 0.26, y: -size.height * 0.14)
+
+                // Blob 3 (Cream Gold)
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            gradient: Gradient(
+                                colors: [
+                                    Color(hex: "FFFBEB").opacity(0.20),
+                                    Color(hex: "EAB308").opacity(0.08),
+                                    .clear
+                                ]
+                            ),
+                            center: .center,
+                            startRadius: 4,
+                            endRadius: size.width * 0.30
+                        )
+                    )
+                    .frame(width: size.width * 0.58, height: size.width * 0.58)
+                    .offset(x: size.width * 0.06, y: size.height * 0.24)
+
+                // Stars/Sparkles scattered
+                Group {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 6))
+                        .foregroundColor(Color.white.opacity(0.45))
+                        .position(x: size.width * 0.2, y: size.height * 0.25)
+                    
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 4))
+                        .foregroundColor(Color.white.opacity(0.35))
+                        .position(x: size.width * 0.75, y: size.height * 0.3)
+                    
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 5))
+                        .foregroundColor(Color.white.opacity(0.4))
+                        .position(x: size.width * 0.3, y: size.height * 0.7)
+                    
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 4))
+                        .foregroundColor(Color.white.opacity(0.35))
+                        .position(x: size.width * 0.85, y: size.height * 0.75)
+                    
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(hex: "FFD700").opacity(0.65))
+                        .position(x: size.width * 0.65, y: size.height * 0.2)
+                }
+
+                // Glowing gold border
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(Color(hex: "FFD700").opacity(0.78), lineWidth: 2.2)
+                    .padding(1.5)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .ignoresSafeArea()
+    }
+}
+
 struct WidgetBackgroundDecorations: View {
     let bgTheme: String
     let accentColor: Color
@@ -653,6 +757,14 @@ struct PersonCard: View {
     let avatarPath: String?
     let theme: WidgetTheme
     let avatarSize: CGFloat
+    let battery: Int       // -1 = unknown
+    let isCharging: Bool
+
+    private var batteryLabel: String? {
+        guard battery >= 0 else { return nil }
+        let icon = isCharging ? "⚡" : (battery <= 20 ? "🔋" : "🔋")
+        return "\(icon) \(battery)%"
+    }
 
     var body: some View {
         VStack(spacing: 5) {
@@ -668,7 +780,9 @@ struct PersonCard: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
-            if !weather.isEmpty {
+            if let label = batteryLabel {
+                InfoChip(label: label, theme: theme)
+            } else if !weather.isEmpty {
                 InfoChip(label: weather, theme: theme)
             }
 
@@ -701,6 +815,8 @@ struct SoulLocketWidgetView: View {
 
             if entry.data.bgTheme == "premium" {
                 PremiumAuroraBackdrop(accentColor: theme.accentColor)
+            } else if entry.data.bgTheme == "cosmic" {
+                PremiumCosmicBackdrop()
             } else {
                 WidgetBackgroundDecorations(bgTheme: entry.data.bgTheme, accentColor: theme.accentColor)
             }
@@ -806,7 +922,9 @@ struct MediumWidgetView: View {
                 stars: data.stars1,
                 avatarPath: data.avatar1Path,
                 theme: theme,
-                avatarSize: 60
+                avatarSize: 60,
+                battery: data.battery1,
+                isCharging: data.isCharging1
             )
             .frame(maxWidth: .infinity)
 
@@ -836,7 +954,9 @@ struct MediumWidgetView: View {
                 stars: data.stars2,
                 avatarPath: data.avatar2Path,
                 theme: theme,
-                avatarSize: 60
+                avatarSize: 60,
+                battery: data.battery2,
+                isCharging: data.isCharging2
             )
             .frame(maxWidth: .infinity)
         }
@@ -864,7 +984,9 @@ struct LargeWidgetView: View {
                     stars: data.stars1,
                     avatarPath: data.avatar1Path,
                     theme: theme,
-                    avatarSize: 60
+                    avatarSize: 60,
+                    battery: data.battery1,
+                    isCharging: data.isCharging1
                 )
                 .frame(maxWidth: .infinity)
 
@@ -894,7 +1016,9 @@ struct LargeWidgetView: View {
                     stars: data.stars2,
                     avatarPath: data.avatar2Path,
                     theme: theme,
-                    avatarSize: 60
+                    avatarSize: 60,
+                    battery: data.battery2,
+                    isCharging: data.isCharging2
                 )
                 .frame(maxWidth: .infinity)
             }

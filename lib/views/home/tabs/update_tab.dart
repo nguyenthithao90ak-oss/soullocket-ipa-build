@@ -14,7 +14,7 @@ import '../screens/document_viewer_screen.dart';
 class UpdateTab extends StatelessWidget {
   const UpdateTab({super.key});
 
-  static const String _version = 'v1.0.0';
+  static const String _version = 'v2.0.0+53';
   static const String _supportEmail = 'hotroviethoangdev.lo.ve@gmail.com';
   static final Uri _webAppUri = Uri.parse(AppConfig.webBaseUrl);
   static String? _cachedAdminUid;

@@ -267,6 +267,17 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         _cachedWidgetDiaryImageUrls = const <String>[];
       }
 
+      // Battery: partner battery from notifier
+      final partnerBatteryData = _homePartnerBatteryNotifier.value;
+      final partnerBattery = (partnerBatteryData?['level'] as num?)?.toInt() ?? -1;
+      final partnerIsCharging = partnerBatteryData?['isCharging'] == true;
+
+      // Map battery per role for widget slots (battery1 = user1, battery2 = user2)
+      final battery1 = _currentRole == 'user1' ? -1 : (_partnerRole == 'user1' ? partnerBattery : -1);
+      final isCharging1 = _currentRole == 'user2' && _partnerRole == 'user1' ? partnerIsCharging : false;
+      final battery2 = _currentRole == 'user2' ? -1 : (_partnerRole == 'user2' ? partnerBattery : -1);
+      final isCharging2 = _currentRole == 'user1' && _partnerRole == 'user2' ? partnerIsCharging : false;
+
       final widgetSignature = jsonEncode({
         'houseId': houseId,
         'accountKey': accountKey,
@@ -292,6 +303,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         'diaryLayoutKey': appearance.diaryLayoutKey,
         'seasonModeKey': appearance.seasonModeKey,
         'diaryImageUrls': diaryImageUrls,
+        'battery1': partnerBattery,
+        'isCharging': partnerIsCharging,
       });
       if (_lastLoveWidgetSignature == widgetSignature) {
         return;
@@ -323,6 +336,10 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         birthday1: dobU1,
         birthday2: dobU2,
         diaryImageUrls: diaryImageUrls,
+        battery1: battery1,
+        battery2: battery2,
+        isCharging1: isCharging1,
+        isCharging2: isCharging2,
       );
       await WidgetService.syncCycleWidgetData(houseId: houseId);
       await WidgetService.syncCalendarWidgetData(houseId: houseId);

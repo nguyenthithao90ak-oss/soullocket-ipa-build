@@ -1,4 +1,4 @@
-import 'dart:io';
+
 
 class AppConfig {
   static const String _defaultFirebaseAuthLinkHost =
@@ -143,8 +143,7 @@ class AppConfig {
   );
 
   /// Tạm thời tắt luồng mua/đổi quyền lợi trên iOS để phát hành bản free-only.
-  static bool get isPurchaseEnabled =>
-      showPurchaseUi && !Platform.isIOS && !Platform.isMacOS;
+  static bool get isPurchaseEnabled => showPurchaseUi;
 
   /// Số ngày dùng thử VIP khi tạo nhà mới
   static const int newHouseTrialDays = 3;

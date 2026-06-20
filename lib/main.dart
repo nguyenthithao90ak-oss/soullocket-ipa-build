@@ -290,10 +290,10 @@ void main() {
     try {
       await _verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
-      await _initializeGoogleMobileAds();
+      unawaited(_initializeGoogleMobileAds());
       await _clearStaleIosAuthAfterFreshInstall();
       await _requestIosTrackingAuthorization();
-      await _initializeTikTokSdk();
+      unawaited(_initializeTikTokSdk());
 
       if (!kIsWeb) {
         FirebaseMessaging.onBackgroundMessage(

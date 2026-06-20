@@ -87,7 +87,7 @@ class AuthAdminService {
     }
 
     final isMaintenanceMode = await isMaintenanceModeEnabled();
-    if (isMaintenanceMode && !isAdmin) {
+    if (isMaintenanceMode) {
       return 'Hệ thống đang trong chế độ bảo trì. Vui lòng quay lại sau.';
     }
 

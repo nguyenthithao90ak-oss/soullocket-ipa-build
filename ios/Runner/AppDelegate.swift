@@ -9,6 +9,7 @@ import ActivityKit
   private let widgetBridgeChannelName = "soullocket/widget_ios_bridge"
   private let bootstrapChannelName = "soul_locket/bootstrap"
   private let appIconChannelName = "soullocket/app_icon"
+  private let deviceInfoChannelName = "soul_locket/device_info"
 
   override func application(
     _ application: UIApplication,
@@ -68,6 +69,24 @@ import ActivityKit
           return
         }
         self.handleAppIcon(call: call, result: result)
+      }
+
+      let deviceInfoChannel = FlutterMethodChannel(
+        name: deviceInfoChannelName,
+        binaryMessenger: controller.binaryMessenger
+      )
+      deviceInfoChannel.setMethodCallHandler { call, result in
+        switch call.method {
+        case "getBatteryInfo":
+          UIDevice.current.isBatteryMonitoringEnabled = true
+          let level = UIDevice.current.batteryLevel
+          let state = UIDevice.current.batteryState
+          let isCharging = state == .charging || state == .full
+          let pct = level >= 0 ? Int(level * 100) : -1
+          result(["level": pct, "isCharging": isCharging])
+        default:
+          result(FlutterMethodNotImplemented)
+        }
       }
     }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)

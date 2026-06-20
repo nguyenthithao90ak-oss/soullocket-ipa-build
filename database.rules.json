@@ -1301,7 +1301,7 @@
     "sys_settings": {
       ".read": "auth != null",
       "is_maintenance": {
-        ".read": "auth != null",
+        ".read": "true",
         ".write": "auth != null && (auth.token.admin === true || root.child('admins').child(auth.uid).exists() || root.child('admins_list').child(auth.uid).exists())",
         ".validate": "newData.isBoolean()"
       },

@@ -27,6 +27,14 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
   double _tiltX = 0.0;
   double _tiltY = 0.0;
 
+  // Shake detection and ripple states
+  double _lastX = 0.0;
+  double _lastY = 0.0;
+  double _lastZ = 0.0;
+  bool _isFirstEvent = true;
+  double _shakeIntensity = 0.0;
+  final List<_RippleEffect> _ripples = [];
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +49,7 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
     if (kIsWeb) return;
     try {
       _sensorSubscription?.cancel();
+      _isFirstEvent = true;
       // ⚡ Dùng sample rate cao nhất 50ms thay vì luồng real-time liên tục
       _sensorSubscription = accelerometerEventStream(
         samplingPeriod: const Duration(milliseconds: 50),
@@ -52,6 +61,48 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
           final targetY = event.y.clamp(-6.0, 6.0) * 3.5;
           _tiltX = _tiltX * 0.92 + targetX * 0.08;
           _tiltY = _tiltY * 0.92 + targetY * 0.08;
+
+          // Detect shake using acceleration changes
+          if (_isFirstEvent) {
+            _lastX = event.x;
+            _lastY = event.y;
+            _lastZ = event.z;
+            _isFirstEvent = false;
+            return;
+          }
+
+          final deltaX = event.x - _lastX;
+          final deltaY = event.y - _lastY;
+          final deltaZ = event.z - _lastZ;
+
+          _lastX = event.x;
+          _lastY = event.y;
+          _lastZ = event.z;
+
+          final force = sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+          // Threshold of 3.5 m/s^2 represents a sudden shake
+          if (force > 3.5) {
+            _shakeIntensity = (_shakeIntensity + 0.45).clamp(0.0, 1.5);
+
+            final now = DateTime.now();
+            if (_ripples.isEmpty ||
+                now.difference(_ripples.last.startTime).inMilliseconds > 250) {
+              if (_ripples.length >= 3) {
+                _ripples.removeAt(0);
+              }
+              final random = Random();
+              _ripples.add(
+                _RippleEffect(
+                  centerOffset: Offset(
+                    (random.nextDouble() - 0.5) * 80.0,
+                    (random.nextDouble() - 0.5) * 80.0,
+                  ),
+                  startTime: now,
+                  duration: const Duration(milliseconds: 1500),
+                ),
+              );
+            }
+          }
         },
         onError: (_) {},
         cancelOnError: false,
@@ -136,6 +187,8 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
             quality: quality,
             tiltX: _tiltX,
             tiltY: _tiltY,
+            shakeIntensity: _shakeIntensity,
+            ripples: List.from(_ripples),
           ),
         ),
       );
@@ -144,6 +197,17 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
+          // Decay shake intensity on every frame
+          if (_shakeIntensity > 0.001) {
+            _shakeIntensity *= 0.94;
+          } else {
+            _shakeIntensity = 0.0;
+          }
+
+          // Filter out expired ripples
+          final now = DateTime.now();
+          _ripples.removeWhere((r) => r.getProgress(now) >= 1.0);
+
           return CustomPaint(
             painter: _WavePainter(
               _controller.value,
@@ -151,6 +215,8 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
               quality: quality,
               tiltX: _tiltX,
               tiltY: _tiltY,
+              shakeIntensity: _shakeIntensity,
+              ripples: List.from(_ripples),
             ),
           );
         },
@@ -165,6 +231,8 @@ class _WavePainter extends CustomPainter {
   final String quality;
   final double tiltX;
   final double tiltY;
+  final double shakeIntensity;
+  final List<_RippleEffect> ripples;
 
   _WavePainter(
     this.animationValue,
@@ -172,6 +240,8 @@ class _WavePainter extends CustomPainter {
     required this.quality,
     this.tiltX = 0.0,
     this.tiltY = 0.0,
+    this.shakeIntensity = 0.0,
+    this.ripples = const [],
   });
 
   @override
@@ -216,6 +286,9 @@ class _WavePainter extends CustomPainter {
     } else {
       _drawDefaultWaves(canvas, width, height, center, radius);
     }
+
+    // Draw concentric ripples from shake at the end of paint so they overlay on any background style
+    _drawShakeRipples(canvas, center, radius);
   }
 
   void _drawHeartPath(
@@ -331,7 +404,44 @@ class _WavePainter extends CustomPainter {
       );
     }
 
-    // Dùng bezier thay vòng lặp pixel-by-pixel (~400 pts → 4 điểm điều khiển)
+    void drawWave(
+      Color color,
+      double amplitude,
+      double frequency,
+      double phaseShift,
+      double verticalOffset,
+    ) {
+      final paint = Paint()
+        ..color = color
+        ..style = PaintingStyle.fill;
+
+      final yBase = height * verticalOffset + (tiltY * 0.75);
+      final tiltAmount = tiltX * 3.5;
+
+      final path = Path()..moveTo(0, height);
+      for (double i = 0; i <= width; i += 2.0) {
+        final relX = i / width;
+        final wave = sin(
+                  (relX * frequency * pi * 2) +
+                      (animationValue * pi * 2) +
+                      phaseShift,
+                ) *
+                amplitude;
+        final tilt = (relX - 0.5) * tiltAmount * 2.0;
+        final y = yBase + wave + tilt;
+        if (i == 0) {
+          path.lineTo(0, y);
+        } else {
+          path.lineTo(i, y);
+        }
+      }
+      path
+        ..lineTo(width, height)
+        ..close();
+
+      canvas.drawPath(path, paint);
+    }
+
     void drawWaveBezier(
       Color color,
       double amplitude,
@@ -342,12 +452,10 @@ class _WavePainter extends CustomPainter {
         ..color = color
         ..style = PaintingStyle.fill;
 
-      // Phản ứng nghiêng điện thoại: tiltY thay đổi chiều cao nước chung, tiltX nghiêng nước qua trái/phải
       final yBase = height * verticalOffset + (tiltY * 0.75);
       final t = animationValue * pi * 2 + phaseShift;
 
-      // 4 control points tạo sóng bezier đơn giản phản ứng với độ nghiêng điện thoại
-      final tiltAmount = tiltX * 3.5; // Tăng hệ số nghiêng để rõ rệt hơn
+      final tiltAmount = tiltX * 3.5;
       final y0 = yBase + sin(t) * amplitude - tiltAmount;
       final y1 = yBase + sin(t + pi * 0.5) * amplitude - tiltAmount * 0.5;
       final y2 = yBase + sin(t + pi) * amplitude;
@@ -365,13 +473,14 @@ class _WavePainter extends CustomPainter {
       canvas.drawPath(path, paint);
     }
 
+    final double shakeAmpMultiplier = 1.0 + shakeIntensity * 1.5;
     if (quality == 'low') {
-      drawWaveBezier(const Color(0xFFFFC6DA).withValues(alpha: 0.32), 18, 0, 0.55);
-      drawWaveBezier(const Color(0xFFFFB1CA).withValues(alpha: 0.40), 10, pi, 0.65);
+      drawWaveBezier(const Color(0xFFFFC6DA).withValues(alpha: 0.32), 18 * shakeAmpMultiplier, 0, 0.55);
+      drawWaveBezier(const Color(0xFFFFB1CA).withValues(alpha: 0.40), 10 * shakeAmpMultiplier, pi, 0.65);
     } else {
-      drawWaveBezier(const Color(0xFFFFC6DA).withValues(alpha: 0.32), 18, 0, 0.55);
-      drawWaveBezier(const Color(0xFFFF9EBB).withValues(alpha: 0.26), 14, pi / 2, 0.60);
-      drawWaveBezier(const Color(0xFFFFB1CA).withValues(alpha: 0.40), 10, pi, 0.65);
+      drawWave(const Color(0xFFFFC6DA).withValues(alpha: 0.32), 18 * shakeAmpMultiplier, 1.0, 0, 0.55);
+      drawWave(const Color(0xFFFF9EBB).withValues(alpha: 0.26), 14 * shakeAmpMultiplier, 1.2, pi / 2, 0.60);
+      drawWave(const Color(0xFFFFB1CA).withValues(alpha: 0.40), 10 * shakeAmpMultiplier, 1.5, pi, 0.65);
     }
 
     // Bubbles nhẹ - bỏ maskFilter.blur (nặng GPU)
@@ -1260,10 +1369,80 @@ class _WavePainter extends CustomPainter {
     }
   }
 
+  void _drawShakeRipples(Canvas canvas, Offset center, double radius) {
+    if (ripples.isEmpty) return;
+    final now = DateTime.now();
+    for (final ripple in ripples) {
+      final progress = ripple.getProgress(now);
+      if (progress >= 1.0) continue;
+
+      final maxR = radius * 0.95;
+      final currentRadius = maxR * progress;
+
+      // Fade out as it expands
+      final opacity = (1.0 - progress) * 0.4;
+
+      final ripplePaint = Paint()
+        ..color = const Color(0xFFFFEBF2).withValues(alpha: opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0 + (1.0 - progress) * 4.0;
+
+      if (quality == 'high') {
+        ripplePaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0);
+      }
+
+      canvas.drawCircle(
+        Offset(center.dx + ripple.centerOffset.dx, center.dy + ripple.centerOffset.dy),
+        currentRadius,
+        ripplePaint,
+      );
+
+      // Draw secondary delayed ripple ring
+      if (progress > 0.2) {
+        final progress2 = (progress - 0.2) / 0.8;
+        final opacity2 = (1.0 - progress2) * 0.25;
+        final ripplePaint2 = Paint()
+          ..color = const Color(0xFFFFD4E5).withValues(alpha: opacity2)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0 + (1.0 - progress2) * 3.0;
+
+        if (quality == 'high') {
+          ripplePaint2.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+        }
+
+        canvas.drawCircle(
+          Offset(center.dx + ripple.centerOffset.dx, center.dy + ripple.centerOffset.dy),
+          maxR * 0.85 * progress2,
+          ripplePaint2,
+        );
+      }
+    }
+  }
+
   @override
   bool shouldRepaint(covariant _WavePainter oldDelegate) {
     return oldDelegate.animationValue != animationValue ||
         oldDelegate.styleKey != styleKey ||
-        oldDelegate.quality != quality;
+        oldDelegate.quality != quality ||
+        oldDelegate.shakeIntensity != shakeIntensity ||
+        oldDelegate.ripples.length != ripples.length ||
+        ripples.isNotEmpty;
+  }
+}
+
+class _RippleEffect {
+  final Offset centerOffset;
+  final DateTime startTime;
+  final Duration duration;
+
+  _RippleEffect({
+    required this.centerOffset,
+    required this.startTime,
+    required this.duration,
+  });
+
+  double getProgress(DateTime now) {
+    final elapsed = now.difference(startTime).inMilliseconds;
+    return (elapsed / duration.inMilliseconds).clamp(0.0, 1.0);
   }
 }

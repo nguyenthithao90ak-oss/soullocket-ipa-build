@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -17,12 +16,11 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/sl_theme.dart';
-import '../../utils/app_error_mapper.dart';
-import '../../utils/services/app_lifecycle_presence_guard.dart';
-import '../../utils/services/private_media_url_service.dart';
-import '../../utils/services/activity_history_service.dart';
-import '../../core/fast_backdrop_filter.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/app_lifecycle_presence_guard.dart';
+import 'package:soullocket_app/utils/services/private_media_url_service.dart';
+import 'package:soullocket_app/utils/services/activity_history_service.dart';
 
 class VoiceScreen extends StatefulWidget {
   final String houseId;
@@ -40,7 +38,7 @@ class VoiceScreen extends StatefulWidget {
   State<VoiceScreen> createState() => _VoiceScreenState();
 }
 
-class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
+class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, SingleTickerProviderStateMixin {
 
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
@@ -103,6 +101,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   Timer? _recordLimitTimer;
   DateTime? _recordStartedAt;
   Duration _recordElapsed = Duration.zero;
+  late final AnimationController _bounceController;
 
   late final Stream<DatabaseEvent> _voiceStream;
 
@@ -112,6 +111,10 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _bounceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
     _voiceStream = _voiceRef.onValue;
     WidgetsBinding.instance.addObserver(this);
     _player.onPlayerComplete.listen((_) {
@@ -131,6 +134,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     _recordLimitTimer?.cancel();
     _recorder.dispose();
     _player.dispose();
+    _bounceController.dispose();
     super.dispose();
   }
 
@@ -871,51 +875,16 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        automaticallyImplyLeading: !widget.embedded,
-        title: Text(
-          context.tr('util_ghimlinhn_7761df'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            letterSpacing: 1.1,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-          actions: [_buildInfoIcon(context)],
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: ClipRect(
-          child: FastBackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.25),
-            ),
-          ),
-        ),
-        leading: widget.embedded
-            ? null
-            : IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                onPressed: () => Navigator.pop(context),
-              ),
+      appBar: SLTheme.appBar(
+        context,
+        context.tr('util_ghimlinhn_7761df'),
+        actions: [_buildInfoIcon(context)],
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF0F3E38), // Rich dark deep green
-              Color(0xFF071F1B), // Deeper forest green/black
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+      body: SLTheme.softCanvasBackdrop(
+        baseColor: SLColors.bgMain,
+        accentColor: const Color(0xFF00B4DB),
+        secondaryAccent: const Color(0xFF0083B0),
+        motif: SLCanvasBackdropMotif.sparkles,
         child: SafeArea(
           child: Column(
             children: [
@@ -932,99 +901,213 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      margin: SLSpacing.all20,
+      margin: const EdgeInsets.fromLTRB(20, 10, 20, 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.08),
-            Colors.white.withValues(alpha: 0.02),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        border: Border.all(color: SLColors.borderLight),
+        boxShadow: SLShadow.subtle,
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.mic_rounded,
-                  label: _isRecording
-                      ? 'Dừng ${_formatDuration(_recordElapsed.inMilliseconds)}'
-                      : context.tr('util_ghim_f8ac88'),
+          // Walkie-Talkie Retro Layout
+          Container(
+            width: 200,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFECEFF1), // Retro plastic gray
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: const Color(0xFFCFD8DC), width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Antenna
+                Container(
+                  width: 12,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF455A64),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                SLSpacing.h8,
+                // Retro Screen
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: _isRecording ? const Color(0xFFFFEBEE) : const Color(0xFFE0F2F1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _isRecording ? Colors.red.shade200 : Colors.teal.shade200,
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        _isRecording ? 'TRANSMITTING...' : 'STANDBY 📻',
+                        style: SLTheme.quicksand(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: _isRecording ? Colors.red.shade900 : Colors.teal.shade900,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                      SLSpacing.h4,
+                      if (_isRecording)
+                        Text(
+                          _formatDuration(_recordElapsed.inMilliseconds),
+                          style: TextStyle(
+                            fontFamily: 'Courier',
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red.shade900,
+                          ),
+                        )
+                      else
+                        Text(
+                          '00:00',
+                          style: TextStyle(
+                            fontFamily: 'Courier',
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal.shade900.withOpacity(0.4),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                SLSpacing.h16,
+                // Mic / PTT Button
+                GestureDetector(
                   onTap: _isUploading ? null : _toggleRecordAndUpload,
-                  filled: _isRecording,
+                  child: ScaleTransition(
+                    scale: _isRecording
+                        ? Tween<double>(begin: 0.94, end: 1.06).animate(
+                            CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
+                          )
+                        : const AlwaysStoppedAnimation(1.0),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: _isRecording
+                            ? const LinearGradient(
+                                colors: [Color(0xFFFF5252), Color(0xFFFF1744)],
+                              )
+                            : const LinearGradient(
+                                colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
+                              ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (_isRecording ? Colors.red : const Color(0xFF00B4DB)).withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        border: Border.all(color: Colors.white, width: 3),
+                      ),
+                      child: Icon(
+                        _isRecording ? Icons.mic_rounded : Icons.mic_none_rounded,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.upload_file_rounded,
-                  label: 'Upload file',
-                  onTap: (_isUploading || _isRecording)
-                      ? null
-                      : _pickAndUploadVoice,
-                  filled: false,
+                SLSpacing.h6,
+                Text(
+                  _isRecording ? 'BẤM ĐỂ DỪNG' : 'PTT BUTTON',
+                  style: SLTheme.quicksand(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    color: SLColors.textSecond,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
+          SLSpacing.h12,
+          // Action controls
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const SizedBox.shrink(),
-              if (_isUploading)
-                Row(
-                  children: [
-                    const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _isRestoringUpload
-                          ? context.tr('util_angkhiphcu_076cd4')
-                          : context.tr('util_angupload_7ded4c'),
+              Expanded(
+                child: Container(
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: SLColors.borderLight),
+                    boxShadow: SLShadow.subtle,
+                  ),
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.upload_file_rounded, color: SLColors.primary, size: 18),
+                    label: Text(
+                      'Tải lên file audio',
                       style: SLTheme.quicksand(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
+                        color: SLColors.primary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
                       ),
                     ),
-                  ],
+                    onPressed: (_isUploading || _isRecording) ? null : _pickAndUploadVoice,
+                  ),
                 ),
+              ),
             ],
           ),
+          if (_isUploading) ...[
+            SLSpacing.h10,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: SLColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isRestoringUpload
+                      ? context.tr('util_angkhiphcu_076cd4')
+                      : context.tr('util_angupload_7ded4c'),
+                  style: SLTheme.quicksand(
+                    color: SLColors.textSecond,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (_pendingRetryUpload != null && !_isUploading) ...[
-            const SizedBox(height: 10),
+            SLSpacing.h10,
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.16),
+                color: SLColors.dangerLight,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+                border: Border.all(color: SLColors.danger.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
                   const Icon(
                     Icons.error_outline_rounded,
-                    color: Colors.white,
+                    color: SLColors.danger,
                     size: 18,
                   ),
                   const SizedBox(width: 10),
@@ -1032,7 +1115,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                     child: Text(
                       context.tr('util_lnuploadgh_c94950'),
                       style: SLTheme.quicksand(
-                        color: Colors.white,
+                        color: SLColors.danger,
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
                         height: 1.35,
@@ -1045,7 +1128,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                     child: Text(
                       context.tr('util_thli_4dffdf'),
                       style: SLTheme.quicksand(
-                        color: Colors.white,
+                        color: SLColors.danger,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -1055,70 +1138,6 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
             ),
           ],
         ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback? onTap,
-    required bool filled,
-  }) {
-    return _AnimatedPressButton(
-      onTap: onTap,
-      borderRadius: 16,
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          gradient: onTap == null
-              ? null
-              : filled
-                  ? const LinearGradient(
-                      colors: [Color(0xFFFF5252), Color(0xFFFF1744)],
-                    )
-                  : LinearGradient(
-                      colors: [
-                        const Color(0xFF00BFA5).withValues(alpha: 0.8),
-                        const Color(0xFF00E676).withValues(alpha: 0.8),
-                      ],
-                    ),
-          color: onTap == null ? Colors.white.withValues(alpha: 0.05) : null,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: filled
-                ? const Color(0xFFFF5252).withValues(alpha: 0.3)
-                : const Color(0xFF00E676).withValues(alpha: 0.3),
-          ),
-          boxShadow: onTap == null || filled
-              ? []
-              : [
-                  BoxShadow(
-                    color: const Color(0xFF00E676).withValues(alpha: 0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (filled) ...[
-              _PulseIcon(icon: icon),
-            ] else ...[
-              Icon(icon, color: Colors.white, size: 18),
-            ],
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                fontSize: 13,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -1134,7 +1153,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
             child: Text(
               context.tr('util_khngticlin_a510e1'),
               style: SLTheme.quicksand(
-                  color: Colors.white70, fontWeight: FontWeight.w600),
+                  color: SLColors.textSecond, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
           );
@@ -1145,7 +1164,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
             child: Text(
               context.tr('util_chaclinhnt_9864b0'),
               style: SLTheme.quicksand(
-                  color: Colors.white70, fontWeight: FontWeight.w600),
+                  color: SLColors.textSecond, fontWeight: FontWeight.w600),
             ),
           );
         }
@@ -1156,7 +1175,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
             child: Text(
               context.tr('util_dliulinhnt_f7fe04'),
               style: SLTheme.quicksand(
-                  color: Colors.white70, fontWeight: FontWeight.w600),
+                  color: SLColors.textSecond, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
           );
@@ -1197,15 +1216,15 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00E676).withValues(alpha: 0.15),
+                          color: const Color(0xFF00B4DB).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                              color: const Color(0xFF00B4DB).withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           L10nService().translateRecordsCount(items.length),
                           style: SLTheme.quicksand(
-                            color: const Color(0xFF00E676),
+                            color: const Color(0xFF00B4DB),
                             fontWeight: FontWeight.w800,
                             fontSize: 12,
                           ),
@@ -1215,13 +1234,14 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
+                          color: Colors.white.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: SLColors.borderLight),
                         ),
                         child: Text(
                           '${_formatDuration(totalDurationMs)}/05:00',
                           style: SLTheme.quicksand(
-                            color: Colors.white70,
+                            color: SLColors.textPrimary,
                             fontWeight: FontWeight.w700,
                             fontSize: 12,
                           ),
@@ -1259,36 +1279,28 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                             gradient: isPlaying
                                 ? LinearGradient(
                                     colors: [
-                                      const Color(0xFF004D40).withValues(alpha: 0.75),
-                                      const Color(0xFF00796B).withValues(alpha: 0.65),
+                                      const Color(0xFF00B4DB).withValues(alpha: 0.12),
+                                      const Color(0xFF0083B0).withValues(alpha: 0.06),
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   )
                                 : LinearGradient(
                                     colors: [
-                                      Colors.white.withValues(alpha: 0.08),
-                                      Colors.white.withValues(alpha: 0.03),
+                                      Colors.white.withValues(alpha: 0.85),
+                                      Colors.white.withValues(alpha: 0.55),
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isPlaying
-                                  ? const Color(0xFF00E676).withValues(alpha: 0.45)
-                                  : Colors.white.withValues(alpha: 0.12),
+                                  ? const Color(0xFF00B4DB).withValues(alpha: 0.5)
+                                  : SLColors.borderLight,
                               width: isPlaying ? 1.5 : 1.0,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: isPlaying
-                                    ? const Color(0xFF00E676).withValues(alpha: 0.15)
-                                    : Colors.black.withValues(alpha: 0.15),
-                                blurRadius: isPlaying ? 14 : 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                            boxShadow: SLShadow.subtle,
                           ),
                           child: Row(
                             children: [
@@ -1298,23 +1310,16 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                                 decoration: BoxDecoration(
                                   gradient: isPlaying
                                       ? const LinearGradient(
-                                          colors: [Color(0xFF00E676), Color(0xFF00BFA5)],
+                                          colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
                                         )
                                       : LinearGradient(
                                           colors: [
-                                            Colors.white.withValues(alpha: 0.12),
-                                            Colors.white.withValues(alpha: 0.05),
+                                            SLColors.primaryLight,
+                                            SLColors.primaryLight.withValues(alpha: 0.5),
                                           ],
                                         ),
                                   shape: BoxShape.circle,
-                                  boxShadow: isPlaying
-                                      ? [
-                                          BoxShadow(
-                                            color: const Color(0xFF00E676).withValues(alpha: 0.4),
-                                            blurRadius: 10,
-                                          )
-                                        ]
-                                      : [],
+                                  boxShadow: isPlaying ? SLShadow.primary : [],
                                 ),
                                 child: Center(
                                   child: isLoading
@@ -1330,7 +1335,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                                           isPlaying
                                               ? Icons.pause_rounded
                                               : Icons.play_arrow_rounded,
-                                          color: Colors.white,
+                                          color: isPlaying ? Colors.white : SLColors.primary,
                                           size: 26,
                                         ),
                                 ),
@@ -1344,7 +1349,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                                     Text(
                                       L10nService().translatePartnerMessage(item['a']?.toString() ?? ''),
                                       style: SLTheme.quicksand(
-                                          color: Colors.white,
+                                          color: SLColors.textPrimary,
                                           fontWeight: FontWeight.w800,
                                           fontSize: 14.5),
                                     ),
@@ -1353,14 +1358,14 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                                       children: [
                                         const Icon(
                                           Icons.access_time_rounded,
-                                          color: Colors.white54,
+                                          color: SLColors.textSecond,
                                           size: 11,
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
                                           '$timeStr  •  $durationStr',
                                           style: SLTheme.quicksand(
-                                              color: Colors.white54,
+                                              color: SLColors.textSecond,
                                               fontWeight: FontWeight.w600,
                                               fontSize: 11),
                                         ),
@@ -1374,7 +1379,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: SLTheme.quicksand(
-                                            color: Colors.white38,
+                                            color: SLColors.textSecond.withValues(alpha: 0.6),
                                             fontWeight: FontWeight.w600,
                                             fontSize: 10.5),
                                       ),
@@ -1389,7 +1394,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver {
                               ],
                               IconButton(
                                 icon: const Icon(Icons.delete_outline_rounded,
-                                    color: Colors.white38, size: 20),
+                                    color: SLColors.textSecond, size: 20),
                                 onPressed: () => _deleteVoice(
                                     key, item['aud']?.toString()),
                               )

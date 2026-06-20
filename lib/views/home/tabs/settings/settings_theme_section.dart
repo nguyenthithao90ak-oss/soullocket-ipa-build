@@ -476,13 +476,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                   onChanged: (value) =>
                       _updateThemeDraft(() => _draftHomeBlockToneKey = value),
                 ),
-                const SizedBox(height: 14),
-                _buildThemeHomeLikePreviewCard(
-                  selection.previewBackground,
-                  themeKey: selection.themeKey,
-                  effectKey: selection.effectKey,
-                  graphicsKey: selection.graphicsKey,
-                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [

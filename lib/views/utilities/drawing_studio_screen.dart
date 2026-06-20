@@ -41,6 +41,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   static const int _maxGalleryItems = 20;
 
   final GlobalKey _canvasKey = GlobalKey();
+  final _CanvasRepaintNotifier _canvasRepaintNotifier = _CanvasRepaintNotifier();
   final List<_DrawStroke> _strokes = [];
   final DrawingStudioService _drawingService = DrawingStudioService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -49,6 +50,9 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   StreamSubscription<List<DrawingStudioStroke>>? _strokesSub;
   StreamSubscription<DrawingStudioBackground>? _backgroundSub;
   StreamSubscription<List<DrawingStudioPresence>>? _presenceSub;
+
+  Timer? _presenceTimer;
+  bool _presenceIsDrawing = false;
 
   String _mode = 'frame';
   String _backgroundId = 'paper_grid';
@@ -93,6 +97,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
 
   @override
   void dispose() {
+    _presenceTimer?.cancel();
     _strokesSub?.cancel();
     _backgroundSub?.cancel();
     _presenceSub?.cancel();
@@ -234,6 +239,22 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     );
   }
 
+  Future<void> _setPresenceDrawingState(bool isDrawing) async {
+    _presenceTimer?.cancel();
+    if (isDrawing) {
+      if (!_presenceIsDrawing) {
+        _presenceIsDrawing = true;
+        await _updatePresence(isDrawing: true);
+      }
+    } else {
+      _presenceTimer = Timer(const Duration(milliseconds: 1500), () async {
+        if (!mounted) return;
+        _presenceIsDrawing = false;
+        await _updatePresence(isDrawing: false);
+      });
+    }
+  }
+
   void _startStroke(DragStartDetails details) {
     final point = _toCanvasPoint(details.globalPosition);
     if (point == null) {
@@ -255,7 +276,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       );
       _localPendingStrokeIds.add(strokeId);
     });
-    unawaited(_updatePresence(isDrawing: true));
+    unawaited(_setPresenceDrawingState(true));
   }
 
   void _appendStrokePoint(DragUpdateDetails details) {
@@ -265,12 +286,25 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     }
 
     final lastStroke = _strokes.last;
-    if (lastStroke.points.isNotEmpty &&
-        (lastStroke.points.last - point).distance < 1.2) {
-      return;
+    if (lastStroke.points.isNotEmpty) {
+      final lastPoint = lastStroke.points.last;
+      if ((lastPoint - point).distance < 1.5) {
+        return;
+      }
     }
 
-    setState(() => lastStroke.points.add(point));
+    // Apply a simple low-pass filter to smooth out hand jitter
+    Offset finalPoint = point;
+    if (lastStroke.points.isNotEmpty) {
+      final lastPoint = lastStroke.points.last;
+      finalPoint = Offset(
+        lastPoint.dx * 0.18 + point.dx * 0.82,
+        lastPoint.dy * 0.18 + point.dy * 0.82,
+      );
+    }
+
+    lastStroke.points.add(finalPoint);
+    _canvasRepaintNotifier.repaint();
   }
 
   void _endStroke([DragEndDetails? _]) {
@@ -279,7 +313,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     }
     final stroke = _strokes.isNotEmpty ? _strokes.last : null;
     setState(() => _isDrawing = false);
-    unawaited(_updatePresence(isDrawing: false));
+    unawaited(_setPresenceDrawingState(false));
     if (stroke != null) {
       unawaited(_pushCompletedStroke(stroke));
     }
@@ -294,7 +328,25 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     if (canvasSize == null || canvasSize.width <= 0 || canvasSize.height <= 0) {
       return;
     }
-    final normalizedPoints = stroke.points
+
+    // Simplify/Downsample the points list to reduce database payload size.
+    final simplifiedPoints = <Offset>[];
+    if (stroke.points.isNotEmpty) {
+      simplifiedPoints.add(stroke.points.first);
+      for (int i = 1; i < stroke.points.length - 1; i++) {
+        final lastSaved = simplifiedPoints.last;
+        final current = stroke.points[i];
+        // Only keep points that are at least 4.0 logical pixels apart to compress payload
+        if ((current - lastSaved).distance >= 4.0) {
+          simplifiedPoints.add(current);
+        }
+      }
+      if (stroke.points.length > 1) {
+        simplifiedPoints.add(stroke.points.last);
+      }
+    }
+
+    final normalizedPoints = simplifiedPoints
         .map(
           (point) => <double>[
             (point.dx / canvasSize.width).clamp(0.0, 1.0).toDouble(),
@@ -1070,6 +1122,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                         painter: _DrawingCanvasPainter(
                           backgroundId: _backgroundId,
                           strokes: _allVisibleStrokes,
+                          repaint: _canvasRepaintNotifier,
                         ),
                         child: const SizedBox.expand(),
                       ),
@@ -1961,5 +2014,11 @@ class _DrawingStudioPreviewScreenState
         ),
       ),
     );
+  }
+}
+
+class _CanvasRepaintNotifier extends ChangeNotifier {
+  void repaint() {
+    notifyListeners();
   }
 }
