@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 
 import 'app_lifecycle_presence_guard.dart';
 import 'image_picker_recovery_service.dart';
@@ -13,7 +14,7 @@ class StoragePickerService {
 
   final ImagePicker _picker;
 
-  static const int pickerImageQuality = 94;
+  static const int pickerImageQuality = AppConfig.imageCompressQuality;
   static const double pickerMaxWidth = 1080;
   static const double pickerMaxHeight = 1080;
   static const int maxGallerySelectionPerBatch = 30;

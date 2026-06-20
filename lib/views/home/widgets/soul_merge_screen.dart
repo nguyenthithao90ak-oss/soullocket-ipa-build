@@ -62,6 +62,14 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   List<Map<String, dynamic>> _chatHistory = [];
   final ScrollController _chatScrollController = ScrollController();
   bool _overlayEnabled = false;
+  StreamSubscription<dynamic>? _overlayListenerSub;
+
+  // Anti-spam state variables
+  final List<int> _msgTimestamps = [];
+  final List<int> _warningTimestamps = [];
+  int _tempBlockSecondsLeft = 0;
+  Timer? _tempBlockTimer;
+  String? _spamWarning;
 
   @override
   void initState() {
@@ -87,7 +95,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _listenSoulMessages();
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      FlutterOverlayWindow.overlayListener.listen((event) {
+      _overlayListenerSub = FlutterOverlayWindow.overlayListener.listen((event) {
         if (event == 'launch_app') {
           const MethodChannel('soul_locket/app_control').invokeMethod('bringToForeground');
         } else if (event == 'request_sync') {
@@ -98,7 +106,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             if (data['action'] == 'send_msg') {
               final txt = data['text']?.toString() ?? '';
               if (txt.isNotEmpty) {
-                _sendSoulMessage(txt);
+                _sendSoulMessage(txt, bypassSpamCheck: true);
               }
             }
           } catch (e) {
@@ -540,8 +548,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _continuousHeartsTimer?.cancel();
     _bumpDetector.stop();
     _mergeTimesSub?.cancel();
+    _overlayListenerSub?.cancel();
     _pulseController.dispose();
     _explosionTimer?.cancel();
+    _tempBlockTimer?.cancel();
     unawaited(_mergeService.clearBumps());
     unawaited(_mergeService.clearChat());
     super.dispose();
@@ -944,6 +954,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
       _sendOverlaySyncPayload();
 
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        FlutterOverlayWindow.isActive().then((active) {
+          if (mounted && _overlayEnabled != active) {
+            setState(() {
+              _overlayEnabled = active;
+            });
+          }
+        });
+      }
+
       // Scroll to bottom
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_chatScrollController.hasClients) {
@@ -982,7 +1002,92 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     });
   }
 
-  Future<void> _sendSoulMessage(String text) async {
+  Future<bool> _checkSpamAndMaybeBlock() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    // 1. Check 1-hour block in SharedPreferences
+    int blockUntil = 0;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      blockUntil = prefs.getInt('soul_merge_chat_block_until') ?? 0;
+    } catch (e) {
+      debugPrint('[SpamCheck] Error reading prefs: $e');
+    }
+
+    if (now < blockUntil) {
+      final remainingMs = blockUntil - now;
+      final remainingMin = (remainingMs / 60000).ceil();
+      setState(() {
+        _spamWarning = 'Thao tác quá nhanh! Bị chặn trong $remainingMin phút nữa.';
+      });
+      Timer(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _spamWarning = null);
+      });
+      return true;
+    }
+
+    // 2. Check 5s countdown
+    if (_tempBlockSecondsLeft > 0) {
+      setState(() {
+        _spamWarning = 'Thao tác quá nhanh! Vui lòng đợi $_tempBlockSecondsLeft giây đếm ngược.';
+      });
+      return true;
+    }
+
+    // 3. Check messages rate (3 messages within 2 seconds)
+    _msgTimestamps.removeWhere((t) => now - t > 2000);
+    if (_msgTimestamps.length >= 3) {
+      _tempBlockSecondsLeft = 5;
+      _tempBlockTimer?.cancel();
+      
+      setState(() {
+        _spamWarning = 'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
+      });
+
+      _tempBlockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (mounted) {
+          setState(() {
+            _tempBlockSecondsLeft--;
+            if (_tempBlockSecondsLeft <= 0) {
+              _spamWarning = null;
+              timer.cancel();
+            } else {
+              _spamWarning = 'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
+            }
+          });
+        } else {
+          timer.cancel();
+        }
+      });
+
+      _warningTimestamps.add(now);
+      _warningTimestamps.removeWhere((t) => now - t > 60000);
+
+      if (_warningTimestamps.length >= 5) {
+        final targetBlockUntil = now + 3600000;
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt('soul_merge_chat_block_until', targetBlockUntil);
+        } catch (e) {
+          debugPrint('[SpamCheck] Error writing prefs: $e');
+        }
+        setState(() {
+          _spamWarning = 'Thao tác quá nhanh! Bị chặn nhắn tin trong 1 giờ.';
+          _tempBlockSecondsLeft = 0;
+          _tempBlockTimer?.cancel();
+        });
+      }
+
+      return true;
+    }
+
+    _msgTimestamps.add(now);
+    return false;
+  }
+
+  Future<void> _sendSoulMessage(String text, {bool bypassSpamCheck = false}) async {
+    if (!bypassSpamCheck && await _checkSpamAndMaybeBlock()) return;
+
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
     await _mergeService.sendSoulMessage(trimmed);
@@ -1027,6 +1132,40 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_spamWarning != null)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF4F4F).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFFFF4F4F).withValues(alpha: 0.4),
+                  width: 1.0,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xFFFF4F4F),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _spamWarning!,
+                      style: SLTheme.quicksand(
+                        color: const Color(0xFFFFD1D1),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // Chat History List Container (Glassmorphic)
           Container(
             height: 160,

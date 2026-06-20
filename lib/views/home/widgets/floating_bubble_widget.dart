@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FloatingBubbleWidget extends StatefulWidget {
   const FloatingBubbleWidget({super.key});
@@ -25,6 +27,14 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  StreamSubscription<dynamic>? _overlayListenerSub;
+
+  // Anti-spam state variables
+  final List<int> _msgTimestamps = [];
+  final List<int> _warningTimestamps = [];
+  int _tempBlockSecondsLeft = 0;
+  Timer? _tempBlockTimer;
+  String? _spamWarning;
 
   @override
   void initState() {
@@ -40,7 +50,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     _animController.forward();
 
     // Listen to data from the main app
-    FlutterOverlayWindow.overlayListener.listen((event) {
+    _overlayListenerSub = FlutterOverlayWindow.overlayListener.listen((event) {
       if (event is String && event.isNotEmpty) {
         if (event == 'launch_app') return;
         
@@ -99,6 +109,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     _animController.dispose();
     _textController.dispose();
     _scrollController.dispose();
+    _overlayListenerSub?.cancel();
+    _tempBlockTimer?.cancel();
     super.dispose();
   }
 
@@ -112,7 +124,92 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     _scrollToBottom();
   }
 
-  void _sendMessage() {
+  Future<bool> _checkSpamAndMaybeBlock() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    // 1. Check 1-hour block in SharedPreferences
+    int blockUntil = 0;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      blockUntil = prefs.getInt('soul_merge_chat_block_until') ?? 0;
+    } catch (e) {
+      debugPrint('[SpamCheck] Error reading prefs: $e');
+    }
+
+    if (now < blockUntil) {
+      final remainingMs = blockUntil - now;
+      final remainingMin = (remainingMs / 60000).ceil();
+      setState(() {
+        _spamWarning = 'Thao tác quá nhanh! Bị chặn trong $remainingMin phút nữa.';
+      });
+      Timer(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _spamWarning = null);
+      });
+      return true;
+    }
+
+    // 2. Check 5s countdown
+    if (_tempBlockSecondsLeft > 0) {
+      setState(() {
+        _spamWarning = 'Thao tác quá nhanh! Vui lòng đợi $_tempBlockSecondsLeft giây đếm ngược.';
+      });
+      return true;
+    }
+
+    // 3. Check messages rate (3 messages within 2 seconds)
+    _msgTimestamps.removeWhere((t) => now - t > 2000);
+    if (_msgTimestamps.length >= 3) {
+      _tempBlockSecondsLeft = 5;
+      _tempBlockTimer?.cancel();
+      
+      setState(() {
+        _spamWarning = 'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
+      });
+
+      _tempBlockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (mounted) {
+          setState(() {
+            _tempBlockSecondsLeft--;
+            if (_tempBlockSecondsLeft <= 0) {
+              _spamWarning = null;
+              timer.cancel();
+            } else {
+              _spamWarning = 'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
+            }
+          });
+        } else {
+          timer.cancel();
+        }
+      });
+
+      _warningTimestamps.add(now);
+      _warningTimestamps.removeWhere((t) => now - t > 60000);
+
+      if (_warningTimestamps.length >= 5) {
+        final targetBlockUntil = now + 3600000;
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt('soul_merge_chat_block_until', targetBlockUntil);
+        } catch (e) {
+          debugPrint('[SpamCheck] Error writing prefs: $e');
+        }
+        setState(() {
+          _spamWarning = 'Thao tác quá nhanh! Bị chặn nhắn tin trong 1 giờ.';
+          _tempBlockSecondsLeft = 0;
+          _tempBlockTimer?.cancel();
+        });
+      }
+
+      return true;
+    }
+
+    _msgTimestamps.add(now);
+    return false;
+  }
+
+  void _sendMessage() async {
+    if (await _checkSpamAndMaybeBlock()) return;
+
     final text = _textController.text.trim();
     if (text.isEmpty) return;
     _textController.clear();
@@ -342,6 +439,40 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                     },
                   ),
           ),
+
+          if (_spamWarning != null)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF4F4F).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFFFF4F4F).withValues(alpha: 0.3),
+                  width: 1.0,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xFFFF4F4F),
+                    size: 14,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      _spamWarning!,
+                      style: GoogleFonts.quicksand(
+                        color: const Color(0xFFFFD1D1),
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // Footer Text Input
           Container(

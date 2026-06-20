@@ -34,9 +34,9 @@ class SoulMergeService {
   /// Listen to the bump times of both partners (resolved by server time).
   /// Key trong map là role ('user1'/'user2').
   Stream<Map<String, int>> watchMergeTimes() {
-    return Stream.fromFuture(_houseService.getCurrentHouseId()).asyncExpand((houseId) {
+    return Stream.fromFuture(_houseService.getCurrentHouseId()).asyncExpand<Map<String, int>>((houseId) {
       if (houseId == null || houseId.isEmpty) return const Stream.empty();
-      return _db.ref('houses/$houseId/soul_merge').onValue.map((event) {
+      return _db.ref('houses/$houseId/soul_merge').onValue.asBroadcastStream().map((event) {
         final data = event.snapshot.value as Map<dynamic, dynamic>?;
         if (data == null) return const <String, int>{};
 
@@ -53,7 +53,7 @@ class SoulMergeService {
         });
         return map;
       });
-    });
+    }).asBroadcastStream();
   }
 
   /// Clear the soul merge bump record của role hiện tại.
@@ -114,13 +114,14 @@ class SoulMergeService {
 
   /// Watch real-time temporary messages in Soul Merge
   Stream<List<Map<String, dynamic>>> watchSoulMessages() {
-    return Stream.fromFuture(_houseService.getCurrentHouseId()).asyncExpand((houseId) {
+    return Stream.fromFuture(_houseService.getCurrentHouseId()).asyncExpand<List<Map<String, dynamic>>>((houseId) {
       if (houseId == null || houseId.isEmpty) return const Stream.empty();
       return _db
           .ref('houses/$houseId/soul_merge/chat')
           .orderByChild('timestamp')
           .limitToLast(20)
           .onValue
+          .asBroadcastStream()
           .map((event) {
         final data = event.snapshot.value;
         final list = <Map<String, dynamic>>[];
@@ -140,7 +141,7 @@ class SoulMergeService {
         }
         return list;
       });
-    });
+    }).asBroadcastStream();
   }
 
   /// Clear all messages under the soul_merge/chat node (No-op now to preserve history)

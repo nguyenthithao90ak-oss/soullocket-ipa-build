@@ -19,6 +19,7 @@ import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/views/utilities/creative_diary_screen.dart';
 import 'package:soullocket_app/views/utilities/cinema_screen.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'house_service.dart';
 import 'offline_cache_service.dart';
 import 'role_utils.dart';
@@ -235,6 +236,29 @@ class NotificationService {
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     final notification = message.notification;
     if (notification == null || _shouldSkipForegroundMessage(message)) return;
+
+    final type = message.data['type']?.toString() ?? '';
+    final screen = message.data['screen']?.toString() ?? '';
+    if (type == 'soul_merge' || screen == 'soul_merge' || type == 'chat' || screen == 'chat') {
+      try {
+        final granted = await FlutterOverlayWindow.isPermissionGranted();
+        if (granted) {
+          final active = await FlutterOverlayWindow.isActive();
+          if (!active) {
+            await FlutterOverlayWindow.showOverlay(
+              enableDrag: true,
+              height: 80,
+              width: 80,
+              alignment: OverlayAlignment.centerRight,
+              overlayTitle: 'Bong bóng tâm hồn',
+              overlayContent: 'Lời thì thầm đang kết nối...',
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Error showing overlay in foreground: $e');
+      }
+    }
 
     await showLocalNotification(
       title: notification.title ?? '',

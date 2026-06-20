@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:soullocket_app/app.dart';
 import 'package:soullocket_app/views/home/widgets/floating_bubble_widget.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -40,6 +41,25 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       await _initializeFirebaseBootstrap();
     }
     FirebaseDatabase.instance.setPersistenceEnabled(true);
+
+    final type = message.data['type']?.toString() ?? '';
+    final screen = message.data['screen']?.toString() ?? '';
+    if (type == 'soul_merge' || screen == 'soul_merge' || type == 'chat' || screen == 'chat') {
+      final granted = await FlutterOverlayWindow.isPermissionGranted();
+      if (granted) {
+        final active = await FlutterOverlayWindow.isActive();
+        if (!active) {
+          await FlutterOverlayWindow.showOverlay(
+            enableDrag: true,
+            height: 80,
+            width: 80,
+            alignment: OverlayAlignment.centerRight,
+            overlayTitle: 'Bong bóng tâm hồn',
+            overlayContent: 'Lời thì thầm đang kết nối...',
+          );
+        }
+      }
+    }
   } catch (error, stackTrace) {
     debugPrint('FCM background bootstrap error: ${AppErrorMapper.resolve(
       error,
