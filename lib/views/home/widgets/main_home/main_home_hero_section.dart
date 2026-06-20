@@ -76,6 +76,19 @@ class _ModernHomeBodyState extends State<_ModernHomeBody> {
       isWeb: kIsWeb,
     );
     final showDecorGlow = !effectProfile.performanceMode;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = SLResponsive.horizontalPaddingForWidth(
+      screenWidth,
+      compactPadding: 12,
+      handsetPadding: 16,
+      tabletPadding: 24,
+    );
+    final contentWidth = SLResponsive.maxContentWidthForWidth(
+      screenWidth,
+      handsetMax: 520,
+      tabletMax: 620,
+      desktopMax: 680,
+    );
 
     return Stack(
       children: [
@@ -121,47 +134,65 @@ class _ModernHomeBodyState extends State<_ModernHomeBody> {
             ),
           ),
         ),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final horizontalPadding = SLResponsive.horizontalPaddingForWidth(
-              constraints.maxWidth,
-              compactPadding: 12,
-              handsetPadding: 16,
-              tabletPadding: 24,
-            );
-            final contentWidth = SLResponsive.maxContentWidthForWidth(
-              constraints.maxWidth,
-              handsetMax: 520,
-              tabletMax: 620,
-              desktopMax: 680,
-            );
-            return NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                if (notification is ScrollStartNotification) {
+        NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification is ScrollStartNotification) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
                   widget.state._isScrollingNotifier.value = true;
-                } else if (notification is ScrollEndNotification) {
+                }
+              });
+            } else if (notification is ScrollEndNotification) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
                   widget.state._isScrollingNotifier.value = false;
                 }
-                return false;
-              },
-              child: ValueListenableBuilder<bool>(
-                valueListenable: _isDraggingNotifier,
-                builder: (context, isDragging, _) {
-                  return SingleChildScrollView(
-                    physics: isDragging
-                        ? const NeverScrollableScrollPhysics()
-                        : const BouncingScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: contentWidth),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            SizedBox(height: MediaQuery.of(context).padding.top + 36),
-                            RepaintBoundary(
-                              child: widget.state.widget.isSwipingListenable == null
-                                  ? _MainHomeHeroCountdownSection(
+              });
+            }
+            return false;
+          },
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isDraggingNotifier,
+            builder: (context, isDragging, _) {
+              return SingleChildScrollView(
+                physics: isDragging
+                    ? const NeverScrollableScrollPhysics()
+                    : const BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: contentWidth),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(height: MediaQuery.of(context).padding.top + 36),
+                        RepaintBoundary(
+                          child: widget.state.widget.isSwipingListenable == null
+                              ? _MainHomeHeroCountdownSection(
+                                  state: widget.state,
+                                  isSingle: widget.isSingle,
+                                  houseName: widget.houseName,
+                                  smartGreeting: widget.smartGreeting,
+                                  circleValue: widget.circleValue,
+                                  circleTopLabel: widget.circleTopLabel,
+                                  circleBottomLabel: widget.circleBottomLabel,
+                                  startDate: widget.startDate,
+                                  circleSize: widget.circleSize,
+                                  homeShowHouseName: widget.homeShowHouseName,
+                                  showDayCounter: widget.showDayCounter,
+                                  showLoveTimeDetail: widget.showLoveTimeDetail,
+                                  countdownStyleKey: widget.countdownStyleKey,
+                                  enableMotion: effectProfile.animationEnabled &&
+                                      !widget.state._deferHeavyHomeMotion,
+                                  onEditStartDate: widget.onEditStartDate,
+                                  onEditTopLabel: widget.onEditTopLabel,
+                                  onEditBottomLabel: widget.onEditBottomLabel,
+                                  firstGuideHeroKey: widget.state.widget.firstGuideHeroKey,
+                                )
+                              : ValueListenableBuilder<bool>(
+                                  valueListenable: widget.state.widget.isSwipingListenable!,
+                                  builder: (context, isSwiping, _) {
+                                    return _MainHomeHeroCountdownSection(
                                       state: widget.state,
                                       isSingle: widget.isSingle,
                                       houseName: widget.houseName,
@@ -176,77 +207,49 @@ class _ModernHomeBodyState extends State<_ModernHomeBody> {
                                       showLoveTimeDetail: widget.showLoveTimeDetail,
                                       countdownStyleKey: widget.countdownStyleKey,
                                       enableMotion: effectProfile.animationEnabled &&
-                                          !widget.state._deferHeavyHomeMotion &&
-                                          widget.state._isTabActive,
+                                          !isSwiping &&
+                                          !widget.state._deferHeavyHomeMotion,
                                       onEditStartDate: widget.onEditStartDate,
                                       onEditTopLabel: widget.onEditTopLabel,
                                       onEditBottomLabel: widget.onEditBottomLabel,
                                       firstGuideHeroKey: widget.state.widget.firstGuideHeroKey,
-                                    )
-                                  : ValueListenableBuilder<bool>(
-                                      valueListenable: widget.state.widget.isSwipingListenable!,
-                                      builder: (context, isSwiping, _) {
-                                        return _MainHomeHeroCountdownSection(
-                                          state: widget.state,
-                                          isSingle: widget.isSingle,
-                                          houseName: widget.houseName,
-                                          smartGreeting: widget.smartGreeting,
-                                          circleValue: widget.circleValue,
-                                          circleTopLabel: widget.circleTopLabel,
-                                          circleBottomLabel: widget.circleBottomLabel,
-                                          startDate: widget.startDate,
-                                          circleSize: widget.circleSize,
-                                          homeShowHouseName: widget.homeShowHouseName,
-                                          showDayCounter: widget.showDayCounter,
-                                          showLoveTimeDetail: widget.showLoveTimeDetail,
-                                          countdownStyleKey: widget.countdownStyleKey,
-                                          enableMotion: effectProfile.animationEnabled &&
-                                              !widget.state._deferHeavyHomeMotion &&
-                                              !isSwiping &&
-                                              widget.state._isTabActive,
-                                          onEditStartDate: widget.onEditStartDate,
-                                          onEditTopLabel: widget.onEditTopLabel,
-                                          onEditBottomLabel: widget.onEditBottomLabel,
-                                          firstGuideHeroKey: widget.state.widget.firstGuideHeroKey,
-                                        );
-                                      },
-                                    ),
-                            ),
-                            SLSpacing.h8,
-                            RepaintBoundary(
-                              child: widget.state._buildModernAvatarSection(
-                                isSingle: widget.isSingle,
-                                nameU1: widget.nameU1,
-                                nameU2: widget.nameU2,
-                                avtUser1: widget.avtUser1,
-                                avtUser2: widget.avtUser2,
-                              ),
-                            ),
-                            SLSpacing.h20,
-                            _HomeBlockDragList(
-                              uiState: uiState,
-                              isSingle: widget.isSingle,
-                              contentWidth: contentWidth,
-                              effectProfile: effectProfile,
-                              state: widget.state,
-                              startDate: widget.startDate,
-                              nameU1: widget.nameU1,
-                              nameU2: widget.nameU2,
-                              isDraggingNotifier: _isDraggingNotifier,
-                            ),
-                            RepaintBoundary(
-                              child: widget.state._buildHomeToolSlotSection(),
-                            ),
-                            SLSpacing.gapH(148),
-                          ],
+                                    );
+                                  },
+                                ),
                         ),
-                      ),
+                        SLSpacing.h8,
+                        RepaintBoundary(
+                          child: widget.state._buildModernAvatarSection(
+                            isSingle: widget.isSingle,
+                            nameU1: widget.nameU1,
+                            nameU2: widget.nameU2,
+                            avtUser1: widget.avtUser1,
+                            avtUser2: widget.avtUser2,
+                          ),
+                        ),
+                        SLSpacing.h20,
+                        _HomeBlockDragList(
+                          uiState: uiState,
+                          isSingle: widget.isSingle,
+                          contentWidth: contentWidth,
+                          effectProfile: effectProfile,
+                          state: widget.state,
+                          startDate: widget.startDate,
+                          nameU1: widget.nameU1,
+                          nameU2: widget.nameU2,
+                          isDraggingNotifier: _isDraggingNotifier,
+                        ),
+                        RepaintBoundary(
+                          child: widget.state._buildHomeToolSlotSection(),
+                        ),
+                        SLSpacing.gapH(148),
+                      ],
                     ),
-                  );
-                },
-              ),
-            );
-          },
+                  ),
+                ),
+              );
+            },
+          ),
         ),
         _MainHomeHeroHeader(
           state: widget.state,
@@ -325,8 +328,7 @@ class _HomeBlockDragListState extends State<_HomeBlockDragList> {
         );
       case 'insight':
         final enableMotion = widget.effectProfile.animationEnabled &&
-            !widget.state._deferHeavyHomeMotion &&
-            widget.state._isTabActive;
+            !widget.state._deferHeavyHomeMotion;
         if (widget.state.widget.isSwipingListenable == null) {
           return widget.state._buildModernInsightCard(
             isSingle: widget.isSingle,

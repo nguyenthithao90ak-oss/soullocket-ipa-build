@@ -171,19 +171,10 @@ class _MainHomeHeroCountdownCircle extends StatelessWidget {
                       border: countdownVisual.innerBorder,
                     ),
                     child: RepaintBoundary(
-                      child: ValueListenableBuilder<bool>(
-                        valueListenable: state._isScrollingNotifier,
-                        builder: (context, isScrolling, child) {
-                          return TickerMode(
-                            enabled: enableMotion && !isScrolling,
-                            child: child!,
-                          );
-                        },
-                        child: _AnimatedWaveBackground(
-                          styleKey: countdownStyleKey,
-                          enableMotion: enableMotion,
-                          transparentMode: transparentMode,
-                        ),
+                      child: AnimatedWaveBackground(
+                        styleKey: countdownStyleKey,
+                        enableMotion: enableMotion,
+                        transparentMode: transparentMode,
                       ),
                     ),
                   ),

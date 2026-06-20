@@ -307,6 +307,9 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                               bottomLabel: _bottomLabel(uiState),
                                               styleData: styleData,
                                               fontKey: uiState.fontKey,
+                                              styleKey: uiState.countdownStyleKey,
+                                              transparentMode: uiState.transparentMode,
+                                              enableMotion: true,
                                             ),
                                             if (uiState.countdownStyleKey == 'floating_hearts')
                                               FloatingHeartsRingOverlay(size: circleSize),

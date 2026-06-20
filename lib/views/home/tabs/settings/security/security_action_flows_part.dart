@@ -185,6 +185,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
       final now = DateTime.now();
       final nowMs = now.millisecondsSinceEpoch;
       final todayStr = '${now.year}-${now.month}-${now.day}';

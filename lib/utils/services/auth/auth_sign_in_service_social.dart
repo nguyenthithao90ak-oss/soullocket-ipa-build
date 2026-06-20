@@ -44,10 +44,40 @@ Future<void> linkGoogleToCurrentUser() async {
         await user.linkWithPopup(provider);
       } else {
         final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
-        await googleSignIn.signOut();
-        await googleSignIn.initialize();
-        final googleUser = await googleSignIn.authenticate(
+        if (!AuthSignInService._isGoogleSignInInitialized) {
+          final initCompleter = Completer<void>();
+          googleSignIn.initialize().then((_) {
+            if (!initCompleter.isCompleted) initCompleter.complete();
+          }).catchError((error) {
+            if (!initCompleter.isCompleted) {
+              initCompleter.completeError(error);
+            } else {
+              debugPrint('Late Google init error swallowed: $error');
+            }
+          });
+          await initCompleter.future.timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => throw 'Không thể khởi động dịch vụ Google. Vui lòng kiểm tra Google Play Services.',
+          );
+          AuthSignInService._isGoogleSignInInitialized = true;
+        }
+
+        final authCompleter = Completer<dynamic>();
+        googleSignIn.authenticate(
           scopeHint: const ['email'],
+        ).then((user) {
+          if (!authCompleter.isCompleted) authCompleter.complete(user);
+        }).catchError((error) {
+          if (!authCompleter.isCompleted) {
+            authCompleter.completeError(error);
+          } else {
+            debugPrint('Late Google auth error swallowed: $error');
+          }
+        });
+
+        final googleUser = await authCompleter.future.timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => throw 'Đăng nhập Google phản hồi lâu. Vui lòng kiểm tra kết nối mạng và Google Play Services.',
         );
         final googleAuth = googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
@@ -84,6 +114,10 @@ Future<void> linkGoogleToCurrentUser() async {
           throw handleFirebaseAuthError(error);
       }
     } catch (error) {
+      final errStr = error.toString().toLowerCase();
+      if (errStr.contains('sign_in_canceled') || errStr.contains('canceled')) {
+        throw 'Bạn đã huỷ đăng nhập Google.';
+      }
       final raw = error.toString();
       if (raw.contains('10') ||
           raw.contains('sign_in_failed') ||
@@ -270,10 +304,40 @@ Future<void> _reauthenticateCurrentUserWithGoogle(
       }
 
       final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
-      await googleSignIn.signOut();
-      await googleSignIn.initialize();
-      final googleUser = await googleSignIn.authenticate(
+      if (!AuthSignInService._isGoogleSignInInitialized) {
+        final initCompleter = Completer<void>();
+        googleSignIn.initialize().then((_) {
+          if (!initCompleter.isCompleted) initCompleter.complete();
+        }).catchError((error) {
+          if (!initCompleter.isCompleted) {
+            initCompleter.completeError(error);
+          } else {
+            debugPrint('Late Google init error swallowed: $error');
+          }
+        });
+        await initCompleter.future.timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => throw 'Không thể khởi động dịch vụ Google. Vui lòng kiểm tra Google Play Services.',
+        );
+        AuthSignInService._isGoogleSignInInitialized = true;
+      }
+
+      final authCompleter = Completer<dynamic>();
+      googleSignIn.authenticate(
         scopeHint: const ['email'],
+      ).then((user) {
+        if (!authCompleter.isCompleted) authCompleter.complete(user);
+      }).catchError((error) {
+        if (!authCompleter.isCompleted) {
+          authCompleter.completeError(error);
+        } else {
+          debugPrint('Late Google auth error swallowed: $error');
+        }
+      });
+
+      final googleUser = await authCompleter.future.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw 'Đăng nhập Google phản hồi lâu. Vui lòng kiểm tra kết nối mạng và Google Play Services.',
       );
       final googleAuth = googleUser.authentication;
       if ((googleAuth.idToken ?? '').isEmpty) {
@@ -299,6 +363,10 @@ Future<void> _reauthenticateCurrentUserWithGoogle(
           throw handleFirebaseAuthError(error);
       }
     } catch (error) {
+      final errStr = error.toString().toLowerCase();
+      if (errStr.contains('sign_in_canceled') || errStr.contains('canceled')) {
+        throw 'Bạn đã huỷ đăng nhập Google.';
+      }
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
         error,

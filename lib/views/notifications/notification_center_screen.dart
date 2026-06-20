@@ -10,6 +10,7 @@ import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/services/schedule_notification_presenter.dart';
 import '../../utils/services/l10n_service.dart';
+import '../../utils/app_error_mapper.dart';
 
 part 'notification_center_screen_types.dart';
 part 'notification_center_screen_sections.dart';
@@ -100,7 +101,16 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
         .ref('notifications/$_houseId')
         .limitToLast(_notificationsLimit)
         .onValue
-        .listen(_handleNotificationsEvent);
+        .listen(
+      _handleNotificationsEvent,
+      onError: (Object error) {
+        debugPrint(
+          '[NotificationCenter] listener error: ${AppErrorMapper.resolve(error).message}',
+        );
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+      },
+    );
   }
 
   void _detachNotificationsListener() {
@@ -128,7 +138,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
         lifecycleState == null || lifecycleState == AppLifecycleState.resumed;
     final route = ModalRoute.of(context);
     final isCurrentRoute = route == null || route.isCurrent;
-    return isAppResumed && isCurrentRoute && TickerMode.valuesOf(context).enabled;
+    return isAppResumed &&
+        isCurrentRoute &&
+        TickerMode.valuesOf(context).enabled;
   }
 
   void _handleNotificationsEvent(DatabaseEvent event) {
@@ -342,16 +354,24 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     }
 
     var catName = L10nService().translate('core_all');
-    if (_cat == _NotifCategory.warning) catName = L10nService().translate('notif_category_warning');
-    if (_cat == _NotifCategory.friend) catName = L10nService().translate('notif_category_friend');
-    if (_cat == _NotifCategory.social) catName = L10nService().translate('notif_category_social');
+    if (_cat == _NotifCategory.warning) {
+      catName = L10nService().translate('notif_category_warning');
+    }
+    if (_cat == _NotifCategory.friend) {
+      catName = L10nService().translate('notif_category_friend');
+    }
+    if (_cat == _NotifCategory.social) {
+      catName = L10nService().translate('notif_category_social');
+    }
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(L10nService().format('notif_delete_title', {'category': catName})),
+        title: Text(
+            L10nService().format('notif_delete_title', {'category': catName})),
         content: Text(
-          L10nService().format('notif_delete_confirm_body', {'count': deletable.length}),
+          L10nService()
+              .format('notif_delete_confirm_body', {'count': deletable.length}),
         ),
         actions: [
           TextButton(
@@ -420,7 +440,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
       fromHouseId: fromHouseId,
     );
     await _db.ref('notifications/$_houseId/$notifId').remove();
-    _snack(ok ? L10nService().translate('notif_friend_accepted') : L10nService().translate('notif_invite_process_error'));
+    _snack(ok
+        ? L10nService().translate('notif_friend_accepted')
+        : L10nService().translate('notif_invite_process_error'));
   }
 
   Future<void> _declineFriendReq(String notifId, String fromHouseId) async {

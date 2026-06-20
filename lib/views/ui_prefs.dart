@@ -271,7 +271,9 @@ class UiPrefs {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
       case TargetPlatform.iOS:
-        return 'low';
+        // Dùng 'balanced' để animation wave background hoạt động bình thường.
+        // User muốn tiết kiệm pin tối đa có thể chọn thủ công 'low' trong cài đặt.
+        return 'balanced';
       case TargetPlatform.macOS:
       case TargetPlatform.windows:
       case TargetPlatform.linux:

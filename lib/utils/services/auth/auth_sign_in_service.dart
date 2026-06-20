@@ -62,6 +62,7 @@ class AuthSignInService {
   static const String accountNotFoundMessage =
       'Tài khoản không tồn tại. Vui lòng kiểm tra lại email hoặc tạo tài khoản mới.';
   static const String wrongPasswordMessage = 'Sai mật khẩu. Vui lòng thử lại.';
+  static bool _isGoogleSignInInitialized = false;
   static const String _dailyLoginTrackerPrefsKey = 'il_login_tracker';
   static const Set<String> _signOutPreservedPrefsKeys = {
     _dailyLoginTrackerPrefsKey,
@@ -336,10 +337,7 @@ class AuthSignInService {
           );
 
       if (userCredential.user != null) {
-        await SettingsSyncService().restoreSettingsFromCloud(
-          userCredential.user!.uid,
-        );
-        await _recordServerLoginSuccess(normalizedEmail);
+        unawaited(_recordServerLoginSuccess(normalizedEmail));
         if (!await recordDailyLoginLimit(normalizedEmail)) {
           await signOut();
           throw dailyLoginLimitMessage;
@@ -679,9 +677,6 @@ class AuthSignInService {
       await _enforceNoNewAccountOnWeb(userCredential);
 
       if (userCredential.user != null) {
-        await SettingsSyncService().restoreSettingsFromCloud(
-          userCredential.user!.uid,
-        );
         final resolvedEmail =
             userCredential.user?.email?.trim().toLowerCase() ?? '';
         if (resolvedEmail.isNotEmpty &&
@@ -757,10 +752,40 @@ class AuthSignInService {
         userCredential = await _auth.signInWithPopup(provider);
       } else {
         final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
-        await googleSignIn.signOut();
-        await googleSignIn.initialize();
-        final googleUser = await googleSignIn.authenticate(
+        if (!_isGoogleSignInInitialized) {
+          final initCompleter = Completer<void>();
+          googleSignIn.initialize().then((_) {
+            if (!initCompleter.isCompleted) initCompleter.complete();
+          }).catchError((error) {
+            if (!initCompleter.isCompleted) {
+              initCompleter.completeError(error);
+            } else {
+              debugPrint('Late Google init error swallowed: $error');
+            }
+          });
+          await initCompleter.future.timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => throw 'Không thể khởi động dịch vụ Google. Vui lòng kiểm tra Google Play Services.',
+          );
+          _isGoogleSignInInitialized = true;
+        }
+
+        final authCompleter = Completer<dynamic>();
+        googleSignIn.authenticate(
           scopeHint: const ['email'],
+        ).then((user) {
+          if (!authCompleter.isCompleted) authCompleter.complete(user);
+        }).catchError((error) {
+          if (!authCompleter.isCompleted) {
+            authCompleter.completeError(error);
+          } else {
+            debugPrint('Late Google auth error swallowed: $error');
+          }
+        });
+
+        final googleUser = await authCompleter.future.timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => throw 'Đăng nhập Google phản hồi lâu. Vui lòng kiểm tra kết nối mạng và Google Play Services.',
         );
         final googleAuth = googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
@@ -776,9 +801,6 @@ class AuthSignInService {
       await _enforceNoNewAccountOnWeb(userCredential);
 
       if (userCredential.user != null) {
-        await SettingsSyncService().restoreSettingsFromCloud(
-          userCredential.user!.uid,
-        );
         final resolvedEmail =
             userCredential.user?.email?.trim().toLowerCase() ?? '';
         if (resolvedEmail.isNotEmpty &&
@@ -799,6 +821,10 @@ class AuthSignInService {
       );
       throw handleFirebaseAuthError(error);
     } catch (error) {
+      final errStr = error.toString().toLowerCase();
+      if (errStr.contains('sign_in_canceled') || errStr.contains('canceled')) {
+        return null;
+      }
       if (isGoogleSignInConfigMismatch(error)) {
         throw kDebugMode
             ? 'Lỗi Google Sign-In (Code 10/ApiException): SHA-1/SHA-256 trên Firebase chưa khớp với chứng chỉ Play App Signing của ứng dụng trên CH Play. Vui lòng lấy mã SHA từ Play Console và thêm vào Firebase, sau đó tải lại file google-services.json.'
@@ -884,9 +910,6 @@ class AuthSignInService {
           ? resolvedEmail
           : 'facebook:${userCredential.user!.uid}';
 
-      await SettingsSyncService().restoreSettingsFromCloud(
-        userCredential.user!.uid,
-      );
       if (!await recordDailyLoginLimit(loginLimitKey)) {
         await signOut();
         throw dailyLoginLimitMessage;
@@ -1321,7 +1344,7 @@ class AuthSignInService {
     if (!existingSnap.exists) {
       payload['createdAt'] = ServerValue.timestamp;
       try {
-        TiktokBusinessSdk().trackTTEvent(
+        await TiktokBusinessSdk().trackTTEvent(
           event: EventName.Registration,
         );
       } catch (e) {
@@ -1337,43 +1360,44 @@ class AuthSignInService {
     String? fallbackEmail,
   }) async {
     final resolvedEmail = (user.email ?? fallbackEmail ?? '').trim();
-    if (resolvedEmail.isNotEmpty) {
-      final postLoginBlockReason = await _adminService.getSystemBlockReason(
-        resolvedEmail,
-        allowAdminBypass: true,
-        forceRefreshAdmin: true,
-      );
-      if (postLoginBlockReason != null) {
-        await signOut();
-        throw postLoginBlockReason;
-      }
+
+    // Parallel Phase 1: Check block reason, ensure user profile exists, fetch house ID, read prefs, and restore settings from cloud
+    final phase1Results = await Future.wait([
+      if (resolvedEmail.isNotEmpty)
+        _adminService.getSystemBlockReason(
+          resolvedEmail,
+          allowAdminBypass: true,
+          forceRefreshAdmin: true,
+        ).catchError((error) {
+          debugPrint('Failed to check system block reason: $error');
+          return null;
+        })
+      else
+        Future<String?>.value(null),
+      _ensureUserProfileExists(user),
+      _db.child('users/${user.uid}/houseId').get(),
+      _prefs,
+      SettingsSyncService().restoreSettingsFromCloud(user.uid),
+    ]);
+
+    final postLoginBlockReason = phase1Results[0] as String?;
+    if (postLoginBlockReason != null) {
+      await signOut();
+      throw postLoginBlockReason;
     }
 
-    await _ensureUserProfileExists(user);
-
-    final userSnap = await _db.child('users/${user.uid}/houseId').get();
-    final rawHouseId = userSnap.value?.toString().trim();
+    final houseIdSnap = phase1Results[2] as DataSnapshot;
+    final rawHouseId = houseIdSnap.value?.toString().trim();
     final houseId =
         (rawHouseId == null || rawHouseId.isEmpty) ? null : rawHouseId;
 
-    await _houseContextService.checkBanStatus(
-      houseId,
-      onForcedSignOut: signOut,
-    );
+    final prefs = phase1Results[3] as SharedPreferences;
 
-    final prefs = await _prefs;
+    String? existingRole;
     if (houseId != null && houseId.isNotEmpty) {
       await prefs.setString('il_house_id', houseId);
       await prefs.setString('il_auth_uid', user.uid);
-      // Chỉ detect và ghi role khi role hiện tại chưa có hoặc không hợp lệ.
-      // Không bao giờ ghi đè role đã được user chọn/lưu hợp lệ.
-      final existingRole = prefs.getString('il_role');
-      if (existingRole != 'user1' && existingRole != 'user2') {
-        final role = await _houseContextService.detectAutoRole(houseId);
-        if (role == 'user1' || role == 'user2') {
-          await prefs.setString('il_role', role);
-        }
-      }
+      existingRole = prefs.getString('il_role');
     } else {
       await prefs.remove('il_house_id');
       await prefs.remove('il_auth_uid');
@@ -1384,31 +1408,81 @@ class AuthSignInService {
       'il_login_ts',
       _nowProvider().millisecondsSinceEpoch.toString(),
     );
-    await _houseContextService.syncRelationshipModeForCurrentUser(
-      user: user,
-      houseId: houseId,
-    );
 
-    if (houseId != null && houseId.isNotEmpty) {
+    final shouldDetectRole = houseId != null &&
+        houseId.isNotEmpty &&
+        existingRole != 'user1' &&
+        existingRole != 'user2';
+
+    // Parallel Phase 2: Check ban status, sync relationship mode, fetch settings, sync security email, register device, detect auto role
+    final phase2Results = await Future.wait([
+      _houseContextService.checkBanStatus(
+        houseId,
+        onForcedSignOut: signOut,
+      ),
+      _houseContextService.syncRelationshipModeForCurrentUser(
+        user: user,
+        houseId: houseId,
+      ).catchError((error) {
+        debugPrint('Failed to sync relationship mode: $error');
+        return null;
+      }),
+      if (houseId != null && houseId.isNotEmpty)
+        _db.child('houses/$houseId/settings').get().then<DataSnapshot?>((snap) => snap).catchError((error) {
+          debugPrint('Failed to fetch house settings: $error');
+          return null;
+        })
+      else
+        Future<DataSnapshot?>.value(null),
+      if (resolvedEmail.contains('@'))
+        _houseContextService.syncSecurityEmailForCurrentUser(
+          user: user,
+          email: resolvedEmail,
+          houseId: houseId,
+        ).catchError((error) {
+          debugPrint('Failed to sync security email: $error');
+        })
+      else
+        Future<void>.value(null),
+      DeviceManagerService()
+          .registerCurrentDevice()
+          .timeout(const Duration(seconds: 4))
+          .catchError((error) {
+        debugPrint(
+          'registerCurrentDevice skipped during auth finalize: '
+          '${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể đăng ký thiết bị hiện tại lúc này.',
+          ).message}',
+        );
+      }),
+      if (shouldDetectRole)
+        _houseContextService.detectAutoRole(houseId).catchError((error) {
+          debugPrint('Failed to detect auto role: $error');
+          return '';
+        })
+      else
+        Future<String>.value(''),
+    ]);
+
+    final settingsSnap = phase2Results[2] as DataSnapshot?;
+    if (settingsSnap != null && settingsSnap.exists) {
       try {
-        final settingsSnap = await _db.child('houses/$houseId/settings').get();
-        if (settingsSnap.exists) {
-          final settings = settingsSnap.value is Map
-              ? _asStringDynamicMap(settingsSnap.value)
-              : null;
-          if (settings != null) {
-            final customBackgroundUrl = (settings['customBackgroundUrl'] ??
-                    settings['customHomeBackground'] ??
-                    '')
-                .toString();
-            if (customBackgroundUrl.isNotEmpty) {
-              await UiPrefs.ensureLoaded();
-              await UiPrefs.saveState(
-                UiPrefs.notifier.value.copyWith(
-                  customBackgroundUrl: customBackgroundUrl,
-                ),
-              );
-            }
+        final settings = settingsSnap.value is Map
+            ? _asStringDynamicMap(settingsSnap.value)
+            : null;
+        if (settings != null) {
+          final customBackgroundUrl = (settings['customBackgroundUrl'] ??
+                  settings['customHomeBackground'] ??
+                  '')
+              .toString();
+          if (customBackgroundUrl.isNotEmpty) {
+            await UiPrefs.ensureLoaded();
+            await UiPrefs.saveState(
+              UiPrefs.notifier.value.copyWith(
+                customBackgroundUrl: customBackgroundUrl,
+              ),
+            );
           }
         }
       } catch (error) {
@@ -1419,43 +1493,26 @@ class AuthSignInService {
       }
     }
 
-    if (resolvedEmail.contains('@')) {
-      try {
-        await _houseContextService.syncSecurityEmailForCurrentUser(
-          user: user,
-          email: resolvedEmail,
-          houseId: houseId,
-        );
-      } catch (_) {}
+    if (shouldDetectRole) {
+      final role = phase2Results[5] as String;
+      if (role == 'user1' || role == 'user2') {
+        await prefs.setString('il_role', role);
+      }
     }
-    try {
-      await DeviceManagerService()
-          .registerCurrentDevice()
-          .timeout(const Duration(seconds: 4));
-    } catch (error) {
-      debugPrint(
-        'registerCurrentDevice skipped during auth finalize: '
-        '${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể đăng ký thiết bị hiện tại lúc này.',
-        ).message}',
-      );
-    }
-
-    // 🔓 DISABLED: Bỏ kiểm tra chặn thiết bị để cho phép đăng nhập trên mọi thiết bị
-    // if (houseId != null && houseId.isNotEmpty) {
-    //   final isBlocked = await DeviceManagerService().isCurrentDeviceBlocked();
-    //   if (isBlocked) {
-    //     await signOut();
-    //     throw 'Thiết bị này đã bị chặn truy cập vĩnh viễn.';
-    //   }
-    // }
 
     unawaited(
       CriticalDataSyncService().syncCurrentUserData(
         houseId: houseId,
         force: true,
-      ),
+      ).catchError((error) {
+        debugPrint(
+          'CriticalDataSync skipped during auth finalize: '
+          '${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể đồng bộ dữ liệu quan trọng lúc này.',
+          ).message}',
+        );
+      }),
     );
   }
 

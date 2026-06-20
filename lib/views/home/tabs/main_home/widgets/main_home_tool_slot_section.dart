@@ -674,7 +674,7 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
       stream: PurchaseService().vipStatusStream(),
       initialData: false,
       builder: (context, snapshot) {
-        final isVip = (snapshot.data ?? false) || kDebugMode;
+        final isVip = (snapshot.data ?? false);
         final uiPrefs = UiPrefs.notifier.value;
         final secureStyle = uiPrefs.vaultHomeStyle == 'secure';
         final compactStyle = uiPrefs.vaultHomeStyle == 'compact';

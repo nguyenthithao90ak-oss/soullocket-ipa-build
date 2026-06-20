@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'push_notification_helper.dart';
 import 'chat_service.dart';
@@ -252,7 +253,8 @@ class FriendsService {
       final reqRef = _db.ref('friend_requests/$normalizedRequestId');
 
       // 1. Giới hạn 1000 bạn bè
-      final myFriendsSnap = await _db.ref('friends/$normalizedCurrentHouseId').get();
+      final myFriendsSnap =
+          await _db.ref('friends/$normalizedCurrentHouseId').get();
       if (myFriendsSnap.exists) {
         final friends = _asStringDynamicMap(myFriendsSnap.value);
         if ((friends?.length ?? 0) >= 1000) return false;
@@ -262,17 +264,22 @@ class FriendsService {
       await reqRef.child('status').set('accepted');
 
       // 3. Thêm list bạn bè 2 chiều
-      await _db.ref('friends/$normalizedCurrentHouseId/$normalizedFromHouseId').set(true);
+      await _db
+          .ref('friends/$normalizedCurrentHouseId/$normalizedFromHouseId')
+          .set(true);
 
       // Try to set for the other user.
       // It might fail due to Firebase security rules (only the user can write to their own friends list),
       // so we catch the error to prevent the whole function from failing.
       try {
-        await _db.ref('friends/$normalizedFromHouseId/$normalizedCurrentHouseId').set(true);
+        await _db
+            .ref('friends/$normalizedFromHouseId/$normalizedCurrentHouseId')
+            .set(true);
       } catch (_) {}
 
       // 4. Tạo conversation tự động (DM)
-      final convId = _getConversationId(normalizedCurrentHouseId, normalizedFromHouseId);
+      final convId =
+          _getConversationId(normalizedCurrentHouseId, normalizedFromHouseId);
       final convRef = _db.ref('conversations/$convId');
 
       await convRef.update({
@@ -329,8 +336,12 @@ class FriendsService {
     final normalizedMyHouseId = myHouseId.trim();
     final normalizedFriendHouseId = friendHouseId.trim();
     if (normalizedMyHouseId.isEmpty || normalizedFriendHouseId.isEmpty) return;
-    await _db.ref('friends/$normalizedMyHouseId/$normalizedFriendHouseId').remove();
-    await _db.ref('friends/$normalizedFriendHouseId/$normalizedMyHouseId').remove();
+    await _db
+        .ref('friends/$normalizedMyHouseId/$normalizedFriendHouseId')
+        .remove();
+    await _db
+        .ref('friends/$normalizedFriendHouseId/$normalizedMyHouseId')
+        .remove();
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -341,7 +352,8 @@ class FriendsService {
     final normalizedHouseId = houseId.trim();
     final normalizedFriendId = friendId.trim();
     if (normalizedHouseId.isEmpty || normalizedFriendId.isEmpty) return;
-    final ref = _db.ref('houses/$normalizedHouseId/settings/favoriteFriends/$normalizedFriendId');
+    final ref = _db.ref(
+        'houses/$normalizedHouseId/settings/favoriteFriends/$normalizedFriendId');
     final snap = await ref.get();
 
     if (snap.exists) {
@@ -376,7 +388,9 @@ class FriendsService {
 
   void _startAcceptedRequestsSync(String houseId) {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty || _syncingHouseId == normalizedHouseId) return;
+    if (normalizedHouseId.isEmpty || _syncingHouseId == normalizedHouseId) {
+      return;
+    }
     _syncingHouseId = normalizedHouseId;
 
     // Lắng nghe các thay đổi trên friend_requests mà mình gửi đi
@@ -409,6 +423,8 @@ class FriendsService {
           }
         }
       }
+    }, onError: (Object error) {
+      debugPrint('[FriendsService] accepted requests sync error: $error');
     });
   }
 
@@ -450,6 +466,8 @@ class FriendsService {
         }
       });
       return data;
+    }).handleError((Object error) {
+      debugPrint('[FriendsService] friend requests stream error: $error');
     }).asBroadcastStream();
   }
 

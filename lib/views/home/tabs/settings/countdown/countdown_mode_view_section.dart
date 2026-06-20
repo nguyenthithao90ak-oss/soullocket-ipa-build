@@ -369,6 +369,9 @@ extension _CountdownModeIndependentScreenViewPart
                       bottomLabel: _bottomLabel(),
                       styleData: styleData,
                       fontKey: _fontKey,
+                      styleKey: _countdownStyleKey,
+                      transparentMode: _transparentMode,
+                      enableMotion: true,
                       onTopTap: () => _editCountdownLabel(
                         editTopLabel: true,
                       ),

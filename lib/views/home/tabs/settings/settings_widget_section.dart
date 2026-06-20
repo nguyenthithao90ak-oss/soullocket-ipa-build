@@ -557,7 +557,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       case 'pink':    return Icons.favorite_rounded;
       case 'white':   return Icons.ac_unit_rounded;
       case 'dark':    return Icons.dark_mode_rounded;
-      case 'blue':    return Icons.water_rounded;
+      case 'blue':    return Icons.waves;
       case 'orange':  return Icons.wb_sunny_rounded;
       case 'purple':  return Icons.auto_awesome_rounded;
       case 'green':   return Icons.eco_rounded;
@@ -703,6 +703,22 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                             ),
                           ),
                         ),
+                        // White curved wave overlay for normal swatches
+                        if (key != 'premium' && key != 'cosmic')
+                          Positioned(
+                            bottom: -22,
+                            left: -10,
+                            right: -10,
+                            child: Container(
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.16),
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.elliptical(50, 15),
+                                ),
+                              ),
+                            ),
+                          ),
                         // Center content
                         Center(
                           child: isSelected

@@ -112,89 +112,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
     return frameKey == 'vip' && !_isVipActive;
   }
 
-  bool _isVipThemeLocked(String themeKey) {
-    return themeKey == 'theme-vip-rotate' && !_isVipActive;
-  }
 
-  Future<void> _openPremiumStoreFromThemePanel() async {
-    if (!AppConfig.isPurchaseEnabled) {
-      _showToast(context.tr('home_mcnyangtmn_fdd99c'), success: false);
-      return;
-    }
-
-    final houseId = _houseId?.trim();
-    if (houseId == null || houseId.isEmpty) {
-      _showToast(context.tr('home_hyvonhtrck_c33334'), success: false);
-      return;
-    }
-
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PremiumStoreScreen(
-          houseId: houseId,
-          myName: _nameU1.trim().isEmpty ? context.tr('home_bn_1fd75b') : _nameU1.trim(),
-        ),
-      ),
-    );
-    if (!mounted) return;
-    await _loadVipStatus();
-  }
-
-
-  Future<void> _handleThemeSelection(String themeKey) async {
-    final customBackgroundUrl = (_draftCustomBackgroundUrl ??
-            UiPrefs.notifier.value.customBackgroundUrl)
-        .trim();
-    if (customBackgroundUrl.isNotEmpty && themeKey != 'off') {
-      // Khi người dùng chọn theme mới, ưu tiên áp dụng theme đó ngay.
-      // Tự tắt nền ảnh custom để tránh cảm giác "đổi theme không ăn".
-      _updateThemeDraft(() {
-        _draftCustomBackgroundUrl = '';
-        _draftThemeKey = themeKey;
-      });
-      LegacyWebUi.showNotice(
-        context,
-        message: context.tr('theme_applied_msg'),
-        success: true,
-        title: context.tr('theme_applied'),
-        icon: Icons.palette_rounded,
-      );
-      return;
-    }
-
-    if (themeKey == 'theme-vip-rotate') {
-      await _loadVipStatus();
-      if (!mounted) return;
-
-      if (!_isVipActive) {
-        LegacyWebUi.showNotice(
-          context,
-          message: AppConfig.isPurchaseEnabled
-              ? context.tr('home_chtinnmi30_57840c')
-              : context.tr('home_chtinnmi30_cf7b7c'),
-          success: true,
-          title: AppConfig.isPurchaseEnabled ? context.tr('home_cnpro_244529') : context.tr('home_chakhdng_9f4400'),
-          icon: AppConfig.isPurchaseEnabled
-              ? Icons.workspace_premium_rounded
-              : Icons.info_outline_rounded,
-        );
-        return;
-      }
-    }
-
-    if (_isVipThemeLocked(themeKey)) {
-      _showToast(
-        AppConfig.isPurchaseEnabled
-            ? context.tr('home_chtinnmi30_ae1dc8')
-            : context.tr('home_chtinnmi30_cf7b7c'),
-        success: false,
-      );
-      await _openPremiumStoreFromThemePanel();
-      return;
-    }
-    _updateThemeDraft(() => _draftThemeKey = themeKey);
-  }
 
   void _handleAvatarFrameSelection(String frameKey) {
     if (_isVipFrameLocked(frameKey)) {
@@ -575,11 +493,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 ),
                 const SizedBox(height: 8),
                 _buildLabel(context.tr('theme_frame_type')),
-                _buildThemeDropdownField(
-                  value: selection.avatarFrameKey,
-                  options: config.avatarFrames,
-                  onChanged: _handleAvatarFrameSelection,
-                ),
+                const SizedBox(height: 8),
+                _buildAvatarFrameStrip(selection.avatarFrameKey),
                 const SizedBox(height: 12),
                 _buildLabel(context.tr('theme_countdown_style')),
                 _buildThemeDropdownField(

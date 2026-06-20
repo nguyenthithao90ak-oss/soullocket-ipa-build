@@ -460,6 +460,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     XFile? file = presetFile ?? await _storageService.pickImage();
     if (file == null) return;
 
+    final oldHeaderUrl = _profileHeaderImageUrl();
+
     try {
       if (presetFile == null) {
         file = await _cropProfileHeaderImage(file);
@@ -489,6 +491,13 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         target: 'profile_header',
       );
       await PendingUploadService.instance.clear(_pendingProfileHeaderUploadKey);
+
+      if (oldHeaderUrl.isNotEmpty && oldHeaderUrl.startsWith('http')) {
+        try {
+          _storageService.deleteImageByUrl(oldHeaderUrl);
+        } catch (_) {}
+      }
+
       final refreshedUrl = _withRefreshToken(url);
       if (!mounted) return;
       setState(() {
@@ -509,6 +518,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
     XFile? file = presetFile ?? await _storageService.pickImage();
     if (file == null) return;
+
+    final oldAvatarUrl = (_targetSettings['houseAvatar'] ?? _targetData['houseAvatar'] ?? '').toString().trim();
 
     try {
       if (presetFile == null) {
@@ -539,6 +550,13 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         target: 'house_avatar',
       );
       await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
+
+      if (oldAvatarUrl.isNotEmpty && oldAvatarUrl.startsWith('http')) {
+        try {
+          _storageService.deleteImageByUrl(oldAvatarUrl);
+        } catch (_) {}
+      }
+
       final refreshedUrl = _withRefreshToken(url);
       if (!mounted) return;
       setState(
@@ -551,7 +569,13 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   }
 
   Future<void> _removeProfileHeaderImage() async {
+    final oldHeaderUrl = _profileHeaderImageUrl();
     await _saveProfilePresentation(headerImageUrl: '');
+    if (oldHeaderUrl.isNotEmpty && oldHeaderUrl.startsWith('http')) {
+      try {
+        _storageService.deleteImageByUrl(oldHeaderUrl);
+      } catch (_) {}
+    }
     if (!mounted) return;
     _showSnack('Đã quay về nền mặc định của hồ sơ.');
   }

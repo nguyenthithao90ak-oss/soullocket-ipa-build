@@ -121,6 +121,8 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                           fallback: 'LOVE',
                           uppercase: true,
                         ),
+                        styleKey: _draftCountdownStyleKey ?? ui.countdownStyleKey,
+                        transparentMode: _draftTransparentMode ?? ui.transparentMode,
                       ),
                       const Spacer(flex: 2),
                       // Presence Card
@@ -514,8 +516,9 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     required String topLabel,
     required String valueText,
     required String bottomLabel,
+    required String styleKey,
+    required bool transparentMode,
   }) {
-    final innerSize = size - 14;
     return Container(
       width: size,
       height: size,
@@ -528,9 +531,12 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
             alignment: Alignment.center,
             children: [
               Positioned.fill(
-                child: _buildThemePreviewCountdownBackdrop(
-                  visual.backdropType,
-                  size: innerSize,
+                child: RepaintBoundary(
+                  child: AnimatedWaveBackground(
+                    styleKey: styleKey,
+                    enableMotion: true,
+                    transparentMode: transparentMode,
+                  ),
                 ),
               ),
               Padding(

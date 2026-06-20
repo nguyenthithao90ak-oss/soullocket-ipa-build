@@ -67,7 +67,6 @@ class SettingsSyncService {
 
   static const List<String> _syncKeys = [
     'il_theme_key',
-    'il_lang',
     'il_falling_effect',
     'il_avatar_size',
     'il_countdown_size',
@@ -77,30 +76,12 @@ class SettingsSyncService {
     'il_countdown_bottom_label',
     'il_font_key',
     'il_home_block_tone',
-    'il_lite_mode',
-    'il_graphics_quality',
     'il_custom_background_url',
-    'il_touch_sound',
-    'il_confetti_fx',
-    'il_music_autoplay',
-    'il_notifications_enabled',
-    'il_notif_anniversary',
-    'il_notif_post',
-    'il_notif_chat',
-    'il_notif_friend',
-    'il_notif_heart',
-    'il_smart_reminder_diary',
-    'il_smart_reminder_capsule',
-    'il_smart_reminder_love_note',
-    'il_show_weather',
-    'il_show_status',
     'il_home_show_house_name',
     'il_home_show_timer',
     'il_auto_reply_text',
     'il_greeting_quote_text',
     'il_love_unit_text',
-    'il_vault_timeout_mins',
-    'il_transparent_mode',
     'il_brand_mark_key',
   ];
 
@@ -149,24 +130,6 @@ class SettingsSyncService {
       }
     }
 
-    // Also backup widget settings
-    for (final key in prefs.getKeys()) {
-      if (key.startsWith('il_widget_theme_') ||
-          key.startsWith('il_widget_style_') ||
-          key.startsWith('il_widget_show_diary_') ||
-          key.startsWith('il_widget_heart_animated_') ||
-          key.startsWith('il_widget_heart_style_') ||
-          key.startsWith('il_widget_heart_color_') ||
-          key.startsWith('il_widget_preview_size_') ||
-          key.startsWith('il_widget_diary_layout_') ||
-          key.startsWith('il_widget_season_mode_')) {
-        final value = prefs.get(key);
-        if (value != null) {
-          settings[key] = value;
-        }
-      }
-    }
-
     if (settings.isNotEmpty) {
       settings['_meta'] = {
         'schemaVersion': 2,
@@ -180,17 +143,6 @@ class SettingsSyncService {
     for (final key in const [
       'il_greeting_quote_text',
       'il_love_unit_text',
-      'il_notifications_enabled',
-      'il_notif_anniversary',
-      'il_notif_post',
-      'il_notif_chat',
-      'il_notif_friend',
-      'il_notif_heart',
-      'il_smart_reminder_diary',
-      'il_smart_reminder_capsule',
-      'il_smart_reminder_love_note',
-      'il_show_weather',
-      'il_show_status',
       'il_home_show_house_name',
       'il_home_show_timer',
       'il_auto_reply_text',
@@ -278,6 +230,20 @@ class SettingsSyncService {
           if (_legacySecretKeys.contains(key) ||
               _legacyCloudSensitiveKeys.contains(key)) {
             legacyRemovals[key] = null;
+            continue;
+          }
+
+          // Tránh khôi phục các cài đặt chỉ lưu cục bộ (không nằm trong _syncKeys và không phải widget)
+          final isWidgetKey = key.startsWith('il_widget_theme_') ||
+              key.startsWith('il_widget_style_') ||
+              key.startsWith('il_widget_show_diary_') ||
+              key.startsWith('il_widget_heart_animated_') ||
+              key.startsWith('il_widget_heart_style_') ||
+              key.startsWith('il_widget_heart_color_') ||
+              key.startsWith('il_widget_preview_size_') ||
+              key.startsWith('il_widget_diary_layout_') ||
+              key.startsWith('il_widget_season_mode_');
+          if (!_syncKeys.contains(key) && !isWidgetKey) {
             continue;
           }
 

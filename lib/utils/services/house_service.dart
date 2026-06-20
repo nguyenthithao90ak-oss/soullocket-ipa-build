@@ -40,7 +40,6 @@ class HouseService {
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
   Map<String, dynamic>? _asStringDynamicMap(Object? raw) {
     if (raw is! Map) {

@@ -41,11 +41,20 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   bool _iHaveBumped = false;
   bool _partnerHasBumped = false;
   bool _notificationSent = false;
-
   final GlobalKey<_TapHeartsOverlayState> _heartsOverlayKey = GlobalKey<_TapHeartsOverlayState>();
   double _interactiveScale = 1.0;
   Timer? _continuousHeartsTimer;
   Offset _lastTapPosition = Offset.zero;
+  Offset? _lastSpawnedPosition;
+  bool _isDragging = false;
+  Offset _heartOffset = Offset.zero;
+  Offset _dragStartPos = Offset.zero;
+
+  final TextEditingController _customMsgController = TextEditingController();
+  StreamSubscription<Map<String, dynamic>?>? _messagesSub;
+  final List<FloatingMessage> _floatingMessages = [];
+  int _lastMsgTimestamp = 0;
+  String _myRole = 'user1';
 
   @override
   void initState() {
@@ -68,6 +77,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     // Clear previous bumps to start fresh
     unawaited(_mergeService.clearBumps());
     _initUserInfo();
+    _listenSoulMessages();
 
     _mergeTimesSub = _mergeService.watchMergeTimes().listen((mergeTimes) {
       debugPrint('[SoulMergeScreen] watchMergeTimes update: $mergeTimes');
@@ -119,6 +129,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         final defaultMyName = myRole == 'user2' ? 'bạn nữ' : 'bạn nam';
         final defaultPartnerName = partnerRole == 'user2' ? 'bạn nữ' : 'bạn nam';
         setState(() {
+          _myRole = myRole;
           _myName = defaultMyName;
           _partnerName = defaultPartnerName;
         });
@@ -193,8 +204,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   void _onTapDown(Offset globalPosition) {
     setState(() {
       _interactiveScale = 0.9;
+      _isDragging = true;
+      _dragStartPos = globalPosition;
+      _heartOffset = Offset.zero;
     });
     _lastTapPosition = globalPosition;
+    _lastSpawnedPosition = globalPosition;
     _heartsOverlayKey.currentState?.spawnExplosion(globalPosition);
     _handleLocalBump();
     _sendAutoNotification();
@@ -203,9 +218,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _pulseController.duration = const Duration(milliseconds: 400);
     _pulseController.repeat(reverse: true);
 
-    // Continuous heart spawning & haptic feedback timer
+    // Continuous heart spawning & haptic feedback timer - 60ms for smooth dense stream following finger
     _continuousHeartsTimer?.cancel();
-    _continuousHeartsTimer = Timer.periodic(const Duration(milliseconds: 140), (timer) {
+    _continuousHeartsTimer = Timer.periodic(const Duration(milliseconds: 60), (timer) {
       if (!mounted || _isMerged) {
         timer.cancel();
         return;
@@ -220,6 +235,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _continuousHeartsTimer = null;
     setState(() {
       _interactiveScale = 1.0;
+      _isDragging = false;
+      _heartOffset = Offset.zero;
     });
     // Reset heart beating pulse to normal speed
     _pulseController.duration = const Duration(milliseconds: 1500);
@@ -231,6 +248,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _continuousHeartsTimer = null;
     setState(() {
       _interactiveScale = 1.0;
+      _isDragging = false;
+      _heartOffset = Offset.zero;
     });
     // Reset heart beating pulse to normal speed
     _pulseController.duration = const Duration(milliseconds: 1500);
@@ -421,12 +440,15 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   @override
   void dispose() {
+    _customMsgController.dispose();
+    _messagesSub?.cancel();
     _continuousHeartsTimer?.cancel();
     _bumpDetector.stop();
     _mergeTimesSub?.cancel();
     _pulseController.dispose();
     _explosionTimer?.cancel();
     unawaited(_mergeService.clearBumps());
+    unawaited(_mergeService.clearChat());
     super.dispose();
   }
 
@@ -501,192 +523,228 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           // Isolated tap hearts particle overlay
           _TapHeartsOverlay(key: _heartsOverlayKey),
           
+          // 4. Floating message bubbles
+          for (final msg in _floatingMessages)
+            FloatingMessageWidget(key: msg.id, message: msg),
+
           if (!_isMerged)
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Listener(
-                    onPointerDown: (event) {
-                      _onTapDown(event.position);
-                    },
-                    onPointerMove: (event) {
-                      _lastTapPosition = event.position;
-                    },
-                    onPointerUp: (event) {
-                      _onTapUp();
-                    },
-                    onPointerCancel: (event) {
-                      _onTapCancel();
-                    },
-                    child: AnimatedScale(
-                      scale: _interactiveScale,
-                      duration: const Duration(milliseconds: 100),
-                      curve: Curves.easeOut,
-                      child: ScaleTransition(
-                        scale: _pulseAnim,
-                        child: SizedBox(
-                          width: 200,
-                          height: 200,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // Outermost soft glow ring
-                              Container(
-                                width: 190,
-                                height: 190,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFFE879A0).withValues(alpha: 0.12),
-                                      blurRadius: 36,
-                                      spreadRadius: 2,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 140.0),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Listener(
+                      onPointerDown: (event) {
+                        _onTapDown(event.position);
+                      },
+                      onPointerMove: (event) {
+                        _lastTapPosition = event.position;
+                        final lastPos = _lastSpawnedPosition;
+                        if (lastPos == null || (event.position - lastPos).distance > 8.0) {
+                          _lastSpawnedPosition = event.position;
+                          _heartsOverlayKey.currentState?.spawnExplosion(event.position, count: 2);
+                        }
+                        setState(() {
+                          final delta = event.position - _dragStartPos;
+                          final distance = delta.distance;
+                          // Limit drag distance to 180.0 pixels to stay within screen boundaries
+                          if (distance > 180.0) {
+                            _heartOffset = delta * (180.0 / distance);
+                          } else {
+                            _heartOffset = delta;
+                          }
+                        });
+                      },
+                      onPointerUp: (event) {
+                        _onTapUp();
+                      },
+                      onPointerCancel: (event) {
+                        _onTapCancel();
+                      },
+                      child: TweenAnimationBuilder<Offset>(
+                        tween: Tween<Offset>(
+                          begin: _heartOffset,
+                          end: _isDragging ? _heartOffset : Offset.zero,
+                        ),
+                        duration: _isDragging ? Duration.zero : const Duration(milliseconds: 400),
+                        curve: Curves.elasticOut,
+                        builder: (context, offset, child) {
+                          return Transform.translate(
+                            offset: offset,
+                            child: child,
+                          );
+                        },
+                        child: AnimatedScale(
+                          scale: _interactiveScale,
+                          duration: const Duration(milliseconds: 100),
+                          curve: Curves.easeOut,
+                          child: ScaleTransition(
+                            scale: _pulseAnim,
+                          child: SizedBox(
+                            width: 200,
+                            height: 200,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Outermost soft glow ring
+                                Container(
+                                  width: 190,
+                                  height: 190,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFE879A0).withValues(alpha: 0.12),
+                                        blurRadius: 36,
+                                        spreadRadius: 2,
+                                      ),
+                                      BoxShadow(
+                                        color: const Color(0xFFBF70FF).withValues(alpha: 0.08),
+                                        blurRadius: 60,
+                                        spreadRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Subtle ring 1
+                                Container(
+                                  width: 162,
+                                  height: 162,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: const Color(0xFFFF80B3).withValues(alpha: 0.18),
+                                      width: 1.5,
                                     ),
-                                    BoxShadow(
-                                      color: const Color(0xFFBF70FF).withValues(alpha: 0.08),
-                                      blurRadius: 60,
-                                      spreadRadius: 8,
+                                  ),
+                                ),
+                                // Subtle ring 2
+                                Container(
+                                  width: 136,
+                                  height: 136,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: const Color(0xFFFF80B3).withValues(alpha: 0.10),
+                                      width: 1.0,
                                     ),
-                                  ],
-                                ),
-                              ),
-                              // Subtle ring 1
-                              Container(
-                                width: 162,
-                                height: 162,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: const Color(0xFFFF80B3).withValues(alpha: 0.18),
-                                    width: 1.5,
                                   ),
                                 ),
-                              ),
-                              // Subtle ring 2
-                              Container(
-                                width: 136,
-                                height: 136,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: const Color(0xFFFF80B3).withValues(alpha: 0.10),
-                                    width: 1.0,
+                                // Cute sticker heart
+                                Image.asset(
+                                  'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                                  width: 120,
+                                  height: 120,
+                                  fit: BoxFit.contain,
+                                  isAntiAlias: true,
+                                  filterQuality: FilterQuality.high,
+                                  errorBuilder: (_, __, ___) => ShaderMask(
+                                    shaderCallback: (bounds) => const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [Color(0xFFFF80B3), Color(0xFFD454A0)],
+                                    ).createShader(bounds),
+                                    child: const Icon(
+                                      Icons.favorite_rounded,
+                                      color: Colors.white,
+                                      size: 90,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              // Cute sticker heart
-                              Image.asset(
-                                'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-                                width: 120,
-                                height: 120,
-                                fit: BoxFit.contain,
-                                isAntiAlias: true,
-                                filterQuality: FilterQuality.high,
-                                errorBuilder: (_, __, ___) => ShaderMask(
-                                  shaderCallback: (bounds) => const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [Color(0xFFFF80B3), Color(0xFFD454A0)],
-                                  ).createShader(bounds),
-                                  child: const Icon(
-                                    Icons.favorite_rounded,
-                                    color: Colors.white,
-                                    size: 90,
+                                // Sparkle dots around the heart - wrapped in AnimatedBuilder to ensure smooth continuous breathing opacity
+                                AnimatedBuilder(
+                                  animation: _pulseAnim,
+                                  builder: (context, _) => Stack(
+                                    children: _buildSparkles(),
                                   ),
                                 ),
-                              ),
-                              // Sparkle dots around the heart - wrapped in AnimatedBuilder to ensure smooth continuous breathing opacity
-                              AnimatedBuilder(
-                                animation: _pulseAnim,
-                                builder: (context, _) => Stack(
-                                  children: _buildSparkles(),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 50),
-                  Text(
-                    'Soul Merge',
-                    style: SLTheme.quicksand(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 50),
+                    Text(
+                      'Soul Merge',
+                      style: SLTheme.quicksand(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Hãy mở màn hình này trên cả hai máy, sau đó cụng nhẹ hai điện thoại vào nhau để ghép nối linh hồn.',
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 15,
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          '*(Nếu thiết bị không hỗ trợ cảm biến, chạm trực tiếp vào hình trái tim trên cả 2 máy cùng lúc để ghép nối)*',
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            color: const Color(0xFFFF7FB2),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Connection Status Line
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.12),
-                            ),
-                          ),
-                          child: Text(
-                            _getConnectionStatusText(),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Hãy mở màn hình này trên cả hai máy, sau đó cụng nhẹ hai điện thoại vào nhau để ghép nối linh hồn.',
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
-                              color: _getConnectionStatusColor(),
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: 15,
+                              height: 1.5,
                             ),
                           ),
-                        ),
-                        if (!_partnerHasBumped && _houseId != null && _houseId!.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          TextButton.icon(
-                            onPressed: _sendManualNudgeNotification,
-                            icon: const Icon(Icons.favorite_rounded, size: 14),
-                            label: Text(
-                              'Nhắc $_partnerName chạm',
-                              style: SLTheme.quicksand(
-                                fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline,
-                                fontSize: 13,
+                          const SizedBox(height: 12),
+                          Text(
+                            '*(Nếu thiết bị không hỗ trợ cảm biến, chạm trực tiếp vào hình trái tim trên cả 2 máy cùng lúc để ghép nối)*',
+                            textAlign: TextAlign.center,
+                            style: SLTheme.quicksand(
+                              color: const Color(0xFFFF7FB2),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          // Connection Status Line
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.12),
                               ),
                             ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFFFF7FB2),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            child: Text(
+                              _getConnectionStatusText(),
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                color: _getConnectionStatusColor(),
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
+                          if (!_partnerHasBumped && _houseId != null && _houseId!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            TextButton.icon(
+                              onPressed: _sendManualNudgeNotification,
+                              icon: const Icon(Icons.favorite_rounded, size: 14),
+                              label: Text(
+                                'Nhắc $_partnerName chạm',
+                                style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFFFF7FB2),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             )
           else ...[
@@ -734,6 +792,188 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               ),
             ),
           ],
+
+          // Message / Preset Chat Input Bar at the bottom
+          Positioned(
+            bottom: MediaQuery.of(context).padding.bottom + 16,
+            left: 16,
+            right: 16,
+            child: _buildChatInputBar(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _listenSoulMessages() {
+    _messagesSub = _mergeService.watchSoulMessages().listen((data) {
+      if (data == null || !mounted) return;
+      final timestamp = data['timestamp'] as int? ?? 0;
+      if (timestamp <= _lastMsgTimestamp) return;
+
+      final text = (data['text'] ?? '').toString().trim();
+      final sender = (data['sender'] ?? '').toString().trim();
+      if (text.isEmpty || sender.isEmpty) return;
+
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      if ((nowMs - timestamp).abs() > 15000) {
+        _lastMsgTimestamp = timestamp;
+        return;
+      }
+
+      _lastMsgTimestamp = timestamp;
+      final isSelf = (sender == _myRole);
+
+      _spawnFloatingMessage(text, isSelf);
+    });
+  }
+
+  void _spawnFloatingMessage(String text, bool isSelf) {
+    if (!mounted) return;
+    final size = MediaQuery.of(context).size;
+    final double x = isSelf
+        ? size.width * 0.3 + _random.nextDouble() * (size.width * 0.05)
+        : size.width * 0.05 + _random.nextDouble() * (size.width * 0.05);
+    final double y = isSelf
+        ? size.height * 0.5 + _random.nextDouble() * 50.0
+        : size.height * 0.25 + _random.nextDouble() * 50.0;
+
+    final msg = FloatingMessage(
+      text: text,
+      isSelf: isSelf,
+      position: Offset(x, y),
+    );
+
+    setState(() {
+      _floatingMessages.add(msg);
+    });
+
+    Future.delayed(const Duration(milliseconds: 4000), () {
+      if (mounted) {
+        setState(() {
+          _floatingMessages.removeWhere((m) => m.id == msg.id);
+        });
+      }
+    });
+  }
+
+  Future<void> _sendSoulMessage(String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+    await _mergeService.sendSoulMessage(trimmed);
+  }
+
+  void _sendCustomMessage() {
+    final text = _customMsgController.text.trim();
+    if (text.isEmpty) return;
+    _customMsgController.clear();
+    unawaited(_sendSoulMessage(text));
+    FocusScope.of(context).unfocus();
+  }
+
+  Widget _buildChatInputBar() {
+    final presetsBefore = ['Cụng đi! 📲', 'Chờ tí nhé ⏳', 'Nhớ thương 💕'];
+    final presetsAfter = ['Yêu bạn 😘', 'Nhớ quá! 💖', 'Ú òa! 👻'];
+    final presets = _isMerged ? presetsAfter : presetsBefore;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: presets.map((text) {
+                return Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  child: InkWell(
+                    onTap: () => _sendSoulMessage(text),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Ink(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.15),
+                        ),
+                      ),
+                      child: Text(
+                        text,
+                        style: SLTheme.quicksand(
+                          color: Colors.white,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 1.0,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: TextField(
+                      controller: _customMsgController,
+                      style: SLTheme.quicksand(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Nhập tin nhắn tâm hồn...',
+                        hintStyle: SLTheme.quicksand(
+                          color: Colors.white60,
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      onSubmitted: (_) => _sendCustomMessage(),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _sendCustomMessage,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1030,7 +1270,7 @@ class _TapHeartsOverlayState extends State<_TapHeartsOverlay> {
   final List<TinyHeart> _hearts = [];
   Timer? _timer;
 
-  void spawnExplosion(Offset globalPosition) {
+  void spawnExplosion(Offset globalPosition, {int count = 8}) {
     if (!mounted) return;
     final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null || !renderBox.hasSize || !renderBox.attached) {
@@ -1053,7 +1293,7 @@ class _TapHeartsOverlayState extends State<_TapHeartsOverlay> {
       // Chọn 1 palette cho toàn bộ đợt này
       final palette = palettes[random.nextInt(palettes.length)];
       setState(() {
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < count; i++) {
           final angle = random.nextDouble() * math.pi * 2;
           final speed = 1.5 + random.nextDouble() * 3.0;
           final size = 12.0 + random.nextDouble() * 16.0;
@@ -1126,6 +1366,151 @@ class _TapHeartsOverlayState extends State<_TapHeartsOverlay> {
             ),
           ),
       ],
+    );
+  }
+}
+
+class FloatingMessage {
+  final String text;
+  final bool isSelf;
+  final Offset position;
+  final UniqueKey id = UniqueKey();
+
+  FloatingMessage({
+    required this.text,
+    required this.isSelf,
+    required this.position,
+  });
+}
+
+class FloatingMessageWidget extends StatefulWidget {
+  final FloatingMessage message;
+  const FloatingMessageWidget({super.key, required this.message});
+
+  @override
+  State<FloatingMessageWidget> createState() => _FloatingMessageWidgetState();
+}
+
+class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+  late Animation<double> _opacityAnim;
+  late Animation<double> _slideAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4000),
+    );
+
+    _scaleAnim = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 1.0)
+            .chain(CurveTween(curve: Curves.elasticOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween<double>(1.0),
+        weight: 70,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 15,
+      ),
+    ]).animate(_controller);
+
+    _opacityAnim = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 10,
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween<double>(1.0),
+        weight: 75,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 15,
+      ),
+    ]).animate(_controller);
+
+    _slideAnim = Tween<double>(begin: 0.0, end: -80.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutQuad,
+      ),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeColor = widget.message.isSelf
+        ? const Color(0xFFFF4F93)
+        : const Color(0xFF9C2A6F);
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Positioned(
+          left: widget.message.position.dx,
+          top: widget.message.position.dy + _slideAnim.value,
+          child: Opacity(
+            opacity: _opacityAnim.value.clamp(0.0, 1.0),
+            child: Transform.scale(
+              scale: _scaleAnim.value,
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.65,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(widget.message.isSelf ? 16 : 4),
+            bottomRight: Radius.circular(widget.message.isSelf ? 4 : 16),
+          ),
+          border: Border.all(
+            color: themeColor.withValues(alpha: 0.5),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: themeColor.withValues(alpha: 0.25),
+              blurRadius: 10,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Text(
+          widget.message.text,
+          style: SLTheme.quicksand(
+            color: Colors.white,
+            fontSize: 14.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
     );
   }
 }

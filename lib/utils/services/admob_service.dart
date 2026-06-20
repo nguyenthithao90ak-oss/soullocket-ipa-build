@@ -726,10 +726,8 @@ class AdMobService {
         _rewardedAd = null;
         _loadRewardedAd();
         AppLifecyclePresenceGuard.settle();
-        if (Platform.isIOS) {
-          // Delay to ensure that if onUserEarnedReward is scheduled slightly after dismissal on iOS, it has time to register.
-          await Future<void>.delayed(const Duration(milliseconds: 150));
-        }
+        // Delay to ensure that if onUserEarnedReward is scheduled slightly after dismissal, it has time to register.
+        await Future<void>.delayed(const Duration(milliseconds: 150));
         if (!completer.isCompleted) completer.complete(didEarnReward);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
@@ -817,10 +815,8 @@ class AdMobService {
         _soulGameRewardedAd = null;
         _loadSoulGameRewardedAd();
         AppLifecyclePresenceGuard.settle();
-        if (Platform.isIOS) {
-          // Delay to ensure that if onUserEarnedReward is scheduled slightly after dismissal on iOS, it has time to register.
-          await Future<void>.delayed(const Duration(milliseconds: 150));
-        }
+        // Delay to ensure that if onUserEarnedReward is scheduled slightly after dismissal, it has time to register.
+        await Future<void>.delayed(const Duration(milliseconds: 150));
         if (!completer.isCompleted) completer.complete(didEarnReward);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {

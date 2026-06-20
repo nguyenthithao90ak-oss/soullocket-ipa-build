@@ -126,7 +126,16 @@ class _NotificationScreenState extends State<NotificationScreen>
         .ref('notifications/$_houseId')
         .limitToLast(_notificationsLimit)
         .onValue
-        .listen(_handleNotificationsEvent);
+        .listen(
+      _handleNotificationsEvent,
+      onError: (Object error) {
+        debugPrint(
+          '[NotificationScreen] listener error: ${AppErrorMapper.resolve(error).message}',
+        );
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+      },
+    );
   }
 
   void _detachNotificationsListener() {
@@ -154,7 +163,9 @@ class _NotificationScreenState extends State<NotificationScreen>
         lifecycleState == null || lifecycleState == AppLifecycleState.resumed;
     final route = ModalRoute.of(context);
     final isCurrentRoute = route == null || route.isCurrent;
-    return isAppResumed && isCurrentRoute && TickerMode.valuesOf(context).enabled;
+    return isAppResumed &&
+        isCurrentRoute &&
+        TickerMode.valuesOf(context).enabled;
   }
 
   void _handleNotificationsEvent(DatabaseEvent event) {

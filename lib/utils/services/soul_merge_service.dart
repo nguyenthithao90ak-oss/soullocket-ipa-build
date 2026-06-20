@@ -74,6 +74,56 @@ class SoulMergeService {
     }
   }
 
+  /// Send a temporary message to the partner during Soul Merge
+  Future<void> sendSoulMessage(String text) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return;
+
+      final houseId = await _houseService.getCurrentHouseId();
+      if (houseId == null || houseId.isEmpty) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      final role = _normalizeRole(prefs.getString('il_role'));
+
+      await _db.ref('houses/$houseId/soul_merge/chat').set({
+        'text': text.trim(),
+        'sender': role,
+        'timestamp': ServerValue.timestamp,
+      });
+    } catch (e) {
+      debugPrint('[SoulMergeService] sendSoulMessage error: $e');
+    }
+  }
+
+  /// Watch real-time temporary messages in Soul Merge
+  Stream<Map<String, dynamic>?> watchSoulMessages() async* {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final houseId = await _houseService.getCurrentHouseId();
+    if (houseId == null || houseId.isEmpty) return;
+
+    yield* _db.ref('houses/$houseId/soul_merge/chat').onValue.map((event) {
+      final data = event.snapshot.value;
+      if (data is Map) {
+        return Map<String, dynamic>.from(data);
+      }
+      return null;
+    });
+  }
+
+  /// Clear all messages under the soul_merge/chat node
+  Future<void> clearChat() async {
+    try {
+      final houseId = await _houseService.getCurrentHouseId();
+      if (houseId == null || houseId.isEmpty) return;
+      await _db.ref('houses/$houseId/soul_merge/chat').remove();
+    } catch (e) {
+      debugPrint('[SoulMergeService] clearChat error: $e');
+    }
+  }
+
   String _normalizeRole(String? raw) {
     return raw?.trim() == 'user2' ? 'user2' : 'user1';
   }

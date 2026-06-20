@@ -645,9 +645,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   ),
                   child: ValueListenableBuilder<UiPrefsState>(
                     valueListenable: UiPrefs.notifier,
-                    builder: (context, uiState, _) {
+                    builder: (ctx, uiState, _) {
                       return DropdownButtonFormField<String>(
-                        value: uiState.vaultHomeStyle,
+                        initialValue: uiState.vaultHomeStyle,
                         isExpanded: true,
                         style: SLTextStyles.quicksand(
                           color: const Color(0xFF4A148C),
@@ -661,21 +661,22 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                         items: [
                           DropdownMenuItem(
                             value: 'soft',
-                            child: Text(context.tr('vault_style_soft')),
+                            child: Text(ctx.tr('vault_style_soft')),
                           ),
                           DropdownMenuItem(
                             value: 'secure',
-                            child: Text(context.tr('vault_style_secure')),
+                            child: Text(ctx.tr('vault_style_secure')),
                           ),
                           DropdownMenuItem(
                             value: 'cosmic',
-                            child: Text(context.tr('vault_style_cosmic')),
+                            child: Text(ctx.tr('vault_style_cosmic')),
                           ),
                         ],
                         onChanged: (val) async {
                           if (val == null) return;
                           if (val == 'cosmic') {
                             await _loadVipStatus();
+                            if (!mounted) return;
                             if (!_isVipActive) {
                               _showToast(context.tr('vault_style_pro_required'), success: false);
                               final houseId = _houseId?.trim();
@@ -702,6 +703,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                           }
                           
                           await UiPrefs.saveState(UiPrefs.notifier.value.copyWith(vaultHomeStyle: val));
+                          if (!mounted) return;
                           _showToast(context.tr('saved_local_only'));
                         },
                       );

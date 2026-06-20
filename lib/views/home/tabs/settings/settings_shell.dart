@@ -683,39 +683,39 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildSettingsFooter() {
-    return ValueListenableBuilder<UiPrefsState>(
-      valueListenable: UiPrefs.notifier,
-      builder: (context, ui, _) {
-        return Center(
-          child: Column(
-            children: [
-              SoulLocketBrandMark(
-                styleKey: ui.brandMarkKey,
-                size: 44,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'SoulLocket',
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF526071),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                context.tr('settings_footer_tagline'),
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF7B8794),
-                ),
-              ),
-            ],
+    return Center(
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.asset(
+              'assets/icon.png',
+              width: 44,
+              height: 44,
+              fit: BoxFit.cover,
+            ),
           ),
-        );
-      },
+          const SizedBox(height: 10),
+          Text(
+            'SoulLocket',
+            style: SLTheme.quicksand(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF526071),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            context.tr('settings_footer_tagline'),
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF7B8794),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

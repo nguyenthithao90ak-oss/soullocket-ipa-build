@@ -39,6 +39,11 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
   void initState() {
     super.initState();
     _seedParticles(reset: true);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _syncAnimationState();
   }
 
@@ -56,7 +61,8 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
   }
 
   void _syncAnimationState() {
-    if (_shouldAnimate) {
+    final shouldAnimateNow = _shouldAnimate && TickerMode.valuesOf(context).enabled;
+    if (shouldAnimateNow) {
       final controller = _controller ??= AnimationController(
         vsync: this,
         duration: _animationLoopDuration,
@@ -66,7 +72,7 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
         if (!_startupDelayApplied) {
           _startupDelayApplied = true;
           Future.delayed(_initialAnimationDelay, () {
-            if (mounted && _shouldAnimate) {
+            if (mounted && _shouldAnimate && TickerMode.valuesOf(context).enabled) {
               controller.repeat();
             }
           });
@@ -286,24 +292,8 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
       return const SizedBox.shrink();
     }
 
-    final shouldAnimateNow = _shouldAnimate && TickerMode.valuesOf(context).enabled;
     final useLiteRendering =
         kIsWeb || widget.density == 'low' || widget.density == 'balanced';
-
-    if (!shouldAnimateNow) {
-      return RepaintBoundary(
-        child: CustomPaint(
-          painter: _LegacyFallingPainter(
-            particles: _particles,
-            type: widget.type,
-            isDark: widget.isDark,
-            globalOpacity: opacity,
-            useLiteRendering: useLiteRendering,
-          ),
-          size: Size.infinite,
-        ),
-      );
-    }
 
     final controller = _controller;
     if (controller == null) {
@@ -314,7 +304,10 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
       child: AnimatedBuilder(
         animation: controller,
         builder: (context, child) {
-          _tickParticles();
+          final shouldAnimateNow = _shouldAnimate && TickerMode.valuesOf(context).enabled;
+          if (shouldAnimateNow) {
+            _tickParticles();
+          }
           return CustomPaint(
             painter: _LegacyFallingPainter(
               particles: _particles,

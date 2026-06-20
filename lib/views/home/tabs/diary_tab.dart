@@ -53,7 +53,8 @@ class DiaryTab extends StatefulWidget {
 
 typedef _PreparedMemoryFeed = PreparedDiaryMemoryFeed;
 
-class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin {
+class _DiaryTabState extends State<DiaryTab>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -159,11 +160,13 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
   }
 
   void _preloadMemoryShareRewardedAd() {
-    unawaited(() async {
-      final adMob = AdMobService();
-      await adMob.initialize();
-      adMob.preloadRewardedAd();
-    }());
+    unawaited(
+      Future<void>.delayed(const Duration(seconds: 20), () async {
+        final adMob = AdMobService();
+        await adMob.initialize();
+        adMob.preloadRewardedAd();
+      }),
+    );
   }
 
   void _setCurrentTab(String tab) {
@@ -248,7 +251,9 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
     final memoryLimits = await limitsFuture;
     final currentUser = await currentUserFuture;
 
-    final maxItems = isProUser ? memoryLimits.shareProMaxItems : memoryLimits.shareFreeMaxItems;
+    final maxItems = isProUser
+        ? memoryLimits.shareProMaxItems
+        : memoryLimits.shareFreeMaxItems;
     if (photos.length > maxItems) {
       _showDiarySnackBar(
         'Mỗi liên kết chỉ hỗ trợ tối đa $maxItems ảnh đối với tài khoản ${isProUser ? 'PRO' : 'thường'}. Hãy bỏ chọn bớt ảnh nhé.',
@@ -481,7 +486,8 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
       barrierDismissible: true,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           backgroundColor: Colors.white,
           title: Text(
             'Mật khẩu bảo vệ (Tùy chọn)',
@@ -524,7 +530,9 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                   counterText: '',
                   suffixIcon: IconButton(
                     icon: Icon(
-                      obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                      obscureText
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
                       color: const Color(0xFF66758A),
                     ),
                     onPressed: () {
@@ -543,13 +551,15 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.8),
+                    borderSide:
+                        const BorderSide(color: Color(0xFFD81B60), width: 1.8),
                   ),
                 ),
               ),
             ],
           ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -567,11 +577,15 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
               },
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFD81B60),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               ),
               child: Text(
-                controller.text.trim().isEmpty ? 'Bỏ qua (Không khóa)' : 'Xác nhận đặt',
+                controller.text.trim().isEmpty
+                    ? 'Bỏ qua (Không khóa)'
+                    : 'Xác nhận đặt',
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
@@ -758,7 +772,8 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
         });
       }
       final currentHouseId = _feedController.houseId;
-      if (_feedController.postsVN.value.isEmpty || _lastSyncedMemoryHouseId != currentHouseId) {
+      if (_feedController.postsVN.value.isEmpty ||
+          _lastSyncedMemoryHouseId != currentHouseId) {
         // ⚡ Increased from 300ms → 450ms to clear swipe animation before fetch
         Future.delayed(const Duration(milliseconds: 450), () {
           if (!mounted || !_isTabActive) return;
@@ -1040,7 +1055,8 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                       return ValueListenableBuilder<double>(
                         valueListenable: bgOpacityNotifier,
                         builder: (context, dragOpacity, _) {
-                          final double opacity = 0.92 * dragOpacity * animation.value;
+                          final double opacity =
+                              0.92 * dragOpacity * animation.value;
                           return Container(
                             color: Colors.black.withValues(alpha: opacity),
                           );
@@ -1066,7 +1082,8 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                           if (allPhotos.isNotEmpty)
                             PageView.builder(
                               controller: pageController,
-                              physics: const SLPagePhysics(parent: BouncingScrollPhysics()),
+                              physics: const SLPagePhysics(
+                                  parent: BouncingScrollPhysics()),
                               itemCount: allPhotos.length,
                               onPageChanged: (index) {
                                 setState(() {
@@ -1081,8 +1098,8 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                   dragOffsetNotifier: dragOffsetNotifier,
                                   dragScaleNotifier: dragScaleNotifier,
                                   isZoomedInNotifier: isZoomedInNotifier,
-                                  onLongPress: () =>
-                                      _showMemoryViewerActions(dialogContext, allPhotos[index]),
+                                  onLongPress: () => _showMemoryViewerActions(
+                                      dialogContext, allPhotos[index]),
                                   imageProviderBuilder: _memoryImageProvider,
                                 );
                               },
@@ -1094,8 +1111,8 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                 dragOffsetNotifier: dragOffsetNotifier,
                                 dragScaleNotifier: dragScaleNotifier,
                                 isZoomedInNotifier: isZoomedInNotifier,
-                                onLongPress: () =>
-                                    _showMemoryViewerActions(dialogContext, initialItem),
+                                onLongPress: () => _showMemoryViewerActions(
+                                    dialogContext, initialItem),
                                 imageProviderBuilder: _memoryImageProvider,
                               ),
                             ),
@@ -1105,8 +1122,11 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                               return ValueListenableBuilder<double>(
                                 valueListenable: bgOpacityNotifier,
                                 builder: (context, dragOpacity, _) {
-                                  final double baseUiOpacity = ((dragOpacity - 0.82) / 0.18).clamp(0.0, 1.0);
-                                  final double uiOpacity = baseUiOpacity * animation.value;
+                                  final double baseUiOpacity =
+                                      ((dragOpacity - 0.82) / 0.18)
+                                          .clamp(0.0, 1.0);
+                                  final double uiOpacity =
+                                      baseUiOpacity * animation.value;
                                   return Opacity(
                                     opacity: uiOpacity,
                                     child: IgnorePointer(
@@ -1121,11 +1141,17 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                                     begin: Alignment.topCenter,
                                                     end: Alignment.bottomCenter,
                                                     colors: [
-                                                      Colors.black.withValues(alpha: 0.62),
+                                                      Colors.black.withValues(
+                                                          alpha: 0.62),
                                                       Colors.transparent,
-                                                      Colors.black.withValues(alpha: 0.58),
+                                                      Colors.black.withValues(
+                                                          alpha: 0.58),
                                                     ],
-                                                    stops: const [0.0, 0.22, 1.0],
+                                                    stops: const [
+                                                      0.0,
+                                                      0.22,
+                                                      1.0
+                                                    ],
                                                   ),
                                                 ),
                                               ),
@@ -1134,18 +1160,26 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                           Positioned(
                                             left: 18,
                                             right: 86,
-                                            bottom: MediaQuery.of(context).padding.bottom + 18,
+                                            bottom: MediaQuery.of(context)
+                                                    .padding
+                                                    .bottom +
+                                                18,
                                             child: IgnorePointer(
                                               child: Container(
-                                                padding: const EdgeInsets.symmetric(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
                                                   horizontal: 14,
                                                   vertical: 12,
                                                 ),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.black.withValues(alpha: 0.42),
-                                                  borderRadius: BorderRadius.circular(22),
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.42),
+                                                  borderRadius:
+                                                      BorderRadius.circular(22),
                                                   border: Border.all(
-                                                    color: Colors.white.withValues(alpha: 0.10),
+                                                    color: Colors.white
+                                                        .withValues(
+                                                            alpha: 0.10),
                                                   ),
                                                 ),
                                                 child: Row(
@@ -1154,13 +1188,16 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                                       width: 32,
                                                       height: 32,
                                                       decoration: BoxDecoration(
-                                                        gradient: const LinearGradient(
+                                                        gradient:
+                                                            const LinearGradient(
                                                           colors: [
                                                             Color(0xFFFF6F91),
                                                             Color(0xFF7C8BFF)
                                                           ],
                                                         ),
-                                                        borderRadius: BorderRadius.circular(12),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12),
                                                       ),
                                                       child: const Icon(
                                                         Icons.favorite_rounded,
@@ -1172,29 +1209,47 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                                     Expanded(
                                                       child: Column(
                                                         crossAxisAlignment:
-                                                            CrossAxisAlignment.start,
-                                                        mainAxisSize: MainAxisSize.min,
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
                                                         children: [
                                                           Text(
                                                             '${currentIndex + 1}/${allPhotos.isEmpty ? 1 : allPhotos.length} kỷ niệm',
                                                             maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                            style: SLTheme.quicksand(
-                                                              color: Colors.white,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style: SLTheme
+                                                                .quicksand(
+                                                              color:
+                                                                  Colors.white,
                                                               fontSize: 13,
-                                                              fontWeight: FontWeight.w900,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w900,
                                                             ),
                                                           ),
-                                                          const SizedBox(height: 2),
+                                                          const SizedBox(
+                                                              height: 2),
                                                           Text(
-                                                            _formatMemoryTimestamp(currentItem),
+                                                            _formatMemoryTimestamp(
+                                                                currentItem),
                                                             maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                            style: SLTheme.quicksand(
-                                                              color: Colors.white
-                                                                  .withValues(alpha: 0.68),
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style: SLTheme
+                                                                .quicksand(
+                                                              color: Colors
+                                                                  .white
+                                                                  .withValues(
+                                                                      alpha:
+                                                                          0.68),
                                                               fontSize: 11,
-                                                              fontWeight: FontWeight.w700,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
                                                             ),
                                                           ),
                                                         ],
@@ -1206,19 +1261,26 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                             ),
                                           ),
                                           Positioned(
-                                            top: MediaQuery.of(context).padding.top + 14,
+                                            top: MediaQuery.of(context)
+                                                    .padding
+                                                    .top +
+                                                14,
                                             left: 18,
                                             child: Container(
                                               decoration: BoxDecoration(
-                                                color: Colors.black.withValues(alpha: 0.42),
+                                                color: Colors.black
+                                                    .withValues(alpha: 0.42),
                                                 shape: BoxShape.circle,
                                                 border: Border.all(
-                                                  color: Colors.white.withValues(alpha: 0.12),
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.12),
                                                 ),
                                               ),
                                               child: IconButton(
-                                                tooltip: context.tr('home_ng_f63d1e'),
-                                                onPressed: () => Navigator.pop(dialogContext),
+                                                tooltip: context
+                                                    .tr('home_ng_f63d1e'),
+                                                onPressed: () => Navigator.pop(
+                                                    dialogContext),
                                                 icon: const Icon(
                                                   Icons.close_rounded,
                                                   color: Colors.white,
@@ -1228,35 +1290,46 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                             ),
                                           ),
                                           Positioned(
-                                            top: MediaQuery.of(context).padding.top + 14,
+                                            top: MediaQuery.of(context)
+                                                    .padding
+                                                    .top +
+                                                14,
                                             right: 18,
                                             child: Container(
                                               decoration: BoxDecoration(
-                                                color: Colors.black.withValues(alpha: 0.42),
+                                                color: Colors.black
+                                                    .withValues(alpha: 0.42),
                                                 shape: BoxShape.circle,
                                                 border: Border.all(
-                                                  color: Colors.white.withValues(alpha: 0.12),
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.12),
                                                 ),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: Colors.black.withValues(alpha: 0.22),
+                                                    color: Colors.black
+                                                        .withValues(
+                                                            alpha: 0.22),
                                                     blurRadius: 18,
                                                     offset: const Offset(0, 8),
                                                   ),
                                                 ],
                                               ),
                                               child: PopupMenuButton<String>(
-                                                tooltip: context.tr('home_tychnnh_5e18e0'),
-                                                padding: const EdgeInsets.all(11),
+                                                tooltip: context
+                                                    .tr('home_tychnnh_5e18e0'),
+                                                padding:
+                                                    const EdgeInsets.all(11),
                                                 icon: const Icon(
                                                   Icons.more_vert_rounded,
                                                   color: Colors.white,
                                                   size: 23,
                                                 ),
                                                 color: const Color(0xFF171A21),
-                                                surfaceTintColor: const Color(0xFF171A21),
+                                                surfaceTintColor:
+                                                    const Color(0xFF171A21),
                                                 shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(20),
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
                                                 ),
                                                 itemBuilder: (menuContext) => [
                                                   PopupMenuItem<String>(
@@ -1264,16 +1337,21 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                                     child: Row(
                                                       children: [
                                                         const Icon(
-                                                          Icons.download_rounded,
+                                                          Icons
+                                                              .download_rounded,
                                                           color: Colors.white,
                                                           size: 19,
                                                         ),
-                                                        const SizedBox(width: 12),
+                                                        const SizedBox(
+                                                            width: 12),
                                                         Text(
-                                                          context.tr('home_lunh_9088ba'),
-                                                          style: SLTheme.quicksand(
+                                                          context.tr(
+                                                              'home_lunh_9088ba'),
+                                                          style:
+                                                              SLTheme.quicksand(
                                                             color: Colors.white,
-                                                            fontWeight: FontWeight.w800,
+                                                            fontWeight:
+                                                                FontWeight.w800,
                                                           ),
                                                         ),
                                                       ],
@@ -1288,12 +1366,16 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                                           color: Colors.white,
                                                           size: 19,
                                                         ),
-                                                        const SizedBox(width: 12),
+                                                        const SizedBox(
+                                                            width: 12),
                                                         Text(
-                                                          context.tr('home_chiasnh_003604'),
-                                                          style: SLTheme.quicksand(
+                                                          context.tr(
+                                                              'home_chiasnh_003604'),
+                                                          style:
+                                                              SLTheme.quicksand(
                                                             color: Colors.white,
-                                                            fontWeight: FontWeight.w800,
+                                                            fontWeight:
+                                                                FontWeight.w800,
                                                           ),
                                                         ),
                                                       ],
@@ -1304,16 +1386,21 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                                     child: Row(
                                                       children: [
                                                         const Icon(
-                                                          Icons.info_outline_rounded,
+                                                          Icons
+                                                              .info_outline_rounded,
                                                           color: Colors.white,
                                                           size: 19,
                                                         ),
-                                                        const SizedBox(width: 12),
+                                                        const SizedBox(
+                                                            width: 12),
                                                         Text(
-                                                          context.tr('home_chititnh_958bbd'),
-                                                          style: SLTheme.quicksand(
+                                                          context.tr(
+                                                              'home_chititnh_958bbd'),
+                                                          style:
+                                                              SLTheme.quicksand(
                                                             color: Colors.white,
-                                                            fontWeight: FontWeight.w800,
+                                                            fontWeight:
+                                                                FontWeight.w800,
                                                           ),
                                                         ),
                                                       ],
@@ -1324,16 +1411,23 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                                     child: Row(
                                                       children: [
                                                         const Icon(
-                                                          Icons.delete_outline_rounded,
-                                                          color: Color(0xFFFF6B6B),
+                                                          Icons
+                                                              .delete_outline_rounded,
+                                                          color:
+                                                              Color(0xFFFF6B6B),
                                                           size: 19,
                                                         ),
-                                                        const SizedBox(width: 12),
+                                                        const SizedBox(
+                                                            width: 12),
                                                         Text(
-                                                          context.tr('home_xanh_0b98d1'),
-                                                          style: SLTheme.quicksand(
-                                                            color: const Color(0xFFFF6B6B),
-                                                            fontWeight: FontWeight.w800,
+                                                          context.tr(
+                                                              'home_xanh_0b98d1'),
+                                                          style:
+                                                              SLTheme.quicksand(
+                                                            color: const Color(
+                                                                0xFFFF6B6B),
+                                                            fontWeight:
+                                                                FontWeight.w800,
                                                           ),
                                                         ),
                                                       ],
@@ -1347,16 +1441,21 @@ class _DiaryTabState extends State<DiaryTab> with AutomaticKeepAliveClientMixin 
                                                           currentItem['url']);
                                                       break;
                                                     case 'share':
-                                                      Navigator.pop(dialogContext);
-                                                      await _shareSingleMemory(currentItem);
+                                                      Navigator.pop(
+                                                          dialogContext);
+                                                      await _shareSingleMemory(
+                                                          currentItem);
                                                       break;
                                                     case 'info':
                                                       await _showMemoryInfoSheet(
-                                                          dialogContext, currentItem);
+                                                          dialogContext,
+                                                          currentItem);
                                                       break;
                                                     case 'delete':
-                                                      Navigator.pop(dialogContext);
-                                                      await _deleteMemory(currentItem);
+                                                      Navigator.pop(
+                                                          dialogContext);
+                                                      await _deleteMemory(
+                                                          currentItem);
                                                       break;
                                                   }
                                                 },
@@ -1553,10 +1652,13 @@ class _MemoryZoomDraggableWrapper extends StatefulWidget {
   });
 
   @override
-  State<_MemoryZoomDraggableWrapper> createState() => _MemoryZoomDraggableWrapperState();
+  State<_MemoryZoomDraggableWrapper> createState() =>
+      _MemoryZoomDraggableWrapperState();
 }
 
-class _MemoryZoomDraggableWrapperState extends State<_MemoryZoomDraggableWrapper> with SingleTickerProviderStateMixin {
+class _MemoryZoomDraggableWrapperState
+    extends State<_MemoryZoomDraggableWrapper>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   double _dragY = 0.0;
   double _dragStartAnimY = 0.0;
@@ -1564,7 +1666,8 @@ class _MemoryZoomDraggableWrapperState extends State<_MemoryZoomDraggableWrapper
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 280));
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 280));
     _controller.addListener(() {
       setState(() {
         final double curveValue = CurvedAnimation(
@@ -1627,7 +1730,8 @@ class _MemoryViewerPage extends StatefulWidget {
   final ValueNotifier<double> dragScaleNotifier;
   final ValueNotifier<bool> isZoomedInNotifier;
   final VoidCallback onLongPress;
-  final ImageProvider<Object> Function(String, {int? maxWidth}) imageProviderBuilder;
+  final ImageProvider<Object> Function(String, {int? maxWidth})
+      imageProviderBuilder;
 
   const _MemoryViewerPage({
     required this.item,
@@ -1687,7 +1791,8 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
         valueListenable: _panEnabledVN,
         builder: (context, panEnabled, _) {
           return AnimatedBuilder(
-            animation: Listenable.merge([widget.dragOffsetNotifier, widget.dragScaleNotifier]),
+            animation: Listenable.merge(
+                [widget.dragOffsetNotifier, widget.dragScaleNotifier]),
             builder: (context, child) {
               return Transform.translate(
                 offset: widget.dragOffsetNotifier.value,

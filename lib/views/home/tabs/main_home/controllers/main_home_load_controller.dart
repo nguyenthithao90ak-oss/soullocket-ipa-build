@@ -43,6 +43,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _noteSubscription = null;
     _homeCalendarSubscription?.cancel();
     _homeCalendarSubscription = null;
+    _healthCycleSyncSubscription?.cancel();
+    _healthCycleSyncSubscription = null;
     _chatSignalSubscription?.cancel();
     _chatSignalSubscription = null;
     _reactionFlightSubscription?.cancel();
@@ -105,6 +107,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
           : msgNewDeviceBody;
 
       _showLatestSnackBarImpl('⚠️ $title: $body');
+    }, onError: (Object error) {
+      debugPrint('[MainHome] new device notification listener error: $error');
     });
   }
 
@@ -319,7 +323,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
     final isNewHouseContext = normalizedNewHouseId.isEmpty ||
         normalizedPreviousHouseId != normalizedNewHouseId;
 
-    if (!isNewHouseContext && _presenceSubscription != null && _settingsSubscription != null) {
+    if (!isNewHouseContext &&
+        _presenceSubscription != null &&
+        _settingsSubscription != null) {
       if (mounted && _isLoading) {
         setState(() => _isLoading = false);
       }
@@ -497,15 +503,22 @@ extension _MainHomeLoadController on _MainHomeTabState {
 
         _listenHighlights(houseId);
         _listenHomeCalendarEvents(houseId);
-        _listenNewDeviceNotifications(houseId);
-        _listenInteractionSignals(houseId);
-        _listenReactionFlights(houseId);
-        _bindHomeMapPreview(houseId);
-        unawaited(_ensureAppWideLocationTracking(houseId));
-        if (_showWeather) {
-          _startWeatherRefreshLoop(houseId);
-        }
-        _startInteractionRotationLoop();
+        _listenHealthCycleForWidgetSync(houseId);
+        Future<void>.delayed(const Duration(seconds: 3), () {
+          if (!mounted || isStale()) return;
+          _listenNewDeviceNotifications(houseId);
+          _listenInteractionSignals(houseId);
+          _listenReactionFlights(houseId);
+          _startInteractionRotationLoop();
+        });
+        Future<void>.delayed(const Duration(seconds: 6), () {
+          if (!mounted || isStale()) return;
+          _bindHomeMapPreview(houseId);
+          unawaited(_ensureAppWideLocationTracking(houseId));
+          if (_showWeather) {
+            _startWeatherRefreshLoop(houseId);
+          }
+        });
 
         _pinnedApps = await _utilityService.getPinnedApps();
         if (isStale()) return;

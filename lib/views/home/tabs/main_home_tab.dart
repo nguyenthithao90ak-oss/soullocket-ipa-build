@@ -223,7 +223,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   List<SharedNote> _noteHighlights = [];
   List<_HomeHighlightItem> _highlightItems = [];
   StreamSubscription<DatabaseEvent>? _homeCalendarSubscription;
+  StreamSubscription<DatabaseEvent>? _healthCycleSyncSubscription;
   List<Map<String, dynamic>> _homeCalendarEvents = [];
+
   String? _selectedHomeToolId;
   late final ValueNotifier<List<_HomeReactionFlight>> _reactionFlightsNotifier;
   final Set<String> _seenReactionFlightIds = <String>{};
@@ -607,6 +609,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   void _handleTabActivityChanged(bool isActive) {
     _isTabActive = isActive;
+    if (mounted) setState(() {});
     if (isActive) {
       _deferHeavyHomeMotion = true;
       _warmHomeMedia(delayMotion: true);
@@ -1423,6 +1426,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         throw 'Không lấy được phiên tải ảnh mới.';
       }
 
+      final oldAvatarUrl = (_houseSettings?[field] ?? '').toString().trim();
+
       await _storageService.finalizePublicImageUpload(
         houseId: houseId,
         sessionId: sessionId,
@@ -1431,6 +1436,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         blurHash: upload?.blurHash,
       );
       await PendingUploadService.instance.clear(pendingKey);
+
+      if (oldAvatarUrl.isNotEmpty && oldAvatarUrl.startsWith('http')) {
+        try {
+          _storageService.deleteImageByUrl(oldAvatarUrl);
+        } catch (_) {}
+      }
 
       if (mounted) {
         setState(() {

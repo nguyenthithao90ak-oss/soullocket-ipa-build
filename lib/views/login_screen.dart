@@ -91,6 +91,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _checkFirstTimeSyncGuide() async {
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
+    if (!mounted || _isLoading) return;
     final prefs = await SharedPreferences.getInstance();
     final hasSeen = prefs.getBool('il_has_seen_sync_guide') ?? false;
     if (!hasSeen) {
@@ -131,6 +133,15 @@ class _LoginScreenState extends State<LoginScreen> {
       _emailController.text = savedEmail;
       _rememberMe = true;
     });
+  }
+
+  void _rememberProxyStateAtLogin() {
+    unawaited(
+      SecurityService().isProxyOrVpnActive().then(
+            SecurityService().setProxyAtLogin,
+            onError: (_) {},
+          ),
+    );
   }
 
   Future<String?> _ensureRelationshipModeSelected(String accountKey) async {
@@ -180,8 +191,8 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-              'Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
+          content:
+              Text('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
           duration: Duration(seconds: 2),
         ),
       );
@@ -388,8 +399,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final strongRegex = RegExp(r'^(?=.*[0-9])(?=.{6,})');
       if (!strongRegex.hasMatch(password)) {
         _showErrorDialog(
-          L10nService().translate(
-              'Mật khẩu yếu: Cần ít nhất 6 ký tự và 1 số!'),
+          L10nService().translate('Mật khẩu yếu: Cần ít nhất 6 ký tự và 1 số!'),
         );
         return;
       }
@@ -463,8 +473,7 @@ class _LoginScreenState extends State<LoginScreen> {
           L10nService().translate('Đang đăng nhập... 🔐'),
         );
 
-        final isProxy = await SecurityService().isProxyOrVpnActive();
-        SecurityService().setProxyAtLogin(isProxy);
+        _rememberProxyStateAtLogin();
 
         await _authService.signInWithEmailPassword(email, password);
 
@@ -504,8 +513,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         return;
       } else {
-        final isProxy = await SecurityService().isProxyOrVpnActive();
-        SecurityService().setProxyAtLogin(isProxy);
+        _rememberProxyStateAtLogin();
 
         await _persistPendingHouseSetupDraft(role: sessionRole);
         shouldClearPendingHouseSetupDraft = true;
@@ -719,7 +727,8 @@ class _LoginScreenState extends State<LoginScreen> {
           await _authService.signOut();
           if (mounted) {
             _showErrorDialog(
-              L10nService().translate('Bạn cần chọn vai trò tài khoản trước khi tiếp tục.'),
+              L10nService().translate(
+                  'Bạn cần chọn vai trò tài khoản trước khi tiếp tục.'),
             );
           }
           return;
@@ -1095,7 +1104,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final l10n = L10nService();
     showDialog(
       context: context,
-      barrierDismissible: !enforceDelay, // Prevent dismissing by tapping outside if enforced
+      barrierDismissible:
+          !enforceDelay, // Prevent dismissing by tapping outside if enforced
       builder: (context) {
         int countdown = enforceDelay ? 1 : 0;
         Timer? timer;
@@ -1117,7 +1127,8 @@ class _LoginScreenState extends State<LoginScreen> {
               canPop: !enforceDelay || countdown == 0,
               child: Dialog(
                 backgroundColor: Colors.transparent,
-                insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                insetPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 340),
                   decoration: BoxDecoration(

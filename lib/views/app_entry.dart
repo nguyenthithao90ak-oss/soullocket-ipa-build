@@ -137,7 +137,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       unawaited(_bootstrapAppEntry());
     });
 
-    _listenToMaintenance();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _listenToMaintenance();
+    });
     _scheduleAuthStreamTimeout();
     // Load cached maintenance state để block offline
     unawaited(_loadCachedMaintenanceState());

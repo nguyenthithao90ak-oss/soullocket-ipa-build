@@ -198,7 +198,7 @@ class PlayIntegrityService {
       MethodChannel('soul_locket/play_integrity');
   static const String _prepareMethod = 'prepareIntegrityToken';
   static const String _requestMethod = 'requestIntegrityToken';
-  static const Duration _requestTimeout = Duration(seconds: 20);
+  static const Duration _requestTimeout = Duration(seconds: 5);
   static const Duration _serverTimeout = Duration(seconds: 20);
 
   final firebase_auth.FirebaseAuth? _firebaseAuth;
@@ -207,6 +207,7 @@ class PlayIntegrityService {
   final MethodChannel _methodChannel;
 
   bool _prepared = false;
+  static bool _markedUnsupported = false;
 
   firebase_auth.FirebaseAuth get _auth =>
       _firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
@@ -216,6 +217,7 @@ class PlayIntegrityService {
 
   Future<bool> warmUp({bool force = false}) async {
     if (!_isAndroidSupported) return false;
+    if (_markedUnsupported && !force) return false;
     if (_prepared && !force) return true;
     try {
       await _methodChannel.invokeMethod<void>(
@@ -223,18 +225,29 @@ class PlayIntegrityService {
         <String, Object?>{
           'cloudProjectNumber': AppConfig.playIntegrityCloudProjectNumber,
         },
-      );
+      ).timeout(const Duration(seconds: 3));
       _prepared = true;
       return true;
     } on MissingPluginException {
       _prepared = false;
+      _markedUnsupported = true;
+      return false;
+    } on TimeoutException {
+      _prepared = false;
+      _markedUnsupported = true;
+      debugPrint('PlayIntegrity warmUp timed out');
       return false;
     } on PlatformException catch (error) {
       _prepared = false;
+      _markedUnsupported = true;
       debugPrint('PlayIntegrity warmUp failed: ${AppErrorMapper.resolve(
         error,
         fallbackMessage: 'Không thể khởi tạo Play Integrity.',
       ).message}');
+      return false;
+    } catch (_) {
+      _prepared = false;
+      _markedUnsupported = true;
       return false;
     }
   }
@@ -262,7 +275,7 @@ class PlayIntegrityService {
       if (normalizedPayload.isNotEmpty) 'payload': normalizedPayload,
     };
     final requestHash = buildRequestHash(requestBody);
-    if (normalizedFlow.isEmpty || !_isAndroidSupported) {
+    if (normalizedFlow.isEmpty || !_isAndroidSupported || _markedUnsupported) {
       return null;
     }
     if (autoWarmUp) {
@@ -318,14 +331,14 @@ class PlayIntegrityService {
       );
     }
 
-    if (!_isAndroidSupported) {
+    if (!_isAndroidSupported || _markedUnsupported) {
       return PlayIntegrityAssessment.unavailable(
         flow: normalizedFlow,
         requestHash: requestHash,
         requestId: requestId,
-        reason: 'unsupported_platform',
+        reason: _markedUnsupported ? 'marked_unsupported' : 'unsupported_platform',
         message: kDebugMode
-            ? 'Play Integrity hiện chỉ áp dụng cho Android.'
+            ? 'Play Integrity hiện không khả dụng.'
             : 'Tính năng kiểm tra an toàn hiện chưa áp dụng trên thiết bị này.',
         riskLevel: PlayIntegrityRiskLevel.allow,
       );
@@ -483,6 +496,7 @@ class PlayIntegrityService {
   Future<String?> _requestIntegrityToken({
     required String requestHash,
   }) async {
+    if (_markedUnsupported) return null;
     try {
       final token = await _methodChannel.invokeMethod<String>(
         _requestMethod,
@@ -495,13 +509,20 @@ class PlayIntegrityService {
       return normalized.isEmpty ? null : normalized;
     } on MissingPluginException {
       _prepared = false;
+      _markedUnsupported = true;
       return null;
     } on PlatformException catch (error) {
+      _markedUnsupported = true;
       debugPrint(
         'PlayIntegrity request token failed: ${error.code} ${error.message}',
       );
       return null;
     } on TimeoutException {
+      _markedUnsupported = true;
+      debugPrint('PlayIntegrity request token timed out');
+      return null;
+    } catch (_) {
+      _markedUnsupported = true;
       return null;
     }
   }

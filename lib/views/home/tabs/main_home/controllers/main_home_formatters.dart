@@ -39,6 +39,45 @@ extension _MainHomeFormatters on _MainHomeTabState {
     }
   }
 
+  Map<String, String> _getLoveYmdDetail(String? dateString) {
+    if (dateString == null || dateString.isEmpty) {
+      return {'y': '00', 'M': '00', 'd': '00'};
+    }
+    try {
+      final startDate = DateTime.parse(dateString);
+      final now = DateTime.now();
+
+      var years = now.year - startDate.year;
+      var months = now.month - startDate.month;
+      var days = now.day - startDate.day;
+
+      if (days < 0) {
+        final prevMonthDate = DateTime(now.year, now.month, 0);
+        days += prevMonthDate.day;
+        months--;
+      }
+
+      if (months < 0) {
+        months += 12;
+        years--;
+      }
+
+      if (years < 0) {
+        years = 0;
+        months = 0;
+        days = 0;
+      }
+
+      return {
+        'y': years.toString().padLeft(2, '0'),
+        'M': months.toString().padLeft(2, '0'),
+        'd': days.toString().padLeft(2, '0'),
+      };
+    } catch (e) {
+      return {'y': '00', 'M': '00', 'd': '00'};
+    }
+  }
+
   String _getSmartGreeting() {
     final hour = DateTime.now().hour;
     if (hour >= 5 && hour < 11) {

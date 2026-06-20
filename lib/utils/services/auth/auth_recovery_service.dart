@@ -15,18 +15,14 @@ class AuthRecoveryService {
     DatabaseReference? databaseRef,
     FirebaseFunctions? firebaseFunctions,
   })  : _firebaseAuth = firebaseAuth,
-        _databaseRef = databaseRef,
-        _firebaseFunctions = firebaseFunctions;
+        _databaseRef = databaseRef;
 
   final firebase_auth.FirebaseAuth? _firebaseAuth;
   final DatabaseReference? _databaseRef;
-  final FirebaseFunctions? _firebaseFunctions;
 
   firebase_auth.FirebaseAuth get _auth =>
       _firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
   DatabaseReference get _db => _databaseRef ?? FirebaseDatabase.instance.ref();
-  FirebaseFunctions get _functions =>
-      _firebaseFunctions ?? FirebaseFunctions.instance;
 
   Map<String, dynamic>? _asStringDynamicMap(Object? raw) {
     if (raw is! Map) {

@@ -16,7 +16,7 @@ import 'social_auth_action_helper.dart';
 import '../../../core/sl_theme.dart';
 
 class LoginController extends ChangeNotifier {
-  static const Duration _authActionTimeout = Duration(seconds: 20);
+  static const Duration _authActionTimeout = Duration(seconds: 12);
   static const Duration _prefsTimeout = Duration(seconds: 5);
 
   bool _isLoginTab = true;
@@ -395,10 +395,11 @@ class LoginController extends ChangeNotifier {
     } catch (e) {
       _failedAuthAttempts++;
       if (context.mounted) {
-        SLNotice.showError(
-          context,
-          L10nService().translate('auth_login_unavailable'),
-        );
+        final message = AppErrorMapper.resolve(
+          e,
+          fallbackMessage: L10nService().translate('auth_login_unavailable'),
+        ).message;
+        SLNotice.showError(context, message);
       }
     } finally {
       _isLoading = false;

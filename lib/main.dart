@@ -8,7 +8,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -185,7 +184,8 @@ Future<void> _clearStaleIosAuthAfterFreshInstall() async {
     } catch (e) {
       debugPrint('Fresh install cleanup log skipped: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: L10nService().translate('core_err_log_fresh_install_failed'),
+        fallbackMessage:
+            L10nService().translate('core_err_log_fresh_install_failed'),
       ).message}');
     }
   }
@@ -238,7 +238,8 @@ void main() {
 
     FlutterError.onError = (details) {
       final errStr = details.exception.toString().toLowerCase();
-      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
+      if (errStr.contains('unable to load asset') ||
+          errStr.contains('không thể tải')) {
         debugPrint('Ignored fatal asset error in main: $errStr');
         return;
       }
@@ -264,7 +265,8 @@ void main() {
 
     PlatformDispatcher.instance.onError = (error, stackTrace) {
       final errStr = error.toString().toLowerCase();
-      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
+      if (errStr.contains('unable to load asset') ||
+          errStr.contains('không thể tải')) {
         debugPrint('Ignored async asset error in main: $errStr');
         return true;
       }
@@ -290,9 +292,7 @@ void main() {
     try {
       await _verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
-      unawaited(_initializeGoogleMobileAds());
       await _clearStaleIosAuthAfterFreshInstall();
-      await _requestIosTrackingAuthorization();
       unawaited(_initializeTikTokSdk());
 
       if (!kIsWeb) {
@@ -300,9 +300,12 @@ void main() {
             _firebaseMessagingBackgroundHandler);
       }
 
-      await UiPrefs.ensureLoaded();
-      await L10nService().init();
-      await PerformanceProfileService.instance.initialize();
+      // Chạy song song 3 tác vụ độc lập trước khi render UI
+      await Future.wait([
+        UiPrefs.ensureLoaded(),
+        L10nService().init(),
+        PerformanceProfileService.instance.initialize(),
+      ]);
       runApp(const MyApp());
       _scheduleDeferredBootstrap();
     } on _MissingBootstrapConfig {
@@ -315,12 +318,9 @@ void main() {
             ? L10nService().translate('core_err_missing_env_req')
             : L10nService().translate('core_err_app_not_ready'),
         details: [
-          if (kDebugMode)
-            L10nService().translate('core_err_missing_vars'),
-          if (kDebugMode)
-            L10nService().translate('core_err_pass_config_ci'),
-          if (!kDebugMode)
-            L10nService().translate('core_err_update_app'),
+          if (kDebugMode) L10nService().translate('core_err_missing_vars'),
+          if (kDebugMode) L10nService().translate('core_err_pass_config_ci'),
+          if (!kDebugMode) L10nService().translate('core_err_update_app'),
         ],
       ));
     } on _UnofficialBuildDetected catch (error) {
@@ -335,8 +335,7 @@ void main() {
     } catch (error) {
       final bootstrapError = AppErrorMapper.resolve(
         error,
-        fallbackMessage:
-            L10nService().translate('core_err_app_start_failed'),
+        fallbackMessage: L10nService().translate('core_err_app_start_failed'),
       );
       debugPrint('Bootstrap error: ${bootstrapError.message}');
       unawaited(
@@ -392,7 +391,7 @@ Future<void> _initializeFirebaseBootstrap() async {
     _throwIfFirebaseEnvMissing();
     await Firebase.initializeApp(options: _firebaseOptionsFromEnv())
         .timeout(const Duration(seconds: 8));
-        
+
     try {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
@@ -417,7 +416,8 @@ Future<void> _initializeFirebaseBootstrap() async {
     } catch (e) {
       debugPrint('Firebase persistence error: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: L10nService().translate('core_err_firebase_cache_failed'),
+        fallbackMessage:
+            L10nService().translate('core_err_firebase_cache_failed'),
       ).message}');
     }
 
@@ -455,7 +455,8 @@ Future<void> _initializeNativeFirebaseBootstrap() async {
   } catch (nativeError) {
     debugPrint('Firebase native init error: ${AppErrorMapper.resolve(
       nativeError,
-      fallbackMessage: L10nService().translate('core_err_firebase_native_failed'),
+      fallbackMessage:
+          L10nService().translate('core_err_firebase_native_failed'),
     ).message}');
   }
 
@@ -568,7 +569,8 @@ Future<FirebaseOptions?> _loadNativeFirebaseOptions() async {
   } catch (error) {
     debugPrint('Native Firebase options load error: ${AppErrorMapper.resolve(
       error,
-      fallbackMessage: L10nService().translate('core_err_firebase_read_config_failed'),
+      fallbackMessage:
+          L10nService().translate('core_err_firebase_read_config_failed'),
     ).message}');
     return null;
   }
@@ -626,18 +628,15 @@ Future<void> _initializeTikTokSdk() async {
   final bool isIos = defaultTargetPlatform == TargetPlatform.iOS ||
       defaultTargetPlatform == TargetPlatform.macOS;
 
-  final appId = (isIos
-          ? AppConfig.tiktokIosAppId
-          : AppConfig.tiktokAndroidAppId)
-      .trim();
+  final appId =
+      (isIos ? AppConfig.tiktokIosAppId : AppConfig.tiktokAndroidAppId).trim();
   final accessToken = (isIos
           ? AppConfig.tiktokIosAccessToken
           : AppConfig.tiktokAndroidAccessToken)
       .trim();
-  final ttAppId = (isIos
-          ? AppConfig.tiktokIosTtAppId
-          : AppConfig.tiktokAndroidTtAppId)
-      .trim();
+  final ttAppId =
+      (isIos ? AppConfig.tiktokIosTtAppId : AppConfig.tiktokAndroidTtAppId)
+          .trim();
 
   if (appId.isEmpty || accessToken.isEmpty || ttAppId.isEmpty) {
     debugPrint('TikTok Business SDK skipped: missing credentials in config');
@@ -652,25 +651,10 @@ Future<void> _initializeTikTokSdk() async {
       openDebug: kDebugMode,
       enableAutoIapTrack: true,
     );
-    debugPrint('TikTok Business SDK initialized successfully [${ isIos ? "iOS" : "Android"}]');
+    debugPrint(
+        'TikTok Business SDK initialized successfully [${isIos ? "iOS" : "Android"}]');
   } catch (e) {
     debugPrint('TikTok Business SDK init error: $e');
-  }
-}
-
-Future<void> _initializeGoogleMobileAds() async {
-  if (kIsWeb) {
-    return;
-  }
-
-  try {
-    await MobileAds.instance.initialize();
-    debugPrint('Google Mobile Ads initialized successfully');
-  } catch (e) {
-    debugPrint('Google Mobile Ads init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: 'Could not initialize Google Mobile Ads',
-    ).message}');
   }
 }
 
@@ -703,6 +687,7 @@ void _scheduleDeferredBootstrap() {
           _warmUpOfflineCache(),
           _warmUpLocalDatabase(),
           _warmUpWidgetService(),
+          _requestIosTrackingAuthorization(),
         ]);
         unawaited(_warmUpBackgroundServices());
       } catch (error, stackTrace) {

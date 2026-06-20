@@ -43,12 +43,11 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       case 'purple':
         return (
           colors: const [
-            Color(0xFFF3E8FF),
-            Color(0xFFE9D5FF),
-            Color(0xFFD8B4FE),
+            Color(0xFFCE93D8),
+            Color(0xFF6A1B9A),
           ],
-          textColor: const Color(0xFF5B217A),
-          borderColor: const Color(0xFFC084FC),
+          textColor: Colors.white,
+          borderColor: const Color(0xFFCE93D8),
           premium: false,
         );
       case 'green':
@@ -100,12 +99,11 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       default:
         return (
           colors: const [
-            Color(0xFFFFF0F5),
-            Color(0xFFFFD3E0),
-            Color(0xFFFFB7CE),
+            Color(0xFFFFB6CA),
+            Color(0xFFFF7098),
           ],
-          textColor: const Color(0xFF831843),
-          borderColor: const Color(0xFFFBCFE8),
+          textColor: Colors.white,
+          borderColor: const Color(0xFFFFB6CA),
           premium: false,
         );
     }

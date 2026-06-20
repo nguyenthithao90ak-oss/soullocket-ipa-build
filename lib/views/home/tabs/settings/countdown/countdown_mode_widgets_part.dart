@@ -757,7 +757,7 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
       frameKey: avatarFrameKey,
       size: size,
       accentColor: accent,
-      isUser1: accent.value == 0xFF4BA7FF,
+      isUser1: accent.toARGB32() == 0xFF4BA7FF,
       child: avatarContent,
     );
   }
@@ -816,6 +816,9 @@ class _CountdownModeCircle extends StatelessWidget {
     this.onTopTap,
     this.onValueTap,
     this.onBottomTap,
+    required this.styleKey,
+    required this.transparentMode,
+    required this.enableMotion,
   });
 
   final double size;
@@ -827,6 +830,9 @@ class _CountdownModeCircle extends StatelessWidget {
   final VoidCallback? onTopTap;
   final VoidCallback? onValueTap;
   final VoidCallback? onBottomTap;
+  final String styleKey;
+  final bool transparentMode;
+  final bool enableMotion;
 
   @override
   Widget build(BuildContext context) {
@@ -859,11 +865,23 @@ class _CountdownModeCircle extends StatelessWidget {
               gradient: styleData.innerGradient,
               border: styleData.innerBorder,
             ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: resolvedSize * 0.12),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: RepaintBoundary(
+                    child: AnimatedWaveBackground(
+                      styleKey: styleKey,
+                      enableMotion: enableMotion,
+                      transparentMode: transparentMode,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: resolvedSize * 0.12),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                   Padding(
                     padding:
                         EdgeInsets.symmetric(horizontal: resolvedSize * 0.04),
@@ -945,10 +963,12 @@ class _CountdownModeCircle extends StatelessWidget {
                 ],
               ),
             ),
-          ),
+          ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
 
@@ -1053,12 +1073,13 @@ class FloatingHeartsRingOverlay extends StatefulWidget {
 }
 
 class _FloatingHeartsRingOverlayState
-    extends State<FloatingHeartsRingOverlay> with SingleTickerProviderStateMixin {
+    extends State<FloatingHeartsRingOverlay> {
   static const int _kCount = 14; // Tăng lượng hạt để trông ảo diệu hơn
 
   late final List<_HeartParticle> _particles;
-  late final AnimationController _mainController;
+  final ValueNotifier<double> _progressNotifier = ValueNotifier<double>(0.0);
   final ValueNotifier<Offset> _tiltNotifier = ValueNotifier<Offset>(Offset.zero);
+  Timer? _timer;
 
   StreamSubscription<AccelerometerEvent>? _sensorSub;
 
@@ -1106,10 +1127,10 @@ class _FloatingHeartsRingOverlayState
       );
     });
 
-    _mainController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 6000), // Chu kỳ vòng lặp 6 giây
-    )..repeat();
+    _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (!mounted) return;
+      _progressNotifier.value = (_progressNotifier.value + (16 / 6000)) % 1.0;
+    });
 
     try {
       _sensorSub = accelerometerEventStream().listen(
@@ -1141,7 +1162,8 @@ class _FloatingHeartsRingOverlayState
   @override
   void dispose() {
     _sensorSub?.cancel();
-    _mainController.dispose();
+    _timer?.cancel();
+    _progressNotifier.dispose();
     _tiltNotifier.dispose();
     super.dispose();
   }
@@ -1158,12 +1180,12 @@ class _FloatingHeartsRingOverlayState
           clipBehavior: Clip.none,
           children: [
             AnimatedBuilder(
-              animation: _mainController,
+              animation: Listenable.merge([_progressNotifier, _tiltNotifier]),
               builder: (context, _) {
                 final tilt = _tiltNotifier.value;
                 final tiltX = tilt.dx;
                 final tiltY = tilt.dy;
-                final progress = _mainController.value;
+                final progress = _progressNotifier.value;
 
                 return Stack(
                   clipBehavior: Clip.none,

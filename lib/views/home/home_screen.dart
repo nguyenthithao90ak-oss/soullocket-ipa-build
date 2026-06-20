@@ -15,7 +15,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../../utils/services/offline_cache_service.dart';
 
-import '../../core/sl_page_physics.dart';
 import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/auth_service.dart';
@@ -147,7 +146,8 @@ class _TabActivationHostState extends State<_TabActivationHost> {
     super.didUpdateWidget(oldWidget);
     bool needsRebuild = false;
     if (oldWidget.activeIndexListenable != widget.activeIndexListenable ||
-        oldWidget.backgroundIndexListenable != widget.backgroundIndexListenable ||
+        oldWidget.backgroundIndexListenable !=
+            widget.backgroundIndexListenable ||
         oldWidget.isSwipingListenable != widget.isSwipingListenable ||
         oldWidget.jumpListenable != widget.jumpListenable ||
         oldWidget.tabIndex != widget.tabIndex) {
@@ -243,8 +243,6 @@ class _KeepAliveTabPageState extends State<_KeepAliveTabPage>
     return widget.child;
   }
 }
-
-
 
 class _HomePreloadPageView extends StatefulWidget {
   final PageController controller;
@@ -469,9 +467,7 @@ class _HomeScreenState extends State<HomeScreen>
       (_) => const UpdateTab(),
     ];
     // Pre-init tất cả các tab để chuyển đổi mượt ngay từ lần đầu
-    for (var i = 0; i < _navItems.length; i++) {
-      _tabPageCache[i] = _buildTabPage(i);
-    }
+    _tabPageCache[_currentIndex] = _buildTabPage(_currentIndex);
     _musicController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2500),
@@ -499,12 +495,22 @@ class _HomeScreenState extends State<HomeScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       unawaited(_consumePendingWidgetAction());
       unawaited(WidgetService.checkAndProcessPendingWidgetActions());
-      unawaited(_prewarmShellMedia());
+      unawaited(
+        Future<void>.delayed(
+          const Duration(seconds: 3),
+          _prewarmShellMedia,
+        ),
+      );
       _startupTasksTimer = Timer(_homeStartupTaskDelay, () {
         if (!mounted) return;
         unawaited(_runDeferredStartupTasks());
       });
-      unawaited(_checkAndUpdateApp());
+      unawaited(
+        Future<void>.delayed(
+          const Duration(seconds: 5),
+          _checkAndUpdateApp,
+        ),
+      );
     });
     _widgetActionSub = WidgetActionService().actions.listen((action) {
       unawaited(_handleWidgetLaunchAction(action));
@@ -1486,7 +1492,8 @@ class _HomeScreenState extends State<HomeScreen>
               final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
               final resolvedEffectKey = uiState.liteMode
                   ? 'off'
-                  : _resolveEffectKey(uiState.fallingEffectKey, resolvedThemeKey);
+                  : _resolveEffectKey(
+                      uiState.fallingEffectKey, resolvedThemeKey);
               final isDark = _isDarkTheme(resolvedThemeKey);
               final shouldAnimateEffects =
                   effectProfile.premiumEffects && resolvedEffectKey == 'off';
@@ -1513,12 +1520,14 @@ class _HomeScreenState extends State<HomeScreen>
                   final rotatedThemeKey = _resolveThemeKey(uiState.themeKey);
                   final rotatedEffectKey = uiState.liteMode
                       ? 'off'
-                      : _resolveEffectKey(uiState.fallingEffectKey, rotatedThemeKey);
+                      : _resolveEffectKey(
+                          uiState.fallingEffectKey, rotatedThemeKey);
                   final rotatedIsDark = _isDarkTheme(rotatedThemeKey);
                   final rotatedShouldAnimateEffects =
                       effectProfile.premiumEffects && rotatedEffectKey == 'off';
                   final rotatedShouldAnimateFallingEffect =
-                      effectProfile.animationEnabled && rotatedEffectKey != 'off';
+                      effectProfile.animationEnabled &&
+                          rotatedEffectKey != 'off';
                   return _buildShellBody(
                     foregroundChild: shellChild,
                     isDark: rotatedIsDark,
@@ -1526,7 +1535,8 @@ class _HomeScreenState extends State<HomeScreen>
                     resolvedEffectKey: rotatedEffectKey,
                     graphicsQualityKey: graphicsQualityKey,
                     shouldAnimateEffects: rotatedShouldAnimateEffects,
-                    shouldAnimateFallingEffect: rotatedShouldAnimateFallingEffect,
+                    shouldAnimateFallingEffect:
+                        rotatedShouldAnimateFallingEffect,
                   );
                 },
               );

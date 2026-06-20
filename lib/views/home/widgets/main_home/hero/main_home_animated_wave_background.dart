@@ -1,11 +1,12 @@
 part of '../../../tabs/main_home_tab.dart';
 
-class _AnimatedWaveBackground extends StatefulWidget {
+class AnimatedWaveBackground extends StatefulWidget {
   final String styleKey;
   final bool enableMotion;
   final bool transparentMode;
 
-  const _AnimatedWaveBackground({
+  const AnimatedWaveBackground({
+    super.key,
     required this.styleKey,
     required this.enableMotion,
     this.transparentMode = false,
@@ -16,11 +17,11 @@ class _AnimatedWaveBackground extends StatefulWidget {
   }
 
   @override
-  State<_AnimatedWaveBackground> createState() =>
+  State<AnimatedWaveBackground> createState() =>
       _AnimatedWaveBackgroundState();
 }
 
-class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
+class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   StreamSubscription<AccelerometerEvent>? _sensorSubscription;
@@ -50,12 +51,33 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
     try {
       _sensorSubscription?.cancel();
       _isFirstEvent = true;
-      // ⚡ Dùng sample rate cao nhất 50ms thay vì luồng real-time liên tục
-      _sensorSubscription = accelerometerEventStream(
-        samplingPeriod: const Duration(milliseconds: 50),
-      ).listen(
+
+      double? lastRawX;
+      double? lastRawY;
+      int staticCount = 0;
+      bool isSensorActive = true;
+
+      _sensorSubscription = accelerometerEventStream().listen(
         (event) {
           if (!mounted) return;
+
+          // Check if sensor is sending changing values (to detect static/emulated sensors)
+          if (lastRawX != null && lastRawY != null) {
+            if ((event.x - lastRawX!).abs() < 0.0001 && (event.y - lastRawY!).abs() < 0.0001) {
+              staticCount++;
+              if (staticCount > 10) {
+                isSensorActive = false;
+              }
+            } else {
+              staticCount = 0;
+              isSensorActive = true;
+            }
+          }
+          lastRawX = event.x;
+          lastRawY = event.y;
+
+          if (!isSensorActive) return;
+
           // Smooth the tilt using low-pass filter (lerp)
           final targetX = -event.x.clamp(-6.0, 6.0) * 3.5;
           final targetY = event.y.clamp(-6.0, 6.0) * 3.5;
@@ -117,7 +139,7 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
   }
 
   @override
-  void didUpdateWidget(_AnimatedWaveBackground oldWidget) {
+  void didUpdateWidget(AnimatedWaveBackground oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.styleKey != widget.styleKey ||
         oldWidget.enableMotion != widget.enableMotion) {
@@ -139,7 +161,7 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
   }
 
   bool _shouldAnimateFor() {
-    if (!_AnimatedWaveBackground.hasMotion(widget.styleKey)) return false;
+    if (!AnimatedWaveBackground.hasMotion(widget.styleKey)) return false;
     if (!TickerMode.valuesOf(context).enabled) return false;
     return widget.enableMotion;
   }
@@ -163,10 +185,10 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
 
   @override
   Widget build(BuildContext context) {
-    if (!_AnimatedWaveBackground.hasMotion(widget.styleKey)) {
+    if (!AnimatedWaveBackground.hasMotion(widget.styleKey)) {
       return const SizedBox.expand();
     }
-    final isBasicStyle = widget.styleKey == 'default' || widget.styleKey == 'glass' || widget.styleKey == 'plain' || widget.styleKey.isEmpty;
+    final isBasicStyle = widget.styleKey == 'default' || widget.styleKey == 'plain' || widget.styleKey.isEmpty;
     if (widget.transparentMode && isBasicStyle) {
       return const SizedBox.expand();
     }
@@ -177,27 +199,13 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
     );
     final quality = effectProfile.graphicsQualityKey;
 
-    final shouldAnimate = _controller.isAnimating;
-    if (!shouldAnimate) {
-      return RepaintBoundary(
-        child: CustomPaint(
-          painter: _WavePainter(
-            0,
-            widget.styleKey,
-            quality: quality,
-            tiltX: _tiltX,
-            tiltY: _tiltY,
-            shakeIntensity: _shakeIntensity,
-            ripples: List.from(_ripples),
-          ),
-        ),
-      );
-    }
-    return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          // Decay shake intensity on every frame
+    final result = AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final shouldAnimate = _shouldAnimateFor();
+
+        // Decay shake intensity on every frame
+        if (shouldAnimate) {
           if (_shakeIntensity > 0.001) {
             _shakeIntensity *= 0.94;
           } else {
@@ -207,19 +215,68 @@ class _AnimatedWaveBackgroundState extends State<_AnimatedWaveBackground>
           // Filter out expired ripples
           final now = DateTime.now();
           _ripples.removeWhere((r) => r.getProgress(now) >= 1.0);
+        }
 
-          return CustomPaint(
-            painter: _WavePainter(
-              _controller.value,
-              widget.styleKey,
-              quality: quality,
-              tiltX: _tiltX,
-              tiltY: _tiltY,
-              shakeIntensity: _shakeIntensity,
-              ripples: List.from(_ripples),
-            ),
-          );
+        return CustomPaint(
+          painter: _WavePainter(
+            shouldAnimate ? _controller.value : 0.0,
+            widget.styleKey,
+            quality: quality,
+            tiltX: _tiltX,
+            tiltY: _tiltY,
+            shakeIntensity: _shakeIntensity,
+            ripples: List.from(_ripples),
+          ),
+        );
+      },
+    );
+
+    return RepaintBoundary(
+      child: MouseRegion(
+        onHover: (event) {
+          final localPos = event.localPosition;
+          final renderBox = context.findRenderObject();
+          if (renderBox is RenderBox && renderBox.hasSize) {
+            final size = renderBox.size;
+            final centerX = size.width / 2;
+            final centerY = size.height / 2;
+            if (centerX > 0.0 && centerY > 0.0) {
+              _tiltX = (localPos.dx - centerX) / centerX * 12.0;
+              _tiltY = (localPos.dy - centerY) / centerY * 12.0;
+            }
+          }
         },
+        onExit: (_) {
+          _tiltX = 0.0;
+          _tiltY = 0.0;
+        },
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (event) {
+            final renderBox = context.findRenderObject();
+            if (renderBox is RenderBox && renderBox.hasSize) {
+              final localPos = event.localPosition;
+              final size = renderBox.size;
+              final centerX = size.width / 2;
+              final centerY = size.height / 2;
+              if (centerX > 0.0 && centerY > 0.0) {
+                final offset = Offset(localPos.dx - centerX, localPos.dy - centerY);
+                _shakeIntensity = (_shakeIntensity + 0.45).clamp(0.0, 1.5);
+                if (_ripples.length >= 3) {
+                  _ripples.removeAt(0);
+                }
+                _ripples.add(
+                  _RippleEffect(
+                    centerOffset: offset,
+                    startTime: DateTime.now(),
+                    duration: const Duration(milliseconds: 1500),
+                  ),
+                );
+              }
+            }
+          },
+          child: result,
+        ),
       ),
     );
   }
@@ -254,12 +311,6 @@ class _WavePainter extends CustomPainter {
     canvas.clipPath(
       Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
     );
-
-    if (SLTheme.isTabSwiping.value) {
-      final baseColor = const Color(0xFFFFC6DA).withValues(alpha: 0.25);
-      canvas.drawCircle(center, radius, Paint()..color = baseColor);
-      return;
-    }
 
     if (styleKey == 'plain') {
       return;
@@ -301,6 +352,12 @@ class _WavePainter extends CustomPainter {
     final paint = Paint()
       ..color = const Color(0xFFFF4F93).withValues(alpha: opacity)
       ..style = PaintingStyle.fill;
+
+    if (quality == 'high') {
+      paint.maskFilter = MaskFilter.blur(BlurStyle.normal, size * 0.25);
+    } else if (quality == 'balanced') {
+      paint.maskFilter = MaskFilter.blur(BlurStyle.normal, size * 0.15);
+    }
 
     final path = Path();
     path.moveTo(x, y + size / 4);
@@ -366,6 +423,13 @@ class _WavePainter extends CustomPainter {
       final opacity = sin(progress * pi);
 
       bubblePaint.color = Colors.white.withValues(alpha: 0.15 * opacity);
+      if (quality == 'high') {
+        bubblePaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+      } else if (quality == 'balanced') {
+        bubblePaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+      } else {
+        bubblePaint.maskFilter = null;
+      }
       canvas.drawCircle(Offset(x, y), size, bubblePaint);
 
       if (quality != 'low') {
@@ -384,8 +448,10 @@ class _WavePainter extends CustomPainter {
   ) {
     if (quality != 'low') {
       // Pulsing ring - nhẹ, chỉ drawCircle, có lệch nhẹ theo nghiêng
+      // Giảm alpha cho balanced để sóng không quá sáng
+      final ringAlphaFactor = quality == 'balanced' ? 0.72 : 1.0;
       final ringPaint1 = Paint()
-        ..color = const Color(0xFFFFC6DA).withValues(alpha: 0.13 * (1 - animationValue))
+        ..color = const Color(0xFFFFC6DA).withValues(alpha: 0.13 * (1 - animationValue) * ringAlphaFactor)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(
         Offset(center.dx + tiltX * 0.3, center.dy + tiltY * 0.3),
@@ -395,7 +461,7 @@ class _WavePainter extends CustomPainter {
 
       final phase2 = (animationValue + 0.5) % 1.0;
       final ringPaint2 = Paint()
-        ..color = const Color(0xFFFF9EBB).withValues(alpha: 0.08 * (1 - phase2))
+        ..color = const Color(0xFFFF9EBB).withValues(alpha: 0.08 * (1 - phase2) * ringAlphaFactor)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(
         Offset(center.dx + tiltX * 0.3, center.dy + tiltY * 0.3),
@@ -477,6 +543,11 @@ class _WavePainter extends CustomPainter {
     if (quality == 'low') {
       drawWaveBezier(const Color(0xFFFFC6DA).withValues(alpha: 0.32), 18 * shakeAmpMultiplier, 0, 0.55);
       drawWaveBezier(const Color(0xFFFFB1CA).withValues(alpha: 0.40), 10 * shakeAmpMultiplier, pi, 0.65);
+    } else if (quality == 'balanced') {
+      // Balanced: giảm alpha ~25% để sóng không quá chói
+      drawWave(const Color(0xFFFFC6DA).withValues(alpha: 0.24), 18 * shakeAmpMultiplier, 1.0, 0, 0.55);
+      drawWave(const Color(0xFFFF9EBB).withValues(alpha: 0.19), 14 * shakeAmpMultiplier, 1.2, pi / 2, 0.60);
+      drawWave(const Color(0xFFFFB1CA).withValues(alpha: 0.30), 10 * shakeAmpMultiplier, 1.5, pi, 0.65);
     } else {
       drawWave(const Color(0xFFFFC6DA).withValues(alpha: 0.32), 18 * shakeAmpMultiplier, 1.0, 0, 0.55);
       drawWave(const Color(0xFFFF9EBB).withValues(alpha: 0.26), 14 * shakeAmpMultiplier, 1.2, pi / 2, 0.60);
@@ -484,8 +555,9 @@ class _WavePainter extends CustomPainter {
     }
 
     // Bubbles nhẹ - bỏ maskFilter.blur (nặng GPU)
+    final bubbleAlpha = quality == 'balanced' ? 0.18 : 0.28;
     final bubblePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.28)
+      ..color = Colors.white.withValues(alpha: bubbleAlpha)
       ..style = PaintingStyle.fill;
 
     final bubbleY1 = height - (height * ((animationValue + 0.2) % 1.0)) + tiltY * 0.8;
@@ -1167,6 +1239,8 @@ class _WavePainter extends CustomPainter {
           ..strokeWidth = 2.0;
         if (quality == 'high') {
           paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+        } else if (quality == 'balanced') {
+          paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
         }
         canvas.drawLine(
           Offset(anchors[b].dx, sy + 25),
@@ -1207,27 +1281,39 @@ class _WavePainter extends CustomPainter {
             ..strokeCap = StrokeCap.round;
           if (quality == 'high') {
             paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+          } else if (quality == 'balanced') {
+            paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5);
           }
           canvas.drawLine(start, end, paint);
 
-          if (quality == 'high' && isLong && burstProgress > 0.4 && burstProgress < 0.9) {
+          if (quality != 'low' && isLong && burstProgress > 0.4 && burstProgress < 0.9) {
+            final paintDot = Paint()
+              ..color = Colors.white.withValues(alpha: 1 - burstProgress);
+            if (quality == 'high') {
+              paintDot.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+            } else if (quality == 'balanced') {
+              paintDot.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+            }
             canvas.drawCircle(
               end,
               2.0 * (1 - burstProgress),
-              Paint()
-                ..color = Colors.white.withValues(alpha: 1 - burstProgress)
-                ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+              paintDot,
             );
           }
         }
 
-        if (quality == 'high' && burstProgress < 0.4) {
+        if (quality != 'low' && burstProgress < 0.4) {
+          final paintFlash = Paint()
+            ..color = Colors.white.withValues(alpha: 1 - burstProgress / 0.4);
+          if (quality == 'high') {
+            paintFlash.maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+          } else if (quality == 'balanced') {
+            paintFlash.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5);
+          }
           canvas.drawCircle(
             anchors[b],
             6 * (1 - burstProgress / 0.4),
-            Paint()
-              ..color = Colors.white.withValues(alpha: 1 - burstProgress / 0.4)
-              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+            paintFlash,
           );
         }
       }

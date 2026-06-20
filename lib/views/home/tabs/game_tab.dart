@@ -45,7 +45,9 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
   void initState() {
     super.initState();
     _loadDownloadStatus();
-    _loadBannerAd();
+    Future<void>.delayed(const Duration(seconds: 20), () {
+      if (mounted) unawaited(_loadBannerAd());
+    });
     // Lắng nghe thay đổi download để cập nhật state mà không tạo Future mới
     GameDownloadService().addListener(_onDownloadServiceChanged);
   }
@@ -134,8 +136,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
             content: Text(
               AppErrorMapper.resolve(
                 e,
-                fallbackMessage:
-                    context.tr('home_chathtigam_4cf45e'),
+                fallbackMessage: context.tr('home_chathtigam_4cf45e'),
               ).message,
             ),
             backgroundColor: const Color(0xFFD32F2F),
@@ -198,7 +199,8 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
               child: Text(context.tr('home_hy_1e4050'))),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(context.tr('home_xangay_dc07fa'), style: const TextStyle(color: Colors.red)),
+            child: Text(context.tr('home_xangay_dc07fa'),
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -327,9 +329,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                           isDownloaded: soulBlockDownloaded,
                           downloadProgress:
                               downloadService.getProgress('soul_block'),
-                          onTap: () => _onGameTap(
-                              'soul_block',
-                              'Soul Block',
+                          onTap: () => _onGameTap('soul_block', 'Soul Block',
                               () => _openSoulBlockGame(context)),
                           onLongPress: soulBlockDownloaded
                               ? () => _confirmDeleteGame(
@@ -346,10 +346,8 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                             isDownloaded: soulRhythmDownloaded,
                             downloadProgress:
                                 downloadService.getProgress('soul_rhythm'),
-                            onTap: () => _onGameTap(
-                                'soul_rhythm',
-                                'Soul Rhythm',
-                                () => _openSoulGame(context)),
+                            onTap: () => _onGameTap('soul_rhythm',
+                                'Soul Rhythm', () => _openSoulGame(context)),
                             onLongPress: soulRhythmDownloaded
                                 ? () => _confirmDeleteGame(
                                     context, 'soul_rhythm', 'Soul Rhythm')
@@ -646,7 +644,9 @@ class _GameLauncherTile extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                isDownloaded ? context.tr('home_chingay_861291') : context.tr('home_tixung_82b80b'),
+                                isDownloaded
+                                    ? context.tr('home_chingay_861291')
+                                    : context.tr('home_tixung_82b80b'),
                                 style: SLTheme.quicksand(
                                   fontSize: 8,
                                   fontWeight: FontWeight.w900,
@@ -893,14 +893,20 @@ class _SoulBlockCardPainter extends CustomPainter {
       }
     }
 
-    drawBlock(const [Offset(0, 0), Offset(1, 0), Offset(0, 1)], const Color(0xFFFF4D6D));
-    drawBlock(const [Offset(3, 0), Offset(4, 0), Offset(4, 1)], const Color(0xFFFFD166));
-    drawBlock(const [Offset(1, 2), Offset(2, 2), Offset(3, 2)], const Color(0xFF4D96FF));
-    drawBlock(const [Offset(0, 3), Offset(0, 4), Offset(1, 4)], const Color(0xFF37E67F));
-    drawBlock(const [Offset(3, 3), Offset(4, 3), Offset(3, 4), Offset(4, 4)], const Color(0xFFC77DFF));
+    drawBlock(const [Offset(0, 0), Offset(1, 0), Offset(0, 1)],
+        const Color(0xFFFF4D6D));
+    drawBlock(const [Offset(3, 0), Offset(4, 0), Offset(4, 1)],
+        const Color(0xFFFFD166));
+    drawBlock(const [Offset(1, 2), Offset(2, 2), Offset(3, 2)],
+        const Color(0xFF4D96FF));
+    drawBlock(const [Offset(0, 3), Offset(0, 4), Offset(1, 4)],
+        const Color(0xFF37E67F));
+    drawBlock(const [Offset(3, 3), Offset(4, 3), Offset(3, 4), Offset(4, 4)],
+        const Color(0xFFC77DFF));
 
     final badgeRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.18, size.height * 0.74, size.width * 0.64, 16),
+      Rect.fromLTWH(
+          size.width * 0.18, size.height * 0.74, size.width * 0.64, 16),
       const Radius.circular(999),
     );
     canvas.drawRRect(

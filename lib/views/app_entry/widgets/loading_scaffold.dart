@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../core/sl_theme.dart';
-import '../../../widgets/soul_locket_brand_mark.dart';
-import '../../ui_prefs.dart';
 
 class LoadingScaffold extends StatefulWidget {
   const LoadingScaffold({super.key});
@@ -62,57 +60,73 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: SLTheme.softPanel(
-                      padding: const EdgeInsets.fromLTRB(28, 30, 28, 26),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedBuilder(
-                            animation: _loadingController,
-                            builder: (context, child) {
-                              final pulse = 1 +
-                                  (_loadingController.value < 0.5 ? 1 : -1) *
-                                      0.02;
-                              return Transform.scale(
-                                scale: pulse,
-                                child: child,
-                              );
-                            },
-                            child: ValueListenableBuilder<UiPrefsState>(
-                              valueListenable: UiPrefs.notifier,
-                              builder: (context, ui, _) {
-                                return SoulLocketBrandMark(
-                                  styleKey: ui.brandMarkKey,
-                                  size: 112,
-                                );
-                              },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AnimatedBuilder(
+                          animation: _loadingController,
+                          builder: (context, child) {
+                            final pulse = 1 +
+                                (_loadingController.value < 0.5 ? 1 : -1) *
+                                    0.02;
+                            return Transform.scale(
+                              scale: pulse,
+                              child: child,
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(28),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFD81B60).withValues(alpha: 0.22),
+                                  blurRadius: 28,
+                                  spreadRadius: 2,
+                                  offset: const Offset(0, 10),
+                                ),
+                                BoxShadow(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  blurRadius: 0,
+                                  spreadRadius: 1,
+                                  offset: const Offset(0, 0),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(28),
+                              child: Image.asset(
+                                'assets/icon.png',
+                                width: 112,
+                                height: 112,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'SoulLocket',
-                            style: SLTheme.quicksand(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                              color: SLColors.textPrimary,
-                            ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'SoulLocket',
+                          style: SLTheme.quicksand(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w900,
+                            color: SLColors.textPrimary,
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            context.tr('app_entry_angmnginhc_763d46'),
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: SLTheme.authChipText,
-                            ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          context.tr('app_entry_angmnginhc_763d46'),
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: SLTheme.authChipText,
                           ),
-                          const SizedBox(height: 26),
-                          _SoftLoadingBar(controller: _loadingController),
-                          const SizedBox(height: 16),
-                          _LoadingDots(controller: _loadingController),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 26),
+                        _SoftLoadingBar(controller: _loadingController),
+                        const SizedBox(height: 16),
+                        _LoadingDots(controller: _loadingController),
+                      ],
                     ),
                   ),
                 ),

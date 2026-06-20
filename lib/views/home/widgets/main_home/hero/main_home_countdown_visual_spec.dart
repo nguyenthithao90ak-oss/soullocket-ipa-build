@@ -486,23 +486,24 @@ class _CountdownVisualSpec {
           ),
           innerBorder:
               Border.all(color: Colors.white.withValues(alpha: 0.55), width: 1.5),
-          numberGradient: const [Color(0xFFFFFBFD), Color(0xFFFFBCD7)],
+          // Số rõ hơn: gradient đậm dần từ trắng sang hồng đố bão hoà
+          numberGradient: const [Color(0xFFFFFFFF), Color(0xFFFF5B9A), Color(0xFFD81B60)],
           topLabelColor: Colors.white,
           bottomLabelColor: Colors.white.withValues(alpha: 0.94),
           labelShadows: [
-            Shadow(color: const Color(0xFF9D315F).withValues(alpha: 0.38), blurRadius: 10),
-            Shadow(color: Colors.white.withValues(alpha: 0.60), blurRadius: 4),
+            Shadow(color: const Color(0xFF9D315F).withValues(alpha: 0.52), blurRadius: 12),
+            Shadow(color: Colors.white.withValues(alpha: 0.70), blurRadius: 4),
           ],
           numberShadows: [
             Shadow(
-              color: const Color(0xFF8D365B).withValues(alpha: 0.35),
-              blurRadius: 20,
+              color: const Color(0xFF8D1A3B).withValues(alpha: 0.55),
+              blurRadius: 24,
               offset: const Offset(0, 10),
             ),
             Shadow(
-              color: Colors.white.withValues(alpha: 0.65),
-              blurRadius: 6,
-              offset: const Offset(-2, -3),
+              color: const Color(0xFF8D1A3B).withValues(alpha: 0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         );

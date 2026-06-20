@@ -357,34 +357,47 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       return;
     }
 
-    // Yêu cầu xem quảng cáo tối đa 20p/lần
-    final prefs = await SharedPreferences.getInstance();
-    final lastAdStr = prefs.getString('last_bg_ad_time');
-    bool shouldShowAd = !_isVipActive;
-    if (shouldShowAd && lastAdStr != null) {
-      final lastAd = DateTime.tryParse(lastAdStr);
-      if (lastAd != null && DateTime.now().difference(lastAd).inMinutes < 20) {
-        shouldShowAd = false;
-      }
-    }
-
-    if (shouldShowAd) {
-      final adMob = AdMobService();
-      final adSuccess = await adMob.showRewardedAd();
-      if (!mounted) return;
-      if (!adSuccess) {
-        _showToast(context.tr('theme_err_ad_for_bg'), success: false);
-        return;
-      }
-      await prefs.setString(
-          'last_bg_ad_time', DateTime.now().toIso8601String());
+    if (mounted) {
+      setState(() {
+        _isUploadingThemeBackground = true;
+        _themeUploadProgress = null;
+      });
     }
 
     try {
+      // Yêu cầu xem quảng cáo tối đa 20p/lần
+      final prefs = await SharedPreferences.getInstance();
+      final lastAdStr = prefs.getString('last_bg_ad_time');
+      bool shouldShowAd = !_isVipActive;
+      if (shouldShowAd && lastAdStr != null) {
+        final lastAd = DateTime.tryParse(lastAdStr);
+        if (lastAd != null && DateTime.now().difference(lastAd).inMinutes < 20) {
+          shouldShowAd = false;
+        }
+      }
+
+      if (shouldShowAd) {
+        final adMob = AdMobService();
+        // ignoreCooldown=true: tránh bị block bởi cooldown 45s giữa các ad toàn màn hình
+        // loadTimeout=12s: cho đủ thời gian load ad nếu chưa preload
+        final adSuccess = await adMob.showRewardedAd(
+          ignoreCooldown: true,
+          loadTimeout: const Duration(seconds: 12),
+        );
+        if (!mounted) return;
+        if (!adSuccess) {
+          _showToast(context.tr('theme_err_ad_for_bg'), success: false);
+          return;
+        }
+        await prefs.setString(
+            'last_bg_ad_time', DateTime.now().toIso8601String());
+      }
+
       final pickedFile = presetFile ?? await _storageService.pickImage();
       if (pickedFile == null || !mounted) return;
       XFile file = pickedFile;
 
+      bool cropCancelled = false;
       try {
         if (presetFile == null && kIsWeb) {
           // Bỏ qua ImageCropper trên Web để tránh lỗi văng do không tương thích WebUiSettings
@@ -408,6 +421,8 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
           );
           if (croppedFile != null) {
             file = XFile(croppedFile.path);
+          } else {
+            cropCancelled = true;
           }
         }
       } catch (e) {
@@ -415,9 +430,10 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         // Bỏ qua lỗi cắt ảnh, tiếp tục dùng file gốc
       }
 
+      if (cropCancelled || !mounted) return;
+
       if (mounted) {
         setState(() {
-          _isUploadingThemeBackground = true;
           _themeUploadProgress = 0.0;
         });
       }

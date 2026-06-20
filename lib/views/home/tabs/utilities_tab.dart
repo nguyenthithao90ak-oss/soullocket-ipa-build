@@ -59,7 +59,8 @@ class UtilitiesTab extends StatefulWidget {
   State<UtilitiesTab> createState() => _UtilitiesTabState();
 }
 
-class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClientMixin {
+class _UtilitiesTabState extends State<UtilitiesTab>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -88,8 +89,11 @@ class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClie
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(_fetchUtilityStats());
-      precacheUtilityStickerList(context);
-      Future<void>.delayed(const Duration(milliseconds: 420), () {
+      Future<void>.delayed(const Duration(seconds: 3), () {
+        if (!mounted) return;
+        precacheUtilityStickerList(context);
+      });
+      Future<void>.delayed(const Duration(seconds: 20), () {
         if (!mounted) return;
         _loadBottomBanner();
       });
@@ -406,7 +410,10 @@ class _UtilitiesTabState extends State<UtilitiesTab> with AutomaticKeepAliveClie
       int openCount = (prefs.getInt('app_review_utility_open_count') ?? 0) + 1;
       await prefs.setInt('app_review_utility_open_count', openCount);
 
-      if (openCount == 6 || openCount == 30 || openCount == 90 || openCount == 200) {
+      if (openCount == 6 ||
+          openCount == 30 ||
+          openCount == 90 ||
+          openCount == 200) {
         final InAppReview inAppReview = InAppReview.instance;
         if (await inAppReview.isAvailable()) {
           Future.delayed(const Duration(seconds: 2), () async {

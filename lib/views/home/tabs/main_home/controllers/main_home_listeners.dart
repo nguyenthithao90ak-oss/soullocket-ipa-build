@@ -40,6 +40,7 @@ extension _MainHomeListeners on _MainHomeTabState {
         _safeSetState(() {
           _homeCalendarEvents = [];
         });
+        unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
         return;
       }
 
@@ -65,7 +66,21 @@ extension _MainHomeListeners on _MainHomeTabState {
         _safeSetState(() {
           _homeCalendarEvents = parsedEvents;
         });
+        // Sync calendar widget ngay khi dữ liệu thay đổi
+        unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
       } catch (_) {}
+    });
+  }
+
+  void _listenHealthCycleForWidgetSync(String houseId) {
+    _healthCycleSyncSubscription?.cancel();
+    _healthCycleSyncSubscription = _dbRef
+        .child('houses/$houseId/health_cycle')
+        .onValue
+        .listen((event) {
+      if (!mounted || !event.snapshot.exists) return;
+      // Sync cycle widget ngay khi dữ liệu thay đổi
+      unawaited(WidgetService.syncCycleWidgetData(houseId: houseId));
     });
   }
 

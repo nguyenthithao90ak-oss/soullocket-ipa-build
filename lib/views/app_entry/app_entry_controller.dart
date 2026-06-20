@@ -107,7 +107,8 @@ class AppEntryController {
   bool get hasPendingResume => _lastPausedAt != null;
 
   Future<SharedPreferences> getPrefs() async {
-    return _prefs ??= OfflineCacheService.getPrefsSync() ?? await SharedPreferences.getInstance();
+    return _prefs ??= OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
   }
 
   void dispose() {
@@ -399,35 +400,27 @@ class AppEntryController {
       ),
     );
 
-    unawaited(
-      _runGuarded(
+    Future<void>.delayed(const Duration(seconds: 45), () async {
+      await _runGuarded(
         'initialize AdMob',
         () => _adMobService.initialize(),
-      ),
-    );
+      );
+    });
 
-    unawaited(_runGuarded('preload rewarded ad', () async {
-      _adMobService.preloadRewardedAd();
-    }));
-    unawaited(_runGuarded('preload soul game rewarded ad', () async {
-      _adMobService.preloadSoulGameRewardedAd();
-    }));
-
-    if (!hasTriggeredInitialAppOpenAd) {
-      didScheduleInitialAppOpenAd = true;
-      Future<void>.delayed(const Duration(milliseconds: 1500), () async {
-        await _runGuarded(
-          'show deferred startup app open ad after home stabilizes',
-          () => _adMobService.showAppOpenAdIfEligible(),
-        );
+    Future<void>.delayed(const Duration(seconds: 60), () async {
+      await _runGuarded('preload rewarded ads', () async {
+        _adMobService.preloadRewardedAd();
+        _adMobService.preloadSoulGameRewardedAd();
       });
-    }
+    });
 
     unawaited(
-      _runGuarded(
-        'start auto interstitial scheduler',
-        () => _adMobService.startAutoInterstitialScheduler(),
-      ),
+      Future<void>.delayed(const Duration(seconds: 75), () async {
+        await _runGuarded(
+          'start auto interstitial scheduler',
+          () => _adMobService.startAutoInterstitialScheduler(),
+        );
+      }),
     );
     unawaited(
       _runGuarded(
@@ -544,7 +537,8 @@ class AppEntryController {
     // Không fallback cứng về 'user1' — giữ nguyên _currentRole cũ nếu không có role hợp lệ.
     final houseId = await _houseService.getCurrentHouseId();
     _currentHouseId = houseId;
-    _currentRole = (houseId == null || houseId.isEmpty) ? null : (role ?? _currentRole);
+    _currentRole =
+        (houseId == null || houseId.isEmpty) ? null : (role ?? _currentRole);
     _sessionConnectivityCoordinator.updatePresenceTarget(
       houseId: _currentHouseId,
       role: _currentRole,

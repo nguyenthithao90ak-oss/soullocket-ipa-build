@@ -101,6 +101,7 @@ import '../../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../../widgets/soul_locket_brand_mark.dart';
 import '../../visitors/visitor_profile_screen.dart';
 import 'settings/account/identity_panel.dart';
+import 'main_home_tab.dart' show AnimatedWaveBackground;
 import 'settings/controllers/settings_identity_controller.dart';
 import 'settings/controllers/settings_notifications_controller.dart';
 import 'settings/controllers/settings_widget_controller.dart';
@@ -478,9 +479,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isDevicePending = false;
   String _devicePendingMessage = '';
   int _devicePendingUnlockAtMs = 0;
-  bool _isVipActiveField = false;
-  bool get _isVipActive => kDebugMode || _isVipActiveField;
-  set _isVipActive(bool val) => _isVipActiveField = val;
+  bool _isVipActive = false;
   bool _isRestoringVip = false;
   bool _googleLinked = false;
   bool _passwordLinked = false;

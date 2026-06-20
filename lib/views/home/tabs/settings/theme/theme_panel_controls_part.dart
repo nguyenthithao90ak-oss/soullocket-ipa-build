@@ -883,6 +883,127 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   }
 
 
+  // --- Avatar frame visual strip ---
+  BorderRadius _avatarFramePreviewRadius(String frameKey) {
+    switch (frameKey) {
+      case 'off':
+        return BorderRadius.circular(6);
+      case 'circle':
+        return BorderRadius.circular(999);
+      case 'rounded':
+        return BorderRadius.circular(18);
+      case 'squircle':
+        return BorderRadius.circular(22);
+      case 'pearl':
+        return BorderRadius.circular(12);
+      case 'glass':
+        return BorderRadius.circular(14);
+      case 'vip':
+        return BorderRadius.circular(999);
+      default:
+        return BorderRadius.circular(999);
+    }
+  }
+
+  Widget _buildAvatarFrameStrip(String selectedKey) {
+    final items = <(String, String, IconData, Color)>[
+      ('Không', 'off', Icons.block_rounded, const Color(0xFFBDBDBD)),
+      ('Tròn', 'circle', Icons.circle_rounded, const Color(0xFF2563EB)),
+      ('Bo góc', 'rounded', Icons.rounded_corner_rounded, const Color(0xFFEC4899)),
+      ('Squircle', 'squircle', Icons.crop_square_rounded, const Color(0xFF8B5CF6)),
+      ('Ngọc trai', 'pearl', Icons.blur_circular_rounded, const Color(0xFFD4A520)),
+      ('Thủy tinh', 'glass', Icons.water_drop_rounded, const Color(0xFF06B6D4)),
+      if (AppConfig.isPurchaseEnabled)
+        (
+          _isVipActive ? 'VIP ✨' : 'VIP 🔒',
+          'vip',
+          Icons.workspace_premium_rounded,
+          const Color(0xFFFF9800),
+        ),
+    ];
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 12,
+      children: items.map((item) {
+        final key = item.$2;
+        final locked = key == 'vip' && !_isVipActive;
+        final selected = selectedKey == key;
+        final color = item.$4;
+        final previewRadius = _avatarFramePreviewRadius(key);
+
+        return GestureDetector(
+          onTap: () => _handleAvatarFrameSelection(key),
+          child: AnimatedScale(
+            scale: selected ? 1.08 : 1.0,
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutBack,
+            child: SizedBox(
+              width: 58,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? color.withValues(alpha: 0.14)
+                          : Colors.white.withValues(alpha: 0.92),
+                      borderRadius: previewRadius,
+                      border: Border.all(
+                        color: selected ? color : const Color(0xFFDDD0D6),
+                        width: selected ? 2.2 : 1.2,
+                      ),
+                      boxShadow: selected
+                          ? [
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.30),
+                                blurRadius: 14,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                    ),
+                    child: Icon(
+                      item.$3,
+                      size: 22,
+                      color: locked
+                          ? color.withValues(alpha: 0.5)
+                          : selected
+                              ? color
+                              : const Color(0xFF9CA3AF),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    item.$1,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: selected ? color : const Color(0xFF6B7280),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildThemeFontDropdownMenuItem(
     SLFontOption font, {
     bool compact = false,
