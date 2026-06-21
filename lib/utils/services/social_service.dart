@@ -11,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///   RTDB:      `social_feed/{postId}` — stream realtime (chỉ listen bài mới nhất)
 ///              `post_likes`, `house_likes`, `houses/...` — metadata nhẹ
 class SocialService {
+  static final SocialService instance = SocialService();
+
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 

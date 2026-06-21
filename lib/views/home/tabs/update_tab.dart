@@ -10,6 +10,7 @@ import '../../../utils/services/auth_service.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../utilities/user_support_chat_screen.dart';
 import '../screens/document_viewer_screen.dart';
+import 'settings_tab.dart';
 
 class UpdateTab extends StatelessWidget {
   const UpdateTab({super.key});
@@ -416,7 +417,22 @@ class UpdateTab extends StatelessWidget {
                   ],
                 ),
               ),
-              SLSpacing.gapW(36),
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE91E63).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SettingsTab()),
+                    );
+                  },
+                  icon: const Icon(Icons.settings_rounded, color: Color(0xFFE91E63)),
+                  tooltip: _tr('Cài đặt', 'Settings'),
+                ),
+              ),
             ],
           ),
         ],

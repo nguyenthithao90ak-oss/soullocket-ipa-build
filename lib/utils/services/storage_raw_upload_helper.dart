@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/cloudflare_r2_service.dart';
 import 'storage_media_constants.dart';
 
 typedef StorageVideoUploadRejector = void Function({
@@ -46,64 +47,38 @@ class StorageRawUploadHelper {
     await purgeLegacyCache();
 
     try {
-      final ref = buildStorageRef(storagePath);
-      TaskSnapshot uploadTask;
-
-      if (!kIsWeb && file.path.isNotEmpty) {
-        if (_isImageContentType(resolvedContentType)) {
-          final compressed = await _compressImageFile(
-            File(file.path),
-            resolvedContentType,
-          );
-          uploadTask = await _retryUpload(
-            () {
-              final task = ref.putData(compressed, metadata);
-              if (onProgress != null) {
-                task.snapshotEvents.listen((event) {
-                  if (event.totalBytes > 0) {
-                    onProgress(event.bytesTransferred / event.totalBytes);
-                  }
-                });
-              }
-              return task;
-            },
-          );
+      CloudflareR2Service.instance.init();
+      
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = p.join(tempDir.path, 'r2_upload_${DateTime.now().microsecondsSinceEpoch}.tmp');
+      final tempFile = File(tempPath);
+      
+      try {
+        if (!kIsWeb && file.path.isNotEmpty) {
+          if (_isImageContentType(resolvedContentType)) {
+            final compressed = await _compressImageFile(File(file.path), resolvedContentType);
+            await tempFile.writeAsBytes(compressed);
+          } else {
+            await File(file.path).copy(tempPath);
+          }
         } else {
-          uploadTask = await _retryUpload(
-            () {
-              final task = ref.putFile(File(file.path), metadata);
-              if (onProgress != null) {
-                task.snapshotEvents.listen((event) {
-                  if (event.totalBytes > 0) {
-                    onProgress(event.bytesTransferred / event.totalBytes);
-                  }
-                });
-              }
-              return task;
-            },
-          );
+          final fileBytes = await file.readAsBytes();
+          final dataToUpload = _isImageContentType(resolvedContentType)
+              ? await _compressImageBytes(fileBytes, resolvedContentType)
+              : fileBytes;
+          await tempFile.writeAsBytes(dataToUpload);
         }
-      } else {
-        final fileBytes = await file.readAsBytes();
-        final dataToUpload = _isImageContentType(resolvedContentType)
-            ? await _compressImageBytes(fileBytes, resolvedContentType)
-            : fileBytes;
-        uploadTask = await _retryUpload(
-          () {
-            final task = ref.putData(dataToUpload, metadata);
-            if (onProgress != null) {
-              task.snapshotEvents.listen((event) {
-                if (event.totalBytes > 0) {
-                  onProgress(event.bytesTransferred / event.totalBytes);
-                }
-              });
-            }
-            return task;
-          },
-        );
+        
+        final r2Url = await CloudflareR2Service.instance.uploadFile(tempFile, folderPath: 'media');
+        if (r2Url == null || r2Url.isEmpty) {
+          throw Exception('R2 upload failed.');
+        }
+        return r2Url;
+      } finally {
+        if (await tempFile.exists()) {
+          await tempFile.delete();
+        }
       }
-
-      return uploadTask.ref.getDownloadURL();
     } catch (e) {
       debugPrint('Lỗi khi upload tệp $storagePath: ${AppErrorMapper.resolve(
         e,
@@ -261,21 +236,30 @@ class StorageRawUploadHelper {
     await purgeLegacyCache();
 
     try {
-      final ref = buildStorageRef(storagePath);
-      TaskSnapshot uploadTask;
-
-      if (!kIsWeb && file.path.isNotEmpty) {
-        uploadTask = await _retryUpload(
-          () => ref.putFile(File(file.path), metadata),
-        );
-      } else {
-        final fileBytes = await file.readAsBytes();
-        uploadTask = await _retryUpload(
-          () => ref.putData(fileBytes, metadata),
-        );
+      CloudflareR2Service.instance.init();
+      
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = p.join(tempDir.path, 'r2_music_upload_${DateTime.now().microsecondsSinceEpoch}.tmp');
+      final tempFile = File(tempPath);
+      
+      try {
+        if (!kIsWeb && file.path.isNotEmpty) {
+          await File(file.path).copy(tempPath);
+        } else {
+          final fileBytes = await file.readAsBytes();
+          await tempFile.writeAsBytes(fileBytes);
+        }
+        
+        final r2Url = await CloudflareR2Service.instance.uploadFile(tempFile, folderPath: 'media');
+        if (r2Url == null || r2Url.isEmpty) {
+          throw Exception('R2 upload failed.');
+        }
+        return r2Url;
+      } finally {
+        if (await tempFile.exists()) {
+          await tempFile.delete();
+        }
       }
-
-      return uploadTask.ref.getDownloadURL();
     } catch (e) {
       debugPrint('Lỗi khi upload file nhạc $storagePath: ${AppErrorMapper.resolve(
         e,
@@ -355,21 +339,28 @@ class StorageRawUploadHelper {
     await purgeLegacyCache();
 
     try {
-      final ref = buildStorageRef(storagePath);
-      final dataToUpload = _isImageContentType(resolvedContentType)
-          ? await _compressImageBytes(fileBytes, resolvedContentType)
-          : fileBytes;
-      final uploadTask = await _retryUpload(
-        () => ref.putData(
-          dataToUpload,
-          SettableMetadata(
-            contentType: resolvedContentType,
-            cacheControl: storageImmutableCacheControl,
-          ),
-        ),
-      );
-
-      return uploadTask.ref.getDownloadURL();
+      CloudflareR2Service.instance.init();
+      
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = p.join(tempDir.path, 'r2_bytes_upload_${DateTime.now().microsecondsSinceEpoch}.tmp');
+      final tempFile = File(tempPath);
+      
+      try {
+        final dataToUpload = _isImageContentType(resolvedContentType)
+            ? await _compressImageBytes(fileBytes, resolvedContentType)
+            : fileBytes;
+        await tempFile.writeAsBytes(dataToUpload);
+        
+        final r2Url = await CloudflareR2Service.instance.uploadFile(tempFile, folderPath: 'media');
+        if (r2Url == null || r2Url.isEmpty) {
+          throw Exception('R2 upload failed.');
+        }
+        return r2Url;
+      } finally {
+        if (await tempFile.exists()) {
+          await tempFile.delete();
+        }
+      }
     } catch (e) {
       debugPrint('Lỗi khi upload tệp $storagePath: ${AppErrorMapper.resolve(
         e,

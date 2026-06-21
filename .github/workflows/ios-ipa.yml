@@ -31,7 +31,7 @@ concurrency:
 jobs:
   build:
     name: Build signed IPA
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 60
     env:
       IOS_EXPORT_METHOD: ${{ inputs.export_method }}

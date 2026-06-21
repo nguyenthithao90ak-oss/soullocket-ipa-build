@@ -74,7 +74,7 @@ dependencies:
   home_widget: ^0.9.1
   flutter_overlay_window: ^0.5.0
   crypto: ^3.0.7
-  connectivity_plus: ^7.1.1
+  connectivity_plus: ^6.0.5
   local_auth: ^3.0.1
   signature: ^6.3.0
   audioplayers: ^6.5.1
@@ -123,6 +123,7 @@ dependencies:
   vector_math: ^2.1.4
   tiktok_business_sdk:
     path: packages/tiktok_business_sdk
+  minio: ^3.5.8
 dependency_overrides:
   image_cropper_platform_interface: 7.1.0
 

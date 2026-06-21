@@ -639,6 +639,45 @@ class ChatService {
     }
 
     Future<void> finalizeCall() async {
+      if (sessionId.startsWith('R2_BYPASS|')) {
+        final url = sessionId.split('|')[1];
+        
+        await _runExternalChatAction(() async {
+          final target = isInternal ? myHouseId : (targetHouseId ?? myHouseId);
+          await _assertNotBlocked(myHouseId, target);
+          await _assertChatRoomOpen(myHouseId, target);
+          await _enforceRateLimit('chat_send_$myHouseId', type: 'image');
+          final roomId = _getRoomId(myHouseId, target);
+          await _ensureChatRoomStructure(myHouseId, target, roomId);
+          await _ensureChatRoomIndex(myHouseId, target, roomId);
+
+          final pushRef = _dbRef.child('chats/$roomId/messages').push();
+          final messageId = pushRef.key ?? '';
+          
+          final msgMap = _buildMessageWriteMap(
+            senderId: isInternal ? senderRole : myHouseId,
+            text: '[Hình ảnh]',
+            type: 'image',
+          );
+          msgMap['imageUrl'] = url;
+          if (upload.blurHash != null) {
+            msgMap['blurHash'] = upload.blurHash;
+          }
+          
+          await _dbRef.update({
+            'chats/$roomId/messages/$messageId': msgMap,
+            'chats/$roomId/lastMessage': _lastMessageWriteMap(
+              senderId: isInternal ? senderRole : myHouseId,
+              type: 'image',
+              text: '[Hình ảnh]',
+              messageId: messageId,
+            ),
+            'chats/$roomId/updatedAt': ServerValue.timestamp,
+          });
+        }, permissionMessage: 'Không thể gửi ảnh lúc này.');
+        return;
+      }
+
       final callable = _functions.httpsCallable('finalizeChatImageMessage');
       await callable.call(<String, dynamic>{
         'sessionId': sessionId,

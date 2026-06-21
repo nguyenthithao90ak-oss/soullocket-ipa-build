@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'blurhash_helper.dart';
 import 'storage_upload_result.dart';
+import 'cloudflare_r2_service.dart';
+
 
 typedef StorageSignedSessionBuilder = Future<Map<String, dynamic>> Function(
   String contentType,
@@ -169,25 +171,43 @@ class StorageSignedUploadHelper {
           uploadFile.name.isNotEmpty ? uploadFile.name : '$nowMs$fileExtension',
         );
 
-        final session = await _runWithSmoothProgress(
-          () => request.sessionBuilder(finalContentType, preferredFileName),
+        final r2Url = await _runWithSmoothProgress(
+          () async {
+            CloudflareR2Service.instance.init();
+            final tempDir = await getTemporaryDirectory();
+            final tempUploadPath = p.join(
+              tempDir.path,
+              'r2_temp_${DateTime.now().millisecondsSinceEpoch}$fileExtension',
+            );
+            final tempUploadFile = File(tempUploadPath);
+            await tempUploadFile.writeAsBytes(uploadBytes);
+            try {
+              return await CloudflareR2Service.instance.uploadFile(
+                tempUploadFile,
+                folderPath: 'media',
+              );
+            } finally {
+              if (await tempUploadFile.exists()) {
+                await tempUploadFile.delete();
+              }
+            }
+          },
           0.15,
-          0.35,
-          const Duration(milliseconds: 1000),
+          0.75,
+          const Duration(milliseconds: 3000),
           request.onProgress,
         );
 
-        final headers = stringMapFromDynamicMap(session['headers']);
-        headers.putIfAbsent('Content-Type', () => finalContentType);
+        if (r2Url == null || r2Url.isEmpty) {
+          throw Exception('Không thể tải ảnh lên Cloudflare R2.');
+        }
 
-        await uploadBytesToSignedUrl(
-          uploadUrl: session['uploadUrl'].toString(),
-          bytes: uploadBytes,
-          headers: headers,
-          onProgress: request.onProgress != null 
-              ? (p) => request.onProgress!(0.35 + (p * 0.40))
-              : null,
-        );
+        final session = <String, dynamic>{
+          'sessionId': 'R2_BYPASS|$r2Url',
+          'uploadUrl': r2Url,
+          'downloadUrl': r2Url,
+          'finalizeBy': DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch,
+        };
 
         if (request.onProgress != null) request.onProgress!(0.75);
 

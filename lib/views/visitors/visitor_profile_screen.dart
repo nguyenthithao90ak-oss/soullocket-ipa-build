@@ -12,12 +12,15 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
 import '../../models/social_post.dart';
+import 'dart:io';
 import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/services/social_service.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/house_settings_service.dart';
-import '../../utils/services/storage_service.dart';
+import 'package:soullocket_app/utils/services/cloudflare_r2_service.dart';
+import 'package:soullocket_app/utils/services/error_logger_service.dart';
+import 'package:soullocket_app/utils/services/storage_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'profile/dialogs/profile_appearance_sheet.dart';
 import 'profile/dialogs/profile_confirm_dialog.dart';
@@ -531,31 +534,24 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         <String, dynamic>{'filePath': file.path},
       );
 
-      final upload = await _storageService.uploadPublicImage(
-        houseId,
-        'house_avatar',
-        file,
-        quality: 88,
-        minWidth: 720,
-        minHeight: 720,
+      // 🚀 SỬ DỤNG CLOUDFLARE R2 TẠI ĐÂY
+      final url = await CloudflareR2Service.instance.uploadFile(
+        File(file.path),
+        folderPath: 'avatars/$houseId',
       );
-      final sessionId = upload?.sessionId?.trim() ?? '';
-      final url = upload?.downloadUrl.trim() ?? '';
-      if (sessionId.isEmpty || url.isEmpty) {
-        throw 'Avatar chưa tải lên được.';
+      
+      if (url == null || url.trim().isEmpty) {
+        throw 'Avatar chưa tải lên được lên R2.';
       }
-      await _storageService.finalizePublicImageUpload(
-        houseId: houseId,
-        sessionId: sessionId,
-        target: 'house_avatar',
-      );
+
+      // Xóa cache pending
       await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
 
-      if (oldAvatarUrl.isNotEmpty && oldAvatarUrl.startsWith('http')) {
-        try {
-          _storageService.deleteImageByUrl(oldAvatarUrl);
-        } catch (_) {}
-      }
+      // Cập nhật Database trực tiếp
+      await _saveHouseAvatar(url);
+      
+      // Không cần gọi finalize qua Cloud Functions nữa
+      // Bỏ qua bước Firebase Storage cũ
 
       final refreshedUrl = _withRefreshToken(url);
       if (!mounted) return;

@@ -10,6 +10,10 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:path_provider/path_provider.dart';
+import 'cloudflare_r2_service.dart';
+import 'social_service.dart';
 import 'offline_cache_service.dart';
 import 'secret_vault_media_policy.dart' as secret_vault_policy;
 import 'storage_app_check_helper.dart';
@@ -689,6 +693,34 @@ class StorageService {
     double? lng,
     String? blurHash,
   }) async {
+    if (sessionId.startsWith('R2_BYPASS|')) {
+      final url = sessionId.split('|')[1];
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final dbRef = FirebaseDatabase.instance.ref();
+      final memoryRef = dbRef.child('houses/$houseId/memories').push();
+      final memoryId = memoryRef.key ?? now.toString();
+      
+      final data = {
+        'id': memoryId,
+        'url': url,
+        'thumbUrl': url,
+        'authorName': authorName,
+        'authorEmail': authorEmail,
+        'authorRole': authorRole,
+        'timestamp': now,
+        'ts': now,
+        'type': 'image',
+        if (lat != null) 'lat': lat,
+        if (lng != null) 'lng': lng,
+        if (blurHash != null) 'blurHash': blurHash,
+      };
+      
+      await memoryRef.set(data);
+      await dbRef.child('houses/$houseId/memoriesCount').set(ServerValue.increment(1));
+      
+      return {'ok': true, 'memoryId': memoryId};
+    }
+
     try {
       final response = await _finalizeHelper.finalizeUpload(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
@@ -950,6 +982,32 @@ class StorageService {
     bool flagged = false,
     String? blurHash,
   }) async {
+    if (sessionId.startsWith('R2_BYPASS|')) {
+      final url = sessionId.split('|')[1];
+      try {
+        await SocialService.instance.createPostUnified(
+          houseId: houseId,
+          houseName: houseName,
+          authorRole: authorRole,
+          authorName: authorName,
+          authorAvt: authorAvt,
+          content: content,
+          imageUrl: url,
+          privacy: privacy,
+          mood: mood,
+          moodEmoji: moodEmoji,
+          location: location,
+          postType: postType,
+          isAnon: isAnon,
+          isLocket: isLocket,
+          commentsEnabled: commentsEnabled,
+        );
+        return {'ok': true};
+      } catch (e) {
+        throw Exception('Không thể tạo bài viết từ R2: $e');
+      }
+    }
+
     try {
       return _finalizeHelper.finalizeUpload(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
@@ -1204,30 +1262,51 @@ class StorageService {
     String caption = '',
   }) async {
     _requireCurrentUid();
-    final session = await _createCollageUploadSession(
-      houseId: houseId,
-      contentType: 'image/png',
-      fileName: fileName,
+    final tempDir = await getTemporaryDirectory();
+    final tempUploadPath = p.join(
+      tempDir.path,
+      'r2_collage_temp_${DateTime.now().millisecondsSinceEpoch}_$fileName',
     );
-    final uploadUrl = session['uploadUrl']?.toString().trim() ?? '';
-    final sessionId = session['sessionId']?.toString().trim() ?? '';
-    if (uploadUrl.isEmpty || sessionId.isEmpty) {
-      throw Exception('Thiếu phiên tải ảnh ghép.');
+    final tempUploadFile = File(tempUploadPath);
+    await tempUploadFile.writeAsBytes(bytes);
+    
+    String? r2Url;
+    try {
+      CloudflareR2Service.instance.init();
+      r2Url = await CloudflareR2Service.instance.uploadFile(
+        tempUploadFile,
+        folderPath: 'media',
+      );
+    } finally {
+      if (await tempUploadFile.exists()) {
+        await tempUploadFile.delete();
+      }
     }
-    final headers = _stringMapFromDynamicMap(session['headers']);
-    headers.putIfAbsent('Content-Type', () => 'image/png');
-    await _uploadBytesToSignedUrl(
-      uploadUrl: uploadUrl,
-      bytes: bytes,
-      headers: headers,
-    );
-    return finalizeCollageUpload(
-      houseId: houseId,
-      sessionId: sessionId,
-      template: template,
-      style: style,
-      caption: caption,
-    );
+
+    if (r2Url == null || r2Url.isEmpty) {
+      throw Exception('Không thể tải ảnh ghép lên R2.');
+    }
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final houseSnapshot = await FirebaseDatabase.instance.ref('houses/$houseId/settings').get();
+      final houseName = (houseSnapshot.value as Map?)?['name']?.toString() ?? 'Gia đình';
+      
+      await SocialService.instance.createPostUnified(
+        houseId: houseId,
+        houseName: houseName,
+        authorRole: 'user1', // Not strictly needed
+        authorName: user?.displayName ?? 'Thành viên',
+        authorAvt: user?.photoURL ?? '',
+        content: caption,
+        imageUrl: r2Url,
+        privacy: 'public',
+        postType: 'collage',
+      );
+      return {'ok': true};
+    } catch (e) {
+      throw Exception('Không thể tạo bài viết ảnh ghép từ R2: $e');
+    }
   }
 
   Future<StorageUploadResult?> uploadManagedImage(
