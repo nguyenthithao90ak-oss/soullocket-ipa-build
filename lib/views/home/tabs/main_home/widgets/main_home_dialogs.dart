@@ -790,6 +790,14 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           startCooldown: startCooldown,
         );
         if (!mounted) return;
+        
+        // Optimistic UI update
+        _safeSetState(() {
+          if (_houseSettings != null) {
+            _houseSettings!['startDate'] = newDateStr;
+          }
+        });
+
         scaffoldMessenger?.showSnackBar(
           SnackBar(content: Text(msgUpdated)),
         );
@@ -913,6 +921,19 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           topLabel: editTopLabel ? newLabel : null,
           bottomLabel: editTopLabel ? null : newLabel,
         );
+
+        // Optimistic UI update
+        _safeSetState(() {
+          if (_houseSettings != null) {
+            if (editTopLabel) {
+              _houseSettings!['countdownTopLabel'] = newLabel;
+              _houseSettings!['greetingQuote'] = newLabel;
+            } else {
+              _houseSettings!['countdownBottomLabel'] = newLabel;
+              _houseSettings!['dayUnit'] = newLabel;
+            }
+          }
+        });
       } catch (e) {
         if (!mounted) return;
         final message = _shortErrorMessage(

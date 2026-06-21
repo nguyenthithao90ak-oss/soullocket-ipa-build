@@ -414,14 +414,18 @@ class HouseSettingsService {
 
 
     try {
-      await _dbRef.update({
-        'houses/$houseId/settings/startDate': safeDate,
-        'houses/$houseId/settings/startDateChangedAt': nowMs,
-        'houses/$houseId/settings/startDateChangeCount': changeCount,
-        'houses/$houseId/settings/startDateCooldownUntil': nextCooldownUntil,
-        'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
-        'houses/$houseId/updatedAt': ServerValue.timestamp,
+      // Split into two updates to guarantee optimistic event propagation to deep listeners
+      await _dbRef.child('houses/$houseId/settings').update({
+        'startDate': safeDate,
+        'startDateChangedAt': nowMs,
+        'startDateChangeCount': changeCount,
+        'startDateCooldownUntil': nextCooldownUntil,
+        'updatedAt': ServerValue.timestamp,
       });
+      await _dbRef.child('houses/$houseId').update({
+        'updatedAt': ServerValue.timestamp,
+      });
+      
       _invalidateCache(houseId);
     } on FirebaseException catch (fe) {
       if (fe.code == 'permission-denied') {

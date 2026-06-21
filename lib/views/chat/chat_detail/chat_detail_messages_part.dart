@@ -359,10 +359,16 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                         ),
                         if (isMe && isLatestMe) ...[
                           const SizedBox(width: 4),
+                          Icon(
+                            msg.isRead ? Icons.done_all_rounded : Icons.check_circle_outline_rounded,
+                            size: 12,
+                            color: isMe ? Colors.white70 : Colors.black38,
+                          ),
+                          const SizedBox(width: 2),
                           Text(
-                            msg.isRead ? '• Đã xem' : '• Đã gửi',
+                            msg.isRead ? 'Đã xem' : 'Đã gửi',
                             style: TextStyle(
-                              color: isMe ? Colors.white60 : Colors.black38,
+                              color: isMe ? Colors.white70 : Colors.black38,
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                             ),

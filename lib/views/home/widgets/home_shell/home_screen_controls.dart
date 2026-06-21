@@ -211,7 +211,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
           clipBehavior: Clip.none,
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 14),
+              padding: const EdgeInsets.only(top: 10),
               child: RepaintBoundary(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(40),
@@ -234,8 +234,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   onLongPress: _hideBottomNavForSession,
                   borderRadius: SLRadius.pillAll,
                   child: Ink(
-                    width: 36,
-                    height: 14,
+                    width: 28,
+                    height: 10,
                     decoration: BoxDecoration(
                       color: isDark
                           ? Colors.white.withValues(alpha: 0.12)
@@ -258,7 +258,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                     child: Center(
                       child: Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        size: 14,
+                        size: 10,
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.8)
                             : accent.withValues(alpha: 0.9),

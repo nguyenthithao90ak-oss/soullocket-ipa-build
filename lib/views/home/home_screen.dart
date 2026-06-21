@@ -1541,7 +1541,20 @@ class _HomeScreenState extends State<HomeScreen>
                 },
               );
             },
-            child: foregroundContent,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification notification) {
+                if (notification is UserScrollNotification &&
+                    notification.metrics.axis == Axis.vertical) {
+                  if (notification.direction == ScrollDirection.reverse) {
+                    _setNavCollapsed(true);
+                  } else if (notification.direction == ScrollDirection.forward) {
+                    _setNavCollapsed(false);
+                  }
+                }
+                return false;
+              },
+              child: foregroundContent,
+            ),
           ),
           bottomNavigationBar: ValueListenableBuilder<UiPrefsState>(
             valueListenable: UiPrefs.notifier,

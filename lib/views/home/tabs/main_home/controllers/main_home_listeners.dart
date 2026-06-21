@@ -123,8 +123,10 @@ extension _MainHomeListeners on _MainHomeTabState {
           final right = (b['ts'] as num?)?.toInt() ?? 0;
           return right.compareTo(left);
         });
+      final partnerSenderId = _currentRole == 'user1' ? 'U2' : 'U1';
       final nextSignals = items
           .where((item) => (item['type'] ?? 'text').toString() == 'text')
+          .where((item) => item['senderId'] == partnerSenderId && item['isRead'] != true)
           .map((item) => (item['text'] ?? item['content'] ?? '').toString())
           .map((text) => text.trim())
           .where((text) => text.isNotEmpty)
