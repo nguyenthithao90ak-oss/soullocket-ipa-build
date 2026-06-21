@@ -327,19 +327,24 @@ class _LoveCardHistoryItem extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                colors.first.withValues(alpha: isUnread ? 0.42 : 0.30),
-                colors.last.withValues(alpha: isUnread ? 0.34 : 0.20),
+                colors.first.withValues(alpha: isUnread ? 0.35 : 0.25),
+                colors.last.withValues(alpha: isUnread ? 0.25 : 0.15),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: isUnread
-                  ? Colors.white.withValues(alpha: 0.42)
-                  : Colors.white.withValues(alpha: 0.16),
-              width: isUnread ? 1.4 : 1,
+              color: Colors.white.withValues(alpha: isUnread ? 0.9 : 0.65),
+              width: isUnread ? 2.5 : 2.0,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: colors.first.withValues(alpha: 0.12),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

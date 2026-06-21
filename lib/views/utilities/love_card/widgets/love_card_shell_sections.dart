@@ -58,6 +58,7 @@ class _LoveCardScreenBody extends StatelessWidget {
               child: _LoveCardBackgroundOrb(
                 size: 240,
                 opacity: 0.10,
+                type: _LoveCardOrbType.cloud,
               ),
             ),
             const Positioned(
@@ -66,6 +67,7 @@ class _LoveCardScreenBody extends StatelessWidget {
               child: _LoveCardBackgroundOrb(
                 size: 280,
                 opacity: 0.06,
+                type: _LoveCardOrbType.heart,
               ),
             ),
             Positioned.fill(
@@ -364,23 +366,195 @@ class _LoveCardTabButton extends StatelessWidget {
   }
 }
 
+enum _LoveCardOrbType { circle, heart, cloud }
+
+class _CuteHeartPainter extends CustomPainter {
+  final Color color;
+  const _CuteHeartPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final w = size.width;
+    final h = size.height;
+
+    path.moveTo(w * 0.5, h * 0.28);
+    path.cubicTo(w * 0.2, h * -0.08, w * -0.12, h * 0.36, w * 0.5, h * 0.9);
+    path.cubicTo(w * 1.12, h * 0.36, w * 0.8, h * -0.08, w * 0.5, h * 0.28);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _CuteCloudPainter extends CustomPainter {
+  final Color color;
+  const _CuteCloudPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final w = size.width;
+    final h = size.height;
+
+    path.moveTo(w * 0.25, h * 0.75);
+    path.cubicTo(w * 0.05, h * 0.75, w * 0.05, h * 0.45, w * 0.2, h * 0.4);
+    path.cubicTo(w * 0.2, h * 0.15, w * 0.55, h * 0.1, w * 0.65, h * 0.3);
+    path.cubicTo(w * 0.85, h * 0.25, w * 0.95, h * 0.45, w * 0.85, h * 0.65);
+    path.cubicTo(w * 0.9, h * 0.8, w * 0.7, h * 0.8, w * 0.6, h * 0.75);
+    path.cubicTo(w * 0.5, h * 0.85, w * 0.35, h * 0.85, w * 0.25, h * 0.75);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _CuteSparklePainter extends CustomPainter {
+  final Color color;
+  const _CuteSparklePainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+    final cy = h / 2;
+
+    path.moveTo(cx, 0);
+    path.quadraticBezierTo(cx, cy, w, cy);
+    path.quadraticBezierTo(cx, cy, cx, h);
+    path.quadraticBezierTo(cx, cy, 0, cy);
+    path.quadraticBezierTo(cx, cy, cx, 0);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _LoveCardBackgroundOrb extends StatelessWidget {
   final double size;
   final double opacity;
+  final _LoveCardOrbType type;
 
   const _LoveCardBackgroundOrb({
     required this.size,
     required this.opacity,
+    this.type = _LoveCardOrbType.circle,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: opacity),
+    final color = Colors.white.withValues(alpha: opacity);
+    switch (type) {
+      case _LoveCardOrbType.heart:
+        return CustomPaint(
+          size: Size(size, size),
+          painter: _CuteHeartPainter(color),
+        );
+      case _LoveCardOrbType.cloud:
+        return CustomPaint(
+          size: Size(size, size),
+          painter: _CuteCloudPainter(color),
+        );
+      case _LoveCardOrbType.circle:
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+          ),
+        );
+    }
+  }
+}
+
+class _LoveCardBackdropHeartDoodle extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double rotation;
+
+  const _LoveCardBackdropHeartDoodle({
+    required this.size,
+    required this.color,
+    this.rotation = 0.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: rotation,
+      child: CustomPaint(
+        size: Size(size, size),
+        painter: _CuteHeartPainter(color),
+      ),
+    );
+  }
+}
+
+class _LoveCardBackdropSparkleDoodle extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double rotation;
+
+  const _LoveCardBackdropSparkleDoodle({
+    required this.size,
+    required this.color,
+    this.rotation = 0.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: rotation,
+      child: CustomPaint(
+        size: Size(size, size),
+        painter: _CuteSparklePainter(color),
+      ),
+    );
+  }
+}
+
+class _LoveCardBackdropCloudDoodle extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double rotation;
+
+  const _LoveCardBackdropCloudDoodle({
+    required this.size,
+    required this.color,
+    this.rotation = 0.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: rotation,
+      child: CustomPaint(
+        size: Size(size, size),
+        painter: _CuteCloudPainter(color),
       ),
     );
   }
@@ -429,6 +603,14 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
                 mirrored: true,
               ),
             ),
+            Positioned(
+              top: 180,
+              right: 80,
+              child: _LoveCardBackdropSparkleDoodle(
+                size: 20,
+                color: Colors.white.withValues(alpha: 0.24),
+              ),
+            ),
           ],
         );
       case 'anniversary':
@@ -446,21 +628,27 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
             Positioned(
               top: 224,
               left: 24,
-              child: _LoveCardBackdropGlyph(
-                icon: Icons.workspace_premium_rounded,
-                size: 28,
-                rotation: -0.24,
-                color: Colors.white.withValues(alpha: 0.16),
+              child: _LoveCardBackdropSparkleDoodle(
+                size: 32,
+                color: Colors.white.withValues(alpha: 0.22),
+                rotation: 0.1,
               ),
             ),
             Positioned(
               bottom: 160,
               right: 36,
-              child: _LoveCardBackdropGlyph(
-                icon: Icons.auto_awesome_rounded,
-                size: 22,
-                rotation: 0.22,
-                color: const Color(0xFFFFE3A2).withValues(alpha: 0.32),
+              child: _LoveCardBackdropSparkleDoodle(
+                size: 24,
+                color: const Color(0xFFFFE3A2).withValues(alpha: 0.4),
+                rotation: -0.15,
+              ),
+            ),
+            Positioned(
+              bottom: 230,
+              left: 36,
+              child: _LoveCardBackdropCloudDoodle(
+                size: 40,
+                color: Colors.white.withValues(alpha: 0.18),
               ),
             ),
           ],
@@ -480,21 +668,19 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
             Positioned(
               top: 218,
               left: 22,
-              child: _LoveCardBackdropGlyph(
-                icon: Icons.star_rounded,
-                size: 20,
+              child: _LoveCardBackdropSparkleDoodle(
+                size: 24,
+                color: Colors.white.withValues(alpha: 0.22),
                 rotation: -0.12,
-                color: Colors.white.withValues(alpha: 0.18),
               ),
             ),
             Positioned(
               bottom: 176,
               right: 34,
-              child: _LoveCardBackdropGlyph(
-                icon: Icons.nights_stay_rounded,
-                size: 26,
+              child: _LoveCardBackdropCloudDoodle(
+                size: 52,
+                color: Colors.white.withValues(alpha: 0.16),
                 rotation: 0.16,
-                color: Colors.white.withValues(alpha: 0.14),
               ),
             ),
           ],
@@ -505,31 +691,37 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
             Positioned(
               top: 92,
               left: 20,
-              child: _LoveCardBackdropGlyph(
-                icon: Icons.favorite_rounded,
-                size: 28,
+              child: _LoveCardBackdropHeartDoodle(
+                size: 36,
+                color: Colors.white.withValues(alpha: 0.24),
                 rotation: -0.18,
-                color: Colors.white.withValues(alpha: 0.18),
               ),
             ),
             Positioned(
               top: 150,
               right: 26,
-              child: _LoveCardBackdropGlyph(
-                icon: Icons.auto_awesome_rounded,
-                size: 24,
+              child: _LoveCardBackdropSparkleDoodle(
+                size: 28,
+                color: Colors.white.withValues(alpha: 0.22),
                 rotation: 0.18,
-                color: Colors.white.withValues(alpha: 0.18),
               ),
             ),
             Positioned(
               bottom: 168,
               left: 32,
-              child: _LoveCardBackdropGlyph(
-                icon: Icons.favorite_border_rounded,
-                size: 24,
+              child: _LoveCardBackdropHeartDoodle(
+                size: 32,
+                color: colors.first.withValues(alpha: 0.3),
                 rotation: 0.14,
-                color: colors.first.withValues(alpha: 0.24),
+              ),
+            ),
+            Positioned(
+              bottom: 220,
+              right: 40,
+              child: _LoveCardBackdropSparkleDoodle(
+                size: 20,
+                color: Colors.white.withValues(alpha: 0.18),
+                rotation: -0.1,
               ),
             ),
           ],
@@ -538,31 +730,6 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
   }
 }
 
-class _LoveCardBackdropGlyph extends StatelessWidget {
-  final IconData icon;
-  final double size;
-  final double rotation;
-  final Color color;
-
-  const _LoveCardBackdropGlyph({
-    required this.icon,
-    required this.size,
-    required this.rotation,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: rotation,
-      child: Icon(
-        icon,
-        size: size,
-        color: color,
-      ),
-    );
-  }
-}
 
 class _LoveCardBackdropBalloonPair extends StatelessWidget {
   final Color leftColor;
@@ -625,14 +792,11 @@ class _LoveCardBackdropBalloon extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(width),
-          ),
+        CustomPaint(
+          size: Size(width, height),
+          painter: _CuteHeartPainter(color),
         ),
+        const SizedBox(height: 2),
         Container(
           width: 1.6,
           height: tailHeight,
@@ -854,6 +1018,14 @@ class _LoveCardBackdropMoon extends StatelessWidget {
             ),
           ),
           Positioned(
+            bottom: -4,
+            left: -8,
+            child: CustomPaint(
+              size: Size(size * 0.8, size * 0.5),
+              painter: _CuteCloudPainter(Colors.white.withValues(alpha: 0.28)),
+            ),
+          ),
+          Positioned(
             left: 8,
             top: 8,
             child: Icon(
@@ -923,42 +1095,6 @@ class _LoveCardGlassIcon extends StatelessWidget {
   }
 }
 
-class _LoveCardHeroChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _LoveCardHeroChip({
-    required this.icon,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 14),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _LoveCardStatusPill extends StatelessWidget {
   final String label;

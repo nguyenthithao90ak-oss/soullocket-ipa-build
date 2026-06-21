@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:soullocket_app/utils/helpers/sensor_helper.dart';
 
 /// Lắng nghe cảm biến gia tốc để phát hiện cú va chạm (bump) khi 2 điện thoại cụng vào nhau.
 class BumpDetector {
@@ -22,7 +23,7 @@ class BumpDetector {
     if (kIsWeb) return; // Không hỗ trợ web
     
     _subscription?.cancel();
-    _subscription = userAccelerometerEventStream().listen(
+    _subscription = SensorHelper.userAccelerometerEvents.listen(
       (UserAccelerometerEvent event) {
         // userAccelerometer loại bỏ trọng lực, chỉ còn gia tốc do chuyển động tay.
         // Tính độ lớn vector gia tốc tuyến tính (bo qua Z nếu chi quan tam mặt phẳng màn hình, 

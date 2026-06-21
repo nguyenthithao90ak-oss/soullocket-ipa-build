@@ -410,74 +410,103 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildPinWidgetTile(bool compact) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFFF758C), // Coral Pink
+            Color(0xFFFF7EB3), // Soft Pink
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: InkWell(
-          onTap: () async {
-            final scaffoldMessenger = ScaffoldMessenger.of(context);
-            scaffoldMessenger.hideCurrentSnackBar();
-            scaffoldMessenger.showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Đang gửi yêu cầu... Nếu không thấy phản hồi, vui lòng nhấn giữ màn hình chính để tự thêm thủ công nhé! ✨',
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.9),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF758C).withValues(alpha: 0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () async {
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              scaffoldMessenger.hideCurrentSnackBar();
+              scaffoldMessenger.showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Đang gửi yêu cầu... Nếu không thấy phản hồi, vui lòng nhấn giữ màn hình chính để tự thêm thủ công nhé! ✨',
+                  ),
+                  duration: Duration(seconds: 5),
                 ),
-                duration: Duration(seconds: 5),
-              ),
-            );
-            await WidgetService.requestPinCalendarWidget();
-          },
-          child: Row(
-            children: [
-              Container(
-                width: compact ? 40 : 44,
-                height: compact ? 40 : 44,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.add_to_home_screen_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Thêm tiện ích ra màn hình chính',
-                      style: SLTheme.quicksand(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: compact ? 14 : 15,
-                      ),
+              );
+              await WidgetService.requestPinCalendarWidget();
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: compact ? 40 : 44,
+                    height: compact ? 40 : 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'Ghim lịch trình & đếm ngược chuyến đi ra màn hình chính',
-                      style: SLTheme.quicksand(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontWeight: FontWeight.w600,
-                        fontSize: compact ? 11 : 12,
-                      ),
+                    child: const Icon(
+                      Icons.add_to_home_screen_rounded,
+                      color: Color(0xFFFF758C),
+                      size: 22,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Thêm tiện ích ra màn hình chính',
+                          style: SLTheme.quicksand(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: compact ? 14 : 15,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Ghim lịch trình & đếm ngược chuyến đi ra màn hình chính',
+                          style: SLTheme.quicksand(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w600,
+                            fontSize: compact ? 11 : 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white,
+                  ),
+                ],
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: Colors.white70,
-              ),
-            ],
+            ),
           ),
         ),
       ),

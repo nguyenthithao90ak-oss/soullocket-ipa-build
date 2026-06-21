@@ -133,56 +133,87 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                         ),
                       ),
                       Center(
-                        child: Container(
-                          width: 78,
-                          height: 78,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.78),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.92),
-                              width: 4,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.12),
-                                blurRadius: 18,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ShaderMask(
-                                shaderCallback: (bounds) =>
-                                    const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFF8A65),
-                                    Color(0xFFFF5E92),
-                                  ],
-                                ).createShader(bounds),
-                                child: Text(
-                                  '55',
-                                  style: SLTheme.quicksand(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                    height: 0.95,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          clipBehavior: Clip.none,
+                          children: [
+                             if (UiPrefs.notifier.value.countdownStyleKey == 'floating_hearts') ...[
+                              // Outer decorative thin ring
+                              Container(
+                                width: 94,
+                                height: 94,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.28),
+                                    width: 1.2,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'ngày rồi',
-                                style: SLTheme.quicksand(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF7E5F72),
+                              // Floating heart badge on bottom-left
+                              const Positioned(
+                                bottom: -6,
+                                left: -6,
+                                child: Icon(
+                                  Icons.favorite_rounded,
+                                  size: 14,
+                                  color: Color(0xFFFF9FBC),
                                 ),
                               ),
                             ],
-                          ),
+                            // Main countdown circle
+                            Container(
+                              width: 78,
+                              height: 78,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.78),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.92),
+                                  width: 4,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.12),
+                                    blurRadius: 18,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  ShaderMask(
+                                    shaderCallback: (bounds) =>
+                                        const LinearGradient(
+                                      colors: [
+                                        Color(0xFFFF8A65),
+                                        Color(0xFFFF5E92),
+                                      ],
+                                    ).createShader(bounds),
+                                    child: Text(
+                                      '55',
+                                      style: SLTheme.quicksand(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                        height: 0.95,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'ngày rồi',
+                                    style: SLTheme.quicksand(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF7E5F72),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       Positioned(

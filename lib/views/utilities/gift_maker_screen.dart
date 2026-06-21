@@ -37,35 +37,26 @@ class GiftMakerScreen extends StatefulWidget {
   List<Color> _giftColors(GiftType type) {
     switch (type) {
       case GiftType.giftBox:
-        return const [Color(0xFFFF2D75), Color(0xFFFF7A9E)];
+        return const [Color(0xFFFF3B8D), Color(0xFF7C3AED)];
       case GiftType.loveLetter:
-        return const [Color(0xFFFF3D8E), Color(0xFFFFB15E)];
+        return const [Color(0xFFFF5252), Color(0xFFF59E0B)];
       case GiftType.surpriseEgg:
-        return const [Color(0xFF20C997), Color(0xFFC7F464)];
+        return const [Color(0xFF10B981), Color(0xFF06B6D4)];
       case GiftType.bubbleWrap:
-        return const [Color(0xFF7C8CF8), Color(0xFFC4B5FD)];
+        return const [Color(0xFF6366F1), Color(0xFF8B5CF6)];
       case GiftType.scratchReveal:
-        return const [Color(0xFFFFC700), Color(0xFFFFF0A3)];
+        return const [Color(0xFFEC4899), Color(0xFFD946EF)];
       case GiftType.happyBirthday:
-        return const [Color(0xFF7C3AED), Color(0xFFFF6EC7)];
+        return const [Color(0xFFF43F5E), Color(0xFFFF7E40)];
       case GiftType.yourHeart:
-        return const [Color(0xFFFF1F70), Color(0xFFFF9DD4)];
+        return const [Color(0xFFE11D48), Color(0xFFFF5D97)];
       case GiftType.lovelyTurkey:
-        return const [Color(0xFFFF7A1A), Color(0xFFFFD166)];
+        return const [Color(0xFFEA580C), Color(0xFFFBBF24)];
       case GiftType.moonWish:
-        return const [Color(0xFF4F46E5), Color(0xFF6EE7F9)];
+        return const [Color(0xFF4338CA), Color(0xFF3B82F6)];
     }
   }
 
-  Color _giftForeground(GiftType type) {
-    switch (type) {
-      case GiftType.bubbleWrap:
-      case GiftType.scratchReveal:
-        return const Color(0xFF111827);
-      default:
-        return Colors.white;
-    }
-  }
 
   String _giftTeaser(GiftType type) {
     switch (type) {
@@ -95,151 +86,77 @@ class GiftMakerScreen extends StatefulWidget {
     required VoidCallback onPreview,
   }) {
     final colors = _giftColors(selectedType);
-    final foreground = _giftForeground(selectedType);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [colors.first, colors.last, const Color(0xFF17192E)],
-          stops: const [0, 0.55, 1],
+          colors: [
+            colors.first.withValues(alpha: 0.85),
+            colors.last.withValues(alpha: 0.70),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
         boxShadow: [
           BoxShadow(
-            color: colors.first.withValues(alpha: 0.32),
-            blurRadius: 34,
-            offset: const Offset(0, 20),
-          ),
-          BoxShadow(
-            color: const Color(0xFF17192E).withValues(alpha: 0.20),
+            color: colors.first.withValues(alpha: 0.22),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 780;
-          final left = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  context.tr('util_gikiutrnhb_90c66b'),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.22),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Text(
+              GiftMakerService.giftEmoji(selectedType),
+              style: const TextStyle(fontSize: 28),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  GiftMakerService.giftLabel(selectedType),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
+                    fontSize: 16,
                     color: Colors.white,
                   ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                context.tr('util_toqutheoki_254ac4'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w900,
-                  fontSize: wide ? 30 : 24,
-                  color: Colors.white,
-                  height: 1.1,
-                ),
-              ),
-              SLSpacing.h10,
-              Text(
-                context.tr('util_gicchmqunh_ae3147'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white.withValues(alpha: 0.82),
-                  height: 1.5,
-                ),
-              ),
-            ],
-          );
-
-          final right = SizedBox(
-            width: wide ? 300 : double.infinity,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.14),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            GiftMakerService.giftEmoji(selectedType),
-                            style: const TextStyle(fontSize: 22),
-                          ),
-                          SLSpacing.w8,
-                          Text(
-                            GiftMakerService.giftLabel(selectedType),
-                            style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
                 Text(
                   _giftTeaser(selectedType),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
-                    color: foreground.withValues(alpha: 0.88),
-                    height: 1.45,
+                    color: Colors.white.withValues(alpha: 0.88),
+                    fontSize: 12,
+                    height: 1.3,
                   ),
                 ),
               ],
             ),
-          );
-
-          if (wide) {
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: left),
-                SLSpacing.w16,
-                right,
-              ],
-            );
-          }
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              left,
-              SLSpacing.h16,
-              right,
-            ],
-          );
-        },
+          ),
+        ],
       ),
     );
   }
@@ -751,10 +668,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFFFF5DA2),
-                  Color(0xFFFF9EB6),
-                  Color(0xFFFFD28A),
-                  Color(0xFFFFF1C8),
+                  Color(0xFFFF5E97),
+                  Color(0xFFFF85A7),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -806,10 +721,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0xFFFFF8FC),
-                      Color(0xFFFFE6F1),
-                      Color(0xFFFFF3D5),
-                      Color(0xFFF5EEFF),
+                      Color(0xFFFFF5F8),
+                      Color(0xFFFFEBF2),
+                      Color(0xFFFFF9ED),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -819,8 +733,10 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
             ),
             const Positioned.fill(
               child: IgnorePointer(
-                child: CustomPaint(
-                  painter: _GiftBackdropPainter(),
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    painter: _GiftBackdropPainter(),
+                  ),
                 ),
               ),
             ),
@@ -829,18 +745,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFFFFFDFF),
-                          Color(0xFFFFF4FA),
-                          Color(0xFFFFF7E6),
-                          Color(0xFFF9F2FF),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                      borderRadius: BorderRadius.only(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.35),
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(28),
                         topRight: Radius.circular(28),
                       ),
@@ -1118,61 +1025,66 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         _selectedType = type;
         _isChoosingType = false;
       }),
-      borderRadius: BorderRadius.circular(24),
-      child: Ink(
+      borderRadius: BorderRadius.circular(28),
+      child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: selected
-                ? [colors.first, colors.last]
-                : [
-                    Colors.white.withValues(alpha: 0.96),
-                    const Color(0xFFFFF7FB).withValues(alpha: 0.98),
-                    Color.lerp(colors.last, Colors.white, 0.88) ??
-                        const Color(0xFFFFF7FB),
+          gradient: selected
+              ? LinearGradient(
+                  colors: [colors.first, colors.last],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : const LinearGradient(
+                  colors: [
+                    Color(0xFFFFF9FA),
+                    Color(0xFFFFF0F3),
                   ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: selected
-                ? Colors.white.withValues(alpha: 0.78)
-                : const Color(0xFFE5E7EB),
-            width: selected ? 2 : 1.2,
+                ? Colors.white.withValues(alpha: 0.95)
+                : const Color(0xFFFFD6E2).withValues(alpha: 0.7),
+            width: selected ? 1.8 : 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: (selected ? colors.first : const Color(0xFFFF6BA6))
-                  .withValues(
-                alpha: selected ? 0.28 : 0.08,
-              ),
-              blurRadius: selected ? 28 : 18,
-              offset: Offset(0, selected ? 14 : 8),
+              color: selected
+                  ? colors.first.withValues(alpha: 0.4)
+                  : const Color(0xFFFF758C).withValues(alpha: 0.05),
+              blurRadius: selected ? 16 : 8,
+              offset: Offset(0, selected ? 8 : 4),
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              width: 82,
-              height: 82,
+              width: 78,
+              height: 78,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: selected ? 0.24 : 0.78),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: selected ? 0.34 : 0.9),
-                ),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
               child: AnimatedScale(
-                scale: selected ? 1.06 : 1,
+                scale: selected ? 1.1 : 1,
                 duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOutCubic,
+                curve: Curves.easeOutBack,
                 child: Text(
                   GiftMakerService.giftEmoji(type),
-                  style: const TextStyle(fontSize: 44),
+                  style: const TextStyle(fontSize: 40),
                 ),
               ),
             ),
@@ -1180,6 +1092,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     GiftMakerService.giftLabel(type),
@@ -1187,8 +1100,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
-                      fontSize: 17,
-                      color: selected ? Colors.white : const Color(0xFF111827),
+                      fontSize: 16.5,
+                      color: selected ? Colors.white : const Color(0xFF1F2937),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1199,9 +1112,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w700,
                       color: selected
-                          ? Colors.white.withValues(alpha: 0.86)
+                          ? Colors.white.withValues(alpha: 0.9)
                           : const Color(0xFF6B7280),
-                      fontSize: 12.5,
+                      fontSize: 12,
                       height: 1.3,
                     ),
                   ),
@@ -1224,12 +1137,15 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [colors.first, colors.last, const Color(0xFF2B1736)],
-          stops: const [0, 0.58, 1],
+          colors: [
+            colors.first,
+            colors.last,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
         boxShadow: [
           BoxShadow(
             color: colors.first.withValues(alpha: 0.24),
@@ -1241,17 +1157,17 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
       child: Row(
         children: [
           Container(
-            width: 72,
-            height: 72,
+            width: 64,
+            height: 64,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+              color: Colors.white.withValues(alpha: 0.20),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
             ),
             child: Text(
               GiftMakerService.giftEmoji(_selectedType),
-              style: const TextStyle(fontSize: 40),
+              style: const TextStyle(fontSize: 36),
             ),
           ),
           const SizedBox(width: 14),
@@ -1263,16 +1179,16 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                   GiftMakerService.giftLabel(_selectedType),
                   style: SLTheme.quicksand(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   widget._giftTeaser(_selectedType),
                   style: SLTheme.quicksand(
-                    color: Colors.white.withValues(alpha: 0.84),
-                    fontSize: 12.5,
+                    color: Colors.white.withValues(alpha: 0.88),
+                    fontSize: 12,
                     fontWeight: FontWeight.w800,
                     height: 1.35,
                   ),
@@ -1293,9 +1209,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+          color: Colors.white.withValues(alpha: 0.70),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.90)),
         ),
         child: Row(
           children: [
@@ -1303,8 +1219,9 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+                color: Colors.white.withValues(alpha: 0.80),
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFFCE7F3).withValues(alpha: 0.5)),
               ),
               child: _selectedImage != null
                   ? ClipRRect(
@@ -1315,7 +1232,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                         filterQuality: FilterQuality.high,
                       ),
                     )
-                  : const Icon(Icons.image_outlined, color: Color(0xFF6B7280)),
+                  : const Icon(Icons.image_outlined, color: Color(0xFFD81B60)),
             ),
             SLSpacing.w12,
             Expanded(
@@ -1358,11 +1275,11 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   Widget _buildLinkPromiseCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFD1FAE5)),
+        color: const Color(0xFFECFDF5).withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFD1FAE5).withValues(alpha: 0.8)),
       ),
       child: Row(
         children: [
@@ -1392,18 +1309,14 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.70), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF4F93).withValues(alpha: 0.08),
+            color: const Color(0xFFFF4F93).withValues(alpha: 0.04),
             blurRadius: 26,
             offset: const Offset(0, 12),
-          ),
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.85),
-            blurRadius: 0,
-            spreadRadius: 1,
           ),
         ],
       ),
@@ -1437,28 +1350,35 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
     return InputDecoration(
       hintText: hint,
       hintStyle: SLTheme.quicksand(
-        color: const Color(0xFF9CA3AF),
+        color: const Color(0xFFA1A8B3),
         fontWeight: FontWeight.w700,
         fontSize: 14,
       ),
-      prefixIcon: Icon(icon,
-          color: const Color(0xFFD81B60).withValues(alpha: 0.7), size: 20),
+      prefixIcon: Padding(
+        padding: const EdgeInsets.only(left: 16, right: 12),
+        child: Icon(icon, color: const Color(0xFFFF758C), size: 20),
+      ),
+      prefixIconConstraints: const BoxConstraints(minWidth: 48),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide:
-            BorderSide(color: const Color(0xFFE5E7EB).withValues(alpha: 0.6)),
+        borderRadius: BorderRadius.circular(24),
+        borderSide: const BorderSide(
+          color: Color(0xFFFFD6E2),
+          width: 1.2,
+        ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide:
-            BorderSide(color: const Color(0xFFE5E7EB).withValues(alpha: 0.6)),
+        borderRadius: BorderRadius.circular(24),
+        borderSide: const BorderSide(
+          color: Color(0xFFFFD6E2),
+          width: 1.2,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.2),
+        borderRadius: BorderRadius.circular(24),
+        borderSide: const BorderSide(color: Color(0xFFFF758C), width: 1.8),
       ),
     );
   }
@@ -1540,19 +1460,19 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
 
     return _GiftTouchTile(
       onTap: () => _openGiftPreview(gift, markOpened: markOpened),
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(28),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFF3F4F6)),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: const Color(0xFFFFD6E2).withValues(alpha: 0.6)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: const Color(0xFFFF758C).withValues(alpha: 0.04),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -1571,7 +1491,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 GiftMakerService.giftEmoji(gift.giftType),

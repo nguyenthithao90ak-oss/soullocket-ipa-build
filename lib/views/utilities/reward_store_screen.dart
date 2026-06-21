@@ -135,6 +135,11 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
           final nextDays = _parseCheckinDays(data);
           final nextCheckedInToday = nextDays[_todayKey()] == true;
           final nextStreak = _calculateStreak(nextDays);
+          
+          if (_isCheckingIn && !nextCheckedInToday) {
+            return;
+          }
+
           if (!_isCheckinLoaded ||
               _checkedInToday != nextCheckedInToday ||
               _streak != nextStreak ||
@@ -221,10 +226,26 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
     if (_auth.currentUser == null) return;
 
+    // Save previous state for reverting in case of failure
+    final previousCheckinDays = Map<String, bool>.from(_checkinDays);
+    final previousCheckedInToday = _checkedInToday;
+    final previousStreak = _streak;
+
+    // Optimistically mark checked-in locally to provide instant response
+    _markCheckedInToday();
     setState(() => _isCheckingIn = true);
+
     try {
       if (!await SecurityService()
           .guardAction(context, 'reward_daily_checkin')) {
+        if (mounted) {
+          setState(() {
+            _checkinDays = previousCheckinDays;
+            _checkedInToday = previousCheckedInToday;
+            _streak = previousStreak;
+            _isCheckingIn = false;
+          });
+        }
         return;
       }
       if (!mounted) return;
@@ -247,8 +268,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         'status=${result.statusCode} granted=${result.granted}',
       );
       if (!mounted) return;
+
       if (result.alreadyClaimed) {
-        _markCheckedInToday();
+        // Keep optimistic state since they are checked-in anyway
         scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(L10nService().translate('util_hmnaybnimd_35fac7')),
@@ -272,7 +294,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 'users/${user.uid}/checkinDays/$today': true,
               });
               if (!mounted) return;
-              _markCheckedInToday();
               scaffoldMessenger.showSnackBar(
                 SnackBar(
                   content:
@@ -280,11 +301,18 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   backgroundColor: Colors.green,
                 ),
               );
+              // Fallback update succeeded, keep the optimistic check-in
+              return;
             } catch (error) {
               debugPrint(
                 'Debug check-in fallback write failed: ${AppErrorMapper.resolve(error).message}',
               );
               if (!mounted) return;
+              setState(() {
+                _checkinDays = previousCheckinDays;
+                _checkedInToday = previousCheckedInToday;
+                _streak = previousStreak;
+              });
               scaffoldMessenger.showSnackBar(
                 SnackBar(
                   content: Text(
@@ -296,13 +324,20 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
             return;
           }
         }
+
+        // Revert optimistic update on failure
+        setState(() {
+          _checkinDays = previousCheckinDays;
+          _checkedInToday = previousCheckedInToday;
+          _streak = previousStreak;
+        });
         scaffoldMessenger.showSnackBar(
           SnackBar(content: Text(_checkinFailureMessage(result))),
         );
         return;
       }
 
-      _markCheckedInToday();
+      // Success, keep the optimistic update
       scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text(L10nService().translate('util_imdanhthnh_93f64e')),
@@ -521,11 +556,41 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         if (mounted && navigator.canPop()) {
           navigator.pop();
         }
+
+        // Fallback for debug mode if real ad fails to play
+        if (!worked && kDebugMode) {
+          debugPrint('AdMobService: Real ad failed to load/play in debug mode. Falling back to simulated web ad dialog.');
+          if (mounted) {
+            worked = await _showWebRewardDialog();
+          }
+        }
       }
 
       if (worked) {
-        final result = await _adMob.claimRewardedAdPoints();
+        var result = await _adMob.claimRewardedAdPoints();
         if (!mounted) return;
+
+        // Fallback points grant in debug mode if claim fails
+        if (!result.ok && kDebugMode) {
+          final user = _auth.currentUser;
+          if (user != null) {
+            try {
+              const debugPoints = AdMobService.rewardedMainPoints;
+              await _dbRef.update({
+                'users/${user.uid}/points': ServerValue.increment(debugPoints),
+              });
+              await _adMob.incrementDailyRewardedAdCountDebug();
+              result = const RewardClaimResult(
+                ok: true,
+                granted: debugPoints,
+              );
+              debugPrint('AdMobService: Debug mode fallback points grant succeeded (+50 points).');
+            } catch (fallbackError) {
+              debugPrint('AdMobService: Debug mode fallback points grant failed: $fallbackError');
+            }
+          }
+        }
+
         if (!result.ok) {
           scaffoldMessenger.showSnackBar(
             SnackBar(content: Text(_rewardedAdFailureMessage(result))),

@@ -1133,7 +1133,7 @@ class _FloatingHeartsRingOverlayState
     });
 
     try {
-      _sensorSub = accelerometerEventStream().listen(
+      _sensorSub = SensorHelper.accelerometerEvents.listen(
         (event) {
           if (!mounted) return;
           final rawX = event.x.clamp(-8.0, 8.0);

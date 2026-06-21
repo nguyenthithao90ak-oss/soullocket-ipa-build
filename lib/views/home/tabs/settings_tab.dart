@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:soullocket_app/utils/helpers/sensor_helper.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

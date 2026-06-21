@@ -514,22 +514,7 @@ class _HealthScreenState extends State<HealthScreen>
         ),
         if (Platform.isAndroid) ...[
           SLSpacing.h16,
-          _buildGlassListTile(
-            title: 'Thêm tiện ích ra màn hình chính',
-            subtitle: 'Ghim tiện ích Chu kỳ ra màn hình để xem nhanh',
-            icon: Icons.add_to_home_screen_rounded,
-            onTap: () async {
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-              scaffoldMessenger.hideCurrentSnackBar();
-              scaffoldMessenger.showSnackBar(
-                const SnackBar(
-                  content: Text('Đang gửi yêu cầu... Nếu không thấy phản hồi, vui lòng nhấn giữ màn hình chính để tự thêm thủ công nhé! ✨'),
-                  duration: Duration(seconds: 5),
-                ),
-              );
-              await WidgetService.requestPinCycleWidget();
-            },
-          ),
+          _buildPinWidgetTile(),
         ],
         SLSpacing.h16,
         Row(
@@ -564,6 +549,110 @@ class _HealthScreenState extends State<HealthScreen>
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildPinWidgetTile() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFFF758C), // Coral Pink
+            Color(0xFFFF7EB3), // Soft Pink
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.9),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF758C).withValues(alpha: 0.45),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () async {
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              scaffoldMessenger.hideCurrentSnackBar();
+              scaffoldMessenger.showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Đang gửi yêu cầu... Nếu không thấy phản hồi, vui lòng nhấn giữ màn hình chính để tự thêm thủ công nhé! ✨',
+                  ),
+                  duration: Duration(seconds: 5),
+                ),
+              );
+              await WidgetService.requestPinCycleWidget();
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.add_to_home_screen_rounded,
+                      color: Color(0xFFFF758C),
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Thêm tiện ích ra màn hình chính',
+                          style: SLTheme.quicksand(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Ghim tiện ích Chu kỳ ra màn hình để xem nhanh',
+                          style: SLTheme.quicksand(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

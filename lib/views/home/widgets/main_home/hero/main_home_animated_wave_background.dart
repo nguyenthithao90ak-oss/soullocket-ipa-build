@@ -57,7 +57,7 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
       int staticCount = 0;
       bool isSensorActive = true;
 
-      _sensorSubscription = accelerometerEventStream().listen(
+      _sensorSubscription = SensorHelper.accelerometerEvents.listen(
         (event) {
           if (!mounted) return;
 

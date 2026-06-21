@@ -668,6 +668,13 @@ class AdMobService {
     }
   }
 
+  /// Tăng bộ đếm xem quảng cáo lên 1 trong chế độ debug
+  Future<void> incrementDailyRewardedAdCountDebug() async {
+    if (kDebugMode) {
+      await _incrementDailyRewardedAdCount();
+    }
+  }
+
   // ─── REWARDED COOLDOWN ─────────────────────────────────────────
   int _lastRewardedShownMs = 0;
   static const int _rewardedCooldownMs = 45000; // 45 seconds
@@ -1249,7 +1256,7 @@ class AdMobService {
 
     String idToken;
     try {
-      idToken = await readBearerToken(forceRefresh: true);
+      idToken = await readBearerToken(forceRefresh: false);
     } catch (tokenError) {
       final errorInfo = AppErrorMapper.resolve(
         tokenError,
