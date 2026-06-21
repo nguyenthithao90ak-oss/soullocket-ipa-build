@@ -93,21 +93,9 @@ class SingleMatchService {
     }
 
     Future<void> loadFallbackProfiles() async {
-      try {
-        final snapshot = await _db.child('house_profiles').get();
-        if (controller.isClosed) {
-          return;
-        }
-        fallbackProfiles = _readProfileMap(snapshot.value);
-        emitMergedCandidates();
-      } catch (error) {
-        debugPrint(
-            '[SingleMatch] load fallback profiles failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: L10nService().translate('err_single_match_load_fallback_failed'),
-        ).message}');
-        emitMergedCandidates();
-      }
+      // Root read is disabled for house_profiles due to security rules.
+      // We skip querying the root node to prevent Permission Denied warnings.
+      emitMergedCandidates();
     }
 
     controller = StreamController<List<SingleMatchCandidate>>(

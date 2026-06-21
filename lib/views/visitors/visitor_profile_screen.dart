@@ -649,7 +649,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         debugPrint('Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}');
       }
 
-      if (_targetData.isEmpty) {
+      if (_targetData.isEmpty && _myHouseId == widget.targetHouseId) {
         try {
           final targetSnap2 =
               await _db.ref('houses/${widget.targetHouseId}').get();
@@ -664,6 +664,40 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
                 : {};
           }
         } catch (_) {}
+      }
+
+      if (_targetData.isEmpty) {
+        if (_myHouseId == widget.targetHouseId) {
+          try {
+            final targetSettingsSnap =
+                await _db.ref('houses/${widget.targetHouseId}/settings').get();
+            if (targetSettingsSnap.exists && targetSettingsSnap.value is Map) {
+              _targetSettings = Map<String, dynamic>.from(
+                Map<dynamic, dynamic>.from(targetSettingsSnap.value as Map),
+              );
+            }
+            
+            final houseNameSnap = await _db.ref('houses/${widget.targetHouseId}/houseName').get();
+            final houseAvatarSnap = await _db.ref('houses/${widget.targetHouseId}/houseAvatar').get();
+            final avatarSnap = await _db.ref('houses/${widget.targetHouseId}/avatar').get();
+
+            _targetData = {
+              'settings': _targetSettings,
+              if (houseNameSnap.value != null) 'houseName': houseNameSnap.value,
+              if (houseAvatarSnap.value != null) 'houseAvatar': houseAvatarSnap.value,
+              if (avatarSnap.value != null) 'avatar': avatarSnap.value,
+            };
+          } catch (_) {}
+        } else {
+          try {
+            final houseNameSnap = await _db.ref('houses/${widget.targetHouseId}/houseName').get();
+            if (houseNameSnap.value != null) {
+              _targetData = {
+                'houseName': houseNameSnap.value,
+              };
+            }
+          } catch (_) {}
+        }
       }
 
       try {

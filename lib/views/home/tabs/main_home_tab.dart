@@ -212,7 +212,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   StreamSubscription<DatabaseEvent>? _alertSubscription;
   StreamSubscription<DatabaseEvent>? _newDeviceNotificationSubscription;
   StreamSubscription<DatabaseEvent>? _partnerInboxSubscription;
-  StreamSubscription<DatabaseEvent>? _loveCardsSubscription;
   StreamSubscription? _albumSubscription;
   StreamSubscription? _noteSubscription;
   StreamSubscription<DatabaseEvent>? _chatSignalSubscription;

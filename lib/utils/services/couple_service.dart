@@ -159,12 +159,14 @@ class CoupleService {
     required String houseId,
     required String uid,
   }) async {
-    final houseSnap = await _db.ref('houses/$houseId').get();
-    final houseData = _toMap(houseSnap.value);
+    final membersSnap = await _db.ref('houses/$houseId/members').get();
+    final ownerUidSnap = await _db.ref('houses/$houseId/owner_uid').get();
+    final members = _toMap(membersSnap.value);
+    final ownerUid = ownerUidSnap.value?.toString().trim();
     return _findMemberRole(
-      members: _toMap(houseData['members']),
+      members: members,
       uid: uid,
-      ownerUid: houseData['owner_uid']?.toString().trim(),
+      ownerUid: ownerUid,
     );
   }
 

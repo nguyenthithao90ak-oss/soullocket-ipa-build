@@ -583,17 +583,12 @@ class _HomeScreenState extends State<HomeScreen>
     final houseId = await HouseService().getCurrentHouseId();
     if (!mounted || houseId == null) return;
     unawaited(_syncIncomingCallListener(houseId));
-    final houseData =
-        await FirebaseDatabase.instance.ref('houses/$houseId').get();
-    if (!mounted || !houseData.exists || houseData.value is! Map) return;
-    final data = Map<String, dynamic>.from(
-      Map<dynamic, dynamic>.from(houseData.value as Map),
-    );
-    if (data['startDate'] != null) {
-      final startDate = DateTime.tryParse(data['startDate'].toString());
-      if (startDate != null) {
-        NotificationService().checkAnniversaryReminder(houseId, startDate);
-      }
+    final startDateSnap =
+        await FirebaseDatabase.instance.ref('houses/$houseId/settings/startDate').get();
+    if (!mounted || !startDateSnap.exists || startDateSnap.value == null) return;
+    final startDate = DateTime.tryParse(startDateSnap.value.toString());
+    if (startDate != null) {
+      NotificationService().checkAnniversaryReminder(houseId, startDate);
     }
   }
 
@@ -1243,7 +1238,7 @@ class _HomeScreenState extends State<HomeScreen>
     var targetAvatar = '';
 
     try {
-      final snap = await FirebaseDatabase.instance.ref('houses/$houseId').get();
+      final snap = await FirebaseDatabase.instance.ref('houses/$houseId/settings').get();
       final raw = snap.value;
       if (raw is Map) {
         final data = Map<dynamic, dynamic>.from(raw);
@@ -1541,20 +1536,7 @@ class _HomeScreenState extends State<HomeScreen>
                 },
               );
             },
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (ScrollNotification notification) {
-                if (notification is UserScrollNotification &&
-                    notification.metrics.axis == Axis.vertical) {
-                  if (notification.direction == ScrollDirection.reverse) {
-                    _setNavCollapsed(true);
-                  } else if (notification.direction == ScrollDirection.forward) {
-                    _setNavCollapsed(false);
-                  }
-                }
-                return false;
-              },
-              child: foregroundContent,
-            ),
+            child: foregroundContent,
           ),
           bottomNavigationBar: ValueListenableBuilder<UiPrefsState>(
             valueListenable: UiPrefs.notifier,

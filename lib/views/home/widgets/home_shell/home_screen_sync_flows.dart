@@ -15,19 +15,18 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
       await NotificationService().checkAutoSleepGreetings(houseId);
 
       // Check Account Deletion
-      final houseData =
-          await FirebaseDatabase.instance.ref('houses/$houseId').get();
-      if (houseData.exists && houseData.value is Map && mounted) {
-        final data = Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(houseData.value as Map),
-        );
-        if (data['scheduledDeletionAt'] != null) {
-          final ms = int.tryParse(data['scheduledDeletionAt'].toString()) ?? 0;
-          if (ms > DateTime.now().millisecondsSinceEpoch) {
-            final deleteUid = data['scheduledDeletionUid']?.toString();
-            final isMe = deleteUid == FirebaseAuth.instance.currentUser?.uid;
-            _showPendingDeletionDialog(ms, isMe);
-          }
+      final deletionAtSnap = await FirebaseDatabase.instance
+          .ref('houses/$houseId/scheduledDeletionAt')
+          .get();
+      if (deletionAtSnap.exists && deletionAtSnap.value != null && mounted) {
+        final ms = int.tryParse(deletionAtSnap.value.toString()) ?? 0;
+        if (ms > DateTime.now().millisecondsSinceEpoch) {
+          final deletionUidSnap = await FirebaseDatabase.instance
+              .ref('houses/$houseId/scheduledDeletionUid')
+              .get();
+          final deleteUid = deletionUidSnap.value?.toString();
+          final isMe = deleteUid == FirebaseAuth.instance.currentUser?.uid;
+          _showPendingDeletionDialog(ms, isMe);
         }
       }
     } catch (e) {

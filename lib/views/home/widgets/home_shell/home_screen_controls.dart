@@ -113,22 +113,26 @@ extension _HomeScreenShellControls on _HomeScreenState {
                       UiPrefs.notifier.value,
                       pauseAnimations: isSwiping,
                     );
-                    return AnimatedSize(
-                      duration: effectProfile.performanceMode || isSwiping
-                          ? Duration.zero
-                          : const Duration(milliseconds: 180),
-                      curve: Curves.easeOutCubic,
-                      alignment: Alignment.bottomCenter,
-                      child: navCollapsed
-                          ? _buildCollapsedNavHandle(
-                              isDark: isDark,
-                              currentIndex: currentIndex,
-                            )
-                          : _buildExpandedBottomNav(
-                              isDark: isDark,
-                              currentIndex: currentIndex,
-                              isSwiping: isSwiping,
-                            ),
+                    final bottomInset = MediaQuery.of(context).padding.bottom;
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: bottomInset > 0 ? bottomInset : 0),
+                      child: AnimatedSize(
+                        duration: effectProfile.performanceMode || isSwiping
+                            ? Duration.zero
+                            : const Duration(milliseconds: 180),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.bottomCenter,
+                        child: navCollapsed
+                            ? _buildCollapsedNavHandle(
+                                isDark: isDark,
+                                currentIndex: currentIndex,
+                              )
+                            : _buildExpandedBottomNav(
+                                isDark: isDark,
+                                currentIndex: currentIndex,
+                                isSwiping: isSwiping,
+                              ),
+                      ),
                     );
                   },
                 );
@@ -160,13 +164,13 @@ extension _HomeScreenShellControls on _HomeScreenState {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.black.withValues(alpha: 0.45)
-            : Colors.black.withValues(alpha: 0.12),
+            ? Colors.black.withValues(alpha: 0.60)
+            : Colors.black.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(40),
         border: Border.all(
           color: isDark
-              ? Colors.white.withValues(alpha: 0.10)
-              : Colors.black.withValues(alpha: 0.05),
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.black.withValues(alpha: 0.08),
           width: 1,
         ),
         boxShadow: [
@@ -205,7 +209,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
       child: Padding(
         key: const ValueKey('expanded-nav'),
         padding: EdgeInsets.fromLTRB(
-            24, 0, 24, bottomInset > 0 ? bottomInset + 4 : 12),
+            24, 0, 24, bottomInset > 0 ? 4 : 12),
         child: Stack(
           alignment: Alignment.topCenter,
           clipBehavior: Clip.none,
@@ -289,7 +293,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
       child: Padding(
         key: const ValueKey('collapsed-nav'),
         padding:
-            EdgeInsets.fromLTRB(12, 0, 12, bottomInset > 0 ? bottomInset : 0),
+            EdgeInsets.fromLTRB(12, 0, 12, 0),
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Material(

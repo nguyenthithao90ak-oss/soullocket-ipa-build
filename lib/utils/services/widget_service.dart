@@ -888,7 +888,7 @@ class WidgetService {
       final currentRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       final partnerRole = currentRole == 'user1' ? 'user2' : 'user1';
 
-      final houseData = await FirebaseDatabase.instance.ref('houses/$houseId').get();
+      final houseData = await FirebaseDatabase.instance.ref('houses/$houseId/settings').get();
       if (!houseData.exists || houseData.value is! Map) return;
 
       final data = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(houseData.value as Map));

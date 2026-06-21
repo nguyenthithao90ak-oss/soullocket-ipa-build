@@ -61,33 +61,39 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
 
     if (houseId.isNotEmpty) {
       try {
-        final snap =
-            await FirebaseDatabase.instance.ref('houses/$houseId').get();
-        if (snap.exists && snap.value is Map) {
-          final house = Map<String, dynamic>.from(snap.value as Map);
-          final security = house['security'] is Map
-              ? Map<String, dynamic>.from(house['security'] as Map)
-              : <String, dynamic>{};
-          final banned = house['banned'] == true || house['isBanned'] == true;
-          final bannedUntil =
-              ((house['bannedUntil'] ?? house['banUntil']) as num?)?.toInt() ??
-                  0;
+        final securitySnap = await FirebaseDatabase.instance.ref('houses/$houseId/security').get();
+        final security = securitySnap.exists && securitySnap.value is Map
+            ? Map<String, dynamic>.from(securitySnap.value as Map)
+            : <String, dynamic>{};
 
-          houseName = house['houseName']?.toString().trim().isNotEmpty == true
-              ? house['houseName'].toString().trim()
-              : houseName;
-          loginId = security['loginId']?.toString().trim() ?? '';
-          email = security['email']?.toString().trim().isNotEmpty == true
-              ? security['email'].toString().trim()
-              : email;
-          if (bannedUntil > DateTime.now().millisecondsSinceEpoch) {
-            lockType = 'temporary';
-            lockedUntil = bannedUntil;
-          } else if (banned) {
-            lockType = 'permanent';
-          }
+        final bannedSnap = await FirebaseDatabase.instance.ref('houses/$houseId/banned').get();
+        final isBannedSnap = await FirebaseDatabase.instance.ref('houses/$houseId/isBanned').get();
+        final banned = (bannedSnap.value == true) || (isBannedSnap.value == true);
+
+        final bannedUntilSnap = await FirebaseDatabase.instance.ref('houses/$houseId/bannedUntil').get();
+        final banUntilSnap = await FirebaseDatabase.instance.ref('houses/$houseId/banUntil').get();
+        final bannedUntil = ((bannedUntilSnap.value ?? banUntilSnap.value) as num?)?.toInt() ?? 0;
+
+        final houseNameSnap = await FirebaseDatabase.instance.ref('houses/$houseId/settings/houseName').get();
+        final houseNameVal = houseNameSnap.value?.toString().trim();
+        if (houseNameVal != null && houseNameVal.isNotEmpty) {
+          houseName = houseNameVal;
         }
-      } catch (_) {}
+
+        loginId = security['loginId']?.toString().trim() ?? '';
+        email = security['email']?.toString().trim().isNotEmpty == true
+            ? security['email'].toString().trim()
+            : email;
+
+        if (banned) {
+          lockType = 'permanent';
+        } else if (bannedUntil > DateTime.now().millisecondsSinceEpoch) {
+          lockType = 'temporary';
+          lockedUntil = bannedUntil;
+        }
+      } catch (e) {
+        debugPrint('Lỗi tải thông tin nhà khoá: $e');
+      }
     }
 
     final contactSeed = email.isNotEmpty ? email : loginId;

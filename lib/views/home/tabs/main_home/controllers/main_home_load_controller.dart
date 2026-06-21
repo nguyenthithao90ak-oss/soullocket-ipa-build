@@ -35,8 +35,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _newDeviceNotificationSubscription = null;
     _partnerInboxSubscription?.cancel();
     _partnerInboxSubscription = null;
-    _loveCardsSubscription?.cancel();
-    _loveCardsSubscription = null;
     _albumSubscription?.cancel();
     _albumSubscription = null;
     _noteSubscription?.cancel();
@@ -713,23 +711,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
           );
         }, onError: (Object error) {
           debugPrint('Home partner inbox listener failed: $error');
-        });
-
-        _loveCardsSubscription = _dbRef
-            .child('houses/$houseId/love_cards')
-            .orderByChild('ts')
-            .onChildAdded
-            .listen((event) {
-          if (isStale()) return;
-          if (event.snapshot.value == null || !mounted) return;
-          final data = _toStringDynamicMap(event.snapshot.value);
-          final isOpened = data['isOpened'] == true;
-          final fromUid = data['fromUid']?.toString() ?? '';
-          final myUid = user.uid;
-
-          if (!isOpened && fromUid != myUid) {}
-        }, onError: (Object error) {
-          debugPrint('Home love cards listener failed: $error');
         });
 
         _missInteractionSubscription = _dbRef

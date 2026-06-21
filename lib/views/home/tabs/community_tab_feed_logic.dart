@@ -277,23 +277,27 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
 
     final candidates = <Map<String, dynamic>>[];
     try {
-      final snap = await _dbRef.child('houses/$houseId/memories').get();
-      _collectAnniversaryMemoryCandidates(
-        candidates,
-        snap.value,
-        anniversaryDate: anniversaryDate,
-        today: today,
-      );
+      final cached = OfflineCacheService.loadCacheSync('memories_$houseId');
+      if (cached != null) {
+        _collectAnniversaryMemoryCandidates(
+          candidates,
+          cached,
+          anniversaryDate: anniversaryDate,
+          today: today,
+        );
+      }
     } catch (_) {}
 
     if (candidates.isEmpty) {
-      final cached = OfflineCacheService.loadCacheSync('memories_$houseId');
-      _collectAnniversaryMemoryCandidates(
-        candidates,
-        cached,
-        anniversaryDate: anniversaryDate,
-        today: today,
-      );
+      try {
+        final snap = await _dbRef.child('houses/$houseId/memories').get();
+        _collectAnniversaryMemoryCandidates(
+          candidates,
+          snap.value,
+          anniversaryDate: anniversaryDate,
+          today: today,
+        );
+      } catch (_) {}
     }
 
     if (candidates.isEmpty) {
