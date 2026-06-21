@@ -197,6 +197,9 @@ extension _MainHomeListeners on _MainHomeTabState {
           emoji: emoji,
           assetPath: data['assetPath']?.toString() ?? '',
           sentAtMs: sentAtMs,
+          imageUrl: data['imageUrl']?.toString().trim().isNotEmpty == true
+              ? data['imageUrl']!.toString().trim()
+              : null,
         ),
       );
     }, onError: (Object error) {

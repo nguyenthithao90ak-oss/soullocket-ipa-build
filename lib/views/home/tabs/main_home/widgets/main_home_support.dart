@@ -65,6 +65,7 @@ class ShootingHeartEffect extends StatefulWidget {
   final bool shootToRight;
   final String emoji;
   final String? assetPath;
+  final String? imageUrl;
 
   const ShootingHeartEffect({
     super.key,
@@ -72,6 +73,7 @@ class ShootingHeartEffect extends StatefulWidget {
     required this.shootToRight,
     this.emoji = '❤️',
     this.assetPath,
+    this.imageUrl,
   });
 
   @override
@@ -111,7 +113,9 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
     final random = Random();
     const particleCount = 4; // Slightly more particles
     final hasAsset = widget.assetPath != null && widget.assetPath!.trim().isNotEmpty;
+    final hasImage = widget.imageUrl != null && widget.imageUrl!.trim().isNotEmpty;
 
+    // 4 hạt tim thông thường
     for (int i = 0; i < particleCount; i++) {
       _particles.add(_ParticleData(
         delay: random.nextDouble() * 0.35, // More spread out
@@ -122,7 +126,59 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
       ));
     }
 
-    _particleWidgets = List.generate(particleCount, (i) {
+    // 1 hạt ảnh kỷ niệm (lớn hơn, bay theo quỹ đạo hơi khác)
+    if (hasImage) {
+      _particles.add(_ParticleData(
+        delay: random.nextDouble() * 0.15,
+        flightDuration: 0.72,
+        peakHeight: random.nextDouble() * 0.8 + 1.0,
+        size: 90 + random.nextDouble() * 20, // 90–110dp
+        baseRotation: (random.nextDouble() - 0.5) * 0.4,
+      ));
+    }
+
+    _particleWidgets = List.generate(_particles.length, (i) {
+      // Hạt ảnh kỷ niệm (hạt cuối)
+      if (hasImage && i == particleCount) {
+        final p = _particles[i];
+        return Container(
+          width: p.size,
+          height: p.size,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(9),
+            child: CachedNetworkImage(
+              imageUrl: widget.imageUrl!,
+              fit: BoxFit.cover,
+              fadeInDuration: const Duration(milliseconds: 150),
+              placeholder: (_, __) => Container(
+                color: const Color(0xFFFFD6E7),
+                child: const Center(
+                  child: Text('📷', style: TextStyle(fontSize: 24)),
+                ),
+              ),
+              errorWidget: (_, __, ___) => Container(
+                color: const Color(0xFFFFD6E7),
+                child: const Center(
+                  child: Text('🖼️', style: TextStyle(fontSize: 24)),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Hạt tim thông thường
       final p = _particles[i];
       return hasAsset
           ? Image.asset(

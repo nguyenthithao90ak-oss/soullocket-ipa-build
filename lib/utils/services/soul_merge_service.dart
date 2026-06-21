@@ -72,7 +72,7 @@ class SoulMergeService {
   }
 
   /// Send a temporary message to the partner during Soul Merge
-  Future<void> sendSoulMessage(String text) async {
+  Future<void> sendSoulMessage(String text, {String? imageUrl}) async {
     try {
       final user = _auth.currentUser;
       if (user == null) return;
@@ -85,7 +85,8 @@ class SoulMergeService {
 
       final ref = _db.ref('houses/$houseId/soul_merge/chat');
       await ref.push().set({
-        'text': text.trim(),
+        if (text.isNotEmpty) 'text': text.trim(),
+        if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
         'sender': role,
         'timestamp': ServerValue.timestamp,
       });
@@ -173,6 +174,75 @@ class SoulMergeService {
       debugPrint('[SoulMergeService] getLastSeenTimestamp error: $e');
       return 0;
     }
+  }
+
+  /// Send an interactive event (e.g. photo shot or heart tap) to the partner
+  Future<void> sendInteractiveEvent({required String type, String? url, double? x, double? y}) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return;
+
+      final houseId = await _houseService.getCurrentHouseId();
+      if (houseId == null || houseId.isEmpty) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      final role = _normalizeRole(prefs.getString('il_role'));
+
+      final ref = _db.ref('houses/$houseId/soul_merge/interactive_events');
+      await ref.push().set({
+        'type': type,
+        'url': url ?? '',
+        'x': x ?? 0.0,
+        'y': y ?? 0.0,
+        'sender': role,
+        'timestamp': ServerValue.timestamp,
+      });
+
+      // Prune old events to keep lightweight
+      final snap = await ref.orderByChild('timestamp').get();
+      if (snap.exists && snap.value is Map) {
+        final events = Map<dynamic, dynamic>.from(snap.value as Map);
+        if (events.length > 20) {
+          final sortedKeys = events.keys.toList()
+            ..sort((a, b) {
+              final t1 = events[a]['timestamp'] as int? ?? 0;
+              final t2 = events[b]['timestamp'] as int? ?? 0;
+              return t1.compareTo(t2);
+            });
+          final keysToDelete = sortedKeys.sublist(0, sortedKeys.length - 20);
+          for (final key in keysToDelete) {
+            await ref.child(key.toString()).remove();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[SoulMergeService] sendInteractiveEvent error: $e');
+    }
+  }
+
+  /// Watch real-time interactive events
+  Stream<Map<String, dynamic>> watchInteractiveEvents() {
+    return Stream.fromFuture(_houseService.getCurrentHouseId()).asyncExpand<Map<String, dynamic>>((houseId) {
+      if (houseId == null || houseId.isEmpty) return const Stream.empty();
+      
+      final now = DateTime.now().millisecondsSinceEpoch;
+      
+      return _db
+          .ref('houses/$houseId/soul_merge/interactive_events')
+          .orderByChild('timestamp')
+          .startAt(now)
+          .onChildAdded
+          .asBroadcastStream()
+          .map((event) {
+        final data = event.snapshot.value;
+        if (data is Map) {
+          final msg = Map<String, dynamic>.from(data);
+          msg['id'] = event.snapshot.key;
+          return msg;
+        }
+        return <String, dynamic>{};
+      });
+    }).asBroadcastStream();
   }
 
   String _normalizeRole(String? raw) {

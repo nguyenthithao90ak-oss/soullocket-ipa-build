@@ -693,33 +693,7 @@ class StorageService {
     double? lng,
     String? blurHash,
   }) async {
-    if (sessionId.startsWith('R2_BYPASS|')) {
-      final url = sessionId.split('|')[1];
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final dbRef = FirebaseDatabase.instance.ref();
-      final memoryRef = dbRef.child('houses/$houseId/memories').push();
-      final memoryId = memoryRef.key ?? now.toString();
-      
-      final data = {
-        'id': memoryId,
-        'url': url,
-        'thumbUrl': url,
-        'authorName': authorName,
-        'authorEmail': authorEmail,
-        'authorRole': authorRole,
-        'timestamp': now,
-        'ts': now,
-        'type': 'image',
-        if (lat != null) 'lat': lat,
-        if (lng != null) 'lng': lng,
-        if (blurHash != null) 'blurHash': blurHash,
-      };
-      
-      await memoryRef.set(data);
-      await dbRef.child('houses/$houseId/memoriesCount').set(ServerValue.increment(1));
-      
-      return {'ok': true, 'memoryId': memoryId};
-    }
+    // R2_BYPASS handled natively by Cloud Functions
 
     try {
       final response = await _finalizeHelper.finalizeUpload(
@@ -985,26 +959,100 @@ class StorageService {
     if (sessionId.startsWith('R2_BYPASS|')) {
       final url = sessionId.split('|')[1];
       try {
-        await SocialService.instance.createPostUnified(
-          houseId: houseId,
-          houseName: houseName,
-          authorRole: authorRole,
-          authorName: authorName,
-          authorAvt: authorAvt,
-          content: content,
-          imageUrl: url,
-          privacy: privacy,
-          mood: mood,
-          moodEmoji: moodEmoji,
-          location: location,
-          postType: postType,
-          isAnon: isAnon,
-          isLocket: isLocket,
-          commentsEnabled: commentsEnabled,
-        );
-        return {'ok': true};
+        if (target == 'profile_header') {
+          final dbRef = FirebaseDatabase.instance.ref();
+          final updates = <String, dynamic>{};
+          updates['houses/$houseId/settings/profileHeaderImageUrl'] = url;
+          updates['house_profiles/$houseId/profileHeaderImageUrl'] = url;
+          updates['house_profiles/$houseId/settings/profileHeaderImageUrl'] = url;
+          updates['houses_public/$houseId/profileHeaderImageUrl'] = url;
+          updates['houses_public/$houseId/settings/profileHeaderImageUrl'] = url;
+          
+          final now = DateTime.now().millisecondsSinceEpoch;
+          updates['houses/$houseId/updatedAt'] = now;
+          updates['house_profiles/$houseId/updatedAt'] = now;
+          updates['house_profiles/$houseId/updated_at'] = now;
+          updates['houses_public/$houseId/updatedAt'] = now;
+          updates['houses_public/$houseId/updated_at'] = now;
+
+          await dbRef.update(updates);
+          return {'ok': true, 'target': 'profile_header', 'downloadUrl': url};
+        } else if (target == 'home_avatar') {
+          final dbRef = FirebaseDatabase.instance.ref();
+          final updates = <String, dynamic>{};
+          final field = role.trim() == 'user2' ? 'avtUser2' : 'avtUser1';
+          updates['houses/$houseId/settings/$field'] = url;
+          updates['house_profiles/$houseId/$field'] = url;
+          updates['house_profiles/$houseId/settings/$field'] = url;
+          
+          final now = DateTime.now().millisecondsSinceEpoch;
+          updates['houses/$houseId/updatedAt'] = now;
+          updates['house_profiles/$houseId/updatedAt'] = now;
+          updates['house_profiles/$houseId/updated_at'] = now;
+          updates['houses_public/$houseId/updatedAt'] = now;
+          updates['houses_public/$houseId/updated_at'] = now;
+          
+          await dbRef.update(updates);
+          return {'ok': true, 'target': 'home_avatar', 'downloadUrl': url};
+        } else if (target == 'house_avatar') {
+          final dbRef = FirebaseDatabase.instance.ref();
+          final updates = <String, dynamic>{};
+          updates['houses/$houseId/settings/houseAvatar'] = url;
+          updates['houses/$houseId/avatar'] = url;
+          updates['houses/$houseId/houseAvatar'] = url;
+          updates['house_profiles/$houseId/avatar'] = url;
+          updates['house_profiles/$houseId/houseAvatar'] = url;
+          updates['house_profiles/$houseId/settings/houseAvatar'] = url;
+          updates['houses_public/$houseId/avatar'] = url;
+          updates['houses_public/$houseId/houseAvatar'] = url;
+          updates['houses_public/$houseId/settings/houseAvatar'] = url;
+          
+          final now = DateTime.now().millisecondsSinceEpoch;
+          updates['houses/$houseId/updatedAt'] = now;
+          updates['house_profiles/$houseId/updatedAt'] = now;
+          updates['house_profiles/$houseId/updated_at'] = now;
+          updates['houses_public/$houseId/updatedAt'] = now;
+          updates['houses_public/$houseId/updated_at'] = now;
+          
+          await dbRef.update(updates);
+          return {'ok': true, 'target': 'house_avatar', 'downloadUrl': url};
+        } else if (target == 'story') {
+          final dbRef = FirebaseDatabase.instance.ref();
+          final storyRef = dbRef.child('houses/$houseId/stories').push();
+          final storyId = storyRef.key ?? DateTime.now().millisecondsSinceEpoch.toString();
+          final now = DateTime.now().millisecondsSinceEpoch;
+          
+          await storyRef.set({
+            'url': url,
+            'author': authorName,
+            'ts': now,
+            'expiresAt': now + (24 * 60 * 60 * 1000),
+            'uploadSessionId': sessionId,
+          });
+          return {'ok': true, 'target': 'story', 'downloadUrl': url};
+        } else {
+          // social_post
+          await SocialService.instance.createPostUnified(
+            houseId: houseId,
+            houseName: houseName,
+            authorRole: authorRole,
+            authorName: authorName,
+            authorAvt: authorAvt,
+            content: content,
+            imageUrl: url,
+            privacy: privacy,
+            mood: mood,
+            moodEmoji: moodEmoji,
+            location: location,
+            postType: postType,
+            isAnon: isAnon,
+            isLocket: isLocket,
+            commentsEnabled: commentsEnabled,
+          );
+          return {'ok': true, 'target': target, 'downloadUrl': url};
+        }
       } catch (e) {
-        throw Exception('Không thể tạo bài viết từ R2: $e');
+        throw Exception('Không thể hoàn tất ảnh công khai từ R2: $e');
       }
     }
 

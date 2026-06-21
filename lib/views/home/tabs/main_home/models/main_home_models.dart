@@ -341,6 +341,7 @@ class _HomeReactionFlight {
   final String emoji;
   final String assetPath;
   final int sentAtMs;
+  final String? imageUrl;
 
   const _HomeReactionFlight({
     required this.id,
@@ -349,6 +350,7 @@ class _HomeReactionFlight {
     required this.emoji,
     this.assetPath = '',
     required this.sentAtMs,
+    this.imageUrl,
   });
 
   bool get shootToRight => fromRole == 'user1';

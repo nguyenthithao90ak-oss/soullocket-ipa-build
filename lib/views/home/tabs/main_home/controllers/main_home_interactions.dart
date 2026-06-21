@@ -156,6 +156,16 @@ extension _MainHomeInteractions on _MainHomeTabState {
     final eventId =
         '${_currentRole}_${user.uid}_${nowMs}_${_random.nextInt(999999)}';
     final preset = _maybePresetForInteractionType(type);
+
+    // Chọn ngẫu nhiên 1 ảnh kỷ niệm (nếu có)
+    String? randomImageUrl;
+    final imageAlbum = _albumHighlights
+        .where((item) => item.url.trim().isNotEmpty)
+        .toList(growable: false);
+    if (imageAlbum.isNotEmpty) {
+      randomImageUrl = imageAlbum[_random.nextInt(imageAlbum.length)].url;
+    }
+
     final flight = _HomeReactionFlight(
       id: eventId,
       fromRole: _currentRole,
@@ -163,6 +173,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
       emoji: emoji,
       assetPath: preset?.assetPath ?? '',
       sentAtMs: nowMs,
+      imageUrl: randomImageUrl,
     );
     _showReactionFlight(flight);
 
@@ -172,6 +183,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
         'type': type,
         'emoji': emoji,
         'assetPath': preset?.assetPath ?? '',
+        if (randomImageUrl != null) 'imageUrl': randomImageUrl,
         'fromUid': user.uid,
         'fromRole': _currentRole,
         'toRole': _partnerRole,
@@ -188,6 +200,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
       unawaited(_cleanupOldReactionFlights(houseId));
     }
   }
+
 
   void _sendPartnerInteraction(
     String type, {

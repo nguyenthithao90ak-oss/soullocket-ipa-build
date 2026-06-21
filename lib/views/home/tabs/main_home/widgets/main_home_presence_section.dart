@@ -146,6 +146,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                             shootToRight: flight.shootToRight,
                             emoji: flight.emoji,
                             assetPath: flight.assetPath,
+                            imageUrl: flight.imageUrl,
                             onComplete: () => _removeReactionFlight(flight.id),
                           ),
                         ),

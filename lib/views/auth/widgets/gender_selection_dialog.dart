@@ -98,7 +98,7 @@ class GenderSelectionDialog extends StatelessWidget {
                         SizedBox(
                           width: optionWidth,
                           child: _buildOption(
-                            emoji: '👨',
+                            assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_092.png',
                             title: L10nService().translate('Nam'),
                             desc:
                                 L10nService().translate('Giao diện đằng trai'),
@@ -110,7 +110,7 @@ class GenderSelectionDialog extends StatelessWidget {
                         SizedBox(
                           width: optionWidth,
                           child: _buildOption(
-                            emoji: '👩',
+                            assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_086.png',
                             title: L10nService().translate('Nữ'),
                             desc: L10nService().translate('Giao diện đằng gái'),
                             color: const Color(0xFFFF4081),
@@ -131,7 +131,7 @@ class GenderSelectionDialog extends StatelessWidget {
   }
 
   Widget _buildOption({
-    required String emoji,
+    required String assetPath,
     required String title,
     required String desc,
     required Color color,
@@ -146,24 +146,39 @@ class GenderSelectionDialog extends StatelessWidget {
           horizontal: 12,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withValues(alpha: 0.4), width: 2),
+          border: Border.all(color: color.withValues(alpha: 0.35), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.12),
+              blurRadius: 16,
+              spreadRadius: -2,
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              emoji,
-              style: TextStyle(fontSize: compact ? 38 : 42),
-              textScaler: const TextScaler.linear(1.0),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset(
+                assetPath,
+                width: compact ? 54 : 64,
+                height: compact ? 54 : 64,
+                fit: BoxFit.contain,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               title,
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
               ),
