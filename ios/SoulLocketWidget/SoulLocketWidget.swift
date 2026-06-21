@@ -131,29 +131,14 @@ struct CoupleWidgetProvider: TimelineProvider {
 }
 
 @main
-struct WidgetLauncher {
-    static func main() {
-        if #available(iOS 16.1, *) {
-            WidgetBundle16.main()
-        } else {
-            WidgetBundle14.main()
-        }
-    }
-}
-
-@available(iOS 16.1, *)
-struct WidgetBundle16: WidgetBundle {
+struct SoulLocketWidgetBundle: WidgetBundle {
     var body: some Widget {
         WidgetCoupleProvider()
         #if canImport(ActivityKit)
-        SoulLocketLiveActivity()
+        if #available(iOS 16.1, *) {
+            SoulLocketLiveActivity()
+        }
         #endif
-    }
-}
-
-struct WidgetBundle14: WidgetBundle {
-    var body: some Widget {
-        WidgetCoupleProvider()
     }
 }
 
