@@ -1,8 +1,10 @@
+#if canImport(ActivityKit)
 import ActivityKit
 import WidgetKit
 import SwiftUI
 
 // Định nghĩa cấu hình thuộc tính cho Live Activity dùng chung giữa Extension và Main App
+@available(iOS 16.1, *)
 public struct SoulLocketActivityAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         public var endTime: Date
@@ -101,3 +103,5 @@ fileprivate extension Color {
         self.init(red: r, green: g, blue: b)
     }
 }
+#endif
+

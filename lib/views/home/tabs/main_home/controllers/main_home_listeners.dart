@@ -69,6 +69,8 @@ extension _MainHomeListeners on _MainHomeTabState {
         // Sync calendar widget ngay khi dữ liệu thay đổi
         unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
       } catch (_) {}
+    }, onError: (Object error) {
+      debugPrint('[MainHomeListeners] Calendar events stream failed: $error');
     });
   }
 
@@ -81,6 +83,8 @@ extension _MainHomeListeners on _MainHomeTabState {
       if (!mounted || !event.snapshot.exists) return;
       // Sync cycle widget ngay khi dữ liệu thay đổi
       unawaited(WidgetService.syncCycleWidgetData(houseId: houseId));
+    }, onError: (Object error) {
+      debugPrint('[MainHomeListeners] Health cycle stream failed: $error');
     });
   }
 
@@ -131,6 +135,8 @@ extension _MainHomeListeners on _MainHomeTabState {
       }
       _recentChatSignals = nextSignals;
       _refreshSmartInteraction();
+    }, onError: (Object error) {
+      debugPrint('[MainHomeListeners] Chat signal stream failed: $error');
     });
   }
 
@@ -191,6 +197,8 @@ extension _MainHomeListeners on _MainHomeTabState {
           sentAtMs: sentAtMs,
         ),
       );
+    }, onError: (Object error) {
+      debugPrint('[MainHomeListeners] Reaction flight stream failed: $error');
     });
   }
 }

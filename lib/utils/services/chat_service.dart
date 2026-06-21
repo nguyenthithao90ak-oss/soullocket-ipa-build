@@ -24,6 +24,7 @@ class ChatRoomMeta {
   final String backgroundUrl;
   final String backgroundStoragePath;
   final Map<String, dynamic>? lastMessage;
+  final int unreadCount;
 
   const ChatRoomMeta({
     this.status = '',
@@ -32,6 +33,7 @@ class ChatRoomMeta {
     this.backgroundUrl = '',
     this.backgroundStoragePath = '',
     this.lastMessage,
+    this.unreadCount = 0,
   });
 
   bool get isClosed => status.trim().toLowerCase() == 'closed';
@@ -42,6 +44,7 @@ class ChatRoomMeta {
         deletedDisplayName == other.deletedDisplayName &&
         backgroundUrl == other.backgroundUrl &&
         backgroundStoragePath == other.backgroundStoragePath &&
+        unreadCount == other.unreadCount &&
         _sameStringDynamicMap(lastMessage, other.lastMessage);
   }
 
@@ -1093,9 +1096,10 @@ class ChatService {
 
   Stream<ChatRoomMeta> _streamRoomMetaFields(
     DatabaseReference roomRef, {
-    bool includeStatus = true,
-    bool includeClosedMessage = true,
-    bool includeDeletedDisplayName = true,
+    required bool includeStatus,
+    required bool includeClosedMessage,
+    required bool includeDeletedDisplayName,
+    String? unreadCounterKey,
   }) {
     late final StreamController<ChatRoomMeta> controller;
     final subscriptions = <StreamSubscription<DatabaseEvent>>[];
@@ -1105,6 +1109,7 @@ class ChatService {
     var deletedDisplayName = '';
     var backgroundUrl = '';
     var backgroundStoragePath = '';
+    var unreadCount = 0;
     Map<String, dynamic>? lastMessage;
     var current = const ChatRoomMeta();
 
@@ -1186,6 +1191,22 @@ class ChatService {
         'backgroundStoragePath',
         (value) => backgroundStoragePath = value,
       );
+      if (unreadCounterKey != null) {
+        subscriptions.add(
+          roomRef.child(unreadCounterKey).onValue.listen(
+            (event) {
+              final raw = event.snapshot.value;
+              if (raw is num) {
+                unreadCount = raw.toInt();
+              } else {
+                unreadCount = int.tryParse(raw?.toString() ?? '') ?? 0;
+              }
+              emitIfChanged();
+            },
+            onError: (_) {},
+          ),
+        );
+      }
     }
 
     controller = StreamController<ChatRoomMeta>(
@@ -1226,6 +1247,7 @@ class ChatService {
         includeStatus: includeStatus,
         includeClosedMessage: includeClosedMessage,
         includeDeletedDisplayName: includeDeletedDisplayName,
+        unreadCounterKey: 'unread_$viewerHouseId',
       ).listen(
         controller.add,
         onError: (Object error) {
@@ -1252,12 +1274,13 @@ class ChatService {
     return controller.stream;
   }
 
-  Stream<ChatRoomMeta> streamInternalRoomMeta(String houseId) {
+  Stream<ChatRoomMeta> streamInternalRoomMeta(String houseId, {String? viewerRole}) {
     return _streamRoomMetaFields(
       _dbRef.child('houses/$houseId/chat_room'),
       includeStatus: false,
       includeClosedMessage: false,
       includeDeletedDisplayName: false,
+      unreadCounterKey: viewerRole != null ? 'unread_$viewerRole' : null,
     );
   }
 

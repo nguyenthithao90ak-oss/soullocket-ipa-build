@@ -62,6 +62,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   final List<FloatingMessage> _floatingMessages = [];
   int _lastMsgTimestamp = 0;
   int _lastSeenMsgTimestamp = 0;
+  bool _hasProcessedFirstMessages = false;
   String _myRole = 'user1';
   List<Map<String, dynamic>> _chatHistory = [];
   final ScrollController _chatScrollController = ScrollController();
@@ -189,7 +190,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         final defaultMyName = myRole == 'user2' ? 'bạn nữ' : 'bạn nam';
         final defaultPartnerName = partnerRole == 'user2' ? 'bạn nữ' : 'bạn nam';
         
-        final lastSeen = prefs.getInt('soul_merge_last_seen_msg_ts') ?? 0;
+        final localLastSeen = prefs.getInt('soul_merge_last_seen_msg_ts') ?? 0;
+        final remoteLastSeen = await _mergeService.getLastSeenTimestamp();
+        final lastSeen = math.max(localLastSeen, remoteLastSeen);
         
         final isUserVip = await PurchaseService().isVip();
         var savedStyle = prefs.getString('soul_merge_heart_style') ?? 'basic';
@@ -292,15 +295,19 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _pulseController.duration = const Duration(milliseconds: 400);
     _pulseController.repeat(reverse: true);
 
-    // Continuous heart spawning & haptic feedback timer - 60ms for smooth dense stream following finger
+    // Continuous heart spawning & haptic feedback timer - optimized for performance
     _continuousHeartsTimer?.cancel();
-    _continuousHeartsTimer = Timer.periodic(const Duration(milliseconds: 60), (timer) {
+    int tickCount = 0;
+    _continuousHeartsTimer = Timer.periodic(const Duration(milliseconds: 90), (timer) {
       if (!mounted || _isMerged) {
         timer.cancel();
         return;
       }
-      _heartsOverlayKey.currentState?.spawnExplosion(_lastTapPosition);
-      HapticFeedback.lightImpact();
+      _heartsOverlayKey.currentState?.spawnExplosion(_lastTapPosition, count: 5);
+      tickCount++;
+      if (tickCount % 5 == 0) { // Limit haptics to every ~450ms
+        HapticFeedback.lightImpact();
+      }
     });
   }
 
@@ -699,9 +706,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       onPointerMove: (event) {
                         _lastTapPosition = event.position;
                         final lastPos = _lastSpawnedPosition;
-                        if (lastPos == null || (event.position - lastPos).distance > 8.0) {
+                        if (lastPos == null || (event.position - lastPos).distance > 18.0) {
                           _lastSpawnedPosition = event.position;
-                          _heartsOverlayKey.currentState?.spawnExplosion(event.position, count: 2);
+                          _heartsOverlayKey.currentState?.spawnExplosion(event.position, count: 3);
                         }
                         setState(() {
                           final delta = event.position - _dragStartPos;
@@ -824,16 +831,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       ),
                     ),
                   ),
-                    const SizedBox(height: 50),
-                    Text(
-                      'Soul Merge',
-                      style: SLTheme.quicksand(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: Column(
@@ -948,37 +946,34 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _messagesSub = _mergeService.watchSoulMessages().listen((list) {
       if (!mounted) return;
 
-      final isFirstLoad = (_lastMsgTimestamp == 0);
+      final isFirstLoad = !_hasProcessedFirstMessages;
       int maxTimestamp = _lastMsgTimestamp;
 
-      if (isFirstLoad) {
-        if (list.isNotEmpty) {
-          final unreadMsgs = list.where((msg) {
-            final t = msg['timestamp'] as int? ?? 0;
-            final sender = (msg['sender'] ?? '').toString().trim();
-            final isSelf = (sender == _myRole);
-            return t > _lastSeenMsgTimestamp && !isSelf;
-          }).toList();
+      if (isFirstLoad && list.isNotEmpty) {
+        _hasProcessedFirstMessages = true;
+        final unreadMsgs = list.where((msg) {
+          final t = msg['timestamp'] as int? ?? 0;
+          final sender = (msg['sender'] ?? '').toString().trim();
+          final isSelf = (sender == _myRole);
+          return t > _lastSeenMsgTimestamp && !isSelf;
+        }).toList();
 
-          for (int i = 0; i < unreadMsgs.length; i++) {
-            final msg = unreadMsgs[i];
-            final text = (msg['text'] ?? '').toString().trim();
-            if (text.isNotEmpty) {
-              final delayMs = i * 800; // Staggered by 800ms
-              Future.delayed(Duration(milliseconds: delayMs), () {
-                if (mounted) {
-                  _spawnFloatingMessage(text, false);
-                }
-              });
-            }
+        for (int i = 0; i < unreadMsgs.length; i++) {
+          final msg = unreadMsgs[i];
+          final text = (msg['text'] ?? '').toString().trim();
+          if (text.isNotEmpty) {
+            final delayMs = i * 800; // Staggered by 800ms
+            Future.delayed(Duration(milliseconds: delayMs), () {
+              if (mounted) {
+                _spawnFloatingMessage(text, false);
+              }
+            });
           }
+        }
 
-          for (final msg in list) {
-            final t = msg['timestamp'] as int? ?? 0;
-            if (t > maxTimestamp) maxTimestamp = t;
-          }
-        } else {
-          maxTimestamp = DateTime.now().millisecondsSinceEpoch;
+        for (final msg in list) {
+          final t = msg['timestamp'] as int? ?? 0;
+          if (t > maxTimestamp) maxTimestamp = t;
         }
       }
 
@@ -1012,8 +1007,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       setState(() {
         _chatHistory = list;
         _lastMsgTimestamp = maxTimestamp;
+        _lastSeenMsgTimestamp = maxTimestamp;
       });
 
+      unawaited(_mergeService.updateLastSeenTimestamp(maxTimestamp));
       SharedPreferences.getInstance().then((prefs) {
         prefs.setInt('soul_merge_last_seen_msg_ts', maxTimestamp);
       });
@@ -2218,7 +2215,7 @@ class _TapHeartsOverlayState extends State<_TapHeartsOverlay>
         for (int i = 0; i < count; i++) {
           final angle = random.nextDouble() * math.pi * 2;
           final speed = 1.5 + random.nextDouble() * 3.0;
-          final size = 12.0 + random.nextDouble() * 16.0;
+          final size = 16.0 + random.nextDouble() * 20.0; // Slightly larger to compensate for fewer hearts
           
           _hearts.add(
             TinyHeart(
@@ -2261,10 +2258,32 @@ class _TapHeartsOverlayState extends State<_TapHeartsOverlay>
 
 class _HeartsPainter extends CustomPainter {
   final List<TinyHeart> hearts;
-  final Path _reusablePath = Path();
-  final Path _reusableStarPath = Path();
+  static final Path _baseHeartPath = _createBaseHeartPath();
+  static final Path _baseStarPath = _createBaseStarPath();
 
   _HeartsPainter({required this.hearts});
+
+  static Path _createBaseHeartPath() {
+    final Path path = Path();
+    const double width = 1.0;
+    const double height = 0.9;
+    path.moveTo(0, height * 0.3);
+    path.cubicTo(-width * 0.5, -height * 0.2, -width, height * 0.4, 0, height);
+    path.moveTo(0, height * 0.3);
+    path.cubicTo(width * 0.5, -height * 0.2, width, height * 0.4, 0, height);
+    return path;
+  }
+
+  static Path _createBaseStarPath() {
+    final Path path = Path();
+    const double r = 1.0;
+    path.moveTo(0, -r);
+    path.quadraticBezierTo(0, 0, r, 0);
+    path.quadraticBezierTo(0, 0, 0, r);
+    path.quadraticBezierTo(0, 0, -r, 0);
+    path.quadraticBezierTo(0, 0, 0, -r);
+    return path;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2290,7 +2309,6 @@ class _HeartsPainter extends CustomPainter {
           _drawStar(canvas, trailPaint, sx, sy, drawSize * 0.25);
         }
 
-        // Tối ưu hóa: Thay thế MaskFilter.blur bằng vẽ đa tầng độ mờ (concentric paths) cực kỳ mượt mà
         final glowColor = const Color(0xFFBF55EC).withValues(alpha: heart.opacity * 0.12);
         final glowPaint = Paint()
           ..style = PaintingStyle.fill
@@ -2307,8 +2325,8 @@ class _HeartsPainter extends CustomPainter {
         _drawHeartShape(canvas, corePaint, heart.x, heart.y - (drawSize * 0.05), drawSize * 0.4);
 
       } else if (heart.style == 'aurora') {
-        // Tối ưu hóa: Nhảy bước j += 2 để giảm 50% số lượng vẽ sao vệt đường (trail) nặng nề
-        for (int j = 0; j < heart.trail.length; j += 2) {
+        // Reduced trails for aurora performance
+        for (int j = 0; j < heart.trail.length; j += 3) {
           final double trailProgress = j / heart.trail.length;
           final Offset pos = heart.trail[j];
           final trailPaint = Paint()
@@ -2318,7 +2336,6 @@ class _HeartsPainter extends CustomPainter {
           _drawStar(canvas, trailPaint, pos.dx, pos.dy, drawSize * 0.35 * trailProgress);
         }
 
-        // Tối ưu hóa: Thay thế MaskFilter.blur bằng vẽ đa tầng độ mờ cực kỳ mượt mà
         final glowColor = heart.color.withValues(alpha: heart.opacity * 0.15);
         final glowPaint = Paint()
           ..style = PaintingStyle.fill
@@ -2342,27 +2359,19 @@ class _HeartsPainter extends CustomPainter {
   }
 
   void _drawHeartShape(Canvas canvas, Paint paint, double x, double y, double size) {
-    final width = size;
-    final height = size * 0.9;
-    
-    _reusablePath.reset();
-    _reusablePath.moveTo(x, y + height * 0.3);
-    _reusablePath.cubicTo(x - width * 0.5, y - height * 0.2, x - width, y + height * 0.4, x, y + height);
-    _reusablePath.moveTo(x, y + height * 0.3);
-    _reusablePath.cubicTo(x + width * 0.5, y - height * 0.2, x + width, y + height * 0.4, x, y + height);
-
-    canvas.drawPath(_reusablePath, paint);
+    canvas.save();
+    canvas.translate(x, y);
+    canvas.scale(size, size);
+    canvas.drawPath(_baseHeartPath, paint);
+    canvas.restore();
   }
 
   void _drawStar(Canvas canvas, Paint paint, double x, double y, double radius) {
-    _reusableStarPath.reset();
-    _reusableStarPath.moveTo(x, y - radius);
-    _reusableStarPath.quadraticBezierTo(x, y, x + radius, y);
-    _reusableStarPath.quadraticBezierTo(x, y, x, y + radius);
-    _reusableStarPath.quadraticBezierTo(x, y, x - radius, y);
-    _reusableStarPath.quadraticBezierTo(x, y, x, y - radius);
-    
-    canvas.drawPath(_reusableStarPath, paint);
+    canvas.save();
+    canvas.translate(x, y);
+    canvas.scale(radius, radius);
+    canvas.drawPath(_baseStarPath, paint);
+    canvas.restore();
   }
 
   @override

@@ -147,6 +147,34 @@ class SoulMergeService {
   /// Clear all messages under the soul_merge/chat node (No-op now to preserve history)
   Future<void> clearChat() async {}
 
+  /// Cập nhật timestamp tin nhắn đã xem cuối cùng lên Firebase
+  Future<void> updateLastSeenTimestamp(int timestamp) async {
+    try {
+      final houseId = await _houseService.getCurrentHouseId();
+      if (houseId == null || houseId.isEmpty) return;
+      final prefs = await SharedPreferences.getInstance();
+      final role = _normalizeRole(prefs.getString('il_role'));
+      await _db.ref('houses/$houseId/soul_merge/lastSeen/$role').set(timestamp);
+    } catch (e) {
+      debugPrint('[SoulMergeService] updateLastSeenTimestamp error: $e');
+    }
+  }
+
+  /// Lấy timestamp tin nhắn đã xem cuối cùng từ Firebase
+  Future<int> getLastSeenTimestamp() async {
+    try {
+      final houseId = await _houseService.getCurrentHouseId();
+      if (houseId == null || houseId.isEmpty) return 0;
+      final prefs = await SharedPreferences.getInstance();
+      final role = _normalizeRole(prefs.getString('il_role'));
+      final snap = await _db.ref('houses/$houseId/soul_merge/lastSeen/$role').get();
+      return (snap.value as num?)?.toInt() ?? 0;
+    } catch (e) {
+      debugPrint('[SoulMergeService] getLastSeenTimestamp error: $e');
+      return 0;
+    }
+  }
+
   String _normalizeRole(String? raw) {
     return raw?.trim() == 'user2' ? 'user2' : 'user1';
   }

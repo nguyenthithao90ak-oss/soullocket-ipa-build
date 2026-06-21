@@ -166,7 +166,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     });
   }
 
-  Widget _buildMsgBubble(ChatMessage msg, bool isMe) {
+  Widget _buildMsgBubble(ChatMessage msg, bool isMe, {bool isLatestMe = false}) {
     if (msg.type == 'call_invite') {
       return _buildCallInviteBubble(msg, isMe);
     }
@@ -347,12 +347,28 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                         ),
                       ),
                     SLSpacing.h4,
-                    Text(
-                      DateFormat('HH:mm').format(msg.timestamp),
-                      style: TextStyle(
-                        color: isMe ? Colors.white60 : Colors.black38,
-                        fontSize: 10,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          DateFormat('HH:mm').format(msg.timestamp),
+                          style: TextStyle(
+                            color: isMe ? Colors.white60 : Colors.black38,
+                            fontSize: 10,
+                          ),
+                        ),
+                        if (isMe && isLatestMe) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            msg.isRead ? '• Đã xem' : '• Đã gửi',
+                            style: TextStyle(
+                              color: isMe ? Colors.white60 : Colors.black38,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),

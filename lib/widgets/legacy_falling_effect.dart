@@ -361,6 +361,91 @@ class _LegacyFallingPainter extends CustomPainter {
   final double globalOpacity;
   final bool useLiteRendering;
 
+  static final Path _baseLeafPath = _createBaseLeafPath();
+  static final Path _baseHeartPath = _createBaseHeartPath();
+  static final Path _baseSparklePath = _createBaseSparklePath();
+  static final Path _baseStarPath = _createBaseStarPath();
+
+  static Path _createBaseLeafPath() {
+    final size = 1.0;
+    return Path()
+      ..moveTo(0, -size * 0.46)
+      ..quadraticBezierTo(
+        size * 0.46,
+        -size * 0.18,
+        size * 0.28,
+        size * 0.18,
+      )
+      ..quadraticBezierTo(
+        size * 0.08,
+        size * 0.44,
+        0,
+        size * 0.5,
+      )
+      ..quadraticBezierTo(
+        -size * 0.08,
+        size * 0.44,
+        -size * 0.28,
+        size * 0.18,
+      )
+      ..quadraticBezierTo(
+        -size * 0.46,
+        -size * 0.18,
+        0,
+        -size * 0.46,
+      );
+  }
+
+  static Path _createBaseHeartPath() {
+    final s = 1.0;
+    return Path()
+      ..moveTo(0, s * 0.34)
+      ..cubicTo(0, s * 0.08, -s * 0.42, -s * 0.04, -s * 0.46, s * 0.3)
+      ..cubicTo(-s * 0.48, s * 0.58, -s * 0.08, s * 0.84, 0, s)
+      ..cubicTo(s * 0.08, s * 0.84, s * 0.48, s * 0.58, s * 0.46, s * 0.3)
+      ..cubicTo(s * 0.42, -s * 0.04, 0, s * 0.08, 0, s * 0.34);
+  }
+
+  static Path _createBaseSparklePath() {
+    final size = 1.0;
+    final outer = size * 0.34;
+    final inner = size * 0.12;
+    final path = Path();
+    for (int i = 0; i < 8; i++) {
+      final angle = (i * math.pi) / 4;
+      final radius = i.isEven ? outer : inner;
+      final x = math.cos(angle) * radius;
+      final y = math.sin(angle) * radius;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    return path;
+  }
+
+  static Path _createBaseStarPath() {
+    final size = 1.0;
+    final outer = size * 0.38;
+    final inner = size * 0.16;
+    final path = Path();
+    for (int i = 0; i < 10; i++) {
+      final angle = (i * math.pi) / 5 - (math.pi / 2);
+      final radius = i.isEven ? outer : inner;
+      final x = math.cos(angle) * radius;
+      final y = math.sin(angle) * radius;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    return path;
+  }
+
   const _LegacyFallingPainter({
     required this.particles,
     required this.type,
@@ -676,32 +761,9 @@ class _LegacyFallingPainter extends CustomPainter {
       2 => const [Color(0xFFFF8A65), Color(0xFFD84315)],
       _ => const [Color(0xFFFFCC80), Color(0xFFE65100)],
     };
-    final path = Path()
-      ..moveTo(0, -particle.size * 0.46)
-      ..quadraticBezierTo(
-        particle.size * 0.46,
-        -particle.size * 0.18,
-        particle.size * 0.28,
-        particle.size * 0.18,
-      )
-      ..quadraticBezierTo(
-        particle.size * 0.08,
-        particle.size * 0.44,
-        0,
-        particle.size * 0.5,
-      )
-      ..quadraticBezierTo(
-        -particle.size * 0.08,
-        particle.size * 0.44,
-        -particle.size * 0.28,
-        particle.size * 0.18,
-      )
-      ..quadraticBezierTo(
-        -particle.size * 0.46,
-        -particle.size * 0.18,
-        0,
-        -particle.size * 0.46,
-      );
+
+    canvas.save();
+    canvas.scale(particle.size, particle.size);
 
     if (useLiteRendering) {
       paint
@@ -718,22 +780,23 @@ class _LegacyFallingPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ).createShader(
-          Rect.fromCircle(center: Offset.zero, radius: particle.size * 0.52),
+          Rect.fromCircle(center: Offset.zero, radius: 0.52),
         )
         ..style = PaintingStyle.fill;
     }
-    canvas.drawPath(path, paint);
+    canvas.drawPath(_baseLeafPath, paint);
 
     paint
       ..shader = null
       ..color = const Color(0xFF8D4F25).withValues(alpha: alpha * 0.6)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = (particle.size * 0.03).clamp(0.8, 1.4);
+      ..strokeWidth = (0.03).clamp(0.8 / particle.size, 1.4 / particle.size);
     canvas.drawLine(
       Offset.zero,
-      Offset(0, particle.size * 0.34),
+      Offset(0, 0.34),
       paint,
     );
+    canvas.restore();
   }
 
   void _paintHeart(
@@ -752,52 +815,24 @@ class _LegacyFallingPainter extends CustomPainter {
       ..color = color.withValues(alpha: alpha)
       ..style = PaintingStyle.fill;
 
-    final s = particle.size;
-    final path = Path()
-      ..moveTo(0, s * 0.34)
-      ..cubicTo(0, s * 0.08, -s * 0.42, -s * 0.04, -s * 0.46, s * 0.3)
-      ..cubicTo(-s * 0.48, s * 0.58, -s * 0.08, s * 0.84, 0, s)
-      ..cubicTo(s * 0.08, s * 0.84, s * 0.48, s * 0.58, s * 0.46, s * 0.3)
-      ..cubicTo(s * 0.42, -s * 0.04, 0, s * 0.08, 0, s * 0.34);
-    canvas.drawPath(path, paint);
+    canvas.save();
+    canvas.scale(particle.size, particle.size);
+    canvas.drawPath(_baseHeartPath, paint);
+    canvas.restore();
   }
 
   void _drawSparkle(Canvas canvas, Paint paint, double size) {
-    final outer = size * 0.34;
-    final inner = size * 0.12;
-    final path = Path();
-    for (int i = 0; i < 8; i++) {
-      final angle = (i * math.pi) / 4;
-      final radius = i.isEven ? outer : inner;
-      final x = math.cos(angle) * radius;
-      final y = math.sin(angle) * radius;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-    canvas.drawPath(path, paint);
+    canvas.save();
+    canvas.scale(size, size);
+    canvas.drawPath(_baseSparklePath, paint);
+    canvas.restore();
   }
 
   void _drawStar(Canvas canvas, Paint paint, double size) {
-    final outer = size * 0.38;
-    final inner = size * 0.16;
-    final path = Path();
-    for (int i = 0; i < 10; i++) {
-      final angle = (i * math.pi) / 5 - (math.pi / 2);
-      final radius = i.isEven ? outer : inner;
-      final x = math.cos(angle) * radius;
-      final y = math.sin(angle) * radius;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-    canvas.drawPath(path, paint);
+    canvas.save();
+    canvas.scale(size, size);
+    canvas.drawPath(_baseStarPath, paint);
+    canvas.restore();
   }
 
   @override

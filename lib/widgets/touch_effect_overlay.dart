@@ -182,9 +182,43 @@ class _TouchEffectPainter extends CustomPainter {
   final List<_TouchParticle> particles;
   final bool useGlow;
 
-  // Reusable path objects to eliminate garbage collection pressure during gestures
-  final Path _reusablePath = Path();
-  final Path _reusableCorePath = Path();
+  static final Path _baseStarPath = _createBaseStarPath();
+  static final Path _baseStarCorePath = _createBaseStarCorePath();
+  static final Path _baseHeartPath = _createBaseHeartPath();
+
+  static Path _createBaseStarPath() {
+    final path = Path();
+    const double radius = 1.0;
+    path.moveTo(0, -radius);
+    path.quadraticBezierTo(0, 0, radius, 0);
+    path.quadraticBezierTo(0, 0, 0, radius);
+    path.quadraticBezierTo(0, 0, -radius, 0);
+    path.quadraticBezierTo(0, 0, 0, -radius);
+    return path;
+  }
+
+  static Path _createBaseStarCorePath() {
+    final path = Path();
+    const double coreRadius = 0.4;
+    path.moveTo(0, -coreRadius);
+    path.quadraticBezierTo(0, 0, coreRadius, 0);
+    path.quadraticBezierTo(0, 0, 0, coreRadius);
+    path.quadraticBezierTo(0, 0, -coreRadius, 0);
+    path.quadraticBezierTo(0, 0, 0, -coreRadius);
+    return path;
+  }
+
+  static Path _createBaseHeartPath() {
+    final path = Path();
+    const double width = 1.0;
+    const double height = 0.9;
+    
+    path.moveTo(0, height * 0.3);
+    path.cubicTo(-width * 0.5, -height * 0.2, -width, height * 0.4, 0, height);
+    path.moveTo(0, height * 0.3);
+    path.cubicTo(width * 0.5, -height * 0.2, width, height * 0.4, 0, height);
+    return path;
+  }
 
   _TouchEffectPainter({required this.particles, required this.useGlow});
 
@@ -222,43 +256,26 @@ class _TouchEffectPainter extends CustomPainter {
   }
 
   void _drawStar(Canvas canvas, Paint paint, double radius) {
-    _reusablePath.reset();
-    _reusablePath.moveTo(0, -radius);
-    _reusablePath.quadraticBezierTo(0, 0, radius, 0);
-    _reusablePath.quadraticBezierTo(0, 0, 0, radius);
-    _reusablePath.quadraticBezierTo(0, 0, -radius, 0);
-    _reusablePath.quadraticBezierTo(0, 0, 0, -radius);
-
-    canvas.drawPath(_reusablePath, paint);
+    canvas.save();
+    canvas.scale(radius, radius);
+    canvas.drawPath(_baseStarPath, paint);
 
     paint.maskFilter = null;
     paint.color = Colors.white.withValues(alpha: paint.color.a);
 
-    _reusableCorePath.reset();
-    final coreRadius = radius * 0.4;
-    _reusableCorePath.moveTo(0, -coreRadius);
-    _reusableCorePath.quadraticBezierTo(0, 0, coreRadius, 0);
-    _reusableCorePath.quadraticBezierTo(0, 0, 0, coreRadius);
-    _reusableCorePath.quadraticBezierTo(0, 0, -coreRadius, 0);
-    _reusableCorePath.quadraticBezierTo(0, 0, 0, -coreRadius);
-    canvas.drawPath(_reusableCorePath, paint);
+    canvas.drawPath(_baseStarCorePath, paint);
+    canvas.restore();
   }
 
   void _drawHeart(Canvas canvas, Paint paint, double size) {
-    final width = size;
-    final height = size * 0.9;
-    
-    _reusablePath.reset();
-    _reusablePath.moveTo(0, height * 0.3);
-    _reusablePath.cubicTo(-width * 0.5, -height * 0.2, -width, height * 0.4, 0, height);
-    _reusablePath.moveTo(0, height * 0.3);
-    _reusablePath.cubicTo(width * 0.5, -height * 0.2, width, height * 0.4, 0, height);
-
-    canvas.drawPath(_reusablePath, paint);
+    canvas.save();
+    canvas.scale(size, size);
+    canvas.drawPath(_baseHeartPath, paint);
 
     paint.maskFilter = null;
     paint.color = Colors.white.withValues(alpha: paint.color.a * 0.8);
-    canvas.drawPath(_reusablePath, paint);
+    canvas.drawPath(_baseHeartPath, paint);
+    canvas.restore();
   }
 
   @override

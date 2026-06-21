@@ -134,7 +134,16 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
         final isMe = _isInternal
             ? msg.senderId == _currentRole
             : msg.senderId == widget.myHouseId;
-        return _buildMsgBubble(msg, isMe);
+        
+        bool isLatestMe = false;
+        if (isMe) {
+          final firstMeIndex = _messages.indexWhere((m) => _isInternal
+              ? m.senderId == _currentRole
+              : m.senderId == widget.myHouseId);
+          isLatestMe = index == firstMeIndex;
+        }
+
+        return _buildMsgBubble(msg, isMe, isLatestMe: isLatestMe);
       },
     );
   }
